@@ -6,6 +6,6 @@ such that
     s_Occurrence[1],
     and([s_Explicit[q1] < s_Explicit[q1 + 1] | q1 : int(1..1 - 1)]),
     1 = sum([s_Occurrence[q2] | q2 : int(1..2)]),
-    and([s_Occurrence[q3] -> or([s_Explicit[q4] = q3 | q4 : int(1..1)]) | q3 : int(1..2)]),
-    and([s_Occurrence[s_Explicit[q5]] | q5 : int(1..1)])
+    and([s_Occurrence[q3] -> or([s_Explicit[q5] = q3 | q5 : int(1..1)]) | q3 : int(1..2)]),
+    and([s_Occurrence[s_Explicit[q6]] | q6 : int(1..1)])
 

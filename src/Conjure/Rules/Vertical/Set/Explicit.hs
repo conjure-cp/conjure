@@ -19,22 +19,25 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
         "Explicit"           <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
-        return ( "Vertical rule for set-comprehension, Explicit representation"
-               , const $ let val = [essence| &m[&i] |] in
-                   Comprehension (upd val body)
-                       $  gofBefore
-                       ++ [ Generator (GenDomain pat index) ]
-                       ++ transformBi (upd val) gofAfter
-               )
+        return
+            ( "Vertical rule for set-comprehension, Explicit representation"
+            , \ fresh ->
+                let (jPat, j) = quantifiedVar (fresh `at` 0)
+                    val = [essence| &m[&j] |]
+                in
+                    Comprehension (upd val body)
+                        $  gofBefore
+                        ++ [ Generator (GenDomain jPat index) ]
+                        ++ transformBi (upd val) gofAfter
+            )
     theRule _ = na "rule_Comprehension"
 
 

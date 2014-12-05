@@ -13,6 +13,6 @@ such that
     and([y_ExplicitVarSizeWithFlags_Flags[q3] = false -> y_ExplicitVarSizeWithFlags_Values[q3] = 2 | q3 : int(1..1 + (5 - 2))]),
     and([y_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> y_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..1 + (5 - 2) - 1)]),
     1 <= sum([y_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..1 + (5 - 2))]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q4] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[q4]] | q4 : int(1..1 + (5 - 2))]),
-    and([y_Occurrence[q5] -> or([y_ExplicitVarSizeWithFlags_Flags[q6] /\ y_ExplicitVarSizeWithFlags_Values[q6] = q5 | q6 : int(1..1 + (5 - 2))]) | q5 : int(2..5)])
+    and([y_ExplicitVarSizeWithFlags_Flags[q5] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[q5]] | q5 : int(1..1 + (5 - 2))]),
+    and([y_Occurrence[q4] -> or([y_ExplicitVarSizeWithFlags_Flags[q7] /\ y_ExplicitVarSizeWithFlags_Values[q7] = q4 | q7 : int(1..1 + (5 - 2))]) | q4 : int(2..5)])
 

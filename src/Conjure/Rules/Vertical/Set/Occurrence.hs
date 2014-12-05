@@ -27,15 +27,16 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let i = Reference iPat Nothing
-        return ( "Vertical rule for set-comprehension, Occurrence representation"
-               , const $
-                   Comprehension body
-                       $  gofBefore
-                       ++ [ Generator (GenDomain pat index)
-                          , Filter [essence| &m[&i] |]
-                          ]
-                       ++ gofAfter
-               )
+        return
+            ( "Vertical rule for set-comprehension, Occurrence representation"
+            , const $
+                Comprehension body
+                    $  gofBefore
+                    ++ [ Generator (GenDomain pat index)
+                       , Filter [essence| &m[&i] |]
+                       ]
+                    ++ gofAfter
+            )
     theRule _ = na "rule_Comprehension"
 
 

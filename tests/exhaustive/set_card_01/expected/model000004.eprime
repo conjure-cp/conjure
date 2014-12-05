@@ -3,9 +3,9 @@ language ESSENCE' 1.0
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1..1)] of int(1..2)
 such that
-    or([s_Explicit[q3] = sum([s_Occurrence[q4] * 1 | q4 : int(1..2)]) | q3 : int(1..1)]),
+    or([s_Explicit[q4] = sum([s_Occurrence[q3] * 1 | q3 : int(1..2)]) | q4 : int(1..1)]),
     1 = sum([s_Occurrence[q1] | q1 : int(1..2)]),
     and([s_Explicit[q2] < s_Explicit[q2 + 1] | q2 : int(1..1 - 1)]),
-    and([s_Occurrence[s_Explicit[q5]] | q5 : int(1..1)]),
-    and([s_Occurrence[q6] -> or([s_Explicit[q7] = q6 | q7 : int(1..1)]) | q6 : int(1..2)])
+    and([s_Occurrence[s_Explicit[q6]] | q6 : int(1..1)]),
+    and([s_Occurrence[q5] -> or([s_Explicit[q8] = q5 | q8 : int(1..1)]) | q5 : int(1..2)])
 
