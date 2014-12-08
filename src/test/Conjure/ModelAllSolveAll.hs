@@ -256,29 +256,37 @@ equalNumberOfSolutions TestDirFiles{..} =
         dirShouldExist outputsDir
         solutions' <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outputsDir
         let
-            solutions :: [(String, [String])]
+            solutions :: [((String, String), [String])]
             solutions =
-                [ (intercalate "-" (init parts), sol)
+                [ ((param, model), solution)
                 | sol <- solutions'
-                , let parts = splitOn "-" sol
-                ] |> sortBy (comparing fst)
+                , let (model, param, solution) =
+                        case splitOn "." sol |> head |> splitOn "-" of
+                            [m,s] -> (m, "", s)
+                            [m,p,s] -> (m, p, s)
+                            _ -> error ("Cannot parse solution file name: " ++ sol)
+                ] |> sortBy  (comparing fst)
                   |> groupBy ((==) `on` fst)
                   |> map (\ grp -> (fst (head grp), map snd grp) )
         let
             differentOnes = concat
                 [ if length solutions1 == length solutions2
                     then []
-                    else [ (model1, length solutions1)
-                         , (model2, length solutions2)
+                    else [ (model1, param1, length solutions1)
+                         , (model2, param2, length solutions2)
                          ]
-                | (model1, solutions1) <- solutions
-                , (model2, solutions2) <- solutions
-                , model1 < model2
+                | ((param1, model1), solutions1) <- solutions
+                , ((param2, model2), solutions2) <- solutions
+                , param1 == param2                              -- for the same param
+                , model1 < model2                               -- two different models
                 ]
         unless (null differentOnes) $
             assertFailure $ show $ vcat
-                [ nest 4 $ pretty model <+> "has" <+> pretty count <+> "solutions."
-                | (model, count) <- differentOnes
+                [ nest 4 $ if param == ""
+                            then "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
+                            else "For parameter" <+> pretty param <+>
+                                 "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
+                | (model, param, count) <- differentOnes
                 ]
 
 dirShouldExist :: FilePath -> IO ()
