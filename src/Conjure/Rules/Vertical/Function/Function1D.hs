@@ -19,22 +19,26 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let func             =  matchDef opToSet expr
         "Function1D"         <- representationOf func
         TypeFunction{}       <- typeOf func
         [values]             <- downX1 func
         DomainMatrix index _ <- domainOf values
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
-        return ( "Mapping over a function, Function1D representation"
-               , const $ let val = [essence| (&i, &values[&i]) |] in
-                   Comprehension
+        return
+            ( "Mapping over a function, Function1D representation"
+            , \ fresh ->
+                let
+                    (jPat, j) = quantifiedVar (fresh `at` 0)
+                    val = [essence| (&j, &values[&j]) |]
+                in
+                    Comprehension
                        (upd val body)
                        $  gofBefore
-                       ++ [Generator (GenDomain pat index)]
+                       ++ [Generator (GenDomain jPat index)]
                        ++ transformBi (upd val) gofAfter
                )
     theRule _ = na "rule_Comprehension"

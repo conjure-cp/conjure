@@ -98,10 +98,12 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , isSuffixOf, isPrefixOf, isInfixOf
                               , subsequences, transpose, elemIndex
                               , replicate, length
-                              , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words, head
-                              , init, and, or, zipWith, concatMap, all, lines, notElem, foldr
-                              , sum, product, unzip, zip, zip3, take, foldr1, foldl, drop, any, tail
+                              , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words
+                              , and, or, zipWith, concatMap, all, lines, notElem, foldr
+                              , sum, product, unzip, zip, zip3, foldr1, foldl, any
                               , unzip3, repeat, dropWhile, unwords, intersect
+                              , take, drop
+                              , head, init, tail, last
                               )
 import Data.List.Split   as X ( splitOn )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )

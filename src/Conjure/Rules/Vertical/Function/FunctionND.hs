@@ -37,8 +37,8 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let func                      =  matchDef opToSet expr
         "FunctionND"           <- representationOf func
@@ -52,16 +52,18 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
             index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
         let valuesIndexed x = index x values xArity
 
-        let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionND representation"
-            , const $ let val' = valuesIndexed i
-                          val  = [essence| (&i, &val') |] in
-                Comprehension (upd val body)
-                    $  gofBefore
-                    ++ [ Generator (GenDomain pat (DomainTuple indexDomain))
-                       ]
-                    ++ transformBi (upd val) gofAfter
+            , \ fresh ->
+                let
+                    (jPat, j) = quantifiedVar (fresh `at` 0)
+                    val' = valuesIndexed j
+                    val  = [essence| (&j, &val') |]
+                in
+                    Comprehension (upd val body)
+                        $  gofBefore
+                        ++ [ Generator (GenDomain jPat (DomainTuple indexDomain)) ]
+                        ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension"
