@@ -252,7 +252,6 @@ checkExtraFiles TestDirFiles{..} =
 equalNumberOfSolutions :: TestDirFiles -> TestTree
 equalNumberOfSolutions TestDirFiles{..} =
     testCase "Checking number of solutions" $ do
-        dirShouldExist expectedsDir
         dirShouldExist outputsDir
         solutions' <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outputsDir
         let
