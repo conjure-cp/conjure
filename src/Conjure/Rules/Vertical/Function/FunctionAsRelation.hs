@@ -12,18 +12,18 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
-rule_Image :: Rule
-rule_Image = "function-image{FunctionAsRelation}" `namedRule` theRule where
-    theRule [essence| image(&func,&x) |] = do
+rule_Image_Eq :: Rule
+rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule where
+    theRule [essence| image(&func, &x) = &y |] = do
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
         return
-            ( "Function image, FunctionAsRelation representation"
+            ( "Function image-equals, FunctionAsRelation representation"
             , \ fresh ->
                 let
                     (iPat, i) = quantifiedVar (fresh `at` 0)
                 in
-                    [essence| or([ &i = &x | &iPat <- &rel ]) |]
+                    [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
             )
     theRule _ = na "rule_Image"
 

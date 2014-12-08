@@ -532,7 +532,7 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
-    , Vertical.Function.FunctionAsRelation.rule_Image
+    , Vertical.Function.FunctionAsRelation.rule_Image_Eq
 
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
