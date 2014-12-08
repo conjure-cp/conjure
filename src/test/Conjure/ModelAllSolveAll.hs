@@ -101,7 +101,8 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) = testGroup name $ concat
     , savileRows
     , checkingExpected
     , validating
-    , [extraFiles]
+    , [checkExtraFiles t]
+    , [equalNumberOfSolutions t]
     ]
     where
         conjuring =
@@ -132,8 +133,6 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) = testGroup name $ concat
                                                         , s <- expectedSols
                                                         , dropExtension p `isInfixOf` dropExtension s
                                                         ]
-
-        extraFiles = checkExtraFiles t
 
 
 savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
@@ -249,6 +248,38 @@ checkExtraFiles TestDirFiles{..} =
         unless (S.null extras) $
             assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
 
+
+equalNumberOfSolutions :: TestDirFiles -> TestTree
+equalNumberOfSolutions TestDirFiles{..} =
+    testCase "Checking number of solutions" $ do
+        dirShouldExist expectedsDir
+        dirShouldExist outputsDir
+        solutions' <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        let
+            solutions :: [(String, [String])]
+            solutions =
+                [ (intercalate "-" (init parts), sol)
+                | sol <- solutions'
+                , let parts = splitOn "-" sol
+                ] |> sortBy (comparing fst)
+                  |> groupBy ((==) `on` fst)
+                  |> map (\ grp -> (fst (head grp), map snd grp) )
+        let
+            differentOnes = concat
+                [ if length solutions1 == length solutions2
+                    then []
+                    else [ (model1, length solutions1)
+                         , (model2, length solutions2)
+                         ]
+                | (model1, solutions1) <- solutions
+                , (model2, solutions2) <- solutions
+                , model1 < model2
+                ]
+        unless (null differentOnes) $
+            assertFailure $ show $ vcat
+                [ nest 4 $ pretty model <+> "has" <+> pretty count <+> "solutions."
+                | (model, count) <- differentOnes
+                ]
 
 dirShouldExist :: FilePath -> IO ()
 dirShouldExist d = do
