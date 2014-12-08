@@ -43,6 +43,11 @@ Model generation:
                                  representations.
      --seed=INT                  The seed for the random number generator.
      --limit-models=INT          Maximum number of models to generate.
+     --limit-time=INT            Time limit in seconds. (CPU time) Stop
+                                 generating models once the time limit is
+                                 reached. The time limit will only be checked
+                                 after a model is generated, so it will *not*
+                                 stop Conjure whilst working on a model.
 
 conjure refine-param [OPTIONS]
   Refinement of parameter files written in Essence for a particular Essence'
