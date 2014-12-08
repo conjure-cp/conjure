@@ -360,7 +360,7 @@ parsePartitionAttr = do
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
     let isComplete = DAName "complete" `elem` attrs
     let isRegular  = DAName "regular"  `elem` attrs
-    return (PartitionAttr {..})
+    return PartitionAttr {..}
 
 filterAttrName :: Ord a => [Name] -> [DomainAttribute a] -> [DomainAttribute a]
 filterAttrName keep = sort . filter f

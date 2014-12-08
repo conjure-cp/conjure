@@ -40,7 +40,7 @@ data Strategy
     | Interactive
     | AtRandom
     | Auto Strategy
-    deriving (Eq, Ord, Show, Read, Data, Typeable)
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance Default Strategy where def = Auto Interactive
 

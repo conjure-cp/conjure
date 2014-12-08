@@ -119,7 +119,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                                    , "constant:" <+> pretty constant
                                                    ]
 
-        up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) = do
+        up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet sets)) -> do
                     let setOut (ConstantAbstract (AbsLitSet xs)) = return xs

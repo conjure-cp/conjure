@@ -115,7 +115,7 @@ domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Int
 domainSizeConstantRanges = liftM length . valuesInIntDomain
 
 nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
-nchoosek f n k = (f n) `div` (f k * f (n-k))
+nchoosek f n k = f n `div` (f k * f (n-k))
 
 enumNameToInt :: [Name] -> Name -> Int
 enumNameToInt nms nm = case elemIndex nm nms of

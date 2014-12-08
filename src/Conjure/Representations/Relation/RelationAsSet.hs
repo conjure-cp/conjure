@@ -66,7 +66,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                                    , "constant:" <+> pretty constant
                                                    ]
 
-        up ctxt (name, domain@(DomainRelation "RelationAsSet" _ _)) = do
+        up ctxt (name, domain@(DomainRelation "RelationAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
                     let tupleOut (ConstantAbstract (AbsLitTuple xs)) = return xs
