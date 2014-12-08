@@ -55,7 +55,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
         let i = Reference iPat Nothing
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Mapping over a function, Function1DPartial representation"
+            ( "Mapping over a function, FunctionND representation"
             , const $ let val' = valuesIndexed i
                           val  = [essence| (&i, &val') |] in
                 Comprehension (upd val body)
