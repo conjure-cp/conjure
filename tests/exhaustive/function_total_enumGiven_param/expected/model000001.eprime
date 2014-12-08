@@ -4,8 +4,8 @@ given E_EnumSize: int
 find x_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13..15)
 given p_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13..15)
 such that
-    and([x_Function1D[q3] = p_Function1D[q3] | q3 : int(1..E_EnumSize)]),
-    and([p_Function1D[q3] = x_Function1D[q3] | q3 : int(1..E_EnumSize)]),
+    and([x_Function1D[q4] = p_Function1D[q4] | q4 : int(1..E_EnumSize)]),
+    and([p_Function1D[q5] = x_Function1D[q5] | q5 : int(1..E_EnumSize)]),
     allDiff(x_Function1D),
     and([or([x_Function1D[q2] = q1 | q2 : int(1..E_EnumSize)]) | q1 : int(13..15)])
 
