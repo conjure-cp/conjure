@@ -30,6 +30,7 @@ data UI
         , parameterRepresentation   :: Bool
         , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
+        , limitTime                 :: Maybe Int
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -139,6 +140,13 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Maximum number of models to generate."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)\n\
+                                           \Stop generating models once the time limit is reached.\n\
+                                           \The time limit will only be checked after a model is generated, \
+                                           \so it will *not* stop Conjure whilst working on a model."
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \

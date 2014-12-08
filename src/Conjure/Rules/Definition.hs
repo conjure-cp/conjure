@@ -68,6 +68,7 @@ data Config = Config
     , channelling               :: Bool
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
+    , limitTime                 :: Maybe Int
     , numberingStart            :: Int
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
@@ -85,6 +86,7 @@ instance Default Config where
         , channelling               = True
         , parameterRepresentation   = True
         , limitModels               = Nothing
+        , limitTime                 = Nothing
         , numberingStart            = 1
         }
 

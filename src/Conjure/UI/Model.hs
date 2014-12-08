@@ -52,13 +52,16 @@ import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 
+-- base
+import System.CPUTime ( getCPUTime )
+import Text.Printf ( printf )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
 
 -- pipes
-import Pipes ( Producer, yield, (>->) )
-import qualified Pipes.Prelude as Pipes ( foldM, take )
+import Pipes ( Producer, await, yield, (>->), cat )
+import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
@@ -69,8 +72,38 @@ outputModels
 outputModels config model = do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
-    let limitModelsIfNeeded = maybe id (\ n gen -> gen >-> Pipes.take n ) (limitModels config)
-    let each i logOrModel =
+
+    let
+        limitModelsIfNeeded = maybe Pipes.cat limitModelsNeeded (limitModels config)
+        limitModelsNeeded 0 = return ()
+        limitModelsNeeded n = do
+            x <- Pipes.await
+            Pipes.yield x
+            case x of
+                Left {} -> limitModelsNeeded n              -- yielded a log, still n models to produce
+                Right{} -> limitModelsNeeded (n-1)          -- yielded a model, produce n-1 more models
+
+        limitTimeIfNeeded = maybe Pipes.cat limitTimeNeeded (limitTime config)
+        limitTimeNeeded t = do
+            x <- Pipes.await
+            Pipes.yield x
+            case x of
+                Left {} -> limitTimeNeeded t                -- yielded a log, don't even check time, continue.
+                Right{} -> do                               -- yielded a model, check time, continue conditionally.
+                    cputime <- liftIO getCPUTime
+                    let
+                        -- cputime is returned in pico-seconds. arbitrary precision integer.
+                        -- divide by 10^9 first. use arbitrary precision integer arithmetic.
+                        -- do the last 10^3 division via double to get 3 significant digits after the integer part.
+                        cputimeInSeconds :: Double
+                        cputimeInSeconds = fromInteger (cputime `div` 1000000000) / 1000
+                    if cputimeInSeconds < fromIntegral t
+                        then limitTimeNeeded t
+                        else logInfo
+                                $ stringToDoc
+                                $ printf "Timed out. Total CPU time used is %.3f seconds." cputimeInSeconds
+
+        each i logOrModel =
             case logOrModel of
                 Left (l,msg) -> do
                     log l msg
@@ -79,10 +112,13 @@ outputModels config model = do
                     let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
                     liftIO $ writeFile filename (renderWide eprime)
                     return (i+1)
+
     Pipes.foldM each
                 (return (numberingStart config))
                 (const $ return ())
-                (limitModelsIfNeeded $ toCompletion config model )
+                (toCompletion config model
+                    >-> limitModelsIfNeeded
+                    >-> limitTimeIfNeeded)
 
 
 toCompletion
