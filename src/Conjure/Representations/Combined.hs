@@ -27,6 +27,7 @@ import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
 import Conjure.Representations.Function.FunctionNDPartial
+import Conjure.Representations.Function.FunctionAsRelation
 import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.PartitionAsSet
@@ -142,6 +143,7 @@ dispatch domain = do
             "Function1DPartial"             -> function1DPartial
             "FunctionND"                    -> functionND
             "FunctionNDPartial"             -> functionNDPartial
+            "FunctionAsRelation"            -> functionAsRelation dispatch
             _ -> nope
         DomainRelation r _ _ -> case r of
             "RelationAsMatrix"              -> relationAsMatrix
@@ -161,10 +163,11 @@ allReprs =
     [ [ primitive, tuple, matrix
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
-      , relationAsMatrix, partitionAsSet dispatch
+      , relationAsMatrix
+      , partitionAsSet dispatch
       ]
-    , [ -- functionAsRelation
-        relationAsSet dispatch
+    , [ functionAsRelation dispatch
+      , relationAsSet dispatch
       ]
     ]
 

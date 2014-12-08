@@ -50,6 +50,7 @@ import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
+import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
 
@@ -529,6 +530,9 @@ verticalRules =
     , Vertical.Function.FunctionNDPartial.rule_Comprehension
     , Vertical.Function.FunctionNDPartial.rule_Image
     , Vertical.Function.FunctionNDPartial.rule_InDefined
+
+    , Vertical.Function.FunctionAsRelation.rule_Comprehension
+    , Vertical.Function.FunctionAsRelation.rule_Image
 
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
