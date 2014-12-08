@@ -53,10 +53,10 @@ gDomainSizeOf
 gDomainSizeOf DomainBool = return (fromInt 2)
 gDomainSizeOf (DomainInt [] ) = fail "gDomainSizeOf infinite integer domain"
 gDomainSizeOf (DomainInt [r]) = domainSizeOf r
-gDomainSizeOf (DomainInt rs ) = make opSum <$> mapM domainSizeOf rs
+gDomainSizeOf (DomainInt rs ) = foldr1 (make opPlus) <$> mapM domainSizeOf rs
 gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
-gDomainSizeOf (DomainTuple xs) = make opProduct <$> mapM gDomainSizeOf xs
+gDomainSizeOf (DomainTuple xs) = foldr1 (make opTimes) <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
 gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner

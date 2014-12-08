@@ -51,6 +51,7 @@ import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.F
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
+import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
 
 -- base
 import System.CPUTime ( getCPUTime )
@@ -531,6 +532,9 @@ verticalRules =
 
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
+
+    , Vertical.Relation.RelationAsSet.rule_Comprehension
+
     ]
 
 horizontalRules :: [Rule]

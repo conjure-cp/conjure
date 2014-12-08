@@ -57,8 +57,8 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
                     in  Comprehension (upd lit body)
                             $  gofBefore
                             ++ [ Generator (GenDomain iPat (DomainTuple mIndices))
-                              , Filter    (indexThis m)
-                              ]
+                               , Filter    (indexThis m)
+                               ]
                             ++ transformBi (upd lit) gofAfter
                )
     theRule _ = na "rule_Comprehension"
