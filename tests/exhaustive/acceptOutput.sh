@@ -10,5 +10,5 @@ if [ -d "${TESTCASE}" ]; then
     rm -f "${TESTCASE}"/expected/*
     mkdir -p "${TESTCASE}"/expected
     cp "${TESTCASE}"/outputs/*.eprime "${TESTCASE}"/outputs/*.solution "${TESTCASE}"/expected/ 2> /dev/null || :
-    parallel "cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {}" ::: "${TESTCASE}"/expected/*.eprime
+    parallel "[ -f {} ] && (cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {})" ::: "${TESTCASE}"/expected/*.eprime
 fi
