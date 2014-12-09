@@ -260,11 +260,10 @@ equalNumberOfSolutions TestDirFiles{..} =
             solutions =
                 [ ((param, model), solution)
                 | sol <- solutions'
-                , let (model, param, solution) =
-                        case splitOn "." sol |> head |> splitOn "-" of
-                            [m,s] -> (m, "", s)
-                            [m,p,s] -> (m, p, s)
-                            _ -> error ("Cannot parse solution file name: " ++ sol)
+                , let parts = splitOn "." sol |> head |> splitOn "-"
+                , let model = head parts
+                , let solution = last parts
+                , let param = init (tail parts) |> intercalate "-"
                 ] |> sortBy  (comparing fst)
                   |> groupBy ((==) `on` fst)
                   |> map (\ grp -> (fst (head grp), map snd grp) )
