@@ -49,8 +49,8 @@ import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
--- unordered-containers
-import qualified Data.HashSet as S
+-- text
+import qualified Data.Text as T
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -84,12 +84,12 @@ instance Pretty Model where
 freshNames :: Model -> [Name]
 freshNames model = newNames
     where
-        newNames = [ name
+        newNames = [ Name name
                    | i <- allNats
-                   , let name = "q" `mappend` Name (stringToText (show i))
-                   , not (S.member name usedNames)
+                   , let name = "q" `mappend` stringToText (show i)
+                   , not (or [name `T.isPrefixOf` usedName | Name usedName <- usedNames])
                    ]
-        usedNames = S.fromList (universeBi model :: [Name])
+        usedNames = universeBi model :: [Name]
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
