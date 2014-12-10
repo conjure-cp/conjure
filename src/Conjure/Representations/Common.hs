@@ -16,4 +16,6 @@ mkSizeCons sizeAttr cardinality =
         SizeAttr_Size x         -> return [essence| &x =  &cardinality |]
         SizeAttr_MinSize x      -> return [essence| &x <= &cardinality |]
         SizeAttr_MaxSize y      -> return [essence| &cardinality <= &y |]
-        SizeAttr_MinMaxSize x y -> return [essence| &x <= &cardinality /\ &cardinality <= &y |]
+        SizeAttr_MinMaxSize x y -> [ [essence| &x <= &cardinality |]
+                                   , [essence| &cardinality <= &y |]
+                                   ]
