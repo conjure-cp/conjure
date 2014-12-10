@@ -286,7 +286,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPlus x) where
             then return TypeInt
             else raiseTypeError (MkOpPlus p)
 instance EvaluateOp OpPlus where
-    evaluateOp (OpPlus xs) = ConstantInt . sum <$> mapM intOut xs
+    evaluateOp (OpPlus xs) = ConstantInt . sum <$> concatMapM intsOut xs
 
 
 data OpMinus x = OpMinus x x
@@ -319,7 +319,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTimes x) where
             then return TypeInt
             else raiseTypeError (MkOpTimes p)
 instance EvaluateOp OpTimes where
-    evaluateOp (OpTimes xs) = ConstantInt . product <$> mapM intOut xs
+    evaluateOp (OpTimes xs) = ConstantInt . product <$> concatMapM intsOut xs
 
 
 data OpDiv x = OpDiv x x
@@ -895,10 +895,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMax x) where
         return TypeInt
     typeOf p = raiseTypeError (MkOpMax p)
 instance EvaluateOp OpMax where
-    evaluateOp (OpMax [ConstantAbstract (AbsLitList xs)]) = ConstantInt . maximum <$> mapM intOut xs
-    evaluateOp (OpMax [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . maximum <$> mapM intOut xs
-    evaluateOp (OpMax [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . maximum <$> mapM intOut xs
-    evaluateOp (OpMax                               xs)   = ConstantInt . maximum <$> mapM intOut xs
+    evaluateOp (OpMax [ConstantAbstract (AbsLitList xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
+    evaluateOp (OpMax [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
+    evaluateOp (OpMax [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
+    evaluateOp (OpMax                               xs)   = ConstantInt . maximum <$> concatMapM intsOut xs
 
 
 data OpMin x = OpMin [x]
@@ -914,10 +914,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMin x) where
         return TypeInt
     typeOf p = raiseTypeError (MkOpMin p)
 instance EvaluateOp OpMin where
-    evaluateOp (OpMin [ConstantAbstract (AbsLitList xs)]) = ConstantInt . minimum <$> mapM intOut xs
-    evaluateOp (OpMin [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . minimum <$> mapM intOut xs
-    evaluateOp (OpMin [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . minimum <$> mapM intOut xs
-    evaluateOp (OpMin                               xs)   = ConstantInt . minimum <$> mapM intOut xs
+    evaluateOp (OpMin [ConstantAbstract (AbsLitList xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
+    evaluateOp (OpMin [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
+    evaluateOp (OpMin [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
+    evaluateOp (OpMin                               xs)   = ConstantInt . minimum <$> concatMapM intsOut xs
 
 
 data OpFunctionImage x = OpFunctionImage x [x]
@@ -1218,6 +1218,11 @@ boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut (ConstantAbstract (AbsLitList     cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
+
+intsOut :: MonadFail m => Constant -> m [Int]
+intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
+intsOut (ConstantAbstract (AbsLitList     cs)) = concat <$> mapM intsOut cs
+intsOut b = return <$> intOut b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b
 raiseTypeError p = fail ("Type error in" <+> pretty p)
