@@ -52,7 +52,7 @@ instantiateE (Comprehension body gensOrFilters) = do
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
             concatMapM
-                (\ val -> scope $ bind pat val >> loop rest )
+                (\ val -> scope $ bind (Single pat) val >> loop rest )
                 (enumerateDomain domainConstant)
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr

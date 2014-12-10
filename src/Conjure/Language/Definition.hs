@@ -357,7 +357,7 @@ instance TypeOf Expression where
                 in
                     case gen of
                         GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
-                        GenDomainHasRepr pat domain -> typeOf domain                 >>= lu pat
+                        GenDomainHasRepr _   domain -> typeOf domain
                         GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
@@ -522,7 +522,7 @@ instance FromJSON  GeneratorOrFilter where parseJSON = JSON.genericParseJSON jso
 
 data Generator
      = GenDomainNoRepr  AbstractPattern (Domain () Expression)
-     | GenDomainHasRepr AbstractPattern (Domain HasRepresentation Expression)
+     | GenDomainHasRepr Name            (Domain HasRepresentation Expression)
      | GenInExpr        AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -538,7 +538,7 @@ instance FromJSON  Generator where parseJSON = JSON.genericParseJSON jsonOptions
 
 generatorPat :: Generator -> AbstractPattern
 generatorPat (GenDomainNoRepr  pat _) = pat
-generatorPat (GenDomainHasRepr pat _) = pat
+generatorPat (GenDomainHasRepr pat _) = Single pat
 generatorPat (GenInExpr        pat _) = pat
 
 

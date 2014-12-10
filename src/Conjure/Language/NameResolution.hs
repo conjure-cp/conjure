@@ -84,13 +84,10 @@ resolveX (Comprehension x is) = scope $ do
                             Single nm' -> DeclNoRepr Quantified nm' dom'
                             _ -> InComprehension gen''
                         )
-                GenDomainHasRepr pat dom -> do
-                    let gen'' = GenDomainHasRepr pat dom
+                GenDomainHasRepr nm dom ->
                     return
-                        ( gen''
-                        , case pat of
-                            Single nm' -> DeclHasRepr Quantified nm' dom
-                            _ -> InComprehension gen''
+                        ( GenDomainHasRepr nm dom
+                        , DeclHasRepr Quantified nm dom
                         )
                 GenInExpr pat expr -> do
                     expr' <- resolveX expr

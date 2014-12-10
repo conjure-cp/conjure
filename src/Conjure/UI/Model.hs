@@ -709,8 +709,6 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
                             structurals <- mkStructurals fresh nm dom
                             return (dom, outs, structurals)
                 | dom <- domOpts
-                -- , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
-                -- , let out = Reference nm (Just (InComprehension (GenDomainHasRepr (Single nm) dom)))
                 ]
 
         return
@@ -724,22 +722,11 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
                         updateRepr p = p
                     let out' = Comprehension (transform updateRepr body)
                                 $  gofBefore
-                                ++ [ Generator (GenDomainHasRepr (Single name) dom)
+                                ++ [ Generator (GenDomainHasRepr name dom)
                                    | (name, dom) <- outDomains ]
                                 ++ map Filter structurals
                                 ++ transformBi updateRepr gofAfter
                     out <- resolveNamesX out'
-                    -- logInfo $ vcat
-                    --     [ "rule_ChooseReprForComprehension"
-                    --     , "body             :" <+> pretty body
-                    --     , "gensOrFilters    :" <+> vcat (map pretty gensOrFilters)
-                    --     , "gofBefore        :" <+> vcat (map pretty gofBefore)
-                    --     , "gofAfter         :" <+> vcat (map pretty gofAfter)
-                    --     , "nm               :" <+> pretty nm
-                    --     , "domain           :" <+> pretty domain
-                    --     , "out'             :" <+> pretty out'
-                    --     , "out              :" <+> pretty out
-                    --     ]
                     return out
               , return
               )
@@ -750,7 +737,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
     mkStructurals fresh name domain = do
         refs <- downToX1 Quantified name domain
         gen  <- getStructurals downX1 domain
-        gen fresh refs -- >>= mapM resolveNamesX     -- re-resolving names
+        gen fresh refs
 
 
 rule_GeneratorsFirst :: Rule
