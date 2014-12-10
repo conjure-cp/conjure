@@ -5,10 +5,10 @@ find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), int(0..1)] of int
 given p_FunctionNDPartial_Flags: matrix indexed by [int(7..8), int(0..1)] of bool
 given p_FunctionNDPartial_Values: matrix indexed by [int(7..8), int(0..1)] of int(13, 17)
 such that
-    and([{x_FunctionNDPartial_Values[q5, q6] @ such that x_FunctionNDPartial_Flags[q5, q6]} = p_FunctionNDPartial_Values[q5, q6]
-             | q5 : int(7..8), q6 : int(0..1), p_FunctionNDPartial_Flags[q5, q6]]),
-    and([x_FunctionNDPartial_Flags[q1, q7] ->
-         {p_FunctionNDPartial_Values[q1, q7] @ such that p_FunctionNDPartial_Flags[q1, q7]} = x_FunctionNDPartial_Values[q1, q7]
-             | q1 : int(7..8), q7 : int(0..1)]),
-    and([x_FunctionNDPartial_Flags[q2, q3] = false -> x_FunctionNDPartial_Values[q2, q3] = 13 | q2 : int(7..8), q3 : int(0..1)])
+    and([{x_FunctionNDPartial_Values[q3_1, q3_2] @ such that x_FunctionNDPartial_Flags[q3_1, q3_2]} = p_FunctionNDPartial_Values[q3_1, q3_2]
+             | q3_1 : int(7..8), q3_2 : int(0..1), p_FunctionNDPartial_Flags[q3_1, q3_2]]),
+    and([x_FunctionNDPartial_Flags[q4_1, q4_2] ->
+         {p_FunctionNDPartial_Values[q4_1, q4_2] @ such that p_FunctionNDPartial_Flags[q4_1, q4_2]} = x_FunctionNDPartial_Values[q4_1, q4_2]
+             | q4_1 : int(7..8), q4_2 : int(0..1)]),
+    and([x_FunctionNDPartial_Flags[q1_1, q1_2] = false -> x_FunctionNDPartial_Values[q1_1, q1_2] = 13 | q1_1 : int(7..8), q1_2 : int(0..1)])
 
