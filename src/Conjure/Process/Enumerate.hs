@@ -12,7 +12,30 @@ enumerateDomain :: Pretty r => Domain r Constant -> [Constant]
 enumerateDomain DomainBool = [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMap enumerateRange rs
 enumerateDomain (DomainTuple ds) = map (ConstantAbstract . AbsLitTuple) (mapM enumerateDomain ds)
+enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom) =
+    [ ConstantAbstract (AbsLitSet vals)
+    | let inners = enumerateDomain innerDom
+    , vals <- replicateM s inners
+    , sorted vals
+    ]
+enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) =
+    [ ConstantAbstract (AbsLitSet vals)
+    | let inners = enumerateDomain innerDom
+    , let sizes  = case sizeAttr of
+            SizeAttr_None -> [0 .. length inners]
+            SizeAttr_Size (ConstantInt a) -> [a]
+            SizeAttr_MinSize (ConstantInt a) -> [a .. length inners]
+            SizeAttr_MaxSize (ConstantInt a) -> [0 .. a]
+            SizeAttr_MinMaxSize (ConstantInt a) (ConstantInt b) -> [a .. b]
+            _ -> bug $ "sizeAttr, not an int:" <+> pretty sizeAttr
+    , s <- sizes
+    , vals <- replicateM s inners
+    , sorted vals
+    ]
 enumerateDomain d = bug $ "enumerateDomain:" <+> pretty d
+
+sorted :: Ord a => [a] -> Bool
+sorted xs = and $ zipWith (<) xs (tail xs)
 
 enumerateRange :: Range Constant -> [Constant]
 enumerateRange (RangeSingle x) = [x]
