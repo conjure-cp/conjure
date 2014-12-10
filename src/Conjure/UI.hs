@@ -102,7 +102,7 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
-        , strategyQ        = "i"   &= typ "STRATEGY"
+        , strategyQ        = "f"   &= typ "STRATEGY"
                                    &= name "strategy-q"
                                    &= name "q"
                                    &= groupname "Model generation"
@@ -110,13 +110,15 @@ ui = modes
                                    &= help "Strategy to use when selecting the next question to answer. \
                                            \Options: f (for first), i (for interactive), r (for random), x (for all). \
                                            \The letter a (for auto) can be prepended to automatically skip \
-                                           \when there is only one option at any point."
-        , strategyA        = "i"   &= typ "STRATEGY"
+                                           \when there is only one option at any point.\n\
+                                           \Default value: f"
+        , strategyA        = "ai"  &= typ "STRATEGY"
                                    &= name "strategy-a"
                                    &= name "a"
                                    &= groupname "Model generation"
                                    &= explicit
-                                   &= help "Strategy to use when selecting an answer. Same options as strategyQ."
+                                   &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
+                                           \Default value: ai"
         , channelling = True       &= name "channelling"
                                    &= groupname "Model generation"
                                    &= explicit
