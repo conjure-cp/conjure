@@ -34,7 +34,7 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
-import Conjure.Representations ( downX1, downToX1, downD, downD1, reprOptions, getStructurals )
+import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
 
 import Conjure.Rules.Definition
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -701,13 +701,9 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
         let genOptions =
                 [ \ fresh -> do
-                    mouts <- downD1 (nm, dom)
-                    case mouts of
-                        Nothing   ->
-                            return (dom, [(nm, dom)], [])
-                        Just outs -> do
-                            structurals <- mkStructurals fresh nm dom
-                            return (dom, outs, structurals)
+                    outs <- downD (nm, dom)
+                    structurals <- mkStructurals fresh nm dom
+                    return (dom, outs, structurals)
                 | dom <- domOpts
                 ]
 
