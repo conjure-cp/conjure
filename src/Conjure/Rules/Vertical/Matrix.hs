@@ -12,7 +12,9 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
+import Conjure.Representations ( downX1 )
 import Conjure.Rules.Definition ( Rule(..), namedRule )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq )
 
 
 rule_Matrix_Eq :: Rule
@@ -22,11 +24,12 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}         <- typeOf y
         DomainMatrix index _ <- domainOf x
-        return ( "Horizontal rule for matrix ="
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
-               )
+        return
+            ( "Horizontal rule for matrix ="
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
+            )
 
 
 sliceEnoughTimes :: MonadFail m => Expression -> m Expression
@@ -42,8 +45,8 @@ sliceEnoughTimes m = do
     return (unroll m howMany)
 
 
-rule_Matrix_Lt :: Rule
-rule_Matrix_Lt = "matrix-lt" `namedRule` theRule where
+rule_Matrix_Lt_Primitive :: Rule
+rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
     theRule p = do
         (x,y)           <- match opLt p
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -52,13 +55,28 @@ rule_Matrix_Lt = "matrix-lt" `namedRule` theRule where
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
         x' <- sliceEnoughTimes x
         y' <- sliceEnoughTimes y
-        return ( "Horizontal rule for matrix <"
-               , const [essence| &x' <lex &y' |]
-               )
+        return
+            ( "Horizontal rule for matrix <"
+            , const [essence| &x' <lex &y' |]
+            )
 
 
-rule_Matrix_Leq :: Rule
-rule_Matrix_Leq = "matrix-leq" `namedRule` theRule where
+rule_Matrix_Lt_Tuple :: Rule
+rule_Matrix_Lt_Tuple = "matrix-lt-tuple" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opLt p
+        TypeMatrix _ (TypeTuple _) <- typeOf x     -- TODO: check matrix index & tuple arity
+        TypeMatrix _ (TypeTuple _) <- typeOf y
+        xs <- downX1 x
+        ys <- downX1 y
+        return
+            ( "Horizontal rule for matrix <"
+            , const $ decomposeLexLt p xs ys
+            )
+
+
+rule_Matrix_Leq_Primitive :: Rule
+rule_Matrix_Leq_Primitive = "matrix-leq-primitive" `namedRule` theRule where
     theRule p = do
         (x,y)           <- match opLeq p
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -67,6 +85,21 @@ rule_Matrix_Leq = "matrix-leq" `namedRule` theRule where
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
         x' <- sliceEnoughTimes x
         y' <- sliceEnoughTimes y
-        return ( "Horizontal rule for matrix <="
-               , const [essence| &x' <=lex &y' |]
-               )
+        return
+            ( "Horizontal rule for matrix <="
+            , const [essence| &x' <=lex &y' |]
+            )
+
+
+rule_Matrix_Leq_Tuple :: Rule
+rule_Matrix_Leq_Tuple = "matrix-leq-tuple" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opLeq p
+        TypeMatrix _ (TypeTuple _) <- typeOf x     -- TODO: check matrix index & tuple arity
+        TypeMatrix _ (TypeTuple _) <- typeOf y
+        xs <- downX1 x
+        ys <- downX1 y
+        return
+            ( "Horizontal rule for matrix <="
+            , const $ decomposeLexLeq p xs ys
+            )

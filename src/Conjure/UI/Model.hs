@@ -34,7 +34,7 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
-import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
+import Conjure.Representations ( downX1, downToX1, downD, downD1, reprOptions, getStructurals )
 
 import Conjure.Rules.Definition
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -490,7 +490,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [rule_ChooseRepr config]
+    [ [ rule_ChooseRepr config
+      , rule_ChooseReprForComprehension
+      ]
     , verticalRules
     , horizontalRules
     , otherRules
@@ -503,11 +505,13 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index
-    , Vertical.Tuple.rule_Tuple_DomainComprehension
+    -- , Vertical.Tuple.rule_Tuple_DomainComprehension
 
     , Vertical.Matrix.rule_Matrix_Eq
-    , Vertical.Matrix.rule_Matrix_Leq
-    , Vertical.Matrix.rule_Matrix_Lt
+    , Vertical.Matrix.rule_Matrix_Leq_Primitive
+    , Vertical.Matrix.rule_Matrix_Leq_Tuple
+    , Vertical.Matrix.rule_Matrix_Lt_Primitive
+    , Vertical.Matrix.rule_Matrix_Lt_Tuple
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -578,6 +582,8 @@ otherRules =
     , rule_FlattenOf1D
     , rule_Decompose_AllDiff
     , rule_SumFlatten
+
+    , rule_GeneratorsFirst
 
     , rule_BubbleUp
     , rule_BubbleToAnd
@@ -679,6 +685,86 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
             |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
             |> return
+
+
+rule_ChooseReprForComprehension :: Rule
+rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule where
+
+    theRule (Comprehension body gensOrFilters) = do    
+        (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
+            _ -> na "rule_ChooseReprForComprehension"
+
+        let domOpts = reprOptions domain
+        when (null domOpts) $
+            bug $ "No representation matches this beast:" <++> pretty domain
+
+        let genOptions =
+                [ \ fresh -> do
+                    mouts <- downD1 (nm, dom)
+                    case mouts of
+                        Nothing   ->
+                            return (dom, [(nm, dom)], [])
+                        Just outs -> do
+                            structurals <- mkStructurals fresh nm dom
+                            return (dom, outs, structurals)
+                | dom <- domOpts
+                -- , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
+                -- , let out = Reference nm (Just (InComprehension (GenDomainHasRepr (Single nm) dom)))
+                ]
+
+        return
+            [ ( "Choosing representation for quantified variable" <+> pretty nm
+              , \ fresh -> bugFail $ do
+                    option <- genOption fresh
+                    let (thisDom, outDomains, structurals) = option
+                    let updateRepr (Reference nm' _)
+                            | nm == nm'
+                            = Reference nm (Just (DeclHasRepr Quantified nm thisDom))
+                        updateRepr p = p
+                    let out' = Comprehension (transform updateRepr body)
+                                $  gofBefore
+                                ++ [ Generator (GenDomainHasRepr (Single name) dom)
+                                   | (name, dom) <- outDomains ]
+                                ++ map Filter structurals
+                                ++ transformBi updateRepr gofAfter
+                    out <- resolveNamesX out'
+                    -- logInfo $ vcat
+                    --     [ "rule_ChooseReprForComprehension"
+                    --     , "body             :" <+> pretty body
+                    --     , "gensOrFilters    :" <+> vcat (map pretty gensOrFilters)
+                    --     , "gofBefore        :" <+> vcat (map pretty gofBefore)
+                    --     , "gofAfter         :" <+> vcat (map pretty gofAfter)
+                    --     , "nm               :" <+> pretty nm
+                    --     , "domain           :" <+> pretty domain
+                    --     , "out'             :" <+> pretty out'
+                    --     , "out              :" <+> pretty out
+                    --     ]
+                    return out
+              , return
+              )
+            | genOption <- genOptions
+            ]
+    theRule _ = na "rule_ChooseReprForComprehension"
+
+    mkStructurals fresh name domain = do
+        refs <- downToX1 Quantified name domain
+        gen  <- getStructurals downX1 domain
+        gen fresh refs -- >>= mapM resolveNamesX     -- re-resolving names
+
+
+rule_GeneratorsFirst :: Rule
+rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        let gens       = [ x | x@Generator{} <- gensOrFilters ]
+        let conditions = [ x | x@Filter{}    <- gensOrFilters ]
+        let gensOrFilters' = gens ++ conditions
+        when (gensOrFilters == gensOrFilters') $ na "rule_GeneratorsFirst"
+        return
+            ( "Generators come first."
+            , const $ Comprehension body gensOrFilters'
+            )
+    theRule _ = na "rule_GeneratorsFirst"
 
 
 rule_TrueIsNoOp :: Rule
@@ -878,8 +964,8 @@ rule_ComplexAbsPat :: Rule
 rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
         (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
-            Generator (GenDomain pat@AbsPatTuple{} domain) -> return (pat, Left domain)
-            Generator (GenInExpr pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
+            Generator (GenDomainNoRepr pat@AbsPatTuple{} domain) -> return (pat, Left domain)
+            Generator (GenInExpr       pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
             _ -> na "rule_ComplexAbsPat"
         return
             ( "complex pattern on tuple patterns"
@@ -893,8 +979,8 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
                     in
                         Comprehension (transform f body)
                             $  gofBefore
-                            ++ [ either (\ domain -> Generator (GenDomain iPat domain) )
-                                        (\ expr   -> Generator (GenInExpr iPat expr  ) )
+                            ++ [ either (\ domain -> Generator (GenDomainNoRepr iPat domain) )
+                                        (\ expr   -> Generator (GenInExpr       iPat expr  ) )
                                         domainOrExpr ]
                             ++ transformBi f gofAfter
             )

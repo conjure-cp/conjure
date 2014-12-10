@@ -434,11 +434,11 @@ parseComprehension = brackets $ do
                 [ do
                     lexeme L_Colon
                     domain <- parseDomain
-                    return [Generator (GenDomain pat domain) | pat <- pats]
+                    return [Generator (GenDomainNoRepr pat domain) | pat <- pats]
                 , do
                     lexeme L_LeftArrow
                     expr <- parseExpr
-                    return [Generator (GenInExpr pat expr)   | pat <- pats]
+                    return [Generator (GenInExpr       pat expr)   | pat <- pats]
                 ]
         filter_ = return . Filter <$> parseExpr
 
@@ -535,7 +535,7 @@ parseQuantifiedExpr = do
     qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"
 
     let qnMap pat = case qnOver of
-            Left dom -> GenDomain pat dom
+            Left dom -> GenDomainNoRepr pat dom
             Right op -> op pat
 
     return $ mkOp (translateQnName qnName)

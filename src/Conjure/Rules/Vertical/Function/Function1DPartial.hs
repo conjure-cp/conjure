@@ -37,9 +37,9 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
                 in
                 Comprehension (upd val body)
                     $  gofBefore
-                    ++ [ Generator (GenDomain jPat index)
-                      , Filter [essence| &flags[&j] |]
-                      ]
+                    ++ [ Generator (GenDomainNoRepr jPat index)
+                       , Filter [essence| &flags[&j] |]
+                       ]
                     ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension"

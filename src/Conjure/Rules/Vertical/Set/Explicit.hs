@@ -35,7 +35,7 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
                 in
                     Comprehension (upd val body)
                         $  gofBefore
-                        ++ [ Generator (GenDomain jPat index) ]
+                        ++ [ Generator (GenDomainNoRepr jPat index) ]
                         ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension"

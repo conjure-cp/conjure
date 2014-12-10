@@ -44,8 +44,13 @@ instantiateE (Comprehension body gensOrFilters) = do
     let
         loop :: (MonadFail m, MonadState [(Name, Expression)] m) => [GeneratorOrFilter] -> m [Constant]
         loop [] = return <$> instantiateE body
-        loop (Generator (GenDomain pat domain) : rest) = do
+        loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
+            concatMapM
+                (\ val -> scope $ bind pat val >> loop rest )
+                (enumerateDomain domainConstant)
+        loop (Generator (GenDomainHasRepr pat domain) : rest) = do
+            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
             concatMapM
                 (\ val -> scope $ bind pat val >> loop rest )
                 (enumerateDomain domainConstant)

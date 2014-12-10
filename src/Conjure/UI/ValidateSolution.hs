@@ -38,6 +38,12 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                      , "Its domain:" <++> pretty dom
                                      , "Values:" <++> vcat (map pretty vals)
                                      ]
+        Declaration (FindOrGiven Quantified _ _) ->
+            fail $ vcat
+                [ "A quantified declaration at the top level."
+                , "This should never happen."
+                , "Statement:" <+> pretty st
+                ]
         Declaration (Letting nm val) -> modify ((nm, val) :)
         Declaration (GivenDomainDefnEnum nm) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of

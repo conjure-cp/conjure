@@ -63,7 +63,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
                 in
                     Comprehension (upd val body)
                         $  gofBefore
-                        ++ [ Generator (GenDomain jPat (DomainTuple indexDomain)) ]
+                        ++ [ Generator (GenDomainNoRepr jPat (DomainTuple indexDomain)) ]
                         ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension"

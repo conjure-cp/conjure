@@ -23,8 +23,9 @@ instance CategoryOf ReferenceTo where
     categoryOf (DeclHasRepr forg _ _) = categoryOf forg
 
 instance CategoryOf Generator where
-     categoryOf (GenDomain _ x) = categoryOf x
-     categoryOf (GenInExpr _ x) = categoryOf x
+     categoryOf (GenDomainNoRepr  _ x) = categoryOf x
+     categoryOf (GenDomainHasRepr _ x) = categoryOf x
+     categoryOf (GenInExpr        _ x) = categoryOf x
 
 instance CategoryOf x => CategoryOf (Domain r x) where
     categoryOf dom = maximum (CatBottom : toList (fmap categoryOf dom))
@@ -32,3 +33,4 @@ instance CategoryOf x => CategoryOf (Domain r x) where
 instance CategoryOf FindOrGiven where
     categoryOf Find = CatDecision
     categoryOf Given = CatParameter
+    categoryOf Quantified = CatQuantified

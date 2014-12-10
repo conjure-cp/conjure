@@ -85,7 +85,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                 in
                     Comprehension (upd val body)
                     $  gofBefore
-                    ++ [ Generator (GenDomain jPat (DomainTuple indexDomain))
+                    ++ [ Generator (GenDomainNoRepr jPat (DomainTuple indexDomain))
                        , Filter (flagsIndexed j)
                        ]
                     ++ transformBi (upd val) gofAfter

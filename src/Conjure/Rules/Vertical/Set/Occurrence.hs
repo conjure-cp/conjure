@@ -32,7 +32,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
             , const $
                 Comprehension body
                     $  gofBefore
-                    ++ [ Generator (GenDomain pat index)
+                    ++ [ Generator (GenDomainNoRepr pat index)
                        , Filter [essence| &m[&i] |]
                        ]
                     ++ gofAfter

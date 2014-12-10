@@ -198,7 +198,7 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 
-data FindOrGiven = Find | Given
+data FindOrGiven = Find | Given | Quantified
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize FindOrGiven
@@ -209,6 +209,7 @@ instance FromJSON  FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptio
 instance Pretty FindOrGiven where
     pretty Find = "find"
     pretty Given = "given"
+    pretty Quantified = "quantified"
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -355,9 +356,10 @@ instance TypeOf Expression where
                     lu' _ _ = Nothing
                 in
                     case gen of
-                        GenDomain pat domain -> typeOf domain                 >>= lu pat
-                        GenInExpr pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
-            DeclNoRepr _ _ dom -> typeOf dom
+                        GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
+                        GenDomainHasRepr pat domain -> typeOf domain                 >>= lu pat
+                        GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
+            DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf (Comprehension x _) = TypeList <$> typeOf x  -- TODO: do this properly, look into generators and filters
@@ -519,13 +521,15 @@ instance FromJSON  GeneratorOrFilter where parseJSON = JSON.genericParseJSON jso
 
 
 data Generator
-     = GenDomain AbstractPattern (Domain () Expression)
-     | GenInExpr AbstractPattern Expression
+     = GenDomainNoRepr  AbstractPattern (Domain () Expression)
+     | GenDomainHasRepr AbstractPattern (Domain HasRepresentation Expression)
+     | GenInExpr        AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Pretty Generator where     
-    pretty (GenDomain pat x) = pretty pat <+> ":"  <+> pretty x
-    pretty (GenInExpr pat x) = pretty pat <+> "<-" <+> pretty x
+    pretty (GenDomainNoRepr  pat x) = pretty pat <+> ":"  <+> pretty x
+    pretty (GenDomainHasRepr pat x) = pretty pat <+> ":"  <+> pretty x
+    pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x
 
 instance Serialize Generator
 instance Hashable  Generator
@@ -533,8 +537,9 @@ instance ToJSON    Generator where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  Generator where parseJSON = JSON.genericParseJSON jsonOptions
 
 generatorPat :: Generator -> AbstractPattern
-generatorPat (GenDomain pat _) = pat
-generatorPat (GenInExpr pat _) = pat
+generatorPat (GenDomainNoRepr  pat _) = pat
+generatorPat (GenDomainHasRepr pat _) = pat
+generatorPat (GenInExpr        pat _) = pat
 
 
 ------------------------------------------------------------------------------------------------------------------------

@@ -34,7 +34,7 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithFlags}" `namedRule` t
                 in
                     Comprehension (upd val body)
                         $  gofBefore
-                        ++ [ Generator (GenDomain jPat index)
+                        ++ [ Generator (GenDomainNoRepr jPat index)
                            , Filter [essence| &flags[&j] |]
                            ]
                         ++ transformBi (upd val) gofAfter

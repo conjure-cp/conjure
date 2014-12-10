@@ -74,11 +74,30 @@ resolveX (Domain x) = Domain <$> resolveD x
 resolveX (Comprehension x is) = scope $ do
     is' <- forM is $ \ i -> case i of
         Generator gen -> do
-            gen' <- case gen of
-                GenDomain       pat dom  -> GenDomain       pat <$> resolveD dom
-                GenInExpr       pat expr -> GenInExpr       pat <$> resolveX expr
+            (gen', refto) <- case gen of
+                GenDomainNoRepr pat dom -> do
+                    dom' <- resolveD dom
+                    let gen'' = GenDomainNoRepr pat dom'
+                    return
+                        ( gen''
+                        , case pat of
+                            Single nm' -> DeclNoRepr Quantified nm' dom'
+                            _ -> InComprehension gen''
+                        )
+                GenDomainHasRepr pat dom -> do
+                    let gen'' = GenDomainHasRepr pat dom
+                    return
+                        ( gen''
+                        , case pat of
+                            Single nm' -> DeclHasRepr Quantified nm' dom
+                            _ -> InComprehension gen''
+                        )
+                GenInExpr pat expr -> do
+                    expr' <- resolveX expr
+                    let gen'' = GenInExpr pat expr'
+                    return ( gen'' , InComprehension gen'' )
             forM_ (universeBi (generatorPat gen)) $ \ nm ->
-                modify ((nm, InComprehension gen') :)
+                modify ((nm, refto) :)
             return (Generator gen')
         Filter y -> Filter <$> resolveX y
     x' <- resolveX x
