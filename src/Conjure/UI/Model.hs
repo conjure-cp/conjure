@@ -593,6 +593,7 @@ otherRules =
     , rule_Tuple_DontCare
     , rule_Matrix_DontCare
     , rule_Set_DontCare
+    , rule_Function_DontCare
 
     , rule_ComplexAbsPat
     , rule_Set_Comprehension_Literal
@@ -938,7 +939,19 @@ rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
         TypeSet{} <- typeOf x
         hasRepresentation x
         xs        <- downX1 x
-        return ( "dontCare handling for tuple"
+        return ( "dontCare handling for set"
+               , const $ make opAnd (map (make opDontCare) xs)
+               )
+
+
+rule_Function_DontCare :: Rule
+rule_Function_DontCare = "dontCare-set" `namedRule` theRule where
+    theRule p = do
+        x              <- match opDontCare p
+        TypeFunction{} <- typeOf x
+        hasRepresentation x
+        xs             <- downX1 x
+        return ( "dontCare handling for function"
                , const $ make opAnd (map (make opDontCare) xs)
                )
 
