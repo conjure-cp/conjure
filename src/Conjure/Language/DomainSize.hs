@@ -66,6 +66,26 @@ gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
         SizeAttr_MinSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
         SizeAttr_MaxSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
         SizeAttr_MinMaxSize _ _ -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
+gDomainSizeOf (DomainMSet _ attrs inner) = do
+    innerSize <- gDomainSizeOf inner
+    let
+        getMaxSize = case attrs of
+            MSetAttr (SizeAttr_Size x) _ -> return x
+            MSetAttr (SizeAttr_MaxSize x) _ -> return x
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
+            MSetAttr _ (OccurAttr_MaxOccur x) -> return (x * innerSize)
+            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return (x * innerSize)
+            _ -> fail ("gDomainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+        getMaxOccur = case attrs of
+            MSetAttr _ (OccurAttr_MaxOccur x) -> return x
+            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
+            MSetAttr (SizeAttr_Size x) _ -> return (make opMin [x, innerSize])
+            MSetAttr (SizeAttr_MaxSize x) _ -> return (make opMin [x, innerSize])
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return (make opMin [x, innerSize])
+            _ -> fail ("gDomainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+    maxSize  <- getMaxSize
+    maxOccur <- getMaxOccur
+    return (make opPow maxOccur maxSize)
 gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr innerTo) = do
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
