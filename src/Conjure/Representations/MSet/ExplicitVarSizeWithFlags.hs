@@ -134,10 +134,12 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
-              , ConstantAbstract (AbsLitMSet constants)
+              , ConstantAbstract (AbsLitMSet constants')
               ) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+
+            let constants = histogram constants'
 
             maxSizeInt <-
                 case maxSize of
@@ -151,17 +153,17 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (maxSizeInt - length constants) z
 
-            let trues  = replicate (length constants)              (ConstantBool True)
-            let falses = replicate (maxSizeInt - length constants) (ConstantBool False)
+            let counts = map (ConstantInt . snd) constants
+            let falses = replicate (maxSizeInt - length constants) (ConstantInt 0)
 
             return $ Just
                 [ ( nameFlag name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (trues ++ falses)
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (counts ++ falses)
                   )
                 , ( nameValues name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (constants ++ zeroes)
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (map fst constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithFlags"
