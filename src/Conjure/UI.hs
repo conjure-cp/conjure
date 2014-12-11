@@ -198,8 +198,8 @@ ui = modes
                                    &= explicit
                                    &= help "An Essence solution for the original problem specification.\n\
                                            \This field is optional.\n\
-                                           \By default, its value will be 'foo.solution'\n\
-                                           \if the Essence parameter file is named 'foo.eprime-solution'"
+                                           \By default, its value will be the value of --eprime-solution, \
+                                           \with all extensions dropped the extension '.solution' is added instead."
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit

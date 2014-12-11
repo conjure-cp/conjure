@@ -75,9 +75,9 @@ Flags:
                                  Essence' model.
      --essence-solution=FILE     An Essence solution for the original problem
                                  specification. This field is optional. By
-                                 default, its value will be 'foo.solution' if
-                                 the Essence parameter file is named
-                                 'foo.eprime-solution'
+                                 default, its value will be the value of
+                                 --eprime-solution, with all extensions dropped
+                                 the extension '.solution' is added instead.
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
 
