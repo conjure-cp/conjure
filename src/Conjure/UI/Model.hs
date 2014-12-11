@@ -522,9 +522,9 @@ verticalRules =
 
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
-    , Vertical.Matrix.rule_Matrix_Leq_Tuple
+    , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
-    , Vertical.Matrix.rule_Matrix_Lt_Tuple
+    , Vertical.Matrix.rule_Matrix_Lt_Decompose
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension

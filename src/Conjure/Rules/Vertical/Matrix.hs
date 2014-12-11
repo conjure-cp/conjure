@@ -61,16 +61,18 @@ rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
             )
 
 
-rule_Matrix_Lt_Tuple :: Rule
-rule_Matrix_Lt_Tuple = "matrix-lt-tuple" `namedRule` theRule where
+rule_Matrix_Lt_Decompose :: Rule
+rule_Matrix_Lt_Decompose = "matrix-lt-tuple" `namedRule` theRule where
     theRule p = do
         (x,y) <- match opLt p
-        TypeMatrix _ (TypeTuple _) <- typeOf x     -- TODO: check matrix index & tuple arity
-        TypeMatrix _ (TypeTuple _) <- typeOf y
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
         xs <- downX1 x
         ys <- downX1 y
         return
-            ( "Horizontal rule for matrix <"
+            ( "Horizontal rule for matrix <, decomposing"
             , const $ decomposeLexLt p xs ys
             )
 
@@ -91,15 +93,17 @@ rule_Matrix_Leq_Primitive = "matrix-leq-primitive" `namedRule` theRule where
             )
 
 
-rule_Matrix_Leq_Tuple :: Rule
-rule_Matrix_Leq_Tuple = "matrix-leq-tuple" `namedRule` theRule where
+rule_Matrix_Leq_Decompose :: Rule
+rule_Matrix_Leq_Decompose = "matrix-leq-tuple" `namedRule` theRule where
     theRule p = do
         (x,y) <- match opLeq p
-        TypeMatrix _ (TypeTuple _) <- typeOf x     -- TODO: check matrix index & tuple arity
-        TypeMatrix _ (TypeTuple _) <- typeOf y
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
         xs <- downX1 x
         ys <- downX1 y
         return
-            ( "Horizontal rule for matrix <="
+            ( "Horizontal rule for matrix <=, decomposing"
             , const $ decomposeLexLeq p xs ys
             )
