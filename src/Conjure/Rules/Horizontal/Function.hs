@@ -18,7 +18,7 @@ import Conjure.Representations ( downX1 )
 rule_Eq :: Rule
 rule_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)                    <- match opEq p
+        (x,y)          <- match opEq p
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return ( "Horizontal rule for function equality"
@@ -28,6 +28,8 @@ rule_Eq = "function-eq" `namedRule` theRule where
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
+                                /\
+                            defined(&x) = defined(&y)
                         |]
                )
 
