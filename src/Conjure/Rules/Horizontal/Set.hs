@@ -85,7 +85,7 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
 rule_Lt :: Rule
 rule_Lt = "set-lt" `namedRule` theRule where
     theRule p = do
-        (a,b) <- match opLt p
+        (a,b)     <- match opLt p
         TypeSet{} <- typeOf a
         TypeSet{} <- typeOf b
         hasRepresentation a
@@ -100,7 +100,7 @@ rule_Lt = "set-lt" `namedRule` theRule where
 rule_Leq :: Rule
 rule_Leq = "set-leq" `namedRule` theRule where
     theRule p = do
-        (a,b) <- match opLeq p
+        (a,b)     <- match opLeq p
         TypeSet{} <- typeOf a
         TypeSet{} <- typeOf b
         hasRepresentation a
@@ -195,8 +195,6 @@ rule_MaxMin = "set-max-min" `namedRule` theRule where
 
 
 -- x in s ~~> or([ x = i | i in s ])
--- where s is a set
--- and not Occurrence
 rule_In :: Rule
 rule_In = "set-in" `namedRule` theRule where
     theRule p = do
