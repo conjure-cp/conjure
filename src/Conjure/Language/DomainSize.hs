@@ -61,9 +61,11 @@ gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*
 gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
     case sizeAttr of
-        SizeAttr_None      -> return (make opPow (fromInt 2) innerSize)
-        SizeAttr_Size size -> return (nchoosek (make opFactorial) innerSize size)
-        _ -> fail ("gDomainSizeOf:" <+> pretty d)
+        SizeAttr_None           -> return (make opPow (fromInt 2) innerSize)
+        SizeAttr_Size size      -> return (nchoosek (make opFactorial) innerSize size)
+        SizeAttr_MinSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
+        SizeAttr_MaxSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
+        SizeAttr_MinMaxSize _ _ -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
 gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr innerTo) = do
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
