@@ -58,7 +58,7 @@ gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = foldr1 (make opTimes) <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
-gDomainSizeOf d@(DomainSet _ (SetAttr sizeAttr) inner) = do
+gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
     case sizeAttr of
         SizeAttr_None           -> return (make opPow (fromInt 2) innerSize)

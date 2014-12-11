@@ -245,7 +245,7 @@ parseDomain
 
         pMSet = do
             lexeme L_mset
-            x <- parseAttributes
+            x <- parseMSetAttr
             y <- lexeme L_of >> parseDomain
             return $ DomainMSet () x y
 
@@ -300,6 +300,31 @@ parseSetAttr = do
         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+
+parseMSetAttr :: Parser (MSetAttr Expression)
+parseMSetAttr = do
+    DomainAttributes attrs <- parseAttributes
+    size <- case filterSizey attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "size"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    occur <- case filterAttrName ["minOccur", "maxOccur"] attrs of
+        [] -> return OccurAttr_None
+        [DANameValue "minOccur" a] -> return (OccurAttr_MinOccur a)
+        [DANameValue "maxOccur" a] -> return (OccurAttr_MaxOccur a)
+        [DANameValue "maxOccur" b, DANameValue "minOccur" a] -> return (OccurAttr_MinMaxOccur a b)
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    case (size, occur) of
+        (SizeAttr_Size{}, _) -> return ()
+        (SizeAttr_MaxSize{}, _) -> return ()
+        (SizeAttr_MinMaxSize{}, _) -> return ()
+        (_, OccurAttr_MaxOccur{}) -> return ()
+        (_, OccurAttr_MinMaxOccur{}) -> return ()
+        _ -> fail ("mset requires (at least) one of the following attributes: size, maxSize, maxOccur")
+    return (MSetAttr size occur)
 
 parseFunctionAttr :: Parser (FunctionAttr Expression)
 parseFunctionAttr = do

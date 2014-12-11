@@ -23,6 +23,7 @@ import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
+import Conjure.Representations.MSet.ExplicitVarSizeWithFlags
 import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
@@ -138,6 +139,9 @@ dispatch domain = do
             "ExplicitVarSizeWithMarker"     -> setExplicitVarSizeWithMarker
             "ExplicitVarSizeWithFlags"      -> setExplicitVarSizeWithFlags
             _ -> nope
+        DomainMSet r _ _ -> case r of
+            "ExplicitVarSizeWithFlags"      -> msetExplicitVarSizeWithFlags
+            _ -> nope
         DomainFunction r _ _ _ -> case r of
             "Function1D"                    -> function1D
             "Function1DPartial"             -> function1DPartial
@@ -162,6 +166,7 @@ allReprs :: [[Representation (Either Doc)]]
 allReprs =
     [ [ primitive, tuple, matrix
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , relationAsMatrix
       , partitionAsSet dispatch

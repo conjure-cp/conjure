@@ -3,6 +3,7 @@
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
+    , instantiateDAs                    -- not used anywhere else
     ) where
 
 -- conjure
@@ -129,7 +130,7 @@ instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
 instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*> instantiateD inner
 instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAttr attrs <*> instantiateD inner
-instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateDAs attrs <*> instantiateD inner
+instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateMSetAttr attrs <*> instantiateD inner
 instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> instantiateFunctionAttr attrs <*> instantiateD innerFr <*> instantiateD innerTo
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateRelationAttr attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
@@ -161,6 +162,27 @@ instantiateSizeAttr (SizeAttr_Size x) = SizeAttr_Size <$> instantiateE x
 instantiateSizeAttr (SizeAttr_MinSize x) = SizeAttr_MinSize <$> instantiateE x
 instantiateSizeAttr (SizeAttr_MaxSize x) = SizeAttr_MaxSize <$> instantiateE x
 instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instantiateE x <*> instantiateE y
+
+
+instantiateMSetAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => MSetAttr Expression
+    -> m (MSetAttr Constant)
+instantiateMSetAttr (MSetAttr s o) = MSetAttr <$> instantiateSizeAttr s <*> instantiateOccurAttr o
+
+
+instantiateOccurAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => OccurAttr Expression
+    -> m (OccurAttr Constant)
+instantiateOccurAttr OccurAttr_None = return OccurAttr_None
+instantiateOccurAttr (OccurAttr_MinOccur x) = OccurAttr_MinOccur <$> instantiateE x
+instantiateOccurAttr (OccurAttr_MaxOccur x) = OccurAttr_MaxOccur <$> instantiateE x
+instantiateOccurAttr (OccurAttr_MinMaxOccur x y) = OccurAttr_MinMaxOccur <$> instantiateE x <*> instantiateE y
 
 
 instantiateFunctionAttr

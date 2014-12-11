@@ -75,3 +75,16 @@ normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
 normaliseConstant (DomainInConstant d) = DomainInConstant (fmap normaliseConstant d)
+
+instance Num Constant where
+    ConstantInt x + ConstantInt y = ConstantInt (x+y)
+    x + y = bug $ vcat [ "Num Constant (+)", "x:" <+> pretty x, "y:" <+> pretty y ]
+    ConstantInt x - ConstantInt y = ConstantInt (x-y)
+    x - y = bug $ vcat [ "Num Constant (-)", "x:" <+> pretty x, "y:" <+> pretty y ]
+    ConstantInt x * ConstantInt y = ConstantInt (x*y)
+    x * y = bug $ vcat [ "Num Constant (*)", "x:" <+> pretty x, "y:" <+> pretty y ]
+    abs (ConstantInt x) = ConstantInt (abs x)
+    abs x = bug $ vcat [ "Num Constant abs", "x:" <+> pretty x ]
+    signum (ConstantInt x) = ConstantInt (signum x)
+    signum x = bug $ vcat [ "Num Constant signum", "x:" <+> pretty x ]
+    fromInteger = ConstantInt . fromInteger

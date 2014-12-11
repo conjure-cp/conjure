@@ -31,7 +31,7 @@ data Domain r x
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
-    | DomainMSet      r (DomainAttributes x) (Domain r x)
+    | DomainMSet      r (MSetAttr x) (Domain r x)
     | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
     | DomainRelation  r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
@@ -160,6 +160,41 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_MinSize    x  ) = "minSize" <+> pretty x
     pretty (SizeAttr_MaxSize    x  ) = "maxSize" <+> pretty x
     pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <+> ", maxSize" <+> pretty y
+
+
+data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (MSetAttr a)
+instance Hashable  a => Hashable  (MSetAttr a)
+instance ToJSON    a => ToJSON    (MSetAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (MSetAttr a) where def = MSetAttr def def
+instance Pretty a => Pretty (MSetAttr a) where
+    pretty (MSetAttr a b) = 
+        let inside = filter (/=prEmpty) [ pretty a
+                                        , pretty b
+                                        ]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
+data OccurAttr a
+    = OccurAttr_None
+    | OccurAttr_MinOccur a
+    | OccurAttr_MaxOccur a
+    | OccurAttr_MinMaxOccur a a
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (OccurAttr a)
+instance Hashable  a => Hashable  (OccurAttr a)
+instance ToJSON    a => ToJSON    (OccurAttr a) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (OccurAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default (OccurAttr a) where def = OccurAttr_None
+instance Pretty a => Pretty (OccurAttr a) where
+    pretty OccurAttr_None = prEmpty
+    pretty (OccurAttr_MinOccur    x  ) = "minOccur" <+> pretty x
+    pretty (OccurAttr_MaxOccur    x  ) = "maxOccur" <+> pretty x
+    pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <+> ", maxOccur" <+> pretty y
 
 
 data FunctionAttr x
