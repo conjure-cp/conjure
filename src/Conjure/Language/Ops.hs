@@ -425,7 +425,25 @@ instance BinaryOperator (OpEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 instance EvaluateOp OpEq where
-    evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
+    evaluateOp (OpEq a b) = return $ ConstantBool $ eq a b
+        where
+            eqs e xs ys = and (zipWith e xs ys)
+            eq (ConstantBool x) (ConstantBool y) = x == y
+            eq (ConstantInt  x) (ConstantInt  y) = x == y
+            eq (ConstantAbstract (AbsLitTuple xs)) (ConstantAbstract (AbsLitTuple ys))
+                = eqs eq xs ys
+            eq (ConstantAbstract (AbsLitSet xs)) (ConstantAbstract (AbsLitSet ys))
+                = eqs eq (sortNub xs) (sortNub ys)
+            eq (ConstantAbstract (AbsLitMSet xs)) (ConstantAbstract (AbsLitMSet ys))
+                = eqs eq (sort xs) (sort ys)
+            eq (ConstantAbstract (AbsLitFunction xs)) (ConstantAbstract (AbsLitFunction ys))
+                = eqs (\ x y -> eq (fst x) (fst y) && eq (snd x) (snd y) )
+                      (sort xs) (sort ys)
+            eq (ConstantAbstract (AbsLitRelation xs)) (ConstantAbstract (AbsLitRelation ys))
+                = eqs (eqs eq) (sort xs) (sort ys)
+            eq (ConstantAbstract (AbsLitPartition xs)) (ConstantAbstract (AbsLitPartition ys))
+                = eqs (eqs eq) (sortNub xs) (sortNub ys)
+            eq _ _ = False
 
 
 data OpNeq x = OpNeq x x
@@ -439,7 +457,9 @@ instance BinaryOperator (OpNeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 instance EvaluateOp OpNeq where
-    evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
+    evaluateOp (OpNeq x y) = do
+        r <- evaluateOp (OpEq x y)
+        evaluateOp (OpNegate r)
 
 
 data OpLt x = OpLt x x
