@@ -459,7 +459,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq x y) = do
         r <- evaluateOp (OpEq x y)
-        evaluateOp (OpNegate r)
+        evaluateOp (OpNot r)
 
 
 data OpLt x = OpLt x x
