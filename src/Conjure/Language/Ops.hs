@@ -860,6 +860,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
 instance EvaluateOp OpIntersect where
     evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub [ i | i <- as, i `elem` bs]
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+        let asHist = histogram as
+            bsHist = histogram bs
+            allElems = sortNub (as++bs)
+        in
+            return $ ConstantAbstract $ AbsLitMSet $ concat
+                [ replicate (min countA countB) e
+                | e <- allElems
+                , let countA = fromMaybe 0 (e `lookup` asHist)
+                , let countB = fromMaybe 0 (e `lookup` bsHist)
+                ]
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 
@@ -876,6 +887,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
 instance EvaluateOp OpUnion where
     evaluateOp (OpUnion (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)
+    evaluateOp (OpUnion (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+        let asHist = histogram as
+            bsHist = histogram bs
+            allElems = sortNub (as++bs)
+        in
+            return $ ConstantAbstract $ AbsLitMSet $ concat
+                [ replicate (max countA countB) e
+                | e <- allElems
+                , let countA = fromMaybe 0 (e `lookup` asHist)
+                , let countB = fromMaybe 0 (e `lookup` bsHist)
+                ]
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
 
