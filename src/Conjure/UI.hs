@@ -220,8 +220,7 @@ ui = modes
         , essenceSolution  = def   &= typFile
                                    &= name "solution"
                                    &= explicit
-                                   &= help "An Essence solution.\n\
-                                           \This field is optional."
+                                   &= help "An Essence solution."
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
