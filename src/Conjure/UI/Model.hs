@@ -63,6 +63,9 @@ import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
 
+import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition()
+import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
+
 
 -- base
 import System.CPUTime ( getCPUTime )
@@ -556,6 +559,8 @@ verticalRules =
 
     , Vertical.Relation.RelationAsSet.rule_Comprehension
 
+    , Vertical.Partition.PartitionAsSet.rule_Comprehension
+
     ]
 
 horizontalRules :: [Rule]
@@ -618,6 +623,7 @@ otherRules =
     , rule_Tuple_DontCare
     , rule_Matrix_DontCare
     , rule_Set_DontCare
+    , rule_MSet_DontCare
     , rule_Function_DontCare
 
     , rule_ComplexAbsPat
@@ -969,8 +975,20 @@ rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
                )
 
 
+rule_MSet_DontCare :: Rule
+rule_MSet_DontCare = "dontCare-mset" `namedRule` theRule where
+    theRule p = do
+        x          <- match opDontCare p
+        TypeMSet{} <- typeOf x
+        hasRepresentation x
+        xs         <- downX1 x
+        return ( "dontCare handling for mset"
+               , const $ make opAnd (map (make opDontCare) xs)
+               )
+
+
 rule_Function_DontCare :: Rule
-rule_Function_DontCare = "dontCare-set" `namedRule` theRule where
+rule_Function_DontCare = "dontCare-function" `namedRule` theRule where
     theRule p = do
         x              <- match opDontCare p
         TypeFunction{} <- typeOf x
