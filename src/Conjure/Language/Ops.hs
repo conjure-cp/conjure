@@ -82,6 +82,8 @@ data Ops x
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
 
+    | MkOpParts           (OpParts x)
+
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
 instance Hashable  x => Hashable  (Ops x)
@@ -133,6 +135,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpPreImage            x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
+    typeOf (MkOpParts               x) = typeOf x
 
 instance EvaluateOp Ops where
     evaluateOp (MkOpPlus                x) = evaluateOp x
@@ -179,6 +182,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpPreImage            x) = evaluateOp x
     evaluateOp (MkOpDefined             x) = evaluateOp x
     evaluateOp (MkOpRange               x) = evaluateOp x
+    evaluateOp (MkOpParts               x) = evaluateOp x
 
 
 class BinaryOperator op where
@@ -249,6 +253,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpPreImage (OpPreImage a b)) = "preImage" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
+    prettyPrec _ (MkOpParts    (OpParts    a)) = "parts"    <> prParens (pretty a)
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -1044,6 +1049,22 @@ instance EvaluateOp OpRange where
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
 
+data OpParts x = OpParts x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpParts x)
+instance Hashable  x => Hashable  (OpParts x)
+instance ToJSON    x => ToJSON    (OpParts x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpParts x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance TypeOf x => TypeOf (OpParts x) where
+    typeOf (OpParts x) = do
+        TypePartition a <- typeOf x
+        return (TypeSet (TypeSet a))
+instance EvaluateOp OpParts where
+    evaluateOp (OpParts (ConstantAbstract (AbsLitPartition xs))) =
+        return (ConstantAbstract (AbsLitSet (map (ConstantAbstract . AbsLitSet) xs)))
+    evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
+
+
 data OpAllDiff x = OpAllDiff x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpAllDiff x)
@@ -1154,6 +1175,7 @@ mkOp op xs =
             L_min      -> injectOp $ MkOpMin      $ OpMin xs
             L_preImage -> injectOp $ MkOpPreImage $ OpPreImage (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
             L_freq     -> injectOp $ MkOpFreq     $ OpFreq     (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
+            L_parts    -> injectOp $ MkOpParts    $ OpParts    (headNote "parts takes a single argument."    xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 

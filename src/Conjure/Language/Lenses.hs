@@ -278,6 +278,25 @@ opToMSet _ =
     )
 
 
+opParts
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opParts _ =
+    ( injectOp . MkOpParts . OpParts
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpParts (OpParts x) -> return x
+                _ -> na ("Lenses.opParts:" <++> pretty p)
+    )
+
+
 opFunctionImage
     :: ( OperatorContainer x
        , Pretty x
