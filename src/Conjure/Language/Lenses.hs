@@ -392,6 +392,25 @@ opIn _ =
     )
 
 
+opFreq
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opFreq _ =
+    ( \ x y -> injectOp (MkOpFreq (OpFreq x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpFreq (OpFreq x y) -> return (x,y)
+                _ -> na ("Lenses.opFreq:" <++> pretty p)
+    )
+
+
 opIntersect
     :: ( OperatorContainer x
        , Pretty x

@@ -65,6 +65,7 @@ data Ops x
     | MkOpDontCare        (OpDontCare x)
 
     | MkOpIn              (OpIn x)
+    | MkOpFreq            (OpFreq x)
     | MkOpSubset          (OpSubset x)
     | MkOpSubsetEq        (OpSubsetEq x)
     | MkOpSupset          (OpSupset x)
@@ -117,6 +118,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpToInt               x) = typeOf x
     typeOf (MkOpDontCare            x) = typeOf x
     typeOf (MkOpIn                  x) = typeOf x
+    typeOf (MkOpFreq                x) = typeOf x
     typeOf (MkOpSubset              x) = typeOf x
     typeOf (MkOpSubsetEq            x) = typeOf x
     typeOf (MkOpSupset              x) = typeOf x
@@ -162,6 +164,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpToInt               x) = evaluateOp x
     evaluateOp (MkOpDontCare            x) = evaluateOp x
     evaluateOp (MkOpIn                  x) = evaluateOp x
+    evaluateOp (MkOpFreq                x) = evaluateOp x
     evaluateOp (MkOpSubset              x) = evaluateOp x
     evaluateOp (MkOpSubsetEq            x) = evaluateOp x
     evaluateOp (MkOpSupset              x) = evaluateOp x
@@ -231,6 +234,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpToInt    (OpToInt    a)) = "toInt"    <> prParens (pretty a)
     prettyPrec _ (MkOpDontCare (OpDontCare a)) = "dontCare" <> prParens (pretty a)
     prettyPrec prec (MkOpIn        op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec _    (MkOpFreq         (OpFreq      a b)) = "freq" <> prettyList prParens "," [a,b]
     prettyPrec prec (MkOpSubset    op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSubsetEq  op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSupset    op@(OpSupset    a b)) = prettyPrecBinOp prec [op] a b
@@ -754,6 +758,26 @@ instance EvaluateOp OpIn where
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 
+data OpFreq x = OpFreq x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpFreq x)
+instance Hashable  x => Hashable  (OpFreq x)
+instance ToJSON    x => ToJSON    (OpFreq x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpFreq x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance BinaryOperator (OpFreq x) where
+    opLexeme _ = L_in
+instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
+    typeOf p@(OpFreq b a) = do
+        tyA <- typeOf a
+        TypeMSet tyB <- typeOf b
+        if tyA `typeUnify` tyB
+            then return TypeInt
+            else raiseTypeError (MkOpFreq p)
+instance EvaluateOp OpFreq where
+    evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
+
+
 data OpSubset x = OpSubset x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpSubset x)
@@ -1129,6 +1153,7 @@ mkOp op xs =
             L_max      -> injectOp $ MkOpMax      $ OpMax xs
             L_min      -> injectOp $ MkOpMin      $ OpMin xs
             L_preImage -> injectOp $ MkOpPreImage $ OpPreImage (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
+            L_freq     -> injectOp $ MkOpFreq     $ OpFreq     (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 

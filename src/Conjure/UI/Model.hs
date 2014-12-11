@@ -36,23 +36,33 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
 
+
 import Conjure.Rules.Definition
-import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
-import qualified Conjure.Rules.Horizontal.Function as Horizontal.Function
-import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
+
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
+
 import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
+
+import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
 import qualified Conjure.Rules.Vertical.Set.Explicit as Vertical.Set.Explicit
 import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithFlags as Vertical.Set.ExplicitVarSizeWithFlags
 import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker as Vertical.Set.ExplicitVarSizeWithMarker
 import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrence
+
+import qualified Conjure.Rules.Horizontal.MSet as Horizontal.MSet
+import qualified Conjure.Rules.Vertical.MSet.ExplicitVarSizeWithFlags as Vertical.MSet.ExplicitVarSizeWithFlags
+
+import qualified Conjure.Rules.Horizontal.Function as Horizontal.Function
 import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function.Function1D
 import qualified Conjure.Rules.Vertical.Function.Function1DPartial as Vertical.Function.Function1DPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function.FunctionND
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
+
+import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
+
 
 -- base
 import System.CPUTime ( getCPUTime )
@@ -521,6 +531,9 @@ verticalRules =
     , Vertical.Set.Occurrence.rule_Comprehension
     , Vertical.Set.Occurrence.rule_In
 
+    , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Comprehension
+    , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Freq
+
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Image
 
@@ -560,6 +573,18 @@ horizontalRules =
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_MaxMin
+
+    , Horizontal.MSet.rule_Eq
+    , Horizontal.MSet.rule_Neq
+    , Horizontal.MSet.rule_Leq
+    , Horizontal.MSet.rule_Lt
+    , Horizontal.MSet.rule_Subset
+    , Horizontal.MSet.rule_SubsetEq
+    , Horizontal.MSet.rule_Supset
+    , Horizontal.MSet.rule_SupsetEq
+    , Horizontal.MSet.rule_In
+    , Horizontal.MSet.rule_Card
+    , Horizontal.MSet.rule_MaxMin
 
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
