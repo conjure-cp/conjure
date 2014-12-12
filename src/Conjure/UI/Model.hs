@@ -32,6 +32,7 @@ import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
+import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
@@ -452,6 +453,7 @@ prologue model = return model
     >>= return . initInfo           >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel     >>= logDebugId "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel        >>= logDebugId "[removeEnumsFromModel]"
+    >>= lettingsForComplexInDoms    >>= logDebugId "[lettingsForComplexInDoms]"
     >>= finiteGivens                >>= logDebugId "[finiteGivens]"
     >>= resolveNames                >>= logDebugId "[resolveNames]"
     >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
@@ -710,6 +712,13 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                     f x = x
                 in
                     m { mStatements = transformBi f (mStatements m) }
+
+        logDebugVerbose $ vcat
+            [ "Name        :" <+> pretty name
+            , "Previously  :" <+> vcat [ pretty (show d) | (n,d) <- representations, n == name ]
+            , "This guy    :" <+> pretty (show domain)
+            , "usedBefore? :" <+> pretty usedBefore
+            ]
 
         model
             |> addStructurals       -- unless usedBefore: add structurals
