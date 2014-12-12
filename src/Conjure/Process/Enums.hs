@@ -3,7 +3,7 @@
 module Conjure.Process.Enums
     ( removeEnumsFromModel
     , removeEnumsFromParam
-    , addEnumsBack
+    , addEnumsAndUnnamedsBack
     ) where
 
 import Conjure.Prelude
@@ -11,6 +11,9 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+
+-- text
+import Data.Text as T ( pack )
 
 
 -- | The argument is a model before nameResolution.
@@ -157,53 +160,61 @@ removeEnumsFromParam model param = do
 
 -- | Using the original domains from the Essence file.
 --   Converting integers back to enum constants.
--- TODO: complete addEnumsBack
-addEnumsBack
-    :: [((Int, Name), Constant)]
-    -> Domain () Expression
-    -> Constant
-    -> Constant
+-- TODO: complete addEnumsAndUnnamedsBack
 
-addEnumsBack ctxt domain constant = case (domain, constant) of
+addEnumsAndUnnamedsBack
+    :: (Show r, Show x)
+    => [Name]                           -- unnamed types
+    -> [((Int, Name), Constant)]        -- a lookup table for enums
+    -> Domain r x                       -- the domain we are working on
+    -> Constant                         -- the constant with ints in place of enums & unnameds
+    -> Constant                         -- the constant with enums & unnameds again
+addEnumsAndUnnamedsBack unnameds ctxt = helper
+    
+    where
 
-    (DomainBool , c) -> c
-    (DomainInt{}, c) -> c
+        helper domain constant = case (domain, constant) of
 
-    (DomainEnum      ename _, ConstantInt i) ->
-        fromMaybe (bug $ "addEnumsBack:" <+> pretty (i, ename))
-                  (lookup (i, ename) ctxt)
+            (DomainBool , c) -> c
+            (DomainInt{}, c) -> c
 
-    (DomainReference ename _, ConstantInt i) ->
-        fromMaybe (bug $ "addEnumsBack:" <+> pretty (i, ename))
-                  (lookup (i, ename) ctxt)
+            (DomainEnum      ename _, ConstantInt i) ->
+                fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
+                          (lookup (i, ename) ctxt)
 
-    (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
-        ConstantAbstract $ AbsLitTuple
-            [ addEnumsBack ctxt d c
-            | (d,c) <- zip ds cs ]
+            (DomainReference ename _, ConstantInt i) ->
+                if ename `elem` unnameds
+                    then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
+                    else fromMaybe (bug $ "addEnumsAndUnnamedsBack 2:" <+> pretty (i, ename))
+                                   (lookup (i, ename) ctxt)
 
-    (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
-        ConstantAbstract $ AbsLitMatrix index $ map (addEnumsBack ctxt inner) vals
+            (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
+                ConstantAbstract $ AbsLitTuple
+                    [ helper d c
+                    | (d,c) <- zip ds cs ]
 
-    (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
-        ConstantAbstract $ AbsLitSet $ map (addEnumsBack ctxt inner) vals
+            (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
+                ConstantAbstract $ AbsLitMatrix index $ map (helper inner) vals
 
-    (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
-        ConstantAbstract $ AbsLitMSet $ map (addEnumsBack ctxt inner) vals
+            (DomainSet _ _ inner, ConstantAbstract (AbsLitSet vals)) ->
+                ConstantAbstract $ AbsLitSet $ map (helper inner) vals
 
-    (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
-        ConstantAbstract $ AbsLitFunction
-            [ (addEnumsBack ctxt fr a, addEnumsBack ctxt to b)
-            | (a,b) <- vals ]
+            (DomainMSet _ _ inner, ConstantAbstract (AbsLitMSet vals)) ->
+                ConstantAbstract $ AbsLitMSet $ map (helper inner) vals
 
-    (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
-        ConstantAbstract $ AbsLitRelation
-            [ [ addEnumsBack ctxt d c | (d,c) <- zip inners line ]
-            | line <- vals ]
+            (DomainFunction _ _ fr to, ConstantAbstract (AbsLitFunction vals)) ->
+                ConstantAbstract $ AbsLitFunction
+                    [ (helper fr a, helper to b)
+                    | (a,b) <- vals ]
 
-    (DomainPartition _ _ inner, ConstantAbstract (AbsLitPartition vals)) ->
-        ConstantAbstract $ AbsLitPartition
-            [ [ addEnumsBack ctxt inner c | c <- line ]
-            | line <- vals ]
+            (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
+                ConstantAbstract $ AbsLitRelation
+                    [ [ helper d c | (d,c) <- zip inners line ]
+                    | line <- vals ]
 
-    _ -> bug ("addEnumsBack:" <+> pretty (show domain))
+            (DomainPartition _ _ inner, ConstantAbstract (AbsLitPartition vals)) ->
+                ConstantAbstract $ AbsLitPartition
+                    [ [ helper inner c | c <- line ]
+                    | line <- vals ]
+
+            _ -> bug ("addEnumsAndUnnamedsBack 3:" <+> pretty (show domain))

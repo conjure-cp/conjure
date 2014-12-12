@@ -4,11 +4,10 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Domain
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
-import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsBack )
+import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsAndUnnamedsBack )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.Representations ( up )
 
@@ -94,10 +93,9 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
             sortNub
                 [ Declaration (Letting n (Constant (normaliseConstant y)))
                 | (n, d, x) <- essenceLettings
-                , let y = case (d, x) of
-                            (DomainReference dName _, ConstantInt x')
-                                | dName `elem` map fst unnameds ->
-                                ConstantEnum n [] (mconcat [dName, "_", Name (T.pack (show x'))])
-                            _ -> addEnumsBack intToEnumConstant d x
+                , let y = addEnumsAndUnnamedsBack
+                                (map fst unnameds)
+                                intToEnumConstant
+                                d x
                 ]
         }
