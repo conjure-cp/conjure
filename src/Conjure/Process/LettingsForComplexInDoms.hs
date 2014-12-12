@@ -4,6 +4,7 @@ module Conjure.Process.LettingsForComplexInDoms
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 
 
 -- | if the domain of a declaration contains a reference to another declaration (a given)
@@ -39,7 +40,8 @@ lettingsForComplexInDoms m = do
             case st of
                 Declaration (FindOrGiven forg name domain) -> do
                     (domain', newLettings) <- runWriterT (mapM expressionExtract domain)
-                    modify $ \ (nms, prevs) -> (nms, name:prevs)        -- record this as a declaration
+                    unless (isPrimitiveDomain domain) $
+                        modify $ \ (nms, prevs) -> (nms, name:prevs)    -- record this as a declaration
                     return (newLettings ++ [Declaration (FindOrGiven forg name domain')])
                 _ -> return [st]
         return m { mStatements = concat statements }
