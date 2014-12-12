@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 if ! [ -d .hg ] && [ -f src/Conjure/RepositoryVersion.hs ] ; then
     echo "This is not a mercurial repository, but it contains repository information. Reusing."
