@@ -34,15 +34,15 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
 
 sliceEnoughTimes :: MonadFail m => Expression -> m Expression
 sliceEnoughTimes m = do
-    (n,_)  <- match opIndexing' m
     tym    <- typeOf m
-    tyn    <- typeOf n
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
         nestingLevel _ = 0 :: Int
-    let howMany = nestingLevel tyn - nestingLevel tym
+    let howMany = nestingLevel tym
     let unroll a 0 = a
         unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
-    return (unroll m howMany)
+    let sliced = unroll m howMany
+    let flatten = if howMany > 0 then make opFlatten else id
+    return $ flatten sliced
 
 
 rule_Matrix_Lt_Primitive :: Rule
