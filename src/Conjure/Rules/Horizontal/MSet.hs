@@ -56,7 +56,9 @@ rule_SubsetEq = "mset-subsetEq" `namedRule` theRule where
 
 rule_Subset :: Rule
 rule_Subset = "mset-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] =
+    theRule [essence| &a subset &b |] = do
+        TypeMSet{} <- typeOf a
+        TypeMSet{} <- typeOf b
         return
             ( "Horizontal rule for mset subset"
             , const [essence| &a subsetEq &b /\ &a != &b |]
@@ -66,7 +68,9 @@ rule_Subset = "mset-subset" `namedRule` theRule where
 
 rule_Supset :: Rule
 rule_Supset = "mset-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] =
+    theRule [essence| &a supset &b |] = do
+        TypeMSet{} <- typeOf a
+        TypeMSet{} <- typeOf b
         return
             ( "Horizontal rule for mset supset"
             , const [essence| &b subset &a |]
@@ -76,7 +80,9 @@ rule_Supset = "mset-supset" `namedRule` theRule where
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "mset-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] =
+    theRule [essence| &a supsetEq &b |] = do
+        TypeMSet{} <- typeOf a
+        TypeMSet{} <- typeOf b
         return
             ( "Horizontal rule for mset supsetEq"
             , const [essence| &b subsetEq &a |]

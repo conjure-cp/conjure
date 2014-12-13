@@ -45,6 +45,59 @@ rule_Neq = "function-neq" `namedRule` theRule where
     theRule _ = na "rule_Neq"
 
 
+rule_SubsetEq :: Rule
+rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
+    theRule p = do
+        (x,y)          <- match opSubsetEq p
+        TypeFunction{} <- typeOf x
+        TypeFunction{} <- typeOf y
+        return ( "Horizontal rule for function subsetEq"
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (forAll &iPat in &x . &y(&i[1]) = &i[2])
+                                /\
+                            defined(&x) subsetEq defined(&y)
+                        |]
+               )
+
+
+rule_Subset :: Rule
+rule_Subset = "function-subset" `namedRule` theRule where
+    theRule [essence| &a subset &b |] = do
+        TypeFunction{} <- typeOf a
+        TypeFunction{} <- typeOf b
+        return
+            ( "Horizontal rule for set subset"
+            , const [essence| &a subsetEq &b /\ &a != &b |]
+            )
+    theRule _ = na "rule_Subset"
+
+
+rule_Supset :: Rule
+rule_Supset = "set-supset" `namedRule` theRule where
+    theRule [essence| &a supset &b |] = do
+        TypeFunction{} <- typeOf a
+        TypeFunction{} <- typeOf b
+        return
+            ( "Horizontal rule for set supset"
+            , const [essence| &b subset &a |]
+            )
+    theRule _ = na "rule_Supset"
+
+
+rule_SupsetEq :: Rule
+rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
+    theRule [essence| &a supsetEq &b |] = do
+        TypeFunction{} <- typeOf a
+        TypeFunction{} <- typeOf b
+        return
+            ( "Horizontal rule for set supsetEq"
+            , const [essence| &b subsetEq &a |]
+            )
+    theRule _ = na "rule_SupsetEq"
+
+
 rule_Lt :: Rule
 rule_Lt = "function-lt" `namedRule` theRule where
     theRule p = do

@@ -801,6 +801,21 @@ setLiteral _ =
     )
 
 
+partitionLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( [[Expression]] -> Expression
+       , Expression -> m [[Expression]]
+       )
+partitionLiteral _ =
+    ( AbstractLiteral . AbsLitPartition
+    , \ p -> case p of
+        Constant (ConstantAbstract (AbsLitPartition xs)) -> return (map (map Constant) xs)
+        AbstractLiteral (AbsLitPartition xs) -> return xs
+        _ -> na ("Lenses.partitionLiteral:" <+> pretty p)
+    )
+
+
 opTwoBars
     :: ( OperatorContainer x
        , Pretty x

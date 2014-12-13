@@ -64,7 +64,7 @@ import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
 
-import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition()
+import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 
 
@@ -597,6 +597,10 @@ horizontalRules =
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_Leq
     , Horizontal.Function.rule_Lt
+    , Horizontal.Function.rule_Subset
+    , Horizontal.Function.rule_SubsetEq
+    , Horizontal.Function.rule_Supset
+    , Horizontal.Function.rule_SupsetEq
     , Horizontal.Function.rule_Card
     , Horizontal.Function.rule_Comprehension_PreImage
     , Horizontal.Function.rule_Comprehension_Defined
@@ -604,6 +608,17 @@ horizontalRules =
 
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
+
+    , Horizontal.Partition.rule_Eq
+    , Horizontal.Partition.rule_Neq
+    , Horizontal.Partition.rule_Leq
+    , Horizontal.Partition.rule_Lt
+    , Horizontal.Partition.rule_Subset
+    , Horizontal.Partition.rule_SubsetEq
+    , Horizontal.Partition.rule_Supset
+    , Horizontal.Partition.rule_SupsetEq
+    , Horizontal.Partition.rule_In
+
     ]
 
 otherRules :: [Rule]
@@ -629,7 +644,8 @@ otherRules =
     , rule_Function_DontCare
 
     , rule_ComplexAbsPat
-    , rule_Set_Comprehension_Literal
+    , rule_Comprehension_SetLiteral
+    , rule_Comprehension_PartitionLiteral
     ] ++ rule_InlineFilters
 
 
@@ -1098,16 +1114,34 @@ ruleGen_InlineFilters opQ opSkip p = do
 
 
 -- TODO: convert to multiple generators, if needed
-rule_Set_Comprehension_Literal :: Rule
-rule_Set_Comprehension_Literal = "set-mapSetLiteral" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat s)]) = do
+rule_Comprehension_SetLiteral :: Rule
+rule_Comprehension_SetLiteral = "comprehension-set-literal" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat@Single{} s)]) = do
         elems <- match setLiteral s
         let f = lambdaToFunction pat body
-        return ( "Membership on set literals"
-               , const $ AbstractLiteral $ AbsLitMatrix
-                           (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
-                           [ f e
-                           | e <- elems
-                           ]
-               )
-    theRule _ = na "rule_Set_Comprehension_Literal"
+        return
+            ( "Membership on set literals"
+            , const $ AbstractLiteral $ AbsLitMatrix
+                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        [ f e
+                        | e <- elems
+                        ]
+            )
+    theRule _ = na "rule_Comprehension_SetLiteral"
+
+
+-- TODO: convert to multiple generators, if needed
+rule_Comprehension_PartitionLiteral :: Rule
+rule_Comprehension_PartitionLiteral = "comprehension-partition-literal" `namedRule` theRule where
+    theRule (Comprehension body [Generator (GenInExpr pat@Single{} p)]) = do
+        let p' = matchDef opParts p
+        elems <- match partitionLiteral p'
+        let f = lambdaToFunction pat body
+        return
+            ( "Membership on partition literals"
+            , const $ AbstractLiteral $ AbsLitList
+                        [ f (AbstractLiteral (AbsLitSet e))
+                        | e <- elems
+                        ]
+            )
+    theRule _ = na "rule_Comprehension_PartitionLiteral"

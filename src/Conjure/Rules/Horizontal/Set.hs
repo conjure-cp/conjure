@@ -54,7 +54,9 @@ rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
 
 rule_Subset :: Rule
 rule_Subset = "set-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] =
+    theRule [essence| &a subset &b |] = do
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set subset"
             , const [essence| &a subsetEq &b /\ &a != &b |]
@@ -64,7 +66,9 @@ rule_Subset = "set-subset" `namedRule` theRule where
 
 rule_Supset :: Rule
 rule_Supset = "set-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] =
+    theRule [essence| &a supset &b |] = do
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set supset"
             , const [essence| &b subset &a |]
@@ -74,7 +78,9 @@ rule_Supset = "set-supset" `namedRule` theRule where
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] =
+    theRule [essence| &a supsetEq &b |] = do
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set supsetEq"
             , const [essence| &b subsetEq &a |]
