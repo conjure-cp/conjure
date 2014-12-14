@@ -752,6 +752,8 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
+        ty <- typeOf domain
+
         let domOpts = reprOptions domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
@@ -765,7 +767,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
                 ]
 
         return
-            [ ( "Choosing representation for quantified variable" <+> pretty nm
+            [ ( "Choosing representation for quantified variable" <+> pretty nm <+> "(with type:" <+> pretty ty <> ")"
               , \ fresh -> bugFail $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
