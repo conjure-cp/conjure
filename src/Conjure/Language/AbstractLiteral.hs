@@ -39,19 +39,33 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
-instance TypeOf a => TypeOf (AbstractLiteral a) where
-    typeOf (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
-    typeOf (AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType <$> mapM typeOf inn)
-    typeOf (AbsLitSet         xs ) = TypeSet      <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitMSet        xs ) = TypeMSet     <$> (homoType <$> mapM typeOf xs)
-    typeOf (AbsLitFunction    xs ) = TypeFunction <$> (homoType <$> mapM (typeOf . fst) xs)
-                                                  <*> (homoType <$> mapM (typeOf . fst) xs)
-    typeOf (AbsLitRelation    xss) = do
-        ty <- homoType <$> mapM (typeOf . AbsLitTuple) xss
+instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
+
+    typeOf   (AbsLitTuple        []) = return (TypeTuple (replicate 100 TypeAny))
+    typeOf   (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
+
+    typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
+    typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) <$> mapM typeOf inn)
+
+    typeOf   (AbsLitSet         [] ) = return (TypeSet TypeAny)
+    typeOf p@(AbsLitSet         xs ) = TypeSet      <$> (homoType (pretty p) <$> mapM typeOf xs)
+
+    typeOf   (AbsLitMSet        [] ) = return (TypeMSet TypeAny)
+    typeOf p@(AbsLitMSet        xs ) = TypeMSet     <$> (homoType (pretty p) <$> mapM typeOf xs)
+
+    typeOf   (AbsLitFunction    [] ) = return (TypeFunction TypeAny TypeAny)
+    typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
+                                                    <*> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
+
+    typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
+    typeOf p@(AbsLitRelation    xss) = do
+        ty <- homoType (pretty p) <$> mapM (typeOf . AbsLitTuple) xss
         case ty of
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
-    typeOf (AbsLitPartition   xss) = TypePartition <$> (homoType <$> mapM typeOf (concat xss))
+
+    typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
+    typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
 normaliseAbsLit :: Ord c => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
 normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple     $ map norm xs

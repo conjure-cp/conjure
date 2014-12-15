@@ -5,12 +5,14 @@ module Conjure.Language.Type
     , typeUnify
     , typesUnify
     , mostDefined
+    , homoType
     , innerTypeOf
     , isPrimitiveType
     ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.Pretty
 
@@ -101,6 +103,13 @@ mostDefined = foldr f TypeAny
         f (TypeRelation as) (TypeRelation bs) = TypeRelation (zipWith f as bs)
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
+
+homoType :: Doc -> [Type] -> Type
+homoType msg [] = userErr $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
+homoType msg xs =
+    if typesUnify xs
+        then mostDefined xs
+        else userErr $ "not a homoType:" <++> ("When working on:" <+> msg)
 
 innerTypeOf :: MonadFail m => Type -> m Type
 innerTypeOf (TypeList t) = return t
