@@ -434,25 +434,7 @@ instance BinaryOperator (OpEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 instance EvaluateOp OpEq where
-    evaluateOp (OpEq a b) = return $ ConstantBool $ eq a b
-        where
-            eqs e xs ys = and (zipWith e xs ys)
-            eq (ConstantBool x) (ConstantBool y) = x == y
-            eq (ConstantInt  x) (ConstantInt  y) = x == y
-            eq (ConstantAbstract (AbsLitTuple xs)) (ConstantAbstract (AbsLitTuple ys))
-                = eqs eq xs ys
-            eq (ConstantAbstract (AbsLitSet xs)) (ConstantAbstract (AbsLitSet ys))
-                = eqs eq (sortNub xs) (sortNub ys)
-            eq (ConstantAbstract (AbsLitMSet xs)) (ConstantAbstract (AbsLitMSet ys))
-                = eqs eq (sort xs) (sort ys)
-            eq (ConstantAbstract (AbsLitFunction xs)) (ConstantAbstract (AbsLitFunction ys))
-                = eqs (\ x y -> eq (fst x) (fst y) && eq (snd x) (snd y) )
-                      (sort xs) (sort ys)
-            eq (ConstantAbstract (AbsLitRelation xs)) (ConstantAbstract (AbsLitRelation ys))
-                = eqs (eqs eq) (sort xs) (sort ys)
-            eq (ConstantAbstract (AbsLitPartition xs)) (ConstantAbstract (AbsLitPartition ys))
-                = eqs (eqs eq) (sortNub xs) (sortNub ys)
-            eq _ _ = False
+    evaluateOp (OpEq x y) = return $ ConstantBool $ normaliseConstant x == normaliseConstant y
 
 
 data OpNeq x = OpNeq x x
@@ -466,9 +448,7 @@ instance BinaryOperator (OpNeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 instance EvaluateOp OpNeq where
-    evaluateOp (OpNeq x y) = do
-        r <- evaluateOp (OpEq x y)
-        evaluateOp (OpNot r)
+    evaluateOp (OpNeq x y) = return $ ConstantBool $ normaliseConstant x /= normaliseConstant y
 
 
 data OpLt x = OpLt x x
@@ -482,7 +462,7 @@ instance BinaryOperator (OpLt x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpLt x) where
     typeOf (OpLt a b) = sameToSameToBool a b
 instance EvaluateOp OpLt where
-    evaluateOp (OpLt x y) = return $ ConstantBool $ x < y
+    evaluateOp (OpLt x y) = return $ ConstantBool $ normaliseConstant x < normaliseConstant y
 
 
 data OpLeq x = OpLeq x x
@@ -496,7 +476,7 @@ instance BinaryOperator (OpLeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
     typeOf (OpLeq a b) = sameToSameToBool a b
 instance EvaluateOp OpLeq where
-    evaluateOp (OpLeq x y) = return $ ConstantBool $ x <= y
+    evaluateOp (OpLeq x y) = return $ ConstantBool $ normaliseConstant x <= normaliseConstant y
 
 
 data OpGt x = OpGt x x
@@ -510,7 +490,7 @@ instance BinaryOperator (OpGt x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
 instance EvaluateOp OpGt where
-    evaluateOp (OpGt x y) = return $ ConstantBool $ x > y
+    evaluateOp (OpGt x y) = return $ ConstantBool $ normaliseConstant x > normaliseConstant y
 
 
 data OpGeq x = OpGeq x x
@@ -524,7 +504,7 @@ instance BinaryOperator (OpGeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 instance EvaluateOp OpGeq where
-    evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y
+    evaluateOp (OpGeq x y) = return $ ConstantBool $ normaliseConstant x >= normaliseConstant y
 
 
 data OpAnd x = OpAnd [x]
