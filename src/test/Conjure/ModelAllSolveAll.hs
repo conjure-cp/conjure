@@ -32,9 +32,11 @@ import qualified Data.Set as S ( fromList, toList, null, difference )
 
 srOptions :: String -> [T.Text]
 srOptions srExtraOptions =
-    [ "-timelimit"      , "300000"
-    , "-run-solver"     , "-minion"
+    [ "-run-solver"
+    , "-minion"
+    , "-timelimit"      , "300000"
     , "-solver-options" , "-cpulimit 300"
+    , "-all-solutions"
     ] ++ map T.pack (words srExtraOptions)
 
 
@@ -145,7 +147,6 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
             , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
             , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
             , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-            , "-all-solutions"
             ] ++ srOptions srExtraOptions
         stderrSR <- lastStderr
         if not (T.null stderrSR)
@@ -177,7 +178,6 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
             , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
             , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
             , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-            , "-all-solutions"
             ] ++ srOptions srExtraOptions
         stderrSR <- lastStderr
         if not (T.null stderrSR)
