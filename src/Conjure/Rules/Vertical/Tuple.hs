@@ -101,29 +101,3 @@ rule_Tuple_Index = "tuple-index" `namedRule` theRule where
             ( "Tuple indexing on:" <+> pretty p
             , const $ atNote "Tuple indexing" ts (iInt-1)
             )
-
-
--- rule_Tuple_DomainComprehension :: Rule
--- rule_Tuple_DomainComprehension = "tuple-domain-comprehension" `namedRule` theRule where
---     theRule (Comprehension body gensOrFilters) = do
---         (gofBefore, (pat, domains), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
---             Generator (GenDomainNoRepr pat@Single{} (DomainTuple domains)) -> return (pat, domains)
---             _ -> na "rule_Tuple_DomainComprehension"
---         let pats fresh     = [ Single i            | i <- fresh ]
---         let refs fresh     = [ Reference i Nothing | i <- fresh ]
---         let theValue fresh = AbstractLiteral (AbsLitTuple (refs fresh))
---         let upd val old    = lambdaToFunction pat old val -- given an expression "old",
---                                                           -- update uses of "pat" in it
---                                                           -- to use "val"
---         return
---             ( "Tuple domain comprehension"
---             , \ fresh' ->
---                 let fresh = take (length domains) fresh'
---                     val = theValue fresh
---                 in  Comprehension (upd val body)
---                     $  gofBefore
---                     ++ [ Generator (GenDomainNoRepr p d)
---                        | (p,d) <- zip (pats fresh) domains ]
---                     ++ transformBi (upd val) gofAfter
---             )
---     theRule _ = na "rule_Tuple_DomainComprehension"

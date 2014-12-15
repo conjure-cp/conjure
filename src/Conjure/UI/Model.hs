@@ -520,7 +520,6 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index
-    -- , Vertical.Tuple.rule_Tuple_DomainComprehension
 
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
@@ -635,7 +634,6 @@ otherRules =
     , rule_SingletonAnd
     , rule_FlattenOf1D
     , rule_Decompose_AllDiff
-    , rule_SumFlatten
 
     , rule_GeneratorsFirst
 
@@ -885,17 +883,6 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                         |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
-
-
-rule_SumFlatten :: Rule
-rule_SumFlatten = "sum-flatten" `namedRule` theRule where
-    theRule p = do
-        [x]                             <- match opSum p
-        AbstractLiteral (AbsLitList xs) <- match opFlatten x
-        let y = make opSum $ map (make opSum . return) xs
-        return ( "Flatten inside a sum."
-               , const y
-               )
 
 
 rule_BubbleUp :: Rule
