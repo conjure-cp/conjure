@@ -78,6 +78,28 @@ instance TypeOf (Domain r x) where
     typeOf (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
     typeOf (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
 
+instance (Pretty x) => Monoid (Domain () x) where
+    mempty = DomainMetaVar "mempty"
+    mappend DomainMetaVar{} d = d
+    mappend d DomainMetaVar{} = d
+    mappend DomainBool DomainBool = DomainBool
+    mappend (DomainInt r1) (DomainInt r2) = DomainInt (mappend r1 r2)
+    mappend (DomainTuple xs) (DomainTuple ys)
+        | length xs == length ys
+        = DomainTuple (zipWith mappend xs ys)
+    mappend (DomainSet _ _ x) (DomainSet _ _ y)
+        = DomainSet () def (mappend x y)
+    mappend (DomainMSet _ _ x) (DomainMSet _ _ y)
+        = DomainMSet () def (mappend x y)
+    mappend (DomainFunction _ _ x1 x2) (DomainFunction _ _ y1 y2)
+        = DomainFunction () def (mappend x1 y1) (mappend x2 y2)
+    mappend (DomainRelation _ _ xs) (DomainRelation _ _ ys)
+        | length xs == length ys
+        = DomainRelation () def (zipWith mappend xs ys)
+    mappend (DomainPartition _ _ x) (DomainPartition _ _ y)
+        = DomainPartition () def (mappend x y)
+    mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
+
 forgetRepr :: Domain r x -> Domain () x
 forgetRepr DomainBool = DomainBool
 forgetRepr (DomainInt rs) = DomainInt rs
