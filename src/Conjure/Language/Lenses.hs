@@ -801,6 +801,51 @@ setLiteral _ =
     )
 
 
+msetLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( [Expression] -> Expression
+       , Expression -> m [Expression]
+       )
+msetLiteral _ =
+    ( AbstractLiteral . AbsLitMSet
+    , \ p -> case p of
+        Constant (ConstantAbstract (AbsLitMSet xs)) -> return (map Constant xs)
+        AbstractLiteral (AbsLitMSet xs) -> return xs
+        _ -> na ("Lenses.msetLiteral:" <+> pretty p)
+    )
+
+
+functionLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( [(Expression,Expression)] -> Expression
+       , Expression -> m [(Expression,Expression)]
+       )
+functionLiteral _ =
+    ( AbstractLiteral . AbsLitFunction
+    , \ p -> case p of
+        Constant (ConstantAbstract (AbsLitFunction xs)) -> return [ (Constant a, Constant b) | (a,b) <- xs ]
+        AbstractLiteral (AbsLitFunction xs) -> return xs
+        _ -> na ("Lenses.functionLiteral:" <+> pretty p)
+    )
+
+
+relationLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( [[Expression]] -> Expression
+       , Expression -> m [[Expression]]
+       )
+relationLiteral _ =
+    ( AbstractLiteral . AbsLitRelation
+    , \ p -> case p of
+        Constant (ConstantAbstract (AbsLitRelation xs)) -> return (map (map Constant) xs)
+        AbstractLiteral (AbsLitRelation xs) -> return xs
+        _ -> na ("Lenses.relationLiteral:" <+> pretty p)
+    )
+
+
 partitionLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)

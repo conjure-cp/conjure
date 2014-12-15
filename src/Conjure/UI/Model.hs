@@ -567,7 +567,8 @@ verticalRules =
 
 horizontalRules :: [Rule]
 horizontalRules =
-    [ Horizontal.Set.rule_Eq
+    [ Horizontal.Set.rule_Comprehension_Literal
+    , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
     , Horizontal.Set.rule_Leq
     , Horizontal.Set.rule_Lt
@@ -581,6 +582,7 @@ horizontalRules =
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_MaxMin
 
+    , Horizontal.MSet.rule_Comprehension_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
     , Horizontal.MSet.rule_Leq
@@ -593,6 +595,7 @@ horizontalRules =
     , Horizontal.MSet.rule_Card
     , Horizontal.MSet.rule_MaxMin
 
+    , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_Leq
@@ -606,11 +609,13 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_Defined
     , Horizontal.Function.rule_Comprehension_Range
 
+    , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
 
+    , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
     , Horizontal.Partition.rule_Leq
@@ -646,8 +651,6 @@ otherRules =
     , rule_Function_DontCare
 
     , rule_ComplexAbsPat
-    , rule_Comprehension_SetLiteral
-    , rule_Comprehension_PartitionLiteral
     ] ++ rule_InlineFilters
 
 
@@ -1115,37 +1118,3 @@ ruleGen_InlineFilters opQ opSkip p = do
            , const $ make opQ $ return $
                Comprehension (opSkip theGuard body) toKeep
            )
-
-
--- TODO: convert to multiple generators, if needed
-rule_Comprehension_SetLiteral :: Rule
-rule_Comprehension_SetLiteral = "comprehension-set-literal" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@Single{} s)]) = do
-        elems <- match setLiteral s
-        let f = lambdaToFunction pat body
-        return
-            ( "Membership on set literals"
-            , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
-                        [ f e
-                        | e <- elems
-                        ]
-            )
-    theRule _ = na "rule_Comprehension_SetLiteral"
-
-
--- TODO: convert to multiple generators, if needed
-rule_Comprehension_PartitionLiteral :: Rule
-rule_Comprehension_PartitionLiteral = "comprehension-partition-literal" `namedRule` theRule where
-    theRule (Comprehension body [Generator (GenInExpr pat@Single{} p)]) = do
-        let p' = matchDef opParts p
-        elems <- match partitionLiteral p'
-        let f = lambdaToFunction pat body
-        return
-            ( "Membership on partition literals"
-            , const $ AbstractLiteral $ AbsLitList
-                        [ f (AbstractLiteral (AbsLitSet e))
-                        | e <- elems
-                        ]
-            )
-    theRule _ = na "rule_Comprehension_PartitionLiteral"

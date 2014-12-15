@@ -4,6 +4,7 @@ module Conjure.Rules.Horizontal.Function where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
@@ -13,6 +14,27 @@ import Conjure.Language.TH
 import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
 
 import Conjure.Representations ( downX1 )
+
+
+-- TODO: when _gofBefore and _gofAfter are /= []
+rule_Comprehension_Literal :: Rule
+rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (_gofBefore@[], (pat, s), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
+            _ -> na "rule_Comprehension_Literal"
+        elems <- match functionLiteral s
+        let f = lambdaToFunction pat body
+        return
+            ( "Comprehension on function literals"
+            , const $ AbstractLiteral $ AbsLitMatrix
+                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        [ f lit
+                        | (a,b) <- elems
+                        , let lit = AbstractLiteral (AbsLitTuple [a,b])
+                        ]
+            )
+    theRule _ = na "rule_Comprehension_Literal"
 
 
 rule_Eq :: Rule
