@@ -184,7 +184,8 @@ rule_Union = "set-union" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set union"
-            , const $ make opFlatten $ AbstractLiteral $ AbsLitList
+            , const $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                (DomainInt [RangeBounded (fromInt 1) (fromInt 2)])
                 [ Comprehension body
                     $  gofBefore
                     ++ [ Generator (GenInExpr pat x) ]

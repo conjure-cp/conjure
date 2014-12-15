@@ -966,7 +966,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMax x) where
         return TypeInt
     typeOf p = raiseTypeError (MkOpMax p)
 instance EvaluateOp OpMax where
-    evaluateOp (OpMax [ConstantAbstract (AbsLitList xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
     evaluateOp (OpMax [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
     evaluateOp (OpMax [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . maximum <$> concatMapM intsOut xs
     evaluateOp (OpMax                               xs)   = ConstantInt . maximum <$> concatMapM intsOut xs
@@ -985,7 +984,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMin x) where
         return TypeInt
     typeOf p = raiseTypeError (MkOpMin p)
 instance EvaluateOp OpMin where
-    evaluateOp (OpMin [ConstantAbstract (AbsLitList xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
     evaluateOp (OpMin [ConstantAbstract (AbsLitSet  xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
     evaluateOp (OpMin [ConstantAbstract (AbsLitMSet xs)]) = ConstantInt . minimum <$> concatMapM intsOut xs
     evaluateOp (OpMin                               xs)   = ConstantInt . minimum <$> concatMapM intsOut xs
@@ -1305,12 +1303,10 @@ valuesInIntDomain ranges =
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
-boolsOut (ConstantAbstract (AbsLitList     cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Constant -> m [Int]
 intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
-intsOut (ConstantAbstract (AbsLitList     cs)) = concat <$> mapM intsOut cs
 intsOut b = return <$> intOut b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b

@@ -67,7 +67,9 @@ instantiateE (Comprehension body gensOrFilters) = do
                 else return []
 
     constants <- loop gensOrFilters
-    return $ ConstantAbstract $ AbsLitList constants
+    return $ ConstantAbstract $ AbsLitMatrix
+        (DomainInt [RangeBounded (fromInt 1) (fromInt (length constants))])
+        constants
 
 instantiateE (Reference name _) = do
     ctxt <- gets id
