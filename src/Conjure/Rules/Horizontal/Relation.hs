@@ -5,11 +5,14 @@ module Conjure.Rules.Horizontal.Relation where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Type
+import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
-import Conjure.Rules.Definition ( Rule(..), namedRule )
+import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation )
+
+import Conjure.Representations ( downX1 )
 
 
 rule_Eq :: Rule
@@ -33,6 +36,36 @@ rule_Neq = "relation-neq" `namedRule` theRule where
                , const [essence| !(&x = &y) |]
                )
     theRule _ = na "rule_Neq"
+
+
+rule_Lt :: Rule
+rule_Lt = "relation-lt" `namedRule` theRule where
+    theRule p = do
+        (a,b)          <- match opLt p
+        TypeRelation{} <- typeOf a
+        TypeRelation{} <- typeOf b
+        hasRepresentation a
+        hasRepresentation b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
+        return ( "Horizontal rule for relation <" <+> pretty (make opLt ma mb)
+               , const $ make opLt ma mb
+               )
+
+
+rule_Leq :: Rule
+rule_Leq = "relation-leq" `namedRule` theRule where
+    theRule p = do
+        (a,b)          <- match opLeq p
+        TypeRelation{} <- typeOf a
+        TypeRelation{} <- typeOf b
+        hasRepresentation a
+        hasRepresentation b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
+        return ( "Horizontal rule for relation <=" <+> pretty (make opLeq ma mb)
+               , const $ make opLeq ma mb
+               )
 
 
 rule_SubsetEq :: Rule

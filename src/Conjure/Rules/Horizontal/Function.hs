@@ -106,8 +106,8 @@ rule_Lt = "function-lt" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for function <" <+> pretty (make opLt ma mb)
                , const $ make opLt ma mb
                )
@@ -121,8 +121,8 @@ rule_Leq = "function-leq" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for function <=" <+> pretty (make opLeq ma mb)
                , const $ make opLeq ma mb
                )

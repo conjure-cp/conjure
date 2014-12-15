@@ -96,8 +96,8 @@ rule_Lt = "set-lt" `namedRule` theRule where
         TypeSet{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for set <" <+> pretty (make opLt ma mb)
                , const $ make opLt ma mb
                )
@@ -111,8 +111,8 @@ rule_Leq = "set-leq" `namedRule` theRule where
         TypeSet{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for set <=" <+> pretty (make opLeq ma mb)
                , const $ make opLeq ma mb
                )

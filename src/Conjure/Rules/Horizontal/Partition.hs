@@ -95,8 +95,8 @@ rule_Lt = "partition-lt" `namedRule` theRule where
         TypePartition{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for partition <" <+> pretty (make opLt ma mb)
                , const $ make opLt ma mb
                )
@@ -110,8 +110,8 @@ rule_Leq = "partition-leq" `namedRule` theRule where
         TypePartition{} <- typeOf b
         hasRepresentation a
         hasRepresentation b
-        ma <- AbstractLiteral . AbsLitTuple <$> downX1 a
-        mb <- AbstractLiteral . AbsLitTuple <$> downX1 b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
         return ( "Horizontal rule for partition <=" <+> pretty (make opLeq ma mb)
                , const $ make opLeq ma mb
                )

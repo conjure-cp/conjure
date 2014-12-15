@@ -27,6 +27,7 @@ module Conjure.Language.Definition
     , ExpressionLike(..), ReferenceContainer(..)
 
     , extractLettings
+    , tupleLitIfNeeded
 
     ) where
 
@@ -553,3 +554,9 @@ extractLettings model =
              ]
     where isDomain Domain{} = True
           isDomain _ = False
+
+
+tupleLitIfNeeded :: [Expression] -> Expression
+tupleLitIfNeeded [] = bug "tupleLitIfNeeded []"
+tupleLitIfNeeded [x] = x
+tupleLitIfNeeded xs = AbstractLiteral (AbsLitTuple xs)

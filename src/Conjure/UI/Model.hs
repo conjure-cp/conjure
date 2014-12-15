@@ -608,6 +608,8 @@ horizontalRules =
 
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
+    , Horizontal.Relation.rule_Leq
+    , Horizontal.Relation.rule_Lt
 
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
