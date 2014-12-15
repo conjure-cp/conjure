@@ -8,7 +8,6 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
@@ -44,9 +43,12 @@ rule_Eq = "mset-eq" `namedRule` theRule where
         TypeMSet{} <- typeOf x
         TypeMSet{} <- typeOf y
         return ( "Horizontal rule for mset equality"
-               , const $ make opAnd [ make opSubsetEq x y
-                                    , make opSubsetEq y x
-                                    ]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (forAll &iPat in &x . freq(&x,&i) = freq(&y,&i)) /\
+                            (forAll &iPat in &y . freq(&x,&i) = freq(&y,&i))
+                        |]
                )
 
 
@@ -65,23 +67,28 @@ rule_SubsetEq :: Rule
 rule_SubsetEq = "mset-subsetEq" `namedRule` theRule where
     theRule p = do
         (x,y)      <- match opSubsetEq p
-        DomainMSet _ _ inner <- domainOf x
-        TypeMSet{}           <- typeOf y
+        TypeMSet{} <- typeOf x
+        TypeMSet{} <- typeOf y
         return ( "Horizontal rule for mset subsetEq"
                , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat : &inner . freq(&x,&i) <= freq(&y,&i) |]
+                    in  [essence| forAll &iPat in &x . freq(&x,&i) <= freq(&y,&i) |]
                )
 
 
 rule_Subset :: Rule
 rule_Subset = "mset-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypeMSet{} <- typeOf a
-        TypeMSet{} <- typeOf b
+    theRule [essence| &x subset &y |] = do
+        TypeMSet{} <- typeOf x
+        TypeMSet{} <- typeOf y
         return
             ( "Horizontal rule for mset subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (forAll &iPat in &x . freq(&x,&i) <= freq(&y,&i)) /\
+                            (exists &iPat in &x . freq(&x,&i) <  freq(&y,&i))
+                        |]
             )
     theRule _ = na "rule_Subset"
 
