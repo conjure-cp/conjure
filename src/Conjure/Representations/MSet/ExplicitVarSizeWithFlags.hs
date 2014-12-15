@@ -51,7 +51,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         downD (name, DomainMSet _ attrs innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
             maxOccur <- getMaxOccur attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            let indexDomain = DomainInt [RangeBounded 1 maxSize]
             let flagDomain  = DomainInt [RangeBounded (fromInt 0) maxOccur]
             return $ Just
                 [ ( nameFlag name
@@ -137,7 +137,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
               , ConstantAbstract (AbsLitMSet constants')
               ) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded (fromInt 1) maxSize]
+            let indexDomain = DomainInt [RangeBounded 1 maxSize]
 
             let constants = histogram constants'
 

@@ -28,7 +28,7 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
         return
             ( "Comprehension on set literals"
             , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f e
                         | e <- elems
                         ]
@@ -185,7 +185,7 @@ rule_Union = "set-union" `namedRule` theRule where
         return
             ( "Horizontal rule for set union"
             , const $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt [RangeBounded (fromInt 1) (fromInt 2)])
+                (DomainInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gofBefore
                     ++ [ Generator (GenInExpr pat x) ]

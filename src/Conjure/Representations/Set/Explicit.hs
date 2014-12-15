@@ -25,7 +25,7 @@ setExplicit = Representation chck downD structuralCons downC up
         downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
             [ ( outName name
               , DomainMatrix
-                  (DomainInt [RangeBounded (fromInt 1) size])
+                  (DomainInt [RangeBounded 1 size])
                   innerDomain
               ) ]
         downD _ = na "{downD} Explicit"

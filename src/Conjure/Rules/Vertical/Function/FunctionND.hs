@@ -24,7 +24,7 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
 
         TypeTuple ts        <- typeOf x
         let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
+        let index m 1     = make opIndexing m                   (make opIndexing x 1)
             index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
         let valuesIndexed = index values xArity
 
@@ -48,7 +48,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
         let (indexDomain,_)           =  getIndices valuesDom
 
         let xArity          =  length ts
-        let index x m 1     = make opIndexing m                     (make opIndexing x (fromInt 1))
+        let index x m 1     = make opIndexing m                     (make opIndexing x 1)
             index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
         let valuesIndexed x = index x values xArity
 

@@ -28,7 +28,7 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
         return
             ( "Comprehension on relation literals"
             , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f lit
                         | e <- elems
                         , let lit = AbstractLiteral (AbsLitTuple e)

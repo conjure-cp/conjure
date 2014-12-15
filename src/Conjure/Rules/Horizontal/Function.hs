@@ -28,7 +28,7 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
         return
             ( "Comprehension on function literals"
             , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f lit
                         | (a,b) <- elems
                         , let lit = AbstractLiteral (AbsLitTuple [a,b])

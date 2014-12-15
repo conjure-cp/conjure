@@ -160,7 +160,7 @@ domainValues dom =
 toIntDomain :: MonadFail m => Domain HasRepresentation Expression -> m (Domain HasRepresentation Expression)
 toIntDomain dom =
     case dom of
-        DomainBool -> return (DomainInt [RangeBounded (fromInt 0) (fromInt 1)])
+        DomainBool -> return (DomainInt [RangeBounded (fromInt 0) 1])
         DomainInt{} -> return dom
         _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
 

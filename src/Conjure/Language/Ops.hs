@@ -660,7 +660,7 @@ instance EvaluateOp OpFlatten where
             flat c = [c]
         let flattened = flat m
         return (ConstantAbstract (AbsLitMatrix
-                    (DomainInt [RangeBounded (fromInt 1) (fromInt (length flattened))])
+                    (DomainInt [RangeBounded 1 (fromInt (length flattened))])
                     flattened))
 
 

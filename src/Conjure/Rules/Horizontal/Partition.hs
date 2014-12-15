@@ -29,7 +29,7 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
         return
             ( "Comprehension on partition literals"
             , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f lit
                         | e <- elems
                         , let lit = AbstractLiteral (AbsLitSet e)

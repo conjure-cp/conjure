@@ -68,7 +68,7 @@ instantiateE (Comprehension body gensOrFilters) = do
 
     constants <- loop gensOrFilters
     return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt [RangeBounded (fromInt 1) (fromInt (length constants))])
+        (DomainInt [RangeBounded 1 (fromInt (length constants))])
         constants
 
 instantiateE (Reference name _) = do

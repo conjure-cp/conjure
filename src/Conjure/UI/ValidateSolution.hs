@@ -48,7 +48,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
         Declaration (GivenDomainDefnEnum nm) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
-                    let domain = DomainInt [RangeBounded (fromInt 1) (fromInt (length val))]
+                    let domain = DomainInt [RangeBounded 1 (fromInt (length val))]
                     let values = [ (n, Constant (ConstantInt i))
                                  | (n, i) <- zip val allNats
                                  ]
@@ -59,7 +59,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                      , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
                                      ]
         Declaration (LettingDomainDefnEnum nm val) -> do
-                    let domain = DomainInt [RangeBounded (fromInt 1) (fromInt (length val))]
+                    let domain = DomainInt [RangeBounded 1 (fromInt (length val))]
                     let values = [ (n, Constant (ConstantInt i))
                                  | (n, i) <- zip val allNats
                                  ]
@@ -67,7 +67,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
         Declaration (LettingDomainDefnUnnamed nm _) ->
             case [ nms | Declaration (LettingDomainDefnEnum nm2 nms) <- mStatements essenceSolution , nm == nm2 ] of
                 [nms] -> do
-                    let domain = DomainInt [RangeBounded (fromInt 1) (fromInt (length nms))]
+                    let domain = DomainInt [RangeBounded 1 (fromInt (length nms))]
                     let values = [ (n, Constant (ConstantInt i))
                                  | (i,n) <- zip allNats nms
                                  ]

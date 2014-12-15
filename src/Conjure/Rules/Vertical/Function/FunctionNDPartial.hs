@@ -24,7 +24,7 @@ rule_Image = "function-image{FunctionNDPartial}" `namedRule` theRule where
 
         TypeTuple ts        <- typeOf x
         let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
+        let index m 1     = make opIndexing m                   (make opIndexing x 1)
             index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
         let flagsIndexed  = index flags  xArity
         let valuesIndexed = index values xArity
@@ -45,7 +45,7 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
 
         TypeTuple ts        <- typeOf x
         let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x (fromInt 1))
+        let index m 1     = make opIndexing m                   (make opIndexing x 1)
             index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
         let flagsIndexed  = index flags  xArity
 
@@ -69,7 +69,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
         let (indexDomain,_)           =  getIndices valuesDom
 
         let xArity          =  length ts
-        let index x m 1     = make opIndexing m                     (make opIndexing x (fromInt 1))
+        let index x m 1     = make opIndexing m                     (make opIndexing x 1)
             index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
         let flagsIndexed  x = index x flags  xArity
         let valuesIndexed x = index x values xArity

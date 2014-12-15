@@ -29,7 +29,7 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
         return
             ( "Comprehension on mset literals"
             , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded (fromInt 1) (fromInt (length elems))])
+                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f e
                         | e <- elems
                         ]

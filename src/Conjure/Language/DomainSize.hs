@@ -50,7 +50,7 @@ gDomainSizeOf
       , Integral x
       )
     => Domain r x -> m x
-gDomainSizeOf DomainBool = return (fromInt 2)
+gDomainSizeOf DomainBool = return 2
 gDomainSizeOf (DomainInt [] ) = fail "gDomainSizeOf infinite integer domain"
 gDomainSizeOf (DomainInt [r]) = domainSizeOf r
 gDomainSizeOf (DomainInt rs ) = foldr1 (make opPlus) <$> mapM domainSizeOf rs
@@ -61,11 +61,11 @@ gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*
 gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
     case sizeAttr of
-        SizeAttr_None           -> return (make opPow (fromInt 2) innerSize)
+        SizeAttr_None           -> return (make opPow 2 innerSize)
         SizeAttr_Size size      -> return (nchoosek (make opFactorial) innerSize size)
-        SizeAttr_MinSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
-        SizeAttr_MaxSize _      -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
-        SizeAttr_MinMaxSize _ _ -> return (make opPow (fromInt 2) innerSize)              -- TODO: can be better
+        SizeAttr_MinSize _      -> return (make opPow 2 innerSize)              -- TODO: can be better
+        SizeAttr_MaxSize _      -> return (make opPow 2 innerSize)              -- TODO: can be better
+        SizeAttr_MinMaxSize _ _ -> return (make opPow 2 innerSize)              -- TODO: can be better
 gDomainSizeOf (DomainMSet _ attrs inner) = do
     innerSize <- gDomainSizeOf inner
     let
@@ -96,10 +96,11 @@ gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 instance ( ExpressionLike x
          , OperatorContainer x
          , Pretty x
+         , Num x
          , Show x
          ) => DomainSizeOf (Range x) x where
-    domainSizeOf RangeSingle{} = return (fromInt 1)
-    domainSizeOf (RangeBounded l u) = return (make opPlus (fromInt 1) (make opMinus u l))
+    domainSizeOf RangeSingle{} = return 1
+    domainSizeOf (RangeBounded l u) = return (make opPlus 1 (make opMinus u l))
     domainSizeOf r = fail ("domainSizeOf infinite range:" <+> pretty r)
     
 
