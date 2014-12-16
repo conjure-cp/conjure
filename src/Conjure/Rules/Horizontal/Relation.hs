@@ -37,6 +37,43 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
+-- [ body | i <- rel(...) ]
+-- [ body | jPat <- rel(...), j =   ]
+rule_Comprehension_Projection :: Rule
+rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Projection"
+        (rel, args) <- match opRelationProj (matchDef opToSet expr)
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Comprehension on relation literals"
+            , \ fresh ->
+                let
+                    (jPat, j) = quantifiedVar (fresh `at` 0)
+                    -- those indices to keep
+                    val = AbstractLiteral $ AbsLitTuple
+                        [ [essence| &j[&iExpr] |]
+                        | (i, Nothing) <- zip allNats args
+                        , let iExpr = fromInt i
+                        ]
+                    conditions =
+                        [ Filter [essence| &j[&iExpr] = &arg |]
+                        | (i, Just arg) <- zip allNats args
+                        , let iExpr = fromInt i
+                        ]
+                in
+                    Comprehension
+                       (upd val body)
+                       $  gofBefore
+                       ++ [Generator (GenInExpr jPat rel)]
+                       ++ conditions
+                       ++ transformBi (upd val) gofAfter
+               )
+    theRule _ = na "rule_Comprehension_Projection"
+
+
 rule_Eq :: Rule
 rule_Eq = "relation-eq" `namedRule` theRule where
     theRule p = do

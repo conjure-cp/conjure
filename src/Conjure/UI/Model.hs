@@ -609,6 +609,7 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_Range
 
     , Horizontal.Relation.rule_Comprehension_Literal
+    , Horizontal.Relation.rule_Comprehension_Projection
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Leq

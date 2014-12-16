@@ -316,6 +316,25 @@ opFunctionImage _ =
     )
 
 
+opRelationProj
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [Maybe x] -> x
+       , x -> m (x, [Maybe x])
+       )
+opRelationProj _ =
+    ( \ x ys -> injectOp $ MkOpRelationProj $ OpRelationProj x ys
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpRelationProj (OpRelationProj x ys) -> return (x,ys)
+                _ -> na ("Lenses.opRelationProj:" <++> pretty p)
+    )
+
+
 opIndexing
     :: ( OperatorContainer x
        , Pretty x
