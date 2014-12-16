@@ -434,16 +434,16 @@ parseAtomicExpr = do
     withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
-parseAtomicExprNoPrePost = msum $ map try
-    $ parseOthers ++
-    [ parseQuantifiedExpr
-    , metaVarInE <$> parseMetaVariable
-    , parseReference
-    , parseLiteral
-    , parseDomainAsExpr
-    , parseWithLocals
-    , parseComprehension
-    , parens parseExpr
+parseAtomicExprNoPrePost = msum $ map try $ concat
+    [ [parseQuantifiedExpr]
+    , parseOthers
+    , [metaVarInE <$> parseMetaVariable]
+    , [parseReference]
+    , [parseLiteral]
+    , [parseDomainAsExpr]
+    , [parseWithLocals]
+    , [parseComprehension]
+    , [parens parseExpr]
     ]
 
 parseComprehension :: Parser Expression
