@@ -6,7 +6,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Type
--- import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
@@ -40,7 +39,7 @@ rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
         xs          <- downX1 x
         ys          <- downX1 y
         return
-            ( "Horizontal rule for tuple equality"
+            ( "Horizontal rule for tuple !="
             , const $ make opNot $ make opAnd (zipWith (make opEq) xs ys)
             )
 
@@ -71,6 +70,7 @@ rule_Tuple_Leq = "tuple-leq" `namedRule` theRule where
             ( "Horizontal rule for tuple <="
             , const $ decomposeLexLeq p xs ys
             )
+
 
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
 decomposeLexLt p xs ys = unroll xs ys
