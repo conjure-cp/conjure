@@ -223,18 +223,18 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
 
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
-                innerStructuralCons fresh ref = do
+                innerStructuralCons fresh refs = do
                     let (iPat, i) = quantifiedVar (headInf fresh)
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
-                    let inLoop = [essence| &ref[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) [inLoop]
+                    let inLoop r = [essence| &r[&i] |]
+                    outs <- innerStructuralConsGen (tail fresh) (map inLoop refs)
                     return (map activeZone outs)
 
-            return $ \ fresh refs -> concat <$> mapM (innerStructuralCons fresh) refs
+            return $ \ fresh refs -> innerStructuralCons fresh refs
 
         structuralCons _ _ _ = na "{structuralCons} matrix 2"
 
