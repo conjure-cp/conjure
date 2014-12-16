@@ -420,9 +420,7 @@ quantifiedVar nm =
         ref = Reference nm Nothing
     in  (pat, ref)
 
--- TODO: Add support for AbsPatTuple
--- TODO: Add support for AbsPatMatrix
--- TODO: Add support for AbsPatSet
+
 lambdaToFunction :: AbstractPattern -> Expression -> (Expression -> Expression)
 lambdaToFunction (Single nm) body = \ p ->
     let
@@ -445,7 +443,35 @@ lambdaToFunction (AbsPatTuple ts) body = \ p ->
             _ -> bug "lambdaToFunction, AbsPatTuple"
     in
         unroll ts ps body
-lambdaToFunction p _ = bug $ "Unsupported AbstractPattern, expecting `Single` but got " <+> pretty (show p)
+lambdaToFunction (AbsPatMatrix ts) body = \ p ->
+    let
+        unroll :: [AbstractPattern] -> [Expression] -> Expression -> Expression
+        unroll [] [] b = b
+        unroll (pat:pats) (val:vals) b = unroll pats vals (lambdaToFunction pat b val)
+        unroll _ _ _ = bug "lambdaToFunction, AbsPatMatrix, unroll"
+
+        ps :: [Expression]
+        ps = case p of
+            Constant (ConstantAbstract (AbsLitMatrix _ xs)) -> map Constant xs
+            AbstractLiteral (AbsLitMatrix _ xs) -> xs
+            _ -> bug "lambdaToFunction, AbsPatMatrix"
+    in
+        unroll ts ps body
+lambdaToFunction (AbsPatSet ts) body = \ p ->
+    let
+        unroll :: [AbstractPattern] -> [Expression] -> Expression -> Expression
+        unroll [] [] b = b
+        unroll (pat:pats) (val:vals) b = unroll pats vals (lambdaToFunction pat b val)
+        unroll _ _ _ = bug "lambdaToFunction, AbsPatSet, unroll"
+
+        ps :: [Expression]
+        ps = case p of
+            Constant (ConstantAbstract (AbsLitSet xs)) -> map Constant xs
+            AbstractLiteral (AbsLitSet xs) -> xs
+            _ -> bug "lambdaToFunction, AbsPatSet"
+    in
+        unroll ts ps body
+lambdaToFunction p@AbstractPatternMetaVar{} _ = bug $ "Unsupported AbstractPattern, got " <+> pretty (show p)
 
 
 ------------------------------------------------------------------------------------------------------------------------
