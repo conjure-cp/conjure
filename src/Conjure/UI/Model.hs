@@ -261,7 +261,8 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             pickedIndex <- liftIO $ do
                 print (vcat (map fst options))
                 putStr "Pick option: "
-                readNote "Expecting an integer." <$> getLine
+                line <- getLine
+                return $ if null line then 1 else readNote "Expecting an integer." line
             let picked = snd (at options (pickedIndex - 1))
             return [picked]
         AtRandom -> do
