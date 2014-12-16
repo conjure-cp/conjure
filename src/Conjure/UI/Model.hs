@@ -529,10 +529,14 @@ verticalRules =
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
+    , Vertical.Set.Explicit.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithFlags.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_Comprehension
+    , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
 
     , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Comprehension

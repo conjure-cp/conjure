@@ -8,6 +8,7 @@ import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
+import Conjure.Language.Lenses
 import Conjure.Language.TH
 
 import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
@@ -40,3 +41,44 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithFlags}" `namedRule` t
                         ++ transformBi (upd val) gofAfter
                )
     theRule _ = na "rule_Comprehension"
+
+
+rule_PowerSet_Comprehension :: Rule
+rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithFlags}" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
+            _ -> na "rule_PowerSet_Comprehension"
+        s                          <- match opPowerSet expr
+        TypeSet{}                  <- typeOf s
+        "ExplicitVarSizeWithFlags" <- representationOf s
+        [flags, values]            <- downX1 s
+        DomainMatrix index _       <- domainOf values
+        let upd val old = lambdaToFunction setPat old val
+        return
+            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlagst representation"
+            , \ fresh ->
+                let outPats =
+                        [ quantifiedVar (fresh `at` i) | i <- take setPatNum allNats ]
+                    val = AbstractLiteral $ AbsLitSet
+                        [ [essence| &values[&j] |] | (_,j) <- outPats ]
+                in
+                    Comprehension (upd val body) $ concat
+                        [ gofBefore
+                        , concat
+                            [ [ Generator (GenDomainNoRepr pat index)
+                              , Filter [essence| &flags[&patX] |]
+                              ]
+                            | (pat,patX) <- take 1 outPats
+                            ]
+                        , concat
+                            [ [ Generator (GenDomainNoRepr pat index)
+                              , Filter [essence| &patX > &beforeX |]
+                              , Filter [essence| &flags[&patX] |]
+                              ]
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            ]
+                        , transformBi (upd val) gofAfter
+                        ]
+            )
+    theRule _ = na "rule_PowerSet_Comprehension"
