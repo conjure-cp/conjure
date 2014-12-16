@@ -259,4 +259,5 @@ bind :: MonadState [(Name, Expression)] m => AbstractPattern -> Constant -> m ()
 bind (Single nm) val = modify ((nm, Constant val) :)
 bind (AbsPatTuple  pats) (ConstantAbstract (AbsLitTuple    vals)) = zipWithM_ bind pats vals
 bind (AbsPatMatrix pats) (ConstantAbstract (AbsLitMatrix _ vals)) = zipWithM_ bind pats vals
+bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals)) = zipWithM_ bind pats vals
 bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:" <+> pretty val]
