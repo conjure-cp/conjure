@@ -559,6 +559,10 @@ parseQuantifiedExpr = do
                             lexeme L_in
                             over <- parseExpr
                             return (\ pat -> GenInExpr pat over )
+                        , Right <$> do
+                            lexeme L_subsetEq
+                            over <- parseExpr
+                            return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
                         ]
     qnGuard     <- optionMaybe (comma *> parseExpr)
     qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"

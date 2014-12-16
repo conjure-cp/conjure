@@ -72,6 +72,7 @@ data Ops x
     | MkOpSupsetEq        (OpSupsetEq x)
     | MkOpIntersect       (OpIntersect x)
     | MkOpUnion           (OpUnion x)
+    | MkOpPowerSet        (OpPowerSet x)
     | MkOpToSet           (OpToSet x)
     | MkOpToMSet          (OpToMSet x)
     | MkOpMax             (OpMax x)
@@ -129,6 +130,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpSupsetEq            x) = typeOf x
     typeOf (MkOpIntersect           x) = typeOf x
     typeOf (MkOpUnion               x) = typeOf x
+    typeOf (MkOpPowerSet            x) = typeOf x
     typeOf (MkOpToSet               x) = typeOf x
     typeOf (MkOpToMSet              x) = typeOf x
     typeOf (MkOpMax                 x) = typeOf x
@@ -177,6 +179,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpSupsetEq            x) = evaluateOp x
     evaluateOp (MkOpIntersect           x) = evaluateOp x
     evaluateOp (MkOpUnion               x) = evaluateOp x
+    evaluateOp (MkOpPowerSet            x) = evaluateOp x
     evaluateOp (MkOpToSet               x) = evaluateOp x
     evaluateOp (MkOpToMSet              x) = evaluateOp x
     evaluateOp (MkOpMax                 x) = evaluateOp x
@@ -249,6 +252,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec prec (MkOpSupsetEq  op@(OpSupsetEq  a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpIntersect op@(OpIntersect a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpUnion     op@(OpUnion     a b)) = prettyPrecBinOp prec [op] a b
+    prettyPrec _ (MkOpPowerSet (OpPowerSet a)) = "superSet" <> prParens (pretty a)
     prettyPrec _ (MkOpToSet    (OpToSet    a)) = "toSet"    <> prParens (pretty a)
     prettyPrec _ (MkOpToMSet   (OpToMSet   a)) = "toMSet"   <> prParens (pretty a)
     prettyPrec _ (MkOpMax      (OpMax     xs)) = "max" <> prettyList prParens "," xs
@@ -886,6 +890,26 @@ instance EvaluateOp OpUnion where
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
+
+
+data OpPowerSet x = OpPowerSet x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpPowerSet x)
+instance Hashable  x => Hashable  (OpPowerSet x)
+instance ToJSON    x => ToJSON    (OpPowerSet x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpPowerSet x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpPowerSet x) where
+    typeOf p@(OpPowerSet x) = do
+        tx <- typeOf x
+        case tx of
+            TypeSet i -> return (TypeSet (TypeSet i))
+            _ -> raiseTypeError (MkOpPowerSet p)
+instance EvaluateOp OpPowerSet where
+    evaluateOp (OpPowerSet (ConstantAbstract (AbsLitSet xs))) =
+        return $ ConstantAbstract $ AbsLitSet
+            [ ConstantAbstract (AbsLitSet ys)
+            | ys <- subsequences (sortNub xs) ]
+    evaluateOp op = na $ "evaluateOp{OpPowerSet}:" <++> pretty (show op)
 
 
 data OpToSet x = OpToSet x

@@ -240,6 +240,25 @@ opToInt _ =
     )
 
 
+opPowerSet
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opPowerSet _ =
+    ( injectOp . MkOpPowerSet . OpPowerSet
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpPowerSet (OpPowerSet x) -> return x
+                _ -> na ("Lenses.opPowerSet:" <++> pretty p)
+    )
+
+
 opToSet
     :: ( OperatorContainer x
        , Pretty x
