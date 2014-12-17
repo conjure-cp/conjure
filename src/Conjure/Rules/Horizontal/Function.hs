@@ -37,6 +37,28 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
+rule_Image_Literal :: Rule
+rule_Image_Literal = "function-image-literal" `namedRule` theRule where
+    theRule [essence| &lhs = &rhs |] = do
+        (func, [arg]) <- match opFunctionImage lhs
+        elems         <- match functionLiteral func
+        if null elems
+            then
+                return
+                    ( "Image of empty function literal"
+                    , const [essence| false |]
+                    )
+            else
+                return
+                    ( "Image of function literal"
+                    , const $ foldr1 (\ i j -> make opOr [i,j] )
+                        [ [essence| (&a = &arg) /\ (&b = &rhs) |]
+                        | (a,b) <- elems
+                        ]
+                    )
+    theRule _ = na "rule_Image_Literal"
+
+
 rule_Eq :: Rule
 rule_Eq = "function-eq" `namedRule` theRule where
     theRule p = do

@@ -36,6 +36,27 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Literal"
 
 
+rule_Freq_Literal :: Rule
+rule_Freq_Literal = "mset-freq-literal" `namedRule` theRule where
+    theRule p = do
+        (mset, arg) <- match opFreq p
+        elems       <- match msetLiteral mset
+        if null elems
+            then
+                return
+                    ( "freq on empty mset literal"
+                    , const [essence| false |]
+                    )
+            else
+                return
+                    ( "freq on mset literal"
+                    , const $ foldr1 (make opPlus)
+                        [ [essence| toInt(&e = &arg) |]
+                        | e <- elems
+                        ]
+                    )
+
+
 rule_Eq :: Rule
 rule_Eq = "mset-eq" `namedRule` theRule where
     theRule p = do
