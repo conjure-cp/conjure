@@ -787,6 +787,24 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
 instance EvaluateOp OpSubset where
     evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
+    evaluateOp (OpSubset (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+        let asHist = histogram as
+            bsHist = histogram bs
+            allElems = sortNub (as++bs)
+        in return $ ConstantBool $ and
+            [ and
+                [ countA <= countB
+                | e <- allElems
+                , let countA = fromMaybe 0 (e `lookup` asHist)
+                , let countB = fromMaybe 0 (e `lookup` bsHist)
+                ]
+            , or
+                [ countA < countB
+                | e <- allElems
+                , let countA = fromMaybe 0 (e `lookup` asHist)
+                , let countB = fromMaybe 0 (e `lookup` bsHist)
+                ]
+            ]
     evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
 
 
@@ -803,6 +821,16 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
 instance EvaluateOp OpSubsetEq where
     evaluateOp (OpSubsetEq (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantBool $ all (`elem` bs) as
+    evaluateOp (OpSubsetEq (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+        let asHist = histogram as
+            bsHist = histogram bs
+            allElems = sortNub (as++bs)
+        in return $ ConstantBool $ and
+            [ countA <= countB
+            | e <- allElems
+            , let countA = fromMaybe 0 (e `lookup` asHist)
+            , let countB = fromMaybe 0 (e `lookup` bsHist)
+            ]
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
 
@@ -817,9 +845,7 @@ instance BinaryOperator (OpSupset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
 instance EvaluateOp OpSupset where
-    evaluateOp (OpSupset (ConstantAbstract (AbsLitSet bs)) (ConstantAbstract (AbsLitSet as))) =
-        return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
-    evaluateOp op = na $ "evaluateOp{OpSupset}:" <++> pretty (show op)
+    evaluateOp (OpSupset a b) = evaluateOp (OpSubset b a)
 
 
 data OpSupsetEq x = OpSupsetEq x x
@@ -833,9 +859,7 @@ instance BinaryOperator (OpSupsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 instance EvaluateOp OpSupsetEq where
-    evaluateOp (OpSupsetEq (ConstantAbstract (AbsLitSet bs)) (ConstantAbstract (AbsLitSet as))) =
-        return $ ConstantBool $ all (`elem` bs) as
-    evaluateOp op = na $ "evaluateOp{OpSupsetEq}:" <++> pretty (show op)
+    evaluateOp (OpSupsetEq a b) = evaluateOp (OpSubsetEq b a)
 
 
 data OpIntersect x = OpIntersect x x
