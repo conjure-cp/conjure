@@ -330,7 +330,6 @@ interactiveFixedQsAutoA = strategyToDriver PickFirst (Auto Interactive)
 addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
-        nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
         mkTrueConstraint forg nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr forg nm dom)))
         trueConstraints = [ mkTrueConstraint forg nm d
                           | (Declaration (FindOrGiven forg nm d), after) <- withAfter (mStatements m)
@@ -338,6 +337,9 @@ addTrueConstraints m =
                           ]
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
+
+nbUses :: Data x => Name -> x -> Int
+nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
 
 
 oneSuchThat :: Model -> Model
@@ -406,9 +408,9 @@ updateDeclarations model =
     let
         representations = model |> mInfo |> miRepresentations
 
-        statements = concatMap onEachStatement (mStatements model)
+        statements = concatMap onEachStatement (withAfter (mStatements model))
 
-        onEachStatement inStatement =
+        onEachStatement (inStatement, afters) =
             case inStatement of
                 Declaration (FindOrGiven forg nm _) ->
                     case [ d | (n, d) <- representations, n == nm ] of
@@ -416,6 +418,7 @@ updateDeclarations model =
                         domains -> concatMap (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) ->
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
+                Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
                 Declaration LettingDomainDefnEnum{}    -> []
                 Declaration LettingDomainDefnUnnamed{} -> []
                 _ -> [inStatement]

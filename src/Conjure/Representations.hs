@@ -46,7 +46,7 @@ onAbstractLiteral x = bug ("downX1.onAbstractLiteral:" <++> pretty (show x))
 onReference :: MonadFail m => Name -> ReferenceTo -> m [Expression]
 onReference nm refTo =
     case refTo of
-        Alias{}                   -> bug  ("downX1.onReference.Alias:"           <++> pretty (show nm))
+        Alias x                   -> downX1 x
         InComprehension{}         -> fail ("downX1.onReference.InComprehension:" <++> pretty (show nm))
         DeclNoRepr{}              -> fail ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
