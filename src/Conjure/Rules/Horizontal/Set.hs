@@ -16,22 +16,23 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchF
 import Conjure.Representations ( downX1 )
 
 
--- TODO: when _gofBefore and _gofAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         elems <- match setLiteral expr
-        let f = lambdaToFunction pat body
+        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)]) elems
+        let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on set literals"
-            , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
-                        [ f e
-                        | e <- elems
-                        ]
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  Comprehension (upd i body)
+                         $  gofBefore
+                         ++ [Generator (GenInExpr iPat outLiteral)]
+                         ++ transformBi (upd i) gofAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 

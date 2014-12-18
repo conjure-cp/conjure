@@ -18,23 +18,51 @@ import Conjure.Representations ( downX1 )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq )
 
 
--- TODO: when _gofBefore and _gofAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrFilters) = do
-        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension"
-        (index, elems) <- match matrixLiteral expr
+            _ -> na "rule_Comprehension_Literal"
+        (index, _elems) <- match matrixLiteral expr
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension"
-            , const $ AbstractLiteral $ AbsLitMatrix index
-                [ upd e body
-                | e <- elems
-                ]
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     val = make opIndexing expr i
+                 in  Comprehension (upd val body)
+                         $  gofBefore
+                         ++ [Generator (GenDomainNoRepr iPat index)]
+                         ++ transformBi (upd i) gofAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
+
+
+rule_Comprehension_Literal_ContainsSet :: Rule
+rule_Comprehension_Literal_ContainsSet = "matrix-comprehension-literal-containsSet" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Literal_ContainsSet"
+        (matrix, indexer) <- match opIndexing expr
+        (index, elems')   <- match matrixLiteral matrix
+        elems             <- mapM (match setLiteral) elems'
+        let insideOut = make setLiteral
+                [ make opIndexing (make matrixLiteral index inMatrix) indexer
+                | inMatrix <- transpose elems
+                ]
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Vertical rule for matrix-comprehension"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  Comprehension (upd i body)
+                         $  gofBefore
+                         ++ [Generator (GenInExpr iPat insideOut)]
+                         ++ transformBi (upd i) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Literal_ContainsSet"
 
 
 rule_Matrix_Eq :: Rule
