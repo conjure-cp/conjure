@@ -525,6 +525,7 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index
 
+    , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose

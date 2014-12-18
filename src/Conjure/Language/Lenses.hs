@@ -4,6 +4,7 @@ module Conjure.Language.Lenses where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 
@@ -821,6 +822,21 @@ constantInt _ =
     , \ p -> case p of
             (Constant (ConstantInt i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
+    )
+
+
+matrixLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Domain () Expression -> [Expression] -> Expression
+       , Expression -> m (Domain () Expression, [Expression])
+       )
+matrixLiteral _ =
+    ( \ index elems -> AbstractLiteral $ AbsLitMatrix index elems
+    , \ p -> case p of
+        Constant (ConstantAbstract (AbsLitMatrix index xs)) -> return (fmap Constant index, map Constant xs)
+        AbstractLiteral (AbsLitMatrix index xs) -> return (index, xs)
+        _ -> na ("Lenses.matrixLiteral:" <+> pretty p)
     )
 
 

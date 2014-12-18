@@ -12,9 +12,29 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
+import Conjure.Rules.Definition ( Rule(..), namedRule, matchFirst )
+
 import Conjure.Representations ( downX1 )
-import Conjure.Rules.Definition ( Rule(..), namedRule )
 import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq )
+
+
+-- TODO: when _gofBefore and _gofAfter are /= []
+rule_Comprehension_Literal :: Rule
+rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension"
+        (index, elems) <- match matrixLiteral expr
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Vertical rule for matrix-comprehension"
+            , const $ AbstractLiteral $ AbsLitMatrix index
+                [ upd e body
+                | e <- elems
+                ]
+            )
+    theRule _ = na "rule_Comprehension_Literal"
 
 
 rule_Matrix_Eq :: Rule

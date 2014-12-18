@@ -47,6 +47,7 @@ enumerateRange RangeUpperBounded{} = bug "enumerateRange RangeUpperBounded"
 
 enumerateInConstant :: Constant -> [Constant]
 enumerateInConstant constant = case constant of
+    ConstantAbstract (AbsLitMatrix _ xs) -> xs
     ConstantAbstract (AbsLitSet      xs) -> xs
     ConstantAbstract (AbsLitMSet     xs) -> xs
     ConstantAbstract (AbsLitRelation xs) -> map (ConstantAbstract . AbsLitTuple) xs

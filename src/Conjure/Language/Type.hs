@@ -113,6 +113,7 @@ homoType msg xs =
 
 innerTypeOf :: MonadFail m => Type -> m Type
 innerTypeOf (TypeList t) = return t
+innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
