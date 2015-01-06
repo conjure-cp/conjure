@@ -650,8 +650,9 @@ otherRules =
 
     , rule_GeneratorsFirst
 
-    , rule_BubbleUp
-    , rule_BubbleToAnd
+    , rule_BubbleUp_Nested
+    , rule_BubbleUp_Index
+    , rule_BubbleUp_ToAnd
 
     , rule_Bool_DontCare
     , rule_Int_DontCare
@@ -898,32 +899,41 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
     theRule _ = na "rule_Decompose_AllDiff"
 
 
-rule_BubbleUp :: Rule
-rule_BubbleUp = "bubble-up" `namedRule` theRule where
+rule_BubbleUp_Nested :: Rule
+rule_BubbleUp_Nested = "bubble-up-nested" `namedRule` theRule where
     theRule (WithLocals (WithLocals x locals1) locals2) =
-        return ( "Bubbling up nested bubbles"
-               , const $ WithLocals x (locals1 ++ locals2)
-               )
+        return
+            ( "Bubbling up nested bubbles"
+            , const $ WithLocals x (locals1 ++ locals2)
+            )
+    theRule _ = na "rule_BubbleUp_Nested"
+
+
+rule_BubbleUp_Index :: Rule
+rule_BubbleUp_Index = "bubble-up-indexing" `namedRule` theRule where
     theRule p = do
         (m, x) <- match opIndexing p
         case (m, x) of
             (WithLocals m' locals1, WithLocals x' locals2) ->
-                return ( "Bubbling up when the bubble is used to index something (1/3)"
-                       , const $ WithLocals (make opIndexing m' x') (locals1 ++ locals2)
-                       )
+                return
+                    ( "Bubbling up when the bubble is used to index something (1/3)"
+                    , const $ WithLocals (make opIndexing m' x') (locals1 ++ locals2)
+                    )
             (WithLocals m' locals1, x') ->
-                return ( "Bubbling up when the bubble is used to index something (2/3)"
-                       , const $ WithLocals (make opIndexing m' x') locals1
-                       )
+                return
+                    ( "Bubbling up when the bubble is used to index something (2/3)"
+                    , const $ WithLocals (make opIndexing m' x') locals1
+                    )
             (m', WithLocals x' locals2) ->
-                return ( "Bubbling up when the bubble is used to index something (3/3)"
-                       , const $ WithLocals (make opIndexing m' x') locals2
-                       )
-            _ -> na "rule_BubbleUp"
+                return
+                    ( "Bubbling up when the bubble is used to index something (3/3)"
+                    , const $ WithLocals (make opIndexing m' x') locals2
+                    )
+            _ -> na "rule_BubbleUp_Index"
 
 
-rule_BubbleToAnd :: Rule
-rule_BubbleToAnd = "bubble-to-and" `namedRule` theRule where
+rule_BubbleUp_ToAnd :: Rule
+rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
     theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
     theRule (WithLocals x locals) = do
         TypeBool <- typeOf x
@@ -932,9 +942,10 @@ rule_BubbleToAnd = "bubble-to-and" `namedRule` theRule where
         let out = case outs of
                     [_] -> x
                     _   -> make opAnd outs
-        return ( "Converting a bubble into a conjunction."
-               , const out
-               )
+        return
+            ( "Converting a bubble into a conjunction."
+            , const out
+            )
     theRule _ = na "rule_BubbleToAnd"
 
     onlyConstraints :: MonadFail m => [Statement] -> m [Expression]
