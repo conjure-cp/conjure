@@ -18,8 +18,8 @@ import Conjure.Representations ( downX1 )
 
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}                   <- typeOf s
@@ -36,7 +36,7 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
                     Comprehension (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
-                           , Filter [essence| &j <= &marker |]
+                           , Condition [essence| &j <= &marker |]
                            ]
                         ++ transformBi (upd val) gofAfter
                )
@@ -45,8 +45,8 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
 
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         s                           <- match opPowerSet expr
@@ -67,14 +67,14 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
                         [ gofBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
-                              , Filter [essence| &patX <= &marker |]
+                              , Condition [essence| &patX <= &marker |]
                               ]
                             | (pat,patX) <- take 1 outPats
                             ]
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
-                              , Filter [essence| &patX > &beforeX |]
-                              , Filter [essence| &patX <= &marker |]
+                              , Condition [essence| &patX > &beforeX |]
+                              , Condition [essence| &patX <= &marker |]
                               ]
                             | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
                             ]

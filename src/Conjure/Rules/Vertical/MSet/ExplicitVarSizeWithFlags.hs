@@ -18,8 +18,8 @@ import Conjure.Representations ( downX1 )
 
 rule_Comprehension :: Rule
 rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeMSet{}                  <- typeOf s
@@ -36,7 +36,7 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
                     Comprehension (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
-                           , Filter [essence| &flags[&j] > 0 |]
+                           , Condition [essence| &flags[&j] > 0 |]
                            ]
                         ++ transformBi (upd val) gofAfter
                )

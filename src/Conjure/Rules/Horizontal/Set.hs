@@ -18,8 +18,8 @@ import Conjure.Representations ( downX1 )
 
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         elems <- match setLiteral expr
@@ -142,8 +142,8 @@ rule_Leq = "set-leq" `namedRule` theRule where
 
 rule_Intersect :: Rule
 rule_Intersect = "set-intersect" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Intersect"
         (x, y)             <- match opIntersect s
@@ -161,7 +161,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
                 Comprehension body
                     $  gofBefore
                     ++ [ Generator (GenInExpr pat x)
-                       , Filter [essence| &i in &y |]
+                       , Condition [essence| &i in &y |]
                        ]
                     ++ gofAfter
             )
@@ -170,8 +170,8 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
 
 rule_Union :: Rule
 rule_Union = "set-union" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Union"
         (x, y)             <- match opUnion s
@@ -194,7 +194,7 @@ rule_Union = "set-union" `namedRule` theRule where
                 , Comprehension body
                     $  gofBefore
                     ++ [ Generator (GenInExpr pat y)
-                       , Filter [essence| !(&i in &x) |]
+                       , Condition [essence| !(&i in &x) |]
                        ]
                     ++ gofAfter
                 ]

@@ -41,9 +41,9 @@ instantiateE
     => Expression
     -> m Constant
 
-instantiateE (Comprehension body gensOrFilters) = do
+instantiateE (Comprehension body gensOrConds) = do
     let
-        loop :: (MonadFail m, MonadState [(Name, Expression)] m) => [GeneratorOrFilter] -> m [Constant]
+        loop :: (MonadFail m, MonadState [(Name, Expression)] m) => [GeneratorOrCondition] -> m [Constant]
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
@@ -60,13 +60,13 @@ instantiateE (Comprehension body gensOrFilters) = do
             concatMapM
                 (\ val -> scope $ bind pat val >> loop rest )
                 (enumerateInConstant exprConstant)
-        loop (Filter expr : rest) = do
+        loop (Condition expr : rest) = do
             constant <- instantiateE expr
             if constant == ConstantBool True
                 then loop rest
                 else return []
 
-    constants <- loop gensOrFilters
+    constants <- loop gensOrConds
     return $ ConstantAbstract $ AbsLitMatrix
         (DomainInt [RangeBounded 1 (fromInt (length constants))])
         constants

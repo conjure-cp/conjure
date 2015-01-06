@@ -18,8 +18,8 @@ import Conjure.Representations ( downX1 )
 
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
@@ -33,7 +33,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
                 Comprehension body
                     $  gofBefore
                     ++ [ Generator (GenDomainNoRepr pat index)
-                       , Filter [essence| &m[&i] |]
+                       , Condition [essence| &m[&i] |]
                        ]
                     ++ gofAfter
             )
@@ -42,8 +42,8 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
 
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pats, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pats, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr (AbsPatSet pats) expr) -> return (pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         -- assert pats are Single{}
@@ -61,15 +61,15 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
                     [ gofBefore
                     , concat
                         [ [ Generator (GenDomainNoRepr (Single pat) index)
-                          , Filter [essence| &m[&patX] |]
+                          , Condition [essence| &m[&patX] |]
                           ]
                         | pat <- take 1 patNames
                         , let patX = Reference pat Nothing
                         ]
                     , concat
                         [ [ Generator (GenDomainNoRepr (Single pat) index)
-                          , Filter [essence| &patX > &beforeX |]
-                          , Filter [essence| &m[&patX] |]
+                          , Condition [essence| &patX > &beforeX |]
+                          , Condition [essence| &m[&patX] |]
                           ]
                         | (before, pat) <- zip patNames (tail patNames)
                         , let beforeX = Reference before Nothing

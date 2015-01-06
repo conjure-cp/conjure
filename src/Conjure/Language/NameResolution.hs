@@ -125,7 +125,7 @@ resolveX p@Comprehension{} = scope $ do
                     forM_ (universeBi (generatorPat gen)) $ \ nm ->
                         modify (second ((nm, refto) :))
                     return (Generator gen')
-                Filter y -> Filter <$> resolveX y
+                Condition y -> Condition <$> resolveX y
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"

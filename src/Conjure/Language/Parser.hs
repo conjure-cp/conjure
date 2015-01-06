@@ -450,7 +450,7 @@ parseComprehension :: Parser Expression
 parseComprehension = brackets $ do
     x   <- parseExpr
     lexeme L_Bar
-    gens <- sepBy1 (try generator <|> filter_) comma
+    gens <- sepBy1 (try generator <|> condition) comma
     return (Comprehension x (concat gens))
     where
         generator = do
@@ -465,7 +465,7 @@ parseComprehension = brackets $ do
                     expr <- parseExpr
                     return [Generator (GenInExpr       pat expr)   | pat <- pats]
                 ]
-        filter_ = return . Filter <$> parseExpr
+        condition = return . Condition <$> parseExpr
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain
@@ -575,7 +575,7 @@ parseQuantifiedExpr = do
            $ return
            $ Comprehension qnBody
            $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
-             [ Filter g              | Just g <- [qnGuard] ]
+             [ Condition g           | Just g <- [qnGuard] ]
 
 
 parseAbstractPattern :: Parser AbstractPattern

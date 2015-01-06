@@ -664,7 +664,7 @@ otherRules =
     , rule_Function_DontCare
 
     , rule_ComplexAbsPat
-    ] ++ rule_InlineFilters
+    ] ++ rule_InlineConditions
 
 
 rule_ChooseRepr :: Config -> Rule
@@ -765,8 +765,8 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 rule_ChooseReprForComprehension :: Rule
 rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule where
 
-    theRule (Comprehension body gensOrFilters) = do    
-        (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do    
+        (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
@@ -797,7 +797,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
                                 $  gofBefore
                                 ++ [ Generator (GenDomainHasRepr name dom)
                                    | (name, dom) <- outDomains ]
-                                ++ map Filter structurals
+                                ++ map Condition structurals
                                 ++ transformBi updateRepr gofAfter
                     out <- resolveNamesX out'
                     return out
@@ -815,14 +815,14 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
 rule_GeneratorsFirst :: Rule
 rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        let gens       = [ x | x@Generator{} <- gensOrFilters ]
-        let conditions = [ x | x@Filter{}    <- gensOrFilters ]
-        let gensOrFilters' = gens ++ conditions
-        when (gensOrFilters == gensOrFilters') $ na "rule_GeneratorsFirst"
+    theRule (Comprehension body gensOrConds) = do
+        let gens       = [ x | x@Generator{} <- gensOrConds ]
+        let conditions = [ x | x@Condition{} <- gensOrConds ]
+        let gensOrConds' = gens ++ conditions
+        when (gensOrConds == gensOrConds') $ na "rule_GeneratorsFirst"
         return
             ( "Generators come first."
-            , const $ Comprehension body gensOrFilters'
+            , const $ Comprehension body gensOrConds'
             )
     theRule _ = na "rule_GeneratorsFirst"
 
@@ -935,8 +935,8 @@ rule_BubbleUp_Index = "bubble-up-indexing" `namedRule` theRule where
 
 rule_BubbleUp_Comprehension :: Rule
 rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
             _ -> na "rule_BubbleUp_Comprehension"
         locals' <- forM locals $ \ l -> case l of
@@ -947,7 +947,7 @@ rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule wher
             , const $ Comprehension body
                 $  gofBefore
                 ++ [Generator (GenInExpr pat expr)]
-                ++ map Filter (concat locals')
+                ++ map Condition (concat locals')
                 ++ gofAfter
             )
     theRule _ = na "rule_BubbleUp_Comprehension"
@@ -1065,8 +1065,8 @@ rule_Function_DontCare = "dontCare-function" `namedRule` theRule where
 
 rule_ComplexAbsPat :: Rule
 rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenDomainNoRepr pat@AbsPatTuple{} domain) -> return (pat, Left domain)
             Generator (GenInExpr       pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
             _ -> na "rule_ComplexAbsPat"
@@ -1110,13 +1110,13 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineFilters :: [Rule]
-rule_InlineFilters =
-    [ namedRule "filter-inside-and" $ ruleGen_InlineFilters opAnd opAndSkip
-    , namedRule "filter-inside-or"  $ ruleGen_InlineFilters opOr  opOrSkip
-    , namedRule "filter-inside-sum" $ ruleGen_InlineFilters opSum opSumSkip
-    , namedRule "filter-inside-max" $ ruleGen_InlineFilters opMax opMaxSkip
-    , namedRule "filter-inside-min" $ ruleGen_InlineFilters opMin opMinSkip
+rule_InlineConditions :: [Rule]
+rule_InlineConditions =
+    [ namedRule "condition-inside-and" $ ruleGen_InlineConditions opAnd opAndSkip
+    , namedRule "condition-inside-or"  $ ruleGen_InlineConditions opOr  opOrSkip
+    , namedRule "condition-inside-sum" $ ruleGen_InlineConditions opSum opSumSkip
+    , namedRule "condition-inside-max" $ ruleGen_InlineConditions opMax opMaxSkip
+    , namedRule "condition-inside-min" $ ruleGen_InlineConditions opMin opMinSkip
     ]
     where
         opAndSkip x y = make opImply x y
@@ -1125,7 +1125,7 @@ rule_InlineFilters =
         opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
         opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
-ruleGen_InlineFilters
+ruleGen_InlineConditions
     :: MonadFail m
     => (forall m1 . MonadFail m1
             => Proxy (m1 :: * -> *)
@@ -1134,19 +1134,19 @@ ruleGen_InlineFilters
     -> (Expression -> Expression -> Expression)
     -> Expression
     -> m (Doc, [Name] -> Expression)
-ruleGen_InlineFilters opQ opSkip p = do
-    [Comprehension body gensOrFilters] <- match opQ p
+ruleGen_InlineConditions opQ opSkip p = do
+    [Comprehension body gensOrConds] <- match opQ p
     let (toInline, toKeep) = mconcat
             [ case gof of
-                Filter x | categoryOf x == CatDecision -> ([x],[])
+                Condition x | categoryOf x == CatDecision -> ([x],[])
                 _ -> ([],[gof])
-            | gof <- gensOrFilters
+            | gof <- gensOrConds
             ]
     theGuard <- case toInline of
-        []  -> fail "No filter to inline."
+        []  -> fail "No condition to inline."
         [x] -> return x
         xs  -> return $ make opAnd xs
-    return ( "Inlining filters"
+    return ( "Inlining conditions"
            , const $ make opQ $ return $
                Comprehension (opSkip theGuard body) toKeep
            )

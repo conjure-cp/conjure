@@ -19,8 +19,8 @@ import Conjure.Representations ( downX1 )
 -- TODO: when _gofBefore and _gofAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         elems <- match relationLiteral expr
@@ -41,8 +41,8 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
 -- [ body | jPat <- rel(...), j =   ]
 rule_Comprehension_Projection :: Rule
 rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Projection"
         (rel, args) <- match opRelationProj (matchDef opToSet expr)
@@ -59,7 +59,7 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
                         , let iExpr = fromInt i
                         ]
                     conditions =
-                        [ Filter [essence| &j[&iExpr] = &arg |]
+                        [ Condition [essence| &j[&iExpr] = &arg |]
                         | (i, Just arg) <- zip allNats args
                         , let iExpr = fromInt i
                         ]

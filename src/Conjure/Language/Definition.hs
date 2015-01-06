@@ -22,7 +22,7 @@ module Conjure.Language.Definition
     , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
-    , GeneratorOrFilter(..), Generator(..), generatorPat
+    , GeneratorOrCondition(..), Generator(..), generatorPat
 
     , ExpressionLike(..), ReferenceContainer(..)
 
@@ -301,7 +301,7 @@ data Expression
     | Domain (Domain () Expression)
     | Reference Name (Maybe ReferenceTo)
     | WithLocals Expression [Statement]
-    | Comprehension Expression [GeneratorOrFilter]
+    | Comprehension Expression [GeneratorOrCondition]
     | Op (Ops Expression)
     | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -534,17 +534,17 @@ instance Pretty AbstractPattern where
 -- Generator -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-data GeneratorOrFilter = Generator Generator | Filter Expression
+data GeneratorOrCondition = Generator Generator | Condition Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-instance Pretty GeneratorOrFilter where
+instance Pretty GeneratorOrCondition where
     pretty (Generator x) = pretty x
-    pretty (Filter x) = pretty x
+    pretty (Condition x) = pretty x
 
-instance Serialize GeneratorOrFilter
-instance Hashable  GeneratorOrFilter
-instance ToJSON    GeneratorOrFilter where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  GeneratorOrFilter where parseJSON = JSON.genericParseJSON jsonOptions
+instance Serialize GeneratorOrCondition
+instance Hashable  GeneratorOrCondition
+instance ToJSON    GeneratorOrCondition where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  GeneratorOrCondition where parseJSON = JSON.genericParseJSON jsonOptions
 
 
 data Generator

@@ -15,8 +15,8 @@ import Conjure.Representations ( downX1 )
 
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{PartitionAsSet}" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let p                =  matchDef opParts expr

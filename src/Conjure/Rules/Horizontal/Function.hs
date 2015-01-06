@@ -19,8 +19,8 @@ import Conjure.Representations ( downX1 )
 -- TODO: when _gofBefore and _gofAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (_gofBefore@[], (pat, s), _gofAfter@[]) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (_gofBefore@[], (pat, s), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension_Literal"
         elems <- match functionLiteral s
@@ -174,8 +174,8 @@ rule_Leq = "function-leq" `namedRule` theRule where
 
 rule_Comprehension_PreImage :: Rule
 rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
@@ -191,7 +191,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                         (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenInExpr jPat func)
-                           , Filter ([essence| &j[2] = &img |])
+                           , Condition ([essence| &j[2] = &img |])
                            ]
                         ++ transformBi (upd val) gofAfter
             )
@@ -212,8 +212,8 @@ rule_Card = "function-cardinality" `namedRule` theRule where
 -- | TODO: This may allow repetitions.
 rule_Comprehension_Defined :: Rule
 rule_Comprehension_Defined = "function-range" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         func <- match opDefined expr
@@ -237,8 +237,8 @@ rule_Comprehension_Defined = "function-range" `namedRule` theRule where
 -- | TODO: This may allow repetitions.
 rule_Comprehension_Range :: Rule
 rule_Comprehension_Range = "function-range" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         func <- match opRange expr

@@ -20,8 +20,8 @@ import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq )
 
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (index, _elems) <- match matrixLiteral expr
@@ -41,8 +41,8 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
 
 rule_Comprehension_Literal_ContainsSet :: Rule
 rule_Comprehension_Literal_ContainsSet = "matrix-comprehension-literal-containsSet" `namedRule` theRule where
-    theRule (Comprehension body gensOrFilters) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal_ContainsSet"
         (matrix, indexer) <- match opIndexing expr
