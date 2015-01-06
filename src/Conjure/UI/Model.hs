@@ -652,6 +652,7 @@ otherRules =
 
     , rule_BubbleUp_Nested
     , rule_BubbleUp_Index
+    , rule_BubbleUp_Comprehension
     , rule_BubbleUp_ToAnd
 
     , rule_Bool_DontCare
@@ -930,6 +931,26 @@ rule_BubbleUp_Index = "bubble-up-indexing" `namedRule` theRule where
                     , const $ WithLocals (make opIndexing m' x') locals2
                     )
             _ -> na "rule_BubbleUp_Index"
+
+
+rule_BubbleUp_Comprehension :: Rule
+rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrFilters) = do
+        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrFilters $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
+            _ -> na "rule_BubbleUp_Comprehension"
+        locals' <- forM locals $ \ l -> case l of
+            SuchThat xs -> return xs
+            _ -> fail ("rule_BubbleUp_Comprehension, not a SuchThat:" <+> pretty l)
+        return
+            ( "Bubble in the generator of a comprehension."
+            , const $ Comprehension body
+                $  gofBefore
+                ++ [Generator (GenInExpr pat expr)]
+                ++ map Filter (concat locals')
+                ++ gofAfter
+            )
+    theRule _ = na "rule_BubbleUp_Comprehension"
 
 
 rule_BubbleUp_ToAnd :: Rule
