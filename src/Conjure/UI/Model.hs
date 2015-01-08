@@ -661,9 +661,7 @@ otherRules =
     , rule_Int_DontCare
     , rule_Tuple_DontCare
     , rule_Matrix_DontCare
-    , rule_Set_DontCare
-    , rule_MSet_DontCare
-    , rule_Function_DontCare
+    , rule_Abstract_DontCare
 
     , rule_ComplexAbsPat
     ] ++ rule_InlineConditions
@@ -1044,38 +1042,13 @@ rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
                )
 
 
-rule_Set_DontCare :: Rule
-rule_Set_DontCare = "dontCare-set" `namedRule` theRule where
-    theRule p = do
-        x         <- match opDontCare p
-        TypeSet{} <- typeOf x
-        hasRepresentation x
-        xs        <- downX1 x
-        return ( "dontCare handling for set"
-               , const $ make opAnd (map (make opDontCare) xs)
-               )
-
-
-rule_MSet_DontCare :: Rule
-rule_MSet_DontCare = "dontCare-mset" `namedRule` theRule where
-    theRule p = do
-        x          <- match opDontCare p
-        TypeMSet{} <- typeOf x
-        hasRepresentation x
-        xs         <- downX1 x
-        return ( "dontCare handling for mset"
-               , const $ make opAnd (map (make opDontCare) xs)
-               )
-
-
-rule_Function_DontCare :: Rule
-rule_Function_DontCare = "dontCare-function" `namedRule` theRule where
+rule_Abstract_DontCare :: Rule
+rule_Abstract_DontCare = "dontCare-abstract" `namedRule` theRule where
     theRule p = do
         x              <- match opDontCare p
-        TypeFunction{} <- typeOf x
         hasRepresentation x
         xs             <- downX1 x
-        return ( "dontCare handling for function"
+        return ( "dontCare handling for an abstract domain"
                , const $ make opAnd (map (make opDontCare) xs)
                )
 
