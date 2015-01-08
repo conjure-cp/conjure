@@ -1045,9 +1045,17 @@ rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
 rule_Abstract_DontCare :: Rule
 rule_Abstract_DontCare = "dontCare-abstract" `namedRule` theRule where
     theRule p = do
-        x              <- match opDontCare p
+        x  <- match opDontCare p
+        ty <- typeOf x
+        case ty of
+            TypeSet       {} -> return ()
+            TypeMSet      {} -> return ()
+            TypeFunction  {} -> return ()
+            TypeRelation  {} -> return ()
+            TypePartition {} -> return ()
+            _ -> na "not a known abstract domain"
         hasRepresentation x
-        xs             <- downX1 x
+        xs <- downX1 x
         return ( "dontCare handling for an abstract domain"
                , const $ make opAnd (map (make opDontCare) xs)
                )
