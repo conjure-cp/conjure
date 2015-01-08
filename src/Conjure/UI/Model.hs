@@ -650,6 +650,8 @@ otherRules =
 
     , rule_GeneratorsFirst
 
+    , rule_DomainCardinality
+
     , rule_BubbleUp_Nested
     , rule_BubbleUp_Index
     , rule_BubbleUp_Comprehension
@@ -898,6 +900,21 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
                         |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
+
+
+rule_DomainCardinality :: Rule
+rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
+    theRule p = do
+        maybeDomain <- match opTwoBars p
+        case maybeDomain of
+            Reference _ (Just (Alias (Domain d))) ->
+                return
+                    ( "Cardinality of a domain"
+                    , \ fresh ->
+                            let (iPat, _) = quantifiedVar (fresh `at` 0)
+                            in  [essence| sum([ 1 | &iPat : &d ]) |]
+                    )
+            _ -> na "rule_DomainCardinality"
 
 
 rule_BubbleUp_Nested :: Rule

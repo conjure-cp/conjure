@@ -403,10 +403,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
 instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
         case x of
+            -- absolute value
             ConstantInt y                        -> return $ ConstantInt $ abs y
+
+            -- cardinality of a constant
             ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ length $ nub xs
             ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ length       xs
             ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ length $ nub xs
+
+            -- cardinality of a domain
+            DomainInConstant (DomainInt rs)      -> ConstantInt . length <$> rangesInts rs
+
             _ -> fail $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 

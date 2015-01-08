@@ -82,7 +82,9 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                             let outDomain  = DomainInt [RangeBounded 1
                                                 (Reference nameS (Just (Alias (Domain outDomainS))))]
                             modify ([(name, outDomain)] `mappend`)
-                            return [ Declaration (FindOrGiven Given nameS outDomainS) ]
+                            return [ Declaration (FindOrGiven Given nameS         outDomainS)
+                                   , Declaration (Letting           name  (Domain outDomain))
+                                   ]
                         _ -> return [st]
 
             let
