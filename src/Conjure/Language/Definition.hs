@@ -351,16 +351,18 @@ instance TypeOf Expression where
             InComprehension gen ->
                 let
                     lu pat ty = maybe
-                        (bug $ vcat ["Type error, InComprehension:", pretty pat, pretty ty])
+                        (bug $ vcat ["Type error, InComprehension:", pretty nm, pretty pat, pretty ty])
                         return
                         (lu' pat ty)
                     lu' (Single nm') ty | nm == nm' = Just ty
-                    lu' (AbsPatTuple pats) (TypeTuple tys) = zipWith lu' pats tys |> catMaybes |> listToMaybe
+                    lu' (AbsPatTuple  pats) (TypeTuple    tys) = zipWith lu' pats tys   |> catMaybes |> listToMaybe
+                    lu' (AbsPatMatrix pats) (TypeMatrix _ ty ) = [lu' p ty | p <- pats] |> catMaybes |> listToMaybe
+                    lu' (AbsPatSet    pats) (TypeSet      ty ) = [lu' p ty | p <- pats] |> catMaybes |> listToMaybe
                     lu' _ _ = Nothing
                 in
                     case gen of
                         GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
-                        GenDomainHasRepr _   domain -> typeOf domain
+                        GenDomainHasRepr pat domain -> typeOf domain                 >>= lu (Single pat)
                         GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
