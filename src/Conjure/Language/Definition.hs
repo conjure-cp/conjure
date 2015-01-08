@@ -302,6 +302,7 @@ data Expression
     | Reference Name (Maybe ReferenceTo)
     | WithLocals Expression [Statement]
     | Comprehension Expression [GeneratorOrCondition]
+    | Typed Expression Type
     | Op (Ops Expression)
     | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -335,6 +336,7 @@ instance Pretty Expression where
     prettyPrec _ (Reference x _) = pretty x
     prettyPrec _ (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
     prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
+    prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
     prettyPrec _ (ExpressionMetaVar x) = "&" <> pretty x
 
@@ -364,6 +366,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom -> typeOf dom
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf (Comprehension x _) = TypeList <$> typeOf x  -- TODO: do this properly, look into generators and filters
+    typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 

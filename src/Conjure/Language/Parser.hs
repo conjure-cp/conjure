@@ -11,7 +11,6 @@ module Conjure.Language.Parser
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Ops
@@ -520,10 +519,11 @@ parseOthers = [ parseFunctional l
 
         parseTyped :: Parser Expression
         parseTyped = parens $ do
-            x <- parseExpr
+            x  <- parseExpr
             lexeme L_Colon
-            y <- parseDomainAsExpr
-            bug ("parseTyped:" <+> pretty x <+> pretty y)
+            d  <- betweenTicks parseDomain
+            ty <- typeOfDomain d
+            return (Typed x ty)
 
         parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do
