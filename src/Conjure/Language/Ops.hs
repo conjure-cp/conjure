@@ -320,6 +320,14 @@ instance BinaryOperator (OpMinus x) where
 instance TypeOf x => TypeOf (OpMinus x) where
     typeOf (OpMinus a b) = intToIntToInt a b
 instance EvaluateOp OpMinus where
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
+        let bsNormalised = map normaliseConstant bs
+        return $ ConstantAbstract $ AbsLitSet
+            [ aNormalised
+            | a <- as
+            , let aNormalised = normaliseConstant a
+            , not (aNormalised `elem` bsNormalised)
+            ]
     evaluateOp (OpMinus x y) = ConstantInt <$> ((-) <$> intOut x <*> intOut y)
 
 

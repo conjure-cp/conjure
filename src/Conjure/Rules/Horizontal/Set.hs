@@ -202,6 +202,34 @@ rule_Union = "set-union" `namedRule` theRule where
     theRule _ = na "rule_Union"
 
 
+rule_Difference :: Rule
+rule_Difference = "set-difference" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            _ -> na "rule_Difference"
+        (x, y)             <- match opMinus s
+        tx                 <- typeOf x
+        case tx of
+            TypeSet{}      -> return ()
+            TypeMSet{}     -> return ()
+            TypeFunction{} -> return ()
+            TypeRelation{} -> return ()
+            _              -> fail "type incompatibility in difference operator"
+        let i = Reference iPat Nothing
+        return
+            ( "Horizontal rule for set difference"
+            , const $
+                Comprehension body
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat x)
+                       , Condition [essence| !(&i in &y) |]
+                       ]
+                    ++ gofAfter
+            )
+    theRule _ = na "rule_Difference"
+
+
 rule_MaxMin :: Rule
 rule_MaxMin = "set-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do

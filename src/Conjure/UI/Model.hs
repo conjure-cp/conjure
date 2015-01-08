@@ -589,6 +589,7 @@ horizontalRules =
     , Horizontal.Set.rule_Card
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
+    , Horizontal.Set.rule_Difference
     , Horizontal.Set.rule_MaxMin
 
     , Horizontal.MSet.rule_Comprehension_Literal
