@@ -848,11 +848,13 @@ setLiteral
        )
 setLiteral _ =
     ( AbstractLiteral . AbsLitSet
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitSet xs)) -> return (map Constant xs)
-        AbstractLiteral (AbsLitSet xs) -> return xs
-        _ -> na ("Lenses.setLiteral:" <+> pretty p)
+    , extract
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
+        extract (AbstractLiteral (AbsLitSet xs)) = return xs
+        extract (Typed x _) = extract x
+        extract p = na ("Lenses.setLiteral:" <+> pretty p)
 
 
 msetLiteral
