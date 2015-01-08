@@ -37,19 +37,18 @@ instance DomainSizeOf (Domain HasRepresentation Expression) Expression where
     domainSizeOf (DomainEnum n Nothing) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
-    domainSizeOf d = gDomainSizeOf d
+    domainSizeOf d = gDomainSizeOf (forgetRepr d)
 
 
 gDomainSizeOf
-    :: forall m x r
+    :: forall m x
     . ( MonadFail m
       , ExpressionLike x
       , OperatorContainer x
       , Pretty x
-      , Pretty r
       , Integral x
       )
-    => Domain r x -> m x
+    => Domain () x -> m x
 gDomainSizeOf DomainBool = return 2
 gDomainSizeOf (DomainInt [] ) = fail "gDomainSizeOf infinite integer domain"
 gDomainSizeOf (DomainInt [r]) = domainSizeOf r
@@ -90,6 +89,8 @@ gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr 
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
     return (nchoosek (make opFactorial) innerToSize innerFrSize)
+gDomainSizeOf (DomainRelation _ (RelationAttr sizeAttr) inners) =
+    gDomainSizeOf (DomainSet () (SetAttr sizeAttr) (DomainTuple inners))
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 
 
