@@ -1,7 +1,20 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 
-module Conjure.Language.Domain where
+module Conjure.Language.Domain
+    ( Domain(..)
+    , HasRepresentation(..)
+    , Range(..), rangesInts
+    , SetAttr(..), SizeAttr(..)
+    , MSetAttr(..), OccurAttr(..)
+    , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
+    , RelationAttr(..)
+    , PartitionAttr(..)
+    , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
+    , isPrimitiveDomain, domainCanIndexMatrix, getIndices
+    , reprAtTopLevel, forgetRepr
+    , typeOfDomain
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -62,21 +75,24 @@ instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
     shrink _ = []
 
 instance TypeOf (Domain r x) where
-    typeOf DomainBool                = return TypeBool
-    typeOf DomainInt{}               = return TypeInt
-    typeOf (DomainEnum    defn _   ) = return (TypeEnum defn)
-    typeOf (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
-    typeOf (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
-    typeOf (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
-    typeOf (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
-    typeOf (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
-    typeOf (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
-    typeOf (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
-    typeOf (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
-    typeOf DomainOp{} = bug "typeOf DomainOp"
-    typeOf (DomainReference _ (Just d)) = typeOf d
-    typeOf (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
-    typeOf (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
+    typeOf = typeOfDomain
+
+typeOfDomain :: MonadFail m => Domain r x -> m Type
+typeOfDomain DomainBool                = return TypeBool
+typeOfDomain DomainInt{}               = return TypeInt
+typeOfDomain (DomainEnum    defn _   ) = return (TypeEnum defn)
+typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
+typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
+typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
+typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
+typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
+typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
+typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
+typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
+typeOfDomain DomainOp{} = bug "typeOf DomainOp"
+typeOfDomain (DomainReference _ (Just d)) = typeOf d
+typeOfDomain (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
+typeOfDomain (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
 
 instance (Pretty x) => Monoid (Domain () x) where
     mempty = DomainMetaVar "mempty"
