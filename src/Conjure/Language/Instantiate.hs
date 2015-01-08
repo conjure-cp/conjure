@@ -3,7 +3,6 @@
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
-    , instantiateDAs                    -- not used anywhere else
     ) where
 
 -- conjure
@@ -220,26 +219,6 @@ instantiatePartitionAttr (PartitionAttr a b c d e) =
                   <*> instantiateSizeAttr c
                   <*> pure d
                   <*> pure e
-
-
-instantiateDAs
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       )
-    => DomainAttributes Expression
-    -> m (DomainAttributes Constant)
-instantiateDAs (DomainAttributes xs) = DomainAttributes <$> mapM instantiateDA xs
-
-
-instantiateDA
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       )
-    => DomainAttribute Expression
-    -> m (DomainAttribute Constant)
-instantiateDA (DAName n) = return (DAName n)
-instantiateDA (DANameValue n x) = DANameValue n <$> instantiateE x
-instantiateDA DADotDot = return DADotDot
 
 
 instantiateR
