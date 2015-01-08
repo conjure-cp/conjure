@@ -108,8 +108,9 @@ functionNDPartial = Representation chck downD structuralCons downC up
             let cardinality fresh flags =
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0)
+                        flagsIndexed  = index i flags  frArity
                     in
-                        [essence| sum &iPat : &innerDomainFr . toInt(&flags[&i]) |]
+                        [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
 
             let dontCareInactives fresh flags values = return $ -- list
                     let
