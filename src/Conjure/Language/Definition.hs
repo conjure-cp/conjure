@@ -450,7 +450,10 @@ lambdaToFunction (AbsPatTuple ts) body = \ p ->
         ps = case p of
             Constant (ConstantAbstract (AbsLitTuple xs)) -> map Constant xs
             AbstractLiteral (AbsLitTuple xs) -> xs
-            _ -> bug "lambdaToFunction, AbsPatTuple"
+            _ -> [ Op (MkOpIndexing (OpIndexing p i))
+                 | i' <- take (length ts) allNats
+                 , let i = fromInt i'
+                 ]
     in
         unroll ts ps body
 lambdaToFunction (AbsPatMatrix ts) body = \ p ->
