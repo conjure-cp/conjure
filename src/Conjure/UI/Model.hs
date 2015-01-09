@@ -594,7 +594,6 @@ horizontalRules =
     , Horizontal.Set.rule_MaxMin
 
     , Horizontal.MSet.rule_Comprehension_Literal
-    , Horizontal.MSet.rule_Freq_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
     , Horizontal.MSet.rule_Leq

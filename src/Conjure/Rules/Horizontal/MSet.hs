@@ -36,27 +36,6 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Freq_Literal :: Rule
-rule_Freq_Literal = "mset-freq-literal" `namedRule` theRule where
-    theRule p = do
-        (mset, arg) <- match opFreq p
-        elems       <- match msetLiteral mset
-        if null elems
-            then
-                return
-                    ( "freq on empty mset literal"
-                    , const [essence| false |]
-                    )
-            else
-                return
-                    ( "freq on mset literal"
-                    , const $ foldr1 (make opPlus)
-                        [ [essence| toInt(&e = &arg) |]
-                        | e <- elems
-                        ]
-                    )
-
-
 rule_Eq :: Rule
 rule_Eq = "mset-eq" `namedRule` theRule where
     theRule p = do
@@ -189,16 +168,16 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
     theRule _ = na "rule_MaxMin"
 
 
--- x in s ~~> or([ x = i | i in s ])
+-- freq(mset,arg) ~~> sum([ toInt(arg = i) | i in mset ])
 rule_Freq :: Rule
 rule_Freq = "mset-freq" `namedRule` theRule where
     theRule p = do
-        (s,x)      <- match opFreq p
-        TypeMSet{} <- typeOf s
+        (mset, arg) <- match opFreq p
+        TypeMSet{}  <- typeOf mset
         return ( "Horizontal rule for mset-freq."
                , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| sum &iPat in &s . toInt(&i = &x) |]
+                    in  [essence| sum &iPat in &mset . toInt(&i = &arg) |]
                )
 
 
