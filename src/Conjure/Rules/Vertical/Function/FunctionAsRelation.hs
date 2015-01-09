@@ -12,8 +12,11 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFi
 import Conjure.Representations ( downX1 )
 
 
+-- this is incomplete
 rule_Image_Eq :: Rule
 rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule where
+
+    -- =
     theRule [essence| image(&func, &x) = &y |] = do
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
@@ -25,6 +28,66 @@ rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule wher
                 in
                     [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
             )
+    theRule [essence| &y = image(&func, &x) |] = do
+        "FunctionAsRelation" <- representationOf func
+        [rel]                <- downX1 func
+        return
+            ( "Function image-equals, FunctionAsRelation representation"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
+            )
+
+    -- <=
+    theRule [essence| image(&func, &x) <= &y |] = do
+        "FunctionAsRelation" <- representationOf func
+        [rel]                <- downX1 func
+        return
+            ( "Function image-equals, FunctionAsRelation representation"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
+            )
+    theRule [essence| &y >= image(&func, &x) |] = do
+        "FunctionAsRelation" <- representationOf func
+        [rel]                <- downX1 func
+        return
+            ( "Function image-equals, FunctionAsRelation representation"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
+            )
+
+    -- >=
+    theRule [essence| image(&func, &x) >= &y |] = do
+        "FunctionAsRelation" <- representationOf func
+        [rel]                <- downX1 func
+        return
+            ( "Function image-equals, FunctionAsRelation representation"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
+            )
+    theRule [essence| &y <= image(&func, &x) |] = do
+        "FunctionAsRelation" <- representationOf func
+        [rel]                <- downX1 func
+        return
+            ( "Function image-equals, FunctionAsRelation representation"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
+            )
+
     theRule _ = na "rule_Image"
 
 
