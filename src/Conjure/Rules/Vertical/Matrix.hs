@@ -71,7 +71,12 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         (x,y)                <- match opEq p
         TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}         <- typeOf y
-        DomainMatrix index _ <- domainOf x
+        index <- case (domainOf x, domainOf y) of
+            (Just (DomainMatrix index _), _) -> return index
+            (_, Just (DomainMatrix index _)) -> return index
+            (Just _, _) -> fail "rule_Matrix_Eq"
+            (_, Just _) -> fail "rule_Matrix_Eq"
+            _ -> fail "Equality constraint between two matrices, but domainOf doesn't work on either."
         return
             ( "Horizontal rule for matrix ="
             , \ fresh ->
