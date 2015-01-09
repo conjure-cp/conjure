@@ -317,8 +317,14 @@ instance ToJSON    x => ToJSON    (OpMinus x) where toJSON = JSON.genericToJSON 
 instance FromJSON  x => FromJSON  (OpMinus x) where parseJSON = JSON.genericParseJSON jsonOptions
 instance BinaryOperator (OpMinus x) where
     opLexeme _ = L_Minus
-instance TypeOf x => TypeOf (OpMinus x) where
-    typeOf (OpMinus a b) = intToIntToInt a b
+instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
+    typeOf p@(OpMinus a b) = do
+        tya <- typeOf a
+        tyb <- typeOf b
+        case (tya, tyb) of
+            (TypeInt, TypeInt) -> return TypeInt
+            (TypeSet aInner, TypeSet bInner) | typesUnify [aInner, bInner] -> return $ mostDefined [tya,tyb]
+            _ -> raiseTypeError (MkOpMinus p)
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
         let bsNormalised = map normaliseConstant bs

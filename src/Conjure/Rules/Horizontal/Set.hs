@@ -230,6 +230,28 @@ rule_Difference = "set-difference" `namedRule` theRule where
     theRule _ = na "rule_Difference"
 
 
+rule_PowerSet_Difference :: Rule
+rule_PowerSet_Difference = "set-powerSet-difference" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat expr) -> return (pat, expr)
+            _ -> na "rule_PowerSet_Difference"
+        setExpr            <- match opPowerSet expr
+        (x, y)             <- match opMinus setExpr
+        let patAsExpr = patternToExpr pat
+        return
+            ( "Horizontal rule for set powerSet difference"
+            , const $
+                Comprehension body
+                    $  gofBefore
+                    ++ [ Generator (GenInExpr pat (make opPowerSet x))
+                       , Condition [essence| !(&patAsExpr subsetEq &y) |]
+                       ]
+                    ++ gofAfter
+            )
+    theRule _ = na "rule_PowerSet_Difference"
+
+
 rule_MaxMin :: Rule
 rule_MaxMin = "set-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do

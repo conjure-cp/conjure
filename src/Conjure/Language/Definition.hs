@@ -28,6 +28,7 @@ module Conjure.Language.Definition
 
     , extractLettings
     , tupleLitIfNeeded
+    , patternToExpr
 
     ) where
 
@@ -534,6 +535,13 @@ instance Pretty AbstractPattern where
     pretty (AbsPatSet    xs) = prettyList prBraces "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
+patternToExpr :: AbstractPattern -> Expression
+patternToExpr (Single nm) = Reference nm Nothing
+patternToExpr (AbsPatTuple  ts) = AbstractLiteral $ AbsLitTuple  $ map patternToExpr ts
+patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix (DomainInt [RangeBounded 1 (fromInt (length ts))])
+                                                                 $ map patternToExpr ts
+patternToExpr (AbsPatSet    ts) = AbstractLiteral $ AbsLitSet    $ map patternToExpr ts
+patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Generator -----------------------------------------------------------------------------------------------------------
