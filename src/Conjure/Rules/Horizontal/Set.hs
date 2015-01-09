@@ -146,7 +146,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Intersect"
-        (x, y)             <- match opIntersect s
+        (x, y)             <- match opIntersect (matchDef opToSet s)
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -174,7 +174,7 @@ rule_Union = "set-union" `namedRule` theRule where
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Union"
-        (x, y)             <- match opUnion s
+        (x, y)             <- match opUnion (matchDef opToSet s)
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
