@@ -14,6 +14,7 @@ module Conjure.Language.Domain
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , reprAtTopLevel, forgetRepr
     , typeOfDomain
+    , normaliseDomain, normaliseRange
     ) where
 
 -- conjure
@@ -487,3 +488,32 @@ instance Pretty a => Pretty (Range a) where
 instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
     pretty (HasRepresentation r) = pretty r
+
+normaliseDomain :: Ord c => (c -> c) -> Domain r c -> Domain r c
+normaliseDomain _norm DomainBool               = DomainBool
+normaliseDomain  norm (DomainInt rs          ) = DomainInt $ sort $ map (normaliseRange norm) rs
+normaliseDomain _norm (DomainEnum n Nothing  ) = DomainEnum n Nothing
+normaliseDomain _norm (DomainEnum n (Just rs)) = DomainEnum n $ Just $ sort rs
+normaliseDomain  norm (DomainUnnamed n x     ) = DomainUnnamed n (norm x)
+normaliseDomain  norm (DomainTuple            doms     ) = DomainTuple $ map (normaliseDomain norm) doms
+normaliseDomain  norm (DomainMatrix           dom1 dom2) = DomainMatrix      (normaliseDomain norm dom1)
+                                                                             (normaliseDomain norm dom2)
+normaliseDomain  norm (DomainSet       r attr dom      ) = DomainSet       r (fmap norm attr)
+                                                                             (normaliseDomain norm dom)
+normaliseDomain  norm (DomainMSet      r attr dom      ) = DomainMSet      r (fmap norm attr)
+                                                                             (normaliseDomain norm dom)
+normaliseDomain  norm (DomainFunction  r attr dom1 dom2) = DomainFunction  r (fmap norm attr)
+                                                                             (normaliseDomain norm dom1)
+                                                                             (normaliseDomain norm dom2)
+normaliseDomain  norm (DomainRelation  r attr doms     ) = DomainRelation  r (fmap norm attr)
+                                                                             (map (normaliseDomain norm) doms)
+normaliseDomain  norm (DomainPartition r attr dom      ) = DomainPartition r (fmap norm attr)
+                                                                             (normaliseDomain norm dom)
+normaliseDomain _norm d = d
+
+normaliseRange :: Ord c => (c -> c) -> Range c -> Range c
+normaliseRange _norm RangeOpen             = RangeOpen
+normaliseRange  norm (RangeSingle x)       = RangeBounded (norm x) (norm x)
+normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)
+normaliseRange  norm (RangeUpperBounded x) = RangeUpperBounded (norm x)
+normaliseRange  norm (RangeBounded x y)    = RangeBounded (norm x) (norm y)

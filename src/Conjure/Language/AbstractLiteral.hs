@@ -68,10 +68,10 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
 normaliseAbsLit :: Ord c => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
-normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple     $ map norm xs
-normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix d  $ map norm xs
-normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet       $ sortNub $ map norm xs
-normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet      $ sort $ map norm xs
-normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction  $ sortNub [ (norm x, norm y) | (x, y) <- xs ]
-normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation  $ sortNub $ map (map norm) xss
-normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition $ sortNub $ map (sortNub . map norm) xss
+normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple                           $ map norm xs
+normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm d) $ map norm xs
+normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet                   $ sortNub $ map norm xs
+normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet                  $ sort    $ map norm xs
+normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction              $ sortNub [ (norm x, norm y) | (x, y) <- xs ]
+normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation              $ sortNub $ map (map norm) xss
+normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition             $ sortNub $ map (sortNub . map norm) xss
