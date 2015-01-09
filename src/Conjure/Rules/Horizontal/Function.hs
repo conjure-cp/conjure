@@ -257,3 +257,14 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                             ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Range"
+
+
+rule_In :: Rule
+rule_In = "function-in" `namedRule` theRule where
+    theRule [essence| &x in &f |] = do
+        TypeFunction{} <- typeOf f
+        return
+            ( "Function membership to function image."
+            , const $ make opFunctionImage f [x]
+            )
+    theRule _ = na "rule_In"

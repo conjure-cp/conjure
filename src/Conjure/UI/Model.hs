@@ -621,6 +621,7 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_PreImage
     , Horizontal.Function.rule_Comprehension_Defined
     , Horizontal.Function.rule_Comprehension_Range
+    , Horizontal.Function.rule_In
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
@@ -659,6 +660,7 @@ otherRules =
     , rule_BubbleUp_Index
     , rule_BubbleUp_Comprehension
     , rule_BubbleUp_ToAnd
+    , rule_BubbleUp_NotBoolYet
 
     , rule_Bool_DontCare
     , rule_Int_DontCare
@@ -991,6 +993,27 @@ rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
     onlyConstraints [] = return []
     onlyConstraints (SuchThat xs:rest) = (xs++) <$> onlyConstraints rest
     onlyConstraints _ = fail "onlyConstraints: not a SuchThat"
+
+
+rule_BubbleUp_NotBoolYet :: Rule
+rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
+    theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet"
+    theRule p = do
+        let
+            f x@(WithLocals y locals) = do
+                ty <- typeOf y
+                case ty of
+                    TypeBool ->                return x
+                    _        -> tell locals >> return y
+            f x = return x
+        (p', collected) <- runWriterT (descendM f p)
+        if null collected
+            then na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
+            else return ()
+        return
+            ( "Bubbling up, not reached a relational context yet."
+            , const $ WithLocals p' collected
+            )
 
 
 rule_Bool_DontCare :: Rule
