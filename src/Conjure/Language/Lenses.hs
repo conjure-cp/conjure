@@ -17,11 +17,11 @@ make  f = fst (f (Proxy :: Proxy Identity))
 
 -- | To use a lens for deconstructing stuf.
 match :: CanBeAnAlias b => (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
-match f = matcherAlias
-    where
-        matcherNoAlias = snd (f Proxy)
-        matcherAlias (isAlias -> Just x) = matcherAlias x
-        matcherAlias x = matcherNoAlias x
+match f = snd (f Proxy)
+
+followAliases :: CanBeAnAlias b => (b -> c) -> b -> c
+followAliases m (isAlias -> Just x) = followAliases m x
+followAliases m x = m x
 
 tryMatch :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
 tryMatch f = match f
@@ -854,7 +854,7 @@ setLiteral
        )
 setLiteral _ =
     ( AbstractLiteral . AbsLitSet
-    , extract
+    , followAliases extract
     )
     where
         extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
