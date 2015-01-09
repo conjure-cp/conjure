@@ -74,6 +74,42 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
     theRule _ = na "rule_Comprehension_Projection"
 
 
+rule_PowerSet_Comprehension :: Rule
+rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
+            _ -> na "rule_PowerSet_Comprehension"
+        let upd val old      = lambdaToFunction setPat old val
+        rel'                 <- match opPowerSet expr
+        let rel              =  matchDef opToSet rel'
+        TypeRelation{}       <- typeOf rel
+        return
+            ( "Horizontal rule for powerSet relation-comprehension"
+            , \ fresh ->
+                let outPats =
+                        [ quantifiedVar (fresh `at` i) | i <- take setPatNum allNats ]
+                    val = AbstractLiteral $ AbsLitSet
+                        [ j | (_,j) <- outPats ]
+                in
+                    Comprehension (upd val body) $ concat
+                        [ gofBefore
+                        , concat
+                            [ [ Generator (GenInExpr pat rel) ]
+                            | (pat,_) <- take 1 outPats
+                            ]
+                        , concat
+                            [ [ Generator (GenInExpr pat rel)
+                              , Condition [essence| &beforeX < &patX |]
+                              ]
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            ]
+                        , transformBi (upd val) gofAfter
+                        ]
+            )
+    theRule _ = na "rule_PowerSet_Comprehension"
+
+
 rule_Eq :: Rule
 rule_Eq = "relation-eq" `namedRule` theRule where
     theRule p = do

@@ -624,6 +624,7 @@ horizontalRules =
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
+    , Horizontal.Relation.rule_PowerSet_Comprehension
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Leq
