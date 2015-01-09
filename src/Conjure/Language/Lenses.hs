@@ -1,4 +1,5 @@
 {-# LANGUAGE KindSignatures #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Lenses where
 
@@ -7,6 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
+import Conjure.Language.AdHoc
 
 
 -- | To use a lens for constructing stuf.
@@ -14,16 +16,20 @@ make :: (Proxy Identity -> (a, b)) -> a
 make  f = fst (f (Proxy :: Proxy Identity))
 
 -- | To use a lens for deconstructing stuf.
-match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
-match f = snd (f Proxy)
+match :: CanBeAnAlias b => (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
+match f = matcherAlias
+    where
+        matcherNoAlias = snd (f Proxy)
+        matcherAlias (isAlias -> Just x) = matcherAlias x
+        matcherAlias x = matcherNoAlias x
 
-tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
+tryMatch :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
 tryMatch f = match f
 
-matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
+matchOr :: CanBeAnAlias b => c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
 
-matchDef :: (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
+matchDef :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
 matchDef f inp = matchOr inp f inp
 
 

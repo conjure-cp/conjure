@@ -13,3 +13,5 @@ class ExpressionLike a where
 class ReferenceContainer a where
     fromName :: Name -> a
 
+class CanBeAnAlias a where
+    isAlias :: a -> Maybe a

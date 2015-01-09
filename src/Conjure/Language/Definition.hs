@@ -373,6 +373,10 @@ instance TypeOf Expression where
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
+instance CanBeAnAlias Expression where
+    isAlias (Reference _ (Just (Alias x))) = Just x
+    isAlias _ = Nothing
+
 instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
