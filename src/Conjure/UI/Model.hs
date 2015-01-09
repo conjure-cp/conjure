@@ -590,6 +590,7 @@ horizontalRules =
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
+    , Horizontal.Set.rule_PowerSet_Difference
     , Horizontal.Set.rule_MaxMin
 
     , Horizontal.MSet.rule_Comprehension_Literal
@@ -602,6 +603,7 @@ horizontalRules =
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
     , Horizontal.MSet.rule_SupsetEq
+    , Horizontal.MSet.rule_Freq
     , Horizontal.MSet.rule_In
     , Horizontal.MSet.rule_Card
     , Horizontal.MSet.rule_MaxMin

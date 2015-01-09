@@ -190,6 +190,19 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
 
 
 -- x in s ~~> or([ x = i | i in s ])
+rule_Freq :: Rule
+rule_Freq = "mset-freq" `namedRule` theRule where
+    theRule p = do
+        (s,x)      <- match opFreq p
+        TypeMSet{} <- typeOf s
+        return ( "Horizontal rule for mset-freq."
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| sum &iPat in &s . toInt(&i = &x) |]
+               )
+
+
+-- x in s ~~> or([ x = i | i in s ])
 rule_In :: Rule
 rule_In = "mset-in" `namedRule` theRule where
     theRule p = do
