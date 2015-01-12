@@ -31,13 +31,13 @@ export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
 
-CABAL_VERSION="1.20.0.3"
-HAPPY_VERSION="1.19.4"
+CABAL_VERSION="1.22.0.0"
+HAPPY_VERSION="1.19.5"
 HSCOLOUR_VERSION="1.20.3"
 
-CABAL_VERSION_CHECK="1.20"
+CABAL_VERSION_CHECK="1.22"
 HAPPY_VERSION_CHECK="1.19"
-HSCOLOUR_VERSION_CHECK="1.20.3"
+HSCOLOUR_VERSION_CHECK="1.20"
 
 
 
@@ -126,7 +126,7 @@ fi
 if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION_CHECK})" ]; then
     echo "happy version ${HAPPY_VERSION_CHECK} found."
 else
-    echo "happy version ${CABAL_VERSION_CHECK} not found. Installing version ${HAPPY_VERSION}."
+    echo "happy version ${HAPPY_VERSION_CHECK} not found. Installing version ${HAPPY_VERSION}."
     rm -rf dist/tools
     mkdir -p dist/tools
     pushd dist/tools
@@ -134,7 +134,7 @@ else
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
-        --disable-executable-profiling
+        --disable-profiling
     popd
     rm -rf dist/tools
 fi
@@ -153,7 +153,7 @@ if [ $BUILD_DOCS = "yes" ]; then
             --force-reinstalls \
             --disable-documentation \
             --disable-library-profiling \
-            --disable-executable-profiling
+            --disable-profiling
         popd
         rm -rf dist/tools
     fi
@@ -205,12 +205,12 @@ fi
 
 cabal install                                                       \
     --only-dependencies                                             \
-    --disable-library-profiling --disable-executable-profiling      \
+    --disable-library-profiling --disable-profiling                 \
     --force-reinstalls                                              \
     ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                     \
-    --disable-library-profiling --disable-executable-profiling      \
+    --disable-library-profiling --disable-profiling                 \
     ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
