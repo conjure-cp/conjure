@@ -4,8 +4,9 @@ module Conjure.UI.ValidateSolution ( validateSolution ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.Pretty
-import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Language.Instantiate
 
 
 validateSolution
@@ -20,7 +21,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
     forM_ (mStatements essenceModel) $ \ st -> case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
-                [val] -> modify ((nm, val) :)
+                [val] -> do
+                    valC                  <- gets id >>= flip instantiateExpression val
+                    DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
+                    validateConstantForDomain valC domC
+                    modify ((nm, val) :)
                 []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                      , "Its domain:" <++> pretty dom
                                      ]
@@ -30,7 +35,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                      ]
         Declaration (FindOrGiven Find nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceSolution, nm == nm2 ] of
-                [val] -> modify ((nm,val) :)
+                [val] -> do
+                    valC                  <- gets id >>= flip instantiateExpression val
+                    DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
+                    validateConstantForDomain valC domC
+                    modify ((nm,val) :)
                 []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                      , "Its domain:" <++> pretty dom
                                      ]

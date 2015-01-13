@@ -127,7 +127,13 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
-instantiateD (DomainEnum nm rs) = return (DomainEnum nm rs)
+instantiateD (DomainEnum nm rs _) = do
+    st <- gets id
+    mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
+            Just (Constant (ConstantInt i)) -> return (n, i)
+            Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
+            Just _  -> fail $ "Incompatible value for member of enum domain:" <+> pretty n
+    return (DomainEnum nm rs (Just mp))
 instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
 instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*> instantiateD inner
@@ -138,9 +144,14 @@ instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiate
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
 instantiateD (DomainReference _ (Just d)) = instantiateD d
-instantiateD (DomainReference nm Nothing) = gets id >>= \ ctxt ->
-                                               fail $ vcat $ ("Undefined domain reference:" <+> pretty nm)
-                                                    : ("Bindings in context:" : prettyContext ctxt)
+instantiateD (DomainReference name Nothing) = do
+    ctxt <- gets id
+    case name `lookup` ctxt of
+        Just (Domain d) -> instantiateD (forgetRepr d)
+        _ -> fail $ vcat
+            $ ("No value for:" <+> pretty name)
+            : "Bindings in context:"
+            : prettyContext ctxt
 instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 

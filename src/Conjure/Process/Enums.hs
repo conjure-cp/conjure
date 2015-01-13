@@ -54,10 +54,10 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
 
             let
                 onD :: Domain () Expression -> Domain () Expression
-                onD (DomainEnum nm (Just ranges))
+                onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
                     = DomainInt (map (fmap nameToX) ranges)
-                onD (DomainEnum nm Nothing)
+                onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
                 onD (DomainReference nm Nothing)
@@ -89,7 +89,7 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
 
             let
                 onD :: Domain () Expression -> Domain () Expression
-                onD (DomainEnum      nm Nothing)
+                onD (DomainEnum      nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
                 onD (DomainReference nm Nothing)
@@ -142,10 +142,10 @@ removeEnumsFromParam model param = do
 
     let
         onD :: Domain () Expression -> Domain () Expression
-        onD (DomainEnum nm (Just ranges))
+        onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
             = DomainInt (map (fmap nameToX) ranges)
-        onD (DomainEnum nm Nothing)
+        onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
             = DomainReference nm (Just d)
         onD (DomainReference nm Nothing)
@@ -180,11 +180,11 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainBool , c) -> c
             (DomainInt{}, c) -> c
 
-            (DomainEnum      ename _, ConstantInt i) ->
+            (DomainEnum      ename _ _, ConstantInt i) ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
                           (lookup (i, ename) ctxt)
 
-            (DomainReference ename _, ConstantInt i) ->
+            (DomainReference ename _  , ConstantInt i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
                     else fromMaybe (bug $ "addEnumsAndUnnamedsBack 2:" <+> pretty (i, ename))

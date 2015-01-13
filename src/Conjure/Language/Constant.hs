@@ -1,7 +1,12 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
-module Conjure.Language.Constant where
+module Conjure.Language.Constant
+    ( Constant(..)
+    , normaliseConstant
+    , validateConstantForDomain
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -88,3 +93,100 @@ instance Num Constant where
     signum (ConstantInt x) = ConstantInt (signum x)
     signum x = bug $ vcat [ "Num Constant signum", "x:" <+> pretty x ]
     fromInteger = ConstantInt . fromInteger
+
+
+validateConstantForDomain :: forall m r . (MonadFail m, Pretty r) => Constant -> Domain r Constant -> m ()
+
+validateConstantForDomain ConstantBool{} DomainBool{} = return ()
+
+validateConstantForDomain _ (DomainInt []) = return ()              -- no restrictions
+
+validateConstantForDomain c@(ConstantInt i) d@(DomainInt rs) =
+    let
+        intInRange RangeOpen                                      = True
+        intInRange (RangeSingle (ConstantInt a))                  = i == a
+        intInRange (RangeLowerBounded (ConstantInt a))            = i >= a
+        intInRange (RangeUpperBounded (ConstantInt a))            = i <= a
+        intInRange (RangeBounded (ConstantInt a) (ConstantInt b)) = i >= a && i <= b
+        intInRange _                                              = False
+    in  unless (any intInRange rs) (constantNotInDomain c d)
+
+validateConstantForDomain _ (DomainEnum _ Nothing _) = return ()    -- no restrictions
+validateConstantForDomain c d@(DomainEnum _ _ Nothing) = fail $ vcat [ "validateConstantForDomain: enum not handled"
+                                                                     , pretty c
+                                                                     , pretty d
+                                                                     ]
+validateConstantForDomain
+    c@ConstantInt{}
+    d@(DomainEnum _ (Just ranges) (Just mp)) = nested c d $ do
+        let
+            -- lu :: MonadFail m => Name -> m Constant
+            lu nm = case lookup nm mp of Nothing -> fail $ "No value for:" <+> pretty nm
+                                         Just v  -> return (ConstantInt v)
+
+            -- lu2 :: MonadFail m => Range Name -> m (Range Constant)
+            lu2 = mapM lu
+
+        rs <- mapM lu2 ranges
+        validateConstantForDomain c (DomainInt rs :: Domain r Constant)
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitTuple cs))
+    d@(DomainTuple ds) = nested c d $ zipWithM_ validateConstantForDomain cs ds
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitMatrix cIndex vals))
+    d@(DomainMatrix dIndex dInner) = do
+        nested c d $
+            mapM_ (flip validateConstantForDomain dInner) vals
+        unless (cIndex == dIndex) $ fail $ vcat
+            [ "The indices do not match between the value and the domain."
+            , "Value :" <+> pretty c
+            , "Domain:" <+> pretty d
+            ]
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitSet vals))
+    d@(DomainSet _ _ dInner) = nested c d $
+        mapM_ (flip validateConstantForDomain dInner) vals
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitMSet vals))
+    d@(DomainMSet _ _ dInner) = nested c d $
+        mapM_ (flip validateConstantForDomain dInner) vals
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitFunction vals))
+    d@(DomainFunction _ _ dFrom dTo) = nested c d $ do
+        mapM_ (flip validateConstantForDomain dFrom) (map fst vals)
+        mapM_ (flip validateConstantForDomain dTo  ) (map snd vals)
+        
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitRelation valss))
+    d@(DomainRelation _ _ dInners) = nested c d $ do
+        forM_ valss $ \ vals ->
+            zipWithM_ validateConstantForDomain vals dInners
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitPartition valss))
+    d@(DomainPartition _ _ dInner) = nested c d $
+        mapM_ (flip validateConstantForDomain dInner) (concat valss)
+
+validateConstantForDomain c d = constantNotInDomain c d
+
+
+nested :: (MonadFail m, Pretty r) => Constant -> Domain r Constant -> Either Doc () -> m ()
+nested _ _ Right{} = return ()
+nested c d (Left err) = fail $ vcat
+    [ "The value is not a member of the domain."
+    , "Value :" <+> pretty c
+    , "Domain:" <+> pretty (show d)
+    , "Because of:", nest 4 err
+    ]
+
+constantNotInDomain :: (MonadFail m, Pretty r) => Constant -> Domain r Constant -> m ()
+constantNotInDomain c d = fail $ vcat
+    [ "The value is not a member of the domain."
+    , "Value :" <+> pretty c
+    , "Domain:" <+> pretty (show d)
+    ]

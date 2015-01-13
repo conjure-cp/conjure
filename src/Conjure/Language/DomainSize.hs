@@ -34,7 +34,7 @@ instance DomainSizeOf (Domain r Constant) Constant where
 --     domainSizeOf = fmap Constant . domainSizeOf
 
 instance DomainSizeOf (Domain HasRepresentation Expression) Expression where
-    domainSizeOf (DomainEnum n Nothing) = return $
+    domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
     domainSizeOf d = gDomainSizeOf (forgetRepr d)
@@ -111,7 +111,7 @@ instance ( ExpressionLike x
 domainSizeConstant :: MonadFail m => Domain r Constant -> m Int
 domainSizeConstant DomainBool = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
-domainSizeConstant (DomainEnum _ _) = fail "domainSizeConstant: Unknown for given enum."
+domainSizeConstant (DomainEnum _ _ _) = fail "domainSizeConstant: Unknown for given enum."
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
 domainSizeConstant (DomainSet _ (SetAttr attrs) inner) =

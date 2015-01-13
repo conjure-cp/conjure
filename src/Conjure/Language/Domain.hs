@@ -39,8 +39,11 @@ import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 data Domain r x
     = DomainBool
     | DomainInt [Range x]
-    | DomainEnum Name (Maybe [Range Name]) -- subset of values for this domain
-                                           -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
+    | DomainEnum
+        Name
+        (Maybe [Range Name])        -- subset of values for this domain
+                                    -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
+        (Maybe [(Name, Int)])       -- the mapping to integers, if available
     | DomainUnnamed Name x
     | DomainTuple [Domain r x]
     | DomainMatrix (Domain () x) (Domain r x)
@@ -81,7 +84,7 @@ instance TypeOf (Domain r x) where
 typeOfDomain :: MonadFail m => Domain r x -> m Type
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain DomainInt{}               = return TypeInt
-typeOfDomain (DomainEnum    defn _   ) = return (TypeEnum defn)
+typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
 typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
@@ -117,18 +120,18 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainPartition () def (mappend x y)
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
-forgetRepr :: Domain r x -> Domain () x
+forgetRepr :: Domain r x -> Domain r2 x
 forgetRepr DomainBool = DomainBool
 forgetRepr (DomainInt rs) = DomainInt rs
-forgetRepr (DomainEnum defn rs) = DomainEnum defn rs
+forgetRepr (DomainEnum defn rs mp) = DomainEnum defn rs mp
 forgetRepr (DomainUnnamed defn s) = DomainUnnamed defn s
 forgetRepr (DomainTuple ds) = DomainTuple (map forgetRepr ds)
 forgetRepr (DomainMatrix index inner) = DomainMatrix index (forgetRepr inner)
-forgetRepr (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
-forgetRepr (DomainMSet      _ attr d) = DomainMSet () attr (forgetRepr d)
-forgetRepr (DomainFunction  _ attr d1 d2) = DomainFunction () attr (forgetRepr d1) (forgetRepr d2)
-forgetRepr (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr ds)
-forgetRepr (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
+forgetRepr (DomainSet       _ attr d) = DomainSet (error "forgetRepr") attr (forgetRepr d)
+forgetRepr (DomainMSet      _ attr d) = DomainMSet (error "forgetRepr") attr (forgetRepr d)
+forgetRepr (DomainFunction  _ attr d1 d2) = DomainFunction (error "forgetRepr") attr (forgetRepr d1) (forgetRepr d2)
+forgetRepr (DomainRelation  _ attr ds) = DomainRelation (error "forgetRepr") attr (map forgetRepr ds)
+forgetRepr (DomainPartition _ attr d) = DomainPartition (error "forgetRepr") attr (forgetRepr d)
 forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
 forgetRepr (DomainReference x r) = DomainReference x (fmap forgetRepr r)
 forgetRepr (DomainMetaVar x) = DomainMetaVar x
@@ -421,8 +424,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
-    pretty (DomainEnum name (Just ranges)) = pretty name <> prettyList prParens "," ranges
-    pretty (DomainEnum name _) = pretty name
+    pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
+    pretty (DomainEnum name _             _) = pretty name
 
     pretty (DomainUnnamed name _) = pretty name
 
@@ -490,11 +493,11 @@ instance Pretty HasRepresentation where
     pretty (HasRepresentation r) = pretty r
 
 normaliseDomain :: Ord c => (c -> c) -> Domain r c -> Domain r c
-normaliseDomain _norm DomainBool               = DomainBool
-normaliseDomain  norm (DomainInt rs          ) = DomainInt $ sort $ map (normaliseRange norm) rs
-normaliseDomain _norm (DomainEnum n Nothing  ) = DomainEnum n Nothing
-normaliseDomain _norm (DomainEnum n (Just rs)) = DomainEnum n $ Just $ sort rs
-normaliseDomain  norm (DomainUnnamed n x     ) = DomainUnnamed n (norm x)
+normaliseDomain _norm DomainBool                  = DomainBool
+normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) rs
+normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
+normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
+normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)
 normaliseDomain  norm (DomainTuple            doms     ) = DomainTuple $ map (normaliseDomain norm) doms
 normaliseDomain  norm (DomainMatrix           dom1 dom2) = DomainMatrix      (normaliseDomain norm dom1)
                                                                              (normaliseDomain norm dom2)
