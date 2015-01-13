@@ -11,6 +11,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Ops
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate
 
@@ -20,7 +21,7 @@ instantiateExpression
     => [(Name, Expression)]
     -> Expression
     -> m Constant
-instantiateExpression ctxt x = evalStateT (instantiateE x) ctxt
+instantiateExpression ctxt x = normaliseConstant <$> evalStateT (instantiateE x) ctxt
 
 
 instantiateDomain
@@ -30,7 +31,7 @@ instantiateDomain
     => [(Name, Expression)]
     -> Domain r Expression
     -> m (Domain r Constant)
-instantiateDomain ctxt x = evalStateT (instantiateD x) ctxt
+instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (instantiateD x) ctxt
 
 
 instantiateE

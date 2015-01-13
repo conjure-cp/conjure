@@ -95,6 +95,7 @@ instance Num Constant where
     fromInteger = ConstantInt . fromInteger
 
 
+-- | Assuming both the value and the domain are normalised
 validateConstantForDomain :: forall m r . (MonadFail m, Pretty r) => Constant -> Domain r Constant -> m ()
 
 validateConstantForDomain ConstantBool{} DomainBool{} = return ()
