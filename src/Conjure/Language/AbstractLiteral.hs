@@ -55,7 +55,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
     typeOf   (AbsLitFunction    [] ) = return (TypeFunction TypeAny TypeAny)
     typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
-                                                    <*> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
+                                                    <*> (homoType (pretty p) <$> mapM (typeOf . snd) xs)
 
     typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
     typeOf p@(AbsLitRelation    xss) = do
