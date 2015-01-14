@@ -16,23 +16,26 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchF
 import Conjure.Representations ( downX1 )
 
 
--- TODO: when _gofBefore and _gofAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (_gofBefore@[], (pat, s), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match functionLiteral s
-        let f = lambdaToFunction pat body
+        elems <- match functionLiteral expr
+        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            [ AbstractLiteral (AbsLitTuple [a,b])
+                            | (a,b) <- elems
+                            ]
+        let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on function literals"
-            , const $ AbstractLiteral $ AbsLitMatrix
-                        (DomainInt [RangeBounded 1 (fromInt (length elems))])
-                        [ f lit
-                        | (a,b) <- elems
-                        , let lit = AbstractLiteral (AbsLitTuple [a,b])
-                        ]
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  Comprehension (upd i body)
+                         $  gofBefore
+                         ++ [Generator (GenInExpr iPat outLiteral)]
+                         ++ transformBi (upd i) gofAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
