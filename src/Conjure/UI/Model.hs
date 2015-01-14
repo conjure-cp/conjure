@@ -438,7 +438,9 @@ updateDeclarations model =
                 Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
 
     in
-        model { mStatements = statements }
+        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
+        -- and 2 disticnt representations in the inner level. removing them.
+        model { mStatements = nub statements }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
