@@ -257,12 +257,22 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logInfo ("Picking the first option:" <+> doc)
             return [option]
         PickAll     -> return (map snd options)
-        Interactive -> do
-            pickedIndex <- liftIO $ do
-                print (vcat (map fst options))
-                putStr "Pick option: "
-                line <- getLine
-                return $ if null line then 1 else readNote "Expecting an integer." line
+        Interactive -> liftIO $ do
+            print (vcat (map fst options))
+            let
+                pickIndex = do
+                    putStr "Pick option: "
+                    line <- getLine
+                    case (line, readMay line) of
+                        ("", _) -> return 1
+                        (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
+                        (_, Nothing) -> do
+                            putStrLn "Enter an integer value."
+                            pickIndex
+                        (_, Just _) -> do
+                            print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
+                            pickIndex
+            pickedIndex <- pickIndex
             let picked = snd (at options (pickedIndex - 1))
             return [picked]
         AtRandom -> do
