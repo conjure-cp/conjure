@@ -34,7 +34,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
                  in  Comprehension (upd val body)
                          $  gofBefore
                          ++ [Generator (GenDomainNoRepr iPat index)]
-                         ++ transformBi (upd i) gofAfter
+                         ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
