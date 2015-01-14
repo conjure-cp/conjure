@@ -382,6 +382,15 @@ oneSuchThat m =
         breakConjunctions x = [x]
 
 
+toIntIsNoOp :: Model -> Model
+toIntIsNoOp model =
+    let
+        f [essence| toInt(&x) |] = x
+        f x = x
+    in
+        model { mStatements = mStatements model |> transformBi f }
+
+
 inlineDecVarLettings :: Model -> Model
 inlineDecVarLettings model =
     let
@@ -469,6 +478,7 @@ epilogue eprime = do
     eprime
         |> updateDeclarations
         |> inlineDecVarLettings
+        |> toIntIsNoOp
         |> oneSuchThat
         |> languageEprime
         |> return
@@ -647,7 +657,6 @@ horizontalRules =
 otherRules :: [Rule]
 otherRules = 
     [ rule_TrueIsNoOp
-    , rule_ToIntIsNoOp
     , rule_SingletonAnd
     , rule_FlattenOf1D
     , rule_Decompose_AllDiff
@@ -842,15 +851,6 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
                        )
             _ -> fail "The argument of true doesn't have a representation."
     theRule _ = na "rule_TrueIsNoOp"
-
-
-rule_ToIntIsNoOp :: Rule
-rule_ToIntIsNoOp = "toInt-is-noop" `namedRule` theRule where
-    theRule p = do
-        x <- match opToInt p
-        return ( "Remove the toInt wrapper, it is implicit in SR."
-               , const x
-               )
 
 
 rule_SingletonAnd :: Rule
