@@ -299,4 +299,5 @@ modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
                                              , strategyA = PickAll
                                              , outputDirectory = dir
                                              , parameterRepresentation = True
+                                             , channelling = True
                                              }
