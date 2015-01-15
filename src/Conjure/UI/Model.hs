@@ -160,10 +160,6 @@ toCompletion config@Config{..} m = do
                     mapM_ loopy nextModels
 
 
-inAReference :: Zipper a Expression -> Bool
-inAReference x = not $ null [ () | Reference{} <- tail (ascendants x) ]
-
-
 remaining
     :: MonadLog m
     => Config
@@ -182,16 +178,11 @@ remaining config model = do
 
         processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
-            fmap catMaybes $ forM (allContexts modelZipper) $ \ x ->
-                -- things in a reference should not be rewritten.
-                -- specifically, no representation selection for them!
-                if inAReference x
-                    then return Nothing
-                    else do
-                        ys <- applicableRules config rulesAtLevel (hole x)
-                        return $ if null ys
-                                    then Nothing
-                                    else Just (x, ys)
+            fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
+                ys <- applicableRules config rulesAtLevel (hole x)
+                return $ if null ys
+                            then Nothing
+                            else Just (x, ys)
 
     questions <- loopLevels $ map processLevel (allRules config)
     forM (zip allNats questions) $ \ (nQuestion, (focus, answers)) -> do

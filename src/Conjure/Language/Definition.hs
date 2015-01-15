@@ -7,6 +7,7 @@ module Conjure.Language.Definition
     , freshNames
     , languageEprime
     , initInfo
+    , allContextsExceptReferences
 
     , quantifiedVar, lambdaToFunction
 
@@ -54,6 +55,9 @@ import qualified Data.Aeson.Types as JSON
 -- text
 import qualified Data.Text as T
 
+-- uniplate
+import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
+
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Model ---------------------------------------------------------------------------------------------------------------
@@ -65,6 +69,8 @@ data Model = Model
     , mInfo :: ModelInfo
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+type ModelZipper = Zipper Model Expression
 
 instance Serialize Model
 instance Hashable  Model
@@ -96,6 +102,17 @@ freshNames model = newNames
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
 
+allContextsExceptReferences :: ModelZipper -> [ModelZipper]
+allContextsExceptReferences z0 = concatMap subtreeOf (allSiblings z0)
+    where
+        -- the input has to be the left most
+        allSiblings :: ModelZipper -> [ModelZipper]
+        allSiblings z = z : maybe [] allSiblings (right z)
+
+        subtreeOf :: ModelZipper -> [ModelZipper]
+        subtreeOf z = z : case hole z of
+            Reference{} -> []                                       -- don't go through a Reference
+            _           -> maybe [] allContextsExceptReferences (down z)
 
 ------------------------------------------------------------------------------------------------------------------------
 -- LanguageVersion -----------------------------------------------------------------------------------------------------
