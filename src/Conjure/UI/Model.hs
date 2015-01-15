@@ -466,10 +466,10 @@ checkIfAllRefined m = do
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                     >>= logDebugId "[input]"
+    >>= lettingsForComplexInDoms    >>= logDebugId "[lettingsForComplexInDoms]"
     >>= return . initInfo           >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel     >>= logDebugId "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel        >>= logDebugId "[removeEnumsFromModel]"
-    >>= lettingsForComplexInDoms    >>= logDebugId "[lettingsForComplexInDoms]"
     >>= finiteGivens                >>= logDebugId "[finiteGivens]"
     >>= resolveNames                >>= logDebugId "[resolveNames]"
     >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
