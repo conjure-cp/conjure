@@ -320,11 +320,18 @@ instance BinaryOperator (OpMinus x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
     typeOf p@(OpMinus a b) = do
         tya <- typeOf a
+        case tya of
+            TypeInt{}       -> return ()
+            TypeSet{}       -> return ()
+            TypeMSet{}      -> return ()
+            TypeFunction{}  -> return ()
+            TypeRelation{}  -> return ()
+            TypePartition{} -> return ()
+            _               -> raiseTypeError (MkOpMinus p)
         tyb <- typeOf b
-        case (tya, tyb) of
-            (TypeInt, TypeInt) -> return TypeInt
-            (TypeSet aInner, TypeSet bInner) | typesUnify [aInner, bInner] -> return $ mostDefined [tya,tyb]
-            _ -> raiseTypeError (MkOpMinus p)
+        if typesUnify [tya, tyb]
+            then return $ mostDefined [tya,tyb]
+            else raiseTypeError (MkOpMinus p)
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
         let bsNormalised = map normaliseConstant bs
