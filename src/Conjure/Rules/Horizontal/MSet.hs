@@ -37,6 +37,37 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Literal"
 
 
+rule_Comprehension_ToSet_Literal :: Rule
+rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_ToSet_Literal"
+        mset  <- match opToSet expr
+        elems <- match msetLiteral mset
+        let outLiteralDomain = DomainInt [RangeBounded 1 (fromInt $ length elems)]
+        let outLiteral = make matrixLiteral outLiteralDomain elems
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Comprehension on toSet of mset literals"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     (jPat, j) = quantifiedVar (fresh `at` 1)
+                     iIndexed = [essence| &outLiteral[&i] |]
+                     jIndexed = [essence| &outLiteral[&j] |]
+                 in  Comprehension (upd iIndexed body)
+                         $  gofBefore
+                         ++ [ Generator (GenDomainNoRepr iPat outLiteralDomain)
+                            , Condition [essence|
+                                !(exists &jPat : &outLiteralDomain .
+                                    (&j < &i) /\ (&iIndexed = &jIndexed))
+                                        |]
+                            ]
+                         ++ transformBi (upd iIndexed) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_ToSet_Literal"
+
+
 rule_Eq :: Rule
 rule_Eq = "mset-eq" `namedRule` theRule where
     theRule p = do
