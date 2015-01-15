@@ -45,7 +45,7 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Projection"
-        (rel, args) <- match opRelationProj (matchDef opToSet expr)
+        (rel, args) <- match opRelationProj expr
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on relation literals"
@@ -81,8 +81,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         let upd val old      = lambdaToFunction setPat old val
-        rel'                 <- match opPowerSet expr
-        let rel              =  matchDef opToSet rel'
+        rel                  <- match opPowerSet expr
         TypeRelation{}       <- typeOf rel
         return
             ( "Horizontal rule for powerSet relation-comprehension"

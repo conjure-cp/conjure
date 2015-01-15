@@ -29,11 +29,10 @@ rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
 rule_Comprehension :: Rule
 rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gofBefore, (pat, rel), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let upd val old        =  lambdaToFunction pat old val
-        let rel                =  matchDef opToSet expr
         TypeRelation{}         <- typeOf rel
         "RelationAsMatrix"     <- representationOf rel
         [m]                    <- downX1 rel

@@ -38,6 +38,19 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
     theRule _ = na "rule_Comprehension_PartitionLiteral"
 
 
+rule_Remove_Parts :: Rule
+rule_Remove_Parts = "remove-parts" `namedRule` theRule where
+    theRule p = do
+        expr <- match opParts p
+        ty   <- typeOf expr
+        case ty of
+            TypePartition{} -> return
+                ( "partition in a parts"
+                , const expr
+                )
+            _ -> na "rule_Remove_Parts"
+
+
 rule_Eq :: Rule
 rule_Eq = "partition-eq" `namedRule` theRule where
     theRule p = do

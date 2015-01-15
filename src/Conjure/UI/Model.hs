@@ -599,6 +599,7 @@ verticalRules =
 horizontalRules :: [Rule]
 horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
+    , Horizontal.Set.rule_Remove_ToSet
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
     , Horizontal.Set.rule_Leq
@@ -654,6 +655,7 @@ horizontalRules =
     , Horizontal.Relation.rule_Lt
 
     , Horizontal.Partition.rule_Comprehension_Literal
+    , Horizontal.Partition.rule_Remove_Parts
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
     , Horizontal.Partition.rule_Leq

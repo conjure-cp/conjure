@@ -58,10 +58,9 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
-        let func                      =  matchDef opToSet expr
         "FunctionNDPartial"           <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
         [flags,values]                <- downX1 func

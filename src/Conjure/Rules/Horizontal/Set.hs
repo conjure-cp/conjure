@@ -37,6 +37,31 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
     theRule _ = na "rule_Comprehension_Literal"
 
 
+rule_Remove_ToSet :: Rule
+rule_Remove_ToSet = "remove-toSet" `namedRule` theRule where
+    theRule p = do
+        expr <- match opToSet p
+        ty   <- typeOf expr
+        case ty of
+            TypeSet{} -> return
+                ( "set in a toSet"
+                , const expr
+                )
+            TypeFunction{} -> return
+                ( "function in a toSet"
+                , const expr
+                )
+            TypeRelation{} -> return
+                ( "relation in a toSet"
+                , const expr
+                )
+            TypePartition{} -> return
+                ( "partition in a toSet"
+                , const expr
+                )
+            _ -> na "rule_Remove_ToSet"
+
+
 rule_Eq :: Rule
 rule_Eq = "set-eq" `namedRule` theRule where
     theRule p = do
@@ -146,7 +171,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Intersect"
-        (x, y)             <- match opIntersect (matchDef opToSet s)
+        (x, y)             <- match opIntersect s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -174,7 +199,7 @@ rule_Union = "set-union" `namedRule` theRule where
         (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Union"
-        (x, y)             <- match opUnion (matchDef opToSet s)
+        (x, y)             <- match opUnion s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
