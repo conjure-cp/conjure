@@ -1,6 +1,6 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Conjure.Language.TH ( essence ) where
+module Conjure.Language.TH ( essence, essenceStmts ) where
 
 -- conjure
 import Conjure.Prelude
@@ -19,6 +19,20 @@ import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 -- syb
 import Data.Generics.Aliases ( extQ )
 
+
+essenceStmts :: QuasiQuoter
+essenceStmts = QuasiQuoter
+    { quoteExp = \ str -> do
+        l <- locationTH
+        e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
+        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+    , quotePat  = \ str -> do
+        l <- locationTH
+        e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+    , quoteType = error "quoteType"
+    , quoteDec  = error "quoteDec"
+    }
 
 essence :: QuasiQuoter
 essence = QuasiQuoter
