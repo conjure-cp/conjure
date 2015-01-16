@@ -1,0 +1,12 @@
+language ESSENCE' 1.0
+
+given p1: int
+given p2: int
+given p3: int
+given s_Occurrence: matrix indexed by [int(p2..p3)] of bool
+given s_Explicit: matrix indexed by [int(1..p1)] of int(p2..p3)
+letting q1 be min([q3 | q3 : int(p2..p3), s_Occurrence[q3]])
+letting q2 be max([s_Explicit[q5] | q5 : int(1..p1)])
+find x: int(q1..q2)
+such that s_Occurrence[x]
+
