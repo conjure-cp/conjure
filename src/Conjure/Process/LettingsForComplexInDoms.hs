@@ -36,5 +36,8 @@ lettingsForComplexInDoms m = do
                 Declaration (FindOrGiven forg name domain) -> do
                     (domain', newLettings) <- runWriterT (mapM expressionExtract domain)
                     return (newLettings ++ [Declaration (FindOrGiven forg name domain')])
+                Declaration (LettingDomainDefnUnnamed name expr) -> do
+                    (expr', newLettings) <- runWriterT (expressionExtract expr)
+                    return (newLettings ++ [Declaration (LettingDomainDefnUnnamed name expr')])                    
                 _ -> return [st]
         return m { mStatements = concat statements }
