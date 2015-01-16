@@ -672,8 +672,6 @@ otherRules =
 
     , rule_DomainCardinality
 
-    , rule_BubbleUp_Nested
-    , rule_BubbleUp_Index
     , rule_BubbleUp_Comprehension
     , rule_BubbleUp_ToAnd
     , rule_BubbleUp_NotBoolYet
@@ -925,39 +923,6 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
                             in  [essence| sum([ 1 | &iPat : &d ]) |]
                     )
             _ -> na "rule_DomainCardinality"
-
-
-rule_BubbleUp_Nested :: Rule
-rule_BubbleUp_Nested = "bubble-up-nested" `namedRule` theRule where
-    theRule (WithLocals (WithLocals x locals1) locals2) =
-        return
-            ( "Bubbling up nested bubbles"
-            , const $ WithLocals x (locals1 ++ locals2)
-            )
-    theRule _ = na "rule_BubbleUp_Nested"
-
-
-rule_BubbleUp_Index :: Rule
-rule_BubbleUp_Index = "bubble-up-indexing" `namedRule` theRule where
-    theRule p = do
-        (m, x) <- match opIndexing p
-        case (m, x) of
-            (WithLocals m' locals1, WithLocals x' locals2) ->
-                return
-                    ( "Bubbling up when the bubble is used to index something (1/3)"
-                    , const $ WithLocals (make opIndexing m' x') (locals1 ++ locals2)
-                    )
-            (WithLocals m' locals1, x') ->
-                return
-                    ( "Bubbling up when the bubble is used to index something (2/3)"
-                    , const $ WithLocals (make opIndexing m' x') locals1
-                    )
-            (m', WithLocals x' locals2) ->
-                return
-                    ( "Bubbling up when the bubble is used to index something (3/3)"
-                    , const $ WithLocals (make opIndexing m' x') locals2
-                    )
-            _ -> na "rule_BubbleUp_Index"
 
 
 rule_BubbleUp_Comprehension :: Rule
