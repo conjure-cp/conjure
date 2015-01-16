@@ -569,6 +569,7 @@ verticalRules =
     , Vertical.Function.Function1DPartial.rule_InDefined
 
     , Vertical.Function.FunctionND.rule_Comprehension
+    , Vertical.Function.FunctionND.rule_Comprehension_Defined
     , Vertical.Function.FunctionND.rule_Image
 
     , Vertical.Function.FunctionNDPartial.rule_Comprehension
