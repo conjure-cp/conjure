@@ -448,7 +448,7 @@ updateDeclarations model =
 checkIfAllRefined :: MonadFail m => Model -> m ()
 checkIfAllRefined m = do
     let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
-    fails <- fmap concat $ forM (allContexts modelZipper) $ \ x ->
+    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -642,8 +642,9 @@ horizontalRules =
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
     , Horizontal.Relation.rule_PowerSet_Comprehension
-    , Horizontal.Relation.rule_Eq
+    , Horizontal.Relation.rule_Image
     , Horizontal.Relation.rule_In
+    , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
 
