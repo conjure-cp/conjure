@@ -8,7 +8,7 @@ module Conjure.Language.Domain
     , SetAttr(..), SizeAttr(..)
     , MSetAttr(..), OccurAttr(..)
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
-    , RelationAttr(..)
+    , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
     , PartitionAttr(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
@@ -34,6 +34,9 @@ import qualified Data.Aeson as JSON
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
+
+-- containers
+import Data.Set as S ( Set, empty, toList )
 
 
 data Domain r x
@@ -287,16 +290,79 @@ instance Pretty    JectivityAttr where
     pretty JectivityAttr_Bijective = "bijective"
 
 
-data RelationAttr a = RelationAttr (SizeAttr a)
+data RelationAttr a = RelationAttr (SizeAttr a) BinaryRelationAttrs
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (RelationAttr a)
 instance Hashable  a => Hashable  (RelationAttr a)
 instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
-instance Default (RelationAttr a) where def = RelationAttr def
+instance Default (RelationAttr a) where def = RelationAttr def def
 instance Pretty a => Pretty (RelationAttr a) where
-    pretty (RelationAttr SizeAttr_None) = prEmpty
-    pretty (RelationAttr a) = prParens (pretty a)
+    pretty (RelationAttr a b) =
+        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
+newtype BinaryRelationAttrs = BinaryRelationAttrs (S.Set BinaryRelationAttr)
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize BinaryRelationAttrs
+instance Hashable  BinaryRelationAttrs where hashWithSalt salt (BinaryRelationAttrs a) = hashWithSalt salt (S.toList a)
+instance ToJSON    BinaryRelationAttrs where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  BinaryRelationAttrs where parseJSON = JSON.genericParseJSON jsonOptions
+instance Default   BinaryRelationAttrs where def = BinaryRelationAttrs S.empty
+instance Pretty BinaryRelationAttrs where
+    pretty (BinaryRelationAttrs attrs) = prettyList id "," (S.toList attrs)
+
+
+data BinaryRelationAttr
+    = BinRelAttr_Reflexive
+    | BinRelAttr_Irreflexive
+    | BinRelAttr_Coreflexive
+    | BinRelAttr_Symmetric
+    | BinRelAttr_AntiSymmetric
+    | BinRelAttr_ASymmetric
+    | BinRelAttr_Transitive
+    | BinRelAttr_Total
+    | BinRelAttr_Euclidean
+    | BinRelAttr_Serial
+    | BinRelAttr_Equivalence
+    | BinRelAttr_PartialOrder
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+instance Serialize BinaryRelationAttr
+instance Hashable  BinaryRelationAttr
+instance ToJSON    BinaryRelationAttr where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  BinaryRelationAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance Pretty BinaryRelationAttr where
+    pretty BinRelAttr_Reflexive     = "reflexive"
+    pretty BinRelAttr_Irreflexive   = "irreflexive"
+    pretty BinRelAttr_Coreflexive   = "coreflexive"
+    pretty BinRelAttr_Symmetric     = "symmetric"
+    pretty BinRelAttr_AntiSymmetric = "antiSymmetric"
+    pretty BinRelAttr_ASymmetric    = "aSymmetric"
+    pretty BinRelAttr_Transitive    = "transitive"
+    pretty BinRelAttr_Total         = "total"
+    pretty BinRelAttr_Euclidean     = "Euclidean"
+    pretty BinRelAttr_Serial        = "serial"
+    pretty BinRelAttr_Equivalence   = "equivalence"
+    pretty BinRelAttr_PartialOrder  = "partialOrder"
+
+-- reflexive        forAll x : T . rel(x,x)
+-- irreflexive      forAll x : T . !rel(x,x)
+-- coreflexive      forAll x,y : T . rel(x,y) -> x = y
+--
+-- symmetric        forAll x,y : T . rel(x,y) -> rel(y,x)
+-- antisymmetric    forAll x,y : T . rel(x,y) /\ rel(y,x) -> x = y
+-- asymmetric       forAll x,y : T . rel(x,y) -> !rel(y,x)
+--
+-- transitive       forAll x,y,z : T . rel(x,y) /\ rel(y,z) -> rel(x,z)
+--
+-- total            forAll x,y : T . rel(x,y) \/ rel(y,x)
+-- Euclidean        forAll x,y,z : T . rel(x,y) /\ rel(x,z) -> rel(y,z)
+-- serial           forAll x : T . exists y : T . rel(x,y)
+-- equivalence      reflexive + symmetric + transitive
+-- partialOrder     reflexive + antisymmetric + transitive
 
 
 data PartitionAttr a = PartitionAttr
@@ -344,6 +410,7 @@ instance Pretty a => Pretty (PartitionAttr a) where
         in  if null inside
                 then prEmpty
                 else prettyList prParens "," inside
+
 
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)

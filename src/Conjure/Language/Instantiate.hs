@@ -217,7 +217,7 @@ instantiateRelationAttr
        )
     => RelationAttr Expression
     -> m (RelationAttr Constant)
-instantiateRelationAttr (RelationAttr s) = RelationAttr <$> instantiateSizeAttr s
+instantiateRelationAttr (RelationAttr s b) = RelationAttr <$> instantiateSizeAttr s <*> pure b
 
 
 instantiatePartitionAttr

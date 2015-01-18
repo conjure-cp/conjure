@@ -8,6 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
+import Conjure.Representations.Common
 
 
 relationAsSet
@@ -24,7 +25,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
 
         outName name = mconcat [name, "_", "RelationAsSet"]
 
-        outDomain (DomainRelation "RelationAsSet" (RelationAttr sizeAttr) innerDomains) = do
+        outDomain (DomainRelation "RelationAsSet" (RelationAttr sizeAttr _binRelAttrs) innerDomains) = do
             let repr = case sizeAttr of
                         SizeAttr_Size{} -> "Explicit"
                         _               -> "ExplicitVarSizeWithMarker"
@@ -37,17 +38,33 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
             outDom <- outDomain inDom
             return $ Just [ ( outName name , outDom ) ]
 
-        structuralCons f downX1 inDom = return $ \ fresh refs ->
-            case refs of
-                [rel] -> do
+        structuralCons f downX1 inDom = do
+            let
+                innerStructuralCons fresh rel = do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
                     sets                   <- downX1 rel
-                    cons                   <- innerStructuralConsGen fresh sets
-                    return cons
-                _ -> na $ vcat [ "{structuralCons} RelationAsSet"
-                               , pretty inDom
-                               ]
+                    innerStructuralConsGen fresh sets
+
+            return $ \ fresh refs ->
+                case refs of
+                    [rel] -> do
+                        isc <- innerStructuralCons fresh rel
+                        binRelCons <- case inDom of
+                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2] ->
+                                if binRelAttrs == def
+                                    then return []
+                                    else if innerDomain1 == innerDomain2
+                                        then return $ mkBinRelCons binRelAttrs fresh innerDomain1 rel
+                                        else fail "Binary relation between different domains."
+                            _ -> fail "Non-binary relation."
+                        return $ concat
+                            [ isc
+                            , binRelCons
+                            ]
+                    _ -> na $ vcat [ "{structuralCons} RelationAsSet"
+                                   , pretty inDom
+                                   ]
 
         downC ( name
               , inDom

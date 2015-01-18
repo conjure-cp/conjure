@@ -24,6 +24,9 @@ import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, 
 -- text
 import qualified Data.Text as T
 
+-- containers
+import Data.Set as S ( fromList )
+
 
 parseModel :: Parser Model
 parseModel = inCompleteFile $ do
@@ -350,13 +353,29 @@ parseFunctionAttr = do
 parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
     DomainAttributes attrs <- parseAttributes
-    RelationAttr <$> case filterSizey attrs of
+    size <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    let readBinRel (DAName "reflexive"    ) = return BinRelAttr_Reflexive
+        readBinRel (DAName "irreflexive"  ) = return BinRelAttr_Irreflexive
+        readBinRel (DAName "coreflexive"  ) = return BinRelAttr_Coreflexive
+        readBinRel (DAName "symmetric"    ) = return BinRelAttr_Symmetric
+        readBinRel (DAName "antiSymmetric") = return BinRelAttr_AntiSymmetric
+        readBinRel (DAName "aSymmetric"   ) = return BinRelAttr_ASymmetric
+        readBinRel (DAName "transitive"   ) = return BinRelAttr_Transitive
+        readBinRel (DAName "total"        ) = return BinRelAttr_Total
+        readBinRel (DAName "Euclidean"    ) = return BinRelAttr_Euclidean
+        readBinRel (DAName "serial"       ) = return BinRelAttr_Serial
+        readBinRel (DAName "equivalence"  ) = return BinRelAttr_Equivalence
+        readBinRel (DAName "partialOrder" ) = return BinRelAttr_PartialOrder
+        readBinRel a = fail $ "not a binary relation:" <+> pretty (show a)
+    binRels <- mapM readBinRel (filterBinRel attrs)
+    return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
+
 
 parsePartitionAttr :: Parser (PartitionAttr Expression)
 parsePartitionAttr = do
@@ -398,6 +417,22 @@ filterSizey = filterAttrName ["size", "minSize", "maxSize"]
 
 filterJectivity :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
 filterJectivity = filterAttrName ["injective", "surjective", "bijective"]
+
+filterBinRel :: Ord a => [DomainAttribute a] -> [DomainAttribute a]
+filterBinRel = filterAttrName
+    [ "reflexive"
+    , "irreflexive"
+    , "coreflexive"
+    , "symmetric"
+    , "antiSymmetric"
+    , "aSymmetric"
+    , "transitive"
+    , "total"
+    , "Euclidean"
+    , "serial"
+    , "equivalence"
+    , "partialOrder"
+    ]
 
 parseMetaVariable :: Parser String
 parseMetaVariable = do

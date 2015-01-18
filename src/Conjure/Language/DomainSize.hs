@@ -89,7 +89,7 @@ gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr 
     innerFrSize <- gDomainSizeOf innerFr
     innerToSize <- gDomainSizeOf innerTo
     return (nchoosek (make opFactorial) innerToSize innerFrSize)
-gDomainSizeOf (DomainRelation _ (RelationAttr sizeAttr) inners) =
+gDomainSizeOf (DomainRelation _ (RelationAttr sizeAttr binRelAttr) inners) | binRelAttr == def =
     gDomainSizeOf (DomainSet () (SetAttr sizeAttr) (DomainTuple inners))
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 

@@ -32,7 +32,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
             let repr = if all domainCanIndexMatrix [innerDomainFr, innerDomainTo]
                         then "RelationAsMatrix"
                         else "RelationAsSet"
-            return (DomainRelation repr (RelationAttr sizeAttr) [innerDomainFr, innerDomainTo])
+            return (DomainRelation repr (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
         outDomain domain = na $ vcat [ "{outDomain} FunctionAsRelation"
                                      , "domain:" <+> pretty domain
                                      ]
