@@ -32,12 +32,12 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
             ]
         tupleDown_ _ = na "{tupleDown_}"
 
-        structuralCons f downX1 (DomainTuple ds) = return $ \ fresh refs ->
+        structuralCons f downX1 (DomainTuple ds) = return $ \ fresh tup -> do
+            refs <- downX1 tup
             concat <$> sequence
                 [ do
-                    outRefs                <- downX1 ref
                     innerStructuralConsGen <- f dom
-                    outs                   <- innerStructuralConsGen (tail fresh) outRefs
+                    outs                   <- innerStructuralConsGen (tail fresh) ref
                     return outs
                 | (ref, dom) <- zip refs ds
                 ]

@@ -45,8 +45,8 @@ functionND = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} FunctionND"
 
-        -- FIX
-        structuralCons _ _
+        -- FIX: inner structural constraints
+        structuralCons _ downX1
             (DomainFunction "FunctionND"
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
                 (DomainTuple innerDomainFrs')
@@ -102,7 +102,8 @@ functionND = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : &innerDomainFr . 1 |]
 
-            return $ \ fresh refs ->
+            return $ \ fresh func -> do
+                refs <- downX1 func
                 case refs of
                     [values] -> return $ concat
                         [ jectivityCons fresh values

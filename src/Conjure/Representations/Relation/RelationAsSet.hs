@@ -43,13 +43,13 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                 innerStructuralCons fresh rel = do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    sets                   <- downX1 rel
-                    innerStructuralConsGen fresh sets
+                    innerStructuralConsGen fresh rel
 
-            return $ \ fresh refs ->
+            return $ \ fresh rel -> do
+                refs <- downX1 rel
                 case refs of
-                    [rel] -> do
-                        isc <- innerStructuralCons fresh rel
+                    [set] -> do
+                        isc <- innerStructuralCons fresh set
                         binRelCons <- case inDom of
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2] ->
                                 if binRelAttrs == def

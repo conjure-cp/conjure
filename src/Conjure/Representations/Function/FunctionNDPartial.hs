@@ -49,8 +49,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} FunctionNDPartial"
 
-        -- FIX
-        structuralCons _ _
+        -- FIX: inner structural constraints
+        structuralCons _ downX1
             (DomainFunction "FunctionNDPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 (DomainTuple innerDomainFrs')
@@ -124,7 +124,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 dontCare(&valuesIndexed)
                         |]
 
-            return $ \ fresh refs ->
+            return $ \ fresh rel -> do
+                refs <- downX1 rel
                 case refs of
                     [flags,values] -> return $ concat [ jectivityCons fresh flags values
                                                       , dontCareInactives fresh flags values

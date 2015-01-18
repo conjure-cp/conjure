@@ -43,7 +43,8 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
             outDom <- outDomain inDom
             return $ Just [ ( outName name , outDom ) ]
 
-        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ fresh refs -> do
+        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ fresh inpRel -> do
+            refs <- downX1 inpRel
             let
                 atMostOnce rel =
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
@@ -87,8 +88,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                 [rel] -> do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    sets                   <- downX1 rel
-                    cons                   <- innerStructuralConsGen fresh sets
+                    cons                   <- innerStructuralConsGen fresh rel
                     return $ concat
                         [ [ atMostOnce rel ]
                         , mkSizeCons (participantsSize attrs) (participantsCardinality rel)

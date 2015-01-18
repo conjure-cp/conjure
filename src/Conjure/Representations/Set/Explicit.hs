@@ -49,11 +49,11 @@ setExplicit = Representation chck downD structuralCons downC up
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &m[&i] |]
-                    refs <- downX1 inLoop
-                    outs <- innerStructuralConsGen (tail fresh) refs
+                    outs <- innerStructuralConsGen (tail fresh) inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh refs ->
+            return $ \ fresh ref -> do
+                refs <- downX1 ref
                 case refs of
                     [m] -> do
                         isc <- innerStructuralCons fresh m

@@ -35,7 +35,7 @@ import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
-import Conjure.Representations ( downX1, downToX1, downD, reprOptions, getStructurals )
+import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
 
 import Conjure.Rules.Definition
@@ -720,9 +720,9 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             usedBefore = (name, domain) `elem` representations
 
             mstructurals = do
-                refs <- downToX1 Find name domain
+                let ref = Reference name (Just (DeclHasRepr forg name domain))
                 gen  <- getStructurals downX1 domain
-                gen freshNames' refs >>= mapM resolveNamesX     -- re-resolving names
+                gen freshNames' ref >>= mapM resolveNamesX     -- re-resolving names
 
             structurals = case mstructurals of
                 Left err -> bug ("rule_ChooseRepr.hook.structurals" <+> err)
@@ -828,9 +828,9 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
     theRule _ = na "rule_ChooseReprForComprehension"
 
     mkStructurals fresh name domain = do
-        refs <- downToX1 Quantified name domain
+        let ref = Reference name (Just (DeclHasRepr Quantified name domain))
         gen  <- getStructurals downX1 domain
-        gen fresh refs
+        gen fresh ref
 
 
 rule_GeneratorsFirst :: Rule

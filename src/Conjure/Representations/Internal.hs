@@ -36,12 +36,12 @@ data Representation m = Representation
         :: (Name, DomainX Expression)
         -> m (Maybe [(Name, DomainX Expression)])
     , rStructural
-        :: (DomainX Expression -> m ([Name] -> [Expression] -> m [Expression]))
+        :: (DomainX Expression -> m ([Name] -> Expression -> m [Expression]))
                                                         -- other structural constraints for inner domains
         -> (Expression -> m [Expression])               -- general downX1
         -> DomainX Expression                           -- this domain
         -> m (     [Name]                               -- a source of fresh names
-              ->   [Expression]                         -- refined variables
+              ->    Expression                          -- the original variable, before refinement
               -> m [Expression]                         -- structural constraints
              )
     , rDownC

@@ -30,8 +30,9 @@ setOccurrence = Representation chck downD structuralCons downC up
             ]
         downD _ = na "{downD} Occurrence"
 
-        structuralCons _ _ (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
-            return $ \ fresh refs ->
+        structuralCons _ downX1 (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
+            return $ \ fresh set -> do
+                refs <- downX1 set
                 case refs of
                     [m] -> do
                         let (iPat, i) = quantifiedVar (fresh `at` 0)

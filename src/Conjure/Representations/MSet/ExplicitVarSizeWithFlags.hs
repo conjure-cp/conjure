@@ -113,11 +113,11 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &values[&i] |]
-                    refs <- downX1 inLoop
-                    outs <- innerStructuralConsGen (tail fresh) refs
+                    outs <- innerStructuralConsGen (tail fresh) inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh refs ->
+            return $ \ fresh mset -> do
+                refs <- downX1 mset
                 case refs of
                     [flags, values] -> do
                         isc <- innerStructuralCons fresh flags values

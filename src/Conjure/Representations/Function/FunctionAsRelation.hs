@@ -44,7 +44,8 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
         structuralCons f downX1
                 inDom@(DomainFunction _
                         (FunctionAttr _ partilityAttr jectivityAttr)
-                        innerDomainFr innerDomainTo) = return $ \ fresh refs -> do
+                        innerDomainFr innerDomainTo) = return $ \ fresh func -> do
+            refs <- downX1 func
             let
                 partialityCons rel = return $ -- list
                     case partilityAttr of
@@ -106,8 +107,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                 [rel] -> do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    sets                   <- downX1 rel
-                    cons                   <- innerStructuralConsGen fresh sets
+                    cons                   <- innerStructuralConsGen fresh rel
                     return $ concat
                         [ partialityCons rel
                         , jectivityCons rel

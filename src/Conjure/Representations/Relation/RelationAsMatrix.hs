@@ -37,7 +37,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                          , "domain:" <+> pretty domain
                                          ]
 
-        structuralCons _ _
+        structuralCons _ downX1
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains')
                 | all domainCanIndexMatrix innerDomains' = do
             innerDomains <- mapM toIntDomain innerDomains'
@@ -49,13 +49,14 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                             let r = unroll [essence| &n[&i] |] rest
                             in  [essence| sum &iPat : &dom . &r |]
                     in  unroll m (zip [ quantifiedVar f | f <- fresh ] innerDomains)
-            return $ \ fresh refs ->
+            return $ \ fresh rel -> do
+                refs <- downX1 rel
                 case refs of
                     [m] -> do
                         binRelCons <- if binRelAttr == def then return [] else
                             case innerDomains of
                                 [innerDomain1, innerDomain2] | innerDomain1 == innerDomain2 ->
-                                    return (mkBinRelCons binRelAttr fresh innerDomain1 m)
+                                    return (mkBinRelCons binRelAttr fresh innerDomain1 rel)
                                 [_, _] -> fail "Binary relation between different domains."
                                 _      -> fail "Non-binary relation."
                         return $ concat

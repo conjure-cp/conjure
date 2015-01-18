@@ -197,7 +197,7 @@ getStructurals
     :: MonadFail m
     => (Expression -> m [Expression])
     -> DomainX Expression
-    -> m ([Name] -> [Expression] -> m [Expression])
+    -> m ([Name] -> Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
 
@@ -223,7 +223,7 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
 
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
-                innerStructuralCons fresh refs = do
+                innerStructuralCons fresh inpMatrix = do
                     let (iPat, i) = quantifiedVar (headInf fresh)
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
@@ -231,10 +231,10 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop r = [essence| &r[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) (map inLoop refs)
+                    outs <- innerStructuralConsGen (tail fresh) (inLoop inpMatrix)
                     return (map activeZone outs)
 
-            return $ \ fresh refs -> innerStructuralCons fresh refs
+            return $ \ fresh inpMatrix -> innerStructuralCons fresh inpMatrix
 
         structuralCons _ _ _ = na "{structuralCons} matrix 2"
 
