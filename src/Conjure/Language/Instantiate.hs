@@ -128,6 +128,12 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
+instantiateD (DomainEnum nm Nothing _) = do
+    st <- gets id
+    case lookup nm st of
+        Just (Domain dom) -> instantiateD (forgetRepr dom)
+        Just _  -> fail $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
+        Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
 instantiateD (DomainEnum nm rs _) = do
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of

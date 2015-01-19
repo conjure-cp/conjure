@@ -18,14 +18,15 @@ import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 
 -- parsec
-import Text.Parsec ( ParsecT, parse, tokenPrim, try, (<?>), errorPos, sourceLine, sourceColumn )
+import Text.Parsec ( ParsecT, tokenPrim, try, (<?>), errorPos, sourceLine, sourceColumn, getState, modifyState )
 import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
+import qualified Text.Parsec as P ( runParser )
 
 -- text
 import qualified Data.Text as T
 
 -- containers
-import Data.Set as S ( fromList )
+import Data.Set as S ( null, fromList, toList )
 
 
 parseModel :: Parser Model
@@ -94,6 +95,7 @@ parseTopLevels = do
                                     [ do
                                         lexeme L_type
                                         lexeme L_enum
+                                        modifyState (\ st -> st { enumDomains = is ++ enumDomains st } )
                                         return [ Declaration (GivenDomainDefnEnum i)
                                                | i <- is ]
                                     ]
@@ -120,6 +122,7 @@ parseTopLevels = do
                                     , do
                                         lexeme L_enum
                                         ys <- braces (parseName `sepBy` comma) <|> return []
+                                        modifyState (\ st -> st { enumDomains = is ++ enumDomains st } )
                                         return [ Declaration (LettingDomainDefnEnum i ys)
                                                | i <- is
                                                ]
@@ -194,7 +197,7 @@ parseDomain
     where
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum $ map try
-            [ pBool, pInt, pEnum
+            [ pBool, pInt, pEnum, pReference
             , pMatrix, pTupleWithout, pTupleWith
             , pSet, pMSet, pFunction, pFunction'
             , pRelation, pRelation'
@@ -212,14 +215,16 @@ parseDomain
             let xs = fromMaybe [] mxs
             return $ DomainInt xs
 
+        pReference = do
+            r  <- identifierText
+            return $ DomainReference (Name r) Nothing
+
         pEnum = do
-            r <- identifierText
+            r  <- identifierText
             xs <- optionMaybe $ parens $ parseRange parseName `sepBy` comma
-            case xs of
-                Nothing -> return $ DomainReference (Name r) Nothing
-                Just ys -> return $ DomainEnum (Name r) (Just ys) Nothing
-                -- TODO: the DomainDefnEnum in the above line should lookup and find a
-                -- previously declared DomainDefnEnum
+            st <- getState
+            guard (Name r `elem` enumDomains st)
+            return $ DomainEnum (Name r) xs Nothing
 
         pMatrix = do
             lexeme L_matrix
@@ -273,6 +278,10 @@ parseDomain
             x  <- parseRelationAttr
             lexeme L_of
             ys <- parens (parseDomain `sepBy` lexeme L_Times)
+            let RelationAttr _ (BinaryRelationAttrs binAttrs) = x
+            when (length ys /= 2 && not (S.null binAttrs)) $
+                fail $ "Only binary relations can have these attributes:" <+>
+                            prettyList id "," (S.toList binAttrs)
             return $ DomainRelation () x ys
 
         pPartition = do
@@ -783,8 +792,8 @@ findPivotOp xs = do
 
 
 
-
-type Parser a = ParsecT [LexemePos] () Identity a
+data ParserState = ParserState { enumDomains :: [Name] }
+type Parser a = ParsecT [LexemePos] ParserState Identity a
 
 runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s inp = do
@@ -800,7 +809,7 @@ runLexerAndParser p s inp = do
         Right x -> return x
 
 runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
-runParser p s ls = either modifyErr Right (parse p s ls)
+runParser p s ls = either modifyErr Right (P.runParser p (ParserState []) s ls)
     where
         modifyErr e = Left $
             let pos  = errorPos e
