@@ -67,11 +67,6 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 
-
--- base
-import System.CPUTime ( getCPUTime )
-import Text.Printf ( printf )
-
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
 
@@ -99,26 +94,6 @@ outputModels config model = do
                 Left {} -> limitModelsNeeded n              -- yielded a log, still n models to produce
                 Right{} -> limitModelsNeeded (n-1)          -- yielded a model, produce n-1 more models
 
-        limitTimeIfNeeded = maybe Pipes.cat limitTimeNeeded (limitTime config)
-        limitTimeNeeded t = do
-            x <- Pipes.await
-            Pipes.yield x
-            case x of
-                Left {} -> limitTimeNeeded t                -- yielded a log, don't even check time, continue.
-                Right{} -> do                               -- yielded a model, check time, continue conditionally.
-                    cputime <- liftIO getCPUTime
-                    let
-                        -- cputime is returned in pico-seconds. arbitrary precision integer.
-                        -- divide by 10^9 first. use arbitrary precision integer arithmetic.
-                        -- do the last 10^3 division via double to get 3 significant digits after the integer part.
-                        cputimeInSeconds :: Double
-                        cputimeInSeconds = fromInteger (cputime `div` 1000000000) / 1000
-                    if cputimeInSeconds < fromIntegral t
-                        then limitTimeNeeded t
-                        else logInfo
-                                $ stringToDoc
-                                $ printf "Timed out. Total CPU time used is %.3f seconds." cputimeInSeconds
-
         each i logOrModel =
             case logOrModel of
                 Left (l,msg) -> do
@@ -133,8 +108,7 @@ outputModels config model = do
                 (return (numberingStart config))
                 (const $ return ())
                 (toCompletion config model
-                    >-> limitModelsIfNeeded
-                    >-> limitTimeIfNeeded)
+                    >-> limitModelsIfNeeded)
 
 
 toCompletion

@@ -18,6 +18,9 @@ import Conjure.Language.ModelDiff ( modelDiffIO )
 
 -- base
 import System.IO ( hSetBuffering, stdout, BufferMode(..) )
+import System.CPUTime ( getCPUTime )
+import System.Timeout ( timeout )
+import Text.Printf ( printf )
 
 -- cmdargs
 import System.Console.CmdArgs ( cmdArgs )
@@ -26,9 +29,25 @@ import System.Console.CmdArgs ( cmdArgs )
 main :: IO ()
 main = do
     input <- cmdArgs ui
-    runLoggerPipeIO (logLevel input) $ do
-        logDebug ("Command line options: " <+> pretty (groom input))
-        mainWithArgs input
+    let workload = runLoggerPipeIO (logLevel input) $ do
+            logDebug ("Command line options: " <+> pretty (groom input))
+            mainWithArgs input
+    case limitTime input of
+        Just sec | sec > 0 -> do
+            putStrLn $ "Running with a timelimit of " ++ show sec ++ " seconds."
+            res <- timeout (sec * 1000000) workload
+            case res of
+                Nothing -> do
+                    cputime <- getCPUTime
+                    let
+                        -- cputime is returned in pico-seconds. arbitrary precision integer.
+                        -- divide by 10^9 first. use arbitrary precision integer arithmetic.
+                        -- do the last 10^3 division via double to get 3 significant digits after the integer part.
+                        cputimeInSeconds :: Double
+                        cputimeInSeconds = fromInteger (cputime `div` 1000000000) / 1000
+                    putStrLn $ printf "Timed out. Total CPU time used is %.3f seconds." cputimeInSeconds
+                Just () -> return ()
+        _ -> workload
 
 
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m) => UI -> m ()
@@ -51,7 +70,6 @@ mainWithArgs Modelling{..} = do
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart          = numberingStart
-            , Config.limitTime               = if limitTime   == Just 0 then Nothing else limitTime
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do
