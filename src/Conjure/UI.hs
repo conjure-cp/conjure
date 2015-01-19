@@ -37,6 +37,7 @@ data UI
         , essenceParam     :: FilePath       -- essence-param, mandatory
         , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
         , logLevel         :: LogLevel
+        , limitTime        :: Maybe Int
         }
     | TranslateSolution
         { eprime           :: FilePath       -- eprime, mandatory
@@ -44,21 +45,25 @@ data UI
         , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
         , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
         , logLevel         :: LogLevel
+        , limitTime        :: Maybe Int
         }
     | ValidateSolution
         { essence          :: FilePath       -- essence, mandatory
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
         , logLevel         :: LogLevel
+        , limitTime        :: Maybe Int
         }
     | Diff
         { file1    :: FilePath
         , file2    :: FilePath
         , logLevel :: LogLevel
+        , limitTime        :: Maybe Int
         }
     | TypeCheck
         { essence  :: FilePath
         , logLevel :: LogLevel
+        , limitTime        :: Maybe Int
         }
     deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -145,10 +150,7 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= groupname "Model generation"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)\n\
-                                           \Stop generating models once the time limit is reached.\n\
-                                           \The time limit will only be checked after a model is generated, \
-                                           \so it will *not* stop Conjure whilst working on a model."
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \
@@ -174,6 +176,9 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "refine-param"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
@@ -204,6 +209,9 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "translate-solution"
                                    &= explicit
                                    &= help "Translation of solutions back to Essence."
@@ -225,6 +233,9 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
@@ -237,6 +248,9 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "diff"
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
@@ -247,6 +261,9 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= name "type-check"
                                    &= explicit
                                    &= help "Type-checking a single Essence file."
