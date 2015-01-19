@@ -57,7 +57,10 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                     else if innerDomain1 == innerDomain2
                                         then return $ mkBinRelCons binRelAttrs fresh innerDomain1 rel
                                         else fail "Binary relation between different domains."
-                            _ -> fail "Non-binary relation."
+                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
+                                | length innerDomains /= 2 && binRelAttrs /= def
+                                -> fail "Non-binary relation has binary relation attributes."
+                            _ -> return []
                         return $ concat
                             [ isc
                             , binRelCons
