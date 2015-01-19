@@ -79,7 +79,7 @@ normaliseConstant x@ConstantBool{} = x
 normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
-normaliseConstant (DomainInConstant d) = DomainInConstant (fmap normaliseConstant d)
+normaliseConstant (DomainInConstant d) = DomainInConstant (normaliseDomain normaliseConstant d)
 
 instance Num Constant where
     ConstantInt x + ConstantInt y = ConstantInt (x+y)
