@@ -43,11 +43,7 @@ Model generation:
                                  representations.
      --seed=INT                  The seed for the random number generator.
      --limit-models=INT          Maximum number of models to generate.
-     --limit-time=INT            Time limit in seconds. (CPU time) Stop
-                                 generating models once the time limit is
-                                 reached. The time limit will only be checked
-                                 after a model is generated, so it will *not*
-                                 stop Conjure whilst working on a model.
+     --limit-time=INT            Time limit in seconds. (CPU time).
 
 conjure refine-param [OPTIONS]
   Refinement of parameter files written in Essence for a particular Essence'
@@ -63,6 +59,7 @@ Flags:
                                  Essence parameter file is named 'foo.param'
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
 
 conjure translate-solution [OPTIONS]
   Translation of solutions back to Essence.
@@ -80,6 +77,7 @@ Flags:
                                  the extension '.solution' is added instead.
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
 
 conjure validate-solution [OPTIONS]
   Validating a solution.
@@ -91,15 +89,18 @@ Flags:
      --solution=FILE             An Essence solution.
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
 
 conjure diff [OPTIONS] FILE FILE
   Diff on two Essence files. Works on models, parameters, and solutions.
 
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
 
 conjure type-check [OPTIONS] ESSENCE_FILE
   Type-checking a single Essence file.
 
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
