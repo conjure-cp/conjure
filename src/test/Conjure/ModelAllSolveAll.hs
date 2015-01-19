@@ -37,6 +37,7 @@ srOptions srExtraOptions =
     , "-timelimit"      , "300000"
     , "-solver-options" , "-cpulimit 300"
     , "-all-solutions"
+    , "-preprocess"     , "None"
     ] ++ map T.pack (words srExtraOptions)
 
 
