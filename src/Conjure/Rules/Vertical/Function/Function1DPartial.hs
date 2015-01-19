@@ -9,6 +9,7 @@ import Conjure.Language.Domain
 import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
 import Conjure.Language.TH
+import Conjure.Language.Lenses
 
 import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
 
@@ -43,18 +44,48 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
     theRule _ = na "rule_Comprehension"
 
 
-rule_Image :: Rule
-rule_Image = "function-image{Function1DPartial}" `namedRule` theRule where
+rule_Image_NotABool :: Rule
+rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "Function1DPartial" <- representationOf f
+        TypeFunction _ tyTo <- typeOf f
+        case tyTo of
+            TypeBool -> na "function ? --> bool"
+            _        -> return ()
         [flags,values]      <- downX1 f
-        return ( "Function image, Function1DPartial representation"
-               , const [essence| { &values[&x]
-                                 @ such that &flags[&x]
-                                 }
-                       |]
-               )
-    theRule _ = na "rule_Image"
+        return
+            ( "Function image, Function1DPartial representation, not-a-bool"
+            , const [essence| { &values[&x]
+                              @ such that &flags[&x]
+                              }
+                            |]
+            )
+    theRule _ = na "rule_Image_NotABool"
+
+
+rule_Image_Bool :: Rule
+rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule where
+    theRule p = do
+        let
+            imageChild ch@[essence| image(&f,&x) |] = do
+                "Function1DPartial" <- representationOf f
+                TypeFunction _ tyTo <- typeOf f
+                case tyTo of
+                    TypeBool -> do
+                        [flags,values]      <- downX1 f
+                        tell $ return [essence| &flags[&x] |]
+                        return [essence| &values[&x] |]
+                    _ -> return ch
+            imageChild ch = return ch
+        (p', flags) <- runWriterT (descendM imageChild p)
+        case flags of
+            [] -> na "rule_Image_Bool"
+            _  -> do
+                let flagsCombined = foldr1 (\ i j -> make opAnd [i,j] ) flags
+                return
+                    ( "Function image, Function1DPartial representation, bool"
+                    , const [essence| { &p' @ such that &flagsCombined } |]
+                    )
 
 
 rule_InDefined :: Rule

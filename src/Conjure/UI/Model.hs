@@ -539,7 +539,8 @@ verticalRules =
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension
-    , Vertical.Function.Function1DPartial.rule_Image
+    , Vertical.Function.Function1DPartial.rule_Image_NotABool
+    , Vertical.Function.Function1DPartial.rule_Image_Bool
     , Vertical.Function.Function1DPartial.rule_InDefined
 
     , Vertical.Function.FunctionND.rule_Comprehension
@@ -547,7 +548,8 @@ verticalRules =
     , Vertical.Function.FunctionND.rule_Image
 
     , Vertical.Function.FunctionNDPartial.rule_Comprehension
-    , Vertical.Function.FunctionNDPartial.rule_Image
+    , Vertical.Function.FunctionNDPartial.rule_Image_NotABool
+    , Vertical.Function.FunctionNDPartial.rule_Image_Bool
     , Vertical.Function.FunctionNDPartial.rule_InDefined
 
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
