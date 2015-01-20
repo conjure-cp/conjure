@@ -16,7 +16,7 @@ module Conjure.Language.Domain
     , reprAtTopLevel, forgetRepr
     , typeOfDomain
     , readBinRel
-    , attributeLenses
+    , attributeLenses, allSupportedAttributes
     , normaliseDomain, normaliseRange
     ) where
 
@@ -453,6 +453,17 @@ attributeLenses domain@(DomainPartition r partitionAttr inner) = Just (supported
                         , "For the domain:" <+> pretty domain
                         ]
 
+allSupportedAttributes :: [(Name, Int)]
+allSupportedAttributes =
+    map (,1) [ "size", "minSize", "maxSize"
+             , "minOccur", "maxOccur"
+             , "numParts", "minNumParts", "maxNumParts"
+             , "partSize", "minPartSize", "maxPartSize"
+             ] ++
+    map (,0) [ "total"
+             , "injective", "surjective", "bijective"
+             , "complete", "regular"
+             ]
 
 --------------------------------------------------------------------------------
 -- attribute definitions -------------------------------------------------------

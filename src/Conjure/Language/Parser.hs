@@ -11,6 +11,7 @@ module Conjure.Language.Parser
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Ops
@@ -470,6 +471,7 @@ parseAtomicExprNoPrePost = msum $ map try $ concat
     [ [parseQuantifiedExpr]
     , parseOthers
     , [metaVarInE <$> parseMetaVariable]
+    , [parseAAC]
     , [parseReference]
     , [parseLiteral]
     , [parseDomainAsExpr]
@@ -538,6 +540,20 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
             if Nothing `elem` ys
                 then return $ \ x -> Op $ MkOpRelationProj  $ OpRelationProj  x ys
                 else return $ \ x -> Op $ MkOpFunctionImage $ OpFunctionImage x xs
+
+parseAAC :: Parser Expression
+parseAAC = do
+    let
+        isAttr (LIdentifier txt) | Just _ <- Name txt `lookup` allSupportedAttributes = True
+        isAttr _ = False
+    LIdentifier txt <- satisfyT isAttr
+    let attr = Name txt
+    let n = fromMaybe (bug "parseAAC") (lookup attr allSupportedAttributes)
+    args <- parens $ countSep (n+1) parseExpr comma
+    case (n, args) of
+        (0, [e  ]) -> return $ Op $ MkOpAAC $ OpAttributeAsConstraint e attr Nothing
+        (1, [e,v]) -> return $ Op $ MkOpAAC $ OpAttributeAsConstraint e attr (Just v)
+        _ -> fail "parseAAC"
 
 parseOthers :: [Parser Expression]
 parseOthers = [ parseFunctional l
