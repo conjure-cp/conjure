@@ -6,6 +6,7 @@ module Conjure.Language.Ops where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.Name
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
 import Conjure.Language.Type
@@ -87,6 +88,8 @@ data Ops x
 
     | MkOpParts           (OpParts x)
 
+    | MkOpAAC             (OpAttributeAsConstraint x)
+
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (Ops x)
 instance Hashable  x => Hashable  (Ops x)
@@ -141,6 +144,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpRange               x) = typeOf x
     typeOf (MkOpRelationProj        x) = typeOf x
     typeOf (MkOpParts               x) = typeOf x
+    typeOf (MkOpAAC                 x) = typeOf x
 
 instance EvaluateOp Ops where
     evaluateOp (MkOpPlus                x) = evaluateOp x
@@ -190,6 +194,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpRange               x) = evaluateOp x
     evaluateOp (MkOpRelationProj        x) = evaluateOp x
     evaluateOp (MkOpParts               x) = evaluateOp x
+    evaluateOp (MkOpAAC                 x) = evaluateOp x
 
 
 class BinaryOperator op where
@@ -265,6 +270,8 @@ instance Pretty x => Pretty (Ops x) where
         where pr Nothing = "_"
               pr (Just b) = pretty b
     prettyPrec _ (MkOpParts    (OpParts    a)) = "parts"    <> prParens (pretty a)
+    prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr Nothing   )) = pretty attr <> prParens (pretty x)
+    prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr (Just val))) = pretty attr <> prettyList prParens "," [x, val]
 
 
 prettyPrecBinOp :: (BinaryOperator op, Pretty x) => Int -> proxy op -> x -> x -> Doc
@@ -1207,6 +1214,22 @@ instance EvaluateOp OpAllDiff where
     evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =
         return $ ConstantBool $ length vals == length (nub vals)
     evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
+
+
+data OpAttributeAsConstraint x = OpAttributeAsConstraint x
+                                                         Name       -- attribute name
+                                                         (Maybe x)  -- it's value
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpAttributeAsConstraint x)
+instance Hashable  x => Hashable  (OpAttributeAsConstraint x)
+instance ToJSON    x => ToJSON    (OpAttributeAsConstraint x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpAttributeAsConstraint x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance TypeOf x => TypeOf (OpAttributeAsConstraint x) where
+    -- TODO: use attributeLenses to improve this
+    typeOf OpAttributeAsConstraint{} = return TypeBool
+instance EvaluateOp OpAttributeAsConstraint where
+    -- TODO: use attributeLenses to implement this
+    evaluateOp op = na $ "evaluateOp{OpAttributeAsConstraint}:" <++> pretty (show op)
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
