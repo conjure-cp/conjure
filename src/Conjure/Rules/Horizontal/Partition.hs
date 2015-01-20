@@ -57,11 +57,12 @@ rule_Eq = "partition-eq" `namedRule` theRule where
         (x,y)           <- match opEq p
         TypePartition{} <- typeOf x
         TypePartition{} <- typeOf y
-        return ( "Horizontal rule for partition equality"
-               , const $ make opAnd [ make opSubsetEq x y
-                                    , make opSubsetEq y x
-                                    ]
-               )
+        return
+            ( "Horizontal rule for partition equality"
+            , const $ make opAnd [ make opSubsetEq x y
+                                 , make opSubsetEq y x
+                                 ]
+            )
 
 
 rule_Neq :: Rule
@@ -69,9 +70,10 @@ rule_Neq = "partition-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypePartition{} <- typeOf x
         TypePartition{} <- typeOf y
-        return ( "Horizontal rule for partition dis-equality"
-               , const [essence| !(&x = &y) |]
-               )
+        return
+            ( "Horizontal rule for partition dis-equality"
+            , const [essence| !(&x = &y) |]
+            )
     theRule _ = na "rule_Neq"
 
 
@@ -81,11 +83,12 @@ rule_SubsetEq = "partition-subsetEq" `namedRule` theRule where
         (x,y)           <- match opSubsetEq p
         TypePartition{} <- typeOf x
         TypePartition{} <- typeOf y
-        return ( "Horizontal rule for partition subsetEq"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat in (&x) . &i in &y |]
-               )
+        return
+            ( "Horizontal rule for partition subsetEq"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  [essence| forAll &iPat in (&x) . &i in &y |]
+            )
 
 
 rule_Subset :: Rule
@@ -134,9 +137,10 @@ rule_Lt = "partition-lt" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for partition <" <+> pretty (make opLt ma mb)
-               , const $ make opLt ma mb
-               )
+        return
+            ( "Horizontal rule for partition <" <+> pretty (make opLt ma mb)
+            , const $ make opLt ma mb
+            )
 
 
 rule_Leq :: Rule
@@ -149,9 +153,10 @@ rule_Leq = "partition-leq" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for partition <=" <+> pretty (make opLeq ma mb)
-               , const $ make opLeq ma mb
-               )
+        return
+            ( "Horizontal rule for partition <=" <+> pretty (make opLeq ma mb)
+            , const $ make opLeq ma mb
+            )
 
 
 rule_In :: Rule
@@ -159,8 +164,9 @@ rule_In = "partition-in" `namedRule` theRule where
     theRule p = do
         (x,s)           <- match opIn p
         TypePartition{} <- typeOf s
-        return ( "Horizontal rule for partition-in."
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| exists &iPat in parts(&s) . &i = &x |]
-               )
+        return
+            ( "Horizontal rule for partition-in."
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  [essence| exists &iPat in parts(&s) . &i = &x |]
+            )
