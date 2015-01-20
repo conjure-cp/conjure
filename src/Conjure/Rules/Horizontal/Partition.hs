@@ -38,19 +38,6 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
     theRule _ = na "rule_Comprehension_PartitionLiteral"
 
 
-rule_Remove_Parts :: Rule
-rule_Remove_Parts = "remove-parts" `namedRule` theRule where
-    theRule p = do
-        expr <- match opParts p
-        ty   <- typeOf expr
-        case ty of
-            TypePartition{} -> return
-                ( "partition in a parts"
-                , const expr
-                )
-            _ -> na "rule_Remove_Parts"
-
-
 rule_Eq :: Rule
 rule_Eq = "partition-eq" `namedRule` theRule where
     theRule p = do
@@ -59,9 +46,7 @@ rule_Eq = "partition-eq" `namedRule` theRule where
         TypePartition{} <- typeOf y
         return
             ( "Horizontal rule for partition equality"
-            , const $ make opAnd [ make opSubsetEq x y
-                                 , make opSubsetEq y x
-                                 ]
+            , const $ make opEq (make opParts x) (make opParts y)
             )
 
 
@@ -75,56 +60,6 @@ rule_Neq = "partition-neq" `namedRule` theRule where
             , const [essence| !(&x = &y) |]
             )
     theRule _ = na "rule_Neq"
-
-
-rule_SubsetEq :: Rule
-rule_SubsetEq = "partition-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opSubsetEq p
-        TypePartition{} <- typeOf x
-        TypePartition{} <- typeOf y
-        return
-            ( "Horizontal rule for partition subsetEq"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  [essence| forAll &iPat in (&x) . &i in &y |]
-            )
-
-
-rule_Subset :: Rule
-rule_Subset = "partition-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypePartition{} <- typeOf a
-        TypePartition{} <- typeOf b
-        return
-            ( "Horizontal rule for partition subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
-            )
-    theRule _ = na "rule_Subset"
-
-
-rule_Supset :: Rule
-rule_Supset = "partition-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypePartition{} <- typeOf a
-        TypePartition{} <- typeOf b
-        return
-            ( "Horizontal rule for partition supset"
-            , const [essence| &b subset &a |]
-            )
-    theRule _ = na "rule_Supset"
-
-
-rule_SupsetEq :: Rule
-rule_SupsetEq = "partition-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypePartition{} <- typeOf a
-        TypePartition{} <- typeOf b
-        return
-            ( "Horizontal rule for partition supsetEq"
-            , const [essence| &b subsetEq &a |]
-            )
-    theRule _ = na "rule_SupsetEq"
 
 
 rule_Lt :: Rule
@@ -159,14 +94,72 @@ rule_Leq = "partition-leq" `namedRule` theRule where
             )
 
 
-rule_In :: Rule
-rule_In = "partition-in" `namedRule` theRule where
-    theRule p = do
-        (x,s)           <- match opIn p
-        TypePartition{} <- typeOf s
+rule_Together :: Rule
+rule_Together = "partition-together" `namedRule` theRule where
+    theRule [essence| together(&x,&y,&p) |] = do
+        TypePartition{} <- typeOf p
         return
-            ( "Horizontal rule for partition-in."
+            ( "Horizontal rule for partition-together"
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  [essence| exists &iPat in parts(&s) . &i = &x |]
+                 in  [essence| exists &iPat in parts(&p) . &x in &i /\ &y in &i |]
             )
+    theRule _ = na "rule_Together"
+
+
+rule_Apart :: Rule
+rule_Apart = "partition-apart" `namedRule` theRule where
+    theRule [essence| apart(&x,&y,&p) |] = do
+        TypePartition{} <- typeOf p
+        return
+            ( "Horizontal rule for partition-apart"
+            , const [essence| !together(&x,&y,&p) /\ &x in participants(&p) /\ &y in participants(&p) |]
+            )
+    theRule _ = na "rule_Apart"
+
+
+rule_Party :: Rule
+rule_Party = "partition-party" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Literal"
+        (wanted, p) <- match opParty expr
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Comprehension on participants of a partition"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     (jPat, j) = quantifiedVar (fresh `at` 1)
+                 in  Comprehension (upd j body)
+                         $  gofBefore
+                         ++ [ Generator (GenInExpr iPat (make opParts p))
+                            , Condition [essence| &wanted in &i |]
+                            , Generator (GenInExpr jPat i)
+                            ]
+                         ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_Party"
+
+
+rule_Participants :: Rule
+rule_Participants = "partition-participants" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Literal"
+        p <- match opParticipants expr
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Comprehension on participants of a partition"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     (jPat, j) = quantifiedVar (fresh `at` 1)
+                 in  Comprehension (upd j body)
+                         $  gofBefore
+                         ++ [ Generator (GenInExpr iPat (make opParts p))
+                            , Generator (GenInExpr jPat i)
+                            ]
+                         ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_Participants"

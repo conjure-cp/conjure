@@ -629,16 +629,14 @@ horizontalRules =
     , Horizontal.Relation.rule_Lt
 
     , Horizontal.Partition.rule_Comprehension_Literal
-    , Horizontal.Partition.rule_Remove_Parts
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
     , Horizontal.Partition.rule_Leq
     , Horizontal.Partition.rule_Lt
-    , Horizontal.Partition.rule_Subset
-    , Horizontal.Partition.rule_SubsetEq
-    , Horizontal.Partition.rule_Supset
-    , Horizontal.Partition.rule_SupsetEq
-    , Horizontal.Partition.rule_In
+    , Horizontal.Partition.rule_Together
+    , Horizontal.Partition.rule_Apart
+    , Horizontal.Partition.rule_Party
+    , Horizontal.Partition.rule_Participants
 
     ]
 

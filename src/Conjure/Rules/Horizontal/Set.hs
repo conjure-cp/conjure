@@ -55,10 +55,6 @@ rule_Remove_ToSet = "remove-toSet" `namedRule` theRule where
                 ( "relation in a toSet"
                 , const expr
                 )
-            TypePartition{} -> return
-                ( "partition in a toSet"
-                , const expr
-                )
             _ -> na "rule_Remove_ToSet"
 
 

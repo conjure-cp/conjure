@@ -323,6 +323,44 @@ opParts _ =
     )
 
 
+opParty
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x, x)
+       )
+opParty _ =
+    ( \ x y -> injectOp $ MkOpParty $ OpParty x y
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpParty (OpParty x y) -> return (x,y)
+                _ -> na ("Lenses.opParty:" <++> pretty p)
+    )
+
+
+opParticipants
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opParticipants _ =
+    ( injectOp . MkOpParticipants . OpParticipants
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpParticipants (OpParticipants x) -> return x
+                _ -> na ("Lenses.opParticipants:" <++> pretty p)
+    )
+
+
 opFunctionImage
     :: ( OperatorContainer x
        , Pretty x
