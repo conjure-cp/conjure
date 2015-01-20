@@ -87,6 +87,10 @@ data Ops x
     | MkOpRelationProj    (OpRelationProj x)
 
     | MkOpParts           (OpParts x)
+    | MkOpTogether        (OpTogether x)
+    | MkOpApart           (OpApart x)
+    | MkOpParty           (OpParty x)
+    | MkOpParticipants    (OpParticipants x)
 
     | MkOpAAC             (OpAttributeAsConstraint x)
 
@@ -144,6 +148,10 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpRange               x) = typeOf x
     typeOf (MkOpRelationProj        x) = typeOf x
     typeOf (MkOpParts               x) = typeOf x
+    typeOf (MkOpTogether            x) = typeOf x
+    typeOf (MkOpApart               x) = typeOf x
+    typeOf (MkOpParty               x) = typeOf x
+    typeOf (MkOpParticipants        x) = typeOf x
     typeOf (MkOpAAC                 x) = typeOf x
 
 instance EvaluateOp Ops where
@@ -194,6 +202,10 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpRange               x) = evaluateOp x
     evaluateOp (MkOpRelationProj        x) = evaluateOp x
     evaluateOp (MkOpParts               x) = evaluateOp x
+    evaluateOp (MkOpTogether            x) = evaluateOp x
+    evaluateOp (MkOpApart               x) = evaluateOp x
+    evaluateOp (MkOpParty               x) = evaluateOp x
+    evaluateOp (MkOpParticipants        x) = evaluateOp x
     evaluateOp (MkOpAAC                 x) = evaluateOp x
 
 
@@ -269,7 +281,11 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpRelationProj (OpRelationProj a bs)) = pretty a <> prettyList prParens "," (map pr bs)
         where pr Nothing = "_"
               pr (Just b) = pretty b
-    prettyPrec _ (MkOpParts    (OpParts    a)) = "parts"    <> prParens (pretty a)
+    prettyPrec _ (MkOpParts        (OpParts        a )) = "parts"        <> pretty a
+    prettyPrec _ (MkOpTogether     (OpTogether  a b c)) = "together"     <> prettyList prParens "," [a,b,c]
+    prettyPrec _ (MkOpApart        (OpApart     a b c)) = "apart"        <> prettyList prParens "," [a,b,c]
+    prettyPrec _ (MkOpParty        (OpParty     a b  )) = "party"        <> prettyList prParens "," [a,b]
+    prettyPrec _ (MkOpParticipants (OpParticipants a )) = "participants" <> pretty a
     prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr Nothing   )) = pretty attr <> prParens (pretty x)
     prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr (Just val))) = pretty attr <> prettyList prParens "," [x, val]
 
@@ -1200,6 +1216,75 @@ instance EvaluateOp OpParts where
     evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
 
 
+data OpTogether x = OpTogether x x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpTogether x)
+instance Hashable  x => Hashable  (OpTogether x)
+instance ToJSON    x => ToJSON    (OpTogether x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpTogether x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
+    typeOf inp@(OpTogether x y p) = do
+        xTy <- typeOf x
+        yTy <- typeOf y
+        pTy <- typeOf p
+        case pTy of
+            TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
+            _ -> raiseTypeError (MkOpTogether inp)
+instance EvaluateOp OpTogether where
+    evaluateOp op = na $ "evaluateOp{OpTogether}:" <++> pretty (show op)
+
+
+data OpApart x = OpApart x x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpApart x)
+instance Hashable  x => Hashable  (OpApart x)
+instance ToJSON    x => ToJSON    (OpApart x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpApart x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpApart x) where
+    typeOf inp@(OpApart x y p) = do
+        xTy <- typeOf x
+        yTy <- typeOf y
+        pTy <- typeOf p
+        case pTy of
+            TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
+            _ -> raiseTypeError (MkOpApart inp)
+instance EvaluateOp OpApart where
+    evaluateOp op = na $ "evaluateOp{OpApart}:" <++> pretty (show op)
+
+
+data OpParty x = OpParty x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpParty x)
+instance Hashable  x => Hashable  (OpParty x)
+instance ToJSON    x => ToJSON    (OpParty x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpParty x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
+    typeOf inp@(OpParty x p) = do
+        xTy <- typeOf x
+        pTy <- typeOf p
+        case pTy of
+            TypePartition pTyInner | typesUnify [xTy, pTyInner] -> return $ TypeSet $ mostDefined [xTy, pTyInner]
+            _ -> raiseTypeError (MkOpParty inp)
+instance EvaluateOp OpParty where
+    evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
+
+
+data OpParticipants x = OpParticipants x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpParticipants x)
+instance Hashable  x => Hashable  (OpParticipants x)
+instance ToJSON    x => ToJSON    (OpParticipants x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpParticipants x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpParticipants x) where
+    typeOf inp@(OpParticipants p) = do
+        pTy <- typeOf p
+        case pTy of
+            TypePartition pTyInner -> return (TypeSet pTyInner)
+            _ -> raiseTypeError (MkOpParticipants inp)
+instance EvaluateOp OpParticipants where
+    evaluateOp op = na $ "evaluateOp{OpParticipants}:" <++> pretty (show op)
+
+
 data OpAllDiff x = OpAllDiff x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpAllDiff x)
@@ -1316,19 +1401,28 @@ mkOp op xs =
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
-            L_toInt    -> injectOp $ MkOpToInt    $ OpToInt    (headNote "toInt takes a single argument."    xs)
-            L_defined  -> injectOp $ MkOpDefined  $ OpDefined  (headNote "defined takes a single argument."  xs)
-            L_range    -> injectOp $ MkOpRange    $ OpRange    (headNote "range takes a single argument."    xs)
-            L_allDiff  -> injectOp $ MkOpAllDiff  $ OpAllDiff  (headNote "allDiff takes a single argument."  xs)
-            L_dontCare -> injectOp $ MkOpDontCare $ OpDontCare (headNote "dontCare takes a single argument." xs)
-            L_flatten  -> injectOp $ MkOpFlatten  $ OpFlatten  (headNote "flatten takes a single argument."  xs)
-            L_toSet    -> injectOp $ MkOpToSet    $ OpToSet    (headNote "toSet takes a single argument."    xs)
-            L_toMSet   -> injectOp $ MkOpToMSet   $ OpToMSet   (headNote "toMSet takes a single argument."   xs)
-            L_max      -> injectOp $ MkOpMax      $ OpMax xs
-            L_min      -> injectOp $ MkOpMin      $ OpMin xs
-            L_preImage -> injectOp $ MkOpPreImage $ OpPreImage (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
-            L_freq     -> injectOp $ MkOpFreq     $ OpFreq     (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
-            L_parts    -> injectOp $ MkOpParts    $ OpParts    (headNote "parts takes a single argument."    xs)
+            L_toInt        -> injectOp $ MkOpToInt        $ OpToInt        (headNote "toInt takes a single argument."    xs)
+            L_defined      -> injectOp $ MkOpDefined      $ OpDefined      (headNote "defined takes a single argument."  xs)
+            L_range        -> injectOp $ MkOpRange        $ OpRange        (headNote "range takes a single argument."    xs)
+            L_allDiff      -> injectOp $ MkOpAllDiff      $ OpAllDiff      (headNote "allDiff takes a single argument."  xs)
+            L_dontCare     -> injectOp $ MkOpDontCare     $ OpDontCare     (headNote "dontCare takes a single argument." xs)
+            L_flatten      -> injectOp $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
+            L_toSet        -> injectOp $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)
+            L_toMSet       -> injectOp $ MkOpToMSet       $ OpToMSet       (headNote "toMSet takes a single argument."   xs)
+            L_max          -> injectOp $ MkOpMax          $ OpMax xs
+            L_min          -> injectOp $ MkOpMin          $ OpMin xs
+            L_preImage     -> injectOp $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
+            L_freq         -> injectOp $ MkOpFreq         $ OpFreq         (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
+            L_parts        -> injectOp $ MkOpParts        $ OpParts        (headNote "parts takes a single argument."    xs)
+            L_together     -> injectOp $ MkOpTogether     $ OpTogether     (atNote "together 1" xs 0)
+                                                                           (atNote "together 2" xs 1)
+                                                                           (atNote "together 3" xs 2)
+            L_apart        -> injectOp $ MkOpApart        $ OpApart        (atNote "apart 1"    xs 0)
+                                                                           (atNote "apart 2"    xs 1)
+                                                                           (atNote "apart 3"    xs 2)
+            L_party        -> injectOp $ MkOpParty        $ OpParty        (atNote "party 1"    xs 0)
+                                                                           (atNote "party 2"    xs 1)
+            L_participants -> injectOp $ MkOpParticipants $ OpParticipants (headNote "participants takes a single argument." xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 
