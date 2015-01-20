@@ -16,7 +16,7 @@ module Conjure.Language.Domain
     , reprAtTopLevel, forgetRepr
     , typeOfDomain
     , readBinRel
-    , attributeLenses, allSupportedAttributes
+    , attributeLenses, allSupportedAttributes, updateAttributes
     , normaliseDomain, normaliseRange
     ) where
 
@@ -173,6 +173,22 @@ domainCanIndexMatrix DomainBool{} = True
 domainCanIndexMatrix DomainInt {} = True
 domainCanIndexMatrix _            = False
 
+
+updateAttributes
+    :: (MonadFail m, Pretty r, Pretty x)
+    => Domain r x
+    -> [(Name, Maybe x)]
+    -> m (Domain r x)
+updateAttributes domain [] = return domain
+updateAttributes domain newAttrs@((attr, val) : rest) =
+    case attributeLenses domain of
+        Nothing -> fail $ vcat [ "Cannot add attributes to this domain."
+                               , "Domain     :" <+> pretty domain
+                               , "Attributes :" <+> prettyList id "," (map fst newAttrs)
+                               ]
+        Just (_, upd) -> do
+            domain' <- upd attr val
+            updateAttributes domain' rest
 
 attributeLenses
     :: (MonadFail m, Pretty r, Pretty x)

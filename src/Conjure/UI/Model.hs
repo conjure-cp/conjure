@@ -33,6 +33,7 @@ import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
+import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
@@ -440,6 +441,7 @@ checkIfAllRefined m = do
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
+    >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
     >>= return . initInfo             >>= logDebugId "[initInfo]"
