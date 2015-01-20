@@ -449,6 +449,7 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
