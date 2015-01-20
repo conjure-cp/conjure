@@ -26,7 +26,9 @@ class CategoryOf a where
 
 instance CategoryOf Expression where
     categoryOf (Reference _ (Just ref)) = categoryOf ref
-    categoryOf x = maximum (CatBottom : map categoryOf (children x))
+    -- TODO: the following should check for which variable we quantify over
+    categoryOf x@Comprehension{} = maximum $ filter (CatQuantified/=) $ CatBottom : map categoryOf (children x)
+    categoryOf x                 = maximum                            $ CatBottom : map categoryOf (children x)
 
 instance CategoryOf ReferenceTo where
     categoryOf (Alias              x) = categoryOf x
