@@ -658,7 +658,18 @@ instance TypeOf x => TypeOf (OpSlicing x) where
         t@TypeMatrix{} <- typeOf m
         return t
 instance EvaluateOp OpSlicing where
-    evaluateOp op = na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
+    evaluateOp op@(OpSlicing m lb ub) = case m of
+        ConstantAbstract (AbsLitMatrix (DomainInt index) vals) -> do
+            indexVals <- valuesInIntDomain index
+            outVals   <- liftM catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
+                case lb of
+                    Just (ConstantInt lower) | lower > thisIndex -> return Nothing
+                    _ -> case ub of
+                        Just (ConstantInt upper) | upper < thisIndex -> return Nothing
+                        _ -> return $ Just (thisIndex, thisVal)
+            let outDomain = DomainInt $ map (RangeSingle . ConstantInt . fst) outVals
+            return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
+        _ -> na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 
 
 data OpFlatten x = OpFlatten x
@@ -1193,6 +1204,8 @@ instance TypeOf x => TypeOf (OpAllDiff x) where
         TypeMatrix TypeInt TypeInt <- typeOf x
         return TypeBool
 instance EvaluateOp OpAllDiff where
+    evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =
+        return $ ConstantBool $ length vals == length (nub vals)
     evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
 
 
