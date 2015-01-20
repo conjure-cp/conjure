@@ -281,11 +281,11 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpRelationProj (OpRelationProj a bs)) = pretty a <> prettyList prParens "," (map pr bs)
         where pr Nothing = "_"
               pr (Just b) = pretty b
-    prettyPrec _ (MkOpParts        (OpParts        a )) = "parts"        <> pretty a
+    prettyPrec _ (MkOpParts        (OpParts        a )) = "parts"        <> prParens (pretty a)
     prettyPrec _ (MkOpTogether     (OpTogether  a b c)) = "together"     <> prettyList prParens "," [a,b,c]
     prettyPrec _ (MkOpApart        (OpApart     a b c)) = "apart"        <> prettyList prParens "," [a,b,c]
     prettyPrec _ (MkOpParty        (OpParty     a b  )) = "party"        <> prettyList prParens "," [a,b]
-    prettyPrec _ (MkOpParticipants (OpParticipants a )) = "participants" <> pretty a
+    prettyPrec _ (MkOpParticipants (OpParticipants a )) = "participants" <> prParens (pretty a)
     prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr Nothing   )) = pretty attr <> prParens (pretty x)
     prettyPrec _ (MkOpAAC (OpAttributeAsConstraint x attr (Just val))) = pretty attr <> prettyList prParens "," [x, val]
 
@@ -1231,6 +1231,11 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
             TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
             _ -> raiseTypeError (MkOpTogether inp)
 instance EvaluateOp OpTogether where
+    evaluateOp (OpTogether x y (ConstantAbstract (AbsLitPartition xss))) =
+        return $ ConstantBool $ or
+            [ x `elem` xs && y `elem` xs
+            | xs <- xss
+            ]
     evaluateOp op = na $ "evaluateOp{OpTogether}:" <++> pretty (show op)
 
 
@@ -1249,6 +1254,18 @@ instance (TypeOf x, Pretty x) => TypeOf (OpApart x) where
             TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
             _ -> raiseTypeError (MkOpApart inp)
 instance EvaluateOp OpApart where
+    evaluateOp (OpApart x y (ConstantAbstract (AbsLitPartition xss))) =
+        return $ ConstantBool $ and
+            [ or [ x `elem` xs
+                 | xs <- xss
+                 ]
+            , or [ x `elem` xs
+                 | xs <- xss
+                 ]
+            , or [ not (x `elem` xs && y `elem` xs)
+                 | xs <- xss
+                 ]
+            ]
     evaluateOp op = na $ "evaluateOp{OpApart}:" <++> pretty (show op)
 
 
@@ -1266,6 +1283,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
             TypePartition pTyInner | typesUnify [xTy, pTyInner] -> return $ TypeSet $ mostDefined [xTy, pTyInner]
             _ -> raiseTypeError (MkOpParty inp)
 instance EvaluateOp OpParty where
+    evaluateOp op@(OpParty x (ConstantAbstract (AbsLitPartition xss))) =
+        let
+            outSet = [ xs
+                     | xs <- xss
+                     , x `elem` xs
+                     ]
+        in
+            case outSet of
+                [s] -> return $ ConstantAbstract $ AbsLitSet s
+                []  -> fail $ "Element not found in partition:" <++> pretty (MkOpParty op)
+                _   -> fail $ "Element found in multiple parts of the partition:" <++> pretty (MkOpParty op)
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
 
@@ -1282,6 +1310,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParticipants x) where
             TypePartition pTyInner -> return (TypeSet pTyInner)
             _ -> raiseTypeError (MkOpParticipants inp)
 instance EvaluateOp OpParticipants where
+    evaluateOp (OpParticipants (ConstantAbstract (AbsLitPartition xss))) =
+        return $ ConstantAbstract $ AbsLitSet $ sort $ concat xss
     evaluateOp op = na $ "evaluateOp{OpParticipants}:" <++> pretty (show op)
 
 
