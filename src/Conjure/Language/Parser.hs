@@ -369,20 +369,9 @@ parseRelationAttr = do
         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let readBinRel (DAName "reflexive"    ) = return BinRelAttr_Reflexive
-        readBinRel (DAName "irreflexive"  ) = return BinRelAttr_Irreflexive
-        readBinRel (DAName "coreflexive"  ) = return BinRelAttr_Coreflexive
-        readBinRel (DAName "symmetric"    ) = return BinRelAttr_Symmetric
-        readBinRel (DAName "antiSymmetric") = return BinRelAttr_AntiSymmetric
-        readBinRel (DAName "aSymmetric"   ) = return BinRelAttr_ASymmetric
-        readBinRel (DAName "transitive"   ) = return BinRelAttr_Transitive
-        readBinRel (DAName "total"        ) = return BinRelAttr_Total
-        readBinRel (DAName "Euclidean"    ) = return BinRelAttr_Euclidean
-        readBinRel (DAName "serial"       ) = return BinRelAttr_Serial
-        readBinRel (DAName "equivalence"  ) = return BinRelAttr_Equivalence
-        readBinRel (DAName "partialOrder" ) = return BinRelAttr_PartialOrder
-        readBinRel a = fail $ "not a binary relation:" <+> pretty (show a)
-    binRels <- mapM readBinRel (filterBinRel attrs)
+    let readBinRel' (DAName a) = readBinRel a
+        readBinRel' a = fail $ "Not a binary relation attribute:" <+> pretty a
+    binRels <- mapM readBinRel' (filterBinRel attrs)
     return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
 
 
