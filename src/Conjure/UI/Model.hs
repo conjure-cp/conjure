@@ -32,7 +32,7 @@ import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
-import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms )
+import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
@@ -439,14 +439,15 @@ checkIfAllRefined m = do
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
-                                    >>= logDebugId "[input]"
-    >>= lettingsForComplexInDoms    >>= logDebugId "[lettingsForComplexInDoms]"
-    >>= return . initInfo           >>= logDebugId "[initInfo]"
-    >>= removeUnnamedsFromModel     >>= logDebugId "[removeUnnamedsFromModel]"
-    >>= removeEnumsFromModel        >>= logDebugId "[removeEnumsFromModel]"
-    >>= finiteGivens                >>= logDebugId "[finiteGivens]"
-    >>= resolveNames                >>= logDebugId "[resolveNames]"
-    >>= return . addTrueConstraints >>= logDebugId "[addTrueConstraints]"
+                                      >>= logDebugId "[input]"
+    >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
+    >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
+    >>= return . initInfo             >>= logDebugId "[initInfo]"
+    >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
+    >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
+    >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
+    >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
 epilogue :: MonadFail m => Model -> m Model

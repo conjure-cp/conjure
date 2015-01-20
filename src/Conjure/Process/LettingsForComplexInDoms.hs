@@ -1,9 +1,12 @@
 module Conjure.Process.LettingsForComplexInDoms
     ( lettingsForComplexInDoms
+    , inlineLettingDomainsForDecls
     ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Pretty
 
 
 -- | if the domain of a declaration contains a reference to another declaration (a given)
@@ -41,3 +44,29 @@ lettingsForComplexInDoms m = do
                     return (newLettings ++ [Declaration (LettingDomainDefnUnnamed name expr')])                    
                 _ -> return [st]
         return m { mStatements = concat statements }
+
+-- | inline letting domains for declarations, before saving the original domain in the logs
+inlineLettingDomainsForDecls :: MonadFail m => Model -> m Model
+inlineLettingDomainsForDecls m = do
+    let
+        f (DomainReference name Nothing) = do
+            ctxt <- gets id
+            case name `lookup` ctxt of
+                Just d -> f d
+                _ -> fail $ vcat
+                    $ ("No value for:" <+> pretty name)
+                    : "Bindings in context:"
+                    : prettyContext ctxt
+        f d = return d
+
+    flip evalStateT [] $ do
+        statements <- forM (mStatements m) $ \ st ->
+            case st of
+                Declaration (Letting name (Domain domain)) -> do
+                    modify ((name, domain) :)
+                    return st
+                Declaration (FindOrGiven forg name domain) -> do
+                    domain' <- transformM f domain
+                    return (Declaration (FindOrGiven forg name domain'))
+                _ -> return st
+        return m { mStatements = statements }
