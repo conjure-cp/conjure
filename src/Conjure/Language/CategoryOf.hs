@@ -14,6 +14,13 @@ import Conjure.Language.Pretty
 data Category = CatBottom | CatConstant | CatParameter | CatQuantified | CatDecision
     deriving (Eq, Ord, Show)
 
+instance Pretty Category where
+    pretty CatBottom = "_|_"
+    pretty CatConstant = "constant"
+    pretty CatParameter = "parameter"
+    pretty CatQuantified = "quantified"
+    pretty CatDecision = "decision"
+
 class CategoryOf a where
     categoryOf :: a -> Category
 
@@ -48,24 +55,29 @@ categoryChecking m = do
     errors1 <- liftM concat $ forM (mStatements m) $ \ st -> case st of
         Declaration (FindOrGiven _forg name domain) -> do
             let cat = categoryOf domain
-            return [(name, domain) | cat > CatParameter]
+            return [(domain, (name, cat)) | cat > CatParameter]
         _ -> return []
     errors2 <- liftM concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
         let cat = categoryOf domain
-        return [ domain
-               | cat > CatParameter
-               , not (domain `elem` map snd errors1)        -- only if this is a new error
+        return [ (domain, cat)
+               | cat > CatQuantified
+               , not (domain `elem` map fst errors1)        -- only if this is a new error
                ]
 
     if null errors1 && null errors2
         then return m
         else fail $ vcat
             $  [ "Category checking failed." ]
-            ++ concat [ [ "The domain:" <+> pretty domain
+            ++ concat [ [ "The domain   :" <+> pretty domain
+                        , "Its category :" <+> pretty cat
                         , "In the definition of:" <+> pretty name
+                        , ""
                         ]
-                      | (name, domain) <- errors1
+                      | (domain, (name, cat)) <- errors1
                       ]
-            ++        [ "The domain:" <+> pretty domain
-                      | domain <- errors2
+            ++ concat [ [ "The domain   :" <+> pretty domain
+                        , "Its category :" <+> pretty cat
+                        , ""
+                        ]
+                      | (domain, cat) <- errors2
                       ]
