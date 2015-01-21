@@ -34,8 +34,8 @@ srOptions :: String -> [T.Text]
 srOptions srExtraOptions =
     [ "-run-solver"
     , "-minion"
-    , "-timelimit"      , "300000"
-    , "-solver-options" , "-cpulimit 300"
+    , "-timelimit"      , "600000"
+    , "-solver-options" , "-cpulimit 600"
     , "-all-solutions"
     , "-preprocess"     , "None"
     ] ++ map T.pack (words srExtraOptions)
