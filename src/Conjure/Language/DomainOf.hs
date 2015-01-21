@@ -20,7 +20,8 @@ class DomainOf r x a where
 instance DomainOf () Expression Expression where
     domainOfInternal p (Reference _ (Just refTo)) = domainOfInternal p refTo
     domainOfInternal p (Constant c) = domainOfInternal p c
-    domainOfInternal _ x = fail ("domainOfInternal{Expression} 1:" <+> pretty x)
+    domainOfInternal p (AbstractLiteral c) = domainOfInternal p c
+    domainOfInternal _ x = fail ("domainOfInternal{Expression} 1:" <+> pretty (show x))
 
 instance DomainOf HasRepresentation Expression Expression where
     domainOfInternal p (Reference _ (Just refTo)) = domainOfInternal p refTo
@@ -37,7 +38,7 @@ instance DomainOf HasRepresentation Expression Expression where
                              , pretty mDomain
                              , pretty iType
                              ]
-    domainOfInternal _ x = fail ("domainOfInternal{Expression} 2.2:" <+> pretty x)
+    domainOfInternal _ x = forgetRepr <$> domainOfInternal (Proxy :: Proxy ()) x
 
 instance DomainOf () Expression ReferenceTo where
     domainOfInternal p (Alias x) = domainOfInternal p x
@@ -65,6 +66,15 @@ instance DomainOf () Expression Constant where
         doms <- mapM (domainOfInternal p) cs
         return (DomainMSet () (MSetAttr (SizeAttr_Size size) def) (mconcat doms))
     domainOfInternal _ x = fail ("domainOfInternal{Constant}:" <+> pretty x)
+
+instance DomainOf () Expression (AbstractLiteral Expression) where
+    domainOfInternal p (AbsLitTuple cs) = do
+        doms <- mapM (domainOfInternal p) cs
+        return (DomainTuple doms)
+    domainOfInternal p (AbsLitMatrix index values) = do
+        doms <- mapM (domainOfInternal p) values
+        return (DomainMatrix index (mconcat doms))
+    domainOfInternal _ x = fail ("domainOfInternal{AbstractLiteral}:" <+> pretty x)
 
 
 domainOf :: MonadFail m => Expression -> m (Domain HasRepresentation Expression)
