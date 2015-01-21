@@ -15,23 +15,7 @@ import Conjure.Language.Pretty
 
 resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
 resolveNames model = flip evalStateT (freshNames model, []) $ do
-    statements <- forM (mStatements model) $ \ st ->
-        case st of
-            Declaration decl ->
-                case decl of
-                    FindOrGiven forg nm dom       -> do
-                        dom' <- resolveD dom
-                        modify (second ((nm, DeclNoRepr forg nm dom') :))
-                        return (Declaration (FindOrGiven forg nm dom'))
-                    Letting nm x                  -> do
-                        x' <- resolveX x
-                        modify (second ((nm, Alias x') :))
-                        return (Declaration (Letting nm x'))
-                    _ -> fail ("Unexpected declaration:" <+> pretty st)
-            SearchOrder{} -> return st
-            Where xs -> Where <$> mapM resolveX xs
-            Objective obj x -> Objective obj <$> resolveX x
-            SuchThat xs -> SuchThat <$> mapM resolveX xs
+    statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
     duplicateNames <- gets (snd >>> map fst >>> histogram >>> filter (\ (_,n) -> n > 1 ) >>> map fst)
     unless (null duplicateNames) $
@@ -73,6 +57,32 @@ resolveNamesX x = do
 check :: MonadFail m => Expression -> m ()
 check (Reference nm Nothing) = fail ("Undefined:" <+> pretty nm)
 check _ = return ()
+
+
+resolveStatement
+    :: ( MonadFail m
+       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       )
+    => Statement
+    -> m Statement
+
+resolveStatement st =
+    case st of
+        Declaration decl ->
+            case decl of
+                FindOrGiven forg nm dom       -> do
+                    dom' <- resolveD dom
+                    modify (second ((nm, DeclNoRepr forg nm dom') :))
+                    return (Declaration (FindOrGiven forg nm dom'))
+                Letting nm x                  -> do
+                    x' <- resolveX x
+                    modify (second ((nm, Alias x') :))
+                    return (Declaration (Letting nm x'))
+                _ -> fail ("Unexpected declaration:" <+> pretty st)
+        SearchOrder{} -> return st
+        Where xs -> Where <$> mapM resolveX xs
+        Objective obj x -> Objective obj <$> resolveX x
+        SuchThat xs -> SuchThat <$> mapM resolveX xs
 
 
 resolveX
