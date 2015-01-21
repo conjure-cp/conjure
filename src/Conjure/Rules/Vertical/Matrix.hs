@@ -65,6 +65,71 @@ rule_Comprehension_Literal_ContainsSet = "matrix-comprehension-literal-containsS
     theRule _ = na "rule_Comprehension_Literal_ContainsSet"
 
 
+rule_Comprehension_ToSet :: Rule
+rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_ToSet"
+        matrix       <- match opToSet expr
+        TypeMatrix{} <- typeOf matrix
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Vertical rule for comprehension over matrix-toSet"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     val  = make opIndexing i 1
+                     over = make opHist matrix
+                 in  Comprehension (upd val body)
+                         $  gofBefore
+                         ++ [Generator (GenInExpr iPat over)]
+                         ++ transformBi (upd val) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_ToSet"
+
+
+rule_Comprehension_Hist :: Rule
+rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Hist"
+        matrix               <- match opHist expr
+        TypeMatrix{}         <- typeOf matrix
+        DomainMatrix index _ <- domainOf matrix
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Vertical rule for comprehension over matrix-hist"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     (jPat, j) = quantifiedVar (fresh `at` 1)
+                     value = [essence| &matrix[&i] |]
+                     -- if this is the left-most occurrence of value
+                     -- count all
+                     -- otherwise, 0
+                     count = [essence|
+                         sum([ 1                            $ number of occurrences of this value in the matrix
+                             | &jPat : &index
+                             , &matrix[&i] = &matrix[&j]
+                             ])
+                     |]
+                     val   = AbstractLiteral $ AbsLitTuple [value, count]
+                     appearsBefore = [essence|
+                         or([ &matrix[&j] = &matrix[&i]
+                            | &jPat : &index
+                            , &j < &i
+                            ])
+                    |]
+                 in  Comprehension (upd val body)
+                         $  gofBefore
+                         ++ [ Generator (GenDomainNoRepr iPat index)
+                            , Condition [essence| ! &appearsBefore |]
+                            ]
+                         ++ transformBi (upd val) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Hist"
+
+
 rule_Matrix_Eq :: Rule
 rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
     theRule p = do
