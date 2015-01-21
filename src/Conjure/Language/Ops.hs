@@ -67,6 +67,7 @@ data Ops x
 
     | MkOpIn              (OpIn x)
     | MkOpFreq            (OpFreq x)
+    | MkOpHist            (OpHist x)
     | MkOpSubset          (OpSubset x)
     | MkOpSubsetEq        (OpSubsetEq x)
     | MkOpSupset          (OpSupset x)
@@ -131,6 +132,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpDontCare            x) = typeOf x
     typeOf (MkOpIn                  x) = typeOf x
     typeOf (MkOpFreq                x) = typeOf x
+    typeOf (MkOpHist                x) = typeOf x
     typeOf (MkOpSubset              x) = typeOf x
     typeOf (MkOpSubsetEq            x) = typeOf x
     typeOf (MkOpSupset              x) = typeOf x
@@ -185,6 +187,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpDontCare            x) = evaluateOp x
     evaluateOp (MkOpIn                  x) = evaluateOp x
     evaluateOp (MkOpFreq                x) = evaluateOp x
+    evaluateOp (MkOpHist                x) = evaluateOp x
     evaluateOp (MkOpSubset              x) = evaluateOp x
     evaluateOp (MkOpSubsetEq            x) = evaluateOp x
     evaluateOp (MkOpSupset              x) = evaluateOp x
@@ -263,6 +266,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpDontCare (OpDontCare a)) = "dontCare" <> prParens (pretty a)
     prettyPrec prec (MkOpIn        op@(OpIn        a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec _    (MkOpFreq         (OpFreq      a b)) = "freq" <> prettyList prParens "," [a,b]
+    prettyPrec _    (MkOpHist         (OpHist        a)) = "hist" <> prParens (pretty a)
     prettyPrec prec (MkOpSubset    op@(OpSubset    a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSubsetEq  op@(OpSubsetEq  a b)) = prettyPrecBinOp prec [op] a b
     prettyPrec prec (MkOpSupset    op@(OpSupset    a b)) = prettyPrecBinOp prec [op] a b
@@ -822,8 +826,6 @@ instance Serialize x => Serialize (OpFreq x)
 instance Hashable  x => Hashable  (OpFreq x)
 instance ToJSON    x => ToJSON    (OpFreq x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFreq x) where parseJSON = JSON.genericParseJSON jsonOptions
-instance BinaryOperator (OpFreq x) where
-    opLexeme _ = L_in
 instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
     typeOf p@(OpFreq b a) = do
         tyA <- typeOf a
@@ -834,6 +836,30 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
 instance EvaluateOp OpFreq where
     evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
+
+
+data OpHist x = OpHist x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpHist x)
+instance Hashable  x => Hashable  (OpHist x)
+instance ToJSON    x => ToJSON    (OpHist x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpHist x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
+    typeOf p@(OpHist a) = do
+        tyA <- typeOf a
+        case tyA of
+            TypeMSet     aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
+            TypeMatrix _ aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
+            TypeList     aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
+            _ -> raiseTypeError (MkOpHist p)
+instance EvaluateOp OpHist where
+    evaluateOp (OpHist (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantAbstract $ AbsLitMatrix
+        (DomainInt [RangeBounded 1 (fromInt $ length $ histogram cs)])
+        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
+    evaluateOp (OpHist (ConstantAbstract (AbsLitMatrix _ cs))) = return $ ConstantAbstract $ AbsLitMatrix
+        (DomainInt [RangeBounded 1 (fromInt $ length $ histogram cs)])
+        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
+    evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)
 
 
 data OpSubset x = OpSubset x x
@@ -1011,8 +1037,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
             TypeRelation is  -> return (TypeSet (TypeTuple is))
             TypeMSet i       -> return (TypeSet i)
             TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
+            TypeMatrix _ i   -> return (TypeSet i)
+            TypeList i       -> return (TypeSet i)
             _ -> raiseTypeError (MkOpToSet p)
 instance EvaluateOp OpToSet where
+    evaluateOp (OpToSet (ConstantAbstract (AbsLitMatrix _ xs))) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp (OpToSet (ConstantAbstract (AbsLitSet xs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp (OpToSet (ConstantAbstract (AbsLitMSet xs))) =
@@ -1443,6 +1473,7 @@ mkOp op xs =
             L_min          -> injectOp $ MkOpMin          $ OpMin xs
             L_preImage     -> injectOp $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
             L_freq         -> injectOp $ MkOpFreq         $ OpFreq         (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
+            L_hist         -> injectOp $ MkOpHist         $ OpHist         (atNote "hist 1"     xs 0)
             L_parts        -> injectOp $ MkOpParts        $ OpParts        (headNote "parts takes a single argument."    xs)
             L_together     -> injectOp $ MkOpTogether     $ OpTogether     (atNote "together 1" xs 0)
                                                                            (atNote "together 2" xs 1)
