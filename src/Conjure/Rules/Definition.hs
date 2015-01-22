@@ -119,20 +119,26 @@ isAtomic _ = False
 
 representationOf :: MonadFail m => Expression -> m Name
 representationOf x = do
-    dom <- domainOf x
-    case reprAtTopLevel dom of
-        Nothing -> fail "doesn't seem to have a representation"
-        Just NoRepresentation -> fail "doesn't seem to have a representation"
-        Just (HasRepresentation r) -> return r
+    dor <- domainOfInternal x
+    case dor :: DomainOfResult Expression of
+        DomainOfResultNoRepr{} -> fail "doesn't seem to have a representation"
+        DomainOfResultHasRepr dom ->
+            case reprAtTopLevel dom of
+                Nothing -> fail "doesn't seem to have a representation"
+                Just NoRepresentation -> fail "doesn't seem to have a representation"
+                Just (HasRepresentation r) -> return r
 
 
 hasRepresentation :: MonadFail m => Expression -> m ()
 hasRepresentation x = do
-    dom <- domainOf x
-    case reprAtTopLevel dom of
-        Nothing -> fail "doesn't seem to have a representation"
-        Just NoRepresentation -> fail "doesn't seem to have a representation"
-        Just HasRepresentation{} -> return ()
+    dor <- domainOfInternal x
+    case dor :: DomainOfResult Expression of
+        DomainOfResultNoRepr{} -> fail "doesn't seem to have a representation"
+        DomainOfResultHasRepr dom ->
+            case reprAtTopLevel dom of
+                Nothing -> fail "doesn't seem to have a representation"
+                Just NoRepresentation -> fail "doesn't seem to have a representation"
+                Just HasRepresentation{} -> return ()
 
 
 matchFirst
