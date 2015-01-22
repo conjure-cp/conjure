@@ -171,7 +171,7 @@ allReprs =
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , relationAsMatrix
-      , partitionOccurrence
+      -- , partitionOccurrence
       ]
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
