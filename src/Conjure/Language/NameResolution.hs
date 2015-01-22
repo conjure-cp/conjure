@@ -139,6 +139,10 @@ resolveX p@Comprehension{} = scope $ do
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
+resolveX (WithLocals body locals) = scope $ do
+    locals' <- mapM resolveStatement locals
+    body'   <- resolveX body
+    return (WithLocals body' locals')
 resolveX x = descendM resolveX x
 
 
