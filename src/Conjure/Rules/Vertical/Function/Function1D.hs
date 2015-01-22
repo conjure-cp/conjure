@@ -9,6 +9,7 @@ import Conjure.Language.Domain
 import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
 import Conjure.Language.TH
+import Conjure.Language.Lenses
 
 import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
 
@@ -19,7 +20,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension"
         "Function1D"         <- representationOf func
         TypeFunction{}       <- typeOf func

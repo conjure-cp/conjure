@@ -38,7 +38,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension"
         "FunctionND"                  <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
