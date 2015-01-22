@@ -115,12 +115,8 @@ rule_Comprehension_ToSet_Sum = "matrix-toSet" `namedRule` theRule where
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet_Sum"
-        matrix   <- match opToSet expr
-        matrixTy <- typeOf matrix
-        case matrixTy of
-            TypeMatrix{} -> return ()
-            TypeList{}   -> return ()
-            _ -> na "rule_Comprehension_ToSet_Sum: not a matrix type"
+        matrix     <- match opToSet expr
+        TypeList{} <- typeOf matrix
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-toSet (sum)"
