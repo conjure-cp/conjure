@@ -4,7 +4,6 @@ module Conjure.Rules.Vertical.Partition.Occurrence where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
-import Conjure.Language.Domain
 import Conjure.Language.DomainOf
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
