@@ -12,7 +12,6 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Type
-import Conjure.Language.Constant
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
@@ -49,6 +48,14 @@ combineDOR' dors f =
     in
         DomainOfResultNoRepr  $ f doms
 
+onDOR
+    :: Functor m
+    => DomainOfResult x
+    -> (forall r . Domain r x -> m (Domain r x))
+    -> m (DomainOfResult x)
+onDOR (DomainOfResultNoRepr d) f = DomainOfResultNoRepr <$> f d
+onDOR (DomainOfResultHasRepr d) f = DomainOfResultHasRepr <$> f d
+
 
 class DomainOf a x where
     domainOfInternal :: MonadFail m => a -> m (DomainOfResult x)
@@ -57,35 +64,27 @@ instance DomainOf Expression Expression where
     domainOfInternal (Reference _ (Just refTo)) = domainOfInternal refTo
     domainOfInternal (Constant c) = domainOfInternal c
     domainOfInternal (AbstractLiteral c) = domainOfInternal c
-    domainOfInternal x = fail ("domainOfInternal{Expression} 1:" <+> pretty (show x))
 
--- instance DomainOf Expression Expression where
---     domainOfInternal p (Reference _ (Just refTo)) = domainOfInternal p refTo
---     domainOfInternal p x@(Op (MkOpIndexing (OpIndexing m i))) = do
---         mDomain <- domainOfInternal p m
---         iType   <- typeOf i
---         case (mDomain, iType) of
---             (DomainMatrix _ inner, TypeInt{}) -> return inner
---             (DomainTuple inners  , TypeInt{}) -> do
---                 iInt <- intOut i
---                 return (at inners (iInt-1))
---             _ -> fail $ vcat [ "domainOfInternal{Expression} 2.1"
---                              , pretty x
---                              , pretty mDomain
---                              , pretty iType
---                              ]
---     domainOfInternal _ x = forgetRepr <$> domainOfInternal (Proxy :: Proxy ()) x
+    domainOfInternal (Op (MkOpIndexing (OpIndexing m i))) = do
+        iType <- typeOf i
+        case iType of
+            TypeInt{} -> return ()
+            _ -> fail "domainOfInternal, OpIndexing, not an int index"
+        mDor  <- domainOfInternal m
+        onDOR mDor $ \ mDom -> case mDom of
+            DomainMatrix _ inner -> return inner
+            DomainTuple inners -> do
+                iInt <- intOut i
+                return $ atNote "domainOfInternal" inners (iInt-1)
+            _ -> fail "domainOfInternal, OpIndexing, not a matrix or tuple"
+
+    domainOfInternal x = fail ("domainOfInternal{Expression} 1:" <+> pretty (show x))
 
 instance DomainOf ReferenceTo Expression where
     domainOfInternal (Alias x) = domainOfInternal x
     domainOfInternal (DeclNoRepr  _ _ dom) = return (DomainOfResultNoRepr dom)
     domainOfInternal (DeclHasRepr _ _ dom) = return (DomainOfResultHasRepr dom)
     domainOfInternal x = fail ("domainOfInternal{ReferenceTo} 1:" <+> pretty x)
-
--- instance DomainOf HasRepresentation Expression ReferenceTo where
---     domainOfInternal p (Alias x) = domainOfInternal p x
---     domainOfInternal _ (DeclHasRepr _ _ dom) = return dom
---     domainOfInternal _ x = fail ("domainOfInternal{ReferenceTo} 2:" <+> pretty x)
 
 instance DomainOf Constant Expression where
     domainOfInternal   ConstantBool{} = return $ DomainOfResultNoRepr DomainBool
