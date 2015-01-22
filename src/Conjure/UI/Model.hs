@@ -67,6 +67,7 @@ import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relat
 
 import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
+import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
@@ -518,6 +519,10 @@ verticalRules =
 
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet
+    , Vertical.Matrix.rule_Comprehension_Nested
+    , Vertical.Matrix.rule_Comprehension_Hist
+    , Vertical.Matrix.rule_Comprehension_ToSet
+    , Vertical.Matrix.rule_Comprehension_ToSet_Sum
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
@@ -566,12 +571,13 @@ verticalRules =
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
 
+    , Vertical.Partition.Occurrence.rule_Comprehension
+
     ]
 
 horizontalRules :: [Rule]
 horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
-    , Horizontal.Set.rule_Remove_ToSet
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
     , Horizontal.Set.rule_Leq
