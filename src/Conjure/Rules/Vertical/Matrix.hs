@@ -95,7 +95,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, innerBody, innerGof), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} (Comprehension innerBody innerGof)) -> return (pat, innerBody, innerGof)
-            _ -> na "rule_Comprehension_Literal"
+            _ -> na "rule_Comprehension_Nested"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Nested matrix comprehension"
@@ -104,30 +104,32 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
                          ++ innerGof
                          ++ transformBi (upd innerBody) gofAfter
             )
-    theRule _ = na "rule_Comprehension_Literal"
+    theRule _ = na "rule_Comprehension_Nested"
 
 
--- TODO: This is plain wrong!
-rule_Comprehension_ToSet_Sum :: Rule
-rule_Comprehension_ToSet_Sum = "matrix-toSet" `namedRule` theRule where
+withAuxVar :: Name -> Domain () Expression -> (Expression -> Expression) -> Expression
+withAuxVar nm dom f =
+    WithLocals
+        (Reference nm Nothing)
+        [ Declaration (FindOrGiven LocalFind nm dom)
+        , SuchThat [f (Reference nm Nothing)]
+        ]
+
+
+rule_Comprehension_ToSet2 :: Rule
+rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
     theRule p = do
-        [Comprehension body gensOrConds] <- match opSum p
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_ToSet_Sum"
-        matrix     <- match opToSet expr
-        TypeList{} <- typeOf matrix
-        let upd val old = lambdaToFunction pat old val
+        let lu (Comprehension body gof) = return (body, gof)
+            lu (Reference _ (Just (Alias ref))) = lu ref
+            lu _ = fail "not a comprehension"
+        inToSet     <- match opToSet p
+        (body, gof) <- lu inToSet
+        domBody     <- domainOf body
         return
-            ( "Vertical rule for comprehension over matrix-toSet (sum)"
+            ( "Vertical rule for comprehension over matrix-hist"
             , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     val  = i
-                     over = matrix
-                 in  Comprehension (upd val body)
-                         $  gofBefore
-                         ++ [Generator (GenInExpr iPat over)]
-                         ++ transformBi (upd val) gofAfter
+                    withAuxVar (fresh `at` 0) (DomainSet () def (forgetRepr domBody)) $ \ aux ->
+                                make opAnd $ return $ Comprehension [essence| &body in &aux |] gof
             )
 
 
