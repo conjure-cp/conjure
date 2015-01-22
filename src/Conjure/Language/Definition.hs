@@ -229,7 +229,7 @@ instance Pretty FindOrGiven where
     pretty Find = "find"
     pretty Given = "given"
     pretty Quantified = "quantified"
-    pretty LocalFind = "lfind"
+    pretty LocalFind = "find"
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -353,7 +353,10 @@ instance Pretty Expression where
     prettyPrec _ (AbstractLiteral x) = pretty x
     prettyPrec _ (Domain x) = "`" <> pretty x <> "`"
     prettyPrec _ (Reference x _) = pretty x
-    prettyPrec _ (WithLocals x ss) = prBraces $ pretty x <+> "@" <+> vcat (map pretty ss)
+    prettyPrec _ (WithLocals x ss) = vcat [ "{" <+> pretty x
+                                          , "@" <+> vcat (map pretty ss)
+                                          , "}"
+                                          ]
     prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
     prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
