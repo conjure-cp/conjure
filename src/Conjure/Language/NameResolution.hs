@@ -100,13 +100,17 @@ resolveX (Reference nm Nothing) = do
                                : ("Bindings in context:" : prettyContext ctxt)
         Just r  -> return (Reference nm (Just r))
 
-resolveX p@(Reference nm Just{}) = do                   -- this is for re-resolving
+resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving
     mval <- gets (lookup nm . snd)
     case mval of
         Nothing -> return p                             -- hence, do not fail if not in the context
+        Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
+            | DeclHasRepr{} <- refto                    -- but the old one did, do not update
+            -> return p
         Just r  -> return (Reference nm (Just r))
 
 resolveX (Domain x) = Domain <$> resolveD x
+
 resolveX p@Comprehension{} = scope $ do
     p' <- shadowing p
     case p' of
@@ -139,10 +143,12 @@ resolveX p@Comprehension{} = scope $ do
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
+
 resolveX (WithLocals body locals) = scope $ do
     locals' <- mapM resolveStatement locals
     body'   <- resolveX body
     return (WithLocals body' locals')
+
 resolveX x = descendM resolveX x
 
 
