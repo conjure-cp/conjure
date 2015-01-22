@@ -31,6 +31,7 @@ import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Function.FunctionAsRelation
 import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
+import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
 
 
@@ -155,6 +156,7 @@ dispatch domain = do
             _ -> nope
         DomainPartition r _ _ -> case r of
             "PartitionAsSet"                -> partitionAsSet dispatch
+            "Occurrence"                    -> partitionOccurrence
             _ -> nope
         _ -> nope
 
@@ -169,10 +171,11 @@ allReprs =
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , relationAsMatrix
-      , partitionAsSet dispatch
+      , partitionOccurrence
       ]
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
+      , partitionAsSet dispatch
       ]
     ]
 

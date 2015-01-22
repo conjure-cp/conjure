@@ -93,7 +93,7 @@ import Data.Default      as X ( Default, def )
 import Data.Either       as X ( Either(..), either, lefts, rights )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
-                              , group, groupBy, sort, sortBy, partition
+                              , group, groupBy, sort, sortBy
                               , genericLength, genericIndex
                               , isSuffixOf, isPrefixOf, isInfixOf
                               , subsequences, transpose, elemIndex
