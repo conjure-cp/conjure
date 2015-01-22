@@ -217,7 +217,7 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 
-data FindOrGiven = Find | Given | Quantified
+data FindOrGiven = Find | Given | Quantified | LocalFind
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize FindOrGiven
@@ -229,6 +229,7 @@ instance Pretty FindOrGiven where
     pretty Find = "find"
     pretty Given = "given"
     pretty Quantified = "quantified"
+    pretty LocalFind = "lfind"
 
 
 ------------------------------------------------------------------------------------------------------------------------

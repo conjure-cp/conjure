@@ -48,6 +48,7 @@ instance CategoryOf FindOrGiven where
     categoryOf Find = CatDecision
     categoryOf Given = CatParameter
     categoryOf Quantified = CatQuantified
+    categoryOf LocalFind = CatDecision
 
 
 -- | Category checking to check if domains have anything >CatParameter in them.
