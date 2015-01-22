@@ -107,6 +107,34 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Literal"
 
 
+-- TODO: This is plain wrong!
+rule_Comprehension_ToSet_Sum :: Rule
+rule_Comprehension_ToSet_Sum = "matrix-toSet" `namedRule` theRule where
+    theRule p = do
+        [Comprehension body gensOrConds] <- match opSum p
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_ToSet_Sum"
+        matrix   <- match opToSet expr
+        matrixTy <- typeOf matrix
+        case matrixTy of
+            TypeMatrix{} -> return ()
+            TypeList{}   -> return ()
+            _ -> na "rule_Comprehension_ToSet_Sum: not a matrix type"
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Vertical rule for comprehension over matrix-toSet (sum)"
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                     val  = i
+                     over = matrix
+                 in  Comprehension (upd val body)
+                         $  gofBefore
+                         ++ [Generator (GenInExpr iPat over)]
+                         ++ transformBi (upd val) gofAfter
+            )
+
+
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
