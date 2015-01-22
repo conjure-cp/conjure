@@ -503,6 +503,7 @@ allRules :: Config -> [[Rule]]
 allRules config =
     [ [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
+      , rule_ChooseReprForLocals
       ]
     , verticalRules
     , horizontalRules
@@ -521,8 +522,9 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
+    , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Comprehension_ToSet
-    , Vertical.Matrix.rule_Comprehension_ToSet_Sum
+    -- , Vertical.Matrix.rule_Comprehension_ToSet_Sum
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
@@ -658,6 +660,7 @@ otherRules =
     , rule_DomainCardinality
 
     , rule_BubbleUp_Comprehension
+    , rule_BubbleUp_LocalInComprehension
     , rule_BubbleUp_ToAnd
     , rule_BubbleUp_NotBoolYet
 
@@ -674,7 +677,7 @@ otherRules =
 rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" theRule where
 
-    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) = do
+    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given] = do
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
@@ -769,7 +772,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 rule_ChooseReprForComprehension :: Rule
 rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule where
 
-    theRule (Comprehension body gensOrConds) = do    
+    theRule (Comprehension body gensOrConds) = do
         (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
@@ -813,6 +816,62 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
     mkStructurals fresh name domain = do
         let ref = Reference name (Just (DeclHasRepr Quantified name domain))
+        gen  <- getStructurals downX1 domain
+        gen fresh ref
+
+
+rule_ChooseReprForLocals :: Rule
+rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
+
+    theRule (WithLocals body locals) = do
+        (gofBefore, (nm, domain), gofAfter) <- matchFirst locals $ \ local -> case local of
+            Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
+            _ -> na "rule_ChooseReprForLocals"
+
+        let
+            isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
+            isReferencedWithoutRepr _ = False
+
+        unless (any isReferencedWithoutRepr (universeBi (body, gofBefore, gofAfter))) $
+            fail $ "This local variable seems to be handled before:" <+> pretty nm
+
+        let domOpts = reprOptions domain
+        when (null domOpts) $
+            bug $ "No representation matches this beast:" <++> pretty domain
+
+        let genOptions =
+                [ \ fresh -> do
+                    outs <- downD (nm, dom)
+                    structurals <- mkStructurals fresh nm dom
+                    return (dom, outs, structurals)
+                | dom <- domOpts
+                ]
+
+        return
+            [ ( "Choosing representation for local variable" <+> pretty nm
+              , \ fresh -> bugFail $ do
+                    option <- genOption fresh
+                    let (thisDom, outDomains, structurals) = option
+                    let updateRepr (Reference nm' _)
+                            | nm == nm'
+                            = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
+                        updateRepr p = p
+                    let out' = WithLocals (transform updateRepr body)
+                                $  gofBefore
+                                ++ [ Declaration (FindOrGiven LocalFind name (forgetRepr dom))
+                                   | (name, dom) <- outDomains ]
+                                ++ [ SuchThat structurals | not (null structurals) ]
+                                ++ transformBi updateRepr gofAfter
+                    out <- resolveNamesX out'
+                    return out
+              , return
+              )
+            | genOption <- genOptions
+            ]
+    theRule _ = na "rule_ChooseReprForLocals"
+
+    mkStructurals fresh name domain = do
+        let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
         gen  <- getStructurals downX1 domain
         gen fresh ref
 
@@ -928,6 +987,25 @@ rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule wher
                 ++ gofAfter
             )
     theRule _ = na "rule_BubbleUp_Comprehension"
+
+
+rule_BubbleUp_LocalInComprehension :: Rule
+rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
+        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
+            _ -> na "rule_BubbleUp_Comprehension"
+        return
+            ( "Bubble in the generator of a comprehension."
+            , const $ WithLocals
+                ( mkQuan $ Comprehension body
+                    $  gofBefore
+                    ++ [Generator (GenInExpr pat expr)]
+                    ++ gofAfter
+                )
+                locals
+            )
 
 
 rule_BubbleUp_ToAnd :: Rule
