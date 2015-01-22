@@ -88,6 +88,25 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
     theRule _ = na "rule_Comprehension_ToSet"
 
 
+-- [ i | ... , i <- [ j | ... j ... ], ... i ... ]
+-- [ j | ... , ... j ..., ... j ... ]
+rule_Comprehension_Nested :: Rule
+rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, innerBody, innerGof), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} (Comprehension innerBody innerGof)) -> return (pat, innerBody, innerGof)
+            _ -> na "rule_Comprehension_Literal"
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Nested matrix comprehension"
+            , const $ Comprehension (upd innerBody body)
+                         $  gofBefore
+                         ++ innerGof
+                         ++ transformBi (upd innerBody) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Literal"
+
+
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
