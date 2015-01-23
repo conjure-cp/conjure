@@ -522,9 +522,8 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
-    , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Comprehension_ToSet
-    -- , Vertical.Matrix.rule_Comprehension_ToSet_Sum
+    , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose

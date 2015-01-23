@@ -1,6 +1,7 @@
 {-# LANGUAGE MultiParamTypeClasses #-}
 {-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.Language.DomainOf
     ( domainOf, domainOfInternal
@@ -15,6 +16,7 @@ import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
+import Conjure.Language.TH
 
 
 data DomainOfResult x = DomainOfResultNoRepr  (Domain () x)
@@ -64,6 +66,22 @@ instance DomainOf Expression Expression where
     domainOfInternal (Reference _ (Just refTo)) = domainOfInternal refTo
     domainOfInternal (Constant c) = domainOfInternal c
     domainOfInternal (AbstractLiteral c) = domainOfInternal c
+
+    -- TODO: each operator should be calculating domains
+    domainOfInternal [essence| &x * &y |] = do
+        xDom <- domainOf x
+        yDom <- domainOf y
+        -- TODO: domainOf has to be able to generate uniq names
+        let (iPat, i) = quantifiedVar "i"
+        let (jPat, j) = quantifiedVar "j"
+        let core = [essence| [ &i * &j
+                             | &iPat : &xDom
+                             , &jPat : &yDom
+                             ]
+                           |]
+        let a    = [essence| min(&core) |]
+        let b    = [essence| max(&core) |]
+        return $ DomainOfResultNoRepr $ DomainInt [RangeBounded a b]
 
     domainOfInternal (Op (MkOpIndexing (OpIndexing m i))) = do
         iType <- typeOf i
