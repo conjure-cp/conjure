@@ -28,8 +28,8 @@ combineDOR dors f =
     let
         (repr, doms1, doms2) = unzip3
             [ case dor of
-                DomainOfResultNoRepr  d -> (False,            d, anyRepr d)
-                DomainOfResultHasRepr d -> (True , forgetRepr d,         d)
+                DomainOfResultNoRepr  d -> (False,            d, anyRepr "combineDOR" d)
+                DomainOfResultHasRepr d -> (True , forgetRepr d,                      d)
             | dor <- dors
             ]
     in
@@ -134,5 +134,5 @@ domainOf :: MonadFail m => Expression -> m (Domain HasRepresentation Expression)
 domainOf x = do
     dor <- domainOfInternal x
     return $ case dor of
-        DomainOfResultNoRepr  d -> anyRepr d
-        DomainOfResultHasRepr d ->         d
+        DomainOfResultNoRepr  d -> anyRepr "domainOf" d
+        DomainOfResultHasRepr d ->                    d

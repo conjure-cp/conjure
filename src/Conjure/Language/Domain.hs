@@ -137,38 +137,58 @@ instance (Pretty x) => Monoid (Domain () x) where
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
 forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
-forgetRepr = anyRepr
+forgetRepr = anyRepr "forgetRepr"
 
-anyRepr :: (Pretty r, Pretty x) => Domain r x -> Domain r2 x
-anyRepr DomainBool = DomainBool
-anyRepr (DomainInt rs) = DomainInt rs
-anyRepr (DomainEnum defn rs mp) = DomainEnum defn rs mp
-anyRepr (DomainUnnamed defn s) = DomainUnnamed defn s
-anyRepr (DomainTuple ds) = DomainTuple (map anyRepr ds)
-anyRepr (DomainMatrix index inner) = DomainMatrix index (anyRepr inner)
-anyRepr domain@(DomainSet       _ attr d) =
+anyRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
+anyRepr _caller DomainBool = DomainBool
+anyRepr _caller (DomainInt rs) = DomainInt rs
+anyRepr _caller (DomainEnum defn rs mp) = DomainEnum defn rs mp
+anyRepr _caller (DomainUnnamed defn s) = DomainUnnamed defn s
+anyRepr  caller (DomainTuple ds) = DomainTuple (map (anyRepr caller) ds)
+anyRepr  caller (DomainMatrix index inner) = DomainMatrix index (anyRepr caller inner)
+anyRepr  caller domain@(DomainSet       _ attr d) =
     DomainSet
-        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
-        attr (anyRepr d)
-anyRepr domain@(DomainMSet      _ attr d) =
+        (bug $ vcat [ "anyRepr"
+                    , "called from:" <+> caller
+                    , "domain     :" <+> pretty domain
+                    , "domain show:" <+> pretty (show domain)
+                    ])
+        attr (anyRepr caller d)
+anyRepr  caller domain@(DomainMSet      _ attr d) =
     DomainMSet
-        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
-        attr (anyRepr d)
-anyRepr domain@(DomainFunction  _ attr d1 d2) =
+        (bug $ vcat [ "anyRepr"
+                    , "called from:" <+> caller
+                    , "domain     :" <+> pretty domain
+                    , "domain show:" <+> pretty (show domain)
+                    ])
+        attr (anyRepr caller d)
+anyRepr  caller domain@(DomainFunction  _ attr d1 d2) =
     DomainFunction
-        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
-        attr (anyRepr d1) (anyRepr d2)
-anyRepr domain@(DomainRelation  _ attr ds) =
+        (bug $ vcat [ "anyRepr"
+                    , "called from:" <+> caller
+                    , "domain     :" <+> pretty domain
+                    , "domain show:" <+> pretty (show domain)
+                    ])
+        attr (anyRepr caller d1) (anyRepr caller d2)
+anyRepr  caller domain@(DomainRelation  _ attr ds) =
     DomainRelation
-        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
-        attr (map anyRepr ds)
-anyRepr domain@(DomainPartition _ attr d) =
+        (bug $ vcat [ "anyRepr"
+                    , "called from:" <+> caller
+                    , "domain     :" <+> pretty domain
+                    , "domain show:" <+> pretty (show domain)
+                    ])
+        attr (map (anyRepr caller) ds)
+anyRepr  caller domain@(DomainPartition _ attr d) =
     DomainPartition
-        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
-        attr (anyRepr d)
-anyRepr (DomainOp op ds) = DomainOp op (map anyRepr ds)
-anyRepr (DomainReference x r) = DomainReference x (fmap anyRepr r)
-anyRepr (DomainMetaVar x) = DomainMetaVar x
+        (bug $ vcat [ "anyRepr"
+                    , "called from:" <+> caller
+                    , "domain     :" <+> pretty domain
+                    , "domain show:" <+> pretty (show domain)
+                    ])
+        attr (anyRepr caller d)
+anyRepr  caller (DomainOp op ds) = DomainOp op (map (anyRepr caller) ds)
+anyRepr  caller (DomainReference x r) = DomainReference x (fmap (anyRepr caller) r)
+anyRepr _caller (DomainMetaVar x) = DomainMetaVar x
 
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel DomainBool{} = Nothing

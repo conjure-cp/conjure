@@ -133,7 +133,7 @@ instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
     case lookup nm st of
-        Just (Domain dom) -> instantiateD (anyRepr dom)
+        Just (Domain dom) -> instantiateD (anyRepr "instantiateD 1" dom)
         Just _  -> fail $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
         Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
 instantiateD (DomainEnum nm rs _) = do
@@ -156,7 +156,7 @@ instantiateD (DomainReference _ (Just d)) = instantiateD d
 instantiateD (DomainReference name Nothing) = do
     ctxt <- gets id
     case name `lookup` ctxt of
-        Just (Domain d) -> instantiateD (anyRepr d)
+        Just (Domain d) -> instantiateD (anyRepr "instantiateD 2" d)
         _ -> fail $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"

@@ -1185,7 +1185,7 @@ downUpTest high =
 
 
 intDomain :: Int -> Int -> Domain r Constant
-intDomain lb ub = anyRepr $ mkDomainIntB (ConstantInt lb) (ConstantInt ub)
+intDomain lb ub = anyRepr "RepresentationsTest.intDomain" $ mkDomainIntB (ConstantInt lb) (ConstantInt ub)
 
 dropConstant :: (a,b,c) -> (a,b)
 dropConstant (a,b,_) = (a,b)
