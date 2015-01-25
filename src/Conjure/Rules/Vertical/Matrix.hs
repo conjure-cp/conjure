@@ -127,9 +127,10 @@ rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
         domBody     <- domainOf body
         return
             ( "Vertical rule for comprehension over matrix-hist"
-            , \ fresh ->
-                    withAuxVar (fresh `at` 0) (DomainSet () def (forgetRepr domBody)) $ \ aux ->
-                                make opAnd $ return $ Comprehension [essence| &body in &aux |] gof
+            , \ fresh -> withAuxVar
+                    (fresh `at` 0)
+                    (DomainSet () def (forgetRepr "rule_Comprehension_ToSet2" domBody)) $ \ aux ->
+                        make opAnd $ return $ Comprehension [essence| &body in &aux |] gof
             )
 
 

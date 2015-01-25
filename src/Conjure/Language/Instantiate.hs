@@ -52,7 +52,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 (\ val -> scope $ bind pat val >> loop rest )
                 (enumerateDomain domainConstant)
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
-            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
+            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr "instantiateE" domain))
             concatMapM
                 (\ val -> scope $ bind (Single pat) val >> loop rest )
                 (enumerateDomain domainConstant)

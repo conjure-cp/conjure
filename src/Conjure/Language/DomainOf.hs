@@ -28,8 +28,8 @@ combineDOR dors f =
     let
         (repr, doms1, doms2) = unzip3
             [ case dor of
-                DomainOfResultNoRepr  d -> (False,            d, anyRepr "combineDOR" d)
-                DomainOfResultHasRepr d -> (True , forgetRepr d,                      d)
+                DomainOfResultNoRepr  d -> (False,                         d , anyRepr "combineDOR" d)
+                DomainOfResultHasRepr d -> (True , forgetRepr "combineDOR" d,                       d)
             | dor <- dors
             ]
     in
@@ -43,8 +43,8 @@ combineDOR' dors f =
     let
         doms =
             [ case dor of
-                DomainOfResultNoRepr  d ->            d
-                DomainOfResultHasRepr d -> forgetRepr d
+                DomainOfResultNoRepr  d ->                          d
+                DomainOfResultHasRepr d -> forgetRepr "combineDOR'" d
             | dor <- dors
             ]
     in

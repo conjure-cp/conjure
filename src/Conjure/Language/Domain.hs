@@ -136,8 +136,8 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainPartition () def (mappend x y)
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
-forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
-forgetRepr = anyRepr "forgetRepr"
+forgetRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain () x
+forgetRepr caller = anyRepr (caller <+> "via forgetRepr")
 
 anyRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
 anyRepr _caller DomainBool = DomainBool

@@ -38,10 +38,10 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             let indexDomain = mkDomainIntB 1 maxSize
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix (forgetRepr indexDomain) DomainBool
+                  , DomainMatrix (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain) DomainBool
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  , DomainMatrix (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain) innerDomain
                   )
                 ]
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
@@ -129,12 +129,20 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix (forgetRepr indexDomain) DomainBool
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (trues ++ falses)
+                  , DomainMatrix
+                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      DomainBool
+                  , ConstantAbstract $ AbsLitMatrix
+                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (trues ++ falses)
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (constants ++ zeroes)
+                  , DomainMatrix
+                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      innerDomain
+                  , ConstantAbstract $ AbsLitMatrix
+                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithFlags"

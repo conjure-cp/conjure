@@ -59,8 +59,9 @@ expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
-expD (DomainMetaVar x) = Just $ appE [| $(varE (mkName "forgetRepr")) |]
-                                     [| $(varE (mkName x)) |]
+expD (DomainMetaVar x) = Just $ [| $(varE (mkName "forgetRepr")) |]
+                         `appE` [| "TH:expD" |]
+                         `appE` [| $(varE (mkName x)) |]
 expD _ = Nothing
 
 expAP :: AbstractPattern -> Maybe ExpQ

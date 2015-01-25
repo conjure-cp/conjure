@@ -412,7 +412,7 @@ updateDeclarations model =
         onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
+                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr "updateDeclarations" d)) | (n, d) <- outs]
 
     in
         -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
@@ -857,7 +857,10 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
                         updateRepr p = p
                     let out' = WithLocals (transform updateRepr body)
                                 $  gofBefore
-                                ++ [ Declaration (FindOrGiven LocalFind name (forgetRepr dom))
+                                ++ [ Declaration (FindOrGiven
+                                                    LocalFind
+                                                    name
+                                                    (forgetRepr "rule_ChooseReprForLocals" dom))
                                    | (name, dom) <- outDomains ]
                                 ++ [ SuchThat structurals | not (null structurals) ]
                                 ++ transformBi updateRepr gofAfter

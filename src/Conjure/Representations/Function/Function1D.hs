@@ -40,7 +40,7 @@ function1D = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( outName name
                   , DomainMatrix
-                      (forgetRepr innerDomainFr)
+                      (forgetRepr "Representation.Function1D" innerDomainFr)
                       innerDomainTo
                   ) ]
         downD _ = na "{downD} Function1D"
@@ -118,8 +118,8 @@ function1D = Representation chck downD structuralCons downC up
                 ]
             return $ Just
                 [ ( outName name
-                  , DomainMatrix (forgetRepr innerDomainFrInt) innerDomainTo
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFrInt) valsOut
+                  , DomainMatrix (forgetRepr "Representation.Function1D" innerDomainFrInt) innerDomainTo
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr "Representation.Function1D" innerDomainFrInt) valsOut
                   ) ]
         downC _ = na "{downC} Function1D"
 
