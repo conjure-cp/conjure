@@ -8,7 +8,9 @@ refreeze:
 
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
-	    -XOverloadedStrings -XNoImplicitPrelude    \
+		-XNoImplicitPrelude    					   \
+	    -XOverloadedStrings						   \
+		-XScopedTypeVariables 					   \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \

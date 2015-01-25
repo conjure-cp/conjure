@@ -1,6 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
-{-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
