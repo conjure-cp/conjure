@@ -1184,7 +1184,7 @@ downUpTest high =
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 
 
-intDomain :: Int -> Int -> Domain r Constant
+intDomain :: Default r =>Int -> Int -> Domain r Constant
 intDomain lb ub = anyRepr "RepresentationsTest.intDomain" $ mkDomainIntB (ConstantInt lb) (ConstantInt ub)
 
 dropConstant :: (a,b,c) -> (a,b)

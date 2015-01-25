@@ -28,6 +28,7 @@ instantiateDomain
     :: ( MonadFail m
        , Show r
        , Pretty r
+       , Default r
        )
     => [(Name, Expression)]
     -> Domain r Expression
@@ -125,6 +126,7 @@ instantiateD
        , MonadState [(Name, Expression)] m
        , Show r
        , Pretty r
+       , Default r
        )
     => Domain r Expression
     -> m (Domain r Constant)

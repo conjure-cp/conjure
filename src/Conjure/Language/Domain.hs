@@ -139,56 +139,28 @@ instance (Pretty x) => Monoid (Domain () x) where
 forgetRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain () x
 forgetRepr caller = anyRepr (caller <+> "via forgetRepr")
 
-anyRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
-anyRepr _caller DomainBool = DomainBool
-anyRepr _caller (DomainInt rs) = DomainInt rs
-anyRepr _caller (DomainEnum defn rs mp) = DomainEnum defn rs mp
-anyRepr _caller (DomainUnnamed defn s) = DomainUnnamed defn s
-anyRepr  caller (DomainTuple ds) = DomainTuple (map (anyRepr caller) ds)
-anyRepr  caller (DomainMatrix index inner) = DomainMatrix index (anyRepr caller inner)
-anyRepr  caller domain@(DomainSet       _ attr d) =
-    DomainSet
-        (bug $ vcat [ "anyRepr"
-                    , "called from:" <+> caller
-                    , "domain     :" <+> pretty domain
-                    , "domain show:" <+> pretty (show domain)
-                    ])
-        attr (anyRepr caller d)
-anyRepr  caller domain@(DomainMSet      _ attr d) =
-    DomainMSet
-        (bug $ vcat [ "anyRepr"
-                    , "called from:" <+> caller
-                    , "domain     :" <+> pretty domain
-                    , "domain show:" <+> pretty (show domain)
-                    ])
-        attr (anyRepr caller d)
-anyRepr  caller domain@(DomainFunction  _ attr d1 d2) =
-    DomainFunction
-        (bug $ vcat [ "anyRepr"
-                    , "called from:" <+> caller
-                    , "domain     :" <+> pretty domain
-                    , "domain show:" <+> pretty (show domain)
-                    ])
-        attr (anyRepr caller d1) (anyRepr caller d2)
-anyRepr  caller domain@(DomainRelation  _ attr ds) =
-    DomainRelation
-        (bug $ vcat [ "anyRepr"
-                    , "called from:" <+> caller
-                    , "domain     :" <+> pretty domain
-                    , "domain show:" <+> pretty (show domain)
-                    ])
-        attr (map (anyRepr caller) ds)
-anyRepr  caller domain@(DomainPartition _ attr d) =
-    DomainPartition
-        (bug $ vcat [ "anyRepr"
-                    , "called from:" <+> caller
-                    , "domain     :" <+> pretty domain
-                    , "domain show:" <+> pretty (show domain)
-                    ])
-        attr (anyRepr caller d)
-anyRepr  caller (DomainOp op ds) = DomainOp op (map (anyRepr caller) ds)
-anyRepr  caller (DomainReference x r) = DomainReference x (fmap (anyRepr caller) r)
-anyRepr _caller (DomainMetaVar x) = DomainMetaVar x
+anyRepr :: (Default r2, Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
+anyRepr _ = go
+    where
+        go DomainBool = DomainBool
+        go (DomainInt rs) = DomainInt rs
+        go (DomainEnum defn rs mp) = DomainEnum defn rs mp
+        go (DomainUnnamed defn s) = DomainUnnamed defn s
+        go (DomainTuple ds) = DomainTuple (map go ds)
+        go (DomainMatrix index inner) = DomainMatrix index (go inner)
+        go (DomainSet _   attr d) =
+            DomainSet def attr (go d)
+        go (DomainMSet _   attr d) =
+            DomainMSet def attr (go d)
+        go (DomainFunction _   attr d1 d2) =
+            DomainFunction def attr (go d1) (go d2)
+        go (DomainRelation _   attr ds) =
+            DomainRelation def attr (map go ds)
+        go (DomainPartition _   attr d) =
+            DomainPartition def attr (go d)
+        go (DomainOp op ds) = DomainOp op (map go ds)
+        go (DomainReference x r) = DomainReference x (fmap go r)
+        go (DomainMetaVar x) = DomainMetaVar x
 
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel DomainBool{} = Nothing
@@ -945,9 +917,8 @@ instance FromJSON  HasRepresentation where parseJSON = JSON.genericParseJSON jso
 instance IsString  HasRepresentation where
     fromString = HasRepresentation . Name . T.pack
 
-
-
-
+instance Default HasRepresentation where
+    def = NoRepresentation
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     -- domain.*
