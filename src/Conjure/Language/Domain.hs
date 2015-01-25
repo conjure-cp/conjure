@@ -13,7 +13,8 @@ module Conjure.Language.Domain
     , PartitionAttr(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
-    , reprAtTopLevel, forgetRepr
+    , reprAtTopLevel, forgetRepr, anyRepr
+    , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
     , readBinRel
     , attributeLenses, allSupportedAttributes, updateAttributes
@@ -62,6 +63,15 @@ data Domain r x
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+
+mkDomainBool :: Domain () x
+mkDomainBool = DomainBool
+
+mkDomainInt :: [Range x] -> Domain () x
+mkDomainInt = DomainInt
+
+mkDomainIntB :: x -> x -> Domain () x
+mkDomainIntB l u = DomainInt [RangeBounded l u]
 
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
 instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
@@ -126,21 +136,39 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainPartition () def (mappend x y)
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
-forgetRepr :: Domain r x -> Domain r2 x
-forgetRepr DomainBool = DomainBool
-forgetRepr (DomainInt rs) = DomainInt rs
-forgetRepr (DomainEnum defn rs mp) = DomainEnum defn rs mp
-forgetRepr (DomainUnnamed defn s) = DomainUnnamed defn s
-forgetRepr (DomainTuple ds) = DomainTuple (map forgetRepr ds)
-forgetRepr (DomainMatrix index inner) = DomainMatrix index (forgetRepr inner)
-forgetRepr (DomainSet       _ attr d) = DomainSet (error "forgetRepr") attr (forgetRepr d)
-forgetRepr (DomainMSet      _ attr d) = DomainMSet (error "forgetRepr") attr (forgetRepr d)
-forgetRepr (DomainFunction  _ attr d1 d2) = DomainFunction (error "forgetRepr") attr (forgetRepr d1) (forgetRepr d2)
-forgetRepr (DomainRelation  _ attr ds) = DomainRelation (error "forgetRepr") attr (map forgetRepr ds)
-forgetRepr (DomainPartition _ attr d) = DomainPartition (error "forgetRepr") attr (forgetRepr d)
-forgetRepr (DomainOp op ds) = DomainOp op (map forgetRepr ds)
-forgetRepr (DomainReference x r) = DomainReference x (fmap forgetRepr r)
-forgetRepr (DomainMetaVar x) = DomainMetaVar x
+forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
+forgetRepr = anyRepr
+
+anyRepr :: (Pretty r, Pretty x) => Domain r x -> Domain r2 x
+anyRepr DomainBool = DomainBool
+anyRepr (DomainInt rs) = DomainInt rs
+anyRepr (DomainEnum defn rs mp) = DomainEnum defn rs mp
+anyRepr (DomainUnnamed defn s) = DomainUnnamed defn s
+anyRepr (DomainTuple ds) = DomainTuple (map anyRepr ds)
+anyRepr (DomainMatrix index inner) = DomainMatrix index (anyRepr inner)
+anyRepr domain@(DomainSet       _ attr d) =
+    DomainSet
+        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
+        attr (anyRepr d)
+anyRepr domain@(DomainMSet      _ attr d) =
+    DomainMSet
+        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
+        attr (anyRepr d)
+anyRepr domain@(DomainFunction  _ attr d1 d2) =
+    DomainFunction
+        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
+        attr (anyRepr d1) (anyRepr d2)
+anyRepr domain@(DomainRelation  _ attr ds) =
+    DomainRelation
+        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
+        attr (map anyRepr ds)
+anyRepr domain@(DomainPartition _ attr d) =
+    DomainPartition
+        (bug $ vcat ["anyRepr:" <+> pretty domain, pretty (show domain)])
+        attr (anyRepr d)
+anyRepr (DomainOp op ds) = DomainOp op (map anyRepr ds)
+anyRepr (DomainReference x r) = DomainReference x (fmap anyRepr r)
+anyRepr (DomainMetaVar x) = DomainMetaVar x
 
 reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel DomainBool{} = Nothing

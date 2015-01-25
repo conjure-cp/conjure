@@ -23,13 +23,13 @@ data DomainOfResult x = DomainOfResultNoRepr  (Domain () x)
                       | DomainOfResultHasRepr (Domain HasRepresentation x)
     deriving (Eq, Ord, Show)
 
-combineDOR :: [DomainOfResult x] -> (forall r . [Domain r x] -> Domain r x) -> DomainOfResult x
+combineDOR :: Pretty x => [DomainOfResult x] -> (forall r . [Domain r x] -> Domain r x) -> DomainOfResult x
 combineDOR dors f =
     let
         (repr, doms1, doms2) = unzip3
             [ case dor of
-                DomainOfResultNoRepr  d -> (False, forgetRepr d, forgetRepr d)
-                DomainOfResultHasRepr d -> (True , forgetRepr d, forgetRepr d)
+                DomainOfResultNoRepr  d -> (False,            d, anyRepr d)
+                DomainOfResultHasRepr d -> (True , forgetRepr d,         d)
             | dor <- dors
             ]
     in
@@ -38,12 +38,12 @@ combineDOR dors f =
             else DomainOfResultHasRepr $ f doms2
 
 
-combineDOR' :: [DomainOfResult x] -> ([Domain () x] -> Domain () x) -> DomainOfResult x
+combineDOR' :: Pretty x => [DomainOfResult x] -> ([Domain () x] -> Domain () x) -> DomainOfResult x
 combineDOR' dors f =
     let
         doms =
             [ case dor of
-                DomainOfResultNoRepr  d -> forgetRepr d
+                DomainOfResultNoRepr  d ->            d
                 DomainOfResultHasRepr d -> forgetRepr d
             | dor <- dors
             ]
@@ -134,5 +134,5 @@ domainOf :: MonadFail m => Expression -> m (Domain HasRepresentation Expression)
 domainOf x = do
     dor <- domainOfInternal x
     return $ case dor of
-        DomainOfResultNoRepr  d -> forgetRepr d
-        DomainOfResultHasRepr d -> d
+        DomainOfResultNoRepr  d -> anyRepr d
+        DomainOfResultHasRepr d ->         d

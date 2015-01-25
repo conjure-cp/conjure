@@ -67,7 +67,7 @@ setExplicit = Representation chck downD structuralCons downC up
               , DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain
               , ConstantAbstract (AbsLitSet constants)
               ) =
-            let outIndexDomain = DomainInt [RangeBounded (ConstantInt 1) size]
+            let outIndexDomain = mkDomainIntB 1 size
             in  return $ Just
                     [ ( outName name
                       , DomainMatrix outIndexDomain innerDomain

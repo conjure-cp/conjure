@@ -29,7 +29,7 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = DomainInt [RangeBounded 1 (fromInt (length names))]
+                            let outDomain = mkDomainIntB 1 (fromInt (length names))
                             if null (names `intersect` namesBefore)
                                 then modify ( ( [(ename, outDomain)]
                                               , zip names allNats
@@ -79,8 +79,8 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                         Declaration (GivenDomainDefnEnum name) -> do
                             let nameS      = name `mappend` "_EnumSize"
                             let outDomainS = DomainInt []
-                            let outDomain  = DomainInt [RangeBounded 1
-                                                (Reference nameS (Just (Alias (Domain outDomainS))))]
+                            let outDomain  = mkDomainIntB 1
+                                                (Reference nameS (Just (Alias (Domain outDomainS))))
                             modify ([(name, outDomain)] `mappend`)
                             return [ Declaration (FindOrGiven Given nameS         outDomainS)
                                    , Declaration (Letting           name  (Domain outDomain))
@@ -117,7 +117,7 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = DomainInt [RangeBounded 1 (fromInt (length names))]
+                    let outDomain = mkDomainIntB 1 (fromInt (length names))
                     if null (names `intersect` namesBefore)
                         then modify ( ( [(ename, outDomain)]
                                       , zip names allNats

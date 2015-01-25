@@ -45,7 +45,7 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
             _ -> na "rule_Comprehension_ToSet_Literal"
         mset  <- match opToSet expr
         elems <- match msetLiteral mset
-        let outLiteralDomain = DomainInt [RangeBounded 1 (fromInt $ length elems)]
+        let outLiteralDomain = mkDomainIntB 1 (fromInt $ length elems)
         let outLiteral = make matrixLiteral outLiteralDomain elems
         let upd val old = lambdaToFunction pat old val
         return

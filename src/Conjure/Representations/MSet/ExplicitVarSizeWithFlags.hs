@@ -15,11 +15,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitVarSizeWithFlags :: MonadFail m => Representation m
+msetExplicitVarSizeWithFlags :: forall m . MonadFail m => Representation m
 msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainMSet _ attrs innerDomain) =
             DomainMSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
         chck _ _ = []
@@ -48,21 +49,23 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             MSetAttr (SizeAttr_MinMaxSize _ x) _ -> do y <- domainSizeOf innerDomain ; return (make opMin [x,y])
             _ -> fail ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
 
+        downD :: TypeOf_DownD m
         downD (name, DomainMSet _ attrs innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
             maxOccur <- getMaxOccur attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded 1 maxSize]
-            let flagDomain  = DomainInt [RangeBounded (fromInt 0) maxOccur]
+            let indexDomain =           mkDomainIntB 1 maxSize
+            let flagDomain  = anyRepr $ mkDomainIntB 0 maxOccur
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix (forgetRepr indexDomain) flagDomain
+                  , DomainMatrix indexDomain flagDomain
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
+                  , DomainMatrix indexDomain innerDomain
                   )
                 ]
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainMSet "ExplicitVarSizeWithFlags" attrs@(MSetAttr sizeAttrs _) innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
             let
@@ -132,12 +135,13 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithFlags"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
               , ConstantAbstract (AbsLitMSet constants')
               ) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded 1 maxSize]
+            let indexDomain = mkDomainIntB 1 maxSize
 
             let constants = histogram constants'
 
@@ -158,16 +162,17 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix (forgetRepr indexDomain) DomainBool
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (counts ++ falses)
+                  , DomainMatrix indexDomain DomainBool
+                  , ConstantAbstract $ AbsLitMatrix indexDomain (counts ++ falses)
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr indexDomain) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr indexDomain) (map fst constants ++ zeroes)
+                  , DomainMatrix indexDomain innerDomain
+                  , ConstantAbstract $ AbsLitMatrix indexDomain (map fst constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithFlags"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->

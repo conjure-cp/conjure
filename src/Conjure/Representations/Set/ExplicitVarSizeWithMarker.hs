@@ -14,11 +14,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithMarker :: MonadFail m => Representation m
+setExplicitVarSizeWithMarker :: forall m . MonadFail m => Representation m
 setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
         chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithMarker" attrs <$> f innerDomain
         chck _ _ = []
@@ -31,19 +32,21 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             SizeAttr_MinMaxSize _ x -> return x
             _ -> domainSizeOf innerDomain
 
+        downD :: TypeOf_DownD m
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
+            let indexDomain i = mkDomainIntB (fromInt i) maxSize
             return $ Just
                 [ ( nameMarker name
-                  , indexDomain 0
+                  , anyRepr (indexDomain 0)
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr (indexDomain 1)) innerDomain
+                  , DomainMatrix (indexDomain 1) innerDomain
                   )
                 ]
         downD _ = na "{downD} ExplicitVarSizeWithMarker"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
@@ -90,12 +93,13 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithMarker"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet _ (SetAttr attrs) innerDomain)
               , ConstantAbstract (AbsLitSet constants)
               ) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain i = DomainInt [RangeBounded (fromInt i) maxSize]
+            let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
                     ConstantInt x -> return x
@@ -109,16 +113,17 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let zeroes = replicate (maxSizeInt - length constants) z
             return $ Just
                 [ ( nameMarker name
-                  , indexDomain 0
+                  , anyRepr (indexDomain 0)
                   , ConstantInt (length constants)
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr (indexDomain 1)) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr (indexDomain 1)) (constants ++ zeroes)
+                  , DomainMatrix (indexDomain 1) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (indexDomain 1) (constants ++ zeroes)
                   )
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithMarker"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain) =
             case (lookup (nameMarker name) ctxt, lookup (nameValues name) ctxt) of
                 (Just marker, Just constantMatrix) ->

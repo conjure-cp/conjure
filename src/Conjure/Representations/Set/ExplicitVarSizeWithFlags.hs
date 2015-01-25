@@ -35,7 +35,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded 1 maxSize]
+            let indexDomain = mkDomainIntB 1 maxSize
             return $ Just
                 [ ( nameFlag name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
@@ -110,7 +110,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
               , ConstantAbstract (AbsLitSet constants)
               ) = do
             maxSize <- getMaxSize attrs innerDomain
-            let indexDomain = DomainInt [RangeBounded 1 maxSize]
+            let indexDomain = mkDomainIntB 1 maxSize
 
             maxSizeInt <-
                 case maxSize of

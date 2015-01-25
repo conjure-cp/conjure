@@ -181,7 +181,7 @@ allReprs =
 
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
-reprOptions :: (Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
+reprOptions :: (Pretty r, Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
 reprOptions domain = go allReprs
     where
         go [] = []
