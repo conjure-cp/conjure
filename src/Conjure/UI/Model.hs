@@ -444,7 +444,6 @@ prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
     >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
-    >>= resolveNames                  >>= logDebugId "[resolveNames]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
