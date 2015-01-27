@@ -3,12 +3,12 @@
 
 module Conjure.Process.AttributeAsConstraints
     ( attributeAsConstraints
+    , mkAttributeToConstraint
     ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.DomainOf
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.TH
@@ -45,32 +45,22 @@ attributeAsConstraints m = do
             return (Declaration (FindOrGiven forg name domain'))
         _ -> return st
 
-    let
-        f (Op (MkOpAAC (OpAttributeAsConstraint thing attr mval))) = do
-            dom  <- domainOf thing
-            gen  <- attributeToConstraint dom attr mval
-            cons <- gen thing
-            return cons
-        f p = return p
+    return m { mStatements = statements2 }
 
-    statements3 <- evalStateT (transformBiM f statements2) (freshNames m { mStatements = statements2 })
 
-    let
-        check :: Expression -> Maybe Doc
-        check p@(Op (MkOpAAC (OpAttributeAsConstraint thing _ _))) =
-            Just $ vcat [ "Cannot add an attribute to this:" <++> pretty thing
-                        , "If you think this should be supported, please get in touch."
-                        , "The relevant expression:" <++> pretty p
-                        , ""
-                        ]
-        check _ = Nothing
+mkAttributeToConstraint
+    :: (MonadFail m, Pretty r, Eq r)
+    => Domain r Expression                          -- the input domain
+    -> Name                                         -- the name of the attribute
+    -> Maybe Expression                             -- the value for the attribute
+    -> [Name]
+    -> Expression                                   -- the input thing
+    -> m Expression                                 -- the constraint
 
-    -- perform the check
-    let errors = mapMaybe check (universeBi statements3)
-    unless (null errors) (fail (vcat errors))
-
-    return m { mStatements = statements3 }
-
+mkAttributeToConstraint domain attr mval fresh x = flip evalStateT fresh $ do
+    gen  <- attributeToConstraint domain attr mval
+    cons <- gen x
+    return cons
 
 attributeToConstraint
     :: (MonadState [Name] m, MonadFail m, Pretty r, Eq r)

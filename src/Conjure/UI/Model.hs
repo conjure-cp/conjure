@@ -34,7 +34,7 @@ import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
-import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints )
+import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
@@ -675,6 +675,9 @@ otherRules =
     , rule_Abstract_DontCare
 
     , rule_ComplexAbsPat
+
+    , rule_AttributeToConstraint
+
     ] ++ rule_InlineConditions
 
 
@@ -1216,3 +1219,15 @@ ruleGen_InlineConditions opQ opSkip p = do
            , const $ make opQ $ return $
                Comprehension (opSkip theGuard body) toKeep
            )
+
+
+rule_AttributeToConstraint :: Rule
+rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
+    theRule (Op (MkOpAAC (OpAttributeAsConstraint thing attr mval))) = do
+        dom  <- domainOf thing
+        let conv fresh = mkAttributeToConstraint dom attr mval fresh thing
+        return
+            ( "Converting an attribute to a constraint"
+            , bugFail . conv
+            )
+    theRule _ = na "rule_AttributeToConstraint"
