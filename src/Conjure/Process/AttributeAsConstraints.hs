@@ -14,6 +14,7 @@ import Conjure.Language.Pretty
 attributeAsConstraints :: MonadFail m => Model -> m Model
 attributeAsConstraints m = do
 
+    -- collecting top level attribute-as-constraints
     (statements1, topLevelAACs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of
         Where xs -> do
             xs1 <- liftM concat $ forM xs $ \ x -> case x of
@@ -31,6 +32,7 @@ attributeAsConstraints m = do
             return [ SuchThat xs1 | not (null xs1) ]
         _ -> return [st]
 
+    -- adding the top level attribute-as-constraints as attributes to the relevant domains
     statements2 <- forM (concat statements1) $ \ st -> case st of
         Declaration (FindOrGiven forg name domain) -> do
             let newAttrs = [ (attr, val) | (nm, attr, val) <- topLevelAACs, name == nm ]
@@ -39,15 +41,17 @@ attributeAsConstraints m = do
         _ -> return st
 
     let
-        check :: MonadFail m => Expression -> m ()
+        check :: Expression -> Maybe Doc
         check p@(Op (MkOpAAC (OpAttributeAsConstraint thing _ _))) =
-            fail $ vcat [ "Cannot add an attribute to this:" <+> pretty thing
+            Just $ vcat [ "Cannot add an attribute to this:" <++> pretty thing
                         , "If you think this should be supported, please get in touch."
-                        , "The relevant expression:" <+> pretty p
+                        , "The relevant expression:" <++> pretty p
+                        , ""
                         ]
-        check _ = return ()
+        check _ = Nothing
 
     -- perform the check
-    mapM_ check (universeBi statements2)
+    let errors = mapMaybe check (universeBi statements2)
+    unless (null errors) (fail (vcat errors))
 
     return m { mStatements = statements2 }

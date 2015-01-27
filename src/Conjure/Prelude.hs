@@ -323,7 +323,7 @@ instance MonadFail Maybe where
     fail = const Nothing
 
 instance MonadFail IO where
-    fail = error . show
+    fail msg = error $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
 
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
