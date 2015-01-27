@@ -84,12 +84,13 @@ gDomainSizeOf (DomainMSet _ attrs inner) = do
     maxSize  <- getMaxSize
     maxOccur <- getMaxOccur
     return (make opPow maxOccur maxSize)
-gDomainSizeOf (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr innerTo) = do
-    innerFrSize <- gDomainSizeOf innerFr
-    innerToSize <- gDomainSizeOf innerTo
-    return (nchoosek (make opFactorial) innerToSize innerFrSize)
+gDomainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) = do
+    gDomainSizeOf $ DomainRelation () (RelationAttr sizeAttr def) [innerFr, innerTo]
 gDomainSizeOf (DomainRelation _ (RelationAttr sizeAttr binRelAttr) inners) | binRelAttr == def =
     gDomainSizeOf (DomainSet () (SetAttr sizeAttr) (DomainTuple inners))
+gDomainSizeOf (DomainPartition _ a inner) = do
+    gDomainSizeOf $ DomainSet () (SetAttr (partsNum  a))
+                  $ DomainSet () (SetAttr (partsSize a)) $ inner
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 
 
