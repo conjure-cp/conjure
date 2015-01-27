@@ -84,6 +84,7 @@ data Ops x
     | MkOpPreImage        (OpPreImage x)
     | MkOpDefined         (OpDefined x)
     | MkOpRange           (OpRange x)
+    | MkOpRestrict        (OpRestrict x)
 
     | MkOpRelationProj    (OpRelationProj x)
 
@@ -148,6 +149,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where
     typeOf (MkOpPreImage            x) = typeOf x
     typeOf (MkOpDefined             x) = typeOf x
     typeOf (MkOpRange               x) = typeOf x
+    typeOf (MkOpRestrict            x) = typeOf x
     typeOf (MkOpRelationProj        x) = typeOf x
     typeOf (MkOpParts               x) = typeOf x
     typeOf (MkOpTogether            x) = typeOf x
@@ -203,6 +205,7 @@ instance EvaluateOp Ops where
     evaluateOp (MkOpPreImage            x) = evaluateOp x
     evaluateOp (MkOpDefined             x) = evaluateOp x
     evaluateOp (MkOpRange               x) = evaluateOp x
+    evaluateOp (MkOpRestrict            x) = evaluateOp x
     evaluateOp (MkOpRelationProj        x) = evaluateOp x
     evaluateOp (MkOpParts               x) = evaluateOp x
     evaluateOp (MkOpTogether            x) = evaluateOp x
@@ -282,6 +285,7 @@ instance Pretty x => Pretty (Ops x) where
     prettyPrec _ (MkOpPreImage (OpPreImage a b)) = "preImage" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpDefined  (OpDefined  a)) = "defined"  <> prParens (pretty a)
     prettyPrec _ (MkOpRange    (OpRange    a)) = "range"    <> prParens (pretty a)
+    prettyPrec _ (MkOpRestrict (OpRestrict a b)) = "restrict" <> prettyList prParens "," [a,b]
     prettyPrec _ (MkOpRelationProj (OpRelationProj a bs)) = pretty a <> prettyList prParens "," (map pr bs)
         where pr Nothing = "_"
               pr (Just b) = pretty b
@@ -1230,6 +1234,23 @@ instance EvaluateOp OpRange where
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
 
+data OpRestrict x = OpRestrict x {- the function -} x {- the domain -}
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize x => Serialize (OpRestrict x)
+instance Hashable  x => Hashable  (OpRestrict x)
+instance ToJSON    x => ToJSON    (OpRestrict x) where toJSON = JSON.genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpRestrict x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
+    typeOf p@(OpRestrict f dom) = do
+        TypeFunction from to <- typeOf f
+        from'                <- typeOf dom
+        if typesUnify [from, from']
+            then return (TypeFunction from' to)
+            else raiseTypeError (MkOpRestrict p)
+instance EvaluateOp OpRestrict where
+    evaluateOp (OpRestrict f _dom) = return f -- TODO: filter out values
+
+
 data OpParts x = OpParts x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize x => Serialize (OpParts x)
@@ -1464,6 +1485,7 @@ mkOp op xs =
             L_toInt        -> injectOp $ MkOpToInt        $ OpToInt        (headNote "toInt takes a single argument."    xs)
             L_defined      -> injectOp $ MkOpDefined      $ OpDefined      (headNote "defined takes a single argument."  xs)
             L_range        -> injectOp $ MkOpRange        $ OpRange        (headNote "range takes a single argument."    xs)
+            L_restrict     -> injectOp $ MkOpRestrict     $ OpRestrict     (atNote "restrict 1" xs 0) (atNote "restrict 2" xs 1)
             L_allDiff      -> injectOp $ MkOpAllDiff      $ OpAllDiff      (headNote "allDiff takes a single argument."  xs)
             L_dontCare     -> injectOp $ MkOpDontCare     $ OpDontCare     (headNote "dontCare takes a single argument." xs)
             L_flatten      -> injectOp $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
@@ -1542,6 +1564,7 @@ functionals =
     , L_toRelation
     , L_defined
     , L_range
+    , L_restrict
     , L_image
     , L_preImage
     , L_inverse

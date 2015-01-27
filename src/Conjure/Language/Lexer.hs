@@ -110,6 +110,7 @@ data Lexeme
     | L_toRelation
     | L_defined
     | L_range
+    | L_restrict
     | L_image
     | L_preImage
     | L_inverse
@@ -324,6 +325,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_toRelation, "toRelation" )
     , ( L_defined, "defined" )
     , ( L_range, "range" )
+    , ( L_restrict, "restrict" )
     , ( L_image, "image" )
     , ( L_preImage, "preImage" )
     , ( L_inverse, "inverse" )
