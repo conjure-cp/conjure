@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find x : function (int(1..2), int(1..3)) --> int(1..3)
+
+such that total(x)
+such that forAll i : int(1..2) . injective(restrict(x, `(int(i), int(1..3))`))
+such that forAll i : int(1..3) . injective(restrict(x, `(int(1..2), int(i))`))
