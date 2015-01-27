@@ -29,6 +29,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
+import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
@@ -442,6 +443,7 @@ checkIfAllRefined m = do
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
+    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"

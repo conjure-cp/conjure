@@ -329,13 +329,6 @@ parseMSetAttr = do
         [DANameValue "maxOccur" a] -> return (OccurAttr_MaxOccur a)
         [DANameValue "maxOccur" b, DANameValue "minOccur" a] -> return (OccurAttr_MinMaxOccur a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    case (size, occur) of
-        (SizeAttr_Size{}, _) -> return ()
-        (SizeAttr_MaxSize{}, _) -> return ()
-        (SizeAttr_MinMaxSize{}, _) -> return ()
-        (_, OccurAttr_MaxOccur{}) -> return ()
-        (_, OccurAttr_MinMaxOccur{}) -> return ()
-        _ -> fail ("mset requires (at least) one of the following attributes: size, maxSize, maxOccur")
     return (MSetAttr size occur)
 
 parseFunctionAttr :: Parser (FunctionAttr Expression)
