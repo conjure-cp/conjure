@@ -1391,11 +1391,11 @@ instance Hashable  x => Hashable  (OpAttributeAsConstraint x)
 instance ToJSON    x => ToJSON    (OpAttributeAsConstraint x) where toJSON = JSON.genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAttributeAsConstraint x) where parseJSON = JSON.genericParseJSON jsonOptions
 instance TypeOf x => TypeOf (OpAttributeAsConstraint x) where
-    -- TODO: use attributeLenses to improve this
+    -- TODO
     typeOf OpAttributeAsConstraint{} = return TypeBool
 instance EvaluateOp OpAttributeAsConstraint where
-    -- TODO: use attributeLenses to implement this
-    evaluateOp op = na $ "evaluateOp{OpAttributeAsConstraint}:" <++> pretty (show op)
+    -- TODO
+    evaluateOp _ = return (ConstantBool True)
 
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type

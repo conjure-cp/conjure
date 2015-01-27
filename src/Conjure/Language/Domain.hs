@@ -13,11 +13,13 @@ module Conjure.Language.Domain
     , PartitionAttr(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
-    , reprAtTopLevel, forgetRepr, anyRepr
+    , reprAtTopLevel
+    , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
     , readBinRel
-    , attributeLenses, allSupportedAttributes, updateAttributes
+    , allSupportedAttributes
+    , addAttributeToDomain, addAttributesToDomain
     , normaliseDomain, normaliseRange
     ) where
 
@@ -137,10 +139,13 @@ instance (Pretty x) => Monoid (Domain () x) where
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
 forgetRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain () x
-forgetRepr caller = anyRepr (caller <+> "via forgetRepr")
+forgetRepr caller = defRepr (caller <+> "via forgetRepr")
 
-anyRepr :: (Default r2, Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
-anyRepr _ = go
+defRepr :: (Default r2, Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
+defRepr caller = changeRepr (caller <+> "via defRepr") def
+
+changeRepr :: (Pretty r, Pretty x) => Doc -> r2 -> Domain r x -> Domain r2 x
+changeRepr _ rep = go
     where
         go DomainBool = DomainBool
         go (DomainInt rs) = DomainInt rs
@@ -149,15 +154,15 @@ anyRepr _ = go
         go (DomainTuple ds) = DomainTuple (map go ds)
         go (DomainMatrix index inner) = DomainMatrix index (go inner)
         go (DomainSet _   attr d) =
-            DomainSet def attr (go d)
+            DomainSet rep attr (go d)
         go (DomainMSet _   attr d) =
-            DomainMSet def attr (go d)
+            DomainMSet rep attr (go d)
         go (DomainFunction _   attr d1 d2) =
-            DomainFunction def attr (go d1) (go d2)
+            DomainFunction rep attr (go d1) (go d2)
         go (DomainRelation _   attr ds) =
-            DomainRelation def attr (map go ds)
+            DomainRelation rep attr (map go ds)
         go (DomainPartition _   attr d) =
-            DomainPartition def attr (go d)
+            DomainPartition rep attr (go d)
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
@@ -194,38 +199,52 @@ domainCanIndexMatrix DomainInt {} = True
 domainCanIndexMatrix _            = False
 
 
-updateAttributes
+--------------------------------------------------------------------------------
+-- attribute-as-constraint handling --------------------------------------------
+--------------------------------------------------------------------------------
+
+allSupportedAttributes :: [(Name, Int)]
+allSupportedAttributes =
+    map (,1) [ "size", "minSize", "maxSize"
+             , "minOccur", "maxOccur"
+             , "numParts", "minNumParts", "maxNumParts"
+             , "partSize", "minPartSize", "maxPartSize"
+             ] ++
+    map (,0) [ "total"
+             , "injective", "surjective", "bijective"
+             , "complete", "regular"
+             ]
+
+
+addAttributesToDomain
     :: (MonadFail m, Pretty r, Pretty x)
     => Domain r x
     -> [(Name, Maybe x)]
     -> m (Domain r x)
-updateAttributes domain [] = return domain
-updateAttributes domain newAttrs@((attr, val) : rest) =
-    case attributeLenses domain of
-        Nothing -> fail $ vcat [ "Cannot add attributes to this domain."
-                               , "Domain     :" <+> pretty domain
-                               , "Attributes :" <+> prettyList id "," (map fst newAttrs)
-                               ]
-        Just (_, upd) -> do
-            domain' <- upd attr val
-            updateAttributes domain' rest
+addAttributesToDomain domain [] = return domain
+addAttributesToDomain domain ((attr, val) : rest) = do
+    domain' <- addAttributeToDomain domain attr val
+    addAttributesToDomain domain' rest
 
-attributeLenses
+
+addAttributeToDomain
     :: (MonadFail m, Pretty r, Pretty x)
-    => Domain r x
-    -> Maybe ([(Name, Int)], Name -> Maybe x -> m (Domain r x))
-attributeLenses DomainBool{}      = Nothing
-attributeLenses DomainInt{}       = Nothing
-attributeLenses DomainEnum{}      = Nothing
-attributeLenses DomainUnnamed{}   = Nothing
-attributeLenses DomainTuple{}     = Nothing
-attributeLenses DomainMatrix{}    = Nothing
-attributeLenses DomainOp{}        = Nothing
-attributeLenses DomainReference{} = Nothing
-attributeLenses DomainMetaVar{}   = Nothing
+    => Domain r x                                   -- the input domain
+    -> Name                                         -- the name of the attribute
+    -> Maybe x                                      -- the value for the attribute
+    -> m (Domain r x)                               -- the modified domain
 
-attributeLenses domain@(DomainSet r (SetAttr sizeAttr) inner) = Just (supported, updater) where
-    supported = [("size", 1), ("minSize", 1), ("maxSize", 1)]
+addAttributeToDomain d@DomainBool{}      = const $ const $ return d
+addAttributeToDomain d@DomainInt{}       = const $ const $ return d
+addAttributeToDomain d@DomainEnum{}      = const $ const $ return d
+addAttributeToDomain d@DomainUnnamed{}   = const $ const $ return d
+addAttributeToDomain d@DomainTuple{}     = const $ const $ return d
+addAttributeToDomain d@DomainMatrix{}    = const $ const $ return d
+addAttributeToDomain d@DomainOp{}        = const $ const $ return d
+addAttributeToDomain d@DomainReference{} = const $ const $ return d
+addAttributeToDomain d@DomainMetaVar{}   = const $ const $ return d
+
+addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater where
     updater attr (Just val) = case attr of
         "size" ->
             case sizeAttr of
@@ -251,20 +270,12 @@ attributeLenses domain@(DomainSet r (SetAttr sizeAttr) inner) = Just (supported,
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater attr Nothing | attr `elem` map fst supported =
-            fail $ vcat [ "This attribute requires an argument:" <+> pretty attr
-                        , "For the domain:" <+> pretty domain
-                        ]
     updater attr _ =
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
-attributeLenses domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) = Just (supported, updater) where
-    supported =
-        [ ("size", 1), ("minSize", 1), ("maxSize", 1)
-        , ("minOccur", 1), ("maxOccur", 1)
-        ]
+addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) = updater where
     updater attr (Just val) = case attr of
         "size" ->
             case sizeAttr of
@@ -320,23 +331,14 @@ attributeLenses domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) = Just
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater attr Nothing | attr `elem` map fst supported =
-            fail $ vcat [ "This attribute requires an argument:" <+> pretty attr
-                        , "For the domain:" <+> pretty domain
-                        ]
     updater attr _ =
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
-attributeLenses domain@(DomainFunction r
+addAttributeToDomain domain@(DomainFunction r
                             (FunctionAttr sizeAttr partialityAttr jectivityAttr)
-                            inF inT) = Just (supported, updater) where
-    supported =
-        [ ("size", 1), ("minSize", 1), ("maxSize", 1)
-        , ("total", 0)
-        , ("injective", 0), ("surjective", 0), ("bijective", 0)
-        ]
+                            inF inT) = updater where
     updater attr (Just val) = case attr of
         "size" ->
             case sizeAttr of
@@ -411,11 +413,9 @@ attributeLenses domain@(DomainFunction r
                     , "For the domain:" <+> pretty domain
                     ]
 
-attributeLenses domain@(DomainRelation r
+addAttributeToDomain domain@(DomainRelation r
                             (RelationAttr sizeAttr binRelAttr)
-                            inners) = Just (supported, updater) where
-    supported =
-        [ ("size", 1), ("minSize", 1), ("maxSize", 1) ] ++ map (,0) supportedBinRel
+                            inners) = updater where
     supportedBinRel =
         [ "reflexive", "irreflexive", "coreflexive"
         , "symmetric", "antiSymmetric", "aSymmetric"
@@ -468,13 +468,7 @@ attributeLenses domain@(DomainRelation r
                         , "For the domain:" <+> pretty domain
                         ]
 
-attributeLenses domain@(DomainPartition r partitionAttr inner) = Just (supported, updater) where
-    supported =
-        map (,1) [ "size", "minSize", "maxSize"
-                 , "numParts", "minNumParts", "maxNumParts"
-                 , "partSize", "minPartSize", "maxPartSize"
-                 ] ++
-        map (,0) [ "complete", "regular" ]
+addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater where
     updater attr (Just val) = case attr of
 
         "size" ->
@@ -537,9 +531,9 @@ attributeLenses domain@(DomainPartition r partitionAttr inner) = Just (supported
                                             (partitionAttr { partsNum = SizeAttr_MinMaxSize minS val })
                                             inner
 
-        "partsSize" ->
+        "partSize" ->
             case partsSize partitionAttr of
-                SizeAttr_Size{} -> fail $ "Cannot add a partsSize attribute to this domain:" <++> pretty domain
+                SizeAttr_Size{} -> fail $ "Cannot add a partSize attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainPartition r (partitionAttr { partsSize = SizeAttr_Size val }) inner
         "minPartSize" -> do
             let fails = fail $ "Cannot add a minPartSize attribute to this domain:" <++> pretty domain
@@ -579,17 +573,6 @@ attributeLenses domain@(DomainPartition r partitionAttr inner) = Just (supported
                         , "For the domain:" <+> pretty domain
                         ]
 
-allSupportedAttributes :: [(Name, Int)]
-allSupportedAttributes =
-    map (,1) [ "size", "minSize", "maxSize"
-             , "minOccur", "maxOccur"
-             , "numParts", "minNumParts", "maxNumParts"
-             , "partSize", "minPartSize", "maxPartSize"
-             ] ++
-    map (,0) [ "total"
-             , "injective", "surjective", "bijective"
-             , "complete", "regular"
-             ]
 
 --------------------------------------------------------------------------------
 -- attribute definitions -------------------------------------------------------

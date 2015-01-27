@@ -444,6 +444,7 @@ prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
     >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
+    >>= resolveNames                  >>= logDebugId "[resolveNames]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
@@ -627,6 +628,8 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_Defined
     , Horizontal.Function.rule_Comprehension_Range
     , Horizontal.Function.rule_In
+    , Horizontal.Function.rule_Restrict_Image
+    , Horizontal.Function.rule_Restrict_Comprehension
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection

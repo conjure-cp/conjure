@@ -38,7 +38,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             return $ Just
                 [ ( nameMarker name
-                  , anyRepr "Set.ExplicitVarSizeWithMarker.downD" (indexDomain 0)
+                  , defRepr "Set.ExplicitVarSizeWithMarker.downD" (indexDomain 0)
                   )
                 , ( nameValues name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -113,7 +113,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let zeroes = replicate (maxSizeInt - length constants) z
             return $ Just
                 [ ( nameMarker name
-                  , anyRepr "Set.ExplicitVarSizeWithMarker.downC" (indexDomain 0)
+                  , defRepr "Set.ExplicitVarSizeWithMarker.downC" (indexDomain 0)
                   , ConstantInt (length constants)
                   )
                 , ( nameValues name

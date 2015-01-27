@@ -228,6 +228,23 @@ opRange _ =
     )
 
 
+
+opRestrict
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Expression -> Domain () Expression -> Expression
+       , Expression -> m (Expression, Domain () Expression)
+       )
+opRestrict _ =
+    ( \ x d -> injectOp $ MkOpRestrict $ OpRestrict x (Domain d)
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpRestrict (OpRestrict x (Domain d)) -> return (x, d)
+                _ -> na ("Lenses.opRestrict:" <++> pretty p)
+    )
+
+
 opToInt
     :: ( OperatorContainer x
        , Pretty x

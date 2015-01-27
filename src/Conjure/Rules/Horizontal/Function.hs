@@ -271,3 +271,40 @@ rule_In = "function-in" `namedRule` theRule where
             , const $ make opFunctionImage f [x]
             )
     theRule _ = na "rule_In"
+
+
+rule_Restrict_Image :: Rule
+rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
+    theRule p = do
+        (func', [arg]) <- match opFunctionImage p
+        (func , dom)   <- match opRestrict func'
+        return
+            ( "Function image on a restricted function."
+            , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                        bob = [essence| exists &iPat : &dom . &i = &arg |]
+                    in  WithLocals (make opFunctionImage func [arg]) [SuchThat [bob]]
+            )
+
+
+rule_Restrict_Comprehension :: Rule
+rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (iPat, iPatName, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
+            _ -> na "rule_Comprehension_PreImage"
+        (func, dom) <- match opRestrict expr
+        return
+            ( "Mapping over restrict(func, dom)"
+            , \ fresh ->
+                    let (jPat, j) = quantifiedVar (fresh `at` 0)
+                        i = Reference iPatName Nothing
+                    in
+                        Comprehension body
+                            $  gofBefore
+                            ++ [ Generator (GenInExpr iPat func)
+                               , Condition [essence| exists &jPat : &dom . &j = &i |]
+                               ]
+                            ++ gofAfter
+            )
+    theRule _ = na "rule_Restrict_Comprehension"

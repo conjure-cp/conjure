@@ -54,7 +54,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             maxSize  <- getMaxSize attrs innerDomain
             maxOccur <- getMaxOccur attrs innerDomain
             let indexDomain =                                                 mkDomainIntB 1 maxSize
-            let flagDomain  = anyRepr "MSet.ExplicitVarSizeWithFlags.downD" $ mkDomainIntB 0 maxOccur
+            let flagDomain  = defRepr "MSet.ExplicitVarSizeWithFlags.downD" $ mkDomainIntB 0 maxOccur
             return $ Just
                 [ ( nameFlag name
                   , DomainMatrix indexDomain flagDomain

@@ -28,7 +28,7 @@ combineDOR dors f =
     let
         (repr, doms1, doms2) = unzip3
             [ case dor of
-                DomainOfResultNoRepr  d -> (False,                         d , anyRepr "combineDOR" d)
+                DomainOfResultNoRepr  d -> (False,                         d , defRepr "combineDOR" d)
                 DomainOfResultHasRepr d -> (True , forgetRepr "combineDOR" d,                       d)
             | dor <- dors
             ]
@@ -53,7 +53,7 @@ combineDOR' dors f =
 onDOR
     :: Functor m
     => DomainOfResult x
-    -> (forall r . Domain r x -> m (Domain r x))
+    -> (forall r . Default r => Domain r x -> m (Domain r x))
     -> m (DomainOfResult x)
 onDOR (DomainOfResultNoRepr d) f = DomainOfResultNoRepr <$> f d
 onDOR (DomainOfResultHasRepr d) f = DomainOfResultHasRepr <$> f d
@@ -96,6 +96,16 @@ instance DomainOf Expression Expression where
                 return $ atNote "domainOfInternal" inners (iInt-1)
             _ -> fail "domainOfInternal, OpIndexing, not a matrix or tuple"
 
+    domainOfInternal (Op (MkOpRestrict (OpRestrict f (Domain d)))) = do
+        fDor <- domainOfInternal f
+        onDOR fDor $ \ fDom -> case fDom of
+            DomainFunction fRepr a fr to -> do
+                let d' = case reprAtTopLevel fr of
+                            Nothing -> defRepr    "domainOfInternal"   d
+                            Just r  -> changeRepr "domainOfInternal" r d
+                return (DomainFunction fRepr a d' to)
+            _ -> fail "domainOfInternal, OpRestrict, not a function"
+
     domainOfInternal x = fail ("domainOfInternal{Expression} 1:" <+> pretty (show x))
 
 instance DomainOf ReferenceTo Expression where
@@ -134,5 +144,5 @@ domainOf :: MonadFail m => Expression -> m (Domain HasRepresentation Expression)
 domainOf x = do
     dor <- domainOfInternal x
     return $ case dor of
-        DomainOfResultNoRepr  d -> anyRepr "domainOf" d
+        DomainOfResultNoRepr  d -> defRepr "domainOf" d
         DomainOfResultHasRepr d ->                    d
