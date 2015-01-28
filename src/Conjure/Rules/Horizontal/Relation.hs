@@ -46,7 +46,7 @@ rule_Comprehension_Projection :: Rule
 rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension_Projection"
         (rel, args) <- match opRelationProj expr
         let upd val old = lambdaToFunction pat old val

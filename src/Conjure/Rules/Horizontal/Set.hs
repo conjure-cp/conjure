@@ -143,10 +143,10 @@ rule_Leq = "set-leq" `namedRule` theRule where
 rule_Intersect :: Rule
 rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, matchDef opToSet expr)
             _ -> na "rule_Intersect"
-        (x, y)             <- match opIntersect s
+        (x, y)             <- match opIntersect expr
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -171,10 +171,10 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
 rule_Union :: Rule
 rule_Union = "set-union" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, matchDef opToSet expr)
             _ -> na "rule_Union"
-        (x, y)             <- match opUnion s
+        (x, y)             <- match opUnion expr
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
