@@ -2,7 +2,5 @@ language ESSENCE' 1.0
 
 letting n be 2
 find square_FunctionND: matrix indexed by [int(1..n), int(1..n)] of int(1..n)
-such that
-    and([square_FunctionND[q1_1, q1_2] != square_FunctionND[q2_1, q2_2]
-             | q1_1 : int(1..n), q1_2 : int(1..n), q2_1 : int(1..n), q2_2 : int(1..n), !(q1_1 = q2_1 /\ q1_2 = q2_2)])
+such that allDiff([square_FunctionND[q1_1, q1_2] | q1_1 : int(1..n), q1_2 : int(1..n)])
 
