@@ -45,8 +45,7 @@ functionND = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} FunctionND"
 
-        -- FIX: inner structural constraints
-        structuralCons _ downX1
+        structuralCons f downX1
             (DomainFunction "FunctionND"
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
                 (DomainTuple innerDomainFrs')
@@ -63,17 +62,12 @@ functionND = Representation chck downD structuralCons downC up
             let injectiveCons fresh values = return $ -- list
                     let
                         (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-
                         valuesIndexedI = index i values frArity
-                        valuesIndexedJ = index j values frArity
                     in
                         [essence|
-                            and([ &valuesIndexedI != &valuesIndexedJ
-                                | &iPat : &innerDomainFr
-                                , &jPat : &innerDomainFr
-                                , &i != &j
-                                ])
+                            allDiff([ &valuesIndexedI
+                                    | &iPat : &innerDomainFr
+                                    ])
                         |]
 
             let surjectiveCons fresh values = return $ -- list
@@ -81,12 +75,12 @@ functionND = Representation chck downD structuralCons downC up
                         (iPat, i) = quantifiedVar (fresh `at` 0)
                         (jPat, j) = quantifiedVar (fresh `at` 1)
 
-                        valuesIndexed = index j values frArity
+                        valuesIndexedJ = index j values frArity
                     in
                         [essence|
                             forAll &iPat : &innerDomainTo .
                                 exists &jPat : &innerDomainFr .
-                                    &valuesIndexed = &i
+                                    &valuesIndexedJ = &i
                         |]
 
             let jectivityCons fresh values = case jectivityAttr of
@@ -102,13 +96,28 @@ functionND = Representation chck downD structuralCons downC up
                     in
                         [essence| sum &iPat : &innerDomainFr . 1 |]
 
+            let innerStructuralCons fresh values = do
+                    let (iPat, i) = quantifiedVar (headInf fresh)
+                        valuesIndexedI = index i values frArity
+                    let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomainTo
+
+                    let inLoop = valuesIndexedI
+                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    return (map activeZone outs)
+
             return $ \ fresh func -> do
                 refs <- downX1 func
                 case refs of
-                    [values] -> return $ concat
-                        [ jectivityCons fresh values
-                        , mkSizeCons sizeAttr (cardinality fresh)
-                        ]
+                    [values] -> do
+                        isc <- innerStructuralCons fresh values
+                        return $ concat
+                            [ jectivityCons fresh values
+                            , mkSizeCons sizeAttr (cardinality fresh)
+                            , isc
+                            ]
                     _ -> na "{structuralCons} FunctionND"
 
         structuralCons _ _ _ = na "{structuralCons} FunctionND"

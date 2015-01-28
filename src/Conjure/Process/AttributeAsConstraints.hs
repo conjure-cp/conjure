@@ -105,10 +105,8 @@ attributeToConstraint domain@(DomainFunction _ _ inF inT) = generator where
         return [essence| forAll &iPat : &inF . &i in defined(&x) |]
     generator "injective"  Nothing  = return $ \ x -> do
         fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
         let (iPat, i) = quantifiedVar fresh0
-            (jPat, j) = quantifiedVar fresh1
-        return [essence| forAll &iPat, &jPat : &inF . &i != &j -> &x(&i) != &x(&j) |]
+        return [essence| allDiff([ &x(&i) | &iPat : &inF ]) |]
     generator "surjective" Nothing  = return $ \ x -> do
         fresh0 <- gets head ; modify tail
         let (iPat, i) = quantifiedVar fresh0

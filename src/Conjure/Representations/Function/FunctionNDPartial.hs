@@ -49,8 +49,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} FunctionNDPartial"
 
-        -- FIX: inner structural constraints
-        structuralCons _ downX1
+        structuralCons f downX1
             (DomainFunction "FunctionNDPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 (DomainTuple innerDomainFrs')
@@ -124,13 +123,30 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 dontCare(&valuesIndexed)
                         |]
 
+            let innerStructuralCons fresh flags values = do
+                    let (iPat, i) = quantifiedVar (headInf fresh)
+                        flagsIndexed  = index i flags  frArity
+                        valuesIndexed = index i values frArity
+                    let activeZone b = [essence| forAll &iPat : &innerDomainFr . &flagsIndexed -> &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomainTo
+
+                    let inLoop = valuesIndexed
+                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    return (map activeZone outs)
+
             return $ \ fresh rel -> do
                 refs <- downX1 rel
                 case refs of
-                    [flags,values] -> return $ concat [ jectivityCons fresh flags values
-                                                      , dontCareInactives fresh flags values
-                                                      , mkSizeCons sizeAttr (cardinality fresh flags)
-                                                      ]
+                    [flags,values] -> do
+                        isc <- innerStructuralCons fresh flags values
+                        return $ concat
+                            [ jectivityCons fresh flags values
+                            , dontCareInactives fresh flags values
+                            , mkSizeCons sizeAttr (cardinality fresh flags)
+                            , isc
+                            ]
                     _ -> na "{structuralCons} FunctionNDPartial"
 
         structuralCons _ _ _ = na "{structuralCons} FunctionNDPartial"
