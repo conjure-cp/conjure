@@ -509,8 +509,8 @@ allRules config =
       ]
     , verticalRules
     , horizontalRules
-    , otherRules
-    ]
+    ] ++ otherRules
+
 
 verticalRules :: [Rule]
 verticalRules =
@@ -651,33 +651,37 @@ horizontalRules =
 
     ]
 
-otherRules :: [Rule]
-otherRules = 
-    [ rule_TrueIsNoOp
-    , rule_SingletonAnd
-    , rule_FlattenOf1D
-    , rule_Decompose_AllDiff
+otherRules :: [[Rule]]
+otherRules =
+    [
+        [ rule_TrueIsNoOp
+        , rule_SingletonAnd
+        , rule_FlattenOf1D
+        , rule_Decompose_AllDiff
 
-    , rule_GeneratorsFirst
+        , rule_GeneratorsFirst
 
-    , rule_DomainCardinality
+        , rule_DomainCardinality
 
-    , rule_BubbleUp_Comprehension
-    , rule_BubbleUp_LocalInComprehension
-    , rule_BubbleUp_ToAnd
-    , rule_BubbleUp_NotBoolYet
+        , rule_BubbleUp_Comprehension
+        , rule_BubbleUp_LocalInComprehension
+        , rule_BubbleUp_ToAnd
+        , rule_BubbleUp_NotBoolYet
 
-    , rule_Bool_DontCare
-    , rule_Int_DontCare
-    , rule_Tuple_DontCare
-    , rule_Matrix_DontCare
-    , rule_Abstract_DontCare
+        , rule_Bool_DontCare
+        , rule_Int_DontCare
+        , rule_Tuple_DontCare
+        , rule_Matrix_DontCare
+        , rule_Abstract_DontCare
 
-    , rule_ComplexAbsPat
+        , rule_ComplexAbsPat
 
-    , rule_AttributeToConstraint
+        , rule_AttributeToConstraint
+        ]
 
-    ] ++ rule_InlineConditions
+    ,   rule_InlineConditions
+
+    ]
 
 
 rule_ChooseRepr :: Config -> Rule
