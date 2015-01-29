@@ -21,7 +21,7 @@ ghci:
 	    -fwarn-unused-do-bind                      \
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
-	    src/Conjure/*.hs src/Conjure/*/*.hs src/test/*.hs src/test/*/*.hs
+	    `find src -name *.hs | grep -v Main`
 
 clean:
 	@bash etc/build/clean.sh
