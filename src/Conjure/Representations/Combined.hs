@@ -207,22 +207,25 @@ getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals dow
 --   This rule handles the plumbing for matrices.
 --   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
-matrix :: MonadFail m => Representation m
-matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
+matrix :: forall m . MonadFail m => Representation m
+matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainMatrix indexDomain innerDomain) = DomainMatrix indexDomain <$> f innerDomain
         chck _ _ = []
 
-        matrixDown_ (name, DomainMatrix indexDomain innerDomain) = do
+        matrixDownD :: TypeOf_DownD m
+        matrixDownD (name, DomainMatrix indexDomain innerDomain) = do
             mres <- downD1 (name, innerDomain)
             case mres of
                 Nothing -> return Nothing
                 Just mids -> return $ Just
                     [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-        matrixDown_ _ = na "{matrixDown_}"
+        matrixDownD _ = na "{matrixDownD}"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
                 innerStructuralCons fresh inpMatrix = do
@@ -241,7 +244,8 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
         structuralCons _ _ _ = na "{structuralCons} matrix 2"
 
         -- TODO: check if indices are the same
-        matrixDown ( name
+        matrixDownC :: TypeOf_DownC m
+        matrixDownC ( name
                    , DomainMatrix indexDomain innerDomain
                    , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
                    ) = do
@@ -275,8 +279,9 @@ matrix = Representation chck matrixDown_ structuralCons matrixDown matrixUp
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                 ]
-        matrixDown _ = na "{matrixDown}"
+        matrixDownC _ = na "{matrixDownC}"
 
+        matrixUp :: TypeOf_Up m
         matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
 
             mid1

@@ -13,16 +13,18 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setOccurrence :: MonadFail m => Representation m
+setOccurrence :: forall m . MonadFail m => Representation m
 setOccurrence = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = DomainSet "Occurrence" attrs <$> f innerDomain
         chck _ _ = []
 
         outName name = mconcat [name, "_", "Occurrence"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
               , DomainMatrix (forgetRepr "Representation.Occurrence" innerDomain) DomainBool
@@ -30,6 +32,7 @@ setOccurrence = Representation chck downD structuralCons downC up
             ]
         downD _ = na "{downD} Occurrence"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
             return $ \ fresh set -> do
                 refs <- downX1 set
@@ -41,6 +44,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                     _ -> na "{structuralCons} Occurrence"
         structuralCons _ _ _ = na "{structuralCons} Occurrence"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges)
               , ConstantAbstract (AbsLitSet constants)
@@ -58,6 +62,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                     ]
         downC _ = na "{downC} Occurrence"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
                 Just constantMatrix ->

@@ -14,17 +14,19 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
-relationAsMatrix :: MonadFail m => Representation m
+relationAsMatrix :: forall m . MonadFail m => Representation m
 relationAsMatrix = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainRelation _ attrs innerDomains) | all domainCanIndexMatrix innerDomains =
             DomainRelation "RelationAsMatrix" attrs <$> mapM f innerDomains
         chck _ _ = []
 
         outName name = mconcat [name, "_", "RelationAsMatrix"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainRelation "RelationAsMatrix" _ innerDomains') | all domainCanIndexMatrix innerDomains' = do
             innerDomains <- mapM toIntDomain innerDomains'
             let unroll is j = foldr DomainMatrix j is
@@ -37,6 +39,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                          , "domain:" <+> pretty domain
                                          ]
 
+        structuralCons :: TypeOf_Structural m
         structuralCons _ downX1
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains')
                 | all domainCanIndexMatrix innerDomains' = do
@@ -66,6 +69,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     _ -> na "{structuralCons} RelationAsMatrix"
         structuralCons _ _ _ = na "{structuralCons} RelationAsMatrix"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , DomainRelation "RelationAsMatrix" _ innerDomains'
               , ConstantAbstract (AbsLitRelation vals)
@@ -116,6 +120,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                                    , "constant:" <+> pretty constant
                                                    ]
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains')) = do
 
             innerDomains <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomains')

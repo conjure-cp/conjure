@@ -14,11 +14,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithFlags :: MonadFail m => Representation m
+setExplicitVarSizeWithFlags :: forall m . MonadFail m => Representation m
 setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
         chck f (DomainSet _ attrs innerDomain) =
             DomainSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
@@ -33,6 +34,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             _ -> domainSizeOf innerDomain
 
 
+        downD :: TypeOf_DownD m
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
@@ -46,6 +48,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
@@ -105,6 +108,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithFlags"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , domain@(DomainSet _ (SetAttr attrs) innerDomain)
               , ConstantAbstract (AbsLitSet constants)
@@ -147,6 +151,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 ]
         downC _ = na "{downC} ExplicitVarSizeWithFlags"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->

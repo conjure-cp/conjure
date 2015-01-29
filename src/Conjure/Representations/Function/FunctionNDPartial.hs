@@ -16,11 +16,12 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
-functionNDPartial :: MonadFail m => Representation m
+functionNDPartial :: forall m . MonadFail m => Representation m
 functionNDPartial = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(DomainTuple innerDomainFrs)
@@ -33,6 +34,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         nameFlags  name = mconcat [name, "_", "FunctionNDPartial_Flags"]
         nameValues name = mconcat [name, "_", "FunctionNDPartial_Values"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
                     (DomainTuple innerDomainFrs')
@@ -49,6 +51,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} FunctionNDPartial"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1
             (DomainFunction "FunctionNDPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
@@ -151,6 +154,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} FunctionNDPartial"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
@@ -218,6 +222,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         downC _ = na "{downC} FunctionNDPartial"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
                                 (FunctionAttr _ PartialityAttr_Partial _)
                                 (DomainTuple innerDomainFrs') _)) = do

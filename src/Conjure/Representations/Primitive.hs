@@ -11,7 +11,7 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-primitive :: MonadFail m => Representation m
+primitive :: forall m . MonadFail m => Representation m
 primitive = Representation
     { rCheck = \ _ domain ->
         case domain of

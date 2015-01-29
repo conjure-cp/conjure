@@ -15,23 +15,26 @@ import Conjure.Representations.Internal
 import Data.Text ( pack )
 
 
-tuple :: MonadFail m => Representation m
-tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
+tuple :: forall m . MonadFail m => Representation m
+tuple = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainTuple ds) = DomainTuple <$> mapM f ds
         chck _ _ = []
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
-        tupleDown_ (name, DomainTuple ds) = return $ Just
+        downD :: TypeOf_DownD m
+        downD (name, DomainTuple ds) = return $ Just
             [ (mkName name i, d)
             | i <- [1..]
             | d <- ds
             ]
-        tupleDown_ _ = na "{tupleDown_}"
+        downD _ = na "{downD}"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainTuple ds) = return $ \ fresh tup -> do
             refs <- downX1 tup
             concat <$> sequence
@@ -44,15 +47,17 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
         structuralCons _ _ _ = na "{structuralCons} tuple"
 
         -- TODO: check if (length ds == length cs)
-        tupleDown (name, DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) = return $ Just
+        downC :: TypeOf_DownC m
+        downC (name, DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) = return $ Just
             [ (mkName name i, d, c)
             | i <- [1..]
             | d <- ds
             | c <- cs
             ]
-        tupleDown _ = na "{tupleDown}"
+        downC _ = na "{downC}"
 
-        tupleUp ctxt (name, DomainTuple ds) = do
+        up :: TypeOf_Up m
+        up ctxt (name, DomainTuple ds) = do
             let names = map (mkName name) [1 .. length ds]
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
@@ -65,5 +70,5 @@ tuple = Representation chck tupleDown_ structuralCons tupleDown tupleUp
                     Just val -> return val
             -- TODO: check if (length ds == length vals)
             return (name, ConstantAbstract (AbsLitTuple vals))
-        tupleUp _ _ = na "{tupleUp}"
+        up _ _ = na "{up}"
 

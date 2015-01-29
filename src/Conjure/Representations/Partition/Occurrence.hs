@@ -17,11 +17,12 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
-partitionOccurrence :: MonadFail m => Representation m
+partitionOccurrence :: forall m . MonadFail m => Representation m
 partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainPartition _ attrs innerDomain)
             | domainCanIndexMatrix innerDomain
             = DomainPartition "Occurrence" attrs <$> f innerDomain
@@ -31,6 +32,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         nameParts    name = mconcat [name, "_", "Occurrence", "_", "Parts"]
         nameNumParts name = mconcat [name, "_", "Occurrence", "_", "NumParts"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain')
             | domainCanIndexMatrix innerDomain' = do
             innerDomain <- toIntDomain innerDomain'
@@ -52,6 +54,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} Occurrence"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainPartition _ attrs innerDomain')
                 | domainCanIndexMatrix innerDomain'
                 = do
@@ -154,13 +157,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         --         , outDom
         --         , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) vals
         --         )
+        -- TODO
+        downC :: TypeOf_DownC m
         downC (name, domain, constant) = na $ vcat [ "{downC} Occurrence"
                                                    , "name:" <+> pretty name
                                                    , "domain:" <+> pretty domain
                                                    , "constant:" <+> pretty constant
                                                    ]
 
-
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition "Occurrence" _ innerDomain)) =
             case (lookup (nameFlags name) ctxt, lookup (nameParts name) ctxt) of
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,

@@ -15,13 +15,14 @@ import Conjure.Representations.Common
 
 
 partitionAsSet
-    :: MonadFail m
+    :: forall m . MonadFail m
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
 partitionAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainPartition _ attrs innerDomain) = DomainPartition "PartitionAsSet" attrs <$> f innerDomain
         chck _ _ = []
 
@@ -39,10 +40,12 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                      , "domain:" <+> pretty domain
                                      ]
 
+        downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
             return $ Just [ ( outName name , outDom ) ]
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ fresh inpRel -> do
             refs <- downX1 inpRel
             let
@@ -102,6 +105,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                               , "domain:" <+> pretty domain
                                               ]
 
+        downC :: TypeOf_DownC m
         downC ( name
               , inDom
               , ConstantAbstract (AbsLitPartition vals)
@@ -119,6 +123,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                                    , "constant:" <+> pretty constant
                                                    ]
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet sets)) -> do

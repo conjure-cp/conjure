@@ -14,11 +14,12 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
 
 
-function1DPartial :: MonadFail m => Representation m
+function1DPartial :: forall m . MonadFail m => Representation m
 function1DPartial = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
@@ -31,6 +32,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         nameFlags  name = mconcat [name, "_", "Function1DPartial_Flags"]
         nameValues name = mconcat [name, "_", "Function1DPartial_Values"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainFunction "Function1DPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr'
@@ -50,6 +52,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                 ]
         downD _ = na "{downD} Function1DPartial"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1
             (DomainFunction "Function1DPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
@@ -131,6 +134,7 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         structuralCons _ _ _ = na "{structuralCons} Function1DPartial"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , DomainFunction "Function1DPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
@@ -168,6 +172,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                 ]
         downC _ = na "{downC} Function1DPartial"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "Function1DPartial"
                                 (FunctionAttr _ PartialityAttr_Partial _)
                                 innerDomainFr _)) =

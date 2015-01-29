@@ -13,13 +13,14 @@ import Conjure.Representations.Internal
 
 
 functionAsRelation
-    :: MonadFail m
+    :: forall m . MonadFail m
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
 functionAsRelation dispatch = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) =
             DomainFunction "FunctionAsRelation" attrs <$> f innerDomainFr <*> f innerDomainTo
         chck _ _ = []
@@ -37,10 +38,12 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                      , "domain:" <+> pretty domain
                                      ]
 
+        downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
             return $ Just [ ( outName name , outDom ) ]
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1
                 inDom@(DomainFunction _
                         (FunctionAttr _ partilityAttr jectivityAttr)
@@ -121,6 +124,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                       , pretty inDom
                       ]
 
+        downC :: TypeOf_DownC m
         downC ( name
               , inDom
               , ConstantAbstract (AbsLitFunction vals)
@@ -138,6 +142,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                                    , "constant:" <+> pretty constant
                                                    ]
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionAsRelation" _ _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitRelation pairs)) -> do

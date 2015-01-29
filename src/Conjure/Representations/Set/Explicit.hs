@@ -11,17 +11,19 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-setExplicit :: MonadFail m => Representation m
+setExplicit :: forall m . MonadFail m => Representation m
 setExplicit = Representation chck downD structuralCons downC up
 
     where
 
+        chck :: TypeOf_ReprCheck m
         chck f (DomainSet _ attrs@(SetAttr SizeAttr_Size{}) innerDomain) =
             DomainSet "Explicit" attrs <$> f innerDomain
         chck _ _ = []
 
         outName name = mconcat [name, "_", "Explicit"]
 
+        downD :: TypeOf_DownD m
         downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
             [ ( outName name
               , DomainMatrix
@@ -30,6 +32,7 @@ setExplicit = Representation chck downD structuralCons downC up
               ) ]
         downD _ = na "{downD} Explicit"
 
+        structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = do
             let
                 ordering fresh m =
@@ -63,6 +66,7 @@ setExplicit = Representation chck downD structuralCons downC up
                     _ -> na "{structuralCons} Explicit"
         structuralCons _ _ _ = na "{structuralCons} Explicit"
 
+        downC :: TypeOf_DownC m
         downC ( name
               , DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain
               , ConstantAbstract (AbsLitSet constants)
@@ -75,6 +79,7 @@ setExplicit = Representation chck downD structuralCons downC up
                       ) ]
         downC _ = na "{downC} Explicit"
 
+        up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttr_Size _)) _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
