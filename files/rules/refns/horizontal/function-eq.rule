@@ -1,8 +1,0 @@
-
-[1000]
-
-&f = &g ~~> (forAll i in &f . &g(i[1]) = i[2]) /\
-            (forAll i in &g . &f(i[1]) = i[2])
-
-    where &f hasType `function _ --> _`
-    where &g hasType `function _ --> _`

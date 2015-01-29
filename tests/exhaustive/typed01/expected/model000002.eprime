@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find x_Occurrence: matrix indexed by [int(1)] of bool
+find y_Occurrence: matrix indexed by [int(1)] of bool
+find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
+find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
+such that
+    and([x_Occurrence[q2] /\ y_Occurrence[q2] -> or([[; int(1..0)][q3] = q2 | q3 : int(1..0)]) | q2 : int(1)]),
+    and([or([x_Occurrence[q5] /\ y_Occurrence[q5] /\ q5 = [; int(1..0)][q4] | q5 : int(1)]) | q4 : int(1..0)]),
+    and([q1 + 1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q1] < y_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 - 1)]),
+    and([q1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..1)]),
+    and([q7 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[q7]] | q7 : int(1..1)]),
+    and([y_Occurrence[q6] -> or([q9 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q9] = q6 | q9 : int(1..1)]) | q6 : int(1)])
+

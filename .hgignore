@@ -1,10 +1,14 @@
+syntax: glob
+
 dist
 debugging
 .tmtags
 tags
 .swp
 .essence.binary
-RepositoryVersion.hs
+src/Conjure/RepositoryVersion.hs
 cabal.sandbox.config
 .cabal-sandbox
 experiments/dontcare/remote
+tests/exhaustive/*/outputs
+tests/golden/*.generated

@@ -1,0 +1,13 @@
+#/bin/sh
+
+# had to 'set backupcopy=yes' in ~/.vimrc to make vim happy
+
+command='time etc/build/make --trace-logs'
+#command='time etc/build/make'
+
+watchmedo shell-command src \
+    --patterns="*.hs" \
+    --ignore-directories \
+    --recursive \
+    --command="$command"
+

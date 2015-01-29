@@ -1,9 +1,0 @@
-
-toSet(m) ~~> ( aux @ { find aux : set of t }
-                     ( forAll i : ind . m[i] in aux) /\
-                     ( forAll i in aux . exists j : ind . m[j] = i )
-             )
-
-    where m hastype `matrix indexed by [ind] of t`
-
-    $ find aux : set of t

@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2: bool
+such that
+    var1 =
+    !(and([or([[false, 5 / -1; int(1..2)][q2] = [false, 5; int(1..2)][q1] | q2 : int(1..2)]) | q1 : int(1..2)]) /\
+      and([or([[false, 5; int(1..2)][q4] = [false, 5 / -1; int(1..2)][q3] | q4 : int(1..2)]) | q3 : int(1..2)])),
+    var2 = (7 / true != 6 / (8 / -9))
+

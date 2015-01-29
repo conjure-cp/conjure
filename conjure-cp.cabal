@@ -8,166 +8,149 @@ License:        AllRightsReserved
 Author:         Ozgur Akgun
 Maintainer:     ozgur.akgun@st-andrews.ac.uk
 Category:       Constraint Programming
-Build-type:     Custom
-Cabal-version:  >= 1.20
+Build-type:     Simple
+Cabal-version:  >= 1.22
 
 Library
     default-language : Haskell2010
     hs-source-dirs   : src
 
     exposed-modules  : Paths_conjure_cp
-                     , RepositoryVersion
-                     , Bug
 
-                     , Utils.DebugPretty
+                     , Conjure.Prelude
+                     , Conjure.RepositoryVersion
+                     , Conjure.Bug
 
-                     , Conjure
-                     , Conjure.Mode
+                     -- definitions of language constructs
+                     , Conjure.Language.AdHoc
+                     , Conjure.Language.Definition
+                     , Conjure.Language.Name
+                     , Conjure.Language.Constant
+                     , Conjure.Language.AbstractLiteral
+                     , Conjure.Language.Domain
+                     , Conjure.Language.Type
+                     , Conjure.Language.Ops
+                     , Conjure.Language.Lenses
+                     , Conjure.Language.TH
 
-                     , Stuff.MonadList
+                     -- and some operations on the language constructs
+                     , Conjure.Language.Arbitrary
+                     , Conjure.Language.DomainSize
+                     , Conjure.Language.Instantiate
+                     , Conjure.Language.ModelDiff
+                     , Conjure.Language.ModelStats
+                     , Conjure.Language.Lexer
+                     , Conjure.Language.Parser
+                     , Conjure.Language.Pretty
+                     , Conjure.Language.NameResolution
+                     , Conjure.Language.CategoryOf
+                     , Conjure.Language.TypeOf
+                     , Conjure.Language.DomainOf
+                     , Conjure.Language.ZeroVal
+                     , Conjure.Process.Sanity
+                     , Conjure.Process.Enums
+                     , Conjure.Process.Unnameds
+                     , Conjure.Process.Enumerate
+                     , Conjure.Process.FiniteGivens
+                     , Conjure.Process.LettingsForComplexInDoms
+                     , Conjure.Process.AttributeAsConstraints
 
-                     , Stuff.Funky.FunkySingle
-                     , Stuff.Funky.FunkyMulti
+                     -- definitions of representations: how to go down and up
+                     , Conjure.Representations
+                     , Conjure.Representations.Internal
+                     , Conjure.Representations.Common
+                     , Conjure.Representations.Combined
+                     , Conjure.Representations.Primitive
+                     , Conjure.Representations.Tuple
+                     , Conjure.Representations.Set.Occurrence
+                     , Conjure.Representations.Set.Explicit
+                     , Conjure.Representations.Set.ExplicitVarSizeWithMarker
+                     , Conjure.Representations.Set.ExplicitVarSizeWithFlags
+                     , Conjure.Representations.MSet.ExplicitVarSizeWithFlags
+                     , Conjure.Representations.Function.Function1D
+                     , Conjure.Representations.Function.Function1DPartial
+                     , Conjure.Representations.Function.FunctionND
+                     , Conjure.Representations.Function.FunctionNDPartial
+                     , Conjure.Representations.Function.FunctionAsRelation
+                     , Conjure.Representations.Relation.RelationAsMatrix
+                     , Conjure.Representations.Relation.RelationAsSet
+                     , Conjure.Representations.Partition.Occurrence
+                     , Conjure.Representations.Partition.PartitionAsSet
 
-                     , Stuff.Generic.Tag
+                     -- definitions of rules
+                     , Conjure.Rules.Definition
 
-                     , Stuff.Pretty
-                     , Stuff.MetaVariable
-                     , Stuff.NamedLog
+                     , Conjure.Rules.Vertical.Tuple
+                     , Conjure.Rules.Vertical.Matrix
 
-                     , Language.E
-                     , Language.E.TH
-                     , Language.E.Imports
-                     , Language.E.Definition
-                     , Language.E.Definition.Literal
-                     , Language.E.Helpers
-                     , Language.E.Data
-                     , Language.E.Lexer
-                     , Language.E.Parser
-                     , Language.E.Parser.Imports
-                     , Language.E.Parser.Shunt
-                     , Language.E.Parser.EssenceFile
-                     , Language.E.Parser.EssenceFile.Domain
-                     , Language.E.Parser.EssenceFile.Value
-                     , Language.E.Parser.EssenceFile.Expr
-                     , Language.E.Parser.EssenceFile.Declaration
-                     , Language.E.Parser.LogFile
-                     , Language.E.Pretty
-                     , Language.E.MatchBind
-                     , Language.E.TypeOf
-                     , Language.E.DomainOf
-                     , Language.E.CategoryOf
-                     , Language.E.Traversals
-                     , Language.E.CompE
-                     , Language.E.NormaliseSolution
-                     , Language.E.ValidateSolution
+                     , Conjure.Rules.Horizontal.Set
+                     , Conjure.Rules.Vertical.Set.Occurrence
+                     , Conjure.Rules.Vertical.Set.Explicit
+                     , Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker
+                     , Conjure.Rules.Vertical.Set.ExplicitVarSizeWithFlags
 
-                     , Language.E.BuiltIn
-                     , Language.E.BuiltIn.SetStructural
+                     , Conjure.Rules.Horizontal.MSet
+                     , Conjure.Rules.Vertical.MSet.ExplicitVarSizeWithFlags
 
-                     , Language.E.PrepareParam
+                     , Conjure.Rules.Horizontal.Function
+                     , Conjure.Rules.Vertical.Function.Function1D
+                     , Conjure.Rules.Vertical.Function.Function1DPartial
+                     , Conjure.Rules.Vertical.Function.FunctionND
+                     , Conjure.Rules.Vertical.Function.FunctionNDPartial
+                     , Conjure.Rules.Vertical.Function.FunctionAsRelation
 
-                     , Language.E.GenerateParams.Groom2
-                     , Language.E.GenerateParams.Typedefs
+                     , Conjure.Rules.Horizontal.Relation
+                     , Conjure.Rules.Vertical.Relation.RelationAsMatrix
+                     , Conjure.Rules.Vertical.Relation.RelationAsSet
 
+                     , Conjure.Rules.Horizontal.Partition
+                     , Conjure.Rules.Vertical.Partition.PartitionAsSet
+                     , Conjure.Rules.Vertical.Partition.Occurrence
 
-                     , Language.E.Evaluator
-                     , Language.E.Evaluator.DataAboutQuantifiers
-                     , Language.E.Evaluator.Full
-                     , Language.E.Evaluator.Partial
-                     , Language.E.Evaluator.ToBool
-                     , Language.E.Evaluator.ToInt
+                     -- supporting modules for the user interfacing parts
+                     , Conjure.UI
+                     , Conjure.UI.IO
+                     , Conjure.UI.Model
+                     , Conjure.UI.RefineParam
+                     , Conjure.UI.TranslateSolution
+                     , Conjure.UI.ValidateSolution
+                     , Conjure.UI.TypeCheck
 
-                     , Language.E.Up
-                     , Language.E.Up.Common
-                     , Language.E.Up.Data
-                     , Language.E.Up.Debug
-                     , Language.E.Up.EprimeToEssence
-                     , Language.E.Up.EvaluateTree2
-                     , Language.E.Up.Representations
-                     , Language.E.Up.GatherInfomation
-                     , Language.E.Up.IO
-                     , Language.E.Up.ReduceSpec
-                     , Language.E.Up.RepresentationTree
-                     , Language.E.Up.GatherIndexRanges
-
-
-                     , Language.E.Pipeline.ReadIn
-                     , Language.E.Pipeline.Driver
-                     , Language.E.Pipeline.InitialiseSpecState
-                     , Language.E.Pipeline.Groom
-                     , Language.E.Pipeline.SavileRowCompat
-
-                     , Language.E.Pipeline.ImplicitWheres
-                     , Language.E.Pipeline.ExplodeStructuralVars
-                     , Language.E.Pipeline.IntroduceRegions
-                     , Language.E.Pipeline.InlineLettings
-                     , Language.E.Pipeline.IntroduceFakeConstraints
-                     , Language.E.Pipeline.HandlingEnums
-                     , Language.E.Pipeline.HandlingUnnameds
-                     , Language.E.Pipeline.FreshNames
-                     , Language.E.Pipeline.AtMostOneSuchThat
-                     , Language.E.Pipeline.RemoveUnused
-                     , Language.E.Pipeline.RemoveDuplicateCons
-                     , Language.E.Pipeline.CheckIfAllRefined
-                     , Language.E.Pipeline.AbstractDomsInQuans
-                     , Language.E.Pipeline.RedArrow
-                     , Language.E.Pipeline.UniqueQuanVars
-                     , Language.E.Pipeline.TypeStrengthening
-
-                     , Language.E.Pipeline.ConjureAll
-
-                     , Language.E.Pipeline.ConjureRefn
-                     , Language.E.Pipeline.RuleRefnToFunction
-                     , Language.E.Pipeline.ApplyRefn
-                     , Language.E.Pipeline.ApplyRefnSlower
-
-                     , Language.E.Pipeline.ConjureRepr
-                     , Language.E.Pipeline.RuleReprToFunction
-                     , Language.E.Pipeline.ApplyRepr
-
-                     , Language.E.Pipeline.BubbleUp
-                     , Language.E.Pipeline.NoGuards
-                     , Language.E.Pipeline.NoTuples
-
-                     , Language.E.Testing.ParsePrintSpec
-                     , Language.E.Testing.RuleEngine
-                     , Language.E.Testing.TopToBottom
-                     , Language.E.Testing.ValidateSolutionTests
-
-
-    build-depends    : base, ghc-prim
-                     , AC-Random
+    build-depends    : base
                      , aeson
-                     , aeson-pretty
                      , bytestring
                      , cereal
+                     , cmdargs
                      , containers
                      , data-default
                      , directory
-                     , dlist
                      , filepath
                      , groom
                      , hashable
                      , haskell-src-meta >= 0.6
-                     , hspec
-                     , HUnit
-                     , mtl >= 2.2.1
+                     , integer-gmp
+                     , mtl
                      , parsec >= 3
+                     , pipes
                      , pretty
+                     , QuickCheck
                      , random
                      , safe
+                     , scientific
+                     , shelly
                      , split
+                     , syb
                      , template-haskell
                      , text
-                     , time
-                     , transformers
-                     , transformers-base
+                     , transformers >= 0.4
+                     , uniplate
                      , unordered-containers
-                     , haskell-src-exts
-    ghc-prof-options:
-        -auto-all
-        -caf-all
+                     , vector
+
+    default-extensions:
+        NoImplicitPrelude
+        OverloadedStrings
+        ScopedTypeVariables
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -179,36 +162,6 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -Werror
-
-
-Executable conjureBF
-    default-language : Haskell2010
-    hs-source-dirs   : src/exec
-    main-is          : SmallStepMain.hs
-    build-depends    : conjure-cp
-                     , base
-                     , bytestring
-                     , directory
-                     , filepath
-    ghc-prof-options:
-        -auto-all
-        -caf-all
-    ghc-options:
-        -fwarn-incomplete-patterns
-        -fwarn-incomplete-uni-patterns
-        -fwarn-missing-signatures
-        -fwarn-name-shadowing
-        -fwarn-orphans
-        -fwarn-overlapping-patterns
-        -fwarn-tabs
-        -fwarn-unused-do-bind
-        -fwarn-unused-matches
-        -Wall
-        -Werror
-        -rtsopts
-        -with-rtsopts=-K200M
-        -with-rtsopts=-M4G
 
 
 Executable conjure
@@ -217,9 +170,10 @@ Executable conjure
     main-is          : Main.hs
     build-depends    : conjure-cp
                      , base
-    ghc-prof-options:
-        -auto-all
-        -caf-all
+                     , cmdargs
+    default-extensions:
+        NoImplicitPrelude
+        OverloadedStrings
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -231,9 +185,41 @@ Executable conjure
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -Werror
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
 
+
+test-suite conjure-testing
+    type             : exitcode-stdio-1.0
+    default-language : Haskell2010
+    hs-source-dirs   : src/test
+    main-is          : TestsMain.hs
+    build-depends    : conjure-cp
+                     , base
+                     , bytestring
+                     , containers 
+                     , shelly
+                     , tasty
+                     , tasty-ant-xml
+                     , tasty-golden
+                     , tasty-hunit
+                     , text
+    default-extensions:
+        NoImplicitPrelude
+        OverloadedStrings
+    ghc-options:
+        -fwarn-incomplete-patterns
+        -fwarn-incomplete-uni-patterns
+        -fwarn-missing-signatures
+        -fwarn-name-shadowing
+        -fwarn-orphans
+        -fwarn-overlapping-patterns
+        -fwarn-tabs
+        -fwarn-unused-do-bind
+        -fwarn-unused-matches
+        -Wall
+        -rtsopts
+        -with-rtsopts=-K200M
+        -with-rtsopts=-M4G
 

@@ -1,8 +1,0 @@
-
-~~> SetOfSets_KnownPartSize
-~~> set of set (size n) of tau
-
-*** partition (partSize n) from tau
-    ~~> ( forAll i,j : refn , i != j . |i intersect j| = 0 )
-    /\  ( forAll i : tau . exists s : refn . i in s )
-    /\  ( forAll i,j : refn . |i| = |j| )

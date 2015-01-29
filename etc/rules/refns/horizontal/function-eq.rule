@@ -1,0 +1,7 @@
+
+[1000]
+
+&f = &g ~~> forAll i in defined(&f) . &f(i) = &g(i)
+
+    where &f hasType `function _ --> _`
+    where &g hasType `function _ --> _`

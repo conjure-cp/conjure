@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find a,b,c : int(0..9)
+letting m be [1,2,3,3]
+
+such that a = |toSet(m)|
+such that b = sum([ e | (e,_) <- hist(m) ])
+such that c = sum([ n | (_,n) <- hist(m) ])
