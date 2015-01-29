@@ -663,6 +663,7 @@ otherRules =
 
         , rule_DomainCardinality
 
+        , rule_BubbleUp_MergeNested
         , rule_BubbleUp_Comprehension
         , rule_BubbleUp_LocalInComprehension
         , rule_BubbleUp_ToAnd
@@ -982,6 +983,16 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             _ -> na "rule_DomainCardinality"
 
 
+rule_BubbleUp_MergeNested :: Rule
+rule_BubbleUp_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
+    theRule (WithLocals (WithLocals body locals1) locals2) =
+        return
+            ( "Merging nested bubbles"
+            , const $ WithLocals body (locals1 ++ locals2)
+            )
+    theRule _ = na "rule_BubbleUp_MergeNested"
+
+
 rule_BubbleUp_Comprehension :: Rule
 rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -1045,7 +1056,8 @@ rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
 
 rule_BubbleUp_NotBoolYet :: Rule
 rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
-    theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet"
+    theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet Comprehension"
+    theRule WithLocals{}    = na "rule_BubbleUp_NotBoolYet WithLocals"
     theRule p = do
         let
             f x@(WithLocals y locals) = do
