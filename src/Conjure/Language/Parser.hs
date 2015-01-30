@@ -544,8 +544,8 @@ parseAAC = do
     let n = fromMaybe (bug "parseAAC") (lookup attr allSupportedAttributes)
     args <- parens $ countSep (n+1) parseExpr comma
     case (n, args) of
-        (0, [e  ]) -> return $ Op $ MkOpAAC $ OpAttributeAsConstraint e attr Nothing
-        (1, [e,v]) -> return $ Op $ MkOpAAC $ OpAttributeAsConstraint e attr (Just v)
+        (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e attr Nothing
+        (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e attr (Just v)
         _ -> fail "parseAAC"
 
 parseOthers :: [Parser Expression]

@@ -23,14 +23,14 @@ attributeAsConstraints m = do
     (statements1, topLevelAACs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of
         Where xs -> do
             xs1 <- liftM concat $ forM xs $ \ x -> case x of
-                Op (MkOpAAC (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
+                Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
                     tell [(nm, attr, val)]
                     return []
                 _ -> return [x]
             return [ Where xs1 | not (null xs1) ]
         SuchThat xs -> do
             xs1 <- liftM concat $ forM xs $ \ x -> case x of
-                Op (MkOpAAC (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
+                Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
                     tell [(nm, attr, val)]
                     return []
                 _ -> return [x]

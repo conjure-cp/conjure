@@ -164,6 +164,7 @@ cabal --version
 happy --version
 
 etc/build/version.sh
+runhaskell etc/build/gen_Operator.hs
 
 if [ $LLVM = "llvm-on" ]; then
     LLVM='--ghc-options="-fllvm"'

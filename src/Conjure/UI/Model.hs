@@ -1238,7 +1238,7 @@ ruleGen_InlineConditions opQ opSkip p = do
 
 rule_AttributeToConstraint :: Rule
 rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
-    theRule (Op (MkOpAAC (OpAttributeAsConstraint thing attr mval))) = do
+    theRule (Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint thing attr mval))) = do
         dom  <- domainOf thing
         let conv fresh = mkAttributeToConstraint dom attr mval fresh thing
         return
