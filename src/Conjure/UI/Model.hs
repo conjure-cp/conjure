@@ -692,8 +692,8 @@ otherRules =
 delayedRules :: [[Rule]]
 delayedRules =
     [
-        [-- Vertical.Matrix.rule_Comprehension_Singleton
-          Vertical.Matrix.rule_Comprehension_SingletonDomain
+        [ Vertical.Matrix.rule_Comprehension_Singleton
+        , Vertical.Matrix.rule_Comprehension_SingletonDomain
         -- , Vertical.Matrix.rule_MatrixIndexing
         ]
     ]

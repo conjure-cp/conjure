@@ -8,29 +8,21 @@ find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1)] of int(1)
 find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q5] /\
-         or([y_ExplicitVarSizeWithFlags_Flags[q7] /\ y_ExplicitVarSizeWithFlags_Values[q7] = x_ExplicitVarSizeWithFlags_Values[q5] | q7 : int(1..1)])
-         -> or([[; int(1..0)][q4] = x_ExplicitVarSizeWithFlags_Values[q5] | q4 : int(1..0)])
-             | q5 : int(1..1)]),
-    and([or([x_ExplicitVarSizeWithFlags_Flags[q9] /\
-             or([y_ExplicitVarSizeWithFlags_Flags[q10] /\ y_ExplicitVarSizeWithFlags_Values[q10] = x_ExplicitVarSizeWithFlags_Values[q9] | q10 : int(1..1)])
-             /\ x_ExplicitVarSizeWithFlags_Values[q9] = [; int(1..0)][q6]
-                 | q9 : int(1..1)])
+    x_ExplicitVarSizeWithFlags_Flags[1] /\ (y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithFlags_Values[1]) ->
+    or([[; int(1..0)][q4] = x_ExplicitVarSizeWithFlags_Values[1] | q4 : int(1..0)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[1] /\ (y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithFlags_Values[1])
+         /\ x_ExplicitVarSizeWithFlags_Values[1] = [; int(1..0)][q6]
              | q6 : int(1..0)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..1 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..1)]),
+    x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..1 - 1)]),
     and([y_ExplicitVarSizeWithFlags_Flags[q2 + 1] -> y_ExplicitVarSizeWithFlags_Values[q2] < y_ExplicitVarSizeWithFlags_Values[q2 + 1] | q2 : int(1..1 - 1)]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q2] = false -> y_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..1)]),
+    y_ExplicitVarSizeWithFlags_Flags[1] = false -> y_ExplicitVarSizeWithFlags_Values[1] = 1,
     and([y_ExplicitVarSizeWithFlags_Flags[q2 + 1] -> y_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..1 - 1)]),
-    and([x_Occurrence[q8] -> or([x_ExplicitVarSizeWithFlags_Flags[q12] /\ x_ExplicitVarSizeWithFlags_Values[q12] = q8 | q12 : int(1..1)]) | q8 : int(1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q13] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q13]] | q13 : int(1..1)]),
+    x_Occurrence[1] -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    x_ExplicitVarSizeWithFlags_Flags[1] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]],
     and([q3 + 1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q3] < y_ExplicitVarSizeWithMarker_Values[q3 + 1] | q3 : int(1..1 - 1)]),
-    and([q3 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q3] = 1 | q3 : int(1..1)]),
-    and([q14 <= y_ExplicitVarSizeWithMarker_Marker ->
-         or([y_ExplicitVarSizeWithFlags_Flags[q15] /\ y_ExplicitVarSizeWithFlags_Values[q15] = y_ExplicitVarSizeWithMarker_Values[q14] | q15 : int(1..1)])
-             | q14 : int(1..1)]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q16] ->
-         or([q17 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q17] = y_ExplicitVarSizeWithFlags_Values[q16] | q17 : int(1..1)])
-             | q16 : int(1..1)])
+    1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = y_ExplicitVarSizeWithMarker_Values[1],
+    y_ExplicitVarSizeWithFlags_Flags[1] -> 1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = y_ExplicitVarSizeWithFlags_Values[1]
 

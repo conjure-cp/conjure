@@ -2,6 +2,6 @@ language ESSENCE' 1.0
 
 find s_Explicit: matrix indexed by [int(1..1)] of int(1..2)
 such that
-    or([s_Explicit[q3] = 1 | q3 : int(1..1)]),
+    s_Explicit[1] = 1,
     and([s_Explicit[q1] < s_Explicit[q1 + 1] | q1 : int(1..1 - 1)])
 
