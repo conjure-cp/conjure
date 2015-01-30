@@ -306,12 +306,17 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer) <- match opIndexing p
-        (_index, elems)   <- match matrixLiteral matrix
-        indexerInt        <- intOut indexer
-        if indexerInt <= length elems
-            then return
-                ( "Matrix indexing"
-                , const $ at elems (indexerInt - 1)
-                )
+        (matrix, indexer)         <- match opIndexing p
+        (DomainInt ranges, elems) <- match matrixLiteral matrix
+        indexInts                 <- rangesInts ranges
+        indexerInt                <- intOut indexer
+        if length indexInts == length elems
+            then
+                case lookup indexerInt (zip indexInts elems) of
+                    Nothing -> na "rule_MatrixIndexing"
+                    Just v  ->
+                        return
+                            ( "Matrix indexing"
+                            , const v
+                            )
             else na "rule_MatrixIndexing"
