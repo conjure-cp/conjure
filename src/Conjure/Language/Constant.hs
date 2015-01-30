@@ -19,9 +19,6 @@ import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 
--- aeson
-import qualified Data.Aeson as JSON
-
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), oneof )
 
@@ -38,8 +35,8 @@ data Constant
 
 instance Serialize Constant
 instance Hashable  Constant
-instance ToJSON    Constant where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Constant where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Constant where toJSON = genericToJSON jsonOptions
+instance FromJSON  Constant where parseJSON = genericParseJSON jsonOptions
 
 instance Arbitrary Constant where
     arbitrary = oneof

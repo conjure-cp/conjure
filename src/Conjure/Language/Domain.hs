@@ -35,9 +35,6 @@ import Conjure.Language.Pretty
 -- text
 import qualified Data.Text as T
 
--- aeson
-import qualified Data.Aeson as JSON
-
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 
@@ -77,8 +74,8 @@ mkDomainIntB l u = DomainInt [RangeBounded l u]
 
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
 instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
-instance (ToJSON    r, ToJSON    x) => ToJSON    (Domain r x) where toJSON = JSON.genericToJSON jsonOptions
-instance (FromJSON  r, FromJSON  x) => FromJSON  (Domain r x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance (ToJSON    r, ToJSON    x) => ToJSON    (Domain r x) where toJSON = genericToJSON jsonOptions
+instance (FromJSON  r, FromJSON  x) => FromJSON  (Domain r x) where parseJSON = genericParseJSON jsonOptions
 
 instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
     arbitrary = sized f
@@ -582,8 +579,8 @@ data SetAttr a = SetAttr (SizeAttr a)
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (SetAttr a)
 instance Hashable  a => Hashable  (SetAttr a)
-instance ToJSON    a => ToJSON    (SetAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (SetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (SetAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (SetAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (SetAttr a) where def = SetAttr def
 instance Pretty a => Pretty (SetAttr a) where
     pretty (SetAttr SizeAttr_None) = prEmpty
@@ -599,8 +596,8 @@ data SizeAttr a
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (SizeAttr a)
 instance Hashable  a => Hashable  (SizeAttr a)
-instance ToJSON    a => ToJSON    (SizeAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (SizeAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (SizeAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (SizeAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (SizeAttr a) where def = SizeAttr_None
 instance Pretty a => Pretty (SizeAttr a) where
     pretty SizeAttr_None = prEmpty
@@ -614,8 +611,8 @@ data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (MSetAttr a)
 instance Hashable  a => Hashable  (MSetAttr a)
-instance ToJSON    a => ToJSON    (MSetAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (MSetAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (MSetAttr a) where def = MSetAttr def def
 instance Pretty a => Pretty (MSetAttr a) where
     pretty (MSetAttr a b) = 
@@ -635,8 +632,8 @@ data OccurAttr a
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (OccurAttr a)
 instance Hashable  a => Hashable  (OccurAttr a)
-instance ToJSON    a => ToJSON    (OccurAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (OccurAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (OccurAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (OccurAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (OccurAttr a) where def = OccurAttr_None
 instance Pretty a => Pretty (OccurAttr a) where
     pretty OccurAttr_None = prEmpty
@@ -650,8 +647,8 @@ data FunctionAttr x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (FunctionAttr a)
 instance Hashable  a => Hashable  (FunctionAttr a)
-instance ToJSON    a => ToJSON    (FunctionAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (FunctionAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (FunctionAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (FunctionAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (FunctionAttr a) where def = FunctionAttr def def def
 instance Pretty a => Pretty (FunctionAttr a) where
     pretty (FunctionAttr a b c) =
@@ -667,8 +664,8 @@ data PartialityAttr
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize PartialityAttr
 instance Hashable  PartialityAttr
-instance ToJSON    PartialityAttr where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  PartialityAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    PartialityAttr where toJSON = genericToJSON jsonOptions
+instance FromJSON  PartialityAttr where parseJSON = genericParseJSON jsonOptions
 instance Default   PartialityAttr where def = PartialityAttr_Partial
 instance Pretty    PartialityAttr where
     pretty PartialityAttr_Partial = prEmpty -- partial is the default
@@ -683,8 +680,8 @@ data JectivityAttr
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize JectivityAttr
 instance Hashable  JectivityAttr
-instance ToJSON    JectivityAttr where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  JectivityAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    JectivityAttr where toJSON = genericToJSON jsonOptions
+instance FromJSON  JectivityAttr where parseJSON = genericParseJSON jsonOptions
 instance Default   JectivityAttr where def = JectivityAttr_None
 instance Pretty    JectivityAttr where
     pretty JectivityAttr_None = prEmpty
@@ -697,8 +694,8 @@ data RelationAttr a = RelationAttr (SizeAttr a) BinaryRelationAttrs
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (RelationAttr a)
 instance Hashable  a => Hashable  (RelationAttr a)
-instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (RelationAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (RelationAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (RelationAttr a) where def = RelationAttr def def
 instance Pretty a => Pretty (RelationAttr a) where
     pretty (RelationAttr a b) =
@@ -712,8 +709,8 @@ newtype BinaryRelationAttrs = BinaryRelationAttrs (S.Set BinaryRelationAttr)
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize BinaryRelationAttrs
 instance Hashable  BinaryRelationAttrs where hashWithSalt salt (BinaryRelationAttrs a) = hashWithSalt salt (S.toList a)
-instance ToJSON    BinaryRelationAttrs where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  BinaryRelationAttrs where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    BinaryRelationAttrs where toJSON = genericToJSON jsonOptions
+instance FromJSON  BinaryRelationAttrs where parseJSON = genericParseJSON jsonOptions
 instance Default   BinaryRelationAttrs where def = BinaryRelationAttrs S.empty
 instance Pretty BinaryRelationAttrs where
     pretty (BinaryRelationAttrs attrs) = prettyList id "," (S.toList attrs)
@@ -738,8 +735,8 @@ data BinaryRelationAttr
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 instance Serialize BinaryRelationAttr
 instance Hashable  BinaryRelationAttr
-instance ToJSON    BinaryRelationAttr where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  BinaryRelationAttr where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    BinaryRelationAttr where toJSON = genericToJSON jsonOptions
+instance FromJSON  BinaryRelationAttr where parseJSON = genericParseJSON jsonOptions
 instance Pretty BinaryRelationAttr where
     pretty BinRelAttr_Reflexive     = "reflexive"
     pretty BinRelAttr_Irreflexive   = "irreflexive"
@@ -796,8 +793,8 @@ data PartitionAttr a = PartitionAttr
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (PartitionAttr a)
 instance Hashable  a => Hashable  (PartitionAttr a)
-instance ToJSON    a => ToJSON    (PartitionAttr a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (PartitionAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (PartitionAttr a) where def = PartitionAttr def def def False False
 instance Pretty a => Pretty (PartitionAttr a) where
     pretty (PartitionAttr a b c d e) =
@@ -838,8 +835,8 @@ data DomainAttributes a = DomainAttributes [DomainAttribute a]
 
 instance Serialize a => Serialize (DomainAttributes a)
 instance Hashable  a => Hashable  (DomainAttributes a)
-instance ToJSON    a => ToJSON    (DomainAttributes a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (DomainAttributes a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (DomainAttributes a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (DomainAttributes a) where parseJSON = genericParseJSON jsonOptions
 
 instance Default (DomainAttributes a) where
     def = DomainAttributes []
@@ -853,8 +850,8 @@ data DomainAttribute a
 
 instance Serialize a => Serialize (DomainAttribute a)
 instance Hashable  a => Hashable  (DomainAttribute a)
-instance ToJSON    a => ToJSON    (DomainAttribute a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (DomainAttribute a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON    (DomainAttribute a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (DomainAttribute a) where parseJSON = genericParseJSON jsonOptions
 
 
 data Range a
@@ -867,8 +864,8 @@ data Range a
 
 instance Serialize a => Serialize (Range a)
 instance Hashable  a => Hashable (Range a)
-instance ToJSON    a => ToJSON (Range a) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  a => FromJSON (Range a) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    a => ToJSON (Range a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON (Range a) where parseJSON = genericParseJSON jsonOptions
 
 instance Arbitrary a => Arbitrary (Range a) where
     arbitrary = oneof
@@ -894,8 +891,8 @@ data HasRepresentation = NoRepresentation | HasRepresentation Name
 
 instance Serialize HasRepresentation
 instance Hashable  HasRepresentation
-instance ToJSON    HasRepresentation where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  HasRepresentation where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    HasRepresentation where toJSON = genericToJSON jsonOptions
+instance FromJSON  HasRepresentation where parseJSON = genericParseJSON jsonOptions
 
 instance IsString  HasRepresentation where
     fromString = HasRepresentation . Name . T.pack

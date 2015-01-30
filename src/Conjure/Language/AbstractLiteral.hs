@@ -11,9 +11,6 @@ import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
--- aeson
-import qualified Data.Aeson as JSON
-
 
 data AbstractLiteral x
     = AbsLitTuple [x]
@@ -27,8 +24,8 @@ data AbstractLiteral x
 
 instance Serialize x => Serialize (AbstractLiteral x)
 instance Hashable  x => Hashable  (AbstractLiteral x)
-instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    x => ToJSON    (AbstractLiteral x) where toJSON = genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs

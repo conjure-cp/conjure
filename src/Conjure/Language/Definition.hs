@@ -74,8 +74,8 @@ type ModelZipper = Zipper Model Expression
 
 instance Serialize Model
 instance Hashable  Model
-instance ToJSON    Model where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Model where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Model where toJSON = genericToJSON jsonOptions
+instance FromJSON  Model where parseJSON = genericParseJSON jsonOptions
 
 instance Default Model where
     def = Model def [] def
@@ -159,8 +159,8 @@ data Statement
 
 instance Serialize Statement
 instance Hashable  Statement
-instance ToJSON    Statement where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Statement where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Statement where toJSON = genericToJSON jsonOptions
+instance FromJSON  Statement where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
@@ -179,8 +179,8 @@ data Objective = Minimising | Maximising
 
 instance Serialize Objective
 instance Hashable  Objective
-instance ToJSON    Objective where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Objective where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Objective where toJSON = genericToJSON jsonOptions
+instance FromJSON  Objective where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty Objective where
     pretty Minimising = "minimising"
@@ -201,8 +201,8 @@ data Declaration
 
 instance Serialize Declaration
 instance Hashable  Declaration
-instance ToJSON    Declaration where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Declaration where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Declaration where toJSON = genericToJSON jsonOptions
+instance FromJSON  Declaration where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
@@ -222,8 +222,8 @@ data FindOrGiven = Find | Given | Quantified | LocalFind
 
 instance Serialize FindOrGiven
 instance Hashable  FindOrGiven
-instance ToJSON    FindOrGiven where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  FindOrGiven where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    FindOrGiven where toJSON = genericToJSON jsonOptions
+instance FromJSON  FindOrGiven where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty FindOrGiven where
     pretty Find = "find"
@@ -256,8 +256,8 @@ modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . 
 
 instance Serialize ModelInfo
 instance Hashable  ModelInfo
-instance ToJSON    ModelInfo where toJSON = JSON.genericToJSON modelInfoJSONOptions
-instance FromJSON  ModelInfo where parseJSON = JSON.genericParseJSON modelInfoJSONOptions
+instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
+instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
     def = ModelInfo def def def def def def def def def
@@ -306,8 +306,8 @@ decisionJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop
 
 instance Serialize Decision
 instance Hashable  Decision
-instance ToJSON    Decision where toJSON = JSON.genericToJSON decisionJSONOptions
-instance FromJSON  Decision where parseJSON = JSON.genericParseJSON decisionJSONOptions
+instance ToJSON    Decision where toJSON = genericToJSON decisionJSONOptions
+instance FromJSON  Decision where parseJSON = genericParseJSON decisionJSONOptions
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -328,8 +328,8 @@ data Expression
 
 instance Serialize Expression
 instance Hashable  Expression
-instance ToJSON    Expression where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Expression where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Expression where toJSON = genericToJSON jsonOptions
+instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
@@ -521,8 +521,8 @@ data ReferenceTo
 
 instance Serialize ReferenceTo
 instance Hashable  ReferenceTo
-instance ToJSON    ReferenceTo where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  ReferenceTo where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    ReferenceTo where toJSON = genericToJSON jsonOptions
+instance FromJSON  ReferenceTo where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
     pretty (Alias           x  ) = "Alias"           <+> prParens (pretty x)
@@ -552,8 +552,8 @@ data AbstractPattern
 
 instance Serialize AbstractPattern
 instance Hashable  AbstractPattern
-instance ToJSON    AbstractPattern where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  AbstractPattern where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    AbstractPattern where toJSON = genericToJSON jsonOptions
+instance FromJSON  AbstractPattern where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty AbstractPattern where
     pretty (Single       nm) = pretty nm
@@ -584,8 +584,8 @@ instance Pretty GeneratorOrCondition where
 
 instance Serialize GeneratorOrCondition
 instance Hashable  GeneratorOrCondition
-instance ToJSON    GeneratorOrCondition where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  GeneratorOrCondition where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    GeneratorOrCondition where toJSON = genericToJSON jsonOptions
+instance FromJSON  GeneratorOrCondition where parseJSON = genericParseJSON jsonOptions
 
 
 data Generator
@@ -601,8 +601,8 @@ instance Pretty Generator where
 
 instance Serialize Generator
 instance Hashable  Generator
-instance ToJSON    Generator where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Generator where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Generator where toJSON = genericToJSON jsonOptions
+instance FromJSON  Generator where parseJSON = genericParseJSON jsonOptions
 
 generatorPat :: Generator -> AbstractPattern
 generatorPat (GenDomainNoRepr  pat _) = pat

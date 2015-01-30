@@ -16,9 +16,6 @@ import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.Pretty
 
--- aeson
-import qualified Data.Aeson as JSON
-
 
 data Type
     = TypeAny
@@ -38,8 +35,8 @@ data Type
 
 instance Serialize Type
 instance Hashable  Type
-instance ToJSON    Type where toJSON = JSON.genericToJSON jsonOptions
-instance FromJSON  Type where parseJSON = JSON.genericParseJSON jsonOptions
+instance ToJSON    Type where toJSON = genericToJSON jsonOptions
+instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty Type where
     pretty TypeAny = "?"

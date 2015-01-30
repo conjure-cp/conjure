@@ -126,7 +126,7 @@ import Data.Serialize as X ( Serialize, encode, decode )
 import qualified Data.Serialize
 
 -- aeson
-import Data.Aeson as X ( ToJSON(..), FromJSON(..) )
+import Data.Aeson as X ( ToJSON(..), FromJSON(..), genericToJSON, genericParseJSON )
 import qualified Data.Aeson.Types as JSON
 
 -- QuickCheck
