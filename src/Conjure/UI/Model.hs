@@ -1264,6 +1264,7 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
 rule_FullEvaluate :: Rule
 rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Constant{} = na "rule_FullEvaluate"
+    theRule Domain{} = na "rule_FullEvaluate"
     theRule p = do
         constant <- instantiateExpression [] p
         return
