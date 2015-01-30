@@ -504,9 +504,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ rule_FullEvaluate
-      ]
-    , [ rule_ChooseRepr config
+    -- [ [ rule_FullEvaluate
+    --   ]
+    [ [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
       ]
@@ -534,9 +534,9 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
-    , Vertical.Matrix.rule_Comprehension_Singleton
-    , Vertical.Matrix.rule_Comprehension_SingletonDomain
-    , Vertical.Matrix.rule_MatrixIndexing
+    -- , Vertical.Matrix.rule_Comprehension_Singleton
+    -- , Vertical.Matrix.rule_Comprehension_SingletonDomain
+    -- , Vertical.Matrix.rule_MatrixIndexing
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
