@@ -1,7 +1,11 @@
-.PHONY: install refreeze ghci clean
+.PHONY: install preinstall refreeze ghci clean
 
 install:
 	@bash etc/build/install.sh
+
+preinstall:
+	@bash etc/build/version.sh
+	@runhaskell etc/build/gen_Operator.hs
 
 refreeze:
 	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )

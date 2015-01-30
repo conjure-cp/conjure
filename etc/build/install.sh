@@ -163,8 +163,7 @@ ghc   --version
 cabal --version
 happy --version
 
-etc/build/version.sh
-runhaskell etc/build/gen_Operator.hs
+make preinstall
 
 if [ $LLVM = "llvm-on" ]; then
     LLVM='--ghc-options="-fllvm"'
