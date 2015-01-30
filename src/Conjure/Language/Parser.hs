@@ -707,7 +707,7 @@ parseLiteral = msum ( map try
             xs <- parens (sepBy inner comma)
             return (AbsLitPartition xs)
             where
-                inner = braces (sepBy parseLiteral comma)
+                inner = braces (sepBy parseExpr comma)
 
 shuntingYardExpr :: Parser [Either Lexeme Expression] -> Parser Expression
 shuntingYardExpr p = do
