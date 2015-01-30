@@ -5,9 +5,9 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..
 find x_Occurrence: matrix indexed by [int(1..2)] of bool
 such that
     or([x_ExplicitVarSizeWithFlags_Flags[q4] /\ x_ExplicitVarSizeWithFlags_Values[q4] = 1 | q4 : int(1..2)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..2 - 1)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..2)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2 - 1)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
     sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2)]) <= 2,
     sum([x_Occurrence[q2] | q2 : int(1..2)]) <= 2,
     and([x_Occurrence[q3] -> or([x_ExplicitVarSizeWithFlags_Flags[q6] /\ x_ExplicitVarSizeWithFlags_Values[q6] = q3 | q6 : int(1..2)]) | q3 : int(1..2)]),

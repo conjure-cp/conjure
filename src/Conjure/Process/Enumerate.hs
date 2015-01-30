@@ -12,6 +12,12 @@ enumerateDomain :: Pretty r => Domain r Constant -> [Constant]
 enumerateDomain DomainBool = [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMap enumerateRange rs
 enumerateDomain (DomainTuple ds) = map (ConstantAbstract . AbsLitTuple) (mapM enumerateDomain ds)
+enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) =
+    [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
+    | let indexInts = bugFail (rangesInts indexDom)
+    , let inners = enumerateDomain innerDom
+    , vals <- replicateM (length indexInts) inners
+    ]
 enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom) =
     [ ConstantAbstract (AbsLitSet vals)
     | let inners = enumerateDomain innerDom

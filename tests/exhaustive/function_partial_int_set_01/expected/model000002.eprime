@@ -5,6 +5,5 @@ find f_Function1DPartial_Values_Explicit: matrix indexed by [int(1..2), int(1..1
 such that
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values_Explicit[q1, 1] = 1 | q1 : int(1..2)]),
     1 <= sum([f_Function1DPartial_Flags[q1] | q1 : int(1..2)]),
-    and([f_Function1DPartial_Flags[q1] -> and([f_Function1DPartial_Values_Explicit[q1, q2] < f_Function1DPartial_Values_Explicit[q1, q2 + 1] | q2 : int(1..1 - 1)])
-             | q1 : int(1..2)])
+    and([f_Function1DPartial_Flags[q1] -> true | q1 : int(1..2)])
 

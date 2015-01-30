@@ -5,9 +5,7 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 such that
-    x_Occurrence[1] /\ y_Occurrence[1] -> or([[; int(1..0)][q3] = 1 | q3 : int(1..0)]),
-    and([x_Occurrence[1] /\ y_Occurrence[1] /\ 1 = [; int(1..0)][q4] | q4 : int(1..0)]),
-    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 - 1)]),
+    x_Occurrence[1] /\ y_Occurrence[1] -> false,
     1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
     1 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]],
     x_Occurrence[1] -> 1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = 1

@@ -8,20 +8,12 @@ find y_Occurrence: matrix indexed by [int(1)] of bool
 find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1)] of int(1)
 such that
-    1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] ->
-    or([[; int(1..0)][q4] = x_ExplicitVarSizeWithMarker_Values[1] | q4 : int(1..0)]),
-    and([1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] /\ x_ExplicitVarSizeWithMarker_Values[1] = [; int(1..0)][q6]
-             | q6 : int(1..0)]),
-    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 - 1)]),
+    1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] -> false,
     1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
-    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] -> x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1] | q2 : int(1..1 - 1)]),
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q2] | q2 : int(1..1 - 1)]),
     x_ExplicitVarSizeWithFlags_Flags[1] -> 1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithFlags_Values[1],
     1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithMarker_Values[1],
-    and([y_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> y_ExplicitVarSizeWithFlags_Values[q3] < y_ExplicitVarSizeWithFlags_Values[q3 + 1] | q3 : int(1..1 - 1)]),
     y_ExplicitVarSizeWithFlags_Flags[1] = false -> y_ExplicitVarSizeWithFlags_Values[1] = 1,
-    and([y_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> y_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..1 - 1)]),
     y_ExplicitVarSizeWithFlags_Flags[1] -> y_Occurrence[y_ExplicitVarSizeWithFlags_Values[1]],
     y_Occurrence[1] -> y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = 1
 

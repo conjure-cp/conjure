@@ -9,11 +9,10 @@ such that
                  | q3 : int(1..2), q3 <= i_ExplicitVarSizeWithMarker_Marker])
          * 1 | i_ExplicitVarSizeWithMarker_Marker : int(0..2), i_ExplicitVarSizeWithMarker_Values_1 : matrix indexed by [int(1..2)] of int(7..9),
                i_ExplicitVarSizeWithMarker_Values_2 : matrix indexed by [int(1..2)] of bool,
-               and([q1 + 1 <= i_ExplicitVarSizeWithMarker_Marker ->
-                    i_ExplicitVarSizeWithMarker_Values_1[q1] < i_ExplicitVarSizeWithMarker_Values_1[q1 + 1] \/
-                    i_ExplicitVarSizeWithMarker_Values_1[q1] = i_ExplicitVarSizeWithMarker_Values_1[q1 + 1] /\
-                    i_ExplicitVarSizeWithMarker_Values_2[q1] < i_ExplicitVarSizeWithMarker_Values_2[q1 + 1]
-                        | q1 : int(1..2 - 1)]),
+               2 <= i_ExplicitVarSizeWithMarker_Marker ->
+               i_ExplicitVarSizeWithMarker_Values_1[1] < i_ExplicitVarSizeWithMarker_Values_1[2] \/
+               i_ExplicitVarSizeWithMarker_Values_1[1] = i_ExplicitVarSizeWithMarker_Values_1[2] /\
+               i_ExplicitVarSizeWithMarker_Values_2[1] < i_ExplicitVarSizeWithMarker_Values_2[2],
                and([q1 > i_ExplicitVarSizeWithMarker_Marker -> i_ExplicitVarSizeWithMarker_Values_1[q1] = 7 /\ i_ExplicitVarSizeWithMarker_Values_2[q1] = false
                         | q1 : int(1..2)]),
                1 <= i_ExplicitVarSizeWithMarker_Marker, i_ExplicitVarSizeWithMarker_Marker <= 2])

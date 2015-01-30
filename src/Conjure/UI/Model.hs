@@ -504,9 +504,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    -- [ [ rule_FullEvaluate
-    --   ]
-    [ [ rule_ChooseRepr config
+    [ [ rule_FullEvaluate
+      ]
+    , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
       ]

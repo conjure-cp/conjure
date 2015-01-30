@@ -2,7 +2,5 @@ language ESSENCE' 1.0
 
 find x_Occurrence: matrix indexed by [int(1)] of bool
 find y_Occurrence: matrix indexed by [int(1)] of bool
-such that
-    x_Occurrence[1] /\ y_Occurrence[1] -> or([[; int(1..0)][q2] = 1 | q2 : int(1..0)]),
-    and([x_Occurrence[1] /\ y_Occurrence[1] /\ 1 = [; int(1..0)][q3] | q3 : int(1..0)])
+such that x_Occurrence[1] /\ y_Occurrence[1] -> false
 
