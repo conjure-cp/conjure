@@ -64,7 +64,7 @@ categoryChecking m = do
         let cat = categoryOf domain
         return [ (domain, cat)
                | cat > CatQuantified
-               , not (domain `elem` map fst errors1)        -- only if this is a new error
+               , domain `notElem` map fst errors1        -- only if this is a new error
                ]
 
     if null errors1 && null errors2

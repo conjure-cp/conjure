@@ -40,7 +40,7 @@ instance EvaluateOp OpMinus where
             [ aNormalised
             | a <- as
             , let aNormalised = normaliseConstant a
-            , not (aNormalised `elem` bsNormalised)
+            , aNormalised `notElem` bsNormalised
             ]
     evaluateOp (OpMinus x y) = ConstantInt <$> ((-) <$> intOut x <*> intOut y)
 

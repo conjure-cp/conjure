@@ -54,15 +54,16 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                     [set] -> do
                         isc <- innerStructuralCons fresh set
                         binRelCons <- case inDom of
-                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2] ->
-                                if binRelAttrs == def
-                                    then return []
-                                    else if innerDomain1 == innerDomain2
-                                        then return $ mkBinRelCons binRelAttrs fresh innerDomain1 rel
-                                        else fail "Binary relation between different domains."
+                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
+                                | binRelAttrs == def
+                                    -> return []
+                                | innerDomain1 == innerDomain2
+                                    -> return $ mkBinRelCons binRelAttrs fresh innerDomain1 rel
+                                | otherwise
+                                    -> fail "Binary relation between different domains."
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
-                                -> fail "Non-binary relation has binary relation attributes."
+                                    -> fail "Non-binary relation has binary relation attributes."
                             _ -> return []
                         return $ concat
                             [ isc

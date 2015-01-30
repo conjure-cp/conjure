@@ -84,13 +84,13 @@ gDomainSizeOf (DomainMSet _ attrs inner) = do
     maxSize  <- getMaxSize
     maxOccur <- getMaxOccur
     return (make opPow maxOccur maxSize)
-gDomainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) = do
+gDomainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) =
     gDomainSizeOf $ DomainRelation () (RelationAttr sizeAttr def) [innerFr, innerTo]
 gDomainSizeOf (DomainRelation _ (RelationAttr sizeAttr binRelAttr) inners) | binRelAttr == def =
     gDomainSizeOf (DomainSet () (SetAttr sizeAttr) (DomainTuple inners))
-gDomainSizeOf (DomainPartition _ a inner) = do
+gDomainSizeOf (DomainPartition _ a inner) =
     gDomainSizeOf $ DomainSet () (SetAttr (partsNum  a))
-                  $ DomainSet () (SetAttr (partsSize a)) $ inner
+                  $ DomainSet () (SetAttr (partsSize a)) inner
 gDomainSizeOf d = fail ("not implemented: gDomainSizeOf:" <+> pretty d)
 
 
@@ -109,9 +109,9 @@ instance ( ExpressionLike x
 
 -- Nothing means an infinite domain
 domainSizeConstant :: MonadFail m => Domain r Constant -> m Int
-domainSizeConstant DomainBool = return 2
+domainSizeConstant DomainBool{} = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
-domainSizeConstant (DomainEnum _ _ _) = fail "domainSizeConstant: Unknown for given enum."
+domainSizeConstant DomainEnum{} = fail "domainSizeConstant: Unknown for given enum."
 domainSizeConstant (DomainTuple ds) = product <$> mapM domainSizeConstant ds
 domainSizeConstant (DomainMatrix index inner) = (^) <$> domainSizeConstant inner <*> domainSizeConstant index
 domainSizeConstant (DomainSet _ (SetAttr attrs) inner) =

@@ -452,7 +452,7 @@ quantifiedVar nm =
     in  (pat, ref)
 
 
-lambdaToFunction :: AbstractPattern -> Expression -> (Expression -> Expression)
+lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression
 lambdaToFunction (Single nm) body = \ p ->
     let
         replacer :: Expression -> Expression

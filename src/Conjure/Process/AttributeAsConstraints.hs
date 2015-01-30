@@ -210,7 +210,7 @@ attributeToConstraint domain@(DomainRelation _ _ [dom,dom2]) | dom == dom2 = gen
                     , "For the domain:" <+> pretty domain
                     ]
 
-attributeToConstraint domain@(DomainRelation _ _ _) = generator where
+attributeToConstraint domain@DomainRelation{} = generator where
     generator    "size"  (Just val) = return $ \ x -> return [essence| |&x| =  &val |]
     generator "minSize"  (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize"  (Just val) = return $ \ x -> return [essence| |&x| <= &val |]

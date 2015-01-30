@@ -1067,9 +1067,8 @@ rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
                     _        -> tell locals >> return y
             f x = return x
         (p', collected) <- runWriterT (descendM f p)
-        if null collected
-            then na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
-            else return ()
+        when (null collected) $
+            na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
         return
             ( "Bubbling up, not reached a relational context yet."
             , const $ WithLocals p' collected
@@ -1166,8 +1165,8 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
                     in
                         Comprehension (transform f body)
                             $  gofBefore
-                            ++ [ either (\ domain -> Generator (GenDomainNoRepr iPat domain) )
-                                        (\ expr   -> Generator (GenInExpr       iPat expr  ) )
+                            ++ [ either (Generator . GenDomainNoRepr iPat)
+                                        (Generator . GenInExpr       iPat)
                                         domainOrExpr ]
                             ++ transformBi f gofAfter
             )

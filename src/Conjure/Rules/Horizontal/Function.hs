@@ -45,14 +45,13 @@ rule_Image_Literal = "function-image-literal" `namedRule` theRule where
     theRule [essence| &lhs = &rhs |] = do
         (func, [arg]) <- match opFunctionImage lhs
         elems         <- match functionLiteral func
-        if null elems
-            then
-                return
+        return $
+            if null elems
+                then
                     ( "Image of empty function literal"
                     , const [essence| false |]
                     )
-            else
-                return
+                else
                     ( "Image of function literal"
                     , const $ foldr1 (\ i j -> make opOr [i,j] )
                         [ [essence| (&a = &arg) /\ (&b = &rhs) |]

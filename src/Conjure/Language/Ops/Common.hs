@@ -1,8 +1,3 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
-
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-
 module Conjure.Language.Ops.Common
     ( module X
 

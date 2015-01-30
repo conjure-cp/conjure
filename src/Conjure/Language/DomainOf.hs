@@ -33,7 +33,7 @@ combineDOR dors f =
             | dor <- dors
             ]
     in
-        if any (==False) repr
+        if False `elem` repr
             then DomainOfResultNoRepr  $ f doms1
             else DomainOfResultHasRepr $ f doms2
 

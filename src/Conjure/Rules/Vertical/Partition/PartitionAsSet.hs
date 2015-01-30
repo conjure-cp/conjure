@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Conjure.Rules.Vertical.Partition.PartitionAsSet where
 
 import Conjure.Prelude

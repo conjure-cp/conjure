@@ -1,6 +1,3 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
-
 module Conjure.Language.Ops
     ( module Conjure.Language.Ops.Generated
     , OperatorContainer(..)

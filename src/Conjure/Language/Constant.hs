@@ -135,7 +135,7 @@ validateConstantForDomain
     c@(ConstantAbstract (AbsLitMatrix cIndex vals))
     d@(DomainMatrix dIndex dInner) = do
         nested c d $
-            mapM_ (flip validateConstantForDomain dInner) vals
+            mapM_ (`validateConstantForDomain` dInner) vals
         unless (cIndex == dIndex) $ fail $ vcat
             [ "The indices do not match between the value and the domain."
             , "Value :" <+> pretty c
@@ -145,29 +145,29 @@ validateConstantForDomain
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitSet vals))
     d@(DomainSet _ _ dInner) = nested c d $
-        mapM_ (flip validateConstantForDomain dInner) vals
+        mapM_ (`validateConstantForDomain` dInner) vals
 
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitMSet vals))
     d@(DomainMSet _ _ dInner) = nested c d $
-        mapM_ (flip validateConstantForDomain dInner) vals
+        mapM_ (`validateConstantForDomain` dInner) vals
 
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitFunction vals))
     d@(DomainFunction _ _ dFrom dTo) = nested c d $ do
-        mapM_ (flip validateConstantForDomain dFrom) (map fst vals)
-        mapM_ (flip validateConstantForDomain dTo  ) (map snd vals)
+        mapM_ (flip validateConstantForDomain dFrom . fst) vals
+        mapM_ (flip validateConstantForDomain dTo   . snd) vals
         
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitRelation valss))
-    d@(DomainRelation _ _ dInners) = nested c d $ do
+    d@(DomainRelation _ _ dInners) = nested c d $
         forM_ valss $ \ vals ->
             zipWithM_ validateConstantForDomain vals dInners
 
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitPartition valss))
     d@(DomainPartition _ _ dInner) = nested c d $
-        mapM_ (flip validateConstantForDomain dInner) (concat valss)
+        mapM_ (`validateConstantForDomain` dInner) (concat valss)
 
 validateConstantForDomain c d = constantNotInDomain c d
 
