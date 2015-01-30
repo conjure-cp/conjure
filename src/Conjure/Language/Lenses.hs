@@ -879,19 +879,19 @@ opQuantifier
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
-       , x -> m (x -> x, x)
+       , x -> m ([x] -> x, x)
        )
 opQuantifier _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpAnd   (OpAnd   [x]) -> return (injectOp . MkOpAnd   . OpAnd   . return , x)
-                MkOpOr    (OpOr    [x]) -> return (injectOp . MkOpOr    . OpOr    . return , x)
-                MkOpPlus  (OpPlus  [x]) -> return (injectOp . MkOpPlus  . OpPlus  . return , x)
-                MkOpTimes (OpTimes [x]) -> return (injectOp . MkOpTimes . OpTimes . return , x)
-                MkOpMax   (OpMax   [x]) -> return (injectOp . MkOpMax   . OpMax   . return , x)
-                MkOpMin   (OpMin   [x]) -> return (injectOp . MkOpMin   . OpMin   . return , x)
+                MkOpAnd   (OpAnd   [x]) -> return (injectOp . MkOpAnd   . OpAnd   , x)
+                MkOpOr    (OpOr    [x]) -> return (injectOp . MkOpOr    . OpOr    , x)
+                MkOpPlus  (OpPlus  [x]) -> return (injectOp . MkOpPlus  . OpPlus  , x)
+                MkOpTimes (OpTimes [x]) -> return (injectOp . MkOpTimes . OpTimes , x)
+                MkOpMax   (OpMax   [x]) -> return (injectOp . MkOpMax   . OpMax   , x)
+                MkOpMin   (OpMin   [x]) -> return (injectOp . MkOpMin   . OpMin   , x)
                 _ -> na ("Lenses.opSum:" <++> pretty p)
     )
 

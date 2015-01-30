@@ -29,6 +29,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
+import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
@@ -503,7 +504,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ rule_ChooseRepr config
+    [ [ rule_FullEvaluate
+      ]
+    , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
       ]
@@ -531,6 +534,9 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
+    , Vertical.Matrix.rule_Comprehension_Singleton
+    , Vertical.Matrix.rule_Comprehension_SingletonDomain
+    , Vertical.Matrix.rule_MatrixIndexing
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -1023,7 +1029,7 @@ rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRu
         return
             ( "Bubble in the generator of a comprehension."
             , const $ WithLocals
-                ( mkQuan $ Comprehension body
+                ( mkQuan $ return $ Comprehension body
                     $  gofBefore
                     ++ [Generator (GenInExpr pat expr)]
                     ++ gofAfter
@@ -1245,3 +1251,14 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
             , bugFail . conv
             )
     theRule _ = na "rule_AttributeToConstraint"
+
+
+rule_FullEvaluate :: Rule
+rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
+    theRule Constant{} = na "rule_FullEvaluate"
+    theRule p = do
+        constant <- instantiateExpression [] p
+        return
+            ( "Full evaluator"
+            , const $ Constant constant
+            )
