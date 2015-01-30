@@ -513,6 +513,7 @@ allRules config =
     , verticalRules
     , horizontalRules
     ] ++ otherRules
+      ++ delayedRules
 
 
 verticalRules :: [Rule]
@@ -534,9 +535,6 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
-    -- , Vertical.Matrix.rule_Comprehension_Singleton
-    -- , Vertical.Matrix.rule_Comprehension_SingletonDomain
-    -- , Vertical.Matrix.rule_MatrixIndexing
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -688,6 +686,16 @@ otherRules =
 
     ,   rule_InlineConditions
 
+    ]
+
+-- | These rules depend on other rules firing first.
+delayedRules :: [[Rule]]
+delayedRules =
+    [
+        [-- Vertical.Matrix.rule_Comprehension_Singleton
+          Vertical.Matrix.rule_Comprehension_SingletonDomain
+        -- , Vertical.Matrix.rule_MatrixIndexing
+        ]
     ]
 
 

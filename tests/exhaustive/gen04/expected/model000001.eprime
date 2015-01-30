@@ -1,5 +1,5 @@
 language ESSENCE' 1.0
 
 find var1: bool
-such that and([or([[false; int(1..1)][q3] = [false; int(1..1)][q1] | q3 : int(1..1), [1; int(1..1)][q3] = 1]) | q1 : int(1..1)])
+such that and([or([[false; int(1..1)][1] = [false; int(1..1)][1] | [1; int(1..1)][1] = 1]); int(1..1)])
 

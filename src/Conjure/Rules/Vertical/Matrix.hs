@@ -290,7 +290,7 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
                          $  gofBefore
                          ++ transformBi (upd singleVal) gofAfter
             )
-    theRule _ = na "rule_Comprehension_Singleton"
+    theRule _ = na "rule_Comprehension_SingletonDomain"
 
 
 rule_Comprehension_Singleton :: Rule
