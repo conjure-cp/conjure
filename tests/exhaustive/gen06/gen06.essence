@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find b: bool
+such that b = (defined(function(5 --> true) - function(10 --> false)) subsetEq {5})
+
+find x,y,z1,z2: int(1..9)
+such that x  in defined(function(5 --> true))
+such that y  in defined(function(5 --> true) - function(10 --> false))
+such that z1 in defined(function(5 --> true, 6 --> false) - function(5 --> false))
+such that z2 in defined(function(5 --> true, 6 --> false) - function(5 --> true))

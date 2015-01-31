@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find b: bool
+find x: int(1..9)
+find y: int(1..9)
+find z1: int(1..9)
+find z2: int(1..9)
+such that
+    b = true,
+    5 = x,
+    5 = y,
+    or([[5, 6; int(1..2)][q3] = z1 | q3 : int(1..2)]),
+    6 = z2
+
