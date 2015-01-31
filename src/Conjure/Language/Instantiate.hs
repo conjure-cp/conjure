@@ -112,7 +112,7 @@ instantiateOp
        )
     => Ops Expression
     -> m Constant
-instantiateOp opx = mapM instantiateE opx >>= evaluateOp
+instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
 
 
 instantiateAbsLit
