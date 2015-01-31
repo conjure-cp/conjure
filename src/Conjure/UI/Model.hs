@@ -423,7 +423,7 @@ updateDeclarations model =
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
-checkIfAllRefined :: MonadFail m => Model -> m ()
+checkIfAllRefined :: MonadFail m => Model -> m Model
 checkIfAllRefined m = do
     let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
     let returnMsg x = return
@@ -451,7 +451,7 @@ checkIfAllRefined m = do
                     AbstractLiteral{} -> returnMsg x
                     _ -> return []
     unless (null fails) (fail (vcat fails))
-
+    return m
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
@@ -469,16 +469,15 @@ prologue model = return model
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: MonadFail m => Model -> m Model
-epilogue eprime = do
-    checkIfAllRefined eprime
-    eprime
-        |> updateDeclarations
-        |> inlineDecVarLettings
-        |> toIntIsNoOp
-        |> oneSuchThat
-        |> languageEprime
-        |> return
+epilogue :: (MonadFail m, MonadLog m) => Model -> m Model
+epilogue model = return model
+                                      >>= logDebugId "[epilogue]"
+    >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
+    >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
+    >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
+    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
+    >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
 
 applicableRules
