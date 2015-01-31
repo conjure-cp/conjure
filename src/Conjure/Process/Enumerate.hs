@@ -1,62 +1,66 @@
 module Conjure.Process.Enumerate ( enumerateDomain, enumerateInConstant ) where
 
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Pretty
 
 
-enumerateDomain :: Pretty r => Domain r Constant -> [Constant]
-enumerateDomain DomainBool = [ConstantBool False, ConstantBool True]
-enumerateDomain (DomainInt rs) = concatMap enumerateRange rs
-enumerateDomain (DomainTuple ds) = map (ConstantAbstract . AbsLitTuple) (mapM enumerateDomain ds)
-enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) =
-    [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
-    | let indexInts = bugFail (rangesInts indexDom)
-    , let inners = enumerateDomain innerDom
-    , vals <- replicateM (length indexInts) inners
-    ]
-enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom) =
-    [ ConstantAbstract (AbsLitSet vals)
-    | let inners = enumerateDomain innerDom
-    , vals <- replicateM s inners
-    , sorted vals
-    ]
-enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) =
-    [ ConstantAbstract (AbsLitSet vals)
-    | let inners = enumerateDomain innerDom
-    , let sizes  = case sizeAttr of
-            SizeAttr_None -> [0 .. length inners]
-            SizeAttr_Size (ConstantInt a) -> [a]
-            SizeAttr_MinSize (ConstantInt a) -> [a .. length inners]
-            SizeAttr_MaxSize (ConstantInt a) -> [0 .. a]
-            SizeAttr_MinMaxSize (ConstantInt a) (ConstantInt b) -> [a .. b]
-            _ -> bug $ "sizeAttr, not an int:" <+> pretty sizeAttr
-    , s <- sizes
-    , vals <- replicateM s inners
-    , sorted vals
-    ]
-enumerateDomain d = bug $ "enumerateDomain:" <+> pretty d
+enumerateDomain :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
+enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
+enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainTuple ds) = do
+    inners <- mapM enumerateDomain ds
+    return $ map (ConstantAbstract . AbsLitTuple) (sequence inners)
+enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
+    inners <- enumerateDomain innerDom
+    indexInts <- rangesInts indexDom
+    return
+        [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
+        | vals <- replicateM (length indexInts) inners
+        ]
+enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom) = do
+    inners <- enumerateDomain innerDom
+    return
+        [ ConstantAbstract (AbsLitSet vals)
+        | vals <- replicateM s inners
+        , sorted vals
+        ]
+enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) = do
+    inners <- enumerateDomain innerDom
+    sizes  <- case sizeAttr of
+        SizeAttr_None -> return [0 .. length inners]
+        SizeAttr_Size (ConstantInt a) -> return [a]
+        SizeAttr_MinSize (ConstantInt a) -> return [a .. length inners]
+        SizeAttr_MaxSize (ConstantInt a) -> return [0 .. a]
+        SizeAttr_MinMaxSize (ConstantInt a) (ConstantInt b) -> return [a .. b]
+        _ -> fail $ "sizeAttr, not an int:" <+> pretty sizeAttr
+    return
+        [ ConstantAbstract (AbsLitSet vals)
+        | s <- sizes
+        , vals <- replicateM s inners
+        , sorted vals
+        ]
+enumerateDomain d = fail $ "enumerateDomain:" <+> pretty d
 
 sorted :: Ord a => [a] -> Bool
 sorted xs = and $ zipWith (<) xs (tail xs)
 
-enumerateRange :: Range Constant -> [Constant]
-enumerateRange (RangeSingle x) = [x]
-enumerateRange (RangeBounded (ConstantInt x) (ConstantInt y)) = map ConstantInt [x..y]
-enumerateRange RangeBounded{} = bug "enumerateRange RangeBounded"
-enumerateRange RangeOpen{} = bug "enumerateRange RangeOpen"
-enumerateRange RangeLowerBounded{} = bug "enumerateRange RangeLowerBounded"
-enumerateRange RangeUpperBounded{} = bug "enumerateRange RangeUpperBounded"
+enumerateRange :: MonadFail m => Range Constant -> m [Constant]
+enumerateRange (RangeSingle x) = return [x]
+enumerateRange (RangeBounded (ConstantInt x) (ConstantInt y)) = return $ map ConstantInt [x..y]
+enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
+enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
+enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"
+enumerateRange RangeUpperBounded{} = fail "enumerateRange RangeUpperBounded"
 
-enumerateInConstant :: Constant -> [Constant]
+enumerateInConstant :: MonadFail m => Constant -> m [Constant]
 enumerateInConstant constant = case constant of
-    ConstantAbstract (AbsLitMatrix _ xs) -> xs
-    ConstantAbstract (AbsLitSet      xs) -> xs
-    ConstantAbstract (AbsLitMSet     xs) -> xs
-    ConstantAbstract (AbsLitRelation xs) -> map (ConstantAbstract . AbsLitTuple) xs
-    _ -> bug $ vcat [ "enumerateInConstant"
-                    , "constant:" <+> pretty constant
-                    ]
+    ConstantAbstract (AbsLitMatrix _ xs) -> return xs
+    ConstantAbstract (AbsLitSet      xs) -> return xs
+    ConstantAbstract (AbsLitMSet     xs) -> return xs
+    ConstantAbstract (AbsLitRelation xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
+    _ -> fail $ vcat [ "enumerateInConstant"
+                     , "constant:" <+> pretty constant
+                     ]
