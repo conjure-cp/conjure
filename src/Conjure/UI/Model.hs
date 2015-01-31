@@ -191,7 +191,7 @@ remaining config model = do
 strategyToDriver :: Strategy -> Strategy -> Driver
 strategyToDriver strategyQ strategyA questions = do
     let optionsQ =
-            [ (doc, q) 
+            [ (doc, q)
             | (n, q) <- zip allNats questions
             , let doc =
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
@@ -203,13 +203,13 @@ strategyToDriver strategyQ strategyA questions = do
     pickedQs <- executeStrategy optionsQ strategyQ
     fmap concat $ forM pickedQs $ \ pickedQ -> do
         let optionsA =
-                [ (doc, a) 
+                [ (doc, a)
                 | (n, a) <- zip allNats (qAnswers pickedQ)
                 , let doc =
                         nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
                                                                        , pretty (aAnswer a) ]
                 ]
-        pickedAs <- executeStrategy optionsA strategyA
+        pickedAs <- executeAnswerStrategy optionsA strategyA
         return (map aFullModel pickedAs)
 
 
@@ -249,6 +249,24 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let picked = snd (at options (pickedIndex - 1))
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [picked]
+
+        Compact -> bug "executeStrategy: Compact"
+
+
+executeAnswerStrategy :: (MonadIO m, MonadLog m) => [(Doc, Answer)] -> Strategy -> m [Answer]
+executeAnswerStrategy [] _ = bug "executeStrategy: nothing to choose from"
+executeAnswerStrategy [(doc, option)] (viewAuto -> (_, True)) = do
+    logInfo ("Picking the only option:" <+> doc)
+    return [option]
+
+executeAnswerStrategy options@((_, _):_) st@(viewAuto -> (strategy, _)) =
+    case strategy of
+        Compact -> return $ [minimumBy compactCompareAnswer (map snd options)]
+        _      -> executeStrategy options st
+
+
+compactCompareAnswer :: Answer -> Answer->  Ordering
+compactCompareAnswer Answer{aAnswer=_} Answer{aAnswer=_} = LT
 
 
 addToTrail
@@ -701,7 +719,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 ]
         return $ if forg == Given && parameterRepresentation config == False
                     then take 1 options
-                    else options 
+                    else options
     theRule _ = na "rule_ChooseRepr"
 
     mkHook useChannelling   -- whether to use channelling or not

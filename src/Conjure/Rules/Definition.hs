@@ -39,6 +39,7 @@ data Strategy
     | PickAll
     | Interactive
     | AtRandom
+    | Compact
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -54,6 +55,7 @@ parseStrategy "x" = return PickAll
 parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
 parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
+parseStrategy "c" = return Compact
 parseStrategy _ = Nothing
 
 data Config = Config
