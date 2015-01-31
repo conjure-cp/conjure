@@ -426,6 +426,14 @@ updateDeclarations model =
 checkIfAllRefined :: MonadFail m => Model -> m ()
 checkIfAllRefined m = do
     let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
+    let returnMsg x = return
+            $ ""
+            : ("Not refined:" <+> pretty (hole x))
+            : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+              | i <- allNats
+              | c <- tail (ascendants x)
+              ]
+
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
@@ -437,6 +445,10 @@ checkIfAllRefined m = do
                                  | i <- allNats
                                  | c <- tail (ascendants x)
                                  ]
+                    Constant (ConstantAbstract AbsLitMatrix{}) -> return []
+                    AbstractLiteral AbsLitMatrix{} -> return []
+                    Constant ConstantAbstract{} -> returnMsg x
+                    AbstractLiteral{} -> returnMsg x
                     _ -> return []
     unless (null fails) (fail (vcat fails))
 
