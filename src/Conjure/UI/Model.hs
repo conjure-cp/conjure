@@ -250,7 +250,6 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let picked = snd (at options (pickedIndex - 1))
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [picked]
-
         Compact -> bug "executeStrategy: Compact"
 
 
@@ -259,15 +258,17 @@ executeAnswerStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
     return [option]
-
-executeAnswerStrategy options@((_, _):_) st@(viewAuto -> (strategy, _)) =
+executeAnswerStrategy options st@(viewAuto -> (strategy, _)) =
     case strategy of
-        Compact -> return $ [minimumBy compactCompareAnswer (map snd options)]
-        _      -> executeStrategy options st
+        Compact -> return [minimumBy compactCompareAnswer (map snd options)]
+        _       -> executeStrategy options st
 
 
-compactCompareAnswer :: Answer -> Answer->  Ordering
-compactCompareAnswer Answer{aAnswer=_} Answer{aAnswer=_} = LT
+compactCompareAnswer :: Answer -> Answer -> Ordering
+compactCompareAnswer = comparing (expressionDepth . aAnswer)
+    where
+        expressionDepth :: Data a => a -> Int
+        expressionDepth x = 1 + maximum (0 : map expressionDepth (children x))
 
 
 addToTrail
