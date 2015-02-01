@@ -4,7 +4,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithMarker_Marker: int(0..1 + (2 - 1))
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (2 - 1))] of int(1..2)
 such that
-    s_Occurrence[sum([s_Occurrence[q2] * 1 | q2 : int(1..2)])],
+    s_Occurrence[sum([s_Occurrence[q2] | q2 : int(1..2)])],
     2 <= s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
     and([q1 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..2)]),
     and([q4 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q4]] | q4 : int(1..2)]),

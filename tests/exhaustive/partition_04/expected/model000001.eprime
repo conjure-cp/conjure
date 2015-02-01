@@ -6,7 +6,7 @@ such that
     and([1 >=
          sum([or([q8 <= x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q3] /\ x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q3, q8] = q1
                       | q8 : int(1..6)])
-              * 1 | q3 : int(1..2)])
+                  | q3 : int(1..2)])
              | q1 : int(1..6)]),
     6 = sum([x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q4] | q4 : int(1..2)]),
     and([x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q5] = x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q6]

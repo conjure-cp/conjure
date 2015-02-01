@@ -8,6 +8,6 @@ such that
     and([or([[1, 2, 3; int(1..3)][q5] = p_PartitionAsSet_Explicit_Explicit[q10, 1] /\ p_PartitionAsSet_Explicit_Explicit[q10, 1] = [1, 2, 3; int(1..3)][q5]
                  | q10 : int(1..3)])
              | q5 : int(1..3)]),
-    and([1 >= sum([(p_PartitionAsSet_Explicit_Explicit[q3, 1] = q1) * 1 | q3 : int(1..3)]) | q1 : int(1..5)]),
+    and([1 >= sum([p_PartitionAsSet_Explicit_Explicit[q3, 1] = q1 | q3 : int(1..3)]) | q1 : int(1..5)]),
     and([p_PartitionAsSet_Explicit_Explicit[q1, ..] <lex p_PartitionAsSet_Explicit_Explicit[q1 + 1, ..] | q1 : int(1..2)])
 

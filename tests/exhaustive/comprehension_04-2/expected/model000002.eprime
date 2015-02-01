@@ -5,7 +5,7 @@ find y: int(7, 8)
 find z: bool
 such that
     x =
-    sum([or([i_ExplicitVarSizeWithFlags_Values_1[q3] = y /\ i_ExplicitVarSizeWithFlags_Values_2[q3] = z | q3 : int(1..2), i_ExplicitVarSizeWithFlags_Flags[q3]]) * 1
+    sum([or([i_ExplicitVarSizeWithFlags_Values_1[q3] = y /\ i_ExplicitVarSizeWithFlags_Values_2[q3] = z | q3 : int(1..2), i_ExplicitVarSizeWithFlags_Flags[q3]])
              | i_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of bool, i_ExplicitVarSizeWithFlags_Values_1 : matrix indexed by [int(1..2)] of int(7..9),
                i_ExplicitVarSizeWithFlags_Values_2 : matrix indexed by [int(1..2)] of bool,
                i_ExplicitVarSizeWithFlags_Flags[2] ->
