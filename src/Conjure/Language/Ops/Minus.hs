@@ -34,15 +34,30 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
             else raiseTypeError p
 
 instance EvaluateOp OpMinus where
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
-        let bsNormalised = map normaliseConstant bs
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet
-            [ aNormalised
+            [ a
             | a <- as
-            , let aNormalised = normaliseConstant a
-            , aNormalised `notElem` bsNormalised
+            , a `notElem` bs
             ]
-    evaluateOp (OpMinus x y) = ConstantInt <$> ((-) <$> intOut x <*> intOut y)
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
+        let asHist = histogram as
+            bsHist = histogram bs
+            allElems = sortNub (as++bs)
+        return $ ConstantAbstract $ AbsLitMSet $ concat
+            [ replicate (countA - countB) e
+            | e <- allElems
+            , let countA = fromMaybe 0 (e `lookup` asHist)
+            , let countB = fromMaybe 0 (e `lookup` bsHist)
+            ]
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) =
+        return $ ConstantAbstract $ AbsLitFunction
+            [ a
+            | a <- as
+            , a `notElem` bs
+            ]
+    evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
+    evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance Pretty x => Pretty (OpMinus x) where
     prettyPrec prec op@(OpMinus a b) = prettyPrecBinOp prec [op] a b

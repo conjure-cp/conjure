@@ -35,7 +35,7 @@ instance EvaluateOp OpRelationProj where
             , let xsProject   = [ x
                                 | (x, Nothing) <- zip xs mas
                                 ]
-            , let xsCondition = [ normaliseConstant x == normaliseConstant y
+            , let xsCondition = [ x == y
                                 | (x, Just y ) <- zip xs mas
                                 ]
             , and xsCondition

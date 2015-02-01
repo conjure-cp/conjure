@@ -6,11 +6,11 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
 such that
     or([x_ExplicitVarSizeWithFlags_Flags[q4] /\ x_ExplicitVarSizeWithFlags_Values[q4] = 1 | q4 : int(1..2)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..2 - 1)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
     and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..2)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2 - 1)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
     sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2)]) <= 2,
-    and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1] | q2 : int(1..2 - 1)]),
+    2 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] < x_ExplicitVarSizeWithMarker_Values[2],
     and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..2)]),
     x_ExplicitVarSizeWithMarker_Marker <= 2,
     and([q5 <= x_ExplicitVarSizeWithMarker_Marker ->

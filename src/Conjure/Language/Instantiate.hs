@@ -49,19 +49,22 @@ instantiateE (Comprehension body gensOrConds) = do
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
+            enumeration <- enumerateDomain domainConstant
             concatMapM
                 (\ val -> scope $ bind pat val >> loop rest )
-                (enumerateDomain domainConstant)
+                enumeration
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr "instantiateE" domain))
+            enumeration <- enumerateDomain domainConstant
             concatMapM
                 (\ val -> scope $ bind (Single pat) val >> loop rest )
-                (enumerateDomain domainConstant)
+                enumeration
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
+            enumeration <- enumerateInConstant exprConstant
             concatMapM
                 (\ val -> scope $ bind pat val >> loop rest )
-                (enumerateInConstant exprConstant)
+                enumeration
         loop (Condition expr : rest) = do
             constant <- instantiateE expr
             if constant == ConstantBool True
@@ -109,7 +112,7 @@ instantiateOp
        )
     => Ops Expression
     -> m Constant
-instantiateOp opx = mapM instantiateE opx >>= evaluateOp
+instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
 
 
 instantiateAbsLit

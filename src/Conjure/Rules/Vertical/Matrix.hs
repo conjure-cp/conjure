@@ -271,3 +271,52 @@ rule_Matrix_Leq_Decompose = "matrix-leq-tuple" `namedRule` theRule where
             ( "Horizontal rule for matrix <=, decomposing"
             , const $ decomposeLexLeq p xs ys
             )
+
+
+rule_Comprehension_SingletonDomain :: Rule
+rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, singleVal), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenDomainHasRepr patName (DomainInt [RangeSingle a])) -> return (Single patName, a)
+            Generator (GenDomainHasRepr patName (DomainInt [RangeBounded a b])) | a == b -> return (Single patName, a)
+            _ -> na "rule_Comprehension_SingletonDomain"
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Removing matrix-comprehension of a singleton int domain"
+            , const $
+                if null gofBefore && null gofAfter
+                    then AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 1) [upd singleVal body]
+                    else Comprehension (upd singleVal body)
+                         $  gofBefore
+                         ++ transformBi (upd singleVal) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_SingletonDomain"
+
+
+rule_Comprehension_Singleton :: Rule
+rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theRule where
+    theRule p = do
+        (_mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opQuantifier p
+        return
+            ( "Removing quantifier of a single item"
+            , const $ singleVal
+            )
+
+
+rule_MatrixIndexing :: Rule
+rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
+    theRule p = do
+        (matrix, indexer)         <- match opIndexing p
+        (DomainInt ranges, elems) <- match matrixLiteral matrix
+        indexInts                 <- rangesInts ranges
+        indexerInt                <- intOut indexer
+        if length indexInts == length elems
+            then
+                case lookup indexerInt (zip indexInts elems) of
+                    Nothing -> na "rule_MatrixIndexing"
+                    Just v  ->
+                        return
+                            ( "Matrix indexing"
+                            , const v
+                            )
+            else na "rule_MatrixIndexing"

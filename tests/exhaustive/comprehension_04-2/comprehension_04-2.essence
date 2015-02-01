@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find x : int(0..1000)
+find y : int(7,8)
+find z : bool
+such that x = sum([ 1 | i : set (minSize 1, maxSize 2) of (int(7..9), bool)
+                      , (y,z) in i
+                      ])

@@ -5,15 +5,8 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
 find x_Occurrence: matrix indexed by [int(1)] of bool
 find y_Occurrence: matrix indexed by [int(1)] of bool
 such that
-    and([q3 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[q3]] ->
-         or([[; int(1..0)][q2] = x_ExplicitVarSizeWithMarker_Values[q3] | q2 : int(1..0)])
-             | q3 : int(1..1)]),
-    and([or([q6 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]] /\
-             x_ExplicitVarSizeWithMarker_Values[q6] = [; int(1..0)][q4]
-                 | q6 : int(1..1)])
-             | q4 : int(1..0)]),
-    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 - 1)]),
-    and([q1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..1)]),
-    and([x_Occurrence[q5] -> or([q8 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q8] = q5 | q8 : int(1..1)]) | q5 : int(1)]),
-    and([q9 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q9]] | q9 : int(1..1)])
+    1 <= x_ExplicitVarSizeWithMarker_Marker /\ y_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]] -> false,
+    1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    x_Occurrence[1] -> 1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]]
 

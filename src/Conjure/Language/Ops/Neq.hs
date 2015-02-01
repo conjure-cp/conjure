@@ -21,7 +21,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
 
 instance EvaluateOp OpNeq where
-    evaluateOp (OpNeq x y) = return $ ConstantBool $ normaliseConstant x /= normaliseConstant y
+    evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
 
 instance Pretty x => Pretty (OpNeq x) where
     prettyPrec prec op@(OpNeq a b) = prettyPrecBinOp prec [op] a b

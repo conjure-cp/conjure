@@ -33,6 +33,8 @@ import Conjure.Language.AdHoc as X
 import Conjure.Language.Lexer  as X ( Lexeme(..), textToLexeme, lexemeFace )
 
 
+-- | Assume: the input is already normalised.
+--   Make sure the output is normalised.
 class EvaluateOp op where
     evaluateOp :: MonadFail m => op Constant -> m Constant
 

@@ -213,7 +213,7 @@ rule_Card = "function-cardinality" `namedRule` theRule where
 
 -- | TODO: This may allow repetitions.
 rule_Comprehension_Defined :: Rule
-rule_Comprehension_Defined = "function-range" `namedRule` theRule where
+rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
@@ -267,7 +267,7 @@ rule_In = "function-in" `namedRule` theRule where
         TypeFunction{} <- typeOf f
         return
             ( "Function membership to function image."
-            , const $ make opFunctionImage f [x]
+            , const [essence| &f(&x[1]) = &x[2] |]
             )
     theRule _ = na "rule_In"
 

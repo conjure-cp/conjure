@@ -7,21 +7,13 @@ find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 such that
-    and([q4 <= x_ExplicitVarSizeWithMarker_Marker /\
-         or([q6 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q6] = x_ExplicitVarSizeWithMarker_Values[q4] | q6 : int(1..1)])
-         -> or([[; int(1..0)][q3] = x_ExplicitVarSizeWithMarker_Values[q4] | q3 : int(1..0)])
-             | q4 : int(1..1)]),
-    and([or([q8 <= x_ExplicitVarSizeWithMarker_Marker /\
-             or([q9 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q9] = x_ExplicitVarSizeWithMarker_Values[q8] | q9 : int(1..1)])
-             /\ x_ExplicitVarSizeWithMarker_Values[q8] = [; int(1..0)][q5]
-                 | q8 : int(1..1)])
-             | q5 : int(1..0)]),
-    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1] | q1 : int(1..1 - 1)]),
-    and([q1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..1)]),
-    and([q2 + 1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q2] < y_ExplicitVarSizeWithMarker_Values[q2 + 1] | q2 : int(1..1 - 1)]),
-    and([q2 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..1)]),
-    and([x_Occurrence[q7] -> or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q11] = q7 | q11 : int(1..1)]) | q7 : int(1)]),
-    and([q12 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q12]] | q12 : int(1..1)]),
-    and([y_Occurrence[q10] -> or([q14 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q14] = q10 | q14 : int(1..1)]) | q10 : int(1)]),
-    and([q15 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[q15]] | q15 : int(1..1)])
+    1 <= x_ExplicitVarSizeWithMarker_Marker /\
+    (1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithMarker_Values[1])
+    -> false,
+    1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    x_Occurrence[1] -> 1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]],
+    y_Occurrence[1] -> 1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[1]]
 

@@ -4,12 +4,11 @@ find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (2 - 1))] o
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (2 - 1))] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 such that
-    or([s_ExplicitVarSizeWithFlags_Flags[q3] /\ s_ExplicitVarSizeWithFlags_Values[q3] = sum([s_ExplicitVarSizeWithFlags_Flags[q4] * 1 | q4 : int(1..1 + (2 - 1))])
-            | q3 : int(1..1 + (2 - 1))]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
-             | q1 : int(1..1 + (2 - 1) - 1)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q1] = false -> s_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..1 + (2 - 1))]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> s_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..1 + (2 - 1) - 1)]),
-    and([s_Occurrence[q2] -> or([s_ExplicitVarSizeWithFlags_Flags[q6] /\ s_ExplicitVarSizeWithFlags_Values[q6] = q2 | q6 : int(1..1 + (2 - 1))]) | q2 : int(1..2)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q7] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q7]] | q7 : int(1..1 + (2 - 1))])
+    or([s_ExplicitVarSizeWithFlags_Flags[q3] /\ s_ExplicitVarSizeWithFlags_Values[q3] = sum([s_ExplicitVarSizeWithFlags_Flags[q4] * 1 | q4 : int(1..2)])
+            | q3 : int(1..2)]),
+    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
+    and([s_ExplicitVarSizeWithFlags_Flags[q1] = false -> s_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..2)]),
+    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
+    and([s_Occurrence[q2] -> or([s_ExplicitVarSizeWithFlags_Flags[q6] /\ s_ExplicitVarSizeWithFlags_Values[q6] = q2 | q6 : int(1..2)]) | q2 : int(1..2)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q7] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q7]] | q7 : int(1..2)])
 

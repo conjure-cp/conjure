@@ -29,6 +29,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Ops
 import Conjure.Language.ModelStats ( modelInfo )
+import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
@@ -440,9 +441,17 @@ updateDeclarations model =
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
-checkIfAllRefined :: MonadFail m => Model -> m ()
+checkIfAllRefined :: MonadFail m => Model -> m Model
 checkIfAllRefined m = do
     let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
+    let returnMsg x = return
+            $ ""
+            : ("Not refined:" <+> pretty (hole x))
+            : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+              | i <- allNats
+              | c <- tail (ascendants x)
+              ]
+
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
@@ -454,9 +463,13 @@ checkIfAllRefined m = do
                                  | i <- allNats
                                  | c <- tail (ascendants x)
                                  ]
+                    Constant (ConstantAbstract AbsLitMatrix{}) -> return []
+                    AbstractLiteral AbsLitMatrix{} -> return []
+                    Constant ConstantAbstract{} -> returnMsg x
+                    AbstractLiteral{} -> returnMsg x
                     _ -> return []
     unless (null fails) (fail (vcat fails))
-
+    return m
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
@@ -474,16 +487,15 @@ prologue model = return model
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: MonadFail m => Model -> m Model
-epilogue eprime = do
-    checkIfAllRefined eprime
-    eprime
-        |> updateDeclarations
-        |> inlineDecVarLettings
-        |> toIntIsNoOp
-        |> oneSuchThat
-        |> languageEprime
-        |> return
+epilogue :: (MonadFail m, MonadLog m) => Model -> m Model
+epilogue model = return model
+                                      >>= logDebugId "[epilogue]"
+    >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
+    >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
+    >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
+    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
+    >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
 
 applicableRules
@@ -521,13 +533,16 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ rule_ChooseRepr config
+    [ [ rule_FullEvaluate
+      ]
+    , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
       ]
     , verticalRules
     , horizontalRules
     ] ++ otherRules
+      ++ delayedRules
 
 
 verticalRules :: [Rule]
@@ -700,6 +715,16 @@ otherRules =
 
     ,   rule_InlineConditions
 
+    ]
+
+-- | These rules depend on other rules firing first.
+delayedRules :: [[Rule]]
+delayedRules =
+    [
+        [ Vertical.Matrix.rule_Comprehension_Singleton
+        , Vertical.Matrix.rule_Comprehension_SingletonDomain
+        , Vertical.Matrix.rule_MatrixIndexing
+        ]
     ]
 
 
@@ -1041,7 +1066,7 @@ rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRu
         return
             ( "Bubble in the generator of a comprehension."
             , const $ WithLocals
-                ( mkQuan $ Comprehension body
+                ( mkQuan $ return $ Comprehension body
                     $  gofBefore
                     ++ [Generator (GenInExpr pat expr)]
                     ++ gofAfter
@@ -1263,3 +1288,15 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
             , bugFail . conv
             )
     theRule _ = na "rule_AttributeToConstraint"
+
+
+rule_FullEvaluate :: Rule
+rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
+    theRule Constant{} = na "rule_FullEvaluate"
+    theRule Domain{} = na "rule_FullEvaluate"
+    theRule p = do
+        constant <- instantiateExpression [] p
+        return
+            ( "Full evaluator"
+            , const $ Constant constant
+            )

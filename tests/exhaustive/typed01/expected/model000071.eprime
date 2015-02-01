@@ -5,18 +5,8 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1)] of int(1)
 find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1)] of int(1)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q4] /\
-         or([q6 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q6] = x_ExplicitVarSizeWithFlags_Values[q4] | q6 : int(1..1)])
-         -> or([[; int(1..0)][q3] = x_ExplicitVarSizeWithFlags_Values[q4] | q3 : int(1..0)])
-             | q4 : int(1..1)]),
-    and([or([x_ExplicitVarSizeWithFlags_Flags[q8] /\
-             or([q9 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[q9] = x_ExplicitVarSizeWithFlags_Values[q8] | q9 : int(1..1)])
-             /\ x_ExplicitVarSizeWithFlags_Values[q8] = [; int(1..0)][q5]
-                 | q8 : int(1..1)])
-             | q5 : int(1..0)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1] | q1 : int(1..1 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1] = false -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..1 - 1)]),
-    and([q2 + 1 <= y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q2] < y_ExplicitVarSizeWithMarker_Values[q2 + 1] | q2 : int(1..1 - 1)]),
-    and([q2 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..1)])
+    x_ExplicitVarSizeWithFlags_Flags[1] /\ (1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithFlags_Values[1])
+    -> false,
+    x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1
 
