@@ -36,5 +36,8 @@ instance EvaluateOp OpUnion where
                 ]
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
+instance SimplifyOp OpUnion where
+    simplifyOp _ _ = na "simplifyOp{OpUnion}"
+
 instance Pretty x => Pretty (OpUnion x) where
     prettyPrec prec op@(OpUnion a b) = prettyPrecBinOp prec [op] a b

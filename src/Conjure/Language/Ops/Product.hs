@@ -28,6 +28,19 @@ instance BinaryOperator (OpProduct x) where
 instance EvaluateOp OpProduct where
     evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut x
 
+instance SimplifyOp OpProduct where
+    simplifyOp _ (OpProduct x)
+        | Just xs <- listOut x
+        , let zeroless = filter (/=0) xs
+        , length zeroless /= length xs      -- there were 0's
+        = return 0
+    simplifyOp inj (OpProduct x)
+        | Just xs <- listOut x
+        , let oneless = filter (/=1) xs
+        , length oneless /= length xs      -- there were 1's
+        = return $ inj $ OpProduct $ fromList oneless
+    simplifyOp _ _ = na "simplifyOp{OpProduct}"
+
 instance (Pretty x, ExpressionLike x) => Pretty (OpProduct x) where
     prettyPrec prec op@(OpProduct x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b
     prettyPrec _ (OpProduct x) = "product" <> prParens (pretty x)

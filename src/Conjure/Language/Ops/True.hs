@@ -20,5 +20,8 @@ instance TypeOf x => TypeOf (OpTrue x) where
 instance EvaluateOp OpTrue where
     evaluateOp op = na $ "evaluateOp{OpTrue}:" <++> pretty (show op)
 
+instance SimplifyOp OpTrue where
+    simplifyOp _ _ = na "simplifyOp{OpTrue}"
+
 instance Pretty x => Pretty (OpTrue x) where
     prettyPrec _ (OpTrue a) = "true" <> prParens (pretty a)

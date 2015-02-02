@@ -20,5 +20,8 @@ instance TypeOf x => TypeOf (OpNegate x) where
 instance EvaluateOp OpNegate where
     evaluateOp (OpNegate x) = ConstantInt . negate <$> intOut x
 
+instance SimplifyOp OpNegate where
+    simplifyOp _ _ = na "simplifyOp{OpNegate}"
+
 instance Pretty x => Pretty (OpNegate x) where
     prettyPrec _ (OpNegate a) = "-" <> prettyPrec 10000 a

@@ -11,7 +11,7 @@ import Conjure.Bug
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer
-import Conjure.Language.Ops.Common ( evaluateOp, functionals, operators, Fixity(..) )
+import Conjure.Language.Ops.Common ( evaluateOp, simplifyOp, functionals, operators, Fixity(..) )
 import Conjure.Language.Ops.Generated
 
 

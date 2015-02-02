@@ -20,5 +20,8 @@ instance TypeOf x => TypeOf (OpDontCare x) where
 instance EvaluateOp OpDontCare where
     evaluateOp op = na $ "evaluateOp{OpDontcare}:" <++> pretty (show op)
 
+instance SimplifyOp OpDontCare where
+    simplifyOp _ _ = na "simplifyOp{OpDontCare}"
+
 instance Pretty x => Pretty (OpDontCare x) where
     prettyPrec _ (OpDontCare a) = "dontCare" <> prParens (pretty a)

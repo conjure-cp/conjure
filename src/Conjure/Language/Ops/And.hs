@@ -28,6 +28,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpAnd x) where
 instance EvaluateOp OpAnd where
     evaluateOp (OpAnd x) = ConstantBool . and <$> boolsOut x
 
+instance SimplifyOp OpAnd where
+    simplifyOp _ _ = na "simplifyOp{OpAnd}"
+
 instance (Pretty x, ExpressionLike x) => Pretty (OpAnd x) where
     prettyPrec prec op@(OpAnd x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b
     prettyPrec _ (OpAnd x) = "and" <> prParens (pretty x)

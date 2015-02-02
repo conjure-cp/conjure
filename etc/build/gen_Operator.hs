@@ -68,6 +68,13 @@ main = do
               ]
 
             , [ ""
+              , "instance SimplifyOp Ops where"
+              ]
+            , [ "    simplifyOp inj (" ++ patModifier m ++ ") = simplifyOp (inj . MkOp" ++ m ++ ") x"
+              | m <- modules
+              ]
+
+            , [ ""
               , "instance (Pretty x, ExpressionLike x) => Pretty (Ops x) where"
               ]
             , [ "    prettyPrec prec (" ++ patModifier m ++ ") = prettyPrec prec x"

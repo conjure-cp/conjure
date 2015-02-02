@@ -23,5 +23,8 @@ instance TypeOf x => TypeOf (OpMod x) where
 instance EvaluateOp OpMod where
     evaluateOp (OpMod x y) = ConstantInt <$> (mod <$> intOut x <*> intOut y)
 
+instance SimplifyOp OpMod where
+    simplifyOp _ _ = na "simplifyOp{OpMod}"
+
 instance Pretty x => Pretty (OpMod x) where
     prettyPrec prec op@(OpMod a b) = prettyPrecBinOp prec [op] a b

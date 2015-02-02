@@ -34,5 +34,8 @@ instance EvaluateOp OpToMSet where
         return $ ConstantAbstract $ AbsLitMSet $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
 
+instance SimplifyOp OpToMSet where
+    simplifyOp _ _ = na "simplifyOp{OpToMSet}"
+
 instance Pretty x => Pretty (OpToMSet x) where
     prettyPrec _ (OpToMSet a) = "toMSet" <> prParens (pretty a)

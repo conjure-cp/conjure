@@ -25,5 +25,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
 instance EvaluateOp OpRestrict where
     evaluateOp (OpRestrict f _dom) = return f -- TODO: filter out values
 
+instance SimplifyOp OpRestrict where
+    simplifyOp _ _ = na "simplifyOp{OpRestrict}"
+
 instance Pretty x => Pretty (OpRestrict x) where
     prettyPrec _ (OpRestrict a b) = "restrict" <> prettyList prParens "," [a,b]

@@ -28,6 +28,14 @@ instance BinaryOperator (OpSum x) where
 instance EvaluateOp OpSum where
     evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut x
 
+instance SimplifyOp OpSum where
+    simplifyOp inj (OpSum x)
+        | Just xs <- listOut x
+        , let zeroless = filter (/=0) xs
+        , length zeroless /= length xs      -- there were 0's
+        = return $ inj $ OpSum $ fromList zeroless
+    simplifyOp _ _ = na "simplifyOp{OpSum}"
+
 instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
     prettyPrec prec op@(OpSum x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b
     prettyPrec _ (OpSum x) = "sum" <> prParens (pretty x)

@@ -20,5 +20,8 @@ instance TypeOf x => TypeOf (OpFactorial x) where
 instance EvaluateOp OpFactorial where
     evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut x
 
+instance SimplifyOp OpFactorial where
+    simplifyOp _ _ = na "simplifyOp{OpFactorial}"
+
 instance Pretty x => Pretty (OpFactorial x) where
     prettyPrec _ (OpFactorial a) = "factorial" <> prParens (pretty a)

@@ -2,6 +2,7 @@ module Conjure.Language.Ops.Common
     ( module X
 
     , EvaluateOp(..)
+    , SimplifyOp(..)
     , BinaryOperator(..)
     , boolsOut, intsOut
 
@@ -38,6 +39,15 @@ import Conjure.Language.Lexer  as X ( Lexeme(..), textToLexeme, lexemeFace )
 --   Make sure the output is normalised.
 class EvaluateOp op where
     evaluateOp :: MonadFail m => op Constant -> m Constant
+
+class SimplifyOp op where
+    simplifyOp :: ( MonadFail m
+                  , Eq x
+                  , Num x
+                  , ExpressionLike x
+                  ) => (op x -> x)  -- how to inject the op guy back to an ExpressionLike
+                    -> op x         -- the input
+                    -> m x          -- the simplified output (or failure if it cannot be simplified)
 
 class BinaryOperator op where
     opLexeme :: proxy op -> Lexeme

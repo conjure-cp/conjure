@@ -24,5 +24,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
 instance EvaluateOp OpSupsetEq where
     evaluateOp (OpSupsetEq a b) = evaluateOp (OpSubsetEq b a)
 
+instance SimplifyOp OpSupsetEq where
+    simplifyOp _ _ = na "simplifyOp{OpSupsetEq}"
+
 instance Pretty x => Pretty (OpSupsetEq x) where
     prettyPrec prec op@(OpSupsetEq a b) = prettyPrecBinOp prec [op] a b

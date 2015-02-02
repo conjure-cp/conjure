@@ -31,5 +31,8 @@ instance EvaluateOp OpTogether where
             ]
     evaluateOp op = na $ "evaluateOp{OpTogether}:" <++> pretty (show op)
 
+instance SimplifyOp OpTogether where
+    simplifyOp _ _ = na "simplifyOp{OpTogether}"
+
 instance Pretty x => Pretty (OpTogether x) where
     prettyPrec _ (OpTogether a b c) = "together" <> prettyList prParens "," [a,b,c]

@@ -23,5 +23,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpGeq x) where
 instance EvaluateOp OpGeq where
     evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y
 
+instance SimplifyOp OpGeq where
+    simplifyOp _ _ = na "simplifyOp{OpGeq}"
+
 instance Pretty x => Pretty (OpGeq x) where
     prettyPrec prec op@(OpGeq a b) = prettyPrecBinOp prec [op] a b

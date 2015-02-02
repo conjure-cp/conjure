@@ -28,5 +28,8 @@ instance EvaluateOp OpLexLt where
         return $ ConstantBool $ xs < ys
     evaluateOp op = na $ "evaluateOp{OpLexLt}:" <++> pretty (show op)
 
+instance SimplifyOp OpLexLt where
+    simplifyOp _ _ = na "simplifyOp{OpLexLt}"
+
 instance Pretty x => Pretty (OpLexLt x) where
     prettyPrec prec op@(OpLexLt a b) = prettyPrecBinOp prec [op] a b

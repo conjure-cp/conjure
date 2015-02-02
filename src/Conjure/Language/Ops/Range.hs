@@ -24,5 +24,8 @@ instance EvaluateOp OpRange where
         return (ConstantAbstract (AbsLitSet (sortNub (map snd xs))))
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
+instance SimplifyOp OpRange where
+    simplifyOp _ _ = na "simplifyOp{OpRange}"
+
 instance Pretty x => Pretty (OpRange x) where
     prettyPrec _ (OpRange a) = "range" <> prParens (pretty a)

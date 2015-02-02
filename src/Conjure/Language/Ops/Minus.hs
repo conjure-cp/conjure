@@ -59,5 +59,8 @@ instance EvaluateOp OpMinus where
             ]
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
+instance SimplifyOp OpMinus where
+    simplifyOp _ _ = na "simplifyOp{OpMinus}"
+
 instance Pretty x => Pretty (OpMinus x) where
     prettyPrec prec op@(OpMinus a b) = prettyPrecBinOp prec [op] a b

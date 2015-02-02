@@ -517,6 +517,7 @@ applicableRules Config{..} rulesAtLevel x = do
 allRules :: Config -> [[Rule]]
 allRules config =
     [ [ rule_FullEvaluate
+      , rule_PartialEvaluate
       ]
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
@@ -1270,3 +1271,20 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
             ( "Full evaluator"
             , const $ Constant constant
             )
+
+
+rule_PartialEvaluate :: Rule
+rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
+    theRule (Op x) = do
+        x' <- simplifyOp injectOp x
+        when (Op x == x') $ bug $ vcat
+            [ "rule_PartialEvaluate, simplifier returns the input unchanged."
+            , "input:" <+> vcat [ pretty (Op x)
+                                , pretty (show (Op x))
+                                ]
+            ]
+        return
+            ( "Partial evaluator"
+            , const x'
+            )
+    theRule _ = na "rule_PartialEvaluate"

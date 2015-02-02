@@ -24,5 +24,8 @@ instance EvaluateOp OpDefined where
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map fst xs
     evaluateOp op = na $ "evaluateOp{OpDefined}:" <++> pretty (show op)
 
+instance SimplifyOp OpDefined where
+    simplifyOp _ _ = na "simplifyOp{OpDefined}"
+
 instance Pretty x => Pretty (OpDefined x) where
     prettyPrec _ (OpDefined a) = "defined" <> prParens (pretty a)

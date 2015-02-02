@@ -32,5 +32,8 @@ instance EvaluateOp OpHist where
         [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
     evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)
 
+instance SimplifyOp OpHist where
+    simplifyOp _ _ = na "simplifyOp{OpHist}"
+
 instance Pretty x => Pretty (OpHist x) where
     prettyPrec _ (OpHist a) = "hist" <> prParens (pretty a)

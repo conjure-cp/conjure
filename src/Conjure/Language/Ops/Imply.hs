@@ -23,5 +23,8 @@ instance TypeOf x => TypeOf (OpImply x) where
 instance EvaluateOp OpImply where
     evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
 
+instance SimplifyOp OpImply where
+    simplifyOp _ _ = na "simplifyOp{OpImply}"
+
 instance Pretty x => Pretty (OpImply x) where
     prettyPrec prec op@(OpImply a b) = prettyPrecBinOp prec [op] a b

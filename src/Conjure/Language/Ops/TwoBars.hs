@@ -41,5 +41,8 @@ instance EvaluateOp OpTwoBars where
 
             _ -> fail $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
+instance SimplifyOp OpTwoBars where
+    simplifyOp _ _ = na "simplifyOp{OpTwoBars}"
+
 instance Pretty x => Pretty (OpTwoBars x) where
     prettyPrec _ (OpTwoBars a) = "|" <> pretty a <> "|"

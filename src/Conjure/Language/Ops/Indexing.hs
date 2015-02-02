@@ -39,5 +39,8 @@ instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
+instance SimplifyOp OpIndexing where
+    simplifyOp _ _ = na "simplifyOp{OpIndexing}"
+
 instance Pretty x => Pretty (OpIndexing x) where
     prettyPrec _ (OpIndexing  a b) = pretty a <> prBrackets (pretty b)

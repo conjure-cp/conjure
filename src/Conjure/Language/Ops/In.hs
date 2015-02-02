@@ -29,5 +29,8 @@ instance EvaluateOp OpIn where
     evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantBool $ elem c cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
+instance SimplifyOp OpIn where
+    simplifyOp _ _ = na "simplifyOp{OpIn}"
+
 instance Pretty x => Pretty (OpIn x) where
     prettyPrec prec op@(OpIn a b) = prettyPrecBinOp prec [op] a b

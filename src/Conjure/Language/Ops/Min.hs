@@ -28,6 +28,9 @@ instance EvaluateOp OpMin where
     evaluateOp (OpMin (ConstantAbstract (AbsLitMSet     xs))) = ConstantInt . minimum <$> concatMapM intsOut xs
     evaluateOp _ = na "evaluateOp{OpMin}"
 
+instance SimplifyOp OpMin where
+    simplifyOp _ _ = na "simplifyOp{OpMin}"
+
 instance (Pretty x, ExpressionLike x) => Pretty (OpMin x) where
     prettyPrec _ (OpMin x) | Just [a,b] <- listOut x = "min" <> prettyList prParens "," [a,b]
     prettyPrec _ (OpMin x) = "min" <> prParens (pretty x)
