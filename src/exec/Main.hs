@@ -15,6 +15,7 @@ import Conjure.UI.TypeCheck ( typeCheckModel )
 
 import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.ModelDiff ( modelDiffIO )
+import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 
 -- base
 import System.IO ( hSetBuffering, stdout, BufferMode(..) )
@@ -64,6 +65,11 @@ mainWithArgs Modelling{..} = do
             , Config.logRuleAttempts         = logRuleAttempts
             , Config.strategyQ               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
                                                          (parseStrategy strategyQ)
+                |> (\ s ->
+                    if fst (viewAuto s) == Compact
+                        then userErr "The Compact heuristic isn't supported for questions."
+                        else s
+                   )
             , Config.strategyA               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
                                                          (parseStrategy strategyA)
             , Config.channelling             = channelling
