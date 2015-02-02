@@ -143,9 +143,8 @@ remaining
     => Config
     -> Model
     -> m [Question]
-remaining config model = do
+remaining config model | Just modelZipper <- zipperBi model = do
     let freshNames' = freshNames model
-    let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     let
         loopLevels :: Monad m => [m [a]] -> m [a]
         loopLevels [] = return []
@@ -187,6 +186,7 @@ remaining config model = do
             , qAscendants = tail (ascendants focus)
             , qAnswers = answers'
             }
+remaining _ _ = return []
 
 
 strategyToDriver :: Strategy -> Strategy -> Driver
@@ -444,8 +444,7 @@ updateDeclarations model =
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m = do
-    let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
+checkIfAllRefined m | Just modelZipper <- zipperBi m = do
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -472,6 +471,7 @@ checkIfAllRefined m = do
                     _ -> return []
     unless (null fails) (fail (vcat fails))
     return m
+checkIfAllRefined m = return m
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
