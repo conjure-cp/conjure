@@ -29,6 +29,16 @@ instance EvaluateOp OpAnd where
     evaluateOp (OpAnd x) = ConstantBool . and <$> boolsOut x
 
 instance SimplifyOp OpAnd where
+    simplifyOp _ (OpAnd x)
+        | Just xs <- listOut x
+        , let filtered = filter (/= fromBool False) xs
+        , length filtered /= length xs      -- there were false's
+        = return $ fromBool False
+    simplifyOp inj (OpAnd x)
+        | Just xs <- listOut x
+        , let filtered = filter (/= fromBool True) xs
+        , length filtered /= length xs      -- there were true's
+        = return $ inj $ OpAnd $ fromList filtered
     simplifyOp _ _ = na "simplifyOp{OpAnd}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpAnd x) where

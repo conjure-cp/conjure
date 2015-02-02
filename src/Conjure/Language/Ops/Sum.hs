@@ -31,9 +31,9 @@ instance EvaluateOp OpSum where
 instance SimplifyOp OpSum where
     simplifyOp inj (OpSum x)
         | Just xs <- listOut x
-        , let zeroless = filter (/=0) xs
-        , length zeroless /= length xs      -- there were 0's
-        = return $ inj $ OpSum $ fromList zeroless
+        , let filtered = filter (/=0) xs
+        , length filtered /= length xs      -- there were 0's
+        = return $ inj $ OpSum $ fromList filtered
     simplifyOp _ _ = na "simplifyOp{OpSum}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
