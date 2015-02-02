@@ -7,7 +7,7 @@ find var2_ExplicitVarSizeWithMarker_Marker: int(0..2 ** 2)
 find var2_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2 ** 2)] of int(0..2)
 find var2_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2 ** 2), int(1..2)] of bool
 such that
-    or([var2_ExplicitVarSizeWithFlags_Flags[q5] /\ var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] >= -7 /\ true | q5 : int(1..4)]),
+    or([var2_ExplicitVarSizeWithFlags_Flags[q5] /\ var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q5] >= -7 | q5 : int(1..4)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1] < var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1] \/
          var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1] = var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1] /\
