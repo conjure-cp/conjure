@@ -51,10 +51,10 @@ gDomainSizeOf
 gDomainSizeOf DomainBool = return 2
 gDomainSizeOf (DomainInt [] ) = fail "gDomainSizeOf infinite integer domain"
 gDomainSizeOf (DomainInt [r]) = domainSizeOf r
-gDomainSizeOf (DomainInt rs ) = foldr1 (make opPlus) <$> mapM domainSizeOf rs
+gDomainSizeOf (DomainInt rs ) = make opSum . fromList <$> mapM domainSizeOf rs
 gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
-gDomainSizeOf (DomainTuple xs) = foldr1 (make opTimes) <$> mapM gDomainSizeOf xs
+gDomainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
 gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner
@@ -77,9 +77,9 @@ gDomainSizeOf (DomainMSet _ attrs inner) = do
         getMaxOccur = case attrs of
             MSetAttr _ (OccurAttr_MaxOccur x) -> return x
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            MSetAttr (SizeAttr_Size x) _ -> return (make opMin [x, innerSize])
-            MSetAttr (SizeAttr_MaxSize x) _ -> return (make opMin [x, innerSize])
-            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return (make opMin [x, innerSize])
+            MSetAttr (SizeAttr_Size x) _ -> return (make opMin $ fromList [x, innerSize])
+            MSetAttr (SizeAttr_MaxSize x) _ -> return (make opMin $ fromList [x, innerSize])
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return (make opMin $ fromList [x, innerSize])
             _ -> fail ("gDomainSizeOf.getMaxSize, mset not supported. attributes:" <+> pretty attrs)
     maxSize  <- getMaxSize
     maxOccur <- getMaxOccur
@@ -101,7 +101,7 @@ instance ( ExpressionLike x
          , Show x
          ) => DomainSizeOf (Range x) x where
     domainSizeOf RangeSingle{} = return 1
-    domainSizeOf (RangeBounded l u) = return (make opPlus 1 (make opMinus u l))
+    domainSizeOf (RangeBounded l u) = return $ make opSum $ fromList [1, make opMinus u l]
     domainSizeOf r = fail ("domainSizeOf infinite range:" <+> pretty r)
     
 

@@ -410,14 +410,20 @@ instance ExpressionLike Expression where
     fromInt = Constant . fromInt
     intOut (Constant c) = intOut c
     intOut x = fail ("Expecting a constant, but got:" <+> pretty x)
+
     fromBool = Constant . fromBool
     boolOut (Constant c) = boolOut c
     boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
 
+    fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ length xs)) xs
+    listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs
+    listOut (Constant (ConstantAbstract (AbsLitMatrix _ xs))) = return (map Constant xs)
+    listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
+
 instance Num Expression where
-    x + y = Op $ MkOpPlus    $ OpPlus [x,y]
+    x + y = Op $ MkOpSum     $ OpSum     $ fromList [x,y]
     x - y = Op $ MkOpMinus   $ OpMinus x y
-    x * y = Op $ MkOpTimes   $ OpTimes [x,y]
+    x * y = Op $ MkOpProduct $ OpProduct $ fromList [x,y]
     abs x = Op $ MkOpTwoBars $ OpTwoBars x
     signum _ = bug "signum {Expression}"
     fromInteger = fromInt . fromInteger

@@ -26,7 +26,7 @@ rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple equality"
-            , const $ make opAnd (zipWith (make opEq) xs ys)
+            , const $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 
@@ -40,7 +40,7 @@ rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple !="
-            , const $ make opNot $ make opAnd (zipWith (make opEq) xs ys)
+            , const $ make opNot $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 

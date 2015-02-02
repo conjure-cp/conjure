@@ -65,7 +65,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do
-                let flagsCombined = foldr1 (\ i j -> make opAnd [i,j] ) flags
+                let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Function image, FunctionNDPartial representation, bool"
                     , const [essence| { &p' @ such that &flagsCombined } |]

@@ -16,7 +16,7 @@ import Conjure.Representations ( downX1 )
 rule_Image :: Rule
 rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
     theRule p = do
-        (rel, args)         <- match opFunctionImage p
+        (rel, args)         <- match opRelationImage p
         TypeRelation{}      <- typeOf rel
         "RelationAsMatrix"  <- representationOf rel
         [m]                 <- downX1 rel

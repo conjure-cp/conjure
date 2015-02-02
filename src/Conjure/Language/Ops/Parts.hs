@@ -24,6 +24,5 @@ instance EvaluateOp OpParts where
         return (ConstantAbstract (AbsLitSet (map (ConstantAbstract . AbsLitSet) xs)))
     evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
 
-
 instance Pretty x => Pretty (OpParts x) where
     prettyPrec _ (OpParts a) = "parts" <> prParens (pretty a)

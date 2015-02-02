@@ -1,7 +1,8 @@
 module Conjure.Language.Ops.Common
     ( module X
 
-    , EvaluateOp(..), BinaryOperator(..)
+    , EvaluateOp(..)
+    , BinaryOperator(..)
     , boolsOut, intsOut
 
     , valuesInIntDomain

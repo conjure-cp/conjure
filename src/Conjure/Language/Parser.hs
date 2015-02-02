@@ -530,10 +530,7 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
             xs <- parseExpr `sepBy1` comma
             let underscore = Reference "_" Nothing
             let ys = [ if underscore == x then Nothing else Just x | x <- xs ]
-            return $ \ x -> Op $
-                if Nothing `elem` ys
-                    then MkOpRelationProj  $ OpRelationProj  x ys
-                    else MkOpFunctionImage $ OpFunctionImage x xs
+            return $ \ x -> Op $ MkOpRelationProj $ OpRelationProj x ys
 
 parseAAC :: Parser Expression
 parseAAC = do
@@ -573,7 +570,7 @@ parseOthers = [ parseFunctional l
             lexeme l
             xs <- parens $ parseExpr `sepBy1` comma
             return $ case (l,xs) of
-                (L_image, y:ys) -> Op $ MkOpFunctionImage $ OpFunctionImage y ys
+                (L_image, [y,z]) -> Op $ MkOpFunctionImage $ OpFunctionImage y z
                 _ -> mkOp (fromString $ show $ lexemeFace l) xs
 
 parseWithLocals :: Parser Expression

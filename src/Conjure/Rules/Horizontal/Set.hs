@@ -44,9 +44,10 @@ rule_Eq = "set-eq" `namedRule` theRule where
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
         return ( "Horizontal rule for set equality"
-               , const $ make opAnd [ make opSubsetEq x y
-                                    , make opSubsetEq y x
-                                    ]
+               , const $ make opAnd $ fromList
+                   [ make opSubsetEq x y
+                   , make opSubsetEq y x
+                   ]
                )
 
 

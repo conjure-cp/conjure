@@ -1,5 +1,6 @@
 module Conjure.Language.Ops
     ( module Conjure.Language.Ops.Generated
+    , module Conjure.Language.Ops.Common
     , OperatorContainer(..)
     , mkBinOp, mkOp
     ) where
@@ -10,6 +11,7 @@ import Conjure.Bug
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer
+import Conjure.Language.Ops.Common ( evaluateOp, functionals, operators, Fixity(..) )
 import Conjure.Language.Ops.Generated
 
 
@@ -18,16 +20,16 @@ class OperatorContainer x where
     projectOp :: MonadFail m => x -> m (Ops x)
 
 
-mkBinOp :: OperatorContainer x => Text -> x -> x -> x
+mkBinOp :: (OperatorContainer x, ExpressionLike x) => Text -> x -> x -> x
 mkBinOp op a b =
     case textToLexeme op of
         Nothing -> bug ("Unknown binary operator:" <+> pretty op)
         Just l  ->
             let
                 f = case l of
-                    L_Plus      -> \ x y -> injectOp $ MkOpPlus      $ OpPlus       [x,y]
+                    L_Plus      -> \ x y -> injectOp $ MkOpSum       $ OpSum     $ fromList [x,y]
                     L_Minus     -> \ x y -> injectOp $ MkOpMinus     $ OpMinus       x y
-                    L_Times     -> \ x y -> injectOp $ MkOpTimes     $ OpTimes      [x,y]
+                    L_Times     -> \ x y -> injectOp $ MkOpProduct   $ OpProduct $ fromList [x,y]
                     L_Div       -> \ x y -> injectOp $ MkOpDiv       $ OpDiv         x y
                     L_Mod       -> \ x y -> injectOp $ MkOpMod       $ OpMod         x y
                     L_Pow       -> \ x y -> injectOp $ MkOpPow       $ OpPow         x y
@@ -38,8 +40,8 @@ mkBinOp op a b =
                     L_Gt        -> \ x y -> injectOp $ MkOpGt        $ OpGt          x y
                     L_Geq       -> \ x y -> injectOp $ MkOpGeq       $ OpGeq         x y
                     L_in        -> \ x y -> injectOp $ MkOpIn        $ OpIn          x y
-                    L_And       -> \ x y -> injectOp $ MkOpAnd       $ OpAnd        [x,y]
-                    L_Or        -> \ x y -> injectOp $ MkOpOr        $ OpOr         [x,y]
+                    L_And       -> \ x y -> injectOp $ MkOpAnd       $ OpAnd     $ fromList [x,y]
+                    L_Or        -> \ x y -> injectOp $ MkOpOr        $ OpOr      $ fromList [x,y]
                     L_Imply     -> \ x y -> injectOp $ MkOpImply     $ OpImply       x y
                     L_Iff       -> \ x y -> injectOp $ MkOpEq        $ OpEq          x y
                     L_subset    -> \ x y -> injectOp $ MkOpSubset    $ OpSubset      x y
@@ -59,9 +61,10 @@ mkOp :: (OperatorContainer x, ReferenceContainer x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
         Nothing -> case op of
-            "and"       -> injectOp (MkOpAnd       (OpAnd       xs))
-            "or"        -> injectOp (MkOpOr        (OpOr        xs))
-            "sum"       -> injectOp (MkOpPlus      (OpPlus      xs))
+            "and"       -> injectOp (MkOpAnd       (OpAnd       (headNote "and takes a single argument"       xs)))
+            "or"        -> injectOp (MkOpOr        (OpOr        (headNote "or takes a single argument"        xs)))
+            "sum"       -> injectOp (MkOpSum       (OpSum       (headNote "sum takes a single argument"       xs)))
+            "product"   -> injectOp (MkOpProduct   (OpProduct   (headNote "product takes a single argument"   xs)))
             "not"       -> injectOp (MkOpNot       (OpNot       (headNote "not takes a single argument"       xs)))
             "negate"    -> injectOp (MkOpNegate    (OpNegate    (headNote "negate takes a single argument"    xs)))
             "twoBars"   -> injectOp (MkOpTwoBars   (OpTwoBars   (headNote "twoBars takes a single argument"   xs)))
@@ -78,8 +81,8 @@ mkOp op xs =
             L_flatten      -> injectOp $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
             L_toSet        -> injectOp $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)
             L_toMSet       -> injectOp $ MkOpToMSet       $ OpToMSet       (headNote "toMSet takes a single argument."   xs)
-            L_max          -> injectOp $ MkOpMax          $ OpMax xs
-            L_min          -> injectOp $ MkOpMin          $ OpMin xs
+            L_max          -> injectOp $ MkOpMax          $ OpMax          (headNote "max takes a single argument."   xs)
+            L_min          -> injectOp $ MkOpMin          $ OpMin          (headNote "min takes a single argument."   xs)
             L_preImage     -> injectOp $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
             L_freq         -> injectOp $ MkOpFreq         $ OpFreq         (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
             L_hist         -> injectOp $ MkOpHist         $ OpHist         (atNote "hist 1"     xs 0)

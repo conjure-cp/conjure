@@ -34,6 +34,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
             else raiseTypeError p
 
 instance EvaluateOp OpMinus where
+    evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
     evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet
             [ a
@@ -56,7 +57,6 @@ instance EvaluateOp OpMinus where
             | a <- as
             , a `notElem` bs
             ]
-    evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance Pretty x => Pretty (OpMinus x) where

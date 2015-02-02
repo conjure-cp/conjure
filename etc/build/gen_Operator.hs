@@ -24,8 +24,9 @@ main = do
               , "{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}"
               , ""
               , "module Conjure.Language.Ops.Generated" ]
-            , [ "    ( Ops(..), valuesInIntDomain, evaluateOp, Fixity(..)"
-              , "    , functionals, operators" ]
+            , [ "    ( Ops(..)"
+              , "    , valuesInIntDomain"
+              ]
             , [ "    , Op" ++ m ++ "(..)" | m <- modules ]
             , [ "    ) where"
               , ""
@@ -67,7 +68,7 @@ main = do
               ]
 
             , [ ""
-              , "instance Pretty x => Pretty (Ops x) where"
+              , "instance (Pretty x, ExpressionLike x) => Pretty (Ops x) where"
               ]
             , [ "    prettyPrec prec (" ++ patModifier m ++ ") = prettyPrec prec x"
               | m <- modules
@@ -77,12 +78,14 @@ main = do
 
     outText' <- catch (Just <$> readFile (modulesDir ++ "/Generated.hs"))
                       (\ (e :: IOException) -> return Nothing )
-    if Just outText /= outText'
+    if and [ Just (length outText) /= (length <$> outText')
+           , Just outText /= outText'
+           ]
         then do
             putStrLn $ "Generating " ++ modulesDir ++ "/Generated.hs"
             writeFile (modulesDir ++ "/Generated.hs") outText
         else
-            putStrLn $ "Skipping " ++ modulesDir ++ "/Generated.hs"
+            putStrLn $ "Reusing " ++ modulesDir ++ "/Generated.hs"
 
 splitOn :: Char -> String -> [String]
 splitOn _ [] = []

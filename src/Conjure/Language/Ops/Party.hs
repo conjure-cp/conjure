@@ -36,6 +36,5 @@ instance EvaluateOp OpParty where
                 _   -> fail $ "Element found in multiple parts of the partition:" <++> pretty op
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
-
 instance Pretty x => Pretty (OpParty x) where
     prettyPrec _ (OpParty a b) = "party" <> prettyList prParens "," [a,b]

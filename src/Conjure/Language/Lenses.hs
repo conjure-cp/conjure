@@ -38,25 +38,6 @@ matchDef f inp = matchOr inp f inp
 --------------------------------------------------------------------------------
 
 
-opPlus
-    :: ( OperatorContainer x
-       , Pretty x
-       , MonadFail m
-       )
-    => Proxy (m :: * -> *)
-    -> ( x -> x -> x
-       , x -> m (x,x)
-       )
-opPlus _ =
-    ( \ x y -> injectOp (MkOpPlus (OpPlus [x,y]))
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpPlus (OpPlus [x,y]) -> return (x,y)
-                _ -> na ("Lenses.opPlus:" <++> pretty p)
-    )
-
-
 opMinus
     :: ( OperatorContainer x
        , Pretty x
@@ -73,25 +54,6 @@ opMinus _ =
             case op of
                 MkOpMinus (OpMinus x y) -> return (x,y)
                 _ -> na ("Lenses.opMinus:" <++> pretty p)
-    )
-
-
-opTimes
-    :: ( OperatorContainer x
-       , Pretty x
-       , MonadFail m
-       )
-    => Proxy (m :: * -> *)
-    -> ( x -> x -> x
-       , x -> m (x,x)
-       )
-opTimes _ =
-    ( \ x y -> injectOp (MkOpTimes (OpTimes [x,y]))
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpTimes (OpTimes [x,y]) -> return (x,y)
-                _ -> na ("Lenses.opTimes:" <++> pretty p)
     )
 
 
@@ -384,15 +346,15 @@ opFunctionImage
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( x -> [x] -> x
-       , x -> m (x, [x])
+    -> ( x -> x -> x
+       , x -> m (x, x)
        )
 opFunctionImage _ =
-    ( \ x ys -> injectOp $ MkOpFunctionImage $ OpFunctionImage x ys
+    ( \ x y -> injectOp $ MkOpFunctionImage $ OpFunctionImage x y
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpFunctionImage (OpFunctionImage x ys) -> return (x,ys)
+                MkOpFunctionImage (OpFunctionImage x y) -> return (x,y)
                 _ -> na ("Lenses.opFunctionImage:" <++> pretty p)
     )
 
@@ -412,6 +374,28 @@ opRelationProj _ =
             op <- projectOp p
             case op of
                 MkOpRelationProj (OpRelationProj x ys) -> return (x,ys)
+                _ -> na ("Lenses.opRelationProj:" <++> pretty p)
+    )
+
+
+opRelationImage
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> [x] -> x
+       , x -> m (x, [x])
+       )
+opRelationImage _ =
+    ( \ x ys -> injectOp $ MkOpRelationProj $ OpRelationProj x (map Just ys)
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpRelationProj (OpRelationProj x ys)
+                    | let ys' = catMaybes ys
+                    , length ys' == length ys           -- they were all Just's
+                    -> return (x,ys')
                 _ -> na ("Lenses.opRelationProj:" <++> pretty p)
     )
 
@@ -726,8 +710,8 @@ opOr
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opOr _ =
     ( injectOp . MkOpOr . OpOr
@@ -745,8 +729,8 @@ opAnd
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opAnd _ =
     ( injectOp . MkOpAnd . OpAnd
@@ -764,8 +748,8 @@ opMax
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opMax _ =
     ( injectOp . MkOpMax . OpMax
@@ -783,8 +767,8 @@ opMin
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opMin _ =
     ( injectOp . MkOpMin . OpMin
@@ -840,15 +824,15 @@ opProduct
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opProduct _ =
-    ( injectOp . MkOpTimes . OpTimes
+    ( injectOp . MkOpProduct . OpProduct
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpTimes (OpTimes xs) -> return xs
+                MkOpProduct (OpProduct x) -> return x
                 _ -> na ("Lenses.opProduct:" <++> pretty p)
     )
 
@@ -859,15 +843,15 @@ opSum
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( [x] -> x
-       , x -> m [x]
+    -> ( x -> x
+       , x -> m x
        )
 opSum _ =
-    ( injectOp . MkOpPlus . OpPlus
+    ( injectOp . MkOpSum . OpSum
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpPlus (OpPlus xs) -> return xs
+                MkOpSum (OpSum x) -> return x
                 _ -> na ("Lenses.opSum:" <++> pretty p)
     )
 
@@ -879,20 +863,20 @@ opQuantifier
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
-       , x -> m ([x] -> x, x)
+       , x -> m (x -> x, x)
        )
 opQuantifier _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- projectOp p
             case op of
-                MkOpAnd   (OpAnd   [x]) -> return (injectOp . MkOpAnd   . OpAnd   , x)
-                MkOpOr    (OpOr    [x]) -> return (injectOp . MkOpOr    . OpOr    , x)
-                MkOpPlus  (OpPlus  [x]) -> return (injectOp . MkOpPlus  . OpPlus  , x)
-                MkOpTimes (OpTimes [x]) -> return (injectOp . MkOpTimes . OpTimes , x)
-                MkOpMax   (OpMax   [x]) -> return (injectOp . MkOpMax   . OpMax   , x)
-                MkOpMin   (OpMin   [x]) -> return (injectOp . MkOpMin   . OpMin   , x)
-                _ -> na ("Lenses.opSum:" <++> pretty p)
+                MkOpAnd     (OpAnd     x) -> return (injectOp . MkOpAnd     . OpAnd     , x)
+                MkOpOr      (OpOr      x) -> return (injectOp . MkOpOr      . OpOr      , x)
+                MkOpSum     (OpSum     x) -> return (injectOp . MkOpSum     . OpSum     , x)
+                MkOpProduct (OpProduct x) -> return (injectOp . MkOpProduct . OpProduct , x)
+                MkOpMax     (OpMax     x) -> return (injectOp . MkOpMax     . OpMax     , x)
+                MkOpMin     (OpMin     x) -> return (injectOp . MkOpMin     . OpMin     , x)
+                _ -> na ("Lenses.opQuantifier:" <++> pretty p)
     )
 
 

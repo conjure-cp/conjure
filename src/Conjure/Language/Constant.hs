@@ -63,9 +63,14 @@ instance ExpressionLike Constant where
     fromInt = ConstantInt
     intOut (ConstantInt x) = return x
     intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
+
     fromBool = ConstantBool
     boolOut (ConstantBool x) = return x
     boolOut c = fail ("Expecting a boolean, but found:" <+> pretty c)
+
+    fromList xs = ConstantAbstract $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ length xs)) xs
+    listOut (ConstantAbstract (AbsLitMatrix _ xs)) = return xs
+    listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
 
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)

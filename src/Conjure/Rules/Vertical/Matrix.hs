@@ -130,7 +130,7 @@ rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
             , \ fresh -> withAuxVar
                     (fresh `at` 0)
                     (DomainSet () def (forgetRepr "rule_Comprehension_ToSet2" domBody)) $ \ aux ->
-                        make opAnd $ return $ Comprehension [essence| &body in &aux |] gof
+                        make opAnd $ Comprehension [essence| &body in &aux |] gof
             )
 
 

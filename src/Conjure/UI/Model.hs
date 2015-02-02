@@ -355,9 +355,10 @@ oneSuchThat m =
                         else xs
 
         breakConjunctions :: Expression -> [Expression]
-        breakConjunctions   (Op (MkOpAnd (OpAnd [ ]))) = bug "empty /\\"
-        breakConjunctions x@(Op (MkOpAnd (OpAnd [_]))) = [x]
-        breakConjunctions (Op (MkOpAnd (OpAnd xs))) = concatMap breakConjunctions xs
+        breakConjunctions p@(Op (MkOpAnd (OpAnd x))) =
+            case listOut x of
+                Nothing -> [p] -- doesn't contain a list
+                Just xs -> concatMap breakConjunctions xs
         breakConjunctions x = [x]
 
 
@@ -627,6 +628,7 @@ horizontalRules =
     , Horizontal.MSet.rule_Card
     , Horizontal.MSet.rule_MaxMin
 
+    , Horizontal.Function.rule_Mk_FunctionImage
     , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
@@ -670,7 +672,6 @@ otherRules :: [[Rule]]
 otherRules =
     [
         [ rule_TrueIsNoOp
-        , rule_SingletonAnd
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
 
@@ -941,16 +942,6 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
     theRule _ = na "rule_TrueIsNoOp"
 
 
-rule_SingletonAnd :: Rule
-rule_SingletonAnd = "singleton-and" `namedRule` theRule where
-    theRule p = do
-        [x]      <- match opAnd p
-        TypeBool <- typeOf x
-        return ( "singleton and, removing the wrapper"
-               , const x
-               )
-
-
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
     theRule p = do
@@ -1048,7 +1039,7 @@ rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRu
         return
             ( "Bubble in the generator of a comprehension."
             , const $ WithLocals
-                ( mkQuan $ return $ Comprehension body
+                ( mkQuan $ Comprehension body
                     $  gofBefore
                     ++ [Generator (GenInExpr pat expr)]
                     ++ gofAfter
@@ -1064,9 +1055,7 @@ rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
         TypeBool <- typeOf x
         cons     <- onlyConstraints locals
         let outs = x:cons
-        let out = case outs of
-                    [_] -> x
-                    _   -> make opAnd outs
+        let out  = make opAnd $ fromList outs
         return
             ( "Converting a bubble into a conjunction."
             , const out
@@ -1136,7 +1125,7 @@ rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
         TypeTuple{} <- typeOf x
         xs          <- downX1 x
         return ( "dontCare handling for tuple"
-               , const $ make opAnd (map (make opDontCare) xs)
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
 
@@ -1167,7 +1156,7 @@ rule_Abstract_DontCare = "dontCare-abstract" `namedRule` theRule where
         hasRepresentation x
         xs <- downX1 x
         return ( "dontCare handling for an abstract domain"
-               , const $ make opAnd (map (make opDontCare) xs)
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
 
@@ -1227,9 +1216,9 @@ rule_InlineConditions =
     , namedRule "condition-inside-min" $ ruleGen_InlineConditions opMin opMinSkip
     ]
     where
-        opAndSkip x y = make opImply x y
-        opOrSkip  x y = make opAnd [x,y]
-        opSumSkip b x = make opTimes (make opToInt b) x
+        opAndSkip b x = [essence| &b -> &x |]
+        opOrSkip  b x = [essence| &b /\ &x |]
+        opSumSkip b x = [essence| toInt(&b) * &x |]
         opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
         opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
@@ -1237,13 +1226,13 @@ ruleGen_InlineConditions
     :: MonadFail m
     => (forall m1 . MonadFail m1
             => Proxy (m1 :: * -> *)
-            -> ( [Expression] -> Expression , Expression -> m1 [Expression] )
+            -> ( Expression -> Expression , Expression -> m1 Expression )
        )
     -> (Expression -> Expression -> Expression)
     -> Expression
     -> m (Doc, [Name] -> Expression)
 ruleGen_InlineConditions opQ opSkip p = do
-    [Comprehension body gensOrConds] <- match opQ p
+    Comprehension body gensOrConds <- match opQ p
     let (toInline, toKeep) = mconcat
             [ case gof of
                 Condition x | categoryOf x == CatDecision -> ([x],[])
@@ -1252,10 +1241,9 @@ ruleGen_InlineConditions opQ opSkip p = do
             ]
     theGuard <- case toInline of
         []  -> fail "No condition to inline."
-        [x] -> return x
-        xs  -> return $ make opAnd xs
+        xs  -> return $ make opAnd $ fromList xs
     return ( "Inlining conditions"
-           , const $ make opQ $ return $
+           , const $ make opQ $
                Comprehension (opSkip theGuard body) toKeep
            )
 

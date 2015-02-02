@@ -43,8 +43,8 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
 rule_Image_Literal :: Rule
 rule_Image_Literal = "function-image-literal" `namedRule` theRule where
     theRule [essence| &lhs = &rhs |] = do
-        (func, [arg]) <- match opFunctionImage lhs
-        elems         <- match functionLiteral func
+        (func, arg) <- match opFunctionImage lhs
+        elems       <- match functionLiteral func
         return $
             if null elems
                 then
@@ -53,7 +53,7 @@ rule_Image_Literal = "function-image-literal" `namedRule` theRule where
                     )
                 else
                     ( "Image of function literal"
-                    , const $ foldr1 (\ i j -> make opOr [i,j] )
+                    , const $ make opOr $ fromList
                         [ [essence| (&a = &arg) /\ (&b = &rhs) |]
                         | (a,b) <- elems
                         ]
@@ -275,14 +275,14 @@ rule_In = "function-in" `namedRule` theRule where
 rule_Restrict_Image :: Rule
 rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
     theRule p = do
-        (func', [arg]) <- match opFunctionImage p
-        (func , dom)   <- match opRestrict func'
+        (func', arg) <- match opFunctionImage p
+        (func , dom) <- match opRestrict func'
         return
             ( "Function image on a restricted function."
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func [arg]) [SuchThat [bob]]
+                    in  WithLocals (make opFunctionImage func arg) [SuchThat [bob]]
             )
 
 
@@ -307,3 +307,14 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
                             ++ gofAfter
             )
     theRule _ = na "rule_Restrict_Comprehension"
+
+
+rule_Mk_FunctionImage :: Rule
+rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
+    theRule p = do
+        (f, [Just arg]) <- match opRelationProj p
+        TypeFunction{}  <- typeOf f
+        return
+            ( "This is a function image."
+            , const $ make opFunctionImage f arg
+            )

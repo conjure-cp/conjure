@@ -217,8 +217,8 @@ rule_SupsetEq = "relation-subsetEq" `namedRule` theRule where
 rule_Image :: Rule
 rule_Image = "relation-image" `namedRule` theRule where
     theRule p = do
-        (rel, args)         <- match opFunctionImage p
-        TypeRelation{}      <- typeOf rel
+        (rel, args)    <- match opRelationImage p
+        TypeRelation{} <- typeOf rel
         let arg = AbstractLiteral (AbsLitTuple args)
         return ( "relation image to relation membership"
                , const [essence| &arg in &rel |]
