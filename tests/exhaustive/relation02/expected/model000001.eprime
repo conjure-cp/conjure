@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 find r_RelationAsMatrix: matrix indexed by [int(1..3), int(0..1)] of bool
+given p1: int
 given p_RelationAsMatrix: matrix indexed by [int(1..3), int(0..1)] of bool
 such that
     and([or([r_RelationAsMatrix[q3_1, q3_2] /\ (q3_1 = q2_1 /\ q3_2 = q2_2) | q3_1 : int(1..3), q3_2 : int(0..1)])
