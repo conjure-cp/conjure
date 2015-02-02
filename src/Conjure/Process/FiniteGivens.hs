@@ -73,6 +73,8 @@ mkFinite
                                                 -- input is a list of values for the domain
          )
 mkFinite d@DomainSet{} = helper d
+mkFinite d@DomainFunction{} = helper d
+mkFinite d@DomainRelation{} = helper d
 mkFinite d = return (d, [], const (return []))
 
 
@@ -95,10 +97,10 @@ helper (DomainInt []) = do
                        , (to, ConstantInt (maximum ints))
                        ]
         )
-helper (DomainSet () (SetAttr attr@SizeAttr_Size{}) inner) = do
+helper (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
     (inner', innerExtras, innerF) <- helper inner
     return
-        ( DomainSet () (SetAttr attr) inner'
+        ( DomainSet () attr inner'
         , innerExtras
         , \ constants -> do
                 sets <- mapM viewConstantSet constants
@@ -117,7 +119,7 @@ helper (DomainSet () _ inner) = do
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setSize)]
         )
-helper (DomainFunction () attr innerFr innerTo) = do
+helper (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr innerTo) = do
     (innerFr', innerFrExtras, innerFrF) <- helper innerFr
     (innerTo', innerToExtras, innerToF) <- helper innerTo
     return
@@ -128,6 +130,48 @@ helper (DomainFunction () attr innerFr innerTo) = do
                 innerFrValues <- innerFrF (map fst $ concat functions)
                 innerToValues <- innerToF (map snd $ concat functions)
                 return $ innerFrValues ++ innerToValues
+        )
+helper (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
+    s <- nextName
+    (innerFr', innerFrExtras, innerFrF) <- helper innerFr
+    (innerTo', innerToExtras, innerToF) <- helper innerTo
+    return
+        ( DomainFunction ()
+                (FunctionAttr (SizeAttr_Size (fromName s)) partialityAttr jectivityAttr)
+                innerFr' innerTo'
+        , s : innerFrExtras ++ innerToExtras
+        , \ constants -> do
+                functions <- mapM viewConstantFunction constants
+                let functionSizes = map (length . nub) functions
+                functionSize <- allEqual functionSizes
+                innerFrValues <- innerFrF (map fst $ concat functions)
+                innerToValues <- innerToF (map snd $ concat functions)
+                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionSize)]
+        )
+helper (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) = do
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM helper inners
+    return
+        ( DomainRelation () attr inners'
+        , concat innersExtras
+        , \ constants -> do
+                relations <- mapM viewConstantRelation constants
+                innersValues <- zipWithM ($) innersF (transpose $ concat relations)
+                return $ concat innersValues
+        )
+helper (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
+    s <- nextName
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM helper inners
+    return
+        ( DomainRelation ()
+                (RelationAttr (SizeAttr_Size (fromName s)) binRelAttr)
+                inners'
+        , s : concat innersExtras
+        , \ constants -> do
+                relations <- mapM viewConstantRelation constants
+                let relationSizes = map (length . nub) relations
+                relationSize <- allEqual relationSizes
+                innersValues <- zipWithM ($) innersF (transpose $ concat relations)
+                return $ concat innersValues ++ [(s, ConstantInt relationSize)]
         )
 helper d = return (d, [], const (return []))
 
@@ -149,6 +193,10 @@ viewConstantSet constant = fail ("Expecting a set, but got:" <+> pretty constant
 viewConstantFunction :: MonadFail m => Constant -> m [(Constant,Constant)]
 viewConstantFunction (ConstantAbstract (AbsLitFunction xs)) = return xs
 viewConstantFunction constant = fail ("Expecting a function, but got:" <+> pretty constant)
+
+viewConstantRelation :: MonadFail m => Constant -> m [[Constant]]
+viewConstantRelation (ConstantAbstract (AbsLitRelation xs)) = return xs
+viewConstantRelation constant = fail ("Expecting a relation, but got:" <+> pretty constant)
 
 allEqual :: (Eq a, Pretty a, MonadFail m) => [a] -> m a
 allEqual (x:xs) | all (x==) xs = return x
