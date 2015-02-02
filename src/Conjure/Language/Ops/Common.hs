@@ -184,6 +184,8 @@ functionals =
     , L_normIndices
     , L_indices
 
+    , L_true
+
     , LIdentifier "and"
     , LIdentifier "or"
     , LIdentifier "sum"

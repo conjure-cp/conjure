@@ -72,6 +72,7 @@ mkOp op xs =
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
+            L_true         -> injectOp $ MkOpTrue         $ OpTrue         (headNote "true takes a single argument."     xs)
             L_toInt        -> injectOp $ MkOpToInt        $ OpToInt        (headNote "toInt takes a single argument."    xs)
             L_defined      -> injectOp $ MkOpDefined      $ OpDefined      (headNote "defined takes a single argument."  xs)
             L_range        -> injectOp $ MkOpRange        $ OpRange        (headNote "range takes a single argument."    xs)
