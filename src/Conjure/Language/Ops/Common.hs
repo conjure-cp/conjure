@@ -187,6 +187,7 @@ functionals =
     , LIdentifier "and"
     , LIdentifier "or"
     , LIdentifier "sum"
+    , LIdentifier "product"
 
     ]
 
