@@ -123,6 +123,8 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
+                                           \Moreover, c (for compact) can be used to pick the most 'compact' option \
+                                           \at every decision point.\n\
                                            \Default value: ai"
         , channelling = True       &= name "channelling"
                                    &= groupname "Model generation"

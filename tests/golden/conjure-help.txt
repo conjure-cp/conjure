@@ -31,7 +31,10 @@ Model generation:
                                  to automatically skip when there is only one
                                  option at any point. Default value: f
   -a --strategy-a=STRATEGY       Strategy to use when selecting an answer.
-                                 Same options as strategy-q. Default value: ai
+                                 Same options as strategy-q. Moreover, c (for
+                                 compact) can be used to pick the most
+                                 'compact' option at every decision point.
+                                 Default value: ai
      --channelling               Whether to produce channelled models or not.
                                  Can be true or false. (true by default)
                                  false: Do not produce channelled models.
