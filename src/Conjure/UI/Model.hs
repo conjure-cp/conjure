@@ -516,7 +516,10 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ rule_FullEvaluate
+    [ [ Horizontal.Function.rule_Mk_FunctionImage           -- this is a clean-up rule
+                                                            -- it should run as early as possible.
+      ]
+    , [ rule_FullEvaluate
       , rule_PartialEvaluate
       ]
     , [ rule_ChooseRepr config
@@ -629,7 +632,6 @@ horizontalRules =
     , Horizontal.MSet.rule_Card
     , Horizontal.MSet.rule_MaxMin
 
-    , Horizontal.Function.rule_Mk_FunctionImage
     , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
