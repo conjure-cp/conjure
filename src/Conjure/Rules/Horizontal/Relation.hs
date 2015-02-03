@@ -20,7 +20,7 @@ rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
         elems <- match relationLiteral expr
         let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)])

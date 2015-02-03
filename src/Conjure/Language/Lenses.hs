@@ -32,6 +32,12 @@ matchOr defOut f inp = fromMaybe defOut (match f inp)
 matchDef :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
 matchDef f inp = matchOr inp f inp
 
+matchDefs :: CanBeAnAlias b => [Proxy Maybe -> (a, b -> Maybe b)] -> b -> b
+matchDefs fs inp =
+    case mapMaybe (`match` inp) fs of
+        []      -> inp
+        (out:_) -> matchDefs fs out
+
 
 --------------------------------------------------------------------------------
 -- Lenses (for a weird definition of lens) -------------------------------------
@@ -280,6 +286,25 @@ opToMSet _ =
             case op of
                 MkOpToMSet (OpToMSet x) -> return x
                 _ -> na ("Lenses.opToMSet:" <++> pretty p)
+    )
+
+
+opToRelation
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opToRelation _ =
+    ( injectOp . MkOpToRelation . OpToRelation
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpToRelation (OpToRelation x) -> return x
+                _ -> na ("Lenses.opToRelation:" <++> pretty p)
     )
 
 

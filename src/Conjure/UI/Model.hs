@@ -681,6 +681,7 @@ horizontalRules =
     , Horizontal.Relation.rule_Image
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
+    , Horizontal.Relation.rule_Neq
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
 
