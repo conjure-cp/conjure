@@ -539,7 +539,8 @@ allRules config =
                                                             -- it should run as early as possible.
       ]
     , [ rule_FullEvaluate
-      , rule_PartialEvaluate
+      ]
+    , [ rule_PartialEvaluate
       ]
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
