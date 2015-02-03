@@ -82,6 +82,7 @@ mkOp op xs =
             L_flatten      -> injectOp $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
             L_toSet        -> injectOp $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)
             L_toMSet       -> injectOp $ MkOpToMSet       $ OpToMSet       (headNote "toMSet takes a single argument."   xs)
+            L_toRelation   -> injectOp $ MkOpToRelation   $ OpToRelation   (headNote "toRelation takes a single argument."   xs)
             L_max          -> injectOp $ MkOpMax          $ OpMax          (headNote "max takes a single argument."   xs)
             L_min          -> injectOp $ MkOpMin          $ OpMin          (headNote "min takes a single argument."   xs)
             L_preImage     -> injectOp $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
