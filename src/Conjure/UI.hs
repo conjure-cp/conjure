@@ -31,6 +31,7 @@ data UI
         , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
         , limitTime                 :: Maybe Int
+        , eprimeToFollow            :: Maybe FilePath
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -86,7 +87,7 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Starting value to output files.\n\
-                                           \Default value: 1"                                           
+                                           \Default value: 1"
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -153,6 +154,13 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , eprimeToFollow   = def   &= typFile
+                                   &= name "eprime-to-follow"
+                                   &= name "e"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "An Essence' parameter matching the Essence' model.\n"
+
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \

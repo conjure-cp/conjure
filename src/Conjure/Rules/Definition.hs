@@ -30,7 +30,8 @@ data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
     , aFullModel :: Model
-    }
+    } deriving (Show)
+
 
 type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
 
@@ -40,6 +41,7 @@ data Strategy
     | Interactive
     | AtRandom
     | Compact
+    | LogFollow
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -56,6 +58,7 @@ parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
 parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy "c" = return Compact
+parseStrategy "l" = return LogFollow
 parseStrategy _ = Nothing
 
 data Config = Config
@@ -71,8 +74,9 @@ data Config = Config
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
+    , questionAnswers           :: [QuestionAnswered]
     }
-    deriving (Eq, Ord, Show, Read, Data, Typeable)
+    deriving (Eq, Ord, Show, Data, Typeable)
 
 instance Default Config where
     def = Config
@@ -88,6 +92,7 @@ instance Default Config where
         , parameterRepresentation   = True
         , limitModels               = Nothing
         , numberingStart            = 1
+        , questionAnswers           = []
         }
 
 type RuleResult m =

@@ -6,7 +6,7 @@ import Conjure.Prelude
 import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Model ( parseStrategy, outputModels, getAnswers )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -29,6 +29,7 @@ import System.Console.CmdArgs ( cmdArgs )
 
 main :: IO ()
 main = do
+
     input <- cmdArgs ui
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (groom input))
@@ -56,6 +57,11 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
+    answers <- case eprimeToFollow of
+                 Just f  -> getAnswers f
+                 Nothing -> return []
+
+
     let config = Config.Config
             { Config.outputDirectory         = outputDirectory
             , Config.logLevel                = logLevel
@@ -76,6 +82,8 @@ mainWithArgs Modelling{..} = do
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart          = numberingStart
+            , Config.questionAnswers         = answers
+
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do
@@ -183,9 +191,3 @@ mainWithArgs TypeCheck{..} =
 --              full channelling + one redundant refinement
 --              up to n different refinements
 --          ...
-
-
-
-
-
-

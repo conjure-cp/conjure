@@ -17,6 +17,7 @@ module Conjure.Language.Definition
     , ModelInfo(..), Decision(..)
     , Statement(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
+    , QuestionAnswered(..)
 
     , Name(..)
     , Expression(..), ReferenceTo(..)
@@ -236,6 +237,18 @@ instance Pretty FindOrGiven where
 -- ModelInfo -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
+data QuestionAnswered = QuestionAnswered
+    { qHole_       :: Expression
+    , qAscendants_ :: [Expression]
+    , aText_       :: String  --   Doc is not Ord or Data
+    , aAnswer_     :: Expression
+    } deriving (Eq, Show, Ord, Data, Typeable, Generic)
+
+instance ToJSON   QuestionAnswered where toJSON    = genericToJSON jsonOptions
+instance FromJSON QuestionAnswered where parseJSON = genericParseJSON jsonOptions
+instance Serialize QuestionAnswered
+instance Hashable QuestionAnswered
+
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
@@ -246,6 +259,7 @@ data ModelInfo = ModelInfo
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
+    , miFollow :: [String]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -260,7 +274,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -600,7 +614,7 @@ data Generator
      | GenInExpr        AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-instance Pretty Generator where     
+instance Pretty Generator where
     pretty (GenDomainNoRepr  pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenDomainHasRepr pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x

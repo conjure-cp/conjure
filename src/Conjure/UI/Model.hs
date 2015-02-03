@@ -7,13 +7,14 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Conjure.UI.Model
     ( outputModels
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
-    , Strategy(..), Config(..), parseStrategy
+    , Strategy(..), Config(..), parseStrategy, getAnswers
     ) where
 
 import Conjure.Prelude
@@ -78,6 +79,11 @@ import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, repla
 import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
+import Conjure.UI.IO ( readModelFromFile )
+import Conjure.UI.LogFollow
+
+
+
 
 outputModels
     :: (MonadIO m, MonadFail m, MonadLog m)
@@ -125,7 +131,7 @@ toCompletion config@Config{..} m = do
     logInfo $ modelInfo m2
     loopy m2
     where
-        driver = strategyToDriver strategyQ strategyA
+        driver = strategyToDriver config strategyQ strategyA
         loopy model = do
             logDebug $ "[loopy]" <+> pretty model
             qs <- remaining config model
@@ -189,8 +195,8 @@ remaining config model = do
             }
 
 
-strategyToDriver :: Strategy -> Strategy -> Driver
-strategyToDriver strategyQ strategyA questions = do
+strategyToDriver :: Config -> Strategy -> Strategy -> Driver
+strategyToDriver config strategyQ strategyA questions = do
     let optionsQ =
             [ (doc, q)
             | (n, q) <- zip allNats questions
@@ -210,7 +216,7 @@ strategyToDriver strategyQ strategyA questions = do
                         nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
                                                                        , pretty (aAnswer a) ]
                 ]
-        pickedAs <- executeAnswerStrategy optionsA strategyA
+        pickedAs <- executeAnswerStrategy config pickedQ optionsA strategyA
         return (map aFullModel pickedAs)
 
 
@@ -251,17 +257,30 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [picked]
         Compact -> bug "executeStrategy: Compact"
+        LogFollow -> bug "executeStrategy: LogFollow"
 
 
-executeAnswerStrategy :: (MonadIO m, MonadLog m) => [(Doc, Answer)] -> Strategy -> m [Answer]
-executeAnswerStrategy [] _ = bug "executeStrategy: nothing to choose from"
-executeAnswerStrategy [(doc, option)] (viewAuto -> (_, True)) = do
+executeAnswerStrategy :: (MonadIO m, MonadLog m)
+                      => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [Answer]
+executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
+executeAnswerStrategy _  _ [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
     return [option]
-executeAnswerStrategy options st@(viewAuto -> (strategy, _)) =
+executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> return [minimumBy compactCompareAnswer (map snd options)]
-        _       -> executeStrategy options st
+
+        LogFollow -> do
+          logFollow (questionAnswers config) question options
+
+        AtRandom -> do
+          [picked] <- executeStrategy options st
+          let newAns = storeChoice question picked
+          -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
+          return [newAns]
+
+        _  -> executeStrategy options st
+
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -303,20 +322,20 @@ addToTrail Config{..}
             }
 
 
-allFixedQs :: Driver
-allFixedQs = strategyToDriver PickFirst PickAll
+allFixedQs :: Config -> Driver
+allFixedQs c = strategyToDriver c PickFirst PickAll
 
-pickFirst :: Driver
-pickFirst = strategyToDriver PickFirst PickFirst
+pickFirst :: Config -> Driver
+pickFirst c= strategyToDriver c PickFirst PickFirst
 
-interactive :: Driver
-interactive = strategyToDriver Interactive Interactive
+interactive :: Config -> Driver
+interactive c = strategyToDriver c Interactive Interactive
 
-interactiveFixedQs :: Driver
-interactiveFixedQs = strategyToDriver PickFirst Interactive
+interactiveFixedQs :: Config -> Driver
+interactiveFixedQs c = strategyToDriver c PickFirst Interactive
 
-interactiveFixedQsAutoA :: Driver
-interactiveFixedQsAutoA = strategyToDriver PickFirst (Auto Interactive)
+interactiveFixedQsAutoA :: Config -> Driver
+interactiveFixedQsAutoA  c = strategyToDriver c PickFirst (Auto Interactive)
 
 
 
