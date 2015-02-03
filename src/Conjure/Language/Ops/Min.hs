@@ -20,6 +20,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
         case ty of
             TypeList TypeInt -> return TypeInt
             TypeMatrix _ TypeInt -> return TypeInt
+            TypeSet TypeInt -> return TypeInt
+            TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMin where
