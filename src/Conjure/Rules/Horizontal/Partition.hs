@@ -163,3 +163,14 @@ rule_Participants = "partition-participants" `namedRule` theRule where
                          ++ transformBi (upd j) gofAfter
             )
     theRule _ = na "rule_Participants"
+
+
+rule_Card :: Rule
+rule_Card = "partition-card" `namedRule` theRule where
+    theRule p = do
+        partition       <- match opTwoBars p
+        TypePartition{} <- typeOf partition
+        return
+            ( "Cardinality of a partition"
+            , const $ make opTwoBars $ make opParticipants partition
+            )
