@@ -37,6 +37,7 @@ import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
+import Conjure.UI.TypeCheck ( typeCheckModel )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
@@ -485,6 +486,8 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= \ m -> typeCheckModel m >> return m
+                                      >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
