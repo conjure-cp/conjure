@@ -17,9 +17,8 @@ import qualified Data.Aeson as A
 
 logFollow :: (MonadIO m, MonadLog m)
           => [QuestionAnswered] -> Question -> [(Doc, Answer)] -> m [Answer]
-logFollow ans Question{..} options = do
+logFollow before Question{..} options = do
   logWarn ("-----")
-  -- logWarn ("fst ans" <+> (pretty $ show $ head ans))
   logWarn ( "qhole       " <+>  pretty  qHole )
   logWarn ( "qAscendants" <+> vcat (map pretty qAscendants) )
   logWarn ( hang  "Ans" 4  $
@@ -30,18 +29,34 @@ logFollow ans Question{..} options = do
   logWarn ("-----")
 
   case matching of
-    Just ans -> return [ans]
-    Nothing  -> return (map snd options)
+    Just a   -> do
+      logWarn (vcat ["Matched with previous data"
+                    , "Question" <+> (pretty  qHole)
+                    , "Answer" <+> (pretty . aAnswer $ a) ])
+      return [a]
+    Nothing  -> do
+        logWarn (vcat ["No match for ", "question" <+> (pretty  qHole)])
+        return (map snd options)
 
   where
     matching :: Maybe Answer
     matching =
-      case (catMaybes $ map f ans)  of
+      case (catMaybes $ map f (map snd options))  of
            []    -> Nothing
            (x:_) -> return x
 
 
-    f a = Nothing
+    f ans@Answer{..} = if or $ map match before then
+              Just ans
+          else
+              Nothing
+      where
+        match QuestionAnswered{..} = and
+          [ hash qHole_        == hash qHole
+          , hash qAscendants_  == hash  qAscendants
+          -- , aText_          == (show aText)
+          , hash aAnswer_      == hash aAnswer
+          ]
 
 
 storeChoice :: Question -> Answer -> Answer
