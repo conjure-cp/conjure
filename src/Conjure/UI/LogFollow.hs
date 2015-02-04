@@ -11,15 +11,15 @@ import Conjure.Language.Pretty
 
 import Conjure.Rules.Definition
 
-import Text.Read(read)
+-- import Text.Read(read)
 import Conjure.UI.IO ( readModelFromFile )
-import Conjure.Bug
-import qualified Data.Aeson as A
+-- import Conjure.Bug
+-- import qualified Data.Aeson as A
 
 
 logFollow :: (MonadIO m, MonadLog m)
           => [QuestionAnswered] -> Question -> [(Doc, Answer)] -> m [Answer]
-logFollow before Question{..} options = do
+logFollow before q@Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole )
   logWarn ( "qAscendants" <+> vcat (map pretty qAscendants) )
@@ -36,10 +36,10 @@ logFollow before Question{..} options = do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole)
                     , "Answer" <+> (pretty . aAnswer $ a) ])
-      return [a]
+      return [storeChoice q a]
     Nothing  -> do
         logWarn (vcat ["No match for ", "question" <+> (pretty  qHole)])
-        return (map snd options)
+        return (map (storeChoice q . snd) options)
 
   logWarn ("-----")
   return res

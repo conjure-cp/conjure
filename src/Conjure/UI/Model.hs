@@ -262,19 +262,19 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
 executeAnswerStrategy :: (MonadIO m, MonadLog m)
                       => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [Answer]
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
-executeAnswerStrategy _  _ [(doc, option)] (viewAuto -> (_, True)) = do
+executeAnswerStrategy _  q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
-    return [option]
+    return [storeChoice q option]
+
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> return [minimumBy compactCompareAnswer (map snd options)]
 
-        LogFollow -> do
-          logFollow (questionAnswers config) question options
+        LogFollow -> logFollow (questionAnswers config) question options
 
         AtRandom -> do
-          [picked] <- executeStrategy options st
-          let newAns = storeChoice question picked
+          picked <-  executeStrategy options st
+          let newAns = storeChoice question $ headNote "AtRandom no choice" picked
           -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
           return [newAns]
 
