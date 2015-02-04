@@ -1,5 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE ParallelListComp #-}
+
 
 module Conjure.UI.LogFollow where
 
@@ -21,15 +23,16 @@ logFollow before Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole )
   logWarn ( "qAscendants" <+> vcat (map pretty qAscendants) )
-  logWarn ( hang  "Ans" 4  $
-      vcat (map (\(d,Answer{..}) -> hang (pretty d) 8
-                    (vcat ["text" <+> pretty aText, "ansE" <+> pretty aAnswer] )
-                )  options) )
 
-  logWarn ("-----")
+  logWarn $ hang "Ans" 4 $
+    vcat $ [ hang ("Answer" <+> pretty i) 8 $
+                  vcat ["text" <+> pretty aText, "ansE" <+> pretty aAnswer]
+           |  (_,Answer{..}) <- options | i <- allNats ]
 
-  case matching of
-    Just a   -> do
+
+
+  res <- case matching of
+    Just a  -> do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole)
                     , "Answer" <+> (pretty . aAnswer $ a) ])
@@ -37,6 +40,9 @@ logFollow before Question{..} options = do
     Nothing  -> do
         logWarn (vcat ["No match for ", "question" <+> (pretty  qHole)])
         return (map snd options)
+
+  logWarn ("-----")
+  return res
 
   where
     matching :: Maybe Answer
@@ -52,30 +58,30 @@ logFollow before Question{..} options = do
               Nothing
       where
         match QuestionAnswered{..} = and
-          [ hash qHole_        == hash qHole
-          , hash qAscendants_  == hash  qAscendants
-          -- , aText_          == (show aText)
-          , hash aAnswer_      == hash aAnswer
+          [ qHole_        == hash qHole
+          , qAscendants_  == hash  qAscendants
+          , aText_        == (hash $ show aText)
+          , aAnswer_      == hash aAnswer
           ]
 
 
 storeChoice :: Question -> Answer -> Answer
 storeChoice q a@Answer{aFullModel=m} =
-  let qa = QuestionAnswered{ qHole_       = qHole q
-                           , qAscendants_ = qAscendants q
-                           , aText_       = (show $ aText a)
-                           , aAnswer_     = aAnswer a
+  let qa = QuestionAnswered{ qHole_       = hash $ qHole q
+                           , qAscendants_ = hash $ qAscendants q
+                           , aText_       = hash $ show $ aText a
+                           , aAnswer_     = hash $ aAnswer a
                            }
       -- newInfo = (mInfo m){miFollow= qa : (miFollow . mInfo $ m) }
-      newInfo = (mInfo m){miFollow= ( show $ A.encode  [qa]) : (miFollow . mInfo $ m) }
+      newInfo = (mInfo m){miFollow= ( qa : (miFollow . mInfo $ m)) }
   in a{aFullModel=m{mInfo=newInfo}}
 
 
 getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
 getAnswers fp = do
   Model{mInfo=ModelInfo{miFollow=logStrings} }  <- readModelFromFile fp
-  let ans :: [QuestionAnswered] = concatMap  (\a ->
-          fromMaybe (userErr $ "logParseError" <+> (pretty $ show a) <+> "---\n" )
-                        . A.decode . read $ a ) logStrings
-  return ans
-  -- return logStrings
+  -- let ans :: [QuestionAnswered] = concatMap  (\a ->
+  --         fromMaybe (userErr $ "logParseError" <+> (pretty $ show a) <+> "---\n" )
+  --                       . A.decode . read $ a ) logStrings
+  -- return ans
+  return logStrings

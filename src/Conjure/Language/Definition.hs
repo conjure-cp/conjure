@@ -238,10 +238,10 @@ instance Pretty FindOrGiven where
 ------------------------------------------------------------------------------------------------------------------------
 
 data QuestionAnswered = QuestionAnswered
-    { qHole_       :: Expression
-    , qAscendants_ :: [Expression]
-    , aText_       :: String  --   Doc is not Ord or Data
-    , aAnswer_     :: Expression
+    { qHole_       :: Int
+    , qAscendants_ :: Int
+    , aText_       :: Int  --   Doc is not Ord or Data
+    , aAnswer_     :: Int
     } deriving (Eq, Show, Ord, Data, Typeable, Generic)
 
 instance ToJSON   QuestionAnswered where toJSON    = genericToJSON jsonOptions
@@ -259,7 +259,7 @@ data ModelInfo = ModelInfo
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
-    , miFollow :: [String]
+    , miFollow :: [QuestionAnswered]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
