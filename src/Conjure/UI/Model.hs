@@ -79,7 +79,6 @@ import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, repla
 import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
-import Conjure.UI.IO ( readModelFromFile )
 import Conjure.UI.LogFollow
 
 
