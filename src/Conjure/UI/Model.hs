@@ -407,6 +407,9 @@ inlineDecVarLettings model =
                 Declaration (Letting nm x)
                     | categoryOf x == CatDecision
                     -> modify ((nm,x) :) >> return Nothing
+                -- The following doesn't work when the identifier is used in a domain
+                -- Declaration (Letting nm x@Reference{})
+                --     -> modify ((nm,x) :) >> return Nothing
                 _ -> Just <$> transformBiM inline st
     in
         model { mStatements = statements }
@@ -423,7 +426,10 @@ updateDeclarations model =
             case inStatement of
                 Declaration (FindOrGiven forg nm _) ->
                     case [ d | (n, d) <- representations, n == nm ] of
-                        [] -> bug $ "No representation chosen for: " <+> pretty nm
+                        [] -> bug $ vcat [ "No representation chosen for: " <+> pretty nm
+                                         , "Here is the complete model:"
+                                         , pretty model { mInfo = def }
+                                         ]
                         domains -> concatMap (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) ->
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
@@ -545,6 +551,7 @@ allRules config =
       ]
     , [ rule_PartialEvaluate
       ]
+    , paramRules
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
@@ -554,6 +561,16 @@ allRules config =
     ] ++ otherRules
       ++ delayedRules
 
+
+-- | For information that can be readily pulled out from parameters.
+--   Some things are easier when everything involved is a param.
+--   These rules aren't necessary for correctness, but they can help remove some verbose expressions from the output.
+--   Make Savile Row happier so it makes us happier. :)
+paramRules :: [Rule]
+paramRules =
+    [ Horizontal.Set.rule_Param_MinOfSet
+    , Horizontal.Set.rule_Param_MaxOfSet
+    ]
 
 verticalRules :: [Rule]
 verticalRules =

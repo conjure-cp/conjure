@@ -8,6 +8,8 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
+import Conjure.Language.CategoryOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
@@ -298,3 +300,39 @@ rule_Card = "set-card" `namedRule` theRule where
                     let (iPat, _) = quantifiedVar (fresh `at` 0)
                     in  [essence| sum &iPat in &s . 1 |]
                )
+
+
+rule_Param_MinOfSet :: Rule
+rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
+    theRule [essence| min(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
+        hasRepresentation s
+        DomainSet _ _ inner <- domainOf s
+        return
+            ( "min of a parameter set"
+            , case inner of
+                DomainInt [RangeBounded l _] -> const l
+                _ -> \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| min([ &i | &iPat : &inner ]) |]
+            )
+    theRule _ = na "rule_Param_MinOfSet"
+
+
+rule_Param_MaxOfSet :: Rule
+rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
+    theRule [essence| max(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
+        hasRepresentation s
+        DomainSet _ _ inner <- domainOf s
+        return
+            ( "max of a parameter set"
+            , case inner of
+                DomainInt [RangeBounded _ u] -> const u
+                _ -> \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| max([ &i | &iPat : &inner ]) |]
+            )
+    theRule _ = na "rule_Param_MaxOfSet"
