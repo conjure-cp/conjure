@@ -426,10 +426,11 @@ updateDeclarations model =
             case inStatement of
                 Declaration (FindOrGiven forg nm _) ->
                     case [ d | (n, d) <- representations, n == nm ] of
-                        [] -> bug $ vcat [ "No representation chosen for: " <+> pretty nm
-                                         , "Here is the complete model:"
-                                         , pretty model { mInfo = def }
-                                         ]
+                        [] -> []
+                              -- bug $ vcat [ "No representation chosen for: " <+> pretty nm
+                              --            , "Here is the complete model:"
+                              --            , pretty model { mInfo = def }
+                              --            ]
                         domains -> concatMap (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) ->
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
@@ -447,18 +448,6 @@ updateDeclarations model =
         -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
         -- and 2 disticnt representations in the inner level. removing them.
         model { mStatements = nub statements }
-
-
--- | at this point, if a parameter isn't used anywhere in the model it can be removed completely!
-removeUnusedParams :: MonadFail m => Model -> m Model
-removeUnusedParams m = do
-    let statements' =
-            [ case this of
-                Declaration (FindOrGiven Given nm _) | nbUses nm after == 0 -> []
-                _ -> [this]
-            | (this, after) <- withAfter (mStatements m)
-            ]
-    return m { mStatements = concat statements' }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
@@ -515,7 +504,6 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
-    >>= removeUnusedParams            >>= logDebugId "[removeUnusedParams]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
