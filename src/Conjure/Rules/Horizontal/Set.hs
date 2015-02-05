@@ -307,7 +307,6 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
     theRule [essence| min(&s) |] = do
         TypeSet TypeInt <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
-        hasRepresentation s
         DomainSet _ _ inner <- domainOf s
         return
             ( "min of a parameter set"
@@ -325,7 +324,6 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
         TypeSet TypeInt <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
-        hasRepresentation s
         DomainSet _ _ inner <- domainOf s
         return
             ( "max of a parameter set"
@@ -336,3 +334,16 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
                     in  [essence| max([ &i | &iPat : &inner ]) |]
             )
     theRule _ = na "rule_Param_MaxOfSet"
+
+
+rule_Param_Card :: Rule
+rule_Param_Card = "param-card-of-set" `namedRule` theRule where
+    theRule [essence| |&s| |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_Card"
+        DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
+        return
+            ( "cardinality of a parameter set"
+            , const n
+            )
+    theRule _ = na "rule_Param_Card"

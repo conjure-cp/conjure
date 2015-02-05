@@ -449,6 +449,18 @@ updateDeclarations model =
         model { mStatements = nub statements }
 
 
+-- | at this point, if a parameter isn't used anywhere in the model it can be removed completely!
+removeUnusedParams :: MonadFail m => Model -> m Model
+removeUnusedParams m = do
+    let statements' =
+            [ case this of
+                Declaration (FindOrGiven Given nm _) | nbUses nm after == 0 -> []
+                _ -> [this]
+            | (this, after) <- withAfter (mStatements m)
+            ]
+    return m { mStatements = concat statements' }
+
+
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
 checkIfAllRefined m | Just modelZipper <- zipperBi m = do
@@ -503,6 +515,7 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
+    >>= removeUnusedParams            >>= logDebugId "[removeUnusedParams]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
@@ -570,6 +583,7 @@ paramRules :: [Rule]
 paramRules =
     [ Horizontal.Set.rule_Param_MinOfSet
     , Horizontal.Set.rule_Param_MaxOfSet
+    , Horizontal.Set.rule_Param_Card
     ]
 
 verticalRules :: [Rule]
