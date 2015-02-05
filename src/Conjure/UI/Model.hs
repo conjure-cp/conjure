@@ -425,13 +425,13 @@ updateDeclarations model =
         onEachStatement (inStatement, afters) =
             case inStatement of
                 Declaration (FindOrGiven forg nm _) ->
-                    case [ d | (n, d) <- representations, n == nm ] of
-                        [] -> []
-                              -- bug $ vcat [ "No representation chosen for: " <+> pretty nm
-                              --            , "Here is the complete model:"
-                              --            , pretty model { mInfo = def }
-                              --            ]
-                        domains -> concatMap (onEachDomain forg nm) domains
+                    let
+                        -- the refined domains for the high level declaration
+                        domains = [ d | (n, d) <- representations, n == nm ]
+                    in
+                        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
+                        -- and 2 disticnt representations in the inner level. removing them with nub.
+                        nub $ concatMap (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) ->
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
                 Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
@@ -445,9 +445,7 @@ updateDeclarations model =
                 Right outs -> [Declaration (FindOrGiven forg n (forgetRepr "updateDeclarations" d)) | (n, d) <- outs]
 
     in
-        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
-        -- and 2 disticnt representations in the inner level. removing them.
-        model { mStatements = nub statements }
+        model { mStatements = statements }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
