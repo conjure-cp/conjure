@@ -91,7 +91,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Use \"smart names\" for the models.\n\
-                                           \Turned off by default."
+                                           \Turned off by default.\n\
+                                           \Caution: With this flag, Conjure will use the answers when producing \
+                                           \a filename. It will ignore the order of questions. \
+                                           \This will become a problem if anything other than 'f' is used for questions."
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit

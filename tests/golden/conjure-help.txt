@@ -17,7 +17,11 @@ Logging & Output:
      --numbering-start=INT       Starting value to output files. Default
                                  value: 1
      --smart-filenames           Use "smart names" for the models. Turned off
-                                 by default.
+                                 by default. Caution: With this flag, Conjure
+                                 will use the answers when producing a
+                                 filename. It will ignore the order of
+                                 questions. This will become a problem if
+                                 anything other than 'f' is used for questions.
      --log-level=LOGLEVEL        Log level.
      --verbose-trail             Whether to generate verbose trails or not.
      --log-rule-fails            Generate logs for rule failures. (Caution:
