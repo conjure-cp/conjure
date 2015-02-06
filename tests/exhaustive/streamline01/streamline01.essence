@@ -1,0 +1,12 @@
+language Essence 1.3
+
+letting A be domain int(1..2)
+letting B be domain int(1..2)
+
+find f : function A --> B
+
+find s : set (size |A| / 2) of A        $ s is a set of half the things in A
+such that s subsetEq defined(f)         $ 
+
+$ f is monotonic for values in s
+such that forAll i in s , i != min(s) . f(i) > f(min(s))
