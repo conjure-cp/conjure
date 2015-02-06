@@ -105,7 +105,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , take, drop
                               , head, init, tail, last
                               )
-import Data.List.Split   as X ( splitOn )
+import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )

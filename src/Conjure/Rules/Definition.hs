@@ -71,6 +71,7 @@ data Config = Config
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
+    , smartFilenames            :: Bool
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -88,6 +89,7 @@ instance Default Config where
         , parameterRepresentation   = True
         , limitModels               = Nothing
         , numberingStart            = 1
+        , smartFilenames            = False
         }
 
 type RuleResult m =

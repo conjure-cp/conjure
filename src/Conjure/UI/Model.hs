@@ -105,7 +105,15 @@ outputModels config model = do
                     log l msg
                     return i
                 Right eprime -> do
-                    let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
+                    let gen =
+                            if smartFilenames config
+                                then [ choice
+                                     | [_question, (choice, options)] <- eprime |> mInfo |> miTrailCompact |> chunksOf 2
+                                     , length options > 1
+                                     ] |> map (('_':) . show)
+                                       |> concat
+                                else paddedNum i
+                    let filename = dir </> "model" ++ gen ++ ".eprime"
                     liftIO $ writeFile filename (renderWide eprime)
                     return (i+1)
 

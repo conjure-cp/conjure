@@ -76,6 +76,7 @@ mainWithArgs Modelling{..} = do
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart          = numberingStart
+            , Config.smartFilenames          = smartFilenames
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do

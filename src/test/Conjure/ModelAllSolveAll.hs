@@ -301,4 +301,5 @@ modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
                                              , outputDirectory = dir
                                              , parameterRepresentation = True
                                              , channelling = True
+                                             , smartFilenames = True
                                              }
