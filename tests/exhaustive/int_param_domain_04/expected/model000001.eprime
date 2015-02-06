@@ -4,8 +4,8 @@ given p1: int
 given p2: int
 given p3: int
 given s_Occurrence: matrix indexed by [int(p2..p3)] of bool
-letting q1 be min([q3 | q3 : int(p2..p3), s_Occurrence[q3]])
-letting q2 be max([q4 | q4 : int(p2..p3), s_Occurrence[q4]])
+letting q1 be p2
+letting q2 be p3
 find x: int(q1..q2)
 such that s_Occurrence[x]
 
