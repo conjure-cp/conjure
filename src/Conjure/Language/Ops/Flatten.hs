@@ -14,12 +14,16 @@ instance Hashable  x => Hashable  (OpFlatten x)
 instance ToJSON    x => ToJSON    (OpFlatten x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFlatten x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpFlatten x) where
-    typeOf (OpFlatten m) = do
+instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
+    typeOf p@(OpFlatten m) = do
         let flattenType (TypeList inner) = flattenType inner
+            flattenType (TypeMatrix _ inner) = flattenType inner
             flattenType ty = ty
-        TypeList n <- typeOf m
-        return (TypeList (flattenType n))
+        ty <- typeOf m
+        case ty of
+            TypeList n -> return (TypeList (flattenType n))
+            TypeMatrix _ n -> return (TypeList (flattenType n))
+            _ -> raiseTypeError p
 
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do
