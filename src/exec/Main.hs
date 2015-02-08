@@ -58,7 +58,7 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    answers <- case eprimeToFollow of
+    answers <- case jsonChoices of
                  Just f  -> getAnswers f
                  Nothing -> return []
 

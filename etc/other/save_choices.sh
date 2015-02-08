@@ -7,6 +7,7 @@ set -o nounset
 file="$1"
 shift
 
-"$@" | tee >( grep 'LF:' | grep 'END:' \
+"$@" | tee >( grep '^LF:' | grep 'END:$' \
 		| sed -e 's/END://' | sed -e '1s/LF:/[/;t' -e '1,/LF:/s//[/' -e's/LF:/,/1'  \
-		> "$file" && ( [ -s "$file" ] && echo ']' >> "$file") )
+		> "$file" && ( [ -s "$file" ] && echo ']' >> "$file") ) \
+	| grep -v '^LF:'

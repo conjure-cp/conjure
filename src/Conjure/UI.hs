@@ -31,7 +31,7 @@ data UI
         , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
         , limitTime                 :: Maybe Int
-        , eprimeToFollow            :: Maybe FilePath
+        , jsonChoices               :: Maybe FilePath
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -154,12 +154,12 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
-        , eprimeToFollow   = def   &= typFile
-                                   &= name "eprime-to-follow"
-                                   &= name "e"
+        , jsonChoices      = def   &= typFile
+                                   &= name "json-choices"
+                                   &= name "j"
                                    &= groupname "Model generation"
                                    &= explicit
-                                   &= help "An Essence' parameter matching the Essence' model.\n"
+                                   &= help "Choices to Use if possible \n"
 
         }                          &= name "modelling"
                                    &= explicit

@@ -12,17 +12,19 @@ module Conjure.UI.LogFollow
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-
 import Conjure.Rules.Definition
 
--- import Text.Read(read)
--- import Conjure.Bug
-import Conjure.UI.IO ( readModelFromFile )
-import qualified Data.Aeson.Encode as A
+import Conjure.Bug(userErr)
+-- import Conjure.UI.IO ( readModelFromFile )
 
-import qualified Text.PrettyPrint as Pr
+import qualified Data.Aeson as A
+import qualified Data.Aeson.Encode as A
+import qualified Data.ByteString.Lazy as B
+
 import qualified Data.Text.Lazy as T
 import qualified Data.Text.Lazy.Builder as T
+import qualified Text.PrettyPrint as Pr
+-- import Text.Read(read)
 
 
 logFollow :: (MonadIO m, MonadLog m)
@@ -89,12 +91,21 @@ storeChoice q a@Answer{aFullModel=m} = do
 
 getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
 getAnswers fp = do
-  Model{mInfo=ModelInfo{miFollow=logStrings} }  <- readModelFromFile fp
+  -- the double encoded Q&A
   -- let ans :: [QuestionAnswered] = concatMap  (\a ->
   --         fromMaybe (userErr $ "logParseError" <+> (pretty $ show a) <+> "---\n" )
   --                       . A.decode . read $ a ) logStrings
   -- return ans
-  return logStrings
+
+  -- Reading from the eprime
+  -- Model{mInfo=ModelInfo{miFollow=logStrings} }  <- readModelFromFile fp
+  -- return logStrings
+
+  -- Read from a json file
+  liftIO $ fmap A.decode (B.readFile fp) >>= \case
+    Just v  -> return v
+    Nothing -> userErr $ "Error parsing" <+> pretty fp
+
 
 saveToLog :: MonadLog m => Doc -> m ()
 saveToLog = log LogFollow
