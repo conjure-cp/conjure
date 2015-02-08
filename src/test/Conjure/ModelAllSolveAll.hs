@@ -254,38 +254,48 @@ equalNumberOfSolutions :: TestDirFiles -> TestTree
 equalNumberOfSolutions TestDirFiles{..} =
     testCase "Checking number of solutions" $ do
         dirShouldExist outputsDir
-        solutions' <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+        params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
         let
-            solutions :: [((String, String), [String])]
-            solutions =
-                [ ((param, model), solution)
-                | sol <- solutions'
-                , let parts = splitOn "." sol |> head |> splitOn "-"
-                , let model = head parts
-                , let solution = last parts
-                , let param = init (tail parts) |> intercalate "-"
-                ] |> sortBy  (comparing fst)
-                  |> groupBy ((==) `on` fst)
-                  |> map (\ grp -> (fst (head grp), map snd grp) )
+            grouped :: [(Maybe String, [(String, Int)])]
+            grouped =
+                (if null params
+                    then
+                        [ (Nothing, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                        | model' <- models
+                        , let model = splitOn "." model' |> head
+                        , let solnPrefix = model
+                        ]
+                    else
+                        [ (Just param, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                        | model          <- map (head . splitOn ".") models
+                        , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                        , model == model2
+                        , let solnPrefix = model ++ "-" ++ param
+                        ])
+                |> sortBy  (comparing fst)
+                |> groupBy ((==) `on` fst)
+                |> map (\ grp -> (fst (head grp), map snd grp) )
         let
-            differentOnes = concat
-                [ if length solutions1 == length solutions2
-                    then []
-                    else [ (model1, param1, length solutions1)
-                         , (model2, param2, length solutions2)
-                         ]
-                | ((param1, model1), solutions1) <- solutions
-                , ((param2, model2), solutions2) <- solutions
-                , param1 == param2                              -- for the same param
-                , model1 < model2                               -- two different models
+            differentOnes :: [(Maybe String, [(String, Int)])]
+            differentOnes =
+                [ this
+                | this@(_, modelSols) <- grouped
+                , let nbSols = map snd modelSols |> nub
+                , length nbSols > 1
                 ]
+
         unless (null differentOnes) $
             assertFailure $ show $ vcat
-                [ nest 4 $ if param == ""
-                            then "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
-                            else "For parameter" <+> pretty param <+>
-                                 "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
-                | (model, param, count) <- differentOnes
+                [ (maybe
+                    id
+                    (\ p -> hang ("For parameter" <+> pretty p) 4 )
+                    param
+                  ) $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
+                           | (model, nbSols) <- modelSols
+                           ]
+                | (param, modelSols) <- differentOnes
                 ]
 
 dirShouldExist :: FilePath -> IO ()
