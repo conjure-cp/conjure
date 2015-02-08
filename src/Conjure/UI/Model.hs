@@ -14,7 +14,7 @@ module Conjure.UI.Model
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
-    , Strategy(..), Config(..), parseStrategy, getAnswers
+    , Strategy(..), Config(..), parseStrategy
     ) where
 
 import Conjure.Prelude
@@ -79,7 +79,7 @@ import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, repla
 import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
-import Conjure.UI.LogFollow
+import Conjure.UI.LogFollow(logFollow, storeChoice)
 
 
 
@@ -256,7 +256,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [picked]
         Compact -> bug "executeStrategy: Compact"
-        LogFollow -> bug "executeStrategy: LogFollow"
+        FollowLog -> bug "executeStrategy: FollowLog"
 
 
 executeAnswerStrategy :: (MonadIO m, MonadLog m)
@@ -264,17 +264,18 @@ executeAnswerStrategy :: (MonadIO m, MonadLog m)
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy _  q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
-    return [storeChoice q option]
+    c <- storeChoice q option
+    return [c]
 
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> return [minimumBy compactCompareAnswer (map snd options)]
 
-        LogFollow -> logFollow (questionAnswers config) question options
+        FollowLog -> logFollow (questionAnswers config) question options
 
         AtRandom -> do
           picked <-  executeStrategy options st
-          let newAns = storeChoice question $ headNote "AtRandom no choice" picked
+          newAns <- storeChoice question $ headNote "AtRandom no choice" picked
           -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
           return [newAns]
 

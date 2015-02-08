@@ -41,7 +41,7 @@ data Strategy
     | Interactive
     | AtRandom
     | Compact
-    | LogFollow
+    | FollowLog
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -58,7 +58,7 @@ parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
 parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy "c" = return Compact
-parseStrategy "l" = return LogFollow
+parseStrategy "l" = return FollowLog
 parseStrategy _ = Nothing
 
 data Config = Config

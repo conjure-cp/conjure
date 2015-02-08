@@ -3,7 +3,11 @@
 {-# LANGUAGE ParallelListComp #-}
 
 
-module Conjure.UI.LogFollow where
+module Conjure.UI.LogFollow
+    ( logFollow
+    , storeChoice
+    , getAnswers
+    ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition
@@ -12,9 +16,13 @@ import Conjure.Language.Pretty
 import Conjure.Rules.Definition
 
 -- import Text.Read(read)
-import Conjure.UI.IO ( readModelFromFile )
 -- import Conjure.Bug
--- import qualified Data.Aeson as A
+import Conjure.UI.IO ( readModelFromFile )
+import qualified Data.Aeson.Encode as A
+
+import qualified Text.PrettyPrint as Pr
+import qualified Data.Text.Lazy as T
+import qualified Data.Text.Lazy.Builder as T
 
 
 logFollow :: (MonadIO m, MonadLog m)
@@ -36,10 +44,11 @@ logFollow before q@Question{..} options = do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole)
                     , "Answer" <+> (pretty . aAnswer $ a) ])
-      return [storeChoice q a]
+      c <- storeChoice q a
+      return [c]
     Nothing  -> do
         logWarn (vcat ["No match for ", "question" <+> (pretty  qHole)])
-        return (map (storeChoice q . snd) options)
+        mapM (storeChoice q . snd) options
 
   logWarn ("-----")
   return res
@@ -65,8 +74,8 @@ logFollow before q@Question{..} options = do
           ]
 
 
-storeChoice :: Question -> Answer -> Answer
-storeChoice q a@Answer{aFullModel=m} =
+storeChoice :: MonadLog m => Question -> Answer -> m Answer
+storeChoice q a@Answer{aFullModel=m} = do
   let qa = QuestionAnswered{ qHole_       = hash $ qHole q
                            , qAscendants_ = hash $ qAscendants q
                            , aText_       = hash $ show $ aText a
@@ -74,7 +83,8 @@ storeChoice q a@Answer{aFullModel=m} =
                            }
       -- newInfo = (mInfo m){miFollow= qa : (miFollow . mInfo $ m) }
       newInfo = (mInfo m){miFollow= ( qa : (miFollow . mInfo $ m)) }
-  in a{aFullModel=m{mInfo=newInfo}}
+  saveToLog $ "LF: " <+> jsonToDoc qa  <+> "END:"
+  return $ a{aFullModel=m{mInfo=newInfo}}
 
 
 getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
@@ -85,3 +95,10 @@ getAnswers fp = do
   --                       . A.decode . read $ a ) logStrings
   -- return ans
   return logStrings
+
+saveToLog :: MonadLog m => Doc -> m ()
+saveToLog = log LogFollow
+
+
+jsonToDoc :: ToJSON a => a -> Doc
+jsonToDoc  = Pr.text . T.unpack . T.toLazyText . A.encodeToTextBuilder . toJSON
