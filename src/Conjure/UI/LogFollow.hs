@@ -77,16 +77,16 @@ logFollow before q@Question{..} options = do
 
 
 storeChoice :: MonadLog m => Question -> Answer -> m Answer
-storeChoice q a@Answer{aFullModel=m} = do
+storeChoice q a = do
   let qa = QuestionAnswered{ qHole_       = hash $ qHole q
                            , qAscendants_ = hash $ qAscendants q
                            , aText_       = hash $ show $ aText a
                            , aAnswer_     = hash $ aAnswer a
                            }
-      -- newInfo = (mInfo m){miFollow= qa : (miFollow . mInfo $ m) }
-      newInfo = (mInfo m){miFollow= ( qa : (miFollow . mInfo $ m)) }
+      -- newInfo = (mInfo m){miFollow= ( qa : (miFollow . mInfo $ m)) }
   saveToLog $ "LF: " <+> jsonToDoc qa  <+> "END:"
-  return $ a{aFullModel=m{mInfo=newInfo}}
+  -- return $ a{aFullModel=m{mInfo=newInfo}}
+  return a
 
 
 getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
