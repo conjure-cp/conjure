@@ -51,7 +51,7 @@ attributeAsConstraints m = do
 mkAttributeToConstraint
     :: (MonadFail m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
-    -> Name                                         -- the name of the attribute
+    -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
     -> [Name]
     -> Expression                                   -- the input thing
@@ -65,7 +65,7 @@ mkAttributeToConstraint domain attr mval fresh x = flip evalStateT fresh $ do
 attributeToConstraint
     :: (MonadState [Name] m, MonadFail m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
-    -> Name                                         -- the name of the attribute
+    -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
     -> m (Expression -> m Expression)               -- the constraint generator
 

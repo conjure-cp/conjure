@@ -363,7 +363,7 @@ parseRelationAttr = do
         [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let readBinRel' (DAName a) = readBinRel a
+    let readBinRel' (DAName (Name a)) = readBinRel (fromString (textToString a))
         readBinRel' a = fail $ "Not a binary relation attribute:" <+> pretty a
     binRels <- mapM readBinRel' (filterBinRel attrs)
     return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
@@ -537,13 +537,14 @@ parseAAC = do
     let
         isAttr (LIdentifier txt) | Just _ <- Name txt `lookup` allSupportedAttributes = True
         isAttr _ = False
-    LIdentifier txt <- satisfyT isAttr
-    let attr = Name txt
-    let n = fromMaybe (bug "parseAAC") (lookup attr allSupportedAttributes)
+    LIdentifier attr <- satisfyT isAttr
+    let n = fromMaybe (bug "parseAAC") (lookup (Name attr) allSupportedAttributes)
     args <- parens $ countSep (n+1) parseExpr comma
     case (n, args) of
-        (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e attr Nothing
-        (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e attr (Just v)
+        (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
+                                        (fromString (textToString attr)) Nothing
+        (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
+                                        (fromString (textToString attr)) (Just v)
         _ -> fail "parseAAC"
 
 parseOthers :: [Parser Expression]

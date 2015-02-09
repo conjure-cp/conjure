@@ -13,7 +13,7 @@ module Conjure.Prelude
     , padRight, padLeft, padCenter
     , pairWithContents
     , withRest, withAfter, withBefore
-    , T.Text, stringToText
+    , T.Text, stringToText, textToString
     , sameLength
     , concatMapM
     , timedIO
@@ -187,6 +187,9 @@ tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
 
 stringToText :: String -> T.Text
 stringToText = T.pack
+
+textToString :: T.Text -> String
+textToString = T.unpack
 
 stringToDoc :: String -> Doc
 stringToDoc = Pr.text
