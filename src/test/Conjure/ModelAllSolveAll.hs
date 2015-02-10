@@ -18,7 +18,7 @@ import System.Environment ( getEnvironment )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
-import Test.Tasty.HUnit ( testCase, assertFailure )
+import Test.Tasty.HUnit ( testCase, testCaseSteps, assertFailure )
 
 -- shelly
 import Shelly ( run, lastStderr )
@@ -100,12 +100,11 @@ isTestDir baseDir possiblyDir = do
 --                + D/expected for the expected output files
 testSingleDir :: String -> TestDirFiles -> IO TestTree
 testSingleDir srExtraOptions t@(TestDirFiles{..}) = do
-    checkFiles <- checkExpectedAndExtraFiles t
     return $ testGroup name $ concat
         [ [conjuring]
         , savileRows
         , validating
-        , [checkFiles]
+        , [checkExpectedAndExtraFiles t]
         , [equalNumberOfSolutions t]
         ]
     where
@@ -214,8 +213,8 @@ validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right () -> return ()
 
-checkExpectedAndExtraFiles :: TestDirFiles -> IO TestTree
-checkExpectedAndExtraFiles TestDirFiles{..} = do
+checkExpectedAndExtraFiles :: TestDirFiles -> TestTree
+checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
     let relevantFile f = or [ suffix `isSuffixOf` f
                             | suffix <- [".eprime", ".eprime-param", ".solution"]
                             ]
@@ -231,24 +230,23 @@ checkExpectedAndExtraFiles TestDirFiles{..} = do
             else return S.empty
     let extras = S.difference outputs expecteds
 
-    return $ testGroup "Checking" $
-        ( testCase "Extra files" $ unless (S.null extras) $
-            assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
-        ) :
-        [ testCase (unwords ["Expected", item]) $ do
-            let expectedPath  = expectedsDir </> item
-            let generatedPath = outputsDir   </> item
-            isFile <- doesFileExist generatedPath
-            if isFile
-                then do
-                    e <- readModelFromFile expectedPath
-                    g <- readModelFromFile generatedPath
-                    case modelDiff e g of
-                        Nothing -> return ()
-                        Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
-                else assertFailure $ "file doesn't exist: " ++ generatedPath
-        | item <- S.toList expecteds
-        ]
+    step "Checking extra files"
+    unless (S.null extras) $ assertFailure $ show $ prettyList id ", " (S.toList extras)
+
+    step "Checking expected files"
+    forM_ expecteds $ \ item -> do
+        step (unwords ["Checking expected file", item])
+        let expectedPath  = expectedsDir </> item
+        let generatedPath = outputsDir   </> item
+        isFile <- doesFileExist generatedPath
+        if isFile
+            then do
+                e <- readModelFromFile expectedPath
+                g <- readModelFromFile generatedPath
+                case modelDiff e g of
+                    Nothing -> return ()
+                    Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
+            else assertFailure $ "file doesn't exist: " ++ generatedPath
 
 equalNumberOfSolutions :: TestDirFiles -> TestTree
 equalNumberOfSolutions TestDirFiles{..} =
