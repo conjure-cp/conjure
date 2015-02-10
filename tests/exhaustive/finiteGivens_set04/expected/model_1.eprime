@@ -5,5 +5,7 @@ given p2: int
 given p3: int
 given p4: int
 given a_Explicit_Occurrence: matrix indexed by [int(1..p1), int(p3..p4)] of bool
-such that true
+letting q1 be -1000
+find x: int(q1..1000)
+such that x = max([max([q3 | q3 : int(p3..p4), a_Explicit_Occurrence[q2, q3]]) | q2 : int(1..p1)])
 

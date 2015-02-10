@@ -6,5 +6,8 @@ given p3: int
 given p4: int
 given a_Explicit_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..p1), int(1..p2)] of bool
 given a_Explicit_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..p1), int(1..p2)] of int(p3..p4)
-such that true
+letting q1 be -1000
+find x: int(q1..1000)
+such that
+    x = max([max([a_Explicit_ExplicitVarSizeWithFlags_Values[q2, q4] | q4 : int(1..p2), a_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q4]]) | q2 : int(1..p1)])
 
