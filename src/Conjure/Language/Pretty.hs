@@ -128,7 +128,8 @@ instance Pretty JSON.Object where
             keyOrder = [ "decision", "options"
                        , "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                        , "trailCompact", "trailVerbose"
-                       , "representations", "originalDomains"
+                       , "representations", "representationsTree"
+                       , "originalDomains"
                        ]
 
             comp a b =
