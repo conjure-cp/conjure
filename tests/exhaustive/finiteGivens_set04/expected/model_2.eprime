@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+given p1: int
+given p2: int
+given p3: int
+given p4: int
+given a_Explicit_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..p1)] of int(0..p2)
+given a_Explicit_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..p1), int(1..p2)] of int(p3..p4)
+such that true
+
