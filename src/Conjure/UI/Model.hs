@@ -794,9 +794,10 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
             freshNames' = freshNames model
 
-            representations = model |> mInfo |> miRepresentations
+            representations     = model |> mInfo |> miRepresentations
+            representationsTree = model |> mInfo |> miRepresentationsTree
 
-            usedBefore = (name, domain) `elem` representations
+            usedBefore = (name, reprTree domain) `elem` representationsTree
 
             mstructurals = do
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -834,7 +835,10 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 | otherwise = \ m ->
                 let
                     oldInfo = mInfo m
-                    newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
+                    newInfo = oldInfo
+                        { miRepresentations     = miRepresentations     oldInfo ++ [(name, domain)]
+                        , miRepresentationsTree = miRepresentationsTree oldInfo ++ [(name, reprTree domain)]
+                        }
                 in  m { mInfo = newInfo }
 
             fixReprForOthers

@@ -170,6 +170,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
 
+-- containers
 import qualified Data.Set as S
 
 import System.Directory as X

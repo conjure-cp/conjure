@@ -15,7 +15,7 @@ module Conjure.Language.Domain
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
-    , reprAtTopLevel
+    , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
@@ -166,21 +166,50 @@ changeRepr _ rep = go
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
 
+
+data Tree a = Tree { rootLabel :: a, subForest :: [Tree a] }
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+
+instance Serialize a => Serialize (Tree a)
+instance Hashable  a => Hashable  (Tree a)
+instance ToJSON    a => ToJSON    (Tree a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON jsonOptions
+
+reprTree :: Domain r x -> Tree (Maybe r)
+reprTree DomainBool{}    = Tree Nothing []
+reprTree DomainInt{}     = Tree Nothing []
+reprTree DomainEnum{}    = Tree Nothing []
+reprTree DomainUnnamed{} = Tree Nothing []
+reprTree (DomainTuple as  ) = Tree Nothing (map reprTree as)
+reprTree (DomainMatrix _ a) = Tree Nothing [reprTree a]
+reprTree (DomainSet       r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainMSet      r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
+reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
+reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
+reprTree DomainOp{}        = Tree Nothing []
+reprTree DomainReference{} = Tree Nothing []
+reprTree DomainMetaVar{}   = Tree Nothing []
+
 reprAtTopLevel :: Domain r x -> Maybe r
-reprAtTopLevel DomainBool{} = Nothing
-reprAtTopLevel DomainInt{} = Nothing
-reprAtTopLevel DomainEnum{} = Nothing
-reprAtTopLevel DomainUnnamed{} = Nothing
-reprAtTopLevel DomainTuple{} = Nothing
-reprAtTopLevel DomainMatrix{} = Nothing
-reprAtTopLevel (DomainSet       r _ _  ) = return r
-reprAtTopLevel (DomainMSet      r _ _  ) = return r
-reprAtTopLevel (DomainFunction  r _ _ _) = return r
-reprAtTopLevel (DomainRelation  r _ _  ) = return r
-reprAtTopLevel (DomainPartition r _ _  ) = return r
-reprAtTopLevel DomainOp{} = Nothing
-reprAtTopLevel DomainReference{} = Nothing
-reprAtTopLevel DomainMetaVar{} = Nothing
+reprAtTopLevel = rootLabel . reprTree
+
+applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
+applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) = DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
+applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
+applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
+applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = DomainFunction r attr <$> applyReprTree a aRepr <*> applyReprTree b bRepr
+applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
+applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
