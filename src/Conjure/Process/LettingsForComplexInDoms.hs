@@ -29,9 +29,15 @@ lettingsForComplexInDoms m = do
         expressionExtract expr@AbstractLiteral{} = return expr
         expressionExtract expr@Reference{}       = return expr
         expressionExtract expr = do
-            newLetting <- nextName
-            tell [Declaration (Letting newLetting expr)]        -- new declarations
-            return (Reference newLetting Nothing)               -- the replacement expression
+            if null [ () | Name{} <- universeBi expr ]
+                then
+                    -- this expression doesn't contain any references in it.
+                    -- not extracting a letting for it.
+                    return expr
+                else do
+                    newLetting <- nextName
+                    tell [Declaration (Letting newLetting expr)]        -- new declarations
+                    return (Reference newLetting Nothing)               -- the replacement expression
 
     flip evalStateT (freshNames m) $ do
         statements <- forM (mStatements m) $ \ st ->
