@@ -302,7 +302,7 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
                         Comprehension body
                             $  gofBefore
                             ++ [ Generator (GenInExpr iPat func)
-                               , Condition [essence| exists &jPat : &dom . &j = &i |]
+                               , Condition [essence| exists &jPat : &dom . &j = &i[1] |]
                                ]
                             ++ gofAfter
             )

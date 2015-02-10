@@ -196,7 +196,6 @@ opRange _ =
     )
 
 
-
 opRestrict
     :: MonadFail m
     => Proxy (m :: * -> *)
@@ -205,12 +204,11 @@ opRestrict
        )
 opRestrict _ =
     ( \ x d -> injectOp $ MkOpRestrict $ OpRestrict x (Domain d)
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpRestrict (OpRestrict x (Domain d)) -> return (x, d)
-                _ -> na ("Lenses.opRestrict:" <++> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Op (MkOpRestrict (OpRestrict x (Domain d)))) = return (x, d)
+        extract p = na ("Lenses.opRestrict:" <++> pretty p)
 
 
 opToInt

@@ -19,7 +19,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
         TypeFunction from to <- typeOf f
         from'                <- typeOf dom
         if typesUnify [from, from']
-            then return (TypeFunction from' to)
+            then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
 
 instance EvaluateOp OpRestrict where
