@@ -20,10 +20,9 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+        (_gofBefore@[], (pat, p), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opParts expr)
             _ -> na "rule_Comprehension_Literal"
-        let p = matchDef opParts expr
         elems <- match partitionLiteral p
         let f = lambdaToFunction pat body
         return

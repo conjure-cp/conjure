@@ -94,7 +94,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "FunctionNDPartial"           <- representationOf func
         TypeFunction (TypeTuple ts) _ <- typeOf func
