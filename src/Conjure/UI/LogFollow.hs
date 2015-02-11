@@ -1,6 +1,8 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ParallelListComp #-}
+{-# LANGUAGE ViewPatterns #-}
+
 
 
 module Conjure.UI.LogFollow
@@ -29,9 +31,13 @@ import qualified Text.PrettyPrint as Pr
 
 import qualified Data.IntSet as I
 
+import Data.Map(Map)
+import qualified Data.Map as M
+
 
 logFollow :: (MonadIO m, MonadLog m)
-          => [QuestionAnswered] -> Question -> [(Doc, Answer)] -> m [Answer]
+          => Map (String,HoleHash) QuestionAnswered
+          -> Question -> [(Doc, Answer)] -> m [Answer]
 logFollow before q@Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole )
@@ -65,20 +71,23 @@ logFollow before q@Question{..} options = do
            []    -> Nothing
            (x:_) -> return x
 
+    qAsSet = (I.fromList . map hash) qAscendants
 
-    f ans@Answer{..} = if or $ map match before then
-              Just ans
-          else
-              Nothing
-      where
-        match a = and [aRuleName_ a == (show $ aRuleName)
-                      , qHole_ a == hash qHole
-                      , I.null (qAscendants_ a) == I.null qAsSet
-                      ||  (not . I.null) (qAscendants_ a `I.intersection` qAsSet)
-                      ]
+    f ans@Answer{..}
+        | Just a <- M.lookup (show aRuleName, hash qHole) before
+        , I.null (qAscendants_ a) == I.null qAsSet
+        || (not . I.null) (qAscendants_ a `I.intersection` qAsSet) =
+           if process a ans then
+               Just ans
+           else
+               Nothing
 
+    f _ =  Nothing
 
-          where qAsSet = (I.fromList . map hash) qAscendants
+    -- FIXME compare domains
+    process AnsweredRepr{..} ans = aDom_ == getReprDomText ans
+    process AnsweredRule{} _     = True
+
 
 
 storeChoice :: MonadLog m => Question -> Answer -> m Answer
@@ -107,10 +116,11 @@ getReprDomText :: Answer -> Text
 getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
 
 -- Read from a json file
-getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
+type HoleHash = Int
+getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m (Map (String,HoleHash) QuestionAnswered)
 getAnswers fp = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
-    Just v  -> return v
+    Just (vs :: [QuestionAnswered])  -> return $ M.fromList [ ((aRuleName_ v, qHole_ v) ,v)  | v <- vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
 

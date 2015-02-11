@@ -16,6 +16,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.DomainOf
 
+import Data.Map(Map)
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
@@ -75,7 +76,7 @@ data Config = Config
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
-    , questionAnswers           :: [QuestionAnswered]
+    , questionAnswers           :: Map (String,Int) QuestionAnswered
     , smartFilenames            :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -94,7 +95,7 @@ instance Default Config where
         , parameterRepresentation   = True
         , limitModels               = Nothing
         , numberingStart            = 1
-        , questionAnswers           = []
+        , questionAnswers           = def
         , smartFilenames            = False
         }
 

@@ -60,7 +60,7 @@ mainWithArgs Modelling{..} = do
     liftIO $ maybe (return ()) setRandomSeed seed
     answers <- case jsonChoices of
                  Just f  -> getAnswers f
-                 Nothing -> return []
+                 Nothing -> return def
 
 
     let config = Config.Config

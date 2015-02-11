@@ -7,7 +7,6 @@
 {-# LANGUAGE ViewPatterns #-}
 {-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Conjure.UI.Model
     ( outputModels
