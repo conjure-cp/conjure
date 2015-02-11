@@ -18,7 +18,7 @@ instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 
 instance EvaluateOp OpTrue where
-    evaluateOp op = na $ "evaluateOp{OpTrue}:" <++> pretty (show op)
+    evaluateOp _ = return (fromBool True)
 
 instance SimplifyOp OpTrue where
     simplifyOp _ _ = na "simplifyOp{OpTrue}"

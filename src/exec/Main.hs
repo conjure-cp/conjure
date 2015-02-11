@@ -84,7 +84,7 @@ mainWithArgs Modelling{..} = do
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart          = numberingStart
             , Config.questionAnswers         = answers
-
+            , Config.smartFilenames          = smartFilenames
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do

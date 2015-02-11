@@ -7,7 +7,7 @@ import Conjure.Language.Ops.Common
 
 
 data OpAttributeAsConstraint x = OpAttributeAsConstraint x
-                                                         Name       -- attribute name
+                                                         AttrName   -- attribute name
                                                          (Maybe x)  -- it's value
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 

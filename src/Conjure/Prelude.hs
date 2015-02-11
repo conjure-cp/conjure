@@ -13,7 +13,7 @@ module Conjure.Prelude
     , padRight, padLeft, padCenter
     , pairWithContents
     , withRest, withAfter, withBefore
-    , T.Text, stringToText
+    , T.Text, stringToText, textToString
     , sameLength
     , concatMapM
     , timedIO
@@ -105,7 +105,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , take, drop
                               , head, init, tail, last
                               )
-import Data.List.Split   as X ( splitOn )
+import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
@@ -170,6 +170,7 @@ import qualified Data.Text as T
 import qualified Data.Text.IO as T
 import qualified Text.PrettyPrint as Pr
 
+-- containers
 import qualified Data.Set as S
 
 import System.Directory as X
@@ -187,6 +188,9 @@ tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
 
 stringToText :: String -> T.Text
 stringToText = T.pack
+
+textToString :: T.Text -> String
+textToString = T.unpack
 
 stringToDoc :: String -> Doc
 stringToDoc = Pr.text

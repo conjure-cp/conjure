@@ -104,7 +104,12 @@ sameToSameToBool a b = do
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return TypeBool
-        else fail $ "sameToSameToBool" <+> pretty a <+> "~~" <+> pretty b
+        else fail $ vcat [ "Cannot unify the types of the following."
+                         , "lhs        :" <+> pretty a
+                         , "type of lhs:" <+> pretty tyA
+                         , "rhs        :" <+> pretty b
+                         , "type of rhs:" <+> pretty tyB
+                         ]
 
 sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
 sameToSameToSame a b = do
@@ -112,8 +117,12 @@ sameToSameToSame a b = do
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return (mostDefined [tyA,tyB])
-        else fail $ "sameToSameToSame" <+> pretty a <+> "~~" <+> pretty b
-
+        else fail $ vcat [ "Cannot unify the types of the following."
+                         , "lhs        :" <+> pretty a
+                         , "type of lhs:" <+> pretty tyA
+                         , "rhs        :" <+> pretty b
+                         , "type of rhs:" <+> pretty tyB
+                         ]
 
 data Fixity = FNone | FLeft | FRight
     deriving Show
@@ -184,9 +193,12 @@ functionals =
     , L_normIndices
     , L_indices
 
+    , L_true
+
     , LIdentifier "and"
     , LIdentifier "or"
     , LIdentifier "sum"
+    , LIdentifier "product"
 
     ]
 

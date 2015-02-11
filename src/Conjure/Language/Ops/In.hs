@@ -18,15 +18,20 @@ instance BinaryOperator (OpIn x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
     typeOf p@(OpIn a b) = do
-        tyA <- typeOf a
-        TypeSet tyB <- typeOf b
-        if tyA `typeUnify` tyB
+        tyA      <- typeOf a
+        tyB      <- typeOf b
+        tyBInner <- innerTypeOf tyB
+        if tyA `typeUnify` tyBInner
             then return TypeBool
             else raiseTypeError p
 
 instance EvaluateOp OpIn where
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitSet  cs))) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitSet      cs))) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet     cs))) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitFunction cs))) =
+        return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract (AbsLitTuple [i,j]) ) cs
+    evaluateOp (OpIn c (ConstantAbstract (AbsLitRelation cs))) =
+        return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
 instance SimplifyOp OpIn where

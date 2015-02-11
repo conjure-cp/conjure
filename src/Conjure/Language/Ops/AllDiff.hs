@@ -14,10 +14,13 @@ instance Hashable  x => Hashable  (OpAllDiff x)
 instance ToJSON    x => ToJSON    (OpAllDiff x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAllDiff x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpAllDiff x) where
-    typeOf (OpAllDiff x) = do
-        TypeMatrix TypeInt TypeInt <- typeOf x
-        return TypeBool
+instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
+    typeOf p@(OpAllDiff x) = do
+        ty <- typeOf x
+        case ty of
+            TypeList TypeInt -> return TypeBool
+            TypeMatrix TypeInt TypeInt -> return TypeBool
+            _ -> raiseTypeError p
 
 instance EvaluateOp OpAllDiff where
     evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =

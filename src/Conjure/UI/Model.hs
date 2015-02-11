@@ -38,6 +38,7 @@ import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
+import Conjure.UI.TypeCheck ( typeCheckModel )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
@@ -109,7 +110,15 @@ outputModels config model = do
                     log l msg
                     return i
                 Right eprime -> do
-                    let filename = dir </> "model" ++ paddedNum i ++ ".eprime"
+                    let gen =
+                            if smartFilenames config
+                                then [ choice
+                                     | [_question, (choice, options)] <- eprime |> mInfo |> miTrailCompact |> chunksOf 2
+                                     , length options > 1
+                                     ] |> map (('_':) . show)
+                                       |> concat
+                                else paddedNum i
+                    let filename = dir </> "model" ++ gen ++ ".eprime"
                     liftIO $ writeFile filename (renderWide eprime)
                     return (i+1)
 
@@ -148,9 +157,8 @@ remaining
     => Config
     -> Model
     -> m [Question]
-remaining config model = do
+remaining config model | Just modelZipper <- zipperBi model = do
     let freshNames' = freshNames model
-    let modelZipper = fromJustNote "Creating the initial zipper." (zipperBi model)
     let
         loopLevels :: Monad m => [m [a]] -> m [a]
         loopLevels [] = return []
@@ -193,6 +201,7 @@ remaining config model = do
             , qAscendants = tail (ascendants focus)
             , qAnswers = answers'
             }
+remaining _ _ = return []
 
 
 strategyToDriver :: Config -> Strategy -> Strategy -> Driver
@@ -426,6 +435,9 @@ inlineDecVarLettings model =
                 Declaration (Letting nm x)
                     | categoryOf x == CatDecision
                     -> modify ((nm,x) :) >> return Nothing
+                -- The following doesn't work when the identifier is used in a domain
+                -- Declaration (Letting nm x@Reference{})
+                --     -> modify ((nm,x) :) >> return Nothing
                 _ -> Just <$> transformBiM inline st
     in
         model { mStatements = statements }
@@ -441,9 +453,13 @@ updateDeclarations model =
         onEachStatement (inStatement, afters) =
             case inStatement of
                 Declaration (FindOrGiven forg nm _) ->
-                    case [ d | (n, d) <- representations, n == nm ] of
-                        [] -> bug $ "No representation chosen for: " <+> pretty nm
-                        domains -> concatMap (onEachDomain forg nm) domains
+                    let
+                        -- the refined domains for the high level declaration
+                        domains = [ d | (n, d) <- representations, n == nm ]
+                    in
+                        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
+                        -- and 2 disticnt representations in the inner level. removing them with nub.
+                        nub $ concatMap (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) ->
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
                 Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
@@ -457,15 +473,12 @@ updateDeclarations model =
                 Right outs -> [Declaration (FindOrGiven forg n (forgetRepr "updateDeclarations" d)) | (n, d) <- outs]
 
     in
-        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
-        -- and 2 disticnt representations in the inner level. removing them.
-        model { mStatements = nub statements }
+        model { mStatements = statements }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m = do
-    let modelZipper = fromJustNote "checkIfAllRefined: Creating zipper." (zipperBi m)
+checkIfAllRefined m | Just modelZipper <- zipperBi m = do
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -492,6 +505,7 @@ checkIfAllRefined m = do
                     _ -> return []
     unless (null fails) (fail (vcat fails))
     return m
+checkIfAllRefined m = return m
 
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
@@ -505,6 +519,8 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= \ m -> typeCheckModel m >> return m
+                                      >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
@@ -559,8 +575,10 @@ allRules config =
                                                             -- it should run as early as possible.
       ]
     , [ rule_FullEvaluate
-      , rule_PartialEvaluate
       ]
+    , [ rule_PartialEvaluate
+      ]
+    , paramRules
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
       , rule_ChooseReprForLocals
@@ -570,6 +588,17 @@ allRules config =
     ] ++ otherRules
       ++ delayedRules
 
+
+-- | For information that can be readily pulled out from parameters.
+--   Some things are easier when everything involved is a param.
+--   These rules aren't necessary for correctness, but they can help remove some verbose expressions from the output.
+--   Make Savile Row happier so it makes us happier. :)
+paramRules :: [Rule]
+paramRules =
+    [ Horizontal.Set.rule_Param_MinOfSet
+    , Horizontal.Set.rule_Param_MaxOfSet
+    , Horizontal.Set.rule_Param_Card
+    ]
 
 verticalRules :: [Rule]
 verticalRules =
@@ -590,6 +619,8 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
+    , Vertical.Matrix.rule_MatrixLit_Eq
+    , Vertical.Matrix.rule_MatrixLit_Neq
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -695,6 +726,7 @@ horizontalRules =
     , Horizontal.Relation.rule_Image
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
+    , Horizontal.Relation.rule_Neq
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
 
@@ -707,6 +739,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Apart
     , Horizontal.Partition.rule_Party
     , Horizontal.Partition.rule_Participants
+    , Horizontal.Partition.rule_Card
 
     ]
 
@@ -781,9 +814,10 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
             freshNames' = freshNames model
 
-            representations = model |> mInfo |> miRepresentations
+            representations     = model |> mInfo |> miRepresentations
+            representationsTree = model |> mInfo |> miRepresentationsTree
 
-            usedBefore = (name, domain) `elem` representations
+            usedBefore = (name, reprTree domain) `elem` representationsTree
 
             mstructurals = do
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -821,7 +855,10 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 | otherwise = \ m ->
                 let
                     oldInfo = mInfo m
-                    newInfo = oldInfo { miRepresentations = miRepresentations oldInfo ++ [(name, domain)] }
+                    newInfo = oldInfo
+                        { miRepresentations     = miRepresentations     oldInfo ++ [(name, domain)]
+                        , miRepresentationsTree = miRepresentationsTree oldInfo ++ [(name, reprTree domain)]
+                        }
                 in  m { mInfo = newInfo }
 
             fixReprForOthers

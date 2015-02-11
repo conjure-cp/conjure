@@ -18,7 +18,7 @@ import System.Environment ( getEnvironment )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
-import Test.Tasty.HUnit ( testCase, assertFailure )
+import Test.Tasty.HUnit ( testCase, testCaseSteps, assertFailure )
 
 -- shelly
 import Shelly ( run, lastStderr )
@@ -27,15 +27,15 @@ import Shelly ( run, lastStderr )
 import qualified Data.Text as T ( Text, null, pack, unpack )
 
 -- containers
-import qualified Data.Set as S ( fromList, toList, null, difference )
+import qualified Data.Set as S ( fromList, toList, empty, null, difference )
 
 
 srOptions :: String -> [T.Text]
 srOptions srExtraOptions =
     [ "-run-solver"
     , "-minion"
-    , "-timelimit"      , "1200000"
-    , "-solver-options" , "-cpulimit 1200"
+    -- , "-timelimit"      , "1200000"
+    -- , "-solver-options" , "-cpulimit 1200"
     , "-all-solutions"
     , "-preprocess"     , "None"
     ] ++ map T.pack (words srExtraOptions)
@@ -49,7 +49,7 @@ tests = do
     putStrLn $ "Using Savile Row options: " ++ unwords (map T.unpack (srOptions srExtraOptions))
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
-    let testCases = map (testSingleDir srExtraOptions) (catMaybes dirs)
+    testCases <- mapM (testSingleDir srExtraOptions) (catMaybes dirs)
     return (testGroup "exhaustive" testCases)
 
 
@@ -98,15 +98,15 @@ isTestDir baseDir possiblyDir = do
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: String -> TestDirFiles -> TestTree
-testSingleDir srExtraOptions t@(TestDirFiles{..}) = testGroup name $ concat
-    [ [conjuring]
-    , savileRows
-    , checkingExpected
-    , validating
-    , [checkExtraFiles t]
-    , [equalNumberOfSolutions t]
-    ]
+testSingleDir :: String -> TestDirFiles -> IO TestTree
+testSingleDir srExtraOptions t@(TestDirFiles{..}) = do
+    return $ testGroup name $ concat
+        [ [conjuring]
+        , savileRows
+        , validating
+        , [checkExpectedAndExtraFiles t]
+        , [equalNumberOfSolutions t]
+        ]
     where
         conjuring =
             testCase "Conjuring" $ do
@@ -124,10 +124,6 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) = testGroup name $ concat
                 then [ savileRowNoParam    srExtraOptions t m   | m <- expectedModels ]
                 else [ savileRowWithParams srExtraOptions t m p | m <- expectedModels
                                                                 , p <- paramFiles     ]
-
-        checkingExpected =
-            [ checkExpected t e | e <- expectedModels ] ++
-            [ checkExpected t e | e <- expectedSols   ]
 
         validating =
             if null paramFiles
@@ -217,10 +213,29 @@ validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right () -> return ()
 
+checkExpectedAndExtraFiles :: TestDirFiles -> TestTree
+checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
+    let relevantFile f = or [ suffix `isSuffixOf` f
+                            | suffix <- [".eprime", ".eprime-param", ".solution"]
+                            ]
+    expecteds <- do
+        b <- doesDirectoryExist expectedsDir
+        if b
+            then S.fromList . filter relevantFile <$> getDirectoryContents expectedsDir
+            else return S.empty
+    outputs   <- do
+        b <- doesDirectoryExist outputsDir
+        if b
+            then S.fromList . filter relevantFile <$> getDirectoryContents outputsDir
+            else return S.empty
+    let extras = S.difference outputs expecteds
 
-checkExpected :: TestDirFiles -> FilePath -> TestTree
-checkExpected TestDirFiles{..} item =
-    testCase (unwords ["Checking expected:", item]) $ do
+    step "Checking extra files"
+    unless (S.null extras) $ assertFailure $ show $ prettyList id ", " (S.toList extras)
+
+    step "Checking expected files"
+    forM_ expecteds $ \ item -> do
+        step (unwords ["Checking expected file", item])
         let expectedPath  = expectedsDir </> item
         let generatedPath = outputsDir   </> item
         isFile <- doesFileExist generatedPath
@@ -233,59 +248,52 @@ checkExpected TestDirFiles{..} item =
                     Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
             else assertFailure $ "file doesn't exist: " ++ generatedPath
 
-
-checkExtraFiles :: TestDirFiles -> TestTree
-checkExtraFiles TestDirFiles{..} =
-    testCase "Checking extra files" $ do
-        let modelOrSolution f = or [ suffix `isSuffixOf` f
-                                   | suffix <- [".eprime", ".solution"]
-                                   ]
-
-        dirShouldExist expectedsDir
-        dirShouldExist outputsDir
-        expecteds <- S.fromList . filter modelOrSolution <$> getDirectoryContents expectedsDir
-        outputs   <- S.fromList . filter modelOrSolution <$> getDirectoryContents outputsDir
-        let extras = S.difference outputs expecteds
-        unless (S.null extras) $
-            assertFailure $ show $ "extra files:" <+> prettyList id ", " (S.toList extras)
-
-
 equalNumberOfSolutions :: TestDirFiles -> TestTree
 equalNumberOfSolutions TestDirFiles{..} =
     testCase "Checking number of solutions" $ do
         dirShouldExist outputsDir
-        solutions' <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+        params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
         let
-            solutions :: [((String, String), [String])]
-            solutions =
-                [ ((param, model), solution)
-                | sol <- solutions'
-                , let parts = splitOn "." sol |> head |> splitOn "-"
-                , let model = head parts
-                , let solution = last parts
-                , let param = init (tail parts) |> intercalate "-"
-                ] |> sortBy  (comparing fst)
-                  |> groupBy ((==) `on` fst)
-                  |> map (\ grp -> (fst (head grp), map snd grp) )
+            grouped :: [(Maybe String, [(String, Int)])]
+            grouped =
+                (if null params
+                    then
+                        [ (Nothing, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                        | model' <- models
+                        , let model = splitOn "." model' |> head
+                        , let solnPrefix = model
+                        ]
+                    else
+                        [ (Just param, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                        | model          <- map (head . splitOn ".") models
+                        , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                        , model == model2
+                        , let solnPrefix = model ++ "-" ++ param
+                        ])
+                |> sortBy  (comparing fst)
+                |> groupBy ((==) `on` fst)
+                |> map (\ grp -> (fst (head grp), map snd grp) )
         let
-            differentOnes = concat
-                [ if length solutions1 == length solutions2
-                    then []
-                    else [ (model1, param1, length solutions1)
-                         , (model2, param2, length solutions2)
-                         ]
-                | ((param1, model1), solutions1) <- solutions
-                , ((param2, model2), solutions2) <- solutions
-                , param1 == param2                              -- for the same param
-                , model1 < model2                               -- two different models
+            differentOnes :: [(Maybe String, [(String, Int)])]
+            differentOnes =
+                [ this
+                | this@(_, modelSols) <- grouped
+                , let nbSols = map snd modelSols |> nub
+                , length nbSols > 1
                 ]
+
         unless (null differentOnes) $
             assertFailure $ show $ vcat
-                [ nest 4 $ if param == ""
-                            then "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
-                            else "For parameter" <+> pretty param <+>
-                                 "Model" <+> pretty model <+> "has" <+> pretty count <+> "solutions."
-                | (model, param, count) <- differentOnes
+                [ (maybe
+                    id
+                    (\ p -> hang ("For parameter" <+> pretty p) 4 )
+                    param
+                  ) $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
+                           | (model, nbSols) <- modelSols
+                           ]
+                | (param, modelSols) <- differentOnes
                 ]
 
 dirShouldExist :: FilePath -> IO ()
@@ -301,4 +309,5 @@ modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
                                              , outputDirectory = dir
                                              , parameterRepresentation = True
                                              , channelling = True
+                                             , smartFilenames = True
                                              }

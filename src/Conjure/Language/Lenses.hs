@@ -32,6 +32,12 @@ matchOr defOut f inp = fromMaybe defOut (match f inp)
 matchDef :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
 matchDef f inp = matchOr inp f inp
 
+matchDefs :: CanBeAnAlias b => [Proxy Maybe -> (a, b -> Maybe b)] -> b -> b
+matchDefs fs inp =
+    case mapMaybe (`match` inp) fs of
+        []      -> inp
+        (out:_) -> matchDefs fs out
+
 
 --------------------------------------------------------------------------------
 -- Lenses (for a weird definition of lens) -------------------------------------
@@ -190,7 +196,6 @@ opRange _ =
     )
 
 
-
 opRestrict
     :: MonadFail m
     => Proxy (m :: * -> *)
@@ -199,12 +204,11 @@ opRestrict
        )
 opRestrict _ =
     ( \ x d -> injectOp $ MkOpRestrict $ OpRestrict x (Domain d)
-    , \ p -> do
-            op <- projectOp p
-            case op of
-                MkOpRestrict (OpRestrict x (Domain d)) -> return (x, d)
-                _ -> na ("Lenses.opRestrict:" <++> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Op (MkOpRestrict (OpRestrict x (Domain d)))) = return (x, d)
+        extract p = na ("Lenses.opRestrict:" <++> pretty p)
 
 
 opToInt
@@ -280,6 +284,25 @@ opToMSet _ =
             case op of
                 MkOpToMSet (OpToMSet x) -> return x
                 _ -> na ("Lenses.opToMSet:" <++> pretty p)
+    )
+
+
+opToRelation
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opToRelation _ =
+    ( injectOp . MkOpToRelation . OpToRelation
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpToRelation (OpToRelation x) -> return x
+                _ -> na ("Lenses.opToRelation:" <++> pretty p)
     )
 
 
@@ -953,11 +976,13 @@ msetLiteral
        )
 msetLiteral _ =
     ( AbstractLiteral . AbsLitMSet
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitMSet xs)) -> return (map Constant xs)
-        AbstractLiteral (AbsLitMSet xs) -> return xs
-        _ -> na ("Lenses.msetLiteral:" <+> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitMSet xs))) = return (map Constant xs)
+        extract (AbstractLiteral (AbsLitMSet xs)) = return xs
+        extract (Typed x _) = extract x
+        extract p = na ("Lenses.msetLiteral:" <+> pretty p)
 
 
 functionLiteral
@@ -968,11 +993,13 @@ functionLiteral
        )
 functionLiteral _ =
     ( AbstractLiteral . AbsLitFunction
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitFunction xs)) -> return [ (Constant a, Constant b) | (a,b) <- xs ]
-        AbstractLiteral (AbsLitFunction xs) -> return xs
-        _ -> na ("Lenses.functionLiteral:" <+> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitFunction xs))) = return [ (Constant a, Constant b) | (a,b) <- xs ]
+        extract (AbstractLiteral (AbsLitFunction xs)) = return xs
+        extract (Typed x _) = extract x
+        extract p = na ("Lenses.functionLiteral:" <+> pretty p)
 
 
 relationLiteral
@@ -983,11 +1010,13 @@ relationLiteral
        )
 relationLiteral _ =
     ( AbstractLiteral . AbsLitRelation
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitRelation xs)) -> return (map (map Constant) xs)
-        AbstractLiteral (AbsLitRelation xs) -> return xs
-        _ -> na ("Lenses.relationLiteral:" <+> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitRelation xs))) = return (map (map Constant) xs)
+        extract (AbstractLiteral (AbsLitRelation xs)) = return xs
+        extract (Typed x _) = extract x
+        extract p = na ("Lenses.relationLiteral:" <+> pretty p)
 
 
 partitionLiteral
@@ -998,11 +1027,13 @@ partitionLiteral
        )
 partitionLiteral _ =
     ( AbstractLiteral . AbsLitPartition
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitPartition xs)) -> return (map (map Constant) xs)
-        AbstractLiteral (AbsLitPartition xs) -> return xs
-        _ -> na ("Lenses.partitionLiteral:" <+> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitPartition xs))) = return (map (map Constant) xs)
+        extract (AbstractLiteral (AbsLitPartition xs)) = return xs
+        extract (Typed x _) = extract x
+        extract p = na ("Lenses.partitionLiteral:" <+> pretty p)
 
 
 opTwoBars

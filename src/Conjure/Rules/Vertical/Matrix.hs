@@ -185,14 +185,43 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         index <- case (domainOf x, domainOf y) of
             (Just (DomainMatrix index _), _) -> return index
             (_, Just (DomainMatrix index _)) -> return index
-            (Just _, _) -> fail "rule_Matrix_Eq"
-            (_, Just _) -> fail "rule_Matrix_Eq"
-            _ -> fail "Equality constraint between two matrices, but domainOf doesn't work on either."
+            (Just _, _) -> na "rule_Matrix_Eq"
+            (_, Just _) -> na "rule_Matrix_Eq"
+            _ -> na "Equality constraint between two matrices, but domainOf doesn't work on either."
         return
             ( "Horizontal rule for matrix ="
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                  in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
+            )
+
+rule_MatrixLit_Eq :: Rule
+rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opEq p
+        (_, xElems) <- match matrixLiteral x
+        (_, yElems) <- match matrixLiteral y
+        return
+            ( "Horizontal rule for matrix literal equality"
+            , const $
+                if length xElems == length yElems
+                    then make opAnd $ fromList $ zipWith (make opEq) xElems yElems
+                    else fromBool False
+            )
+
+
+rule_MatrixLit_Neq :: Rule
+rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y)       <- match opNeq p
+        (_, xElems) <- match matrixLiteral x
+        (_, yElems) <- match matrixLiteral y
+        return
+            ( "Horizontal rule for matrix literal equality"
+            , const $ 
+                if length xElems == length yElems
+                    then make opNot $ make opAnd $ fromList $ zipWith (make opEq) xElems yElems
+                    else fromBool True
             )
 
 

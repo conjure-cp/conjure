@@ -1,0 +1,12 @@
+language ESSENCE' 1.0
+
+given p1: int
+given p2: int
+given p3: int
+given p4: int
+given a_Explicit_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..p1), int(1..p2)] of bool
+given a_Explicit_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..p1), int(1..p2)] of int(p3..p4)
+find x: int(-1000..1000)
+such that
+    x = max([max([a_Explicit_ExplicitVarSizeWithFlags_Values[q1, q3] | q3 : int(1..p2), a_Explicit_ExplicitVarSizeWithFlags_Flags[q1, q3]]) | q1 : int(1..p1)])
+

@@ -76,6 +76,7 @@ data Config = Config
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
     , questionAnswers           :: [QuestionAnswered]
+    , smartFilenames            :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -94,6 +95,7 @@ instance Default Config where
         , limitModels               = Nothing
         , numberingStart            = 1
         , questionAnswers           = []
+        , smartFilenames            = False
         }
 
 type RuleResult m =

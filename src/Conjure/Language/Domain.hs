@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE NoMonomorphismRestriction #-}
 
 module Conjure.Language.Domain
     ( Domain(..)
@@ -11,9 +12,10 @@ module Conjure.Language.Domain
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
     , PartitionAttr(..)
+    , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
-    , reprAtTopLevel
+    , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
@@ -164,21 +166,50 @@ changeRepr _ rep = go
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
 
+
+data Tree a = Tree { rootLabel :: a, subForest :: [Tree a] }
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+
+instance Serialize a => Serialize (Tree a)
+instance Hashable  a => Hashable  (Tree a)
+instance ToJSON    a => ToJSON    (Tree a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON jsonOptions
+
+reprTree :: Domain r x -> Tree (Maybe r)
+reprTree DomainBool{}    = Tree Nothing []
+reprTree DomainInt{}     = Tree Nothing []
+reprTree DomainEnum{}    = Tree Nothing []
+reprTree DomainUnnamed{} = Tree Nothing []
+reprTree (DomainTuple as  ) = Tree Nothing (map reprTree as)
+reprTree (DomainMatrix _ a) = Tree Nothing [reprTree a]
+reprTree (DomainSet       r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainMSet      r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
+reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
+reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
+reprTree DomainOp{}        = Tree Nothing []
+reprTree DomainReference{} = Tree Nothing []
+reprTree DomainMetaVar{}   = Tree Nothing []
+
 reprAtTopLevel :: Domain r x -> Maybe r
-reprAtTopLevel DomainBool{} = Nothing
-reprAtTopLevel DomainInt{} = Nothing
-reprAtTopLevel DomainEnum{} = Nothing
-reprAtTopLevel DomainUnnamed{} = Nothing
-reprAtTopLevel DomainTuple{} = Nothing
-reprAtTopLevel DomainMatrix{} = Nothing
-reprAtTopLevel (DomainSet       r _ _  ) = return r
-reprAtTopLevel (DomainMSet      r _ _  ) = return r
-reprAtTopLevel (DomainFunction  r _ _ _) = return r
-reprAtTopLevel (DomainRelation  r _ _  ) = return r
-reprAtTopLevel (DomainPartition r _ _  ) = return r
-reprAtTopLevel DomainOp{} = Nothing
-reprAtTopLevel DomainReference{} = Nothing
-reprAtTopLevel DomainMetaVar{} = Nothing
+reprAtTopLevel = rootLabel . reprTree
+
+applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
+applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) = DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
+applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
+applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
+applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = DomainFunction r attr <$> applyReprTree a aRepr <*> applyReprTree b bRepr
+applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
+applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
@@ -200,6 +231,105 @@ domainCanIndexMatrix _            = False
 -- attribute-as-constraint handling --------------------------------------------
 --------------------------------------------------------------------------------
 
+data AttrName
+    = AttrName_size
+    | AttrName_minSize
+    | AttrName_maxSize
+    | AttrName_minOccur
+    | AttrName_maxOccur
+    | AttrName_numParts
+    | AttrName_minNumParts
+    | AttrName_maxNumParts
+    | AttrName_partSize
+    | AttrName_minPartSize
+    | AttrName_maxPartSize
+    | AttrName_total
+    | AttrName_injective
+    | AttrName_surjective
+    | AttrName_bijective
+    | AttrName_complete
+    | AttrName_regular
+    -- bin rel ones
+    | AttrName_reflexive
+    | AttrName_irreflexive
+    | AttrName_coreflexive
+    | AttrName_symmetric
+    | AttrName_antiSymmetric
+    | AttrName_aSymmetric
+    | AttrName_transitive
+    | AttrName_Euclidean
+    | AttrName_serial
+    | AttrName_equivalence
+    | AttrName_partialOrder
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize AttrName
+instance Hashable  AttrName
+instance ToJSON    AttrName where toJSON = genericToJSON jsonOptions
+instance FromJSON  AttrName where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty AttrName where
+    pretty AttrName_size = "size"
+    pretty AttrName_minSize = "minSize"
+    pretty AttrName_maxSize = "maxSize"
+    pretty AttrName_minOccur = "minOccur"
+    pretty AttrName_maxOccur = "maxOccur"
+    pretty AttrName_numParts = "numParts"
+    pretty AttrName_minNumParts = "minNumParts"
+    pretty AttrName_maxNumParts = "maxNumParts"
+    pretty AttrName_partSize = "partSize"
+    pretty AttrName_minPartSize = "minPartSize"
+    pretty AttrName_maxPartSize = "maxPartSize"
+    pretty AttrName_total = "total"
+    pretty AttrName_injective = "injective"
+    pretty AttrName_surjective = "surjective"
+    pretty AttrName_bijective = "bijective"
+    pretty AttrName_complete = "complete"
+    pretty AttrName_regular = "regular"
+    pretty AttrName_reflexive = "reflexive"
+    pretty AttrName_irreflexive = "irreflexive"
+    pretty AttrName_coreflexive = "coreflexive"
+    pretty AttrName_symmetric = "symmetric"
+    pretty AttrName_antiSymmetric = "antiSymmetric"
+    pretty AttrName_aSymmetric = "aSymmetric"
+    pretty AttrName_transitive = "transitive"
+    pretty AttrName_Euclidean = "Euclidean"
+    pretty AttrName_serial = "serial"
+    pretty AttrName_equivalence = "equivalence"
+    pretty AttrName_partialOrder = "partialOrder"
+
+instance IsString AttrName where
+    fromString "size" = AttrName_size
+    fromString "minSize" = AttrName_minSize
+    fromString "maxSize" = AttrName_maxSize
+    fromString "minOccur" = AttrName_minOccur
+    fromString "maxOccur" = AttrName_maxOccur
+    fromString "numParts" = AttrName_numParts
+    fromString "minNumParts" = AttrName_minNumParts
+    fromString "maxNumParts" = AttrName_maxNumParts
+    fromString "partSize" = AttrName_partSize
+    fromString "minPartSize" = AttrName_minPartSize
+    fromString "maxPartSize" = AttrName_maxPartSize
+    fromString "total" = AttrName_total
+    fromString "injective" = AttrName_injective
+    fromString "surjective" = AttrName_surjective
+    fromString "bijective" = AttrName_bijective
+    fromString "complete" = AttrName_complete
+    fromString "regular" = AttrName_regular
+    fromString "reflexive" = AttrName_reflexive
+    fromString "irreflexive" = AttrName_irreflexive
+    fromString "coreflexive" = AttrName_coreflexive
+    fromString "symmetric" = AttrName_symmetric
+    fromString "antiSymmetric" = AttrName_antiSymmetric
+    fromString "aSymmetric" = AttrName_aSymmetric
+    fromString "transitive" = AttrName_transitive
+    fromString "Euclidean" = AttrName_Euclidean
+    fromString "serial" = AttrName_serial
+    fromString "equivalence" = AttrName_equivalence
+    fromString "partialOrder" = AttrName_partialOrder
+    fromString s = bug $ "fromString{AttrName}:" <+> pretty s
+
+
 allSupportedAttributes :: [(Name, Int)]
 allSupportedAttributes =
     map (,1) [ "size", "minSize", "maxSize"
@@ -216,7 +346,7 @@ allSupportedAttributes =
 addAttributesToDomain
     :: (MonadFail m, Pretty r, Pretty x)
     => Domain r x
-    -> [(Name, Maybe x)]
+    -> [(AttrName, Maybe x)]
     -> m (Domain r x)
 addAttributesToDomain domain [] = return domain
 addAttributesToDomain domain ((attr, val) : rest) = do
@@ -227,7 +357,7 @@ addAttributesToDomain domain ((attr, val) : rest) = do
 addAttributeToDomain
     :: (MonadFail m, Pretty r, Pretty x)
     => Domain r x                                   -- the input domain
-    -> Name                                         -- the name of the attribute
+    -> AttrName                                     -- the name of the attribute
     -> Maybe x                                      -- the value for the attribute
     -> m (Domain r x)                               -- the modified domain
 
@@ -243,11 +373,11 @@ addAttributeToDomain d@DomainMetaVar{}   = const $ const $ return d
 
 addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater where
     updater attr (Just val) = case attr of
-        "size" ->
+        AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
-        "minSize" -> do
+        AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -255,7 +385,7 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
                 SizeAttr_MinMaxSize{} -> fails
                 SizeAttr_None{}       -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
                 SizeAttr_MaxSize maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize val maxS)) inner
-        "maxSize" -> do
+        AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -274,11 +404,11 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
 
 addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) = updater where
     updater attr (Just val) = case attr of
-        "size" ->
+        AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainMSet r (MSetAttr (SizeAttr_Size val) occurAttr) inner
-        "minSize" -> do
+        AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -290,7 +420,7 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                 SizeAttr_MaxSize maxS -> return $ DomainMSet r
                                             (MSetAttr (SizeAttr_MinMaxSize val maxS) occurAttr)
                                             inner
-        "maxSize" -> do
+        AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -302,7 +432,7 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                 SizeAttr_MinSize minS -> return $ DomainMSet r
                                             (MSetAttr (SizeAttr_MinMaxSize minS val) occurAttr)
                                             inner
-        "minOccur" -> do
+        AttrName_minOccur -> do
             let fails = fail $ "Cannot add a minOccur attribute to this domain:" <++> pretty domain
             case occurAttr of
                 OccurAttr_MinOccur{}    -> fails
@@ -313,7 +443,7 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                 OccurAttr_MaxOccur maxO -> return $ DomainMSet r
                                             (MSetAttr sizeAttr (OccurAttr_MinMaxOccur val maxO))
                                             inner
-        "maxOccur" -> do
+        AttrName_maxOccur -> do
             let fails = fail $ "Cannot add a maxOccur attribute to this domain:" <++> pretty domain
             case occurAttr of
                 OccurAttr_MaxOccur{}    -> fails
@@ -337,13 +467,13 @@ addAttributeToDomain domain@(DomainFunction r
                             (FunctionAttr sizeAttr partialityAttr jectivityAttr)
                             inF inT) = updater where
     updater attr (Just val) = case attr of
-        "size" ->
+        AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainFunction r
                                             (FunctionAttr (SizeAttr_Size val) partialityAttr jectivityAttr)
                                             inF inT
-        "minSize" -> do
+        AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -355,7 +485,7 @@ addAttributeToDomain domain@(DomainFunction r
                 SizeAttr_MaxSize maxS -> return $ DomainFunction r
                                             (FunctionAttr (SizeAttr_MinMaxSize val maxS) partialityAttr jectivityAttr)
                                             inF inT
-        "maxSize" -> do
+        AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -413,6 +543,7 @@ addAttributeToDomain domain@(DomainFunction r
 addAttributeToDomain domain@(DomainRelation r
                             (RelationAttr sizeAttr binRelAttr)
                             inners) = updater where
+    supportedBinRel :: [AttrName]
     supportedBinRel =
         [ "reflexive", "irreflexive", "coreflexive"
         , "symmetric", "antiSymmetric", "aSymmetric"
@@ -420,11 +551,11 @@ addAttributeToDomain domain@(DomainRelation r
         , "serial", "equivalence", "partialOrder"
         ]
     updater attr (Just val) = case attr of
-        "size" ->
+        AttrName_size ->
             case sizeAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainRelation r (RelationAttr (SizeAttr_Size val) binRelAttr) inners
-        "minSize" -> do
+        AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -436,7 +567,7 @@ addAttributeToDomain domain@(DomainRelation r
                 SizeAttr_MaxSize maxS -> return $ DomainRelation r
                                             (RelationAttr (SizeAttr_MinMaxSize val maxS) binRelAttr)
                                             inners
-        "maxSize" -> do
+        AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
                 SizeAttr_Size{}       -> fails
@@ -468,13 +599,13 @@ addAttributeToDomain domain@(DomainRelation r
 addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater where
     updater attr (Just val) = case attr of
 
-        "size" ->
+        AttrName_size ->
             case participantsSize partitionAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainPartition r
                                             (partitionAttr { participantsSize = SizeAttr_Size val })
                                             inner
-        "minSize" -> do
+        AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case participantsSize partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -486,7 +617,7 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                 SizeAttr_MaxSize maxS -> return $ DomainPartition r
                                             (partitionAttr { participantsSize = SizeAttr_MinMaxSize val maxS })
                                             inner
-        "maxSize" -> do
+        AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case participantsSize partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -499,11 +630,11 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                                             (partitionAttr { participantsSize = SizeAttr_MinMaxSize minS val })
                                             inner
 
-        "numParts" ->
+        AttrName_numParts ->
             case partsNum partitionAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a numParts attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainPartition r (partitionAttr { partsNum = SizeAttr_Size val }) inner
-        "minNumParts" -> do
+        AttrName_minNumParts -> do
             let fails = fail $ "Cannot add a minNumParts attribute to this domain:" <++> pretty domain
             case partsNum partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -515,7 +646,7 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                 SizeAttr_MaxSize maxS -> return $ DomainPartition r
                                             (partitionAttr { partsNum = SizeAttr_MinMaxSize val maxS })
                                             inner
-        "maxNumParts" -> do
+        AttrName_maxNumParts -> do
             let fails = fail $ "Cannot add a maxNumParts attribute to this domain:" <++> pretty domain
             case partsNum partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -528,11 +659,11 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                                             (partitionAttr { partsNum = SizeAttr_MinMaxSize minS val })
                                             inner
 
-        "partSize" ->
+        AttrName_partSize ->
             case partsSize partitionAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a partSize attribute to this domain:" <++> pretty domain
                 _               -> return $ DomainPartition r (partitionAttr { partsSize = SizeAttr_Size val }) inner
-        "minPartSize" -> do
+        AttrName_minPartSize -> do
             let fails = fail $ "Cannot add a minPartSize attribute to this domain:" <++> pretty domain
             case partsSize partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -544,7 +675,7 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                 SizeAttr_MaxSize maxS -> return $ DomainPartition r
                                             (partitionAttr { partsSize = SizeAttr_MinMaxSize val maxS })
                                             inner
-        "maxPartSize" -> do
+        AttrName_maxPartSize -> do
             let fails = fail $ "Cannot add a maxPartSize attribute to this domain:" <++> pretty domain
             case partsSize partitionAttr of
                 SizeAttr_Size{}       -> fails
@@ -561,9 +692,9 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater "complete" Nothing =
+    updater AttrName_complete Nothing =
             return $ DomainPartition r (partitionAttr { isComplete = True }) inner
-    updater "regular" Nothing =
+    updater AttrName_regular Nothing =
             return $ DomainPartition r (partitionAttr { isRegular  = True }) inner
     updater attr _ =
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
@@ -751,19 +882,19 @@ instance Pretty BinaryRelationAttr where
     pretty BinRelAttr_Equivalence   = "equivalence"
     pretty BinRelAttr_PartialOrder  = "partialOrder"
 
-readBinRel :: MonadFail m => Name -> m BinaryRelationAttr
-readBinRel "reflexive"     = return BinRelAttr_Reflexive
-readBinRel "irreflexive"   = return BinRelAttr_Irreflexive
-readBinRel "coreflexive"   = return BinRelAttr_Coreflexive
-readBinRel "symmetric"     = return BinRelAttr_Symmetric
-readBinRel "antiSymmetric" = return BinRelAttr_AntiSymmetric
-readBinRel "aSymmetric"    = return BinRelAttr_ASymmetric
-readBinRel "transitive"    = return BinRelAttr_Transitive
-readBinRel "total"         = return BinRelAttr_Total
-readBinRel "Euclidean"     = return BinRelAttr_Euclidean
-readBinRel "serial"        = return BinRelAttr_Serial
-readBinRel "equivalence"   = return BinRelAttr_Equivalence
-readBinRel "partialOrder"  = return BinRelAttr_PartialOrder
+readBinRel :: MonadFail m => AttrName -> m BinaryRelationAttr
+readBinRel AttrName_reflexive     = return BinRelAttr_Reflexive
+readBinRel AttrName_irreflexive   = return BinRelAttr_Irreflexive
+readBinRel AttrName_coreflexive   = return BinRelAttr_Coreflexive
+readBinRel AttrName_symmetric     = return BinRelAttr_Symmetric
+readBinRel AttrName_antiSymmetric = return BinRelAttr_AntiSymmetric
+readBinRel AttrName_aSymmetric    = return BinRelAttr_ASymmetric
+readBinRel AttrName_transitive    = return BinRelAttr_Transitive
+readBinRel AttrName_total         = return BinRelAttr_Total
+readBinRel AttrName_Euclidean     = return BinRelAttr_Euclidean
+readBinRel AttrName_serial        = return BinRelAttr_Serial
+readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
+readBinRel AttrName_partialOrder  = return BinRelAttr_PartialOrder
 readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
 
 -- reflexive        forAll x : T . rel(x,x)

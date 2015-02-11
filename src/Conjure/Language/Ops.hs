@@ -72,6 +72,7 @@ mkOp op xs =
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
             -- _     -> opFunctionImage (fromName (Name op)) xs
         Just l -> case l of
+            L_true         -> injectOp $ MkOpTrue         $ OpTrue         (headNote "true takes a single argument."     xs)
             L_toInt        -> injectOp $ MkOpToInt        $ OpToInt        (headNote "toInt takes a single argument."    xs)
             L_defined      -> injectOp $ MkOpDefined      $ OpDefined      (headNote "defined takes a single argument."  xs)
             L_range        -> injectOp $ MkOpRange        $ OpRange        (headNote "range takes a single argument."    xs)
@@ -81,6 +82,7 @@ mkOp op xs =
             L_flatten      -> injectOp $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
             L_toSet        -> injectOp $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)
             L_toMSet       -> injectOp $ MkOpToMSet       $ OpToMSet       (headNote "toMSet takes a single argument."   xs)
+            L_toRelation   -> injectOp $ MkOpToRelation   $ OpToRelation   (headNote "toRelation takes a single argument."   xs)
             L_max          -> injectOp $ MkOpMax          $ OpMax          (headNote "max takes a single argument."   xs)
             L_min          -> injectOp $ MkOpMin          $ OpMin          (headNote "min takes a single argument."   xs)
             L_preImage     -> injectOp $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)

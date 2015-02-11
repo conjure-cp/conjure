@@ -64,6 +64,9 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
         )
 
 
+-- | given a domain, add it additional attributes to make it _smaller_
+--   for example, this means adding a size attribute at the outer-most level
+--   and adding a maxSize attribute at the inner levels.
 mkFinite
     :: (MonadState Int m, MonadFail m)
     => Domain () Expression
@@ -72,18 +75,116 @@ mkFinite
          , [Constant] -> m [(Name, Constant)]   -- value calculator for the extra givens
                                                 -- input is a list of values for the domain
          )
-mkFinite d@DomainSet{} = helper d
+mkFinite d@DomainSet{} = mkFiniteOutermost d
+mkFinite d@DomainFunction{} = mkFiniteOutermost d
+mkFinite d@DomainRelation{} = mkFiniteOutermost d
 mkFinite d = return (d, [], const (return []))
 
 
-helper
+mkFiniteOutermost
     :: (MonadState Int m, MonadFail m)
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
          , [Constant] -> m [(Name, Constant)]
          )
-helper (DomainInt []) = do
+mkFiniteOutermost (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainSet () attr inner'
+        , innerExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    set <- viewConstantSet constant
+                    innerValues <- innerF set
+                    return innerValues
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost (DomainSet () _ inner) = do
+    s <- nextName
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainSet () (SetAttr (SizeAttr_Size (fromName s))) inner'
+        , s:innerExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    set <- viewConstantSet constant
+                    let setSize = length $ nub set
+                    innerValues <- innerF set
+                    return $ innerValues ++ [(s, ConstantInt setSize)]
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr innerTo) = do
+    (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
+    (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
+    return
+        ( DomainFunction () attr innerFr' innerTo'
+        , innerFrExtras ++ innerToExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    function <- viewConstantFunction constant
+                    innerFrValues <- innerFrF (map fst function)
+                    innerToValues <- innerToF (map snd function)
+                    return $ innerFrValues ++ innerToValues
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
+    s <- nextName
+    (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
+    (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
+    return
+        ( DomainFunction ()
+                (FunctionAttr (SizeAttr_Size (fromName s)) partialityAttr jectivityAttr)
+                innerFr' innerTo'
+        , s : innerFrExtras ++ innerToExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    function <- viewConstantFunction constant
+                    let functionSize = length $ nub function
+                    innerFrValues <- innerFrF (map fst function)
+                    innerToValues <- innerToF (map snd function)
+                    return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionSize)]
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) = do
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
+    return
+        ( DomainRelation () attr inners'
+        , concat innersExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    relation <- viewConstantRelation constant
+                    innersValues <- zipWithM ($) innersF (transpose relation)
+                    return (concat innersValues)
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
+    s <- nextName
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
+    return
+        ( DomainRelation ()
+                (RelationAttr (SizeAttr_Size (fromName s)) binRelAttr)
+                inners'
+        , s : concat innersExtras
+        , \ constants -> case constants of
+                [constant] -> do
+                    relation <- viewConstantRelation constant
+                    let relationSize = length $ nub relation
+                    innersValues <- zipWithM ($) innersF (transpose relation)
+                    return $ concat innersValues ++ [(s, ConstantInt relationSize)]
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
+mkFiniteOutermost d = return (d, [], const (return []))
+
+
+mkFiniteInner
+    :: (MonadState Int m, MonadFail m)
+    => Domain () Expression
+    -> m ( Domain () Expression
+         , [Name]
+         , [Constant] -> m [(Name, Constant)]
+         )
+mkFiniteInner (DomainInt []) = do
     fr <- nextName
     to <- nextName
     return
@@ -95,31 +196,30 @@ helper (DomainInt []) = do
                        , (to, ConstantInt (maximum ints))
                        ]
         )
-helper (DomainSet () (SetAttr attr@SizeAttr_Size{}) inner) = do
-    (inner', innerExtras, innerF) <- helper inner
+mkFiniteInner (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
-        ( DomainSet () (SetAttr attr) inner'
+        ( DomainSet () attr inner'
         , innerExtras
         , \ constants -> do
                 sets <- mapM viewConstantSet constants
                 innerF (concat sets)
         )
-helper (DomainSet () _ inner) = do
+mkFiniteInner (DomainSet () _ inner) = do
     s <- nextName
-    (inner', innerExtras, innerF) <- helper inner
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
-        ( DomainSet () (SetAttr (SizeAttr_Size (fromName s))) inner'
+        ( DomainSet () (SetAttr (SizeAttr_MaxSize (fromName s))) inner'
         , s:innerExtras
         , \ constants -> do
                 sets <- mapM viewConstantSet constants
-                let setSizes = map (length . nub) sets
-                setSize <- allEqual setSizes
+                let setMaxSize = maximum $ map (length . nub) sets
                 innerValues <- innerF (concat sets)
-                return $ innerValues ++ [(s, ConstantInt setSize)]
+                return $ innerValues ++ [(s, ConstantInt setMaxSize)]
         )
-helper (DomainFunction () attr innerFr innerTo) = do
-    (innerFr', innerFrExtras, innerFrF) <- helper innerFr
-    (innerTo', innerToExtras, innerToF) <- helper innerTo
+mkFiniteInner (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr innerTo) = do
+    (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
+    (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
     return
         ( DomainFunction () attr innerFr' innerTo'
         , innerFrExtras ++ innerToExtras
@@ -129,7 +229,47 @@ helper (DomainFunction () attr innerFr innerTo) = do
                 innerToValues <- innerToF (map snd $ concat functions)
                 return $ innerFrValues ++ innerToValues
         )
-helper d = return (d, [], const (return []))
+mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
+    s <- nextName
+    (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
+    (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
+    return
+        ( DomainFunction ()
+                (FunctionAttr (SizeAttr_MaxSize (fromName s)) partialityAttr jectivityAttr)
+                innerFr' innerTo'
+        , s : innerFrExtras ++ innerToExtras
+        , \ constants -> do
+                functions <- mapM viewConstantFunction constants
+                let functionMaxSize = maximum $ map (length . nub) functions
+                innerFrValues <- innerFrF (map fst $ concat functions)
+                innerToValues <- innerToF (map snd $ concat functions)
+                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionMaxSize)]
+        )
+mkFiniteInner (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) = do
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
+    return
+        ( DomainRelation () attr inners'
+        , concat innersExtras
+        , \ constants -> do
+                relations <- mapM viewConstantRelation constants
+                innersValues <- zipWithM ($) innersF (transpose $ concat relations)
+                return $ concat innersValues
+        )
+mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
+    s <- nextName
+    (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
+    return
+        ( DomainRelation ()
+                (RelationAttr (SizeAttr_MaxSize (fromName s)) binRelAttr)
+                inners'
+        , s : concat innersExtras
+        , \ constants -> do
+                relations <- mapM viewConstantRelation constants
+                let relationMaxSize = maximum $ map (length . nub) relations
+                innersValues <- zipWithM ($) innersF (transpose $ concat relations)
+                return $ concat innersValues ++ [(s, ConstantInt relationMaxSize)]
+        )
+mkFiniteInner d = return (d, [], const (return []))
 
 
 nextName :: MonadState Int m => m Name
@@ -150,7 +290,6 @@ viewConstantFunction :: MonadFail m => Constant -> m [(Constant,Constant)]
 viewConstantFunction (ConstantAbstract (AbsLitFunction xs)) = return xs
 viewConstantFunction constant = fail ("Expecting a function, but got:" <+> pretty constant)
 
-allEqual :: (Eq a, Pretty a, MonadFail m) => [a] -> m a
-allEqual (x:xs) | all (x==) xs = return x
-allEqual [] = fail "allEqual, false: no value."
-allEqual xs = fail $ "allEqual, false:" <+> prettyList id "," xs
+viewConstantRelation :: MonadFail m => Constant -> m [[Constant]]
+viewConstantRelation (ConstantAbstract (AbsLitRelation xs)) = return xs
+viewConstantRelation constant = fail ("Expecting a relation, but got:" <+> pretty constant)

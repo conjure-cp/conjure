@@ -8,6 +8,8 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
+import Conjure.Language.CategoryOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
@@ -145,7 +147,8 @@ rule_Intersect :: Rule
 rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, matchDef opToSet expr)
+            Generator (GenInExpr pat@(Single iPat) expr) ->
+                return (pat, iPat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Intersect"
         (x, y)             <- match opIntersect expr
         tx                 <- typeOf x
@@ -297,3 +300,50 @@ rule_Card = "set-card" `namedRule` theRule where
                     let (iPat, _) = quantifiedVar (fresh `at` 0)
                     in  [essence| sum &iPat in &s . 1 |]
                )
+
+
+rule_Param_MinOfSet :: Rule
+rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
+    theRule [essence| min(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
+        DomainSet _ _ inner <- domainOf s
+        return
+            ( "min of a parameter set"
+            , case inner of
+                DomainInt [RangeBounded l _] -> const l
+                _ -> \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| min([ &i | &iPat : &inner ]) |]
+            )
+    theRule _ = na "rule_Param_MinOfSet"
+
+
+rule_Param_MaxOfSet :: Rule
+rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
+    theRule [essence| max(&s) |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
+        DomainSet _ _ inner <- domainOf s
+        return
+            ( "max of a parameter set"
+            , case inner of
+                DomainInt [RangeBounded _ u] -> const u
+                _ -> \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| max([ &i | &iPat : &inner ]) |]
+            )
+    theRule _ = na "rule_Param_MaxOfSet"
+
+
+rule_Param_Card :: Rule
+rule_Param_Card = "param-card-of-set" `namedRule` theRule where
+    theRule [essence| |&s| |] = do
+        TypeSet TypeInt <- typeOf s
+        unless (categoryOf s == CatParameter) $ na "rule_Param_Card"
+        DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
+        return
+            ( "cardinality of a parameter set"
+            , const n
+            )
+    theRule _ = na "rule_Param_Card"

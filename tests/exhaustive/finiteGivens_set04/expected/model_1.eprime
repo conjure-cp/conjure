@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+given p1: int
+given p2: int
+given p3: int
+given p4: int
+given a_Explicit_Occurrence: matrix indexed by [int(1..p1), int(p3..p4)] of bool
+find x: int(-1000..1000)
+such that x = max([max([q2 | q2 : int(p3..p4), a_Explicit_Occurrence[q1, q2]]) | q1 : int(1..p1)])
+

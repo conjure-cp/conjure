@@ -31,11 +31,13 @@ export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
 
-CABAL_VERSION="1.22.0.0"
+
+# cabal-install-1.22.0.0 doesn't support the option --disable-executable-profiling
+CABAL_VERSION="1.20.0.6"
 HAPPY_VERSION="1.19.5"
 HSCOLOUR_VERSION="1.20.3"
 
-CABAL_VERSION_CHECK="1.22"
+CABAL_VERSION_CHECK="1.20"
 HAPPY_VERSION_CHECK="1.19"
 HSCOLOUR_VERSION_CHECK="1.20"
 
@@ -134,7 +136,7 @@ else
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
-        --disable-profiling
+        --disable-executable-profiling
     popd
     rm -rf dist/tools
 fi
@@ -153,7 +155,7 @@ if [ $BUILD_DOCS = "yes" ]; then
             --force-reinstalls \
             --disable-documentation \
             --disable-library-profiling \
-            --disable-profiling
+            --disable-executable-profiling
         popd
         rm -rf dist/tools
     fi
@@ -205,12 +207,12 @@ fi
 
 cabal install                                                       \
     --only-dependencies                                             \
-    --disable-library-profiling --disable-profiling                 \
+    --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
     ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                     \
-    --disable-library-profiling --disable-profiling                 \
+    --disable-library-profiling --disable-executable-profiling      \
     ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"

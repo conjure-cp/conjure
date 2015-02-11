@@ -17,6 +17,7 @@ data UI
         -- flags related to output
         , outputDirectory           :: FilePath
         , numberingStart            :: Int
+        , smartFilenames            :: Bool
         -- flags related to logging
         , logLevel                  :: LogLevel
         , verboseTrail              :: Bool
@@ -83,11 +84,18 @@ ui = modes
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
         , numberingStart   = 1     &= name "numbering-start"
-                                   &= name "n"
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Starting value to output files.\n\
                                            \Default value: 1"
+        , smartFilenames   = False &= name "smart-filenames"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Use \"smart names\" for the models.\n\
+                                           \Turned off by default.\n\
+                                           \Caution: With this flag, Conjure will use the answers when producing \
+                                           \a filename. It will ignore the order of questions. \
+                                           \This will become a problem if anything other than 'f' is used for questions."
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
