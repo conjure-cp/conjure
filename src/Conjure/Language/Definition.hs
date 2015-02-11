@@ -244,7 +244,7 @@ data ModelInfo = ModelInfo
     , miUnnameds :: [(Name, Expression)]
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
-    , miRepresentationsTree :: [(Name, Tree (Maybe HasRepresentation))]
+    , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
     }

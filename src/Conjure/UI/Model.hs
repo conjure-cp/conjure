@@ -796,6 +796,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
             representations     = model |> mInfo |> miRepresentations
             representationsTree = model |> mInfo |> miRepresentationsTree
+                                        |> concatMap (\ (n, ds) -> map (n,) ds )
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
@@ -836,8 +837,11 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 let
                     oldInfo = mInfo m
                     newInfo = oldInfo
-                        { miRepresentations     = miRepresentations     oldInfo ++ [(name, domain)]
-                        , miRepresentationsTree = miRepresentationsTree oldInfo ++ [(name, reprTree domain)]
+                        { miRepresentations     =  representations     ++ [(name, domain)]
+                        , miRepresentationsTree = (representationsTree ++ [(name, reprTree domain)])
+                                                |> sortBy (comparing fst)
+                                                |> groupBy ((==) `on` fst)
+                                                |> map (\ grp -> (fst (head grp), map snd grp) )
                         }
                 in  m { mInfo = newInfo }
 
