@@ -21,10 +21,13 @@ import qualified Data.Aeson as A
 import qualified Data.Aeson.Encode as A
 import qualified Data.ByteString.Lazy as B
 
-import qualified Data.Text.Lazy as T
-import qualified Data.Text.Lazy.Builder as T
+import qualified Data.Text as T
+import qualified Data.Text.Lazy as L
+import qualified Data.Text.Lazy.Builder as L
 import qualified Text.PrettyPrint as Pr
 -- import Text.Read(read)
+
+import qualified Data.IntSet as I
 
 
 logFollow :: (MonadIO m, MonadLog m)
@@ -32,7 +35,7 @@ logFollow :: (MonadIO m, MonadLog m)
 logFollow before q@Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole )
-  logWarn ( "qAscendants" <+> vcat (map pretty qAscendants) )
+  logWarn ( "qAscendants" <+> vcat (map (pretty . hash) qAscendants) )
 
   logWarn $ hang "Ans" 4 $
     vcat $ [ hang ("Answer" <+> pretty i) 8 $
@@ -68,40 +71,45 @@ logFollow before q@Question{..} options = do
           else
               Nothing
       where
-        match QuestionAnswered{..} = and
-          [ qHole_        == hash qHole
-          , qAscendants_  == hash  qAscendants
-          , aText_        == (hash $ show aText)
-          , aAnswer_      == hash aAnswer
-          ]
+        match a = and [aRuleName_ a == (show $ aRuleName)
+                      , qHole_ a == hash qHole
+                      , I.null (qAscendants_ a) == I.null qAsSet
+                      ||  (not . I.null) (qAscendants_ a `I.intersection` qAsSet)
+                      ]
+
+
+          where qAsSet = (I.fromList . map hash) qAscendants
+        -- match _ = False
 
 
 storeChoice :: MonadLog m => Question -> Answer -> m Answer
 storeChoice q a = do
-  let qa = QuestionAnswered{ qHole_       = hash $ qHole q
-                           , qAscendants_ = hash $ qAscendants q
-                           , aText_       = hash $ show $ aText a
-                           , aAnswer_     = hash $ aAnswer a
-                           }
-      -- newInfo = (mInfo m){miFollow= ( qa : (miFollow . mInfo $ m)) }
+  let qa = case (aRuleName a) of
+                 "choose-repr" ->
+                     AnsweredRepr
+                     { qHole_       = hash $ qHole q
+                     , qAscendants_ = I.fromList . map hash . qAscendants $ q
+                     , aDom_        = getReprDomText a
+                     , aRuleName_   = show $ aRuleName a
+                     }
+                 _ ->
+                     AnsweredRule
+                     { qHole_       = hash $ qHole q
+                     , qAscendants_ = I.fromList . map hash . qAscendants $ q
+                     , aRuleName_   = show $ aRuleName a
+                     }
+
+
   saveToLog $ "LF: " <+> jsonToDoc qa  <+> "END:"
-  -- return $ a{aFullModel=m{mInfo=newInfo}}
   return a
 
 
+getReprDomText :: Answer -> Text
+getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
+
+-- Read from a json file
 getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m [QuestionAnswered]
 getAnswers fp = do
-  -- the double encoded Q&A
-  -- let ans :: [QuestionAnswered] = concatMap  (\a ->
-  --         fromMaybe (userErr $ "logParseError" <+> (pretty $ show a) <+> "---\n" )
-  --                       . A.decode . read $ a ) logStrings
-  -- return ans
-
-  -- Reading from the eprime
-  -- Model{mInfo=ModelInfo{miFollow=logStrings} }  <- readModelFromFile fp
-  -- return logStrings
-
-  -- Read from a json file
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just v  -> return v
     Nothing -> userErr $ "Error parsing" <+> pretty fp
@@ -112,4 +120,4 @@ saveToLog = log LogFollow
 
 
 jsonToDoc :: ToJSON a => a -> Doc
-jsonToDoc  = Pr.text . T.unpack . T.toLazyText . A.encodeToTextBuilder . toJSON
+jsonToDoc  = Pr.text . L.unpack . L.toLazyText . A.encodeToTextBuilder . toJSON

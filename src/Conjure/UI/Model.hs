@@ -14,7 +14,7 @@ module Conjure.UI.Model
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
-    , Strategy(..), Config(..), parseStrategy
+    , Strategy(..), Config(..), parseStrategy, prologue
     ) where
 
 import Conjure.Prelude
@@ -175,6 +175,7 @@ remaining config model = do
             fullModelAfterHook <- hook fullModelBeforeHook
             return Answer
                 { aText = ruleName <> ":" <+> ruleText
+                , aRuleName = ruleName
                 , aAnswer = ruleResultExpr
                 , aFullModel = fullModelAfterHook
                                 |> addToTrail config
@@ -762,7 +763,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
         let options =
                 [ (msg, const out, hook)
                 | dom <- domOpts
-                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
+                , let msg = "Choosing representation for" <+> pretty nm <> "˸" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook (channelling config) forg nm dom
                 ]

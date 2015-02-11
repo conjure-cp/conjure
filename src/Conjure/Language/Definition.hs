@@ -59,6 +59,8 @@ import qualified Data.Text as T
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
+import Data.IntSet(IntSet)
+
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Model ---------------------------------------------------------------------------------------------------------------
@@ -237,17 +239,26 @@ instance Pretty FindOrGiven where
 -- ModelInfo -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-data QuestionAnswered = QuestionAnswered
-    { qHole_       :: Int
-    , qAscendants_ :: Int
-    , aText_       :: Int  --   Doc is not Ord or Data
-    , aAnswer_     :: Int
-    } deriving (Eq, Show, Ord, Data, Typeable, Generic)
+data QuestionAnswered =
+      AnsweredRepr
+      {
+        qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aDom_        :: Text
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      }
+    | AnsweredRule
+      {
+        qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      } deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+
 
 instance ToJSON   QuestionAnswered where toJSON    = genericToJSON jsonOptions
 instance FromJSON QuestionAnswered where parseJSON = genericParseJSON jsonOptions
 instance Serialize QuestionAnswered
-instance Hashable QuestionAnswered
 
 data ModelInfo = ModelInfo
     { miGivens :: [Name]

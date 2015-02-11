@@ -30,6 +30,7 @@ data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
     , aFullModel :: Model
+    , aRuleName  :: Doc
     } deriving (Show)
 
 
