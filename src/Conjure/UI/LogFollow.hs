@@ -79,7 +79,6 @@ logFollow before q@Question{..} options = do
 
 
           where qAsSet = (I.fromList . map hash) qAscendants
-        -- match _ = False
 
 
 storeChoice :: MonadLog m => Question -> Answer -> m Answer

@@ -25,7 +25,7 @@ ghci:
 	    -fwarn-unused-do-bind                      \
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
-	    `find src -name *.hs | grep -v Main`
+	    `find src -name *.hs | grep -v TestsMain | grep -v '\.#' `
 
 clean:
 	@bash etc/build/clean.sh
