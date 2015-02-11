@@ -75,6 +75,11 @@ instance ExpressionLike Constant where
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)
 
+instance DomainContainer Constant (Domain ()) where
+    fromDomain = DomainInConstant
+    domainOut (DomainInConstant dom) = return dom
+    domainOut _ = fail "domainOut{Constant}"
+
 normaliseConstant :: Constant -> Constant
 normaliseConstant x@ConstantBool{} = x
 normaliseConstant x@ConstantInt{}  = x

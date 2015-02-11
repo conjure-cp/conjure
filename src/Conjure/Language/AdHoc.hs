@@ -1,3 +1,5 @@
+{-# LANGUAGE MultiParamTypeClasses #-}
+
 module Conjure.Language.AdHoc where
 
 import Conjure.Prelude
@@ -16,6 +18,10 @@ class ExpressionLike a where
 
 class ReferenceContainer a where
     fromName :: Name -> a
+
+class DomainContainer a dom where
+    fromDomain :: dom a -> a
+    domainOut :: MonadFail m => a -> m (dom a)
 
 class CanBeAnAlias a where
     isAlias :: a -> Maybe a
