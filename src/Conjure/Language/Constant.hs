@@ -31,6 +31,7 @@ data Constant
                    Name   {- the literal -}
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
+    | ConstantUndefined Text
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Constant
@@ -50,6 +51,7 @@ instance TypeOf Constant where
     typeOf (ConstantEnum defn _ _ ) = return (TypeEnum defn)
     typeOf (ConstantAbstract x    ) = typeOf x
     typeOf (DomainInConstant dom) = typeOf dom
+    typeOf (ConstantUndefined reason) = fail ("type of undefined," <+> pretty reason)
 
 instance Pretty Constant where
     pretty (ConstantBool False) = "false"
@@ -58,6 +60,7 @@ instance Pretty Constant where
     pretty (ConstantEnum _ _ x) = pretty x
     pretty (ConstantAbstract x) = pretty x
     pretty (DomainInConstant d) = "`" <> pretty d <> "`"
+    pretty ConstantUndefined{} = "undefined"
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
@@ -86,6 +89,7 @@ normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
 normaliseConstant (DomainInConstant d) = DomainInConstant (normaliseDomain normaliseConstant d)
+normaliseConstant x@ConstantUndefined{} = x
 
 instance Num Constant where
     ConstantInt x + ConstantInt y = ConstantInt (x+y)
