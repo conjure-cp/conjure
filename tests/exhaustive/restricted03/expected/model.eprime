@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+find x_Function1DPartial_Flags: matrix indexed by [int(1..4)] of bool
+find x_Function1DPartial_Values: matrix indexed by [int(1..4)] of int(1..4)
+such that
+    and([x_Function1DPartial_Flags[q5] -> x_Function1DPartial_Values[q5] % 2 = 0 /\ x_Function1DPartial_Flags[q5]
+             | q5 : int(1..4), or([q4 = q5 | q4 : int(1..2)])]),
+    and([x_Function1DPartial_Flags[q7] -> x_Function1DPartial_Values[q7] % 2 = 1 /\ x_Function1DPartial_Flags[q7]
+             | q7 : int(1..4), or([q6 = q7 | q6 : int(3..4)])]),
+    and([x_Function1DPartial_Flags[q1] /\ x_Function1DPartial_Flags[q2] -> x_Function1DPartial_Values[q1] != x_Function1DPartial_Values[q2]
+             | q1 : int(1..4), q2 : int(1..4), q1 != q2]),
+    and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1 | q1 : int(1..4)])
+
