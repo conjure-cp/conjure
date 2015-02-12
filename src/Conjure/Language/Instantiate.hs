@@ -21,7 +21,13 @@ instantiateExpression
     => [(Name, Expression)]
     -> Expression
     -> m Constant
-instantiateExpression ctxt x = normaliseConstant <$> evalStateT (instantiateE x) ctxt
+instantiateExpression ctxt x =
+    return $ either
+        (ConstantUndefined . stringToText . show)
+        normaliseConstant
+        (evalStateT (instantiateE x) ctxt)
+        
+    
 
 
 instantiateDomain
@@ -112,10 +118,7 @@ instantiateOp
        )
     => Ops Expression
     -> m Constant
-instantiateOp opx = do
-    opc <- mapM instantiateE opx
-    let c = either (ConstantUndefined . stringToText . show) id (evaluateOp opc)
-    return (normaliseConstant c)
+instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
 
 
 instantiateAbsLit
