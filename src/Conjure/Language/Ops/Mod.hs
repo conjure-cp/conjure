@@ -22,7 +22,9 @@ instance TypeOf x => TypeOf (OpMod x) where
 
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef $ "Contains undefined things in it:" <+> pretty p
-    evaluateOp (OpMod x y) = ConstantInt <$> (mod <$> intOut x <*> intOut y)
+    evaluateOp p@(OpMod x y)
+        | y /= 0    = ConstantInt <$> (mod <$> intOut x <*> intOut y)
+        | otherwise = return $ mkUndef $ "modulo zero:" <+> pretty p
 
 instance SimplifyOp OpMod where
     simplifyOp _ _ = na "simplifyOp{OpMod}"
