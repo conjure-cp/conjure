@@ -26,6 +26,7 @@ instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef $ "Contains undefined things in it:" <+> pretty p
     evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut x
 
 instance SimplifyOp OpProduct where

@@ -26,6 +26,7 @@ instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus
 
 instance EvaluateOp OpSum where
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef $ "Contains undefined things in it:" <+> pretty p
     evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut x
 
 instance SimplifyOp OpSum where

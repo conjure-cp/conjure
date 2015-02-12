@@ -61,7 +61,7 @@ instance Pretty Constant where
     pretty (ConstantEnum _ _ x) = pretty x
     pretty (ConstantAbstract x) = pretty x
     pretty (DomainInConstant d) = "`" <> pretty d <> "`"
-    pretty ConstantUndefined{} = "undefined"
+    pretty (ConstantUndefined reason) = "undefined" <> prParens (pretty reason)
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt

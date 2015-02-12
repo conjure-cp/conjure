@@ -25,9 +25,22 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMin where
-    evaluateOp (OpMin (ConstantAbstract (AbsLitMatrix _ xs))) = ConstantInt . minimum <$> concatMapM intsOut xs
-    evaluateOp (OpMin (ConstantAbstract (AbsLitSet      xs))) = ConstantInt . minimum <$> concatMapM intsOut xs
-    evaluateOp (OpMin (ConstantAbstract (AbsLitMSet     xs))) = ConstantInt . minimum <$> concatMapM intsOut xs
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef $ "Contains undefined things in it:" <+> pretty p
+    evaluateOp (OpMin (ConstantAbstract (AbsLitMatrix _ xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef "Empty collection in min"
+            else ConstantInt (minimum is)
+    evaluateOp (OpMin (ConstantAbstract (AbsLitSet      xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef "Empty collection in min"
+            else ConstantInt (minimum is)
+    evaluateOp (OpMin (ConstantAbstract (AbsLitMSet     xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef "Empty collection in min"
+            else ConstantInt (minimum is)
     evaluateOp _ = na "evaluateOp{OpMin}"
 
 instance SimplifyOp OpMin where
