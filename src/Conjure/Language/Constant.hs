@@ -70,6 +70,7 @@ instance ExpressionLike Constant where
 
     fromBool = ConstantBool
     boolOut (ConstantBool x) = return x
+    boolOut ConstantUndefined{} = return False
     boolOut c = fail ("Expecting a boolean, but found:" <+> pretty c)
 
     fromList xs = ConstantAbstract $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ length xs)) xs
