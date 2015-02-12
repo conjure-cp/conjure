@@ -87,7 +87,7 @@ instantiateE (Reference name _) = do
 
 instantiateE (Constant c) = return c
 instantiateE (AbstractLiteral lit) = ConstantAbstract <$> instantiateAbsLit lit
-instantiateE (Typed x _) = instantiateE x       -- assuming we won't need a TypedConstant for now.
+instantiateE (Typed x ty) = TypedConstant <$> instantiateE x <*> pure ty
 instantiateE (Op op) = instantiateOp op
 
 -- "Domain () Expression"s inside expressions are handled specially

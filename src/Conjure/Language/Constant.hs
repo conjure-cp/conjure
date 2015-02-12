@@ -32,6 +32,7 @@ data Constant
                    Name   {- the literal -}
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
+    | TypedConstant Constant Type
     | ConstantUndefined Text                                -- never use this for a bool
                                                             -- use false instead for them
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -53,6 +54,7 @@ instance TypeOf Constant where
     typeOf (ConstantEnum defn _ _ ) = return (TypeEnum defn)
     typeOf (ConstantAbstract x    ) = typeOf x
     typeOf (DomainInConstant dom) = typeOf dom
+    typeOf (TypedConstant _ ty) = return ty
     typeOf (ConstantUndefined reason) = fail ("type of undefined," <+> pretty reason)
 
 instance Pretty Constant where
@@ -62,6 +64,7 @@ instance Pretty Constant where
     pretty (ConstantEnum _ _ x) = pretty x
     pretty (ConstantAbstract x) = pretty x
     pretty (DomainInConstant d) = "`" <> pretty d <> "`"
+    pretty (TypedConstant x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     pretty (ConstantUndefined reason) = "undefined" <> prParens (pretty reason)
 
 instance ExpressionLike Constant where
@@ -99,6 +102,7 @@ normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
 normaliseConstant (DomainInConstant d) = DomainInConstant (normaliseDomain normaliseConstant d)
+normaliseConstant (TypedConstant c ty) = TypedConstant (normaliseConstant c) ty
 normaliseConstant x@ConstantUndefined{} = x
 
 instance Num Constant where
