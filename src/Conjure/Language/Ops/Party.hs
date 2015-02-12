@@ -32,8 +32,8 @@ instance EvaluateOp OpParty where
         in
             case outSet of
                 [s] -> return $ ConstantAbstract $ AbsLitSet s
-                []  -> fail $ "Element not found in partition:" <++> pretty op
-                _   -> fail $ "Element found in multiple parts of the partition:" <++> pretty op
+                []  -> return $ mkUndef $ "Element not found in partition:" <++> pretty op
+                _   -> return $ mkUndef $ "Element found in multiple parts of the partition:" <++> pretty op
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
 instance SimplifyOp OpParty where

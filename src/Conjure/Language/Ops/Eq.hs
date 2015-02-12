@@ -21,6 +21,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
 
 instance EvaluateOp OpEq where
+    evaluateOp (OpEq ConstantUndefined{} _) = return $ fromBool False
+    evaluateOp (OpEq _ ConstantUndefined{}) = return $ fromBool False
     evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
 
 instance SimplifyOp OpEq where

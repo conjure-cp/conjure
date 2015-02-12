@@ -26,12 +26,14 @@ instance EvaluateOp OpFunctionImage where
     evaluateOp (OpFunctionImage (ConstantAbstract (AbsLitFunction xs)) a) =
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return y
-            []  -> fail $ vcat [ "Function is not defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
-                               ]
-            _   -> fail $ vcat [ "Function is multiply defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
-                               ]
+            []  -> return $ mkUndef $ vcat
+                    [ "Function is not defined at this point:" <+> pretty a
+                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    ]
+            _   -> return $ mkUndef $ vcat
+                    [ "Function is multiply defined at this point:" <+> pretty a
+                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    ]
     evaluateOp op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty (show op)
 
 instance SimplifyOp OpFunctionImage where

@@ -30,12 +30,14 @@ instance EvaluateOp OpIndexing where
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
-            []  -> fail $ vcat [ "Matrix is not defined at this point:" <+> pretty x
-                               , "Matrix value:" <+> pretty m
-                               ]
-            _   -> fail $ vcat [ "Matrix is multiply defined at this point:" <+> pretty x
-                               , "Matrix value:" <+> pretty m
-                               ]
+            []  -> return $ mkUndef $ vcat
+                    [ "Matrix is not defined at this point:" <+> pretty x
+                    , "Matrix value:" <+> pretty m
+                    ]
+            _   -> return $ mkUndef $ vcat
+                    [ "Matrix is multiply defined at this point:" <+> pretty x
+                    , "Matrix value:" <+> pretty m
+                    ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 

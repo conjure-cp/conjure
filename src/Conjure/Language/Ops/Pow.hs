@@ -23,7 +23,7 @@ instance TypeOf x => TypeOf (OpPow x) where
 instance EvaluateOp OpPow where
     evaluateOp p@(OpPow x y)
         | y >= 0    = ConstantInt <$> ((^) <$> intOut x <*> intOut y)
-        | otherwise = fail $ "negative exponent:" <+> pretty p
+        | otherwise = return $ mkUndef $ "negative exponent:" <+> pretty p
 
 instance SimplifyOp OpPow where
     simplifyOp _ _ = na "simplifyOp{OpPow}"

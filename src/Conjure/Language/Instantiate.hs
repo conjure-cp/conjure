@@ -21,13 +21,7 @@ instantiateExpression
     => [(Name, Expression)]
     -> Expression
     -> m Constant
-instantiateExpression ctxt x =
-    return $ either
-        (ConstantUndefined . stringToText . show)
-        normaliseConstant
-        (evalStateT (instantiateE x) ctxt)
-        
-    
+instantiateExpression ctxt x = normaliseConstant <$> evalStateT (instantiateE x) ctxt
 
 
 instantiateDomain

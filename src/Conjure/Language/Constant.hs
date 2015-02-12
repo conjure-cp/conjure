@@ -5,6 +5,7 @@ module Conjure.Language.Constant
     ( Constant(..)
     , normaliseConstant
     , validateConstantForDomain
+    , mkUndef, isUndef
     ) where
 
 -- conjure
@@ -82,6 +83,13 @@ instance DomainContainer Constant (Domain ()) where
     fromDomain = DomainInConstant
     domainOut (DomainInConstant dom) = return dom
     domainOut _ = fail "domainOut{Constant}"
+
+mkUndef :: Doc -> Constant
+mkUndef = ConstantUndefined . stringToText . show
+
+isUndef :: Constant -> Bool
+isUndef ConstantUndefined{} = True
+isUndef _ = False
 
 normaliseConstant :: Constant -> Constant
 normaliseConstant x@ConstantBool{} = x
