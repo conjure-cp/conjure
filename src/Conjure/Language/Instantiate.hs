@@ -112,7 +112,10 @@ instantiateOp
        )
     => Ops Expression
     -> m Constant
-instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
+instantiateOp opx = do
+    opc <- mapM instantiateE opx
+    let c = either (ConstantUndefined . stringToText . show) id (evaluateOp opc)
+    return (normaliseConstant c)
 
 
 instantiateAbsLit
