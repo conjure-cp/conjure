@@ -44,7 +44,17 @@ rule_Image_Literal :: Rule
 rule_Image_Literal = "function-image-literal" `namedRule` theRule where
     theRule [essence| &lhs = &rhs |] = do
         (func, arg) <- match opFunctionImage lhs
+        tyFunc      <- typeOf func
+        isBool      <- case tyFunc of
+            TypeFunction _ TypeBool -> -- out of range means "false = &rhs"
+                return True
+            _ -> -- out of range means "false"
+                return False
         elems       <- match functionLiteral func
+        let argIsUndef = make opNot $ make opOr $ fromList
+                [ [essence| &a = &arg |]
+                | (a,_) <- elems
+                ]
         return $
             if null elems
                 then
@@ -53,10 +63,20 @@ rule_Image_Literal = "function-image-literal" `namedRule` theRule where
                     )
                 else
                     ( "Image of function literal"
-                    , const $ make opOr $ fromList
-                        [ [essence| (&a = &arg) /\ (&b = &rhs) |]
-                        | (a,b) <- elems
-                        ]
+                    , const $ if isBool
+                        then
+                            -- the argument is defined and equal to rhs
+                            -- OR
+                            -- the argument is undefined and rhs = false
+                            make opOr $ fromList $
+                                [ [essence| (&a = &arg) /\ (&b = &rhs) |]
+                                | (a,b) <- elems
+                                ] ++ [ [essence| &argIsUndef /\ (&rhs = false) |] ]
+                        else
+                            make opOr $ fromList
+                                [ [essence| (&a = &arg) /\ (&b = &rhs) |]
+                                | (a,b) <- elems
+                                ]
                     )
     theRule _ = na "rule_Image_Literal"
 

@@ -32,7 +32,8 @@ data Constant
                    Name   {- the literal -}
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
-    | ConstantUndefined Text
+    | ConstantUndefined Text                                -- never use this for a bool
+                                                            -- use false instead for them
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Constant
