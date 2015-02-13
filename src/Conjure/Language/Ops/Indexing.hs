@@ -15,22 +15,33 @@ instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = genericToJSON js
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x) where
-    typeOf (OpIndexing m i) = do
+    typeOf p@(OpIndexing m i) = do
         tyM <- typeOf m
+        tyI <- typeOf i
         case tyM of
-            TypeMatrix _ inn -> return inn
+            TypeMatrix tyIndex inn
+                | typesUnify [tyIndex, tyI] -> return inn
+                | otherwise -> fail $ "Indexing with inappropriate type:" <+> vcat
+                    [ "The expression:"  <+> pretty p
+                    , "Indexing:"        <+> pretty m
+                    , "Expected type of index:" <+> pretty tyIndex
+                    , "Actual type of index  :" <+> pretty tyI
+                    ]
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
                 return (at inns (iInt-1))
-            _ -> fail ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
+            _ -> fail $ "Indexing something other than a matrix or a tuple:" <++> vcat
+                    [ "The expression:" <+> pretty p
+                    , "Indexing:"       <+> pretty m
+                    , "With type:"      <+> pretty tyM
+                    ]
 
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do
-        ty     <- typeOf m
-        let isBool = case ty of
-                        TypeMatrix _ TypeBool -> True
-                        _                     -> False
+        ty <- typeOf m
+        let isBool = case ty of TypeMatrix _ TypeBool -> True
+                                _                     -> False
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v

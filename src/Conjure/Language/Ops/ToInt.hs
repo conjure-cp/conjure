@@ -14,10 +14,16 @@ instance Hashable  x => Hashable  (OpToInt x)
 instance ToJSON    x => ToJSON    (OpToInt x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpToInt x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpToInt x) where
-    typeOf (OpToInt x) = do
-        TypeBool{} <- typeOf x
-        return TypeInt
+instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
+    typeOf p@(OpToInt x) = do
+        ty <- typeOf x
+        case ty of
+            TypeBool -> return TypeInt
+            _ -> raiseTypeError $ vcat
+                [ pretty p
+                , "Expected type bool."
+                , "But got:" <+> pretty ty
+                ]
 
 instance EvaluateOp OpToInt where
     evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt 0)

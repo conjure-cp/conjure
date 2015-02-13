@@ -20,7 +20,13 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
         xTy <- typeOf x
         if typesUnify [xTy, from]
             then return to
-            else raiseTypeError p
+            else raiseTypeError $ vcat
+                [ pretty p
+                , "f     :" <+> pretty f
+                , "f type:" <+> pretty (TypeFunction from to)
+                , "x     :" <+> pretty x
+                , "x type:" <+> pretty xTy
+                ]
 
 instance EvaluateOp OpFunctionImage where
     evaluateOp (OpFunctionImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do
