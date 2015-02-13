@@ -487,6 +487,33 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
     return m
 checkIfAllRefined m = return m
 
+
+sliceThemMatrices :: MonadFail m => Model -> m Model
+sliceThemMatrices model = do
+    let
+        -- nothing stays with a matrix type
+        -- we are doing this top down, so the first time we reach a matrix typed thing, we know it need to be sliced
+        -- no need to descend any further
+        onExpr :: MonadFail m => Expression -> m Expression
+        onExpr p = do
+            case match opQuantifier p of
+                Nothing -> return p
+                Just (mkQuan, m) -> do
+                    tym <- typeOf m
+                    let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
+                        nestingLevel (TypeList     a) = 1 + nestingLevel a
+                        nestingLevel _ = 0 :: Int
+                    let howMany = nestingLevel tym
+                    let unroll a i | i <= 1 = a
+                        unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
+                    let sliced = unroll m howMany
+                    let flatten = if howMany > 1 then make opFlatten else id
+                    return $ mkQuan $ flatten sliced
+
+    statements <- transformBiM onExpr (mStatements model)
+    return model { mStatements = statements }
+
+
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
@@ -511,6 +538,7 @@ epilogue model = return model
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
@@ -589,7 +617,9 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Index
 
     , Vertical.Matrix.rule_Comprehension_Literal
-    , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet
+    -- , Vertical.Matrix.rule_Comprehension_LiteralIndexed      -- this
+    , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet    -- should be more general than this and
+    , Vertical.Matrix.rule_Comprehension_Literal_ContainsMSet   -- this. waiting on SR.
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet
