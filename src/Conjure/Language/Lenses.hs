@@ -965,6 +965,7 @@ setLiteral _ =
         extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitSet xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.setLiteral:" <+> pretty p)
 
 
@@ -982,6 +983,7 @@ msetLiteral _ =
         extract (Constant (ConstantAbstract (AbsLitMSet xs))) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitMSet xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.msetLiteral:" <+> pretty p)
 
 
@@ -999,6 +1001,7 @@ functionLiteral _ =
         extract (Constant (ConstantAbstract (AbsLitFunction xs))) = return [ (Constant a, Constant b) | (a,b) <- xs ]
         extract (AbstractLiteral (AbsLitFunction xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
 
 
@@ -1016,6 +1019,7 @@ relationLiteral _ =
         extract (Constant (ConstantAbstract (AbsLitRelation xs))) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitRelation xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.relationLiteral:" <+> pretty p)
 
 
@@ -1033,6 +1037,7 @@ partitionLiteral _ =
         extract (Constant (ConstantAbstract (AbsLitPartition xs))) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitPartition xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.partitionLiteral:" <+> pretty p)
 
 
