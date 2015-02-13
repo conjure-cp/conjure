@@ -67,6 +67,8 @@ typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
 typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
+typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
+typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
@@ -94,6 +96,8 @@ mostDefined = foldr f TypeAny
         f (TypeTuple as) (TypeTuple bs) = TypeTuple (zipWith f as bs)
         f (TypeList a) (TypeList b) = TypeList (f a b)
         f (TypeMatrix a1 a2) (TypeMatrix b1 b2) = TypeMatrix (f a1 b1) (f a2 b2)
+        f (TypeList a) (TypeMatrix _ b) = TypeList (f a b)
+        f (TypeMatrix _ a) (TypeList b) = TypeList (f a b)
         f (TypeSet a) (TypeSet b) = TypeSet (f a b)
         f (TypeMSet a) (TypeMSet b) = TypeMSet (f a b)
         f (TypeFunction a1 a2) (TypeFunction b1 b2) = TypeFunction (f a1 b1) (f a2 b2)
@@ -106,7 +110,9 @@ homoType msg [] = userErr $ "empty collection, what's the type?" <++> ("When wor
 homoType msg xs =
     if typesUnify xs
         then mostDefined xs
-        else userErr $ "not a homoType:" <++> ("When working on:" <+> msg)
+        else userErr $ vcat [ "Not uniformly typed:" <+> msg
+                            , "Involved types are:" <+> vcat (map pretty xs)
+                            ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
 innerTypeOf (TypeList t) = return t
