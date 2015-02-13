@@ -390,7 +390,18 @@ instance TypeOf Expression where
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
-    typeOf (Comprehension x _) = TypeList <$> typeOf x  -- TODO: do this properly, look into generators and filters
+    typeOf p@(Comprehension x gensOrConds) = do
+        forM_ gensOrConds $ \ gof -> case gof of
+            Generator{} -> return ()                    -- TODO: do this properly
+            Condition c -> do
+                ty <- typeOf c
+                case ty of
+                    TypeBool -> return ()
+                    _        -> fail $ vcat ["Condition is not boolean."
+                                            , "Condition:" <+> pretty c
+                                            , "In:" <+> pretty p
+                                            ]
+        TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
