@@ -18,8 +18,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
     typeOf p@(OpAllDiff x) = do
         ty <- typeOf x
         case ty of
-            TypeList TypeInt -> return TypeBool
-            TypeMatrix TypeInt TypeInt -> return TypeBool
+            TypeList{} -> return TypeBool
+            TypeMatrix{} -> return TypeBool
             _ -> raiseTypeError p
 
 instance EvaluateOp OpAllDiff where
