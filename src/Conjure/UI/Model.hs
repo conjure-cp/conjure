@@ -175,6 +175,29 @@ remaining config model | Just modelZipper <- zipperBi model = do
         answers' <- forM (zip allNats answers) $ \ (nAnswer, (ruleName, (ruleText, ruleResult, hook))) -> do
             let ruleResultExpr = ruleResult freshNames'
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            let mtyBefore = typeOf (hole focus)
+            let mtyAfter  = typeOf ruleResultExpr
+            case (mtyBefore, mtyAfter) of
+                (Right tyBefore, Right tyAfter) ->
+                    if typesUnify [tyBefore, tyAfter]
+                        then return ()
+                        else bug $ vcat
+                                [ "Rule application changes type."
+                                , "Before:" <+> pretty tyBefore
+                                , "After :" <+> pretty tyAfter
+                                ]
+                (Left msg, _) -> bug $ vcat
+                                [ "Type error before rule application:" <+> pretty ruleName
+                                , "Expr1:" <+> pretty (hole focus)
+                                , "Expr2:" <+> pretty ruleResultExpr
+                                , "Error:" <+> pretty msg
+                                ]
+                (_, Left msg) -> bug $ vcat
+                                [ "Type error after rule application:" <+> pretty ruleName
+                                , "Expr1:" <+> pretty (hole focus)
+                                , "Expr2:" <+> pretty ruleResultExpr
+                                , "Error:" <+> pretty msg
+                                ]
             fullModelAfterHook <- hook fullModelBeforeHook
             return Answer
                 { aText = ruleName <> ":" <+> ruleText

@@ -22,17 +22,19 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "Function1DPartial"  <- representationOf func
-        TypeFunction{}       <- typeOf func
-        [flags,values]       <- downX1 func
-        DomainMatrix index _ <- domainOf values
+        "Function1DPartial"     <- representationOf func
+        TypeFunction tyFr _tyTo <- typeOf func
+        [flags,values]          <- downX1 func
+        DomainMatrix index _    <- domainOf values
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1DPartial representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| (&j, &values[&j]) |]
+                    val = if tyFr == TypeBool
+                            then [essence| (&j = 1, &values[&j]) |]         -- turn the first component into a bool
+                            else [essence| (&j    , &values[&j]) |]
                 in
                 Comprehension (upd val body)
                     $  gofBefore

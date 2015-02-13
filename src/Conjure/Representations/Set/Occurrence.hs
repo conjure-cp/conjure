@@ -39,7 +39,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                 case refs of
                     [m] -> do
                         let (iPat, i) = quantifiedVar (fresh `at` 0)
-                            cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
+                            cardinality = [essence| sum &iPat : &innerDomain . toInt(&m[&i]) |]
                         return (mkSizeCons attrs cardinality)
                     _ -> na "{structuralCons} Occurrence"
         structuralCons _ _ _ = na "{structuralCons} Occurrence"

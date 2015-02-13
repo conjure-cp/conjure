@@ -47,7 +47,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             let cardinality fresh m =
                     let unroll _ [] = bug "RelationAsMatrix.cardinality.unroll []"
                         unroll n [((iPat, i), dom)] =
-                                [essence| sum &iPat : &dom . &n[&i] |]
+                                [essence| sum &iPat : &dom . toInt(&n[&i]) |]
                         unroll n (((iPat, i), dom) : rest) =
                             let r = unroll [essence| &n[&i] |] rest
                             in  [essence| sum &iPat : &dom . &r |]
