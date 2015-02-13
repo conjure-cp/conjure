@@ -22,33 +22,40 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "Function1D"         <- representationOf func
-        TypeFunction{}       <- typeOf func
-        [values]             <- downX1 func
-        DomainMatrix index _ <- domainOf values
+        "Function1D"               <- representationOf func
+        TypeFunction tyFr _        <- typeOf func
+        DomainFunction _ _ index _ <- domainOf func
+        [values]                   <- downX1 func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1D representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| (&j, &values[&j]) |]
+                    valuesIndexed =
+                        if tyFr == TypeBool
+                            then [essence| (&j, &values[toInt(&j)]) |]      -- turn the second component into a bool
+                            else [essence| (&j, &values[      &j ]) |]
                 in
                     Comprehension
-                       (upd val body)
+                       (upd valuesIndexed body)
                        $  gofBefore
-                       ++ [Generator (GenDomainNoRepr jPat index)]
-                       ++ transformBi (upd val) gofAfter
+                       ++ [Generator (GenDomainNoRepr jPat (forgetRepr "" index))]
+                       ++ transformBi (upd valuesIndexed) gofAfter
                )
     theRule _ = na "rule_Comprehension"
 
 
 rule_Image :: Rule
 rule_Image = "function-image{Function1D}" `namedRule` theRule where
-    theRule [essence| image(&f,&x) |] = do
-        "Function1D" <- representationOf f
-        [values]     <- downX1 f
-        return ( "Function image, Function1D representation"
-               , const [essence| &values[&x] |]
-               )
+    theRule [essence| image(&func,&x) |] = do
+        "Function1D"        <- representationOf func
+        TypeFunction tyFr _ <- typeOf func
+        [values]            <- downX1 func
+        return
+            ( "Function image, Function1D representation"
+            , const $ if tyFr == TypeBool
+                then [essence| &values[toInt(&x)] |]
+                else [essence| &values[      &x ] |]
+            )
     theRule _ = na "rule_Image"
