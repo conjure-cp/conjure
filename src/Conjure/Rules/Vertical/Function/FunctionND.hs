@@ -23,10 +23,8 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
         [values]            <- downX1 f
         TypeTuple ts        <- typeOf x
         let
-            toIndex   = [ if t == TypeBool
-                            then [essence| toInt(&x[&k]) |]
-                            else [essence|       &x[&k]  |]
-                        | (k',t) <- zip [1 .. length ts] ts
+            toIndex   = [ [essence| &x[&k] |]
+                        | k' <- [1 .. length ts]
                         , let k = fromInt k'
                         ]
             valuesIndexed = make opIndexing' values toIndex
@@ -53,10 +51,8 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    toIndex   = [ if t == TypeBool
-                                    then [essence| toInt(&j[&k]) |]
-                                    else [essence|       &j[&k]  |]
-                                | (k',t) <- zip [1 .. length ts] ts
+                    toIndex   = [ [essence| &j[&k] |]
+                                | k' <- [1 .. length ts]
                                 , let k = fromInt k'
                                 ]
                     valuesIndexed = make opIndexing' values toIndex

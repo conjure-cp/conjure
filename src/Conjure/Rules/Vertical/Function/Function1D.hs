@@ -23,7 +23,7 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "Function1D"               <- representationOf func
-        TypeFunction tyFr _        <- typeOf func
+        TypeFunction{}             <- typeOf func
         DomainFunction _ _ index _ <- domainOf func
         [values]                   <- downX1 func
         let upd val old = lambdaToFunction pat old val
@@ -32,10 +32,7 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    valuesIndexed =
-                        if tyFr == TypeBool
-                            then [essence| (&j, &values[toInt(&j)]) |]      -- turn the second component into a bool
-                            else [essence| (&j, &values[      &j ]) |]
+                    valuesIndexed = [essence| (&j, &values[&j]) |]
                 in
                     Comprehension
                        (upd valuesIndexed body)
@@ -49,13 +46,11 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
 rule_Image :: Rule
 rule_Image = "function-image{Function1D}" `namedRule` theRule where
     theRule [essence| image(&func,&x) |] = do
-        "Function1D"        <- representationOf func
-        TypeFunction tyFr _ <- typeOf func
-        [values]            <- downX1 func
+        "Function1D"    <- representationOf func
+        TypeFunction {} <- typeOf func
+        [values]        <- downX1 func
         return
             ( "Function image, Function1D representation"
-            , const $ if tyFr == TypeBool
-                then [essence| &values[toInt(&x)] |]
-                else [essence| &values[      &x ] |]
+            , const [essence| &values[&x] |]
             )
     theRule _ = na "rule_Image"

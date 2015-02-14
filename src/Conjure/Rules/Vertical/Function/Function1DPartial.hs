@@ -23,7 +23,7 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "Function1DPartial"        <- representationOf func
-        TypeFunction tyFr _tyTo    <- typeOf func
+        TypeFunction {}            <- typeOf func
         DomainFunction _ _ index _ <- domainOf func
         [flags,values]             <- downX1 func
         let upd val old = lambdaToFunction pat old val
@@ -32,14 +32,8 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    valuesIndexed =
-                        if tyFr == TypeBool
-                            then [essence| (&j, &values[toInt(&j)]) |]      -- turn the first component into a bool
-                            else [essence| (&j, &values[      &j ]) |]
-                    flagsIndexed =
-                        if tyFr == TypeBool
-                            then [essence|      &flags  [toInt(&j)]  |]
-                            else [essence|      &flags  [      &j ]  |]
+                    valuesIndexed = [essence| (&j, &values[&j]) |]
+                    flagsIndexed  = [essence|      &flags [&j]  |]
                 in
                 Comprehension (upd valuesIndexed body)
                     $  gofBefore
@@ -55,16 +49,14 @@ rule_Image_NotABool :: Rule
 rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "Function1DPartial" <- representationOf f
-        TypeFunction tyFr tyTo <- typeOf f
+        TypeFunction _ tyTo <- typeOf f
         case tyTo of
             TypeBool -> na "function ? --> bool"
             _        -> return ()
         [flags,values] <- downX1 f
-        let valuesIndexed  = if tyFr == TypeBool then [essence| &values[toInt(&x)] |]
-                                                 else [essence| &values[      &x ] |]
         return
             ( "Function image, Function1DPartial representation, not-a-bool"
-            , const [essence| { &valuesIndexed
+            , const [essence| { &values[&x]
                               @ such that &flags[&x]
                               }
                             |]
@@ -78,17 +70,12 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
         let
             imageChild ch@[essence| image(&f,&x) |] = do
                 "Function1DPartial" <- representationOf f
-                TypeFunction tyFr tyTo <- typeOf f
+                TypeFunction _ tyTo <- typeOf f
                 case tyTo of
                     TypeBool -> do
                         [flags,values] <- downX1 f
-                        let flagsIndexed   = if tyFr == TypeBool then [essence| &flags [toInt(&x)] |]
-                                                                 else [essence| &flags [      &x ] |]
-                        let valuesIndexed  = if tyFr == TypeBool then [essence| &values[toInt(&x)] |]
-                                                                 else [essence| &values[      &x ] |]
-
-                        tell $ return [essence| &flagsIndexed |]
-                        return [essence| &valuesIndexed |]
+                        tell $ return [essence| &flags[&x] |]
+                        return [essence| &values[&x] |]
                     _ -> return ch
             imageChild ch = return ch
         (p', flags) <- runWriterT (descendM imageChild p)
@@ -105,12 +92,10 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
 rule_InDefined :: Rule
 rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule where
     theRule [essence| &x in defined(&f) |] = do
+        TypeFunction{}      <- typeOf f
         "Function1DPartial" <- representationOf f
         [flags,_values]     <- downX1 f
-        TypeFunction tyFr _ <- typeOf f
-        let flagsIndexed   = if tyFr == TypeBool then [essence| &flags [toInt(&x)] |]
-                                                 else [essence| &flags [      &x ] |]
         return ( "Function in defined, Function1DPartial representation"
-               , const flagsIndexed
+               , const [essence| &flags[&x] |]
                )
     theRule _ = na "rule_InDefined"
