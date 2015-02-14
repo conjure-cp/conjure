@@ -596,7 +596,7 @@ applicableRules Config{..} rulesAtLevel x = do
     return [ (name, (msg, out', hook))
            | (name, Right ress) <- mys
            , (msg, out, hook) <- ress
-           , let out' fresh = out fresh |> resolveNamesX |> bugFail     -- re-resolving names
+           , let out' fresh = out fresh |> resolveNamesX |> bugFail "applicableRules"   -- re-resolving names
            ]
 
 
@@ -853,21 +853,26 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mstructurals = do
+            mkStructurals :: MonadLog m => m [Expression]
+            mkStructurals = do
+                logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
-                gen  <- getStructurals downX1 domain
-                gen freshNames' ref >>= mapM resolveNamesX     -- re-resolving names
+                let gen = bugFail "getStructurals" $ getStructurals downX1 domain
+                let structurals = bugFail "structurals" $ gen freshNames' ref
+                logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
+                let resolved    = bugFail "resolving st"$ mapM resolveNamesX structurals     -- re-resolving names
+                logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
+                return resolved
 
-            structurals = case mstructurals of
-                Left err -> bug ("rule_ChooseRepr.hook.structurals" <+> err)
-                Right s  -> s
-
+            addStructurals :: MonadLog m => Model -> m Model
             addStructurals
-                | forg == Given = id
-                | usedBefore = id
-                | null structurals = id
-                | otherwise = \ m ->
-                    m { mStatements = mStatements m ++ [SuchThat structurals] }
+                | forg == Given = return
+                | usedBefore = return
+                | otherwise = \ m -> do
+                    structurals <- mkStructurals
+                    return $ if null structurals
+                        then m
+                        else m { mStatements = mStatements m ++ [SuchThat structurals] }
 
             channels =
                 [ make opEq this that
@@ -878,14 +883,14 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 ]
 
             addChannels
-                | forg == Given = id
-                | usedBefore = id
-                | null channels = id
-                | otherwise = \ m ->
+                | forg == Given = return
+                | usedBefore = return
+                | null channels = return
+                | otherwise = \ m -> return
                     m { mStatements = mStatements m ++ [SuchThat channels] }
 
             recordThis
-                | usedBefore = id
+                | usedBefore = return
                 | otherwise = \ m ->
                 let
                     oldInfo = mInfo m
@@ -896,16 +901,16 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                                                 |> groupBy ((==) `on` fst)
                                                 |> map (\ grp -> (fst (head grp), map snd grp) )
                         }
-                in  m { mInfo = newInfo }
+                in  return m { mInfo = newInfo }
 
             fixReprForOthers
-                | useChannelling = id           -- no-op, if channelling=yes
+                | useChannelling = return           -- no-op, if channelling=yes
                 | otherwise = \ m ->
                 let
                     f (Reference nm _) | nm == name = Reference nm (Just (DeclHasRepr forg name domain))
                     f x = x
                 in
-                    m { mStatements = transformBi f (mStatements m) }
+                    return m { mStatements = transformBi f (mStatements m) }
 
         logDebugVerbose $ vcat
             [ "Name        :" <+> pretty name
@@ -914,12 +919,11 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             , "usedBefore? :" <+> pretty usedBefore
             ]
 
-        model
-            |> addStructurals       -- unless usedBefore: add structurals
-            |> addChannels          -- for each in previously recorded representation
-            |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
-            |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
-            |> return
+        return model
+            >>= addStructurals       -- unless usedBefore: add structurals
+            >>= addChannels          -- for each in previously recorded representation
+            >>= recordThis           -- unless usedBefore: record (name, domain) as being used in the model
+            >>= fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
 
 
 rule_ChooseReprForComprehension :: Rule
@@ -946,7 +950,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
         return
             [ ( "Choosing representation for quantified variable" <+> pretty nm <+> "(with type:" <+> pretty ty <> ")"
-              , \ fresh -> bugFail $ do
+              , \ fresh -> bugFail "rule_ChooseReprForComprehension" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -1002,7 +1006,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
 
         return
             [ ( "Choosing representation for local variable" <+> pretty nm
-              , \ fresh -> bugFail $ do
+              , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -1371,7 +1375,7 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
         let conv fresh = mkAttributeToConstraint dom attr mval fresh thing
         return
             ( "Converting an attribute to a constraint"
-            , bugFail . conv
+            , bugFail "rule_AttributeToConstraint" . conv
             )
     theRule _ = na "rule_AttributeToConstraint"
 

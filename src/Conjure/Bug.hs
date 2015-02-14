@@ -23,9 +23,9 @@ bug message = error $ unlines
     , "", "" , renderNormal message
     ]
 
-bugFail :: Either Doc a -> a
-bugFail (Left err) = bug ("BUGFAIL:" <+> err)
-bugFail (Right x) = x
+bugFail :: Doc -> Either Doc a -> a
+bugFail loc (Left err) = bug (vcat ["BUGFAIL at" <+> loc, err])
+bugFail _   (Right x) = x
 
 -- call this function instead of "error"
 -- in case of a user error.
