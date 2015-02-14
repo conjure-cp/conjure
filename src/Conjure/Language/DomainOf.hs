@@ -86,8 +86,9 @@ instance DomainOf Expression Expression where
     domainOfInternal (Op (MkOpIndexing (OpIndexing m i))) = do
         iType <- typeOf i
         case iType of
+            TypeBool{} -> return ()
             TypeInt{} -> return ()
-            _ -> fail "domainOfInternal, OpIndexing, not an int index"
+            _ -> fail "domainOfInternal, OpIndexing, not a bool or int index"
         mDor  <- domainOfInternal m
         onDOR mDor $ \ mDom -> case mDom of
             DomainMatrix _ inner -> return inner

@@ -30,18 +30,16 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
 
 instance EvaluateOp OpFunctionImage where
     evaluateOp (OpFunctionImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do
-        ty     <- typeOf f
-        let isBool = case ty of
-                        TypeFunction _ TypeBool -> True
-                        _                       -> False
+        TypeFunction _ tyTo <- typeOf f
+        let isBool = tyTo == TypeBool
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return y
             _ | isBool -> return $ fromBool False
-            []  -> return $ mkUndef $ vcat
+            []  -> return $ mkUndef tyTo $ vcat
                     [ "Function is not defined at this point:" <+> pretty a
                     , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
                     ]
-            _   -> return $ mkUndef $ vcat
+            _   -> return $ mkUndef tyTo $ vcat
                     [ "Function is multiply defined at this point:" <+> pretty a
                     , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
                     ]

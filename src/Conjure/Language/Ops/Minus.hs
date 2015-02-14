@@ -34,7 +34,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
             else raiseTypeError p
 
 instance EvaluateOp OpMinus where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef $ "Contains undefined things in it:" <+> pretty p
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Contains undefined things in it:" <+> pretty p
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
     evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet

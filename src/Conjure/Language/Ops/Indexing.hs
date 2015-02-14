@@ -39,18 +39,20 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
 
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do
-        ty <- typeOf m
-        let isBool = case ty of TypeMatrix _ TypeBool -> True
-                                _                     -> False
+        ty   <- typeOf m
+        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                           TypeList tyTo     -> return tyTo
+                           _ -> fail "evaluateOp{OpIndexing}"
+        let isBool = tyTo == TypeBool
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
             _ | isBool -> return $ fromBool False
-            []  -> return $ mkUndef $ vcat
+            []  -> return $ mkUndef tyTo $ vcat
                     [ "Matrix is not defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]
-            _   -> return $ mkUndef $ vcat
+            _   -> return $ mkUndef tyTo $ vcat
                     [ "Matrix is multiply defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]

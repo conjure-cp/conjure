@@ -33,7 +33,7 @@ data Constant
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
     | TypedConstant Constant Type
-    | ConstantUndefined Text                                -- never use this for a bool
+    | ConstantUndefined Text Type                           -- never use this for a bool
                                                             -- use false instead for them
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -53,9 +53,9 @@ instance TypeOf Constant where
     typeOf ConstantInt{}            = return TypeInt
     typeOf (ConstantEnum defn _ _ ) = return (TypeEnum defn)
     typeOf (ConstantAbstract x    ) = typeOf x
-    typeOf (DomainInConstant dom) = typeOf dom
-    typeOf (TypedConstant _ ty) = return ty
-    typeOf (ConstantUndefined reason) = fail ("type of undefined," <+> pretty reason)
+    typeOf (DomainInConstant dom)   = typeOf dom
+    typeOf (TypedConstant _ ty)     = return ty
+    typeOf (ConstantUndefined _ ty) = return ty
 
 instance Pretty Constant where
     pretty (ConstantBool False) = "false"
@@ -65,7 +65,7 @@ instance Pretty Constant where
     pretty (ConstantAbstract x) = pretty x
     pretty (DomainInConstant d) = "`" <> pretty d <> "`"
     pretty (TypedConstant x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
-    pretty (ConstantUndefined reason) = "undefined" <> prParens (pretty reason)
+    pretty (ConstantUndefined reason ty) = "undefined" <> prParens (pretty reason <+> ":" <+> "`" <> pretty ty <> "`")
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
@@ -89,8 +89,8 @@ instance DomainContainer Constant (Domain ()) where
     domainOut (DomainInConstant dom) = return dom
     domainOut _ = fail "domainOut{Constant}"
 
-mkUndef :: Doc -> Constant
-mkUndef = ConstantUndefined . stringToText . show
+mkUndef :: Type -> Doc -> Constant
+mkUndef ty reason = ConstantUndefined (stringToText $ show reason) ty
 
 isUndef :: Constant -> Bool
 isUndef ConstantUndefined{} = True
