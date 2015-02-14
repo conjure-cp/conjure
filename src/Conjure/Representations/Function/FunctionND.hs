@@ -13,7 +13,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 functionND :: forall m . MonadFail m => Representation m
@@ -36,9 +36,8 @@ functionND = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "FunctionND"
                     (FunctionAttr _ PartialityAttr_Total _)
-                    (DomainTuple innerDomainFrs')
-                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
-            innerDomainFrs <- mapM toIntDomain innerDomainFrs'
+                    (DomainTuple innerDomainFrs)
+                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( nameValues name
@@ -51,9 +50,9 @@ functionND = Representation chck downD structuralCons downC up
         structuralCons f downX1
             (DomainFunction "FunctionND"
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
-                (DomainTuple innerDomainFrs')
-                innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
-            innerDomainFrs    <- mapM toIntDomain innerDomainFrs'
+                (DomainTuple innerDomainFrs)
+                innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
+
             let innerDomainFr =  DomainTuple innerDomainFrs
 
             let
@@ -129,12 +128,11 @@ functionND = Representation chck downD structuralCons downC up
         downC ( name
               , DomainFunction "FunctionND"
                     (FunctionAttr _ PartialityAttr_Total _)
-                    (DomainTuple innerDomainFrs')
+                    (DomainTuple innerDomainFrs)
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
-              ) | all domainCanIndexMatrix innerDomainFrs' = do
+              ) | all domainCanIndexMatrix innerDomainFrs = do
             z <- zeroVal innerDomainTo
-            innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
@@ -148,19 +146,17 @@ functionND = Representation chck downD structuralCons downC up
 
             let
                 unrollC :: MonadFail m
-                        => [ ( Domain () Constant       -- the int domain
-                             , Domain () Constant       -- the actial domain
-                             ) ]
+                        => [Domain () Constant]
                         -> [Constant]               -- indices
                         -> m Constant
-                unrollC [(i,i')] prevIndices = do
-                    domVals <- domainValues i'
+                unrollC [i] prevIndices = do
+                    domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
                     return $ ConstantAbstract $ AbsLitMatrix i
                                 [ fromMaybe z (active val)
                                 | val <- domVals ]
-                unrollC ((i,i'):is) prevIndices = do
-                    domVals <- domainValues i'
+                unrollC (i:is) prevIndices = do
+                    domVals <- domainValues i
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
@@ -169,8 +165,7 @@ functionND = Representation chck downD structuralCons downC up
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
 
-            outValues <- unrollC (zip (map (forgetRepr "Representation.Function1DPartial") innerDomainFrs)
-                                      (map (forgetRepr "Representation.Function1DPartial") innerDomainFrs')) []
+            outValues <- unrollC (map (forgetRepr "Representation.Function1DPartial") innerDomainFrs) []
             return $ Just
                 [ ( nameValues name
                   , unrollD (map (forgetRepr "Representation.Function1DPartial") innerDomainFrs) innerDomainTo
@@ -183,10 +178,7 @@ functionND = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionND"
                                 (FunctionAttr _ PartialityAttr_Total _)
-                                (DomainTuple innerDomainFrs') _)) = do
-
-            innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
-
+                                (DomainTuple innerDomainFrs) _)) =
             case lookup (nameValues name) ctxt of
                 Just valuesMatrix -> do
                     let
@@ -202,11 +194,10 @@ functionND = Representation chck downD structuralCons downC up
                                 Just v  -> index v is
                         index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
 
-                    indices' <- allIndices innerDomainFrs'
                     indices  <- allIndices innerDomainFrs
-                    vals     <- forM (zip indices indices') $ \ (these, these') -> do
+                    vals     <- forM indices $ \ these -> do
                         value <- index valuesMatrix these
-                        return (ConstantAbstract (AbsLitTuple these'), value)
+                        return (ConstantAbstract (AbsLitTuple these), value)
                     return ( name
                            , ConstantAbstract $ AbsLitFunction vals
                            )

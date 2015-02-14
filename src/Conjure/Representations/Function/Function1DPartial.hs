@@ -11,7 +11,7 @@ import Conjure.Language.TH
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 function1DPartial :: forall m . MonadFail m => Representation m
@@ -35,30 +35,27 @@ function1DPartial = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "Function1DPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
-                    innerDomainFr'
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr <- toIntDomain innerDomainFr'
-            return $ Just
-                [ ( nameFlags name
-                  , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
-                      DomainBool
-                  )
-                , ( nameValues name
-                  , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
-                      innerDomainTo
-                  )
-                ]
+                    innerDomainFr
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
+            [ ( nameFlags name
+              , DomainMatrix
+                  (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                  DomainBool
+              )
+            , ( nameValues name
+              , DomainMatrix
+                  (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                  innerDomainTo
+              )
+            ]
         downD _ = na "{downD} Function1DPartial"
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
             (DomainFunction "Function1DPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
-                innerDomainFr'
-                innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr   <- toIntDomain innerDomainFr'
+                innerDomainFr
+                innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
 
             let injectiveCons fresh flags values = return $ -- list
                     let
@@ -143,7 +140,6 @@ function1DPartial = Representation chck downD structuralCons downC up
               , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
             z <- zeroVal innerDomainTo
-            innerDomainFrInt    <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
             froms               <- domainValues innerDomainFr
             (flagsOut, valsOut) <- unzip <$> sequence
                 [ val
@@ -155,18 +151,18 @@ function1DPartial = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameFlags name
                   , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFrInt)
+                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
                       DomainBool
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFrInt)
+                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
                       flagsOut
                   )
                 , ( nameValues name
                   , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFrInt)
+                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
                       innerDomainTo
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFrInt)
+                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
                       valsOut
                   )
                 ]
