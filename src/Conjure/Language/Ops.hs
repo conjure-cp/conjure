@@ -43,7 +43,7 @@ mkBinOp op a b =
                     L_And       -> \ x y -> injectOp $ MkOpAnd       $ OpAnd     $ fromList [x,y]
                     L_Or        -> \ x y -> injectOp $ MkOpOr        $ OpOr      $ fromList [x,y]
                     L_Imply     -> \ x y -> injectOp $ MkOpImply     $ OpImply       x y
-                    L_Iff       -> \ x y -> injectOp $ MkOpEq        $ OpEq          x y
+                    L_Iff       -> \ x y -> injectOp $ MkOpIff       $ OpIff         x y
                     L_subset    -> \ x y -> injectOp $ MkOpSubset    $ OpSubset      x y
                     L_subsetEq  -> \ x y -> injectOp $ MkOpSubsetEq  $ OpSubsetEq    x y
                     L_supset    -> \ x y -> injectOp $ MkOpSupset    $ OpSupset      x y

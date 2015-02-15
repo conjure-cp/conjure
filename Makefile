@@ -15,6 +15,7 @@ ghci:
 	    -XNoImplicitPrelude                        \
 	    -XOverloadedStrings                        \
 	    -XScopedTypeVariables                      \
+	    -XQuasiQuotes                              \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \
