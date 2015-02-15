@@ -7,7 +7,8 @@ module Conjure.Language.Parser
     , parseModel
     , parseTopLevels
     , parseExpr
-    , parseDomain 
+    , parseDomain
+    , parseDomainWithRepr
     ) where
 
 -- conjure
