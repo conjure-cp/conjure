@@ -189,7 +189,10 @@ parseRange p = msum [try pRange, pSingle]
             return (RangeSingle x)
 
 parseDomain :: Parser (Domain () Expression)
-parseDomain
+parseDomain = forgetRepr "" <$> parseDomainWithRepr
+
+parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
+parseDomainWithRepr
     = shuntingYardDomain
     $ some
     $ msum [ Right <$> try pDomainAtom
@@ -201,10 +204,14 @@ parseDomain
             [ pBool, pInt, pEnum, pReference
             , pMatrix, pTupleWithout, pTupleWith
             , pSet, pMSet, pFunction, pFunction'
-            , pRelation, pRelation'
+            , pRelation
             , pPartition
-            , DomainMetaVar <$> parseMetaVariable, parens parseDomain
+            , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
+
+        parseRepr = msum [ HasRepresentation <$> braces parseName
+                         , return NoRepresentation
+                         ]
 
         pBool = do
             lexeme L_bool
@@ -233,64 +240,64 @@ parseDomain
             lexeme L_by
             xs <- brackets (parseDomain `sepBy1` comma)
             lexeme L_of
-            y  <- parseDomain
+            y  <- parseDomainWithRepr
             return $ foldr DomainMatrix y xs
 
         pTupleWith = do
             lexeme L_tuple
-            xs <- parens $ parseDomain `sepBy` comma
+            xs <- parens $ parseDomainWithRepr `sepBy` comma
             return $ DomainTuple xs
 
         pTupleWithout = do
-            xs <- parens $ countSepAtLeast 2 parseDomain comma
+            xs <- parens $ countSepAtLeast 2 parseDomainWithRepr comma
             return $ DomainTuple xs
 
         pSet = do
             lexeme L_set
+            r <- parseRepr
             x <- parseSetAttr
-            y <- lexeme L_of >> parseDomain
-            return $ DomainSet () x y
+            y <- lexeme L_of >> parseDomainWithRepr
+            return $ DomainSet r x y
 
         pMSet = do
             lexeme L_mset
+            r <- parseRepr
             x <- parseMSetAttr
-            y <- lexeme L_of >> parseDomain
-            return $ DomainMSet () x y
-
-        pFunction = do
-            lexeme L_function
-            (y,z) <- arrowedPair parseDomain
-            return $ DomainFunction () def y z
+            y <- lexeme L_of >> parseDomainWithRepr
+            return $ DomainMSet r x y
 
         pFunction' = do
             lexeme L_function
-            x <- parseFunctionAttr
-            y <- parseDomain
-            lexeme L_LongArrow
-            z <- parseDomain
-            return $ DomainFunction () x y z
+            r <- parseRepr
+            (y,z) <- arrowedPair parseDomainWithRepr
+            return $ DomainFunction r def y z
 
-        pRelation' = do
-            lexeme L_relation
-            return $ DomainRelation () def []
+        pFunction = do
+            lexeme L_function
+            r <- parseRepr
+            x <- parseFunctionAttr
+            (y,z) <- arrowedPair parseDomainWithRepr
+            return $ DomainFunction r x y z
 
         pRelation = do
             lexeme L_relation
+            r  <- parseRepr
             x  <- parseRelationAttr
             lexeme L_of
-            ys <- parens (parseDomain `sepBy` lexeme L_Times)
+            ys <- parens (parseDomainWithRepr `sepBy` lexeme L_Times)
             let RelationAttr _ (BinaryRelationAttrs binAttrs) = x
             when (length ys /= 2 && not (S.null binAttrs)) $
                 fail $ "Only binary relations can have these attributes:" <+>
                             prettyList id "," (S.toList binAttrs)
-            return $ DomainRelation () x ys
+            return $ DomainRelation r x ys
 
         pPartition = do
             lexeme L_partition
+            r <- parseRepr
             x <- parsePartitionAttr
             lexeme L_from
-            y <- parseDomain
-            return $ DomainPartition () x y
+            y <- parseDomainWithRepr
+            return $ DomainPartition r x y
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
@@ -715,7 +722,7 @@ shuntingYardExpr p = do
         then fail "Malformed expression, Shunting Yard failed."
         else shunt mergeOp beforeShunt
 
-shuntingYardDomain :: Eq a => Parser [Either Lexeme (Domain () a)] -> Parser (Domain () a)
+shuntingYardDomain :: (Eq a, Eq r) => Parser [Either Lexeme (Domain r a)] -> Parser (Domain r a)
 shuntingYardDomain p = do
     let mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
     beforeShunt <- p
