@@ -52,6 +52,8 @@ mkBinOp op a b =
                     L_union     -> \ x y -> injectOp $ MkOpUnion     $ OpUnion       x y
                     L_LexLt     -> \ x y -> injectOp $ MkOpLexLt     $ OpLexLt       x y
                     L_LexLeq    -> \ x y -> injectOp $ MkOpLexLeq    $ OpLexLeq      x y
+                    L_LexGt     -> \ x y -> injectOp $ MkOpLexLt     $ OpLexLt       y x
+                    L_LexGeq    -> \ x y -> injectOp $ MkOpLexLeq    $ OpLexLeq      y x
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b
