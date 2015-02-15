@@ -17,7 +17,8 @@ instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = genericParseJ
 instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x) where
     typeOf p@(OpIndexing m i) = do
         tyM <- typeOf m
-        tyI <- typeOf i
+        -- tyI <- typeOf i
+        let tyI = TypeAny
         case tyM of
             TypeMatrix tyIndex inn
                 | typesUnify [tyIndex, tyI] -> return inn
