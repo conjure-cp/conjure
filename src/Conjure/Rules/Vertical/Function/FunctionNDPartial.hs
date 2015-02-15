@@ -121,7 +121,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                 in
                     Comprehension (upd val body)
                     $  gofBefore
-                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr "rule_Comprehension" $ DomainTuple ds))
+                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr $ DomainTuple ds))
                        , Condition flagsIndexed
                        ]
                     ++ transformBi (upd val) gofAfter

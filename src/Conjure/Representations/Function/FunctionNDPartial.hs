@@ -42,10 +42,10 @@ functionNDPartial = Representation chck downD structuralCons downC up
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( nameFlags name
-                  , unroll (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) DomainBool
+                  , unroll (map forgetRepr innerDomainFrs) DomainBool
                   )
                 , ( nameValues name
-                  , unroll (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) innerDomainTo
+                  , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
         downD _ = na "{downD} FunctionNDPartial"
@@ -201,14 +201,14 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
 
-            (outFlags, outValues) <- unrollC (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) []
+            (outFlags, outValues) <- unrollC (map forgetRepr innerDomainFrs) []
             return $ Just
                 [ ( nameFlags name
-                  , unrollD (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) DomainBool
+                  , unrollD (map forgetRepr innerDomainFrs) DomainBool
                   , outFlags
                   )
                 , ( nameValues name
-                  , unrollD (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) innerDomainTo
+                  , unrollD (map forgetRepr innerDomainFrs) innerDomainTo
                   , outValues
                   )
                 ]

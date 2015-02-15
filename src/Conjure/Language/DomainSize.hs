@@ -36,7 +36,7 @@ instance DomainSizeOf (Domain HasRepresentation Expression) Expression where
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
-    domainSizeOf d = gDomainSizeOf (forgetRepr "domainSizeOf" d)
+    domainSizeOf d = gDomainSizeOf (forgetRepr d)
 
 
 gDomainSizeOf

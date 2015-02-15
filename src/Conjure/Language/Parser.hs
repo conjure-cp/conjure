@@ -191,7 +191,7 @@ parseRange p = msum [try pRange, pSingle]
             return (RangeSingle x)
 
 parseDomain :: Parser (Domain () Expression)
-parseDomain = forgetRepr "" <$> parseDomainWithRepr
+parseDomain = forgetRepr <$> parseDomainWithRepr
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
 parseDomainWithRepr

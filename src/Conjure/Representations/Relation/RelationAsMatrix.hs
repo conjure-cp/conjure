@@ -31,7 +31,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( outName name
-                  , unroll (map (forgetRepr "Representation.RelationAsMatrix") innerDomains) DomainBool
+                  , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
         downD (name, domain) = na $ vcat [ "{downD} RelationAsMatrix"
                                          , "name:" <+> pretty name
@@ -100,11 +100,11 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
 
-            outConstant <- unrollC (map (forgetRepr "Representation.RelationAsMatrix") innerDomains) []
+            outConstant <- unrollC (map forgetRepr innerDomains) []
 
             return $ Just
                 [ ( outName name
-                  , unrollD (map (forgetRepr "Representation.RelationAsMatrix") innerDomains) DomainBool
+                  , unrollD (map forgetRepr innerDomains) DomainBool
                   , outConstant
                   ) ]
 

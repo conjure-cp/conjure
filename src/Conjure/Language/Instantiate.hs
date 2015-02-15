@@ -54,7 +54,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 (\ val -> scope $ bind pat val >> loop rest )
                 enumeration
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
-            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr "instantiateE" domain))
+            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
             enumeration <- enumerateDomain domainConstant
             concatMapM
                 (\ val -> scope $ bind (Single pat) val >> loop rest )
@@ -143,7 +143,7 @@ instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
     case lookup nm st of
-        Just (Domain dom) -> instantiateD (defRepr "instantiateD 1" dom)
+        Just (Domain dom) -> instantiateD (defRepr dom)
         Just _  -> fail $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
         Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
 instantiateD (DomainEnum nm rs _) = do
@@ -166,7 +166,7 @@ instantiateD (DomainReference _ (Just d)) = instantiateD d
 instantiateD (DomainReference name Nothing) = do
     ctxt <- gets id
     case name `lookup` ctxt of
-        Just (Domain d) -> instantiateD (defRepr "instantiateD 2" d)
+        Just (Domain d) -> instantiateD (defRepr d)
         _ -> fail $ vcat
             $ ("No value for:" <+> pretty name)
             : "Bindings in context:"

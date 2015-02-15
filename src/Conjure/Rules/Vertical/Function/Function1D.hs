@@ -37,7 +37,7 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
                     Comprehension
                        (upd valuesIndexed body)
                        $  gofBefore
-                       ++ [Generator (GenDomainNoRepr jPat (forgetRepr "" index))]
+                       ++ [Generator (GenDomainNoRepr jPat (forgetRepr index))]
                        ++ transformBi (upd valuesIndexed) gofAfter
                )
     theRule _ = na "rule_Comprehension"

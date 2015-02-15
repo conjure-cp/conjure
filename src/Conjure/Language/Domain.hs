@@ -137,14 +137,14 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainPartition () def (mappend x y)
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
-forgetRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain () x
-forgetRepr caller = defRepr (caller <+> "via forgetRepr")
+forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
+forgetRepr = defRepr
 
-defRepr :: (Default r2, Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
-defRepr caller = changeRepr (caller <+> "via defRepr") def
+defRepr :: (Default r2, Pretty r, Pretty x) => Domain r x -> Domain r2 x
+defRepr = changeRepr def
 
-changeRepr :: (Pretty r, Pretty x) => Doc -> r2 -> Domain r x -> Domain r2 x
-changeRepr _ rep = go
+changeRepr :: (Pretty r, Pretty x) => r2 -> Domain r x -> Domain r2 x
+changeRepr rep = go
     where
         go DomainBool = DomainBool
         go (DomainInt rs) = DomainInt rs
@@ -195,10 +195,10 @@ reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel = rootLabel . reprTree
 
 applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
-applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) = DomainTuple <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
 applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
@@ -206,9 +206,9 @@ applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet 
 applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = DomainFunction r attr <$> applyReprTree a aRepr <*> applyReprTree b bRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
-applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool

@@ -27,7 +27,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
-              , DomainMatrix (forgetRepr "Representation.Occurrence" innerDomain) DomainBool
+              , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
         downD _ = na "{downD} Occurrence"
@@ -52,8 +52,8 @@ setOccurrence = Representation chck downD structuralCons downC up
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just
                     [ ( outName name
-                      , DomainMatrix (forgetRepr "Representation.Occurrence" innerDomain) DomainBool
-                      , ConstantAbstract $ AbsLitMatrix (forgetRepr "Representation.Occurrence" innerDomain)
+                      , DomainMatrix (forgetRepr innerDomain) DomainBool
+                      , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
                           , let isIn = ConstantInt v `elem` constants

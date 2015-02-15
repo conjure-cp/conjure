@@ -473,7 +473,7 @@ updateDeclarations model =
         onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr "updateDeclarations" d)) | (n, d) <- outs]
+                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
 
     in
         model { mStatements = statements }
@@ -1017,7 +1017,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
                                                     name
-                                                    (forgetRepr "rule_ChooseReprForLocals" dom))
+                                                    (forgetRepr dom))
                                    | (name, dom) <- outDomains ]
                                 ++ [ SuchThat structurals | not (null structurals) ]
                                 ++ transformBi updateRepr gofAfter

@@ -37,7 +37,7 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
                 in
                 Comprehension (upd valuesIndexed body)
                     $  gofBefore
-                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr "" index))
+                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index))
                        , Condition [essence| &flagsIndexed |]
                        ]
                     ++ transformBi (upd valuesIndexed) gofAfter

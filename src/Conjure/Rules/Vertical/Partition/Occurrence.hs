@@ -25,7 +25,7 @@ rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule w
         TypePartition{}         <- typeOf partition
         "Occurrence"            <- representationOf partition
         [flags, parts, nbParts] <- downX1 partition
-        indexDom                <- forgetRepr "rule_Comprehension" <$> domainOf nbParts
+        indexDom                <- forgetRepr <$> domainOf nbParts
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, Occurrence representation"

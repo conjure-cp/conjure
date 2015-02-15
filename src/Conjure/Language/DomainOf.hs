@@ -28,8 +28,8 @@ combineDOR dors f =
     let
         (repr, doms1, doms2) = unzip3
             [ case dor of
-                DomainOfResultNoRepr  d -> (False,                         d , defRepr "combineDOR" d)
-                DomainOfResultHasRepr d -> (True , forgetRepr "combineDOR" d,                       d)
+                DomainOfResultNoRepr  d -> (False,            d, defRepr d)
+                DomainOfResultHasRepr d -> (True , forgetRepr d,         d)
             | dor <- dors
             ]
     in
@@ -43,8 +43,8 @@ combineDOR' dors f =
     let
         doms =
             [ case dor of
-                DomainOfResultNoRepr  d ->                          d
-                DomainOfResultHasRepr d -> forgetRepr "combineDOR'" d
+                DomainOfResultNoRepr  d ->            d
+                DomainOfResultHasRepr d -> forgetRepr d
             | dor <- dors
             ]
     in
@@ -102,8 +102,8 @@ instance DomainOf Expression Expression where
         onDOR fDor $ \ fDom -> case fDom of
             DomainFunction fRepr a fr to -> do
                 let d' = case reprAtTopLevel fr of
-                            Nothing -> defRepr    "domainOfInternal"   d
-                            Just r  -> changeRepr "domainOfInternal" r d
+                            Nothing -> defRepr      d
+                            Just r  -> changeRepr r d
                 return (DomainFunction fRepr a d' to)
             _ -> fail "domainOfInternal, OpRestrict, not a function"
 
@@ -145,5 +145,5 @@ domainOf :: MonadFail m => Expression -> m (Domain HasRepresentation Expression)
 domainOf x = do
     dor <- domainOfInternal x
     return $ case dor of
-        DomainOfResultNoRepr  d -> defRepr "domainOf" d
-        DomainOfResultHasRepr d ->                    d
+        DomainOfResultNoRepr  d -> defRepr d
+        DomainOfResultHasRepr d ->         d

@@ -39,12 +39,12 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameFlags name
                   , DomainMatrix
-                      (forgetRepr "Representation.PartitionOccurrence" innerDomain)
+                      (forgetRepr innerDomain)
                       DomainBool
                   )
                 , ( nameParts name
                   , DomainMatrix
-                      (forgetRepr "Representation.PartitionOccurrence" innerDomain)
+                      (forgetRepr innerDomain)
                       (DomainInt [RangeBounded 1 maxNbParts])
                   )
                 , ( nameNumParts name

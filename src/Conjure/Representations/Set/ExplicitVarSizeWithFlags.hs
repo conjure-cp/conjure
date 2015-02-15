@@ -40,10 +40,10 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             let indexDomain = mkDomainIntB 1 maxSize
             return $ Just
                 [ ( nameFlag name
-                  , DomainMatrix (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain) DomainBool
+                  , DomainMatrix (forgetRepr indexDomain) DomainBool
                   )
                 , ( nameValues name
-                  , DomainMatrix (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain) innerDomain
+                  , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
@@ -134,18 +134,18 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameFlag name
                   , DomainMatrix
-                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (forgetRepr indexDomain)
                       DomainBool
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (forgetRepr indexDomain)
                       (trues ++ falses)
                   )
                 , ( nameValues name
                   , DomainMatrix
-                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (forgetRepr indexDomain)
                       innerDomain
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.ExplicitVarSizeWithFlags" indexDomain)
+                      (forgetRepr indexDomain)
                       (constants ++ zeroes)
                   )
                 ]

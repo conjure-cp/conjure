@@ -39,12 +39,12 @@ function1DPartial = Representation chck downD structuralCons downC up
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
             [ ( nameFlags name
               , DomainMatrix
-                  (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                  (forgetRepr innerDomainFr)
                   DomainBool
               )
             , ( nameValues name
               , DomainMatrix
-                  (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                  (forgetRepr innerDomainFr)
                   innerDomainTo
               )
             ]
@@ -151,18 +151,18 @@ function1DPartial = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameFlags name
                   , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                      (forgetRepr innerDomainFr)
                       DomainBool
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                      (forgetRepr innerDomainFr)
                       flagsOut
                   )
                 , ( nameValues name
                   , DomainMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                      (forgetRepr innerDomainFr)
                       innerDomainTo
                   , ConstantAbstract $ AbsLitMatrix
-                      (forgetRepr "Representation.Function1DPartial" innerDomainFr)
+                      (forgetRepr innerDomainFr)
                       valsOut
                   )
                 ]
