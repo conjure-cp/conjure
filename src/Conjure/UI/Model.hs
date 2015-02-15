@@ -857,8 +857,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             mkStructurals = do
                 logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
-                let gen = bugFail "getStructurals" $ getStructurals downX1 domain
-                let structurals = bugFail "structurals" $ gen freshNames' ref
+                let structurals = bugFail "structurals" $ getStructurals downX1 domain >>= \ gen -> gen freshNames' ref
                 logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
                 let resolved    = bugFail "resolving st"$ mapM resolveNamesX structurals     -- re-resolving names
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
