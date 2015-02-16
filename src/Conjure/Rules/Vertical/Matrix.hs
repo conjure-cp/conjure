@@ -293,19 +293,15 @@ rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
             )
 
 
-sliceEnoughTimes :: MonadFail m => Expression -> m Expression
-sliceEnoughTimes m = do
-    tym    <- typeOf m
+flattenIfNeeded :: MonadFail m => Expression -> m Expression
+flattenIfNeeded m = do
+    tyM <- typeOf m
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
         nestingLevel (TypeList     a) = 1 + nestingLevel a
         nestingLevel _ = 0 :: Int
-    let howMany = nestingLevel tym
-    let unroll a 0 = a
-        unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
-    let sliced = unroll m howMany
-    let flatten = if howMany > 0 then make opFlatten else id
-    return $ flatten sliced
-
+    return $ if nestingLevel tyM > 1
+        then make opFlatten m
+        else m
 
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
@@ -315,8 +311,8 @@ rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- sliceEnoughTimes x
-        y' <- sliceEnoughTimes y
+        x' <- flattenIfNeeded x
+        y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <"
             , const [essence| &x' <lex &y' |]
@@ -347,8 +343,8 @@ rule_Matrix_Leq_Primitive = "matrix-leq-primitive" `namedRule` theRule where
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- sliceEnoughTimes x
-        y' <- sliceEnoughTimes y
+        x' <- flattenIfNeeded x
+        y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <="
             , const [essence| &x' <=lex &y' |]
