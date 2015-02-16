@@ -34,6 +34,11 @@ instance EvaluateOp OpIntersect where
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
+    -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) =
+        return $ ConstantAbstract $ AbsLitFunction $ sortNub [ i | i <- as, i `elem` bs]
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) =
+        return $ ConstantAbstract $ AbsLitRelation $ sortNub [ i | i <- as, i `elem` bs]
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 instance SimplifyOp OpIntersect where
