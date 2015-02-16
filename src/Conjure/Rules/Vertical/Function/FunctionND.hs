@@ -71,7 +71,7 @@ rule_Comprehension_Defined = "function-comprehension_defined{FunctionND}" `named
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension"
+            _ -> na "rule_Comprehension_Defined"
         func                             <- match opDefined expr
         "FunctionND"                     <- representationOf func
         DomainFunction _ _ indexDomain _ <- domainOf func
@@ -88,4 +88,4 @@ rule_Comprehension_Defined = "function-comprehension_defined{FunctionND}" `named
                         ++ [ Generator (GenDomainNoRepr jPat (forgetRepr indexDomain)) ]
                         ++ transformBi (upd val) gofAfter
             )
-    theRule _ = na "rule_Comprehension"
+    theRule _ = na "rule_Comprehension_Defined"

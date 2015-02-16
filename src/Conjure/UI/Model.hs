@@ -671,6 +671,7 @@ verticalRules =
     , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Freq
 
     , Vertical.Function.Function1D.rule_Comprehension
+    , Vertical.Function.Function1D.rule_Comprehension_Defined
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension

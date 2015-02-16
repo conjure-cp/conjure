@@ -43,6 +43,31 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension"
 
 
+rule_Comprehension_Defined :: Rule
+rule_Comprehension_Defined = "function-comprehension_defined{Function1D}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension"
+        func                       <- match opDefined expr
+        "Function1D"               <- representationOf func
+        DomainFunction _ _ index _ <- domainOf func
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over a function, Function1D representation"
+            , \ fresh ->
+                let
+                    (jPat, j) = quantifiedVar (fresh `at` 0)
+                    val = j
+                in
+                    Comprehension (upd val body)
+                        $  gofBefore
+                        ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index)) ]
+                        ++ transformBi (upd val) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Defined"
+
+
 rule_Image :: Rule
 rule_Image = "function-image{Function1D}" `namedRule` theRule where
     theRule [essence| image(&func,&x) |] = do
