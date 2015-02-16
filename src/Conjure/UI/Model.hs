@@ -644,10 +644,10 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Index
 
     , Vertical.Matrix.rule_Comprehension_Literal
-    -- , Vertical.Matrix.rule_Comprehension_LiteralIndexed      -- this
-    -- , Vertical.Matrix.rule_ComprehensionParts_LiteralIndexed -- and this
-    , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet    -- should be more general than this and
-    , Vertical.Matrix.rule_Comprehension_Literal_ContainsMSet   -- this. waiting on SR.
+    , Vertical.Matrix.rule_Comprehension_LiteralIndexed             -- this
+    , Vertical.Matrix.rule_ComprehensionParts_LiteralIndexed        -- and this
+    -- , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet     -- should be more general than this and
+    -- , Vertical.Matrix.rule_Comprehension_Literal_ContainsMSet    -- this. waiting on SR.
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet
