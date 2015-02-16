@@ -41,7 +41,6 @@ import Conjure.UI.TypeCheck ( typeCheckModel )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
-
 import Conjure.Rules.Definition
 
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
@@ -74,6 +73,7 @@ import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partiti
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
+import qualified Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -165,7 +165,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
         processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
-                ys <- applicableRules config rulesAtLevel (hole x)
+                ys <- applicableRules config rulesAtLevel x
                 return $ if null ys
                             then Nothing
                             else Just (x, ys)
@@ -511,29 +511,33 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
 checkIfAllRefined m = return m
 
 
-sliceThemMatrices :: MonadFail m => Model -> m Model
+sliceThemMatrices :: Monad m => Model -> m Model
 sliceThemMatrices model = do
     let
         -- nothing stays with a matrix type
         -- we are doing this top down, so the first time we reach a matrix typed thing, we know it need to be sliced
         -- no need to descend any further
-        onExpr :: MonadFail m => Expression -> m Expression
+        onExpr :: Monad m => Expression -> m Expression
         onExpr p = do
-            case match opQuantifier p of
-                Nothing -> return p
-                Just (mkQuan, m) -> do
-                    tym <- typeOf m
+            let isIndexedMatrix = do
+                    (m, is) <- match opIndexing' p
+                    when (null is) $ fail "sliceThemMatrices.onExpr"
+                    tyM     <- typeOf m
+                    return (m, is, tyM)
+            case isIndexedMatrix of
+                Nothing -> descendM onExpr p
+                Just (m, is, tyM) -> do
                     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
                         nestingLevel (TypeList     a) = 1 + nestingLevel a
                         nestingLevel _ = 0 :: Int
-                    let howMany = nestingLevel tym
-                    let unroll a i | i <= 1 = a
+                    let howMany = nestingLevel tyM - length is
+                    let unroll a 0 = a
                         unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
-                    let sliced = unroll m howMany
-                    let flatten = if howMany > 1 then make opFlatten else id
-                    return $ mkQuan $ flatten sliced
+                    is' <- mapM (descendM onExpr) is
+                    let p' = make opIndexing' m is'
+                    return $ unroll p' howMany
 
-    statements <- transformBiM onExpr (mStatements model)
+    statements <- descendBiM onExpr (mStatements model)
     return model { mStatements = statements }
 
 
@@ -571,26 +575,26 @@ applicableRules
     :: forall m . MonadLog m
     => Config
     -> [Rule]
-    -> Expression
+    -> Zipper Model Expression
     -> m [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
-    mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
-                         return (rName r, runIdentity $ runExceptT $ rApply r x)
+    mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty (hole x))
+                         return (rName r, runIdentity $ runExceptT $ rApply r x (hole x))
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
             Left  failed -> unless ("N/A" `isPrefixOf` show failed) $ logFail $ vcat
                 [ " rule failed:" <+> rule
-                , "          on:" <+> pretty x
+                , "          on:" <+> pretty (hole x)
                 , "     message:" <+> failed
                 ]
             Right ys     -> logSuccess $ vcat
                 [ "rule applied:" <+> rule
-                , "          on:" <+> pretty x
+                , "          on:" <+> pretty (hole x)
                 , "     message:" <+> vcat (map fst3 ys)
                 ]
     return [ (name, (msg, out', hook))
@@ -641,6 +645,7 @@ verticalRules =
 
     , Vertical.Matrix.rule_Comprehension_Literal
     -- , Vertical.Matrix.rule_Comprehension_LiteralIndexed      -- this
+    -- , Vertical.Matrix.rule_ComprehensionParts_LiteralIndexed -- and this
     , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet    -- should be more general than this and
     , Vertical.Matrix.rule_Comprehension_Literal_ContainsMSet   -- this. waiting on SR.
     , Vertical.Matrix.rule_Comprehension_Nested
@@ -805,7 +810,8 @@ otherRules =
         , rule_AttributeToConstraint
         ]
 
-    ,   rule_InlineConditions
+    ,   [ rule_InlineConditions
+        ]
 
     ]
 
@@ -821,7 +827,7 @@ delayedRules =
 
 
 rule_ChooseRepr :: Config -> Rule
-rule_ChooseRepr config = Rule "choose-repr" theRule where
+rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given] = do
         let domOpts = reprOptions inpDom
@@ -927,7 +933,7 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
 
 rule_ChooseReprForComprehension :: Rule
-rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule where
+rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
@@ -978,7 +984,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
 
 rule_ChooseReprForLocals :: Rule
-rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
+rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body locals) = do
         (gofBefore, (nm, domain), gofAfter) <- matchFirst locals $ \ local -> case local of
@@ -1327,45 +1333,50 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineConditions :: [Rule]
-rule_InlineConditions =
-    [ namedRule "condition-inside-and" $ ruleGen_InlineConditions opAnd opAndSkip
-    , namedRule "condition-inside-or"  $ ruleGen_InlineConditions opOr  opOrSkip
-    , namedRule "condition-inside-sum" $ ruleGen_InlineConditions opSum opSumSkip
-    , namedRule "condition-inside-max" $ ruleGen_InlineConditions opMax opMaxSkip
-    , namedRule "condition-inside-min" $ ruleGen_InlineConditions opMin opMinSkip
-    ]
-    where
-        opAndSkip b x = [essence| &b -> &x |]
-        opOrSkip  b x = [essence| &b /\ &x |]
-        opSumSkip b x = [essence| toInt(&b) * &x |]
-        opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
-        opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
+rule_InlineConditions :: Rule
+rule_InlineConditions = Rule "inline-conditions" theRule where
+    theRule z (Comprehension body gensOrConds) = do
+        let (toInline, toKeep) = mconcat
+                [ case gof of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[gof])
+                | gof <- gensOrConds
+                ]
+        theGuard <- case toInline of
+            []  -> fail "No condition to inline."
+            xs  -> return $ make opAnd $ fromList xs
+        (nameQ, opSkip) <- queryQ z
+        return [( "Inlining conditions, inside" <+> nameQ
+                , const $ Comprehension (opSkip theGuard body) toKeep
+                , return
+                )]
+    theRule _ _ = na "rule_InlineConditions"
 
-ruleGen_InlineConditions
-    :: MonadFail m
-    => (forall m1 . MonadFail m1
-            => Proxy (m1 :: * -> *)
-            -> ( Expression -> Expression , Expression -> m1 Expression )
-       )
-    -> (Expression -> Expression -> Expression)
-    -> Expression
-    -> m (Doc, [Name] -> Expression)
-ruleGen_InlineConditions opQ opSkip p = do
-    Comprehension body gensOrConds <- match opQ p
-    let (toInline, toKeep) = mconcat
-            [ case gof of
-                Condition x | categoryOf x == CatDecision -> ([x],[])
-                _ -> ([],[gof])
-            | gof <- gensOrConds
-            ]
-    theGuard <- case toInline of
-        []  -> fail "No condition to inline."
-        xs  -> return $ make opAnd $ fromList xs
-    return ( "Inlining conditions"
-           , const $ make opQ $
-               Comprehension (opSkip theGuard body) toKeep
-           )
+    -- keep going up, until finding a quantifier
+    -- when found, return the skipping operator for the quantifier
+    -- if none exists, do not apply the rule.
+    -- (or maybe we should call bug right ahead, it can't be anything else.)
+    queryQ z = do
+        let h = hole z
+        case ( match opAnd h
+             , match opOr h
+             , match opSum h
+             , match opMax h
+             , match opMin h ) of
+            (Just _, _, _, _, _) -> return ("and", opAndSkip )
+            (_, Just _, _, _, _) -> return ("or" , opOrSkip  )
+            (_, _, Just _, _, _) -> return ("sum", opSumSkip )
+            (_, _, _, Just _, _) -> return ("max", opMaxSkip )
+            (_, _, _, _, Just _) -> return ("min", opMinSkip )
+            _ -> case Zipper.up z of
+                Nothing -> fail "queryQ"
+                Just u  -> queryQ u
+
+    opAndSkip b x = [essence| &b -> &x |]
+    opOrSkip  b x = [essence| &b /\ &x |]
+    opSumSkip b x = [essence| toInt(&b) * &x |]
+    opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
+    opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
 
 rule_AttributeToConstraint :: Rule
