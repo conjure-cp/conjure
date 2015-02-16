@@ -56,7 +56,13 @@ rule_Neq = "partition-neq" `namedRule` theRule where
         TypePartition{} <- typeOf y
         return
             ( "Horizontal rule for partition dis-equality"
-            , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
             )
     theRule _ = na "rule_Neq"
 

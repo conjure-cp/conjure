@@ -106,7 +106,13 @@ rule_Neq = "function-neq" `namedRule` theRule where
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return ( "Horizontal rule for function dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 
@@ -338,3 +344,14 @@ rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
             ( "This is a function image."
             , const $ make opFunctionImage f arg
             )
+
+
+-- | image(f,x) can be nasty for non-total functions.
+--   1.   if f is a total function, it can readily be replaced by a set expression.
+--   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.
+--      a vertical rule is needed for such cases.
+--   2.2. if the return type is not "right", i.e. it is a bool or an int, i.e. sth we cannot quantify over,
+--        the vertical rule is harder.
+
+
+

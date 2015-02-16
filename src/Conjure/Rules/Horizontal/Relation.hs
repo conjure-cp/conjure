@@ -131,7 +131,13 @@ rule_Neq = "relation-neq" `namedRule` theRule where
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 

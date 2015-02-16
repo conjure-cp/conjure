@@ -59,7 +59,13 @@ rule_Neq = "set-neq" `namedRule` theRule where
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
         return ( "Horizontal rule for set dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 

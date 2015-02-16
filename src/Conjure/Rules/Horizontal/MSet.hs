@@ -90,7 +90,12 @@ rule_Neq = "mset-neq" `namedRule` theRule where
         TypeMSet{} <- typeOf x
         TypeMSet{} <- typeOf y
         return ( "Horizontal rule for mset dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . freq(&x,&i) != freq(&y,&i)) \/
+                            (exists &iPat in &y . freq(&x,&i) != freq(&y,&i))
+                        |]
                )
     theRule _ = na "rule_Neq"
 
