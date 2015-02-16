@@ -14,10 +14,14 @@ instance Hashable  x => Hashable  (OpSlicing x)
 instance ToJSON    x => ToJSON    (OpSlicing x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSlicing x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpSlicing x) where
-    typeOf (OpSlicing m _ _) = do
-        t@TypeMatrix{} <- typeOf m
-        return t
+instance (TypeOf x, Pretty x) => TypeOf (OpSlicing x) where
+    typeOf p@(OpSlicing m _ _) = do
+        ty <- typeOf m
+        case ty of
+            TypeMatrix{} -> return ()
+            TypeList{} -> return ()
+            _ -> raiseTypeError p
+        return ty
 
 instance EvaluateOp OpSlicing where
     evaluateOp op@(OpSlicing m lb ub) = case m of
