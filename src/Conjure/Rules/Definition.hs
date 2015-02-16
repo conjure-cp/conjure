@@ -16,6 +16,9 @@ import Conjure.Language.Domain
 import Conjure.Language.Ops
 import Conjure.Language.DomainOf
 
+-- uniplate
+import Data.Generics.Uniplate.Zipper ( Zipper )
+
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
@@ -100,7 +103,9 @@ type RuleResult m =
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . MonadLog m => Expression -> ExceptT Identity [RuleResult m]
+    , rApply :: forall m . MonadLog m => Zipper Model Expression            -- to query context
+                                      -> Expression
+                                      -> ExceptT Identity [RuleResult m]
                 -- fail in a rule just means that the rule isn't applicable
     }
 
@@ -110,8 +115,8 @@ namedRule
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ x -> let addId (d, y) = (d, y, return)
-                      in  liftM (return . addId) (f x)
+    , rApply = \ _z x -> let addId (d, y) = (d, y, return)
+                         in  liftM (return . addId) (f x)
     }
 
 
