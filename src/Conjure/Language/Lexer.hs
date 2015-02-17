@@ -57,6 +57,9 @@ data Lexeme
     -- type tuple
     | L_tuple
 
+    -- type record
+    | L_record
+
     -- type: matrix
     | L_matrix
     | L_indexed

@@ -205,6 +205,7 @@ parseDomainWithRepr
         pDomainAtom = msum $ map try
             [ pBool, pInt, pEnum, pReference
             , pMatrix, pTupleWithout, pTupleWith
+            , pRecord
             , pSet, pMSet, pFunction, pFunction'
             , pRelation
             , pPartition
@@ -253,6 +254,12 @@ parseDomainWithRepr
         pTupleWithout = do
             xs <- parens $ countSepAtLeast 2 parseDomainWithRepr comma
             return $ DomainTuple xs
+
+        pRecord = do
+            lexeme L_record
+            let one = (,) <$> parseName <*> parseDomainWithRepr
+            xs <- brackets $ one `sepBy` comma
+            return $ DomainRecord xs
 
         pSet = do
             lexeme L_set
