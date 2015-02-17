@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure
@@ -19,7 +21,9 @@ validateSolution
     -> Model      -- essence solution
     -> m ()
 validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $
-    forM_ (mStatements essenceModel) $ \ st -> case st of
+  forM_ (mStatements essenceModel) $ \ st -> do
+    mapM_ introduceRecordFields (universeBi st :: [Domain () Expression])
+    case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
@@ -60,15 +64,6 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 , "This should never happen."
                 , "Statement:" <+> pretty st
                 ]
-        Declaration (Letting nm val@(Domain dom)) -> do
-            let
-                introduceRecordFields (DomainRecord inners) =
-                    forM_ inners $ \ (n, d) -> do
-                        t <- typeOf d
-                        modify ((n, Constant (ConstantRecordField n t)) :)
-                introduceRecordFields _ = return ()
-            mapM_ introduceRecordFields (universe dom)
-            modify ((nm, val) :)
         Declaration (Letting nm val) -> modify ((nm, val) :)
         Declaration (GivenDomainDefnEnum nm) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
@@ -132,3 +127,15 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                          , nm `elem` (universeBi x :: [Name])
                                                          ]
                                                      ]
+
+
+introduceRecordFields
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => Domain r x -> m ()
+introduceRecordFields (DomainRecord inners) =
+    forM_ inners $ \ (n, d) -> do
+        t <- typeOf d
+        modify ((n, Constant (ConstantRecordField n t)) :)
+introduceRecordFields _ = return ()
