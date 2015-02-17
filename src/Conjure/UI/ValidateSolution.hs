@@ -6,8 +6,8 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
+import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
-import Conjure.Language.NameResolution ( resolveNames )
 
 
 validateSolution
@@ -18,8 +18,7 @@ validateSolution
     -> Model      -- essence param
     -> Model      -- essence solution
     -> m ()
-validateSolution essenceModel0 essenceParam essenceSolution = flip evalStateT [] $ do
-    essenceModel <- resolveNames essenceModel0
+validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $
     forM_ (mStatements essenceModel) $ \ st -> case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
@@ -61,6 +60,15 @@ validateSolution essenceModel0 essenceParam essenceSolution = flip evalStateT []
                 , "This should never happen."
                 , "Statement:" <+> pretty st
                 ]
+        Declaration (Letting nm val@(Domain dom)) -> do
+            let
+                introduceRecordFields (DomainRecord inners) =
+                    forM_ inners $ \ (n, d) -> do
+                        t <- typeOf d
+                        modify ((n, Constant (ConstantRecordField n t)) :)
+                introduceRecordFields _ = return ()
+            mapM_ introduceRecordFields (universe dom)
+            modify ((nm, val) :)
         Declaration (Letting nm val) -> modify ((nm, val) :)
         Declaration (GivenDomainDefnEnum nm) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
