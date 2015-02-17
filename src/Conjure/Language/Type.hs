@@ -24,6 +24,7 @@ data Type
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
+    | TypeRecord [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -46,6 +47,8 @@ instance Pretty Type where
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
+    pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index inner) = "matrix indexed by"
                                   <+> prBrackets (pretty index)
