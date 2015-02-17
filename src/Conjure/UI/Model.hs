@@ -810,6 +810,7 @@ otherRules =
         , rule_Bool_DontCare
         , rule_Int_DontCare
         , rule_Tuple_DontCare
+        , rule_Record_DontCare
         , rule_Matrix_DontCare
         , rule_Abstract_DontCare
 
@@ -1259,6 +1260,17 @@ rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
         TypeTuple{} <- typeOf x
         xs          <- downX1 x
         return ( "dontCare handling for tuple"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
+rule_Record_DontCare :: Rule
+rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
+    theRule p = do
+        x            <- match opDontCare p
+        TypeRecord{} <- typeOf x
+        xs           <- downX1 x
+        return ( "dontCare handling for record"
                , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
