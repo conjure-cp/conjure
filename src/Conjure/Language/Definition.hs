@@ -419,6 +419,7 @@ instance OperatorContainer Expression where
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
     nameOut (Reference nm _) = return nm
+    nameOut (Constant (ConstantRecordField nm _)) = return nm
     nameOut p = fail ("This expression isn't a 'name':" <+> pretty p)
 
 instance ExpressionLike Expression where

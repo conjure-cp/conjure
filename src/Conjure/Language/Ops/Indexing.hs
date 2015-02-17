@@ -3,6 +3,7 @@
 module Conjure.Language.Ops.Indexing where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Ops.Common
 
 
@@ -67,6 +68,13 @@ instance EvaluateOp OpIndexing where
                     , "Matrix value:" <+> pretty m
                     ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantRecordField name _)) =
+        case lookup name vals of
+            Nothing -> bug $ vcat
+                    [ "Record doesn't have a member with this name:" <+> pretty name
+                    , "Record:" <+> pretty rec
+                    ]
+            Just val -> return val
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 instance SimplifyOp OpIndexing where

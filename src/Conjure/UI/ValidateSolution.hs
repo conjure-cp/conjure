@@ -7,6 +7,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
+import Conjure.Language.NameResolution ( resolveNames )
 
 
 validateSolution
@@ -17,7 +18,8 @@ validateSolution
     -> Model      -- essence param
     -> Model      -- essence solution
     -> m ()
-validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $
+validateSolution essenceModel0 essenceParam essenceSolution = flip evalStateT [] $ do
+    essenceModel <- resolveNames essenceModel0
     forM_ (mStatements essenceModel) $ \ st -> case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of

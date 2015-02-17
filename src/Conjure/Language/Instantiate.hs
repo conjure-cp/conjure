@@ -76,6 +76,8 @@ instantiateE (Comprehension body gensOrConds) = do
         (DomainInt [RangeBounded 1 (fromInt (length constants))])
         constants
 
+instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantRecordField name ty
+
 instantiateE (Reference name _) = do
     ctxt <- gets id
     case name `lookup` ctxt of

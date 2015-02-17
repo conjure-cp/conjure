@@ -30,6 +30,7 @@ data Constant
     | ConstantEnum Name   {- name for the enum domain -}
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
+    | ConstantRecordField Name Type
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
     | TypedConstant Constant Type
@@ -49,22 +50,24 @@ instance Arbitrary Constant where
         ]
 
 instance TypeOf Constant where
-    typeOf ConstantBool{}           = return TypeBool
-    typeOf ConstantInt{}            = return TypeInt
-    typeOf (ConstantEnum defn _ _ ) = return (TypeEnum defn)
-    typeOf (ConstantAbstract x    ) = typeOf x
-    typeOf (DomainInConstant dom)   = typeOf dom
-    typeOf (TypedConstant _ ty)     = return ty
-    typeOf (ConstantUndefined _ ty) = return ty
+    typeOf ConstantBool{}             = return TypeBool
+    typeOf ConstantInt{}              = return TypeInt
+    typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
+    typeOf (ConstantRecordField _ ty) = return ty
+    typeOf (ConstantAbstract x    )   = typeOf x
+    typeOf (DomainInConstant dom)     = typeOf dom
+    typeOf (TypedConstant _ ty)       = return ty
+    typeOf (ConstantUndefined _ ty)   = return ty
 
 instance Pretty Constant where
-    pretty (ConstantBool False) = "false"
-    pretty (ConstantBool True ) = "true"
-    pretty (ConstantInt  x    ) = pretty x
-    pretty (ConstantEnum _ _ x) = pretty x
-    pretty (ConstantAbstract x) = pretty x
-    pretty (DomainInConstant d) = "`" <> pretty d <> "`"
-    pretty (TypedConstant x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
+    pretty (ConstantBool False)          = "false"
+    pretty (ConstantBool True )          = "true"
+    pretty (ConstantInt  x    )          = pretty x
+    pretty (ConstantEnum _ _ x)          = pretty x
+    pretty (ConstantRecordField n _)     = pretty n
+    pretty (ConstantAbstract x)          = pretty x
+    pretty (DomainInConstant d)          = "`" <> pretty d <> "`"
+    pretty (TypedConstant x ty)          = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     pretty (ConstantUndefined reason ty) = "undefined" <> prParens (pretty reason <+> ":" <+> "`" <> pretty ty <> "`")
 
 instance ExpressionLike Constant where
@@ -83,6 +86,7 @@ instance ExpressionLike Constant where
 
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} fromName --" <+> pretty name)
+    nameOut (ConstantRecordField nm _) = return nm
     nameOut p = bug ("ReferenceContainer{Constant} nameOut --" <+> pretty p)
 
 instance DomainContainer Constant (Domain ()) where
@@ -101,6 +105,7 @@ normaliseConstant :: Constant -> Constant
 normaliseConstant x@ConstantBool{} = x
 normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
+normaliseConstant x@ConstantRecordField{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
 normaliseConstant (DomainInConstant d) = DomainInConstant (normaliseDomain normaliseConstant d)
 normaliseConstant (TypedConstant c ty) = TypedConstant (normaliseConstant c) ty
@@ -159,6 +164,14 @@ validateConstantForDomain
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitTuple cs))
     d@(DomainTuple ds) = nested c d $ zipWithM_ validateConstantForDomain cs ds
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitRecord cs))
+    d@(DomainRecord ds)
+        | map fst cs == map fst ds
+            = nested c d $ zipWithM_ validateConstantForDomain (map snd cs) (map snd ds)
+        | otherwise
+            = constantNotInDomain c d
 
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitMatrix cIndex vals))
