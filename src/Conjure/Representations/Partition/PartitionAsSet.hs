@@ -87,6 +87,10 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence| sum([ |&i| | &iPat <- &rel ]) |]
 
+                partsAren'tEmpty rel =
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
+
             case refs of
                 [rel] -> do
                     outDom                 <- outDomain inDom
@@ -96,6 +100,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                         [ [ atMostOnce rel ]
                         , mkSizeCons (participantsSize attrs) (participantsCardinality rel)
                         , regular rel
+                        , [ partsAren'tEmpty rel ]
                         , cons
                         ]
                 _ -> na $ vcat [ "{structuralCons} PartitionAsSet"
