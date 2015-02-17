@@ -340,6 +340,19 @@ allSupportedAttributes =
     map (,0) [ "total"
              , "injective", "surjective", "bijective"
              , "complete", "regular"
+             ] ++
+    map (,0) [ "reflexive"
+             , "irreflexive"
+             , "coreflexive"
+             , "symmetric"
+             , "antiSymmetric"
+             , "aSymmetric"
+             , "transitive"
+             , "total"
+             , "Euclidean"
+             , "serial"
+             , "equivalence"
+             , "partialOrder"
              ]
 
 
