@@ -18,6 +18,7 @@ class ExpressionLike a where
 
 class ReferenceContainer a where
     fromName :: Name -> a
+    nameOut :: MonadFail m => a -> m Name
 
 class DomainContainer a dom where
     fromDomain :: dom a -> a

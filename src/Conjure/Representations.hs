@@ -50,6 +50,7 @@ onReference nm refTo =
         InComprehension{}         -> fail ("downX1.onReference.InComprehension:" <++> pretty (show nm))
         DeclNoRepr{}              -> fail ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
+        RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
 onOp p@(MkOpIndexing (OpIndexing m i)) = do

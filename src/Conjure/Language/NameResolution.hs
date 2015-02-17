@@ -10,6 +10,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
 
@@ -17,7 +18,14 @@ resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
 resolveNames model = flip evalStateT (freshNames model, []) $ do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    duplicateNames <- gets (snd >>> map fst >>> histogram >>> filter (\ (_,n) -> n > 1 ) >>> map fst)
+    duplicateNames <- gets (snd                                 -- all names defined in the model
+                            >>> filter (\ (_,d) -> case d of
+                                    RecordField{} -> False      -- filter out the RecordField's
+                                    _             -> True )
+                            >>> map fst                         -- strip the ReferenceTo's
+                            >>> histogram
+                            >>> filter (\ (_,n) -> n > 1 )      -- keep those that are defined multiple times
+                            >>> map fst)
     unless (null duplicateNames) $
         userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
     return model { mStatements = statements }
@@ -165,6 +173,11 @@ resolveD (DomainReference nm Nothing) = do
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> resolveD r
         Just x -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
+resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
+    d' <- resolveD d
+    t  <- typeOf d'
+    modify (second ((n, RecordField n t) :))
+    return (n, d')
 resolveD d = do
     d' <- descendM resolveD d
     mapM resolveX d'

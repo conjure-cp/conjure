@@ -54,7 +54,7 @@ main = do
               ]
 
             , [ ""
-              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (Ops x) where"
+              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Ops x) where"
               ]
             , [ "    typeOf (" ++ patModifier m ++ ") = typeOf x"
               | m <- modules

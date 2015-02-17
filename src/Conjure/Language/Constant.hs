@@ -82,7 +82,8 @@ instance ExpressionLike Constant where
     listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
 
 instance ReferenceContainer Constant where
-    fromName name = bug ("ReferenceContainer{Constant} --" <+> pretty name)
+    fromName name = bug ("ReferenceContainer{Constant} fromName --" <+> pretty name)
+    nameOut p = bug ("ReferenceContainer{Constant} nameOut --" <+> pretty p)
 
 instance DomainContainer Constant (Domain ()) where
     fromDomain = DomainInConstant
