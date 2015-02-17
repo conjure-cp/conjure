@@ -30,6 +30,7 @@ downX1 x = bug ("downX1:" <++> pretty (show x))
 
 onConstant :: MonadFail m => Constant -> m [Expression]
 onConstant (ConstantAbstract (AbsLitTuple xs)) = return (map Constant xs)
+onConstant (ConstantAbstract (AbsLitRecord xs)) = return (map (Constant . snd) xs)
 onConstant (ConstantAbstract (AbsLitMatrix index xs)) = do
     yss <- mapM (downX1 . Constant) xs
     let indexX = fmap Constant index
@@ -38,6 +39,7 @@ onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 
 onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
+onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
 onAbstractLiteral (AbsLitMatrix index xs) = do
     yss <- mapM downX1 xs
     return [ AbstractLiteral (AbsLitMatrix index ys) | ys <- transpose yss ]

@@ -104,6 +104,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
                               , head, init, tail, last
+                              , findIndex
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
