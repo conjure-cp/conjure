@@ -27,7 +27,7 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
                         | k' <- [1 .. length ts]
                         , let k = fromInt k'
                         ]
-            valuesIndexed = make opIndexing' values toIndex
+            valuesIndexed = make opMatrixIndexing values toIndex
         return
             ( "Function image, FunctionND representation"
             , const valuesIndexed
@@ -55,7 +55,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
                                 | k' <- [1 .. length ts]
                                 , let k = fromInt k'
                                 ]
-                    valuesIndexed = make opIndexing' values toIndex
+                    valuesIndexed = make opMatrixIndexing values toIndex
                     val  = [essence| (&j, &valuesIndexed) |]
                 in
                     Comprehension (upd val body)

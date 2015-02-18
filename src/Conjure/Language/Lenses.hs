@@ -444,8 +444,7 @@ opIndexing _ =
     )
 
 
--- TODO: rename to opMatrixIndexing
-opIndexing'
+opMatrixIndexing
     :: ( OperatorContainer x
        , Pretty x
        , TypeOf x
@@ -455,12 +454,12 @@ opIndexing'
     -> ( x -> [x] -> x
        , x -> m (x,[x])
        )
-opIndexing' _ =
+opMatrixIndexing _ =
     ( foldl (make opIndexing)
     , \ p -> do
         (m, is) <- go p
         if null is
-            then na ("Lenses.opIndexing':" <+> pretty p)
+            then na ("Lenses.opMatrixIndexing:" <+> pretty p)
             else return (m, is)
     )
     where
@@ -470,7 +469,7 @@ opIndexing' _ =
                 case ty of
                     TypeMatrix{} -> return ()
                     TypeList{} -> return ()
-                    _ -> na ("Lenses.opIndexing':" <+> pretty p)
+                    _ -> na ("Lenses.opMatrixIndexing:" <+> pretty p)
                 (m,is) <- go x
                 return (m, is ++ [i])
             _ -> return (p, [])

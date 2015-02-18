@@ -520,8 +520,7 @@ sliceThemMatrices model = do
         onExpr :: Monad m => Expression -> m Expression
         onExpr p = do
             let isIndexedMatrix = do
-                    (m, is) <- match opIndexing' p
-                    when (null is) $ fail "sliceThemMatrices.onExpr"
+                    (m, is) <- match opMatrixIndexing p
                     tyM     <- typeOf m
                     return (m, is, tyM)
             case isIndexedMatrix of
@@ -534,7 +533,7 @@ sliceThemMatrices model = do
                     let unroll a 0 = a
                         unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
                     is' <- mapM onExpr is
-                    let p' = make opIndexing' m is'
+                    let p' = make opMatrixIndexing m is'
                     return $ unroll p' howMany
 
     statements <- descendBiM onExpr (mStatements model)
@@ -1299,7 +1298,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
             ( "complex pattern on tuple patterns"
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        replacements = [ (p, make opIndexing' i (map fromInt is))
+                        replacements = [ (p, make opMatrixIndexing i (map fromInt is))
                                        | (p, is) <- genMappings pat
                                        ]
                         f x@(Reference nm _) = fromMaybe x (lookup nm replacements)

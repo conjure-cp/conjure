@@ -50,7 +50,7 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
 
                         lit = AbstractLiteral $ AbsLitTuple
                                     [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
-                        indexThis anyMatrix = make opIndexing' anyMatrix
+                        indexThis anyMatrix = make opMatrixIndexing anyMatrix
                                     [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
 
                     in  Comprehension (upd lit body)

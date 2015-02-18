@@ -32,8 +32,8 @@ rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule`
                         | k' <- [1 .. length ts]
                         , let k = fromInt k'
                         ]
-            flagsIndexed  = make opIndexing' flags  toIndex
-            valuesIndexed = make opIndexing' values toIndex
+            flagsIndexed  = make opMatrixIndexing flags  toIndex
+            valuesIndexed = make opMatrixIndexing values toIndex
 
         return ( "Function image, FunctionNDPartial representation, not-a-bool"
                , const [essence| { &valuesIndexed
@@ -87,7 +87,7 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
                         | k' <- [1 .. length ts]
                         , let k = fromInt k'
                         ]
-            flagsIndexed  = make opIndexing' flags  toIndex
+            flagsIndexed  = make opMatrixIndexing flags  toIndex
 
         return ( "Function in defined, FunctionNDPartial representation"
                , const flagsIndexed
@@ -115,8 +115,8 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                                 | k' <- [1 .. length ts]
                                 , let k = fromInt k'
                                 ]
-                    flagsIndexed  = make opIndexing' flags  toIndex
-                    valuesIndexed = make opIndexing' values toIndex
+                    flagsIndexed  = make opMatrixIndexing flags  toIndex
+                    valuesIndexed = make opMatrixIndexing values toIndex
                     val           = [essence| (&j, &valuesIndexed) |]
                 in
                     Comprehension (upd val body)
