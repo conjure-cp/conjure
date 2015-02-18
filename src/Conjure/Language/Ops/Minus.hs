@@ -36,28 +36,40 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
 instance EvaluateOp OpMinus where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Contains undefined things in it:" <+> pretty p
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
-        return $ ConstantAbstract $ AbsLitSet
-            [ a
-            | a <- as
-            , a `notElem` bs
-            ]
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
+    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
+        ty <- typeOf p
+        let outs =
+                [ a
+                | a <- as
+                , a `notElem` bs
+                ]
+        return $ if null outs
+            then TypedConstant (ConstantAbstract (AbsLitSet [])) ty
+            else ConstantAbstract $ AbsLitSet outs
+    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
+        ty <- typeOf p
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
-        return $ ConstantAbstract $ AbsLitMSet $ concat
-            [ replicate (countA - countB) e
-            | e <- allElems
-            , let countA = fromMaybe 0 (e `lookup` asHist)
-            , let countB = fromMaybe 0 (e `lookup` bsHist)
-            ]
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) =
-        return $ ConstantAbstract $ AbsLitFunction
-            [ a
-            | a <- as
-            , a `notElem` bs
-            ]
+            outs =
+                [ replicate (countA - countB) e
+                | e <- allElems
+                , let countA = fromMaybe 0 (e `lookup` asHist)
+                , let countB = fromMaybe 0 (e `lookup` bsHist)
+                ]                
+        return $ if null outs
+            then TypedConstant (ConstantAbstract (AbsLitMSet [])) ty
+            else ConstantAbstract $ AbsLitMSet $ concat outs
+    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
+        ty <- typeOf p
+        let outs =
+                [ a
+                | a <- as
+                , a `notElem` bs
+                ]
+        return $ if null outs
+            then TypedConstant (ConstantAbstract (AbsLitFunction [])) ty
+            else ConstantAbstract (AbsLitFunction outs)
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance SimplifyOp OpMinus where
