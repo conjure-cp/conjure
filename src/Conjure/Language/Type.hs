@@ -47,9 +47,13 @@ instance Pretty Type where
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
     pretty (TypeList x) = prBrackets (pretty x)
-    pretty (TypeMatrix index inner) = "matrix indexed by"
-                                  <+> prBrackets (pretty index)
-                                  <+> "of" <+> pretty inner
+    pretty (TypeMatrix index innerNested)
+        = "matrix indexed by" <+> prettyList prBrackets "," indices
+                              <+> "of" <+> pretty inner
+        where
+            (indices,inner) = first (index:) $ collect innerNested
+            collect (TypeMatrix i j) = first (i:) $ collect j
+            collect x = ([],x)
     pretty (TypeSet x) = "set of" <+> pretty x
     pretty (TypeMSet x) = "mset of" <+> pretty x
     pretty (TypeFunction fr to) = "function" <+> pretty fr <+> "-->" <+> pretty to
