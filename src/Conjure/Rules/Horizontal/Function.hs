@@ -66,6 +66,30 @@ rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule wher
                     )
 
 
+rule_Image_Literal_Int :: Rule
+rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
+    theRule p = do
+        (func, arg)             <- match opFunctionImage p
+        TypeFunction _ TypeInt  <- typeOf func
+        elems                   <- match functionLiteral func
+        return
+            ( "Image of function literal"
+            , const $
+                let
+                    val = make opSum $ fromList $
+                        -- if this is ever true, the output is the value of b.
+                        [ [essence| toInt(&a = &arg) * &b |]
+                        | (a,b) <- elems
+                        ]
+                    argIsDef = make opOr $ fromList
+                        [ [essence| &a = &arg |]
+                        | (a,_) <- elems
+                        ]
+                in
+                    WithLocals val [SuchThat [argIsDef]]
+            )
+
+
 rule_Eq :: Rule
 rule_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
