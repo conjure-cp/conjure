@@ -532,8 +532,9 @@ sliceThemMatrices model = do
                     let howMany = nestingLevel tyM - length is
                     let unroll a 0 = a
                         unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
+                    m'  <- descendM onExpr m
                     is' <- mapM onExpr is
-                    let p' = make opMatrixIndexing m is'
+                    let p' = make opMatrixIndexing m' is'
                     return $ unroll p' howMany
 
     statements <- descendBiM onExpr (mStatements model)
