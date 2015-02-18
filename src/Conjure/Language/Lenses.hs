@@ -6,6 +6,8 @@ module Conjure.Language.Lenses where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
@@ -442,23 +444,36 @@ opIndexing _ =
     )
 
 
+-- TODO: rename to opMatrixIndexing
 opIndexing'
     :: ( OperatorContainer x
        , Pretty x
+       , TypeOf x
        , MonadFail m
        )
     => Proxy (m :: * -> *)
     -> ( x -> [x] -> x
        , x -> m (x,[x])
        )
-opIndexing' proxy =
+opIndexing' _ =
     ( foldl (make opIndexing)
-    , \ p -> case projectOp p of
-                Just (MkOpIndexing (OpIndexing x i)) -> do
-                    (m,is) <- snd (opIndexing' proxy) x
-                    return (m, is ++ [i])
-                _ -> return (p, [])
+    , \ p -> do
+        (m, is) <- go p
+        if null is
+            then na ("Lenses.opIndexing':" <+> pretty p)
+            else return (m, is)
     )
+    where
+        go p = case projectOp p of
+            Just (MkOpIndexing (OpIndexing x i)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opIndexing':" <+> pretty p)
+                (m,is) <- go x
+                return (m, is ++ [i])
+            _ -> return (p, [])
 
 
 opSlicing
