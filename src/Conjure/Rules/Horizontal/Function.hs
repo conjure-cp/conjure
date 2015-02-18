@@ -219,7 +219,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                         (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenInExpr jPat func)
-                           , Condition ([essence| &j[2] = &img |])
+                           , Condition [essence| &j[2] = &img |]
                            ]
                         ++ transformBi (upd val) gofAfter
             )
@@ -354,4 +354,30 @@ rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
 --        the vertical rule is harder.
 
 
+
+rule_Comprehension_Image :: Rule
+rule_Comprehension_Image = "function-image" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
+            _ -> na "rule_Comprehension_Image"
+        (func, arg) <- match opFunctionImage expr
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the image of a function"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    (jPat, j) = quantifiedVar (fresh `at` 1)
+                in
+                    Comprehension
+                        (upd j body)
+                        $  gofBefore
+                        ++ [ Generator (GenInExpr iPat func)
+                           , Condition [essence| &i[1] = &arg |]
+                           , Generator (GenInExpr jPat [essence| &i[2] |])
+                           ]
+                        ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Image"
 

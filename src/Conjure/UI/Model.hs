@@ -742,6 +742,7 @@ horizontalRules =
     , Horizontal.MSet.rule_MaxMin
 
     , Horizontal.Function.rule_Comprehension_Literal
+    , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
