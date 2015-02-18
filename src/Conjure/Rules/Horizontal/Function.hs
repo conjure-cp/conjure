@@ -40,45 +40,30 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Image_Literal :: Rule
-rule_Image_Literal = "function-image-literal" `namedRule` theRule where
-    theRule [essence| &lhs = &rhs |] = do
-        (func, arg) <- match opFunctionImage lhs
-        tyFunc      <- typeOf func
-        isBool      <- case tyFunc of
-            TypeFunction _ TypeBool -> -- out of range means "false = &rhs"
-                return True
-            _ -> -- out of range means "false"
-                return False
-        elems       <- match functionLiteral func
-        let argIsUndef = make opNot $ make opOr $ fromList
-                [ [essence| &a = &arg |]
-                | (a,_) <- elems
-                ]
+rule_Image_Literal_Bool :: Rule
+rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
+    theRule p = do
+        (func, arg)             <- match opFunctionImage p
+        TypeFunction _ TypeBool <- typeOf func
+        elems                   <- match functionLiteral func
+        -- let argIsUndef = make opNot $ make opOr $ fromList
+        --         [ [essence| &a = &arg |]
+        --         | (a,_) <- elems
+        --         ]
         return $
             if null elems
                 then
                     ( "Image of empty function literal"
-                    , const [essence| false |]
+                    , const [essence| false |]                          -- undefined is false.
                     )
                 else
                     ( "Image of function literal"
-                    , const $ if isBool
-                        then
-                            -- the argument is defined and equal to rhs
-                            -- OR
-                            -- the argument is undefined and rhs = false
-                            make opOr $ fromList $
-                                [ [essence| (&a = &arg) /\ (&b = &rhs) |]
-                                | (a,b) <- elems
-                                ] ++ [ [essence| &argIsUndef /\ (&rhs = false) |] ]
-                        else
-                            make opOr $ fromList
-                                [ [essence| (&a = &arg) /\ (&b = &rhs) |]
-                                | (a,b) <- elems
-                                ]
+                    , const $ make opOr $ fromList $
+                          [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
+                                                                        -- undefined is still false.
+                          | (a,b) <- elems
+                          ]
                     )
-    theRule _ = na "rule_Image_Literal"
 
 
 rule_Eq :: Rule
@@ -356,7 +341,7 @@ rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
 
 
 rule_Comprehension_Image :: Rule
-rule_Comprehension_Image = "function-image" `namedRule` theRule where
+rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
@@ -381,3 +366,31 @@ rule_Comprehension_Image = "function-image" `namedRule` theRule where
             )
     theRule _ = na "rule_Comprehension_Image"
 
+
+-- TODO: generalise to other operators (i.e. other than parts)
+rule_ComprehensionParts_Image :: Rule
+rule_ComprehensionParts_Image = "function-image-comprehensionParts" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_ComprehensionParts_Image"
+        expr2 <- match opParts expr
+        (func, arg) <- match opFunctionImage expr2
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the image of a function"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    (jPat, j) = quantifiedVar (fresh `at` 1)
+                in
+                    Comprehension
+                        (upd j body)
+                        $  gofBefore
+                        ++ [ Generator (GenInExpr iPat func)
+                           , Condition [essence| &i[1] = &arg |]
+                           , Generator (GenInExpr jPat [essence| parts(&i[2]) |])
+                           ]
+                        ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_ComprehensionParts_Image"
