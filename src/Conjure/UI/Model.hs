@@ -1400,9 +1400,9 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Domain{} = na "rule_FullEvaluate"
     theRule p = do
         constant <- instantiateExpression [] p
-        case constant of
-            ConstantUndefined{} -> na "rule_PartialEvaluate, undefined"
-            _ -> return ()
+        if null [() | ConstantUndefined{} <- universe constant]
+            then return ()
+            else na "rule_PartialEvaluate, undefined"
         return
             ( "Full evaluator"
             , const $ Constant constant
