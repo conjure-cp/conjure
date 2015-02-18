@@ -18,9 +18,13 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
     typeOf p@(OpSum x) = do
         ty <- typeOf x
         case ty of
+            TypeList TypeAny -> return TypeInt
             TypeList TypeInt -> return TypeInt
+            TypeMatrix _ TypeAny -> return TypeInt
             TypeMatrix _ TypeInt -> return TypeInt
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
 
 instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus
