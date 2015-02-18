@@ -80,14 +80,14 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
 
 
 rule_ComprehensionParts_LiteralIndexed :: Rule
-rule_ComprehensionParts_LiteralIndexed = "matrix-comprehension-literal-indexed" `namedRule` theRule where
+rule_ComprehensionParts_LiteralIndexed = "matrix-comprehensionParts-literal-indexed" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_LiteralIndexed"
+            _ -> na "rule_ComprehensionParts_LiteralIndexed"
         expr2             <- match opParts expr
         (matrix, indices) <- match opIndexing' expr2
-        when (null indices) $ na "rule_Comprehension_LiteralIndexed"
+        when (null indices) $ na "rule_ComprehensionParts_LiteralIndexed"
         (index , elems  ) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
         return
@@ -106,7 +106,7 @@ rule_ComprehensionParts_LiteralIndexed = "matrix-comprehension-literal-indexed" 
                 in
                     make opIndexing' core indices
             )
-    theRule _ = na "rule_Comprehension_LiteralIndexed"
+    theRule _ = na "rule_ComprehensionParts_LiteralIndexed"
 
 
 rule_Comprehension_Literal_ContainsSet :: Rule
