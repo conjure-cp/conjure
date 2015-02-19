@@ -827,6 +827,9 @@ otherRules =
         , rule_ComplexAbsPat
 
         , rule_AttributeToConstraint
+
+        , rule_QuantifierShift
+
         ]
 
     ,   [ rule_InlineConditions
@@ -1451,3 +1454,28 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
             , const x'
             )
     theRule _ = na "rule_PartialEvaluate"
+
+
+-- | shifting quantifiers inwards, if they operate on a row of a 2d matrix,
+--   make them operate on the rows directly then index
+rule_QuantifierShift :: Rule
+rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, inner  )            <- match opQuantifier p
+        (matrix, indexer)            <- match opMatrixIndexing inner
+        (index, elems@(firstElem:_)) <- match matrixLiteral matrix
+        ty <- typeOf firstElem
+        case ty of
+            TypeMatrix{} -> return ()
+            TypeList{} -> return ()
+            _ -> na "rule_QuantifierShift"
+        let
+            
+        return
+            ( "Shifting quantifier inwards"
+            , const $ make opMatrixIndexing
+                        (make matrixLiteral
+                            index
+                            (map mkQuan elems))
+                        indexer
+            )
