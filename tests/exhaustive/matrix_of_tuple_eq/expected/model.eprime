@@ -7,13 +7,7 @@ find y_2: matrix indexed by [int(1..2), int(1..2)] of int(2..4)
 find z_1: matrix indexed by [int(1..2), int(1..2), int(1..2)] of int(1)
 find z_2: matrix indexed by [int(1..2), int(1..2), int(1..2)] of int(2..4)
 such that
-    and([x_1[q1] = [1, 1, 1; int(1..3)][q1] /\ x_2[q1] = [2, 3, 4; int(1..3)][q1] | q1 : int(1..3)]),
-    and([and([y_1[q2, q3] = [[1, 1; int(1..2)], [1, 1; int(1..2)]; int(1..2)][q2, q3] /\ y_2[q2, q3] = [[2, 3; int(1..2)], [2, 3; int(1..2)]; int(1..2)][q2, q3]
-                  | q3 : int(1..2)])
-             | q2 : int(1..2)]),
-    and([and([and([z_1[q4, q5, q6] = [[[1, 1; int(1..2)], [1, 1; int(1..2)]; int(1..2)], [[1, 1; int(1..2)], [1, 1; int(1..2)]; int(1..2)]; int(1..2)][q4, q5, q6]
-                   /\ z_2[q4, q5, q6] = [[[2, 3; int(1..2)], [2, 3; int(1..2)]; int(1..2)], [[2, 3; int(1..2)], [2, 3; int(1..2)]; int(1..2)]; int(1..2)][q4, q5, q6]
-                       | q6 : int(1..2)])
-                  | q5 : int(1..2)])
-             | q4 : int(1..2)])
+    and([x_1[q1] = 1 /\ x_2[q1] = [2, 3, 4; int(1..3)][q1] | q1 : int(1..3)]),
+    and([and([y_1[q2, q3] = 1 /\ y_2[q2, q3] = [2, 3; int(1..2)][q3] | q3 : int(1..2)]) | q2 : int(1..2)]),
+    and([and([and([z_1[q4, q5, q6] = 1 /\ z_2[q4, q5, q6] = [2, 3; int(1..2)][q6] | q6 : int(1..2)]) | q5 : int(1..2)]) | q4 : int(1..2)])
 
