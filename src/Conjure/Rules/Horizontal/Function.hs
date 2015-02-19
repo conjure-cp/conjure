@@ -375,6 +375,9 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
                 let
                     try = do
                         (func, arg) <- match opFunctionImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
                         TypeFunction _ TypeBool <- typeOf func
                         return (func, arg)
                 case try of
@@ -419,6 +422,9 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
                 let
                     try = do
                         (func, arg) <- match opFunctionImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
                         TypeFunction _ TypeInt <- typeOf func
                         return (func, arg)
                 case try of
@@ -460,6 +466,9 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Image"
         (func, arg) <- match opFunctionImage expr
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the image of a function"
@@ -489,6 +498,9 @@ rule_ComprehensionParts_Image = "function-image-comprehensionParts" `namedRule` 
             _ -> na "rule_ComprehensionParts_Image"
         expr2 <- match opParts expr
         (func, arg) <- match opFunctionImage expr2
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the image of a function"
