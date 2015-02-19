@@ -174,8 +174,7 @@ rule_Leq = "relation-leq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)     <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation subsetEq"
@@ -183,6 +182,7 @@ rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence| forAll &iPat in (&x) . &i in &y |]
                )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
