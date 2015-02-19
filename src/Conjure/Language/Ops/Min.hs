@@ -25,7 +25,7 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Contains undefined things in it:" <+> pretty p
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (ConstantAbstract (AbsLitMatrix _ xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is
