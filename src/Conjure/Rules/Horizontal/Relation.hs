@@ -120,8 +120,13 @@ rule_Eq = "relation-eq" `namedRule` theRule where
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation equality"
-               , const $ make opEq (make opToSet x)
-                                   (make opToSet y)
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (forAll &iPat in &x . &i in &y)
+                            /\
+                            (forAll &iPat in &y . &i in &x)
+                        |]
                )
 
 
