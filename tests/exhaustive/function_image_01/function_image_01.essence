@@ -1,0 +1,9 @@
+language Essence 1.3
+
+find b: bool
+find i : int(0..5)
+find x : int(1..2)
+
+such that image( function(false --> 5, true --> x)
+               , b
+               ) = i
