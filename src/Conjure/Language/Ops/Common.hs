@@ -229,10 +229,12 @@ valuesInIntDomain ranges =
         allValues = nub $ concat $ catMaybes allRanges
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
+boolsOut (TypedConstant c _) = boolsOut c
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Constant -> m [Int]
+intsOut (TypedConstant c _) = intsOut c
 intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
 intsOut b = return <$> intOut b
 
