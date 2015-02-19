@@ -667,6 +667,7 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_MatrixLit_Eq
     , Vertical.Matrix.rule_MatrixLit_Neq
+    , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -781,6 +782,10 @@ horizontalRules =
     , Horizontal.Relation.rule_Neq
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
+    , Horizontal.Relation.rule_Subset
+    , Horizontal.Relation.rule_SubsetEq
+    , Horizontal.Relation.rule_Supset
+    , Horizontal.Relation.rule_SupsetEq
 
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
