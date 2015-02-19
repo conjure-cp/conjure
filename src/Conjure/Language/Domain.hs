@@ -17,6 +17,7 @@ module Conjure.Language.Domain
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
+    , domainEq
     , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
     , readBinRel
@@ -169,6 +170,15 @@ changeRepr rep = go
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
+
+
+domainEq :: ExpressionLike x => Domain r x -> Domain r x -> Bool
+domainEq DomainBool DomainBool = True
+domainEq (DomainInt a) (DomainInt b) = fromMaybe False $ do
+    as <- rangesInts a
+    bs <- rangesInts b
+    return (as == bs)
+domainEq _ _ = False
 
 
 data Tree a = Tree { rootLabel :: a, subForest :: [Tree a] }
