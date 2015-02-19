@@ -1,0 +1,21 @@
+language ESSENCE' 1.0
+
+letting m be [1;int(1)]        $ so, a matrix of ints
+letting n be [true;int(1)]     $ so, a matrix of bools
+
+find x,y,z : bool
+
+such that x = (1 = m[0])
+$ here m[0] is undefined
+$ which makes 1=m[0] false (not undefined, undefined bool == false)
+$ which makes x = false
+
+such that y = (true = n[0])
+$ here n[0] is undefined, hence false
+$ true = false is false
+$ y = false
+
+such that z = (false = n[0])
+$ here n[0] is undefined, hence false
+$ false = false is true
+$ z = true

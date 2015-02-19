@@ -1,0 +1,12 @@
+language ESSENCE' 1.0
+
+letting m be [1; int(1..1)]
+letting n be [true; int(1..1)]
+find x: bool
+find y: bool
+find z: bool
+such that
+    x = (1 = m[0]),
+    y = (true = n[0]),
+    z = (false = n[0])
+
