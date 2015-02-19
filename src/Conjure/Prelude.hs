@@ -151,6 +151,7 @@ import Data.Generics.Uniplate.Data as X
     , descendBi, descendBiM
     , universe, universeBi
     , children
+    , uniplate
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 

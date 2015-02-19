@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Rules.Horizontal.Function where
 
@@ -362,6 +363,87 @@ rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
 --   2.2. if the return type is not "right", i.e. it is a bool or an int, i.e. sth we cannot quantify over,
 --        the vertical rule is harder.
 
+rule_Image_Bool :: Rule
+rule_Image_Bool = "function-image-bool" `namedRule` theRule where
+    theRule p = do
+        let
+            onChildren
+                :: ( MonadFail m
+                   , MonadState (Maybe (Expression, Expression)) m
+                   )
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                (func, arg) <- match opFunctionImage ch
+                TypeFunction _ TypeBool <- typeOf func
+                seenBefore <- gets id
+                case seenBefore of
+                    Nothing -> do
+                        modify $ const $ Just (func, arg)
+                        return id
+                    Just{}  ->
+                        return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Bool") return mFunc
+        return
+            ( "Function image, bool."
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    make opOr $ Comprehension (mkP i)
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+            )
+
+
+rule_Image_Int :: Rule
+rule_Image_Int = "function-image-int" `namedRule` theRule where
+    theRule p = do
+        let
+            onChildren
+                :: ( MonadFail m
+                   , MonadState (Maybe (Expression, Expression)) m
+                   )
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                (func, arg) <- match opFunctionImage ch
+                TypeFunction _ TypeInt <- typeOf func
+                seenBefore <- gets id
+                case seenBefore of
+                    Nothing -> do
+                        modify $ const $ Just (func, arg)
+                        return id
+                    Just{}  ->
+                        return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Int") return mFunc
+        return
+            ( "Function image, int."
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    val = make opSum $ Comprehension (mkP i)
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                    isDefined = [essence| &arg in defined(&func) |]
+
+                in
+                    WithLocals val [SuchThat [isDefined]]
+            )
 
 
 rule_Comprehension_Image :: Rule

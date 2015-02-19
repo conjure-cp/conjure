@@ -742,6 +742,8 @@ horizontalRules =
     , Horizontal.MSet.rule_MaxMin
 
     , Horizontal.Function.rule_Comprehension_Literal
+    , Horizontal.Function.rule_Image_Bool
+    , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_ComprehensionParts_Image
     , Horizontal.Function.rule_Image_Literal_Bool
