@@ -291,6 +291,27 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
                  in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
             )
 
+
+rule_Matrix_Neq :: Rule
+rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y)                <- match opNeq p
+        TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeMatrix{}         <- typeOf y
+        index <- case (domainOf x, domainOf y) of
+            (Just (DomainMatrix index _), _) -> return index
+            (_, Just (DomainMatrix index _)) -> return index
+            (Just _, _) -> na "rule_Matrix_Neq"
+            (_, Just _) -> na "rule_Matrix_Neq"
+            _ -> na "Neq constraint between two matrices, but domainOf doesn't work on either."
+        return
+            ( "Horizontal rule for matrix !="
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  [essence| exists &iPat : &index . &x[&i] != &y[&i] |]
+            )
+
+
 rule_MatrixLit_Eq :: Rule
 rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
     theRule p = do
