@@ -205,6 +205,7 @@ parseDomainWithRepr
         pDomainAtom = msum $ map try
             [ pBool, pInt, pEnum, pReference
             , pMatrix, pTupleWithout, pTupleWith
+            , pRecord
             , pSet, pMSet, pFunction, pFunction'
             , pRelation
             , pPartition
@@ -253,6 +254,15 @@ parseDomainWithRepr
         pTupleWithout = do
             xs <- parens $ countSepAtLeast 2 parseDomainWithRepr comma
             return $ DomainTuple xs
+
+        pRecord = do
+            lexeme L_record
+            let one = do n <- parseName
+                         lexeme L_Colon
+                         d <- parseDomainWithRepr
+                         return (n,d)
+            xs <- braces $ one `sepBy` comma
+            return $ DomainRecord xs
 
         pSet = do
             lexeme L_set
@@ -652,6 +662,7 @@ parseLiteral = msum ( map try
     , AbstractLiteral <$> pMatrix'
     , AbstractLiteral <$> pTupleWith
     , AbstractLiteral <$> pTupleWithout
+    , AbstractLiteral <$> pRecord
     , AbstractLiteral <$> pSet
     , AbstractLiteral <$> pMSet
     , AbstractLiteral <$> pFunction
@@ -686,6 +697,15 @@ parseLiteral = msum ( map try
         pTupleWithout = do
             xs <- parens $ countSepAtLeast 2 parseExpr comma
             return (AbsLitTuple xs)
+
+        pRecord = do
+            lexeme L_record
+            let one = do n <- parseName
+                         lexeme L_Eq
+                         x <- parseExpr
+                         return (n,x)
+            xs <- braces $ one `sepBy` comma
+            return $ AbsLitRecord xs
 
         pSet = do
             xs <- braces (sepBy parseExpr comma)

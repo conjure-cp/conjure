@@ -5,6 +5,7 @@ module Conjure.Language.AbstractLiteral where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.Name
 import Conjure.Language.Domain
 import Conjure.Language.Type
 
@@ -14,6 +15,7 @@ import Conjure.Language.Pretty
 
 data AbstractLiteral x
     = AbsLitTuple [x]
+    | AbsLitRecord [(Name, x)]
     | AbsLitMatrix (Domain () x) [x]
     | AbsLitSet [x]
     | AbsLitMSet [x]
@@ -29,6 +31,8 @@ instance FromJSON  x => FromJSON  (AbstractLiteral x) where parseJSON = genericP
 
 instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
+    pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <+> pretty x
+                                                                    | (n,x) <- xs ]
     pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
@@ -40,6 +44,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
     typeOf   (AbsLitTuple        []) = return (TypeTuple (replicate 100 TypeAny))
     typeOf   (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
+
+    typeOf   (AbsLitRecord       xs) = TypeRecord   <$> sequence [ do t <- typeOf x ; return (n,t)
+                                                                 | (n,x) <- xs ]
 
     typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
     typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) <$> mapM typeOf inn)
@@ -66,6 +73,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
 normaliseAbsLit :: Ord c => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
 normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple                           $ map norm xs
+normaliseAbsLit norm (AbsLitRecord    xs ) = AbsLitRecord                          $ map (second norm) xs
 normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm d) $ map norm xs
 normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet                   $ sortNub $ map norm xs
 normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet                  $ sort    $ map norm xs

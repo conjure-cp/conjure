@@ -389,6 +389,7 @@ instance TypeOf Expression where
                         GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
+            RecordField _ ty    -> return ty
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf p@(Comprehension x gensOrConds) = do
         forM_ gensOrConds $ \ gof -> case gof of
@@ -413,10 +414,13 @@ instance CanBeAnAlias Expression where
 instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
-    projectOp x = na ("Not an operator:" <++> pretty (show x))
+    projectOp x = fail ("Not an operator:" <++> pretty (show x))
 
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
+    nameOut (Reference nm _) = return nm
+    nameOut (Constant (ConstantRecordField nm _)) = return nm
+    nameOut p = fail ("This expression isn't a 'name':" <+> pretty p)
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
@@ -535,6 +539,7 @@ data ReferenceTo
     | InComprehension Generator
     | DeclNoRepr      FindOrGiven Name (Domain () Expression)
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
+    | RecordField     Name Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
@@ -547,6 +552,7 @@ instance Pretty ReferenceTo where
     pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
     pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
+    pretty (RecordField     nm ty) = "RecordField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
 
 
 ------------------------------------------------------------------------------------------------------------------------

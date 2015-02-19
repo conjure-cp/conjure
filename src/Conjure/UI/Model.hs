@@ -45,6 +45,8 @@ import Conjure.Rules.Definition
 
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
 
+import qualified Conjure.Rules.Vertical.Record as Vertical.Record
+
 import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
 
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -643,6 +645,12 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index
 
+    , Vertical.Record.rule_Record_Eq
+    , Vertical.Record.rule_Record_Neq
+    , Vertical.Record.rule_Record_Leq
+    , Vertical.Record.rule_Record_Lt
+    , Vertical.Record.rule_Record_Index
+
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed             -- this
     , Vertical.Matrix.rule_ComprehensionParts_LiteralIndexed        -- and this
@@ -807,6 +815,7 @@ otherRules =
         , rule_Bool_DontCare
         , rule_Int_DontCare
         , rule_Tuple_DontCare
+        , rule_Record_DontCare
         , rule_Matrix_DontCare
         , rule_Abstract_DontCare
 
@@ -1256,6 +1265,17 @@ rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
         TypeTuple{} <- typeOf x
         xs          <- downX1 x
         return ( "dontCare handling for tuple"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
+rule_Record_DontCare :: Rule
+rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
+    theRule p = do
+        x            <- match opDontCare p
+        TypeRecord{} <- typeOf x
+        xs           <- downX1 x
+        return ( "dontCare handling for record"
                , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 

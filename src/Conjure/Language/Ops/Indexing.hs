@@ -3,6 +3,7 @@
 module Conjure.Language.Ops.Indexing where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Ops.Common
 
 
@@ -14,7 +15,7 @@ instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x) where
+instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (OpIndexing x) where
     typeOf p@(OpIndexing m i) = do
         tyM <- typeOf m
         -- tyI <- typeOf i
@@ -22,7 +23,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
         case tyM of
             TypeMatrix tyIndex inn
                 | typesUnify [tyIndex, tyI] -> return inn
-                | otherwise -> fail $ "Indexing with inappropriate type:" <+> vcat
+                | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
                     [ "The expression:"  <+> pretty p
                     , "Indexing:"        <+> pretty m
                     , "Expected type of index:" <+> pretty tyIndex
@@ -32,6 +33,15 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x)
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
                 return (at inns (iInt-1))
+            TypeRecord inns  -> do
+                nm <- nameOut i
+                case lookup nm inns of
+                    Nothing -> fail $ "Record indexing with non-member field:" <++> vcat
+                        [ "The expression:" <+> pretty p
+                        , "Indexing:"       <+> pretty m
+                        , "With type:"      <+> pretty tyM
+                        ]
+                    Just ty -> return ty
             _ -> fail $ "Indexing something other than a matrix or a tuple:" <++> vcat
                     [ "The expression:" <+> pretty p
                     , "Indexing:"       <+> pretty m
@@ -58,6 +68,13 @@ instance EvaluateOp OpIndexing where
                     , "Matrix value:" <+> pretty m
                     ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantRecordField name _)) =
+        case lookup name vals of
+            Nothing -> bug $ vcat
+                    [ "Record doesn't have a member with this name:" <+> pretty name
+                    , "Record:" <+> pretty rec
+                    ]
+            Just val -> return val
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 instance SimplifyOp OpIndexing where

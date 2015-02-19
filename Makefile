@@ -26,6 +26,7 @@ ghci:
 	    -fwarn-unused-do-bind                      \
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
+	    -Werror                                    \
 	    `find src -name *.hs | grep -v Main`
 
 clean:

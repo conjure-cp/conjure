@@ -1,3 +1,5 @@
+{-# LANGUAGE FlexibleContexts #-}
+
 module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure
@@ -6,6 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
+import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 
 
@@ -18,7 +21,9 @@ validateSolution
     -> Model      -- essence solution
     -> m ()
 validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $
-    forM_ (mStatements essenceModel) $ \ st -> case st of
+  forM_ (mStatements essenceModel) $ \ st -> do
+    mapM_ introduceRecordFields (universeBi st :: [Domain () Expression])
+    case st of
         Declaration (FindOrGiven Given nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
@@ -122,3 +127,15 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                          , nm `elem` (universeBi x :: [Name])
                                                          ]
                                                      ]
+
+
+introduceRecordFields
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => Domain r x -> m ()
+introduceRecordFields (DomainRecord inners) =
+    forM_ inners $ \ (n, d) -> do
+        t <- typeOf d
+        modify ((n, Constant (ConstantRecordField n t)) :)
+introduceRecordFields _ = return ()

@@ -1,0 +1,13 @@
+language Essence 1.4
+
+letting R be domain record { a : bool, b : int(0..9) }
+
+find x : R
+such that x[a] = true
+such that x[b] = 3
+
+find y : R
+such that y = record { a = false, b = 4 }
+
+find z : R
+such that y = z

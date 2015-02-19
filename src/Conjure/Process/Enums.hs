@@ -195,6 +195,11 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                     [ helper d c
                     | (d,c) <- zip ds cs ]
 
+            (DomainRecord ds, ConstantAbstract (AbsLitRecord cs)) ->
+                ConstantAbstract $ AbsLitRecord
+                    [ (n, helper d c)
+                    | ((n,d),(_,c)) <- zip ds cs ]
+
             (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
                 ConstantAbstract $ AbsLitMatrix index $ map (helper inner) vals
 

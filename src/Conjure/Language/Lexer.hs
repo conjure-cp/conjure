@@ -57,6 +57,9 @@ data Lexeme
     -- type tuple
     | L_tuple
 
+    -- type record
+    | L_record
+
     -- type: matrix
     | L_matrix
     | L_indexed
@@ -285,6 +288,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_type, "type" )
     , ( L_enum, "enum" )
     , ( L_tuple, "tuple" )
+    , ( L_record, "record" )
     , ( L_matrix, "matrix" )
     , ( L_indexed, "indexed" )
     , ( L_by, "by" )
