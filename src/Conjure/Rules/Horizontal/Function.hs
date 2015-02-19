@@ -23,8 +23,10 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match functionLiteral expr
-        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+        (TypeFunction fr to, elems) <- match functionLiteral expr
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt (TypeTuple [fr,to]))
+                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]
@@ -44,9 +46,8 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
 rule_Image_Literal_Bool :: Rule
 rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
     theRule p = do
-        (func, arg)             <- match opFunctionImage p
-        TypeFunction _ TypeBool <- typeOf func
-        elems                   <- match functionLiteral func
+        (func, arg)                      <- match opFunctionImage p
+        (TypeFunction _ TypeBool, elems) <- match functionLiteral func
         -- let argIsUndef = make opNot $ make opOr $ fromList
         --         [ [essence| &a = &arg |]
         --         | (a,_) <- elems
@@ -70,9 +71,8 @@ rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule wher
 rule_Image_Literal_Int :: Rule
 rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
     theRule p = do
-        (func, arg)             <- match opFunctionImage p
-        TypeFunction _ TypeInt  <- typeOf func
-        elems                   <- match functionLiteral func
+        (func, arg)                     <- match opFunctionImage p
+        (TypeFunction _ TypeInt, elems) <- match functionLiteral func
         return
             ( "Image of function literal"
             , const $

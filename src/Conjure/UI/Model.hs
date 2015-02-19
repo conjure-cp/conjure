@@ -1459,10 +1459,9 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
 rule_QuantifierShift :: Rule
 rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner  )            <- match opQuantifier p
-        (matrix, indexer)            <- match opMatrixIndexing inner
-        (index, elems@(firstElem:_)) <- match matrixLiteral matrix
-        ty <- typeOf firstElem
+        (mkQuan, inner  )               <- match opQuantifier p
+        (matrix, indexer)               <- match opMatrixIndexing inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
             TypeMatrix{} -> return ()
             TypeList{} -> return ()
@@ -1473,6 +1472,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , const $ make opMatrixIndexing
                         (make matrixLiteral
+                            TypeAny
                             index
                             (map mkQuan elems))
                         indexer

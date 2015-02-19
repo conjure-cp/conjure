@@ -23,11 +23,12 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
         (_gofBefore@[], (pat, p), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opParts expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match partitionLiteral p
+        (TypePartition _, elems) <- match partitionLiteral p
         let f = lambdaToFunction pat body
         return
             ( "Comprehension on partition literals"
-            , const $ AbstractLiteral $ AbsLitMatrix
+            , const $ make matrixLiteral
+                        (TypeMatrix TypeInt TypeBool)
                         (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f lit
                         | e <- elems

@@ -973,27 +973,38 @@ constantInt _ =
 matrixLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( Domain () Expression -> [Expression] -> Expression
-       , Expression -> m (Domain () Expression, [Expression])
+    -> ( Type -> Domain () Expression -> [Expression] -> Expression
+       , Expression -> m (Type, Domain () Expression, [Expression])
        )
 matrixLiteral _ =
-    ( \ index elems -> AbstractLiteral $ AbsLitMatrix index elems
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitMatrix index xs)) -> return (fmap Constant index, map Constant xs)
-        AbstractLiteral (AbsLitMatrix index xs) -> return (index, xs)
-        _ -> na ("Lenses.matrixLiteral:" <+> pretty p)
+    ( \ ty index elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitMatrix index elems)) ty
+            else        AbstractLiteral (AbsLitMatrix index elems)
+    , \ p -> do
+        ty <- typeOf p
+        case p of
+            Constant (ConstantAbstract (AbsLitMatrix index xs)) -> return (ty, fmap Constant index, map Constant xs)
+            AbstractLiteral (AbsLitMatrix index xs) -> return (ty, index, xs)
+            _ -> na ("Lenses.matrixLiteral:" <+> pretty p)
     )
 
 
 setLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [Expression] -> Expression
-       , Expression -> m [Expression]
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
        )
 setLiteral _ =
-    ( AbstractLiteral . AbsLitSet
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitSet elems)) ty
+            else        AbstractLiteral (AbsLitSet elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
@@ -1006,12 +1017,18 @@ setLiteral _ =
 msetLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [Expression] -> Expression
-       , Expression -> m [Expression]
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
        )
 msetLiteral _ =
-    ( AbstractLiteral . AbsLitMSet
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitMSet elems)) ty
+            else        AbstractLiteral (AbsLitMSet elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitMSet xs))) = return (map Constant xs)
@@ -1024,12 +1041,18 @@ msetLiteral _ =
 functionLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [(Expression,Expression)] -> Expression
-       , Expression -> m [(Expression,Expression)]
+    -> ( Type -> [(Expression,Expression)] -> Expression
+       , Expression -> m (Type, [(Expression,Expression)])
        )
 functionLiteral _ =
-    ( AbstractLiteral . AbsLitFunction
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitFunction elems)) ty
+            else        AbstractLiteral (AbsLitFunction elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitFunction xs))) = return [ (Constant a, Constant b) | (a,b) <- xs ]
@@ -1042,12 +1065,18 @@ functionLiteral _ =
 relationLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [[Expression]] -> Expression
-       , Expression -> m [[Expression]]
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
        )
 relationLiteral _ =
-    ( AbstractLiteral . AbsLitRelation
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitRelation elems)) ty
+            else        AbstractLiteral (AbsLitRelation elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitRelation xs))) = return (map (map Constant) xs)
@@ -1060,12 +1089,18 @@ relationLiteral _ =
 partitionLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [[Expression]] -> Expression
-       , Expression -> m [[Expression]]
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
        )
 partitionLiteral _ =
-    ( AbstractLiteral . AbsLitPartition
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPartition elems)) ty
+            else        AbstractLiteral (AbsLitPartition elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitPartition xs))) = return (map (map Constant) xs)

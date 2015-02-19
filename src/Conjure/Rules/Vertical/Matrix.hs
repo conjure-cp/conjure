@@ -24,7 +24,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        (index, _elems) <- match matrixLiteral expr
+        (_, index, _elems) <- match matrixLiteral expr
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
@@ -59,7 +59,7 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
             _ -> na "rule_Comprehension_LiteralIndexed"
         (mkM, expr2)      <- match opModifier expr
         (matrix, indices) <- match opMatrixIndexing expr2
-        (index , elems  ) <- match matrixLiteral matrix
+        (_, index, elems) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
@@ -234,9 +234,9 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
 rule_MatrixLit_Eq :: Rule
 rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)       <- match opEq p
-        (_, xElems) <- match matrixLiteral x
-        (_, yElems) <- match matrixLiteral y
+        (x,y)          <- match opEq p
+        (_, _, xElems) <- match matrixLiteral x
+        (_, _, yElems) <- match matrixLiteral y
         return
             ( "Horizontal rule for matrix literal equality"
             , const $
@@ -249,9 +249,9 @@ rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
 rule_MatrixLit_Neq :: Rule
 rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
     theRule p = do
-        (x,y)       <- match opNeq p
-        (_, xElems) <- match matrixLiteral x
-        (_, yElems) <- match matrixLiteral y
+        (x,y)          <- match opNeq p
+        (_, _, xElems) <- match matrixLiteral x
+        (_, _, yElems) <- match matrixLiteral y
         return
             ( "Horizontal rule for matrix literal equality"
             , const $ 
@@ -368,10 +368,10 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)         <- match opIndexing p
-        (DomainInt ranges, elems) <- match matrixLiteral matrix
-        indexInts                 <- rangesInts ranges
-        indexerInt                <- intOut indexer
+        (matrix, indexer)            <- match opIndexing p
+        (_, DomainInt ranges, elems) <- match matrixLiteral matrix
+        indexInts                    <- rangesInts ranges
+        indexerInt                   <- intOut indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of
@@ -387,8 +387,8 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
 rule_IndexingIdentical :: Rule
 rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)                    <- match opIndexing p
-        (indexDomain, (firstElem:restElems)) <- match matrixLiteral matrix
+        (matrix, indexer)                       <- match opIndexing p
+        (_, indexDomain, (firstElem:restElems)) <- match matrixLiteral matrix
         indexerDomain <- domainOf indexer
         if indexDomain == forgetRepr indexerDomain && all (firstElem==) restElems
             then return
