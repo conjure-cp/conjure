@@ -917,6 +917,26 @@ opQuantifier _ =
     )
 
 
+opModifier
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x, x) -> x
+       , x -> m (x -> x, x)
+       )
+opModifier _ =
+    ( \ (mk, x) -> mk x
+    , \ p -> case projectOp p of
+        Just (MkOpToSet      (OpToSet      x)) -> return (injectOp . MkOpToSet      . OpToSet      , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (injectOp . MkOpToMSet     . OpToMSet     , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (injectOp . MkOpToRelation . OpToRelation , x)
+        Just (MkOpParts      (OpParts      x)) -> return (injectOp . MkOpParts      . OpParts      , x)
+        _                                      -> return (id                                       , p)
+    )
+
+
 opAllDiff
     :: ( OperatorContainer x
        , Pretty x

@@ -50,41 +50,14 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
 --           , [ i | i <- b ]
 --           , [ i | i <- c ]
 --           ][j]
+
 rule_Comprehension_LiteralIndexed :: Rule
 rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
-        (matrix, indices) <- match opMatrixIndexing expr
-        (index , elems  ) <- match matrixLiteral matrix
-        let upd val old = lambdaToFunction pat old val
-        return
-            ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    comprehensions =
-                        [ Comprehension (upd i body)
-                             $  gofBefore
-                             ++ [Generator (GenInExpr iPat el)]
-                             ++ transformBi (upd i) gofAfter
-                        | el <- elems
-                        ]
-                    core = AbstractLiteral $ AbsLitMatrix index comprehensions
-                in
-                    make opMatrixIndexing core indices
-            )
-    theRule _ = na "rule_Comprehension_LiteralIndexed"
-
-
-rule_ComprehensionParts_LiteralIndexed :: Rule
-rule_ComprehensionParts_LiteralIndexed = "matrix-comprehensionParts-literal-indexed" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_ComprehensionParts_LiteralIndexed"
-        expr2             <- match opParts expr
+        (mkM, expr2)      <- match opModifier expr
         (matrix, indices) <- match opMatrixIndexing expr2
         (index , elems  ) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
@@ -96,7 +69,7 @@ rule_ComprehensionParts_LiteralIndexed = "matrix-comprehensionParts-literal-inde
                     comprehensions =
                         [ Comprehension (upd i body)
                              $  gofBefore
-                             ++ [Generator (GenInExpr iPat (make opParts el))]
+                             ++ [Generator (GenInExpr iPat (mkM el))]
                              ++ transformBi (upd i) gofAfter
                         | el <- elems
                         ]
@@ -104,61 +77,7 @@ rule_ComprehensionParts_LiteralIndexed = "matrix-comprehensionParts-literal-inde
                 in
                     make opMatrixIndexing core indices
             )
-    theRule _ = na "rule_ComprehensionParts_LiteralIndexed"
-
-
-rule_Comprehension_Literal_ContainsSet :: Rule
-rule_Comprehension_Literal_ContainsSet = "matrix-comprehension-literal-containsSet" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_Literal_ContainsSet"
-        (matrix, indexer) <- match opIndexing expr
-        (_     , elems')  <- match matrixLiteral matrix
-        elems             <- mapM (match setLiteral) elems'
-        let insideOut = make setLiteral
-                [ make opIndexing (make matrixLiteral newIndex inMatrix) indexer
-                | inMatrix <- transpose elems
-                , let newIndex = DomainInt [RangeBounded 1 (fromInt $ length inMatrix)]
-                ]
-        let upd val old = lambdaToFunction pat old val
-        return
-            ( "Vertical rule for matrix-comprehension"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
-                         $  gofBefore
-                         ++ [Generator (GenInExpr iPat insideOut)]
-                         ++ transformBi (upd i) gofAfter
-            )
-    theRule _ = na "rule_Comprehension_Literal_ContainsSet"
-
-
-rule_Comprehension_Literal_ContainsMSet :: Rule
-rule_Comprehension_Literal_ContainsMSet = "matrix-comprehension-literal-containsMSet" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_Literal_ContainsMSet"
-        (matrix, indexer) <- match opIndexing expr
-        (_     , elems')  <- match matrixLiteral matrix
-        elems             <- mapM (match msetLiteral) elems'
-        let insideOut = make msetLiteral
-                [ make opIndexing (make matrixLiteral newIndex inMatrix) indexer
-                | inMatrix <- transpose elems
-                , let newIndex = DomainInt [RangeBounded 1 (fromInt $ length inMatrix)]
-                ]
-        let upd val old = lambdaToFunction pat old val
-        return
-            ( "Vertical rule for matrix-comprehension"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
-                         $  gofBefore
-                         ++ [Generator (GenInExpr iPat insideOut)]
-                         ++ transformBi (upd i) gofAfter
-            )
-    theRule _ = na "rule_Comprehension_Literal_ContainsMSet"
+    theRule _ = na "rule_Comprehension_LiteralIndexed"
 
 
 rule_Comprehension_ToSet :: Rule
