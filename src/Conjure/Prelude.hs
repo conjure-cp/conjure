@@ -99,7 +99,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words
-                              , and, or, zipWith, concatMap, all, lines, notElem, foldr
+                              , zipWith, concatMap, all, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, foldr1, foldl, any
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
@@ -111,7 +111,9 @@ import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, ma
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
-import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum )
+import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
+                              , and, or
+                              )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )

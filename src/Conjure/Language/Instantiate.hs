@@ -118,6 +118,7 @@ instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap (stripTyped . no
     where
         -- evaluators usually do not care about types of empty collections
         -- TODO: do this with view patterns instead
+        stripTyped :: Constant -> Constant
         stripTyped (TypedConstant c _) = c
         stripTyped c = c
 

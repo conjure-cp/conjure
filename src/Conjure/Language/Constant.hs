@@ -178,7 +178,7 @@ validateConstantForDomain
     d@(DomainMatrix dIndex dInner) = do
         nested c d $
             mapM_ (`validateConstantForDomain` dInner) vals
-        unless (cIndex `domainEq` dIndex) $ fail $ vcat
+        unless (cIndex == dIndex) $ fail $ vcat
             [ "The indices do not match between the value and the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d

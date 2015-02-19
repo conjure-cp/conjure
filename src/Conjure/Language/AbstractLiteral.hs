@@ -8,6 +8,7 @@ import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.Domain
 import Conjure.Language.Type
+import Conjure.Language.AdHoc
 
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
@@ -71,7 +72,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
-normaliseAbsLit :: Ord c => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
+normaliseAbsLit :: (Ord c, ExpressionLike c) => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
 normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple                           $ map norm xs
 normaliseAbsLit norm (AbsLitRecord    xs ) = AbsLitRecord                          $ map (second norm) xs
 normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm d) $ map norm xs

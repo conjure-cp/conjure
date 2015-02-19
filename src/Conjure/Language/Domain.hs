@@ -17,7 +17,6 @@ module Conjure.Language.Domain
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
-    , domainEq
     , mkDomainBool, mkDomainInt, mkDomainIntB
     , typeOfDomain
     , readBinRel
@@ -170,15 +169,6 @@ changeRepr rep = go
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
-
-
-domainEq :: ExpressionLike x => Domain r x -> Domain r x -> Bool
-domainEq DomainBool DomainBool = True
-domainEq (DomainInt a) (DomainInt b) = fromMaybe False $ do
-    as <- rangesInts a
-    bs <- rangesInts b
-    return (as == bs)
-domainEq _ _ = False
 
 
 data Tree a = Tree { rootLabel :: a, subForest :: [Tree a] }
@@ -1045,6 +1035,16 @@ rangesInts = liftM (sortNub . concat) . mapM rangeInts
                                           return [x' .. y']
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
+expandRanges :: ExpressionLike c => [Range c] -> [Range c]
+expandRanges r =
+    case rangesInts r of
+        Nothing -> r
+        Just [] -> []
+        Just is ->
+            if [ minimum is .. maximum is ] == is
+                then [RangeBounded (fromInt (minimum is)) (fromInt (maximum is))]
+                else map (RangeSingle . fromInt) is
+
 
 data HasRepresentation = NoRepresentation | HasRepresentation Name
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -1139,9 +1139,9 @@ instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
     pretty (HasRepresentation r) = pretty r
 
-normaliseDomain :: Ord c => (c -> c) -> Domain r c -> Domain r c
+normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool
-normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) rs
+normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) (expandRanges rs)
 normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
 normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
 normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)
