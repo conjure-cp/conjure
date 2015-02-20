@@ -17,6 +17,7 @@ import Conjure.Language.Pretty
 data AbstractLiteral x
     = AbsLitTuple [x]
     | AbsLitRecord [(Name, x)]
+    | AbsLitVariant (Maybe [(Name, Type)]) Name x            -- Nothing before name resolution
     | AbsLitMatrix (Domain () x) [x]
     | AbsLitSet [x]
     | AbsLitMSet [x]
@@ -34,6 +35,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitTuple xs) = (if length xs < 2 then "tuple" else prEmpty) <+> prettyList prParens "," xs
     pretty (AbsLitRecord xs) = "record" <+> prettyList prBraces "," [ pretty n <+> "=" <+> pretty x
                                                                     | (n,x) <- xs ]
+    pretty (AbsLitVariant _ n x) = "variant" <+> prBraces (pretty n <+> "=" <+> pretty x)
     pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <+> pretty index) in prettyList f "," xs
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
@@ -48,6 +50,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
     typeOf   (AbsLitRecord       xs) = TypeRecord   <$> sequence [ do t <- typeOf x ; return (n,t)
                                                                  | (n,x) <- xs ]
+
+    typeOf   (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the type of variant literal."
+    typeOf   (AbsLitVariant (Just t) _ _) = return (TypeVariant t)
 
     typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
     typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) <$> mapM typeOf inn)
@@ -75,6 +80,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 normaliseAbsLit :: (Ord c, ExpressionLike c) => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
 normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple                           $ map norm xs
 normaliseAbsLit norm (AbsLitRecord    xs ) = AbsLitRecord                          $ map (second norm) xs
+normaliseAbsLit norm (AbsLitVariant t n x) = AbsLitVariant t n (norm x)
 normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm d) $ map norm xs
 normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet                   $ sortNub $ map norm xs
 normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet                  $ sort    $ map norm xs

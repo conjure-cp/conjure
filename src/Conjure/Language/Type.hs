@@ -25,6 +25,7 @@ data Type
     | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeRecord [(Name, Type)]
+    | TypeVariant [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -48,6 +49,8 @@ instance Pretty Type where
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
     pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index innerNested)

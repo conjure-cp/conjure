@@ -165,7 +165,9 @@ removeEnumsFromParam model param = do
 -- TODO: complete addEnumsAndUnnamedsBack
 
 addEnumsAndUnnamedsBack
-    :: (Show r, Show x)
+    :: ( Show r, Show x
+       , Pretty r, Pretty x
+       )
     => [Name]                           -- unnamed types
     -> [((Int, Name), Constant)]        -- a lookup table for enums
     -> Domain r x                       -- the domain we are working on
@@ -199,6 +201,13 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                 ConstantAbstract $ AbsLitRecord
                     [ (n, helper d c)
                     | ((n,d),(_,c)) <- zip ds cs ]
+
+            (DomainVariant ds, ConstantAbstract (AbsLitVariant t n c)) ->
+                case lookup n ds of
+                    Nothing -> bug $ "addEnumsAndUnnamedsBack Variant:" <++> vcat [ "domain  :" <+> pretty domain
+                                                                                  , "constant:" <+> pretty constant
+                                                                                  ]
+                    Just d  -> ConstantAbstract $ AbsLitVariant t n (helper d c)
 
             (DomainMatrix _ inner, ConstantAbstract (AbsLitMatrix index vals)) ->
                 ConstantAbstract $ AbsLitMatrix index $ map (helper inner) vals

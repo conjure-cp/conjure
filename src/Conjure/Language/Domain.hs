@@ -55,6 +55,7 @@ data Domain r x
     | DomainUnnamed Name x
     | DomainTuple [Domain r x]
     | DomainRecord [(Name, Domain r x)]
+    | DomainVariant [(Name, Domain r x)]
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
     | DomainMSet      r (MSetAttr x) (Domain r x)
@@ -107,6 +108,8 @@ typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
 typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOf d ; return (n, t)
                                                                      | (n,d) <- xs ]
+typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOf d ; return (n, t)
+                                                                     | (n,d) <- xs ]
 typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
 typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
 typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
@@ -155,6 +158,7 @@ changeRepr rep = go
         go (DomainUnnamed defn s) = DomainUnnamed defn s
         go (DomainTuple ds) = DomainTuple (map go ds)
         go (DomainRecord xs) = DomainRecord (map (second go) xs)
+        go (DomainVariant xs) = DomainVariant (map (second go) xs)
         go (DomainMatrix index inner) = DomainMatrix index (go inner)
         go (DomainSet _   attr d) =
             DomainSet rep attr (go d)
@@ -186,6 +190,7 @@ reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
 reprTree (DomainTuple  as ) = Tree Nothing (map reprTree as)
 reprTree (DomainRecord as ) = Tree Nothing (map (reprTree . snd) as)
+reprTree (DomainVariant as) = Tree Nothing (map (reprTree . snd) as)
 reprTree (DomainMatrix _ a) = Tree Nothing [reprTree a]
 reprTree (DomainSet       r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainMSet      r _ a  ) = Tree (Just r) [reprTree a]
@@ -204,7 +209,12 @@ applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr dom)
-applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) = DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) =
+    DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainRecord as ) (Tree Nothing asRepr) =
+    (DomainRecord  . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
+applyReprTree (DomainVariant as) (Tree Nothing asRepr) =
+    (DomainVariant . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
 applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
 applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
@@ -385,6 +395,7 @@ addAttributeToDomain d@DomainEnum{}      = const $ const $ return d
 addAttributeToDomain d@DomainUnnamed{}   = const $ const $ return d
 addAttributeToDomain d@DomainTuple{}     = const $ const $ return d
 addAttributeToDomain d@DomainRecord{}    = const $ const $ return d
+addAttributeToDomain d@DomainVariant{}   = const $ const $ return d
 addAttributeToDomain d@DomainMatrix{}    = const $ const $ return d
 addAttributeToDomain d@DomainOp{}        = const $ const $ return d
 addAttributeToDomain d@DomainReference{} = const $ const $ return d
@@ -1078,6 +1089,9 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
         <+> prettyList prParens "," inners
 
     pretty (DomainRecord xs) = "record" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+
+    pretty (DomainVariant xs) = "variant" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
 
     pretty (DomainMatrix index innerNested)
