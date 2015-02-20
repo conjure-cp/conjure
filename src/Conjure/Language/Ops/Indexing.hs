@@ -42,6 +42,15 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                         , "With type:"      <+> pretty tyM
                         ]
                     Just ty -> return ty
+            TypeVariant inns -> do
+                nm <- nameOut i
+                case lookup nm inns of
+                    Nothing -> fail $ "Variant indexing with non-member field:" <++> vcat
+                        [ "The expression:" <+> pretty p
+                        , "Indexing:"       <+> pretty m
+                        , "With type:"      <+> pretty tyM
+                        ]
+                    Just ty -> return ty
             _ -> fail $ "Indexing something other than a matrix or a tuple:" <++> vcat
                     [ "The expression:" <+> pretty p
                     , "Indexing:"       <+> pretty m
