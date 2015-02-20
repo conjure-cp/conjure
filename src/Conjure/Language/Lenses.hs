@@ -982,12 +982,16 @@ matrixLiteral _ =
             then Typed (AbstractLiteral (AbsLitMatrix index elems)) ty
             else        AbstractLiteral (AbsLitMatrix index elems)
     , \ p -> do
-        ty <- typeOf p
-        case p of
-            Constant (ConstantAbstract (AbsLitMatrix index xs)) -> return (ty, fmap Constant index, map Constant xs)
-            AbstractLiteral (AbsLitMatrix index xs) -> return (ty, index, xs)
-            _ -> na ("Lenses.matrixLiteral:" <+> pretty p)
+        ty          <- typeOf p
+        (index, xs) <- followAliases extract p
+        return (ty, index, xs)
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitMatrix index xs))) = return (fmap Constant index, map Constant xs)
+        extract (AbstractLiteral (AbsLitMatrix index xs)) = return (index, xs)
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.matrixLiteral:" <+> pretty p)
 
 
 setLiteral
