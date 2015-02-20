@@ -390,6 +390,7 @@ instance TypeOf Expression where
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
             RecordField _ ty    -> return ty
+            VariantField _ ty   -> return ty
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf p@(Comprehension x gensOrConds) = do
         forM_ gensOrConds $ \ gof -> case gof of
@@ -539,7 +540,8 @@ data ReferenceTo
     | InComprehension Generator
     | DeclNoRepr      FindOrGiven Name (Domain () Expression)
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
-    | RecordField     Name Type
+    | RecordField     Name Type         -- the type of the field with this name
+    | VariantField    Name Type         -- the type of the variant with this name
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
@@ -552,7 +554,8 @@ instance Pretty ReferenceTo where
     pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
     pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (RecordField     nm ty) = "RecordField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
 
 
 ------------------------------------------------------------------------------------------------------------------------

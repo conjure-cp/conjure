@@ -20,8 +20,9 @@ resolveNames model = flip evalStateT (freshNames model, []) $ do
     mapM_ check (universeBi statements)
     duplicateNames <- gets (snd                                 -- all names defined in the model
                             >>> filter (\ (_,d) -> case d of
-                                    RecordField{} -> False      -- filter out the RecordField's
-                                    _             -> True )
+                                    RecordField{}  -> False      -- filter out the RecordField's
+                                    VariantField{} -> False      --        and the VariantField's
+                                    _              -> True )
                             >>> map fst                         -- strip the ReferenceTo's
                             >>> histogram
                             >>> filter (\ (_,n) -> n > 1 )      -- keep those that are defined multiple times
@@ -177,6 +178,11 @@ resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOf d'
     modify (second ((n, RecordField n t) :))
+    return (n, d')
+resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
+    d' <- resolveD d
+    t  <- typeOf d'
+    modify (second ((n, VariantField n t) :))
     return (n, d')
 resolveD d = do
     d' <- descendM resolveD d

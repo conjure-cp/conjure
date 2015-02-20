@@ -53,6 +53,7 @@ onReference nm refTo =
         DeclNoRepr{}              -> fail ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
         RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
+        VariantField{}            -> fail ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
 onOp p@(MkOpIndexing (OpIndexing m i)) = do
