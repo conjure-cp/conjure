@@ -1,6 +1,5 @@
 language ESSENCE' 1.0
 
-letting m be [[1, 2, 3; int(1..3)], [4, 5, 6; int(1..3)]; int(1..2)]
 find x1: int(0..100)
 find x2: int(0..100)
 find y1: matrix indexed by [int(1..2)] of int(0..100)
@@ -8,14 +7,10 @@ find y2: matrix indexed by [int(1..2)] of int(0..100)
 find y3: matrix indexed by [int(1..2)] of int(0..100)
 find y4: matrix indexed by [int(1..2)] of int(0..100)
 such that
-    x1 = sum(m[1, ..]),
-    x2 = sum(m[2, ..]),
-    and([y1[q1] = [[sum(m[1, ..]), sum(m[2, ..]); int(1..2)], [sum(m[2, ..]), sum(m[1, ..]); int(1..2)], [13, 37; int(1..2)], [x1, x2; int(1..2)]; int(1..4)][1, q1]
-             | q1 : int(1..2)]),
-    and([y2[q2] = [[sum(m[1, ..]), sum(m[2, ..]); int(1..2)], [sum(m[2, ..]), sum(m[1, ..]); int(1..2)], [13, 37; int(1..2)], [x1, x2; int(1..2)]; int(1..4)][2, q2]
-             | q2 : int(1..2)]),
-    and([y3[q3] = [[sum(m[1, ..]), sum(m[2, ..]); int(1..2)], [sum(m[2, ..]), sum(m[1, ..]); int(1..2)], [13, 37; int(1..2)], [x1, x2; int(1..2)]; int(1..4)][3, q3]
-             | q3 : int(1..2)]),
-    and([y4[q4] = [[sum(m[1, ..]), sum(m[2, ..]); int(1..2)], [sum(m[2, ..]), sum(m[1, ..]); int(1..2)], [13, 37; int(1..2)], [x1, x2; int(1..2)]; int(1..4)][4, q4]
-             | q4 : int(1..2)])
+    x1 = 6,
+    x2 = 15,
+    and([y1[q1] = [6, 15; int(1..2)][q1] | q1 : int(1..2)]),
+    and([y2[q2] = [15, 6; int(1..2)][q2] | q2 : int(1..2)]),
+    and([y3[q3] = [13, 37; int(1..2)][q3] | q3 : int(1..2)]),
+    and([y4[q4] = [x1, x2; int(1..2)][q4] | q4 : int(1..2)])
 
