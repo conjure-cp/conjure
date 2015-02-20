@@ -10,6 +10,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
@@ -118,6 +119,8 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
             -> return p
         Just r  -> return (Reference nm (Just r))
 
+resolveX (AbstractLiteral lit) = AbstractLiteral <$> resolveAbsLit lit
+
 resolveX (Domain x) = Domain <$> resolveD x
 
 resolveX p@Comprehension{} = scope $ do
@@ -188,3 +191,24 @@ resolveD d = do
     d' <- descendM resolveD d
     mapM resolveX d'
 
+
+resolveAbsLit
+    :: ( MonadFail m
+       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       )
+    => AbstractLiteral Expression
+    -> m (AbstractLiteral Expression)
+resolveAbsLit p@(AbsLitVariant Nothing n x) = do
+    x'   <- resolveX x
+    mval <- gets snd
+    let
+        isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
+        isTheVariant _ = Nothing
+    case mapMaybe isTheVariant (map snd mval) of
+        [] -> userErr ("Not a member of a variant type:" <+> pretty p)
+        (dom:_) -> do
+            TypeVariant ty <- typeOf dom
+            return (AbsLitVariant (Just ty) n x')
+resolveAbsLit lit = do
+    lit' <- descendM resolveAbsLit lit
+    mapM resolveX lit'
