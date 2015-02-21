@@ -25,6 +25,9 @@ instance EvaluateOp OpIff where
     evaluateOp _ = na "evaluateOp{OpIff}"
 
 instance SimplifyOp OpIff where
+    simplifyOp _ (OpIff a b)
+        | fromBool True == a = return b
+        | fromBool True == b = return a
     simplifyOp _ _ = na "simplifyOp{OpIff}"
 
 instance Pretty x => Pretty (OpIff x) where

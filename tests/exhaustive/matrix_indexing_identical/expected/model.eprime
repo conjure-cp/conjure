@@ -4,6 +4,6 @@ find x: int(1..3)
 find b: bool
 find cs: matrix indexed by [int(1..3)] of bool
 such that
-    b = true,
-    and([cs[i] = true | i : int(1..3)])
+    b,
+    and([cs[i] | i : int(1..3)])
 

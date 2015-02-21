@@ -2,10 +2,5 @@ language ESSENCE' 1.0
 
 find var3_Function1DPartial_Flags: matrix indexed by [int(2, 2)] of bool
 find var3_Function1DPartial_Values: matrix indexed by [int(2, 2)] of int(-4..-2)
-such that
-    and([(var3_Function1DPartial_Values[-1] + -11) / -2 <= q_4_ExplicitVarSizeWithMarker_Marker /\ var3_Function1DPartial_Flags[-1] -> true
-             | q_4_ExplicitVarSizeWithMarker_Marker : int(0..2), q_4_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of bool,
-               2 <= q_4_ExplicitVarSizeWithMarker_Marker -> q_4_ExplicitVarSizeWithMarker_Values[1] < q_4_ExplicitVarSizeWithMarker_Values[2],
-               and([q1 > q_4_ExplicitVarSizeWithMarker_Marker -> q_4_ExplicitVarSizeWithMarker_Values[q1] = false | q1 : int(1..2)])]),
-    and([var3_Function1DPartial_Flags[q2] = false -> var3_Function1DPartial_Values[q2] = -4 | q2 : int(2, 2)])
+such that and([var3_Function1DPartial_Flags[q2] = false -> var3_Function1DPartial_Values[q2] = -4 | q2 : int(2, 2)])
 

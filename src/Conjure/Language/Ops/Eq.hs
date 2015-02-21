@@ -26,6 +26,9 @@ instance EvaluateOp OpEq where
     evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
 
 instance SimplifyOp OpEq where
+    simplifyOp _ (OpEq a b)
+        | fromBool True == a = return b
+        | fromBool True == b = return a
     simplifyOp _ _ = na "simplifyOp{OpEq}"
 
 instance Pretty x => Pretty (OpEq x) where
