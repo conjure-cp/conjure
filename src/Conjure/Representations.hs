@@ -16,7 +16,6 @@ import Conjure.Language.Type
 import Conjure.Language.Ops
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
-import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Combined
 
 
@@ -35,12 +34,10 @@ onConstant (ConstantAbstract (AbsLitRecord xs)) = return (map (Constant . snd) x
 onConstant (ConstantAbstract (AbsLitVariant (Just t) n x))
     | Just i <- findIndex (n==) (map fst t)
     , let iExpr = fromInt (i+1)
-    = do
-        withZeroes <- forM t $ \ (n',dom) -> fmap Constant $
-            if n == n'
-                then return x
-                else zeroVal dom
-        return (iExpr : withZeroes)
+    = return $ iExpr : [ if n == n'
+                            then Constant x
+                            else ExpressionMetaVar "zeroVal for variant"
+                       | (n',_) <- t ]
 onConstant (ConstantAbstract (AbsLitMatrix index xs)) = do
     yss <- mapM (downX1 . Constant) xs
     let indexX = fmap Constant index
@@ -50,15 +47,15 @@ onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
--- onAbstractLiteral (AbsLitVariant (Just t) n x)
---     | Just i <- findIndex (n==) (map fst t)
---     , let iExpr = fromInt (i+1)
---     = do
---         withZeroes <- forM t $ \ (n',dom) ->
---             if n == n'
---                 then return x
---                 else Constant <$> zeroVal dom
---         return (iExpr : withZeroes)
+-- onAbstractLiteral AbsLitVariant{} = fail "onAbstractLiteral, this should be handled differently."
+--                                             -- zeroVal doesn't work on `Domain r Expression`s
+onAbstractLiteral (AbsLitVariant (Just t) n x)
+    | Just i <- findIndex (n==) (map fst t)
+    , let iExpr = fromInt (i+1)
+    = return $ iExpr : [ if n == n'
+                            then x
+                            else ExpressionMetaVar "zeroVal for variant"
+                       | (n',_) <- t ]
 onAbstractLiteral (AbsLitMatrix index xs) = do
     yss <- mapM downX1 xs
     return [ AbstractLiteral (AbsLitMatrix index ys) | ys <- transpose yss ]

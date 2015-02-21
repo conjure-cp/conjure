@@ -114,14 +114,17 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
 -- | puts a constraint on the pair of tagged values
 --   NOTICE: you might want to check if the tags are same before calling this!
 onTagged
-    :: (a -> b -> Expression)           -- the constraint generator
-    -> Expression                       -- tag
-    -> [a]                              -- first bunch of options
-    -> [b]                              -- second bunch of options
-    -> Expression                       -- the constraint
+    :: (Expression -> Expression -> Expression)         -- the constraint generator
+    -> Expression                                       -- tag
+    -> [Expression]                                     -- first bunch of options
+    -> [Expression]                                     -- second bunch of options
+    -> Expression                                       -- the constraint
 onTagged f which xs ys = make opAnd $ fromList
-    [ [essence| &i = &which -> &cons |]                -- and the tagged values are eq
+    [ [essence| &i = &which -> &cons |]                 -- and the tagged values are eq
     | (i',x,y) <- zip3 [1..] xs ys
     , let i = fromInt i'
     , let cons = f x y
+    , let zero = ExpressionMetaVar "zeroVal for variant"
+    , x /= zero
+    , y /= zero
     ]
