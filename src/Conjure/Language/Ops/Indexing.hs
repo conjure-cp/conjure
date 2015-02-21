@@ -77,14 +77,14 @@ instance EvaluateOp OpIndexing where
                     , "Matrix value:" <+> pretty m
                     ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
-    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantRecordField name _)) =
+    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat
                     [ "Record doesn't have a member with this name:" <+> pretty name
                     , "Record:" <+> pretty rec
                     ]
             Just val -> return val
-    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantRecordField name _)) =
+    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name _)) =
         if name == name'
             then return x
             else bug $ vcat
