@@ -823,6 +823,7 @@ otherRules =
         , rule_Int_DontCare
         , rule_Tuple_DontCare
         , rule_Record_DontCare
+        , rule_Variant_DontCare
         , rule_Matrix_DontCare
         , rule_Abstract_DontCare
 
@@ -1286,6 +1287,17 @@ rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
         TypeRecord{} <- typeOf x
         xs           <- downX1 x
         return ( "dontCare handling for record"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
+rule_Variant_DontCare :: Rule
+rule_Variant_DontCare = "dontCare-variant" `namedRule` theRule where
+    theRule p = do
+        x             <- match opDontCare p
+        TypeVariant{} <- typeOf x
+        xs            <- downX1 x
+        return ( "dontCare handling for variant"
                , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
