@@ -30,7 +30,7 @@ variant = Representation chck downD structuralCons downC up
 
         downD :: TypeOf_DownD m
         downD (name, DomainVariant ds) = return $ Just
-            $ (mkName name "_which", defRepr $ mkDomainIntB 1 (fromInt (length ds)))
+            $ (mkName name "_tag", defRepr $ mkDomainIntB 1 (fromInt (length ds)))
             : [ (mkName name n, d)
               | (n,d) <- ds
               ]
@@ -70,7 +70,7 @@ variant = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, DomainVariant ds) = do
             let dsForgotten = [ (n, defRepr d) | (n,d) <- ds ]
-            case lookup (mkName name "_which") ctxt of
+            case lookup (mkName name "_tag") ctxt of
                 Just (ConstantInt i) ->
                     let iTag = at ds (i-1) |> fst
                         iName = mkName name iTag
@@ -83,13 +83,13 @@ variant = Representation chck downD structuralCons downC up
                                 ] ++
                                 ("Bindings in context:" : prettyContext ctxt)
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (mkName name "_which")
+                    [ "No value for:" <+> pretty (mkName name "_tag")
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty (DomainRecord ds)
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just val -> fail $ vcat $
-                    [ "Expecting an integer value for:" <+> pretty (mkName name "_which")
+                    [ "Expecting an integer value for:" <+> pretty (mkName name "_tag")
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty (DomainRecord ds)
                     , "But got:" <+> pretty val
