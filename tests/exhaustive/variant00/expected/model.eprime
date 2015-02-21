@@ -1,34 +1,47 @@
 language ESSENCE' 1.0
 
-find x__which: int(1..2)
+find x__tag: int(1..2)
 find x_a: bool
 find x_b: int(0, 4)
-find y1__which: int(1..2)
+find y1__tag: int(1..2)
 find y1_a: bool
 find y1_b: int(0, 4)
-find y2__which: int(1..2)
+find y2__tag: int(1..2)
 find y2_a: bool
 find y2_b: int(0, 4)
-find z__which: int(1..2)
+find z__tag: int(1..2)
 find z_a: bool
 find z_b: int(0, 4)
+find t1__tag: int(1..2)
+find t1_a: bool
+find t1_b: int(0, 4)
+find t2__tag: int(1..2)
+find t2_a: bool
+find t2_b: int(0, 4)
+find someInt: int(0)
 such that
-    (x_a /\ x__which = 1) = true,
-    y1__which = 1,
-    1 = y1__which -> y1_a = false,
-    2 = y1__which -> y1_b = 0,
-    y2__which = 2,
-    1 = y2__which -> y2_a = false,
-    2 = y2__which -> y2_b = 4,
-    x__which = z__which,
-    1 = x__which -> x_a = z_a,
-    2 = x__which -> x_b = z_b,
-    x__which != 1 -> x_a = false,
-    x__which != 2 -> x_b = 0,
-    y1__which != 1 -> y1_a = false,
-    y1__which != 2 -> y1_b = 0,
-    y2__which != 1 -> y2_a = false,
-    y2__which != 2 -> y2_b = 0,
-    z__which != 1 -> z_a = false,
-    z__which != 2 -> z_b = 0
+    (x_a /\ x__tag = 1) = true,
+    y1__tag = 1,
+    1 = y1__tag -> y1_a = false,
+    y2__tag = 2,
+    2 = y2__tag -> y2_b = 4,
+    x__tag = z__tag,
+    1 = x__tag -> x_a = z_a,
+    2 = x__tag -> x_b = z_b,
+    t1__tag = 2,
+    2 = t1__tag -> t1_b = someInt,
+    t2__tag = 2,
+    2 = t2__tag -> t2_b = t1_b /\ t1__tag = 2,
+    x__tag != 1 -> x_a = false,
+    x__tag != 2 -> x_b = 0,
+    y1__tag != 1 -> y1_a = false,
+    y1__tag != 2 -> y1_b = 0,
+    y2__tag != 1 -> y2_a = false,
+    y2__tag != 2 -> y2_b = 0,
+    z__tag != 1 -> z_a = false,
+    z__tag != 2 -> z_b = 0,
+    t1__tag != 1 -> t1_a = false,
+    t1__tag != 2 -> t1_b = 0,
+    t2__tag != 1 -> t2_a = false,
+    t2__tag != 2 -> t2_b = 0
 

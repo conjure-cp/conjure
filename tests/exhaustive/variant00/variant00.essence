@@ -11,3 +11,8 @@ such that y2 = variant { b = 4 }
 
 find z : V
 such that x = z
+
+find t1, t2 : V
+find someInt : int(0)
+such that t1 = variant { b = someInt }
+such that t2 = variant { b = t1[b] }
