@@ -1,0 +1,13 @@
+language Essence 1.4
+
+letting V be domain variant { a : bool, b : int(0,4) }
+
+find x : V
+such that x[a] = true
+
+find y1, y2 : V
+such that y1 = variant { a = false }
+such that y2 = variant { b = 4 }
+
+find z : V
+such that x = z
