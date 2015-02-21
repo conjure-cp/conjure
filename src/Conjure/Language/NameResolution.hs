@@ -10,7 +10,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
@@ -205,10 +204,8 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
         isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
         isTheVariant _ = Nothing
     case mapMaybe isTheVariant (map snd mval) of
-        [] -> userErr ("Not a member of a variant type:" <+> pretty p)
-        (dom:_) -> do
-            TypeVariant ty <- typeOf dom
-            return (AbsLitVariant (Just ty) n x')
+        (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
+        _ -> userErr ("Not a member of a variant type:" <+> pretty p)
 resolveAbsLit lit = do
     lit' <- descendM resolveAbsLit lit
     mapM resolveX lit'

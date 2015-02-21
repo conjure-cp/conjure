@@ -30,7 +30,7 @@ data Constant
     | ConstantEnum Name   {- name for the enum domain -}
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
-    | ConstantRecordField Name Type
+    | ConstantRecordField Name Type                             -- rename this to "ConstantField"
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
     | TypedConstant Constant Type
@@ -170,6 +170,14 @@ validateConstantForDomain
     d@(DomainRecord ds)
         | map fst cs == map fst ds
             = nested c d $ zipWithM_ validateConstantForDomain (map snd cs) (map snd ds)
+        | otherwise
+            = constantNotInDomain c d
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitVariant _ n c'))
+    d@(DomainVariant ds)
+        | Just d' <- lookup n ds
+            = nested c d $ validateConstantForDomain c' d'
         | otherwise
             = constantNotInDomain c d
 

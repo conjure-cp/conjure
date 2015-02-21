@@ -17,7 +17,7 @@ import Conjure.Language.Pretty
 data AbstractLiteral x
     = AbsLitTuple [x]
     | AbsLitRecord [(Name, x)]
-    | AbsLitVariant (Maybe [(Name, Type)]) Name x            -- Nothing before name resolution
+    | AbsLitVariant (Maybe [(Name, Domain () x)]) Name x            -- Nothing before name resolution
     | AbsLitMatrix (Domain () x) [x]
     | AbsLitSet [x]
     | AbsLitMSet [x]
@@ -52,7 +52,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
                                                                  | (n,x) <- xs ]
 
     typeOf   (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the type of variant literal."
-    typeOf   (AbsLitVariant (Just t) _ _) = return (TypeVariant t)
+    typeOf   (AbsLitVariant (Just t) _ _) = fmap TypeVariant $ forM t $ \ (n,d) -> do
+        dt <- typeOf d
+        return (n, dt)
 
     typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
     typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) <$> mapM typeOf inn)

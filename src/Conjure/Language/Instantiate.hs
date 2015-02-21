@@ -77,6 +77,7 @@ instantiateE (Comprehension body gensOrConds) = do
         constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantRecordField name ty
+instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantRecordField name ty
 
 instantiateE (Reference name _) = do
     ctxt <- gets id

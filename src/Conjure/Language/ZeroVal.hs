@@ -19,6 +19,8 @@ instance Pretty r => ZeroVal (Domain r Constant) where
     zeroVal (DomainInt []) = return $ ConstantInt 0
     zeroVal (DomainInt (r:_)) = zeroVal r
     zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
+    -- TODO: add DomainRecord
+    -- TODO: add DomainVariant
     zeroVal (DomainMatrix index inner) = do
         z  <- zeroVal inner
         is <- case index of

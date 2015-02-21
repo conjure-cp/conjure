@@ -44,9 +44,8 @@ import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 import Conjure.Rules.Definition
 
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
-
 import qualified Conjure.Rules.Vertical.Record as Vertical.Record
-
+import qualified Conjure.Rules.Vertical.Variant as Vertical.Variant
 import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
 
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -650,6 +649,12 @@ verticalRules =
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
     , Vertical.Record.rule_Record_Index
+
+    , Vertical.Variant.rule_Variant_Eq
+    , Vertical.Variant.rule_Variant_Neq
+    , Vertical.Variant.rule_Variant_Leq
+    , Vertical.Variant.rule_Variant_Lt
+    , Vertical.Variant.rule_Variant_Index
 
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
