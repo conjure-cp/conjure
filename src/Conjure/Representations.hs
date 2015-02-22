@@ -31,6 +31,13 @@ downX1 x = bug ("downX1:" <++> pretty (show x))
 onConstant :: MonadFail m => Constant -> m [Expression]
 onConstant (ConstantAbstract (AbsLitTuple xs)) = return (map Constant xs)
 onConstant (ConstantAbstract (AbsLitRecord xs)) = return (map (Constant . snd) xs)
+onConstant (ConstantAbstract (AbsLitVariant (Just t) n x))
+    | Just i <- findIndex (n==) (map fst t)
+    , let iExpr = fromInt (i+1)
+    = return $ iExpr : [ if n == n'
+                            then Constant x
+                            else ExpressionMetaVar "zeroVal for variant"
+                       | (n',_) <- t ]
 onConstant (ConstantAbstract (AbsLitMatrix index xs)) = do
     yss <- mapM (downX1 . Constant) xs
     let indexX = fmap Constant index
@@ -40,6 +47,15 @@ onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
+-- onAbstractLiteral AbsLitVariant{} = fail "onAbstractLiteral, this should be handled differently."
+--                                             -- zeroVal doesn't work on `Domain r Expression`s
+onAbstractLiteral (AbsLitVariant (Just t) n x)
+    | Just i <- findIndex (n==) (map fst t)
+    , let iExpr = fromInt (i+1)
+    = return $ iExpr : [ if n == n'
+                            then x
+                            else ExpressionMetaVar "zeroVal for variant"
+                       | (n',_) <- t ]
 onAbstractLiteral (AbsLitMatrix index xs) = do
     yss <- mapM downX1 xs
     return [ AbstractLiteral (AbsLitMatrix index ys) | ys <- transpose yss ]
@@ -53,6 +69,7 @@ onReference nm refTo =
         DeclNoRepr{}              -> fail ("downX1.onReference.DeclNoRepr:"      <++> pretty (show nm))
         DeclHasRepr forg _ domain -> downToX1 forg nm domain
         RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
+        VariantField{}            -> fail ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
 onOp :: MonadFail m => Ops Expression -> m [Expression]
 onOp p@(MkOpIndexing (OpIndexing m i)) = do

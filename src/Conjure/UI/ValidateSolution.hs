@@ -137,5 +137,9 @@ introduceRecordFields
 introduceRecordFields (DomainRecord inners) =
     forM_ inners $ \ (n, d) -> do
         t <- typeOf d
-        modify ((n, Constant (ConstantRecordField n t)) :)
+        modify ((n, Constant (ConstantField n t)) :)
+introduceRecordFields (DomainVariant inners) =
+    forM_ inners $ \ (n, d) -> do
+        t <- typeOf d
+        modify ((n, Constant (ConstantField n t)) :)
 introduceRecordFields _ = return ()

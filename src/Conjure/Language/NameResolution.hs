@@ -20,8 +20,9 @@ resolveNames model = flip evalStateT (freshNames model, []) $ do
     mapM_ check (universeBi statements)
     duplicateNames <- gets (snd                                 -- all names defined in the model
                             >>> filter (\ (_,d) -> case d of
-                                    RecordField{} -> False      -- filter out the RecordField's
-                                    _             -> True )
+                                    RecordField{}  -> False      -- filter out the RecordField's
+                                    VariantField{} -> False      --        and the VariantField's
+                                    _              -> True )
                             >>> map fst                         -- strip the ReferenceTo's
                             >>> histogram
                             >>> filter (\ (_,n) -> n > 1 )      -- keep those that are defined multiple times
@@ -117,6 +118,8 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
             -> return p
         Just r  -> return (Reference nm (Just r))
 
+resolveX (AbstractLiteral lit) = AbstractLiteral <$> resolveAbsLit lit
+
 resolveX (Domain x) = Domain <$> resolveD x
 
 resolveX p@Comprehension{} = scope $ do
@@ -178,7 +181,31 @@ resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     t  <- typeOf d'
     modify (second ((n, RecordField n t) :))
     return (n, d')
+resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
+    d' <- resolveD d
+    t  <- typeOf d'
+    modify (second ((n, VariantField n t) :))
+    return (n, d')
 resolveD d = do
     d' <- descendM resolveD d
     mapM resolveX d'
 
+
+resolveAbsLit
+    :: ( MonadFail m
+       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       )
+    => AbstractLiteral Expression
+    -> m (AbstractLiteral Expression)
+resolveAbsLit p@(AbsLitVariant Nothing n x) = do
+    x'   <- resolveX x
+    mval <- gets snd
+    let
+        isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
+        isTheVariant _ = Nothing
+    case mapMaybe isTheVariant (map snd mval) of
+        (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
+        _ -> userErr ("Not a member of a variant type:" <+> pretty p)
+resolveAbsLit lit = do
+    lit' <- descendM resolveAbsLit lit
+    mapM resolveX lit'

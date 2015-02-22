@@ -30,7 +30,7 @@ data Constant
     | ConstantEnum Name   {- name for the enum domain -}
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
-    | ConstantRecordField Name Type
+    | ConstantField Name Type                               -- the name of a field of Record or Variant and its type
     | ConstantAbstract (AbstractLiteral Constant)
     | DomainInConstant (Domain () Constant)
     | TypedConstant Constant Type
@@ -53,7 +53,7 @@ instance TypeOf Constant where
     typeOf ConstantBool{}             = return TypeBool
     typeOf ConstantInt{}              = return TypeInt
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
-    typeOf (ConstantRecordField _ ty) = return ty
+    typeOf (ConstantField _ ty) = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
     typeOf (DomainInConstant dom)     = typeOf dom
     typeOf (TypedConstant _ ty)       = return ty
@@ -64,7 +64,7 @@ instance Pretty Constant where
     pretty (ConstantBool True )          = "true"
     pretty (ConstantInt  x    )          = pretty x
     pretty (ConstantEnum _ _ x)          = pretty x
-    pretty (ConstantRecordField n _)     = pretty n
+    pretty (ConstantField n _)     = pretty n
     pretty (ConstantAbstract x)          = pretty x
     pretty (DomainInConstant d)          = "`" <> pretty d <> "`"
     pretty (TypedConstant x ty)          = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
@@ -86,7 +86,7 @@ instance ExpressionLike Constant where
 
 instance ReferenceContainer Constant where
     fromName name = bug ("ReferenceContainer{Constant} fromName --" <+> pretty name)
-    nameOut (ConstantRecordField nm _) = return nm
+    nameOut (ConstantField nm _) = return nm
     nameOut p = bug ("ReferenceContainer{Constant} nameOut --" <+> pretty p)
 
 instance DomainContainer Constant (Domain ()) where
@@ -95,6 +95,7 @@ instance DomainContainer Constant (Domain ()) where
     domainOut _ = fail "domainOut{Constant}"
 
 mkUndef :: Type -> Doc -> Constant
+mkUndef TypeBool _ = ConstantBool False
 mkUndef ty reason = ConstantUndefined (stringToText $ show reason) ty
 
 isUndef :: Constant -> Bool
@@ -105,7 +106,7 @@ normaliseConstant :: Constant -> Constant
 normaliseConstant x@ConstantBool{} = x
 normaliseConstant x@ConstantInt{}  = x
 normaliseConstant x@ConstantEnum{} = x
-normaliseConstant x@ConstantRecordField{} = x
+normaliseConstant x@ConstantField{} = x
 normaliseConstant (ConstantAbstract x) = ConstantAbstract (normaliseAbsLit normaliseConstant x)
 normaliseConstant (DomainInConstant d) = DomainInConstant (normaliseDomain normaliseConstant d)
 normaliseConstant (TypedConstant c ty) = TypedConstant (normaliseConstant c) ty
@@ -170,6 +171,14 @@ validateConstantForDomain
     d@(DomainRecord ds)
         | map fst cs == map fst ds
             = nested c d $ zipWithM_ validateConstantForDomain (map snd cs) (map snd ds)
+        | otherwise
+            = constantNotInDomain c d
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitVariant _ n c'))
+    d@(DomainVariant ds)
+        | Just d' <- lookup n ds
+            = nested c d $ validateConstantForDomain c' d'
         | otherwise
             = constantNotInDomain c d
 

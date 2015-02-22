@@ -56,6 +56,7 @@ gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM gDomainSizeOf xs
 gDomainSizeOf (DomainRecord xs) = make opProduct . fromList <$> mapM (gDomainSizeOf . snd) xs
+gDomainSizeOf (DomainVariant xs) = make opSum . fromList <$> mapM (gDomainSizeOf . snd) xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
 gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner

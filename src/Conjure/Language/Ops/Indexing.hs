@@ -42,6 +42,15 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                         , "With type:"      <+> pretty tyM
                         ]
                     Just ty -> return ty
+            TypeVariant inns -> do
+                nm <- nameOut i
+                case lookup nm inns of
+                    Nothing -> fail $ "Variant indexing with non-member field:" <++> vcat
+                        [ "The expression:" <+> pretty p
+                        , "Indexing:"       <+> pretty m
+                        , "With type:"      <+> pretty tyM
+                        ]
+                    Just ty -> return ty
             _ -> fail $ "Indexing something other than a matrix or a tuple:" <++> vcat
                     [ "The expression:" <+> pretty p
                     , "Indexing:"       <+> pretty m
@@ -54,11 +63,9 @@ instance EvaluateOp OpIndexing where
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
-        let isBool = tyTo == TypeBool
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
-            _ | isBool -> return $ fromBool False
             []  -> return $ mkUndef tyTo $ vcat
                     [ "Matrix is not defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
@@ -68,13 +75,20 @@ instance EvaluateOp OpIndexing where
                     , "Matrix value:" <+> pretty m
                     ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
-    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantRecordField name _)) =
+    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat
                     [ "Record doesn't have a member with this name:" <+> pretty name
                     , "Record:" <+> pretty rec
                     ]
             Just val -> return val
+    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name ty)) =
+        if name == name'
+            then return x
+            else return $ mkUndef ty $ vcat
+                    [ "Variant isn't set to a member with this name:" <+> pretty name
+                    , "Variant:" <+> pretty var
+                    ]
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 instance SimplifyOp OpIndexing where

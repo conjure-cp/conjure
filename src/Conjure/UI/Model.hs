@@ -44,9 +44,8 @@ import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 import Conjure.Rules.Definition
 
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
-
 import qualified Conjure.Rules.Vertical.Record as Vertical.Record
-
+import qualified Conjure.Rules.Vertical.Variant as Vertical.Variant
 import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
 
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -651,6 +650,13 @@ verticalRules =
     , Vertical.Record.rule_Record_Lt
     , Vertical.Record.rule_Record_Index
 
+    , Vertical.Variant.rule_Variant_Eq
+    , Vertical.Variant.rule_Variant_Neq
+    , Vertical.Variant.rule_Variant_Leq
+    , Vertical.Variant.rule_Variant_Lt
+    , Vertical.Variant.rule_Variant_Index
+    , Vertical.Variant.rule_Variant_Active
+
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
@@ -752,7 +758,6 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Bool
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Comprehension_Image
-    , Horizontal.Function.rule_ComprehensionParts_Image
     , Horizontal.Function.rule_Image_Literal_Bool
     , Horizontal.Function.rule_Image_Literal_Int
     , Horizontal.Function.rule_Eq
@@ -819,6 +824,7 @@ otherRules =
         , rule_Int_DontCare
         , rule_Tuple_DontCare
         , rule_Record_DontCare
+        , rule_Variant_DontCare
         , rule_Matrix_DontCare
         , rule_Abstract_DontCare
 
@@ -1282,6 +1288,17 @@ rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
         TypeRecord{} <- typeOf x
         xs           <- downX1 x
         return ( "dontCare handling for record"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
+rule_Variant_DontCare :: Rule
+rule_Variant_DontCare = "dontCare-variant" `namedRule` theRule where
+    theRule p = do
+        x             <- match opDontCare p
+        TypeVariant{} <- typeOf x
+        xs            <- downX1 x
+        return ( "dontCare handling for variant"
                , const $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 

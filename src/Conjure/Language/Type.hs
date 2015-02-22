@@ -25,6 +25,7 @@ data Type
     | TypeUnnamed Name
     | TypeTuple [Type]
     | TypeRecord [(Name, Type)]
+    | TypeVariant [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -49,6 +50,8 @@ instance Pretty Type where
                          <> prettyList prParens "," xs
     pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
         [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
     pretty (TypeList x) = prBrackets (pretty x)
     pretty (TypeMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
@@ -72,12 +75,20 @@ typeUnify TypeInt TypeInt = True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)
-typeUnify (TypeRecord as) (TypeRecord bs) | length as /= length bs = False
-                                          | otherwise = and [ case lookup n bs of
-                                                                   Nothing -> False
-                                                                   Just b -> typeUnify a b
-                                                            | (n,a) <- as
-                                                            ]
+typeUnify (TypeRecord as) (TypeRecord bs)
+    | length as /= length bs = False
+    | otherwise = and [ case lookup n bs of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+                      | (n,a) <- as
+                      ]
+typeUnify (TypeVariant as) (TypeVariant bs)
+    | length as /= length bs = False
+    | otherwise = and [ case lookup n bs of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+                      | (n,a) <- as
+                      ]
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
 typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
@@ -115,6 +126,15 @@ mostDefined = foldr f TypeAny
                            | (n,a) <- as
                            ]
             | typeUnify (TypeRecord as) (TypeRecord bs) = TypeAny
+            | otherwise = TypeAny
+        f (TypeVariant as) (TypeVariant bs)
+            | sort (map fst as) == sort (map fst bs) =
+                TypeVariant [ case lookup n bs of
+                                Nothing -> bug "mostDefined.TypeVariant"
+                                Just b  -> (n, f a b)
+                           | (n,a) <- as
+                           ]
+            | typeUnify (TypeVariant as) (TypeVariant bs) = TypeAny
             | otherwise = TypeAny
         f (TypeList a) (TypeList b) = TypeList (f a b)
         f (TypeMatrix a1 a2) (TypeMatrix b1 b2) = TypeMatrix (f a1 b1) (f a2 b2)

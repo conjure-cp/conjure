@@ -76,7 +76,8 @@ instantiateE (Comprehension body gensOrConds) = do
         (DomainInt [RangeBounded 1 (fromInt (length constants))])
         constants
 
-instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantRecordField name ty
+instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
+instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty
 
 instantiateE (Reference name _) = do
     ctxt <- gets id
@@ -158,8 +159,10 @@ instantiateD (DomainEnum nm rs _) = do
     return (DomainEnum nm rs (Just mp))
 instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
-instantiateD (DomainRecord inners) = DomainRecord <$> sequence [ do d' <- instantiateD d ; return (n,d')
-                                                               | (n,d) <- inners ]
+instantiateD (DomainRecord  inners) = DomainRecord  <$> sequence [ do d' <- instantiateD d ; return (n,d')
+                                                                 | (n,d) <- inners ]
+instantiateD (DomainVariant inners) = DomainVariant <$> sequence [ do d' <- instantiateD d ; return (n,d')
+                                                                 | (n,d) <- inners ]
 instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*> instantiateD inner
 instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAttr attrs <*> instantiateD inner
 instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateMSetAttr attrs <*> instantiateD inner
