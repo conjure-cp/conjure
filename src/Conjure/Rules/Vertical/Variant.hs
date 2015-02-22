@@ -111,6 +111,22 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
                 ]                
             )
 
+
+rule_Variant_Active :: Rule
+rule_Variant_Active = "variant-active" `namedRule` theRule where
+    theRule p = do
+        (x,name)       <- match opActive p
+        TypeVariant ds <- typeOf x
+        (xWhich:_)     <- downX1 x
+        argInt         <- case findIndex (name==) (map fst ds) of
+                            Nothing     -> fail "Variant indexing, not a member of the type."
+                            Just argInt -> return $ fromInt $ argInt + 1
+        return
+            ( "Variant active on:" <+> pretty p
+            , const $ [essence| &xWhich = &argInt |]
+            )
+
+
 -- | puts a constraint on the pair of tagged values
 --   NOTICE: you might want to check if the tags are same before calling this!
 onTagged

@@ -655,6 +655,7 @@ verticalRules =
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
     , Vertical.Variant.rule_Variant_Index
+    , Vertical.Variant.rule_Variant_Active
 
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
