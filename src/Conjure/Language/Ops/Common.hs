@@ -83,20 +83,30 @@ prettyPrecBinOp envPrec op a b =
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
 intToInt a = do
-    TypeInt{} <- typeOf a
-    return TypeInt
+    tya <- typeOf a
+    case tya of
+        TypeInt -> return TypeInt
+        _       -> fail $ "Argument expected to be an int, but it is:" <++> pretty tya
+
 
 intToIntToInt :: (MonadFail m, TypeOf a) => a -> a -> m Type
 intToIntToInt a b = do
-    TypeInt{} <- typeOf a
-    TypeInt{} <- typeOf b
-    return TypeInt
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        (TypeInt, TypeInt) -> return TypeInt
+        (_, TypeInt)       -> fail $  "First argument expected to be an int, but it is:" <++> pretty tya
+        _                  -> fail $ "Second argument expected to be an int, but it is:" <++> pretty tyb
 
 boolToBoolToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
 boolToBoolToBool a b = do
-    TypeBool{} <- typeOf a
-    TypeBool{} <- typeOf b
-    return TypeBool
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        (TypeBool, TypeBool) -> return TypeBool
+        (_, TypeBool)        -> fail $  "First argument expected to be a bool, but it is:" <++> pretty tya
+        _                    -> fail $ "Second argument expected to be a bool, but it is:" <++> pretty tyb
+        
 
 sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
 sameToSameToBool a b = do
