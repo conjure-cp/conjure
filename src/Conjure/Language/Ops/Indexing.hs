@@ -63,11 +63,9 @@ instance EvaluateOp OpIndexing where
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
-        let isBool = tyTo == TypeBool
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
-            _ | isBool -> return $ fromBool False
             []  -> return $ mkUndef tyTo $ vcat
                     [ "Matrix is not defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m

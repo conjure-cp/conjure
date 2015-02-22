@@ -95,6 +95,7 @@ instance DomainContainer Constant (Domain ()) where
     domainOut _ = fail "domainOut{Constant}"
 
 mkUndef :: Type -> Doc -> Constant
+mkUndef TypeBool _ = ConstantBool False
 mkUndef ty reason = ConstantUndefined (stringToText $ show reason) ty
 
 isUndef :: Constant -> Bool
