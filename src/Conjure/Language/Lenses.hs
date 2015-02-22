@@ -1152,6 +1152,25 @@ opPreImage _ =
     )
 
 
+opActive
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> Name -> x
+       , x -> m (x,Name)
+       )
+opActive _ =
+    ( \ x y -> injectOp (MkOpActive (OpActive x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpActive (OpActive x y) -> return (x,y)
+                _ -> na ("Lenses.opActive:" <++> pretty p)
+    )
+
+
 opFactorial
     :: ( OperatorContainer x
        , Pretty x

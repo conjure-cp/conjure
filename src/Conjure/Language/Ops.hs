@@ -100,4 +100,6 @@ mkOp op xs =
             L_party        -> injectOp $ MkOpParty        $ OpParty        (atNote "party 1"    xs 0)
                                                                            (atNote "party 2"    xs 1)
             L_participants -> injectOp $ MkOpParticipants $ OpParticipants (headNote "participants takes a single argument." xs)
+            L_active       -> injectOp $ MkOpActive       $ OpActive       (atNote "active 1" xs 0)
+                                                                           (atNote "active 2" xs 1 |> nameOut |> fromMaybe (bug "active 2"))
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))

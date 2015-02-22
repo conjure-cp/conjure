@@ -210,6 +210,8 @@ functionals =
     , LIdentifier "sum"
     , LIdentifier "product"
 
+    , L_active
+
     ]
 
 
