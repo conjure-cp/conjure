@@ -84,10 +84,10 @@ instance EvaluateOp OpIndexing where
                     , "Record:" <+> pretty rec
                     ]
             Just val -> return val
-    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name _)) =
+    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name ty)) =
         if name == name'
             then return x
-            else bug $ vcat
+            else return $ mkUndef ty $ vcat
                     [ "Variant isn't set to a member with this name:" <+> pretty name
                     , "Variant:" <+> pretty var
                     ]
