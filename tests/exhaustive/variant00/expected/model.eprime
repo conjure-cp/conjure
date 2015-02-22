@@ -20,7 +20,8 @@ find t2_a: bool
 find t2_b: int(0, 4)
 find someInt: int(0)
 such that
-    (x_a /\ x__tag = 1) = true,
+    x_a,
+    x__tag = 1,
     y1__tag = 1,
     1 = y1__tag -> y1_a = false,
     y2__tag = 2,
