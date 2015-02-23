@@ -60,7 +60,6 @@ expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
 expD (DomainMetaVar x) = Just $ [| $(varE (mkName "forgetRepr")) |]
-                         `appE` [| "TH:expD" |]
                          `appE` [| $(varE (mkName x)) |]
 expD _ = Nothing
 

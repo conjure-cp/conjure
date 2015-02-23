@@ -24,6 +24,8 @@ data Type
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
+    | TypeRecord [(Name, Type)]
+    | TypeVariant [(Name, Type)]
     | TypeList Type
     | TypeMatrix Type Type
     | TypeSet Type
@@ -46,15 +48,23 @@ instance Pretty Type where
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
                          <> prettyList prParens "," xs
+    pretty (TypeRecord xs) = "record" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
+    pretty (TypeVariant xs) = "variant" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty ty | (nm, ty) <- xs ]
     pretty (TypeList x) = prBrackets (pretty x)
-    pretty (TypeMatrix index inner) = "matrix indexed by"
-                                  <+> prBrackets (pretty index)
-                                  <+> "of" <+> pretty inner
+    pretty (TypeMatrix index innerNested)
+        = "matrix indexed by" <+> prettyList prBrackets "," indices
+                              <+> "of" <+> pretty inner
+        where
+            (indices,inner) = first (index:) $ collect innerNested
+            collect (TypeMatrix i j) = first (i:) $ collect j
+            collect x = ([],x)
     pretty (TypeSet x) = "set of" <+> pretty x
     pretty (TypeMSet x) = "mset of" <+> pretty x
     pretty (TypeFunction fr to) = "function" <+> pretty fr <+> "-->" <+> pretty to
     pretty (TypePartition x) = "partition from" <+> pretty x
-    pretty (TypeRelation xs) = prettyList prParens " *" xs
+    pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool
@@ -65,8 +75,24 @@ typeUnify TypeInt TypeInt = True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)
+typeUnify (TypeRecord as) (TypeRecord bs)
+    | length as /= length bs = False
+    | otherwise = and [ case lookup n bs of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+                      | (n,a) <- as
+                      ]
+typeUnify (TypeVariant as) (TypeVariant bs)
+    | length as /= length bs = False
+    | otherwise = and [ case lookup n bs of
+                             Nothing -> False
+                             Just b -> typeUnify a b
+                      | (n,a) <- as
+                      ]
 typeUnify (TypeList a) (TypeList b) = typeUnify a b
 typeUnify (TypeMatrix a1 a2) (TypeMatrix b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
+typeUnify (TypeList a) (TypeMatrix _ b) = typeUnify a b
+typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
@@ -92,8 +118,28 @@ mostDefined = foldr f TypeAny
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x
         f (TypeTuple as) (TypeTuple bs) = TypeTuple (zipWith f as bs)
+        f (TypeRecord as) (TypeRecord bs)
+            | sort (map fst as) == sort (map fst bs) =
+                TypeRecord [ case lookup n bs of
+                                Nothing -> bug "mostDefined.TypeRecord"
+                                Just b  -> (n, f a b)
+                           | (n,a) <- as
+                           ]
+            | typeUnify (TypeRecord as) (TypeRecord bs) = TypeAny
+            | otherwise = TypeAny
+        f (TypeVariant as) (TypeVariant bs)
+            | sort (map fst as) == sort (map fst bs) =
+                TypeVariant [ case lookup n bs of
+                                Nothing -> bug "mostDefined.TypeVariant"
+                                Just b  -> (n, f a b)
+                           | (n,a) <- as
+                           ]
+            | typeUnify (TypeVariant as) (TypeVariant bs) = TypeAny
+            | otherwise = TypeAny
         f (TypeList a) (TypeList b) = TypeList (f a b)
         f (TypeMatrix a1 a2) (TypeMatrix b1 b2) = TypeMatrix (f a1 b1) (f a2 b2)
+        f (TypeList a) (TypeMatrix _ b) = TypeList (f a b)
+        f (TypeMatrix _ a) (TypeList b) = TypeList (f a b)
         f (TypeSet a) (TypeSet b) = TypeSet (f a b)
         f (TypeMSet a) (TypeMSet b) = TypeMSet (f a b)
         f (TypeFunction a1 a2) (TypeFunction b1 b2) = TypeFunction (f a1 b1) (f a2 b2)
@@ -106,7 +152,9 @@ homoType msg [] = userErr $ "empty collection, what's the type?" <++> ("When wor
 homoType msg xs =
     if typesUnify xs
         then mostDefined xs
-        else userErr $ "not a homoType:" <++> ("When working on:" <+> msg)
+        else userErr $ vcat [ "Not uniformly typed:" <+> msg
+                            , "Involved types are:" <+> vcat (map pretty xs)
+                            ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
 innerTypeOf (TypeList t) = return t

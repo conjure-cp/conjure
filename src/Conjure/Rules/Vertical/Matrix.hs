@@ -24,10 +24,10 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        (index, _elems) <- match matrixLiteral expr
+        (_, index, _elems) <- match matrixLiteral expr
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for matrix-comprehension"
+            ( "Vertical rule for matrix-comprehension on matrix literal"
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                      val = make opIndexing expr i
@@ -39,30 +39,45 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Comprehension_Literal_ContainsSet :: Rule
-rule_Comprehension_Literal_ContainsSet = "matrix-comprehension-literal-containsSet" `namedRule` theRule where
+-- | input:  [ i | i <- m[j] ] with m = [a,b,c]
+--   output: [ [ i | i <- a ]
+--           , [ i | i <- b ]
+--           , [ i | i <- c ]
+--           ][j]
+--   namely: [ [ m[k]
+--             | k : int(1..3)
+--             ]
+--           , [ i | i <- b ]
+--           , [ i | i <- c ]
+--           ][j]
+
+rule_Comprehension_LiteralIndexed :: Rule
+rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_Literal_ContainsSet"
-        (matrix, indexer) <- match opIndexing expr
-        (index, elems')   <- match matrixLiteral matrix
-        elems             <- mapM (match setLiteral) elems'
-        let insideOut = make setLiteral
-                [ make opIndexing (make matrixLiteral index inMatrix) indexer
-                | inMatrix <- transpose elems
-                ]
+            _ -> na "rule_Comprehension_LiteralIndexed"
+        (mkM, expr2)      <- match opModifier expr
+        (matrix, indices) <- match opMatrixIndexing expr2
+        (_, index, elems) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for matrix-comprehension"
+            ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
             , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
-                         $  gofBefore
-                         ++ [Generator (GenInExpr iPat insideOut)]
-                         ++ transformBi (upd i) gofAfter
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    comprehensions =
+                        [ Comprehension (upd i body)
+                             $  gofBefore
+                             ++ [Generator (GenInExpr iPat (mkM el))]
+                             ++ transformBi (upd i) gofAfter
+                        | el <- elems
+                        ]
+                    core = AbstractLiteral $ AbsLitMatrix index comprehensions
+                in
+                    make opMatrixIndexing core indices
             )
-    theRule _ = na "rule_Comprehension_Literal_ContainsSet"
+    theRule _ = na "rule_Comprehension_LiteralIndexed"
 
 
 rule_Comprehension_ToSet :: Rule
@@ -129,7 +144,7 @@ rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
             ( "Vertical rule for comprehension over matrix-hist"
             , \ fresh -> withAuxVar
                     (fresh `at` 0)
-                    (DomainSet () def (forgetRepr "rule_Comprehension_ToSet2" domBody)) $ \ aux ->
+                    (DomainSet () def (forgetRepr domBody)) $ \ aux ->
                         make opAnd $ Comprehension [essence| &body in &aux |] gof
             )
 
@@ -195,12 +210,33 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
                  in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
             )
 
+
+rule_Matrix_Neq :: Rule
+rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y)                <- match opNeq p
+        TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeMatrix{}         <- typeOf y
+        index <- case (domainOf x, domainOf y) of
+            (Just (DomainMatrix index _), _) -> return index
+            (_, Just (DomainMatrix index _)) -> return index
+            (Just _, _) -> na "rule_Matrix_Neq"
+            (_, Just _) -> na "rule_Matrix_Neq"
+            _ -> na "Neq constraint between two matrices, but domainOf doesn't work on either."
+        return
+            ( "Horizontal rule for matrix !="
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  [essence| exists &iPat : &index . &x[&i] != &y[&i] |]
+            )
+
+
 rule_MatrixLit_Eq :: Rule
 rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)       <- match opEq p
-        (_, xElems) <- match matrixLiteral x
-        (_, yElems) <- match matrixLiteral y
+        (x,y)          <- match opEq p
+        (_, _, xElems) <- match matrixLiteral x
+        (_, _, yElems) <- match matrixLiteral y
         return
             ( "Horizontal rule for matrix literal equality"
             , const $
@@ -213,9 +249,9 @@ rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
 rule_MatrixLit_Neq :: Rule
 rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
     theRule p = do
-        (x,y)       <- match opNeq p
-        (_, xElems) <- match matrixLiteral x
-        (_, yElems) <- match matrixLiteral y
+        (x,y)          <- match opNeq p
+        (_, _, xElems) <- match matrixLiteral x
+        (_, _, yElems) <- match matrixLiteral y
         return
             ( "Horizontal rule for matrix literal equality"
             , const $ 
@@ -225,18 +261,15 @@ rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
             )
 
 
-sliceEnoughTimes :: MonadFail m => Expression -> m Expression
-sliceEnoughTimes m = do
-    tym    <- typeOf m
+flattenIfNeeded :: MonadFail m => Expression -> m Expression
+flattenIfNeeded m = do
+    tyM <- typeOf m
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
+        nestingLevel (TypeList     a) = 1 + nestingLevel a
         nestingLevel _ = 0 :: Int
-    let howMany = nestingLevel tym
-    let unroll a 0 = a
-        unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
-    let sliced = unroll m howMany
-    let flatten = if howMany > 0 then make opFlatten else id
-    return $ flatten sliced
-
+    return $ if nestingLevel tyM > 1
+        then make opFlatten m
+        else m
 
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
@@ -246,8 +279,8 @@ rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- sliceEnoughTimes x
-        y' <- sliceEnoughTimes y
+        x' <- flattenIfNeeded x
+        y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <"
             , const [essence| &x' <lex &y' |]
@@ -278,8 +311,8 @@ rule_Matrix_Leq_Primitive = "matrix-leq-primitive" `namedRule` theRule where
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
         unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- sliceEnoughTimes x
-        y' <- sliceEnoughTimes y
+        x' <- flattenIfNeeded x
+        y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <="
             , const [essence| &x' <=lex &y' |]
@@ -335,10 +368,10 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)         <- match opIndexing p
-        (DomainInt ranges, elems) <- match matrixLiteral matrix
-        indexInts                 <- rangesInts ranges
-        indexerInt                <- intOut indexer
+        (matrix, indexer)            <- match opIndexing p
+        (_, DomainInt ranges, elems) <- match matrixLiteral matrix
+        indexInts                    <- rangesInts ranges
+        indexerInt                   <- intOut indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of
@@ -349,3 +382,17 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
                             , const v
                             )
             else na "rule_MatrixIndexing"
+
+
+rule_IndexingIdentical :: Rule
+rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
+    theRule p = do
+        (matrix, indexer)                       <- match opIndexing p
+        (_, indexDomain, (firstElem:restElems)) <- match matrixLiteral matrix
+        indexerDomain <- domainOf indexer
+        if indexDomain == forgetRepr indexerDomain && all (firstElem==) restElems
+            then return
+                    ( "rule_IndexingIdentical"
+                    , const firstElem
+                    )
+            else na "rule_IndexingIdentical"

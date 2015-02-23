@@ -24,8 +24,11 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match setLiteral expr
-        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)]) elems
+        (TypeSet tau, elems) <- match setLiteral expr
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt tau)
+                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            elems
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on set literals"
@@ -59,7 +62,13 @@ rule_Neq = "set-neq" `namedRule` theRule where
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
         return ( "Horizontal rule for set dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 
@@ -150,7 +159,8 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
             Generator (GenInExpr pat@(Single iPat) expr) ->
                 return (pat, iPat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Intersect"
-        (x, y)             <- match opIntersect expr
+        (mkModifier, s)    <- match opModifier expr
+        (x, y)             <- match opIntersect s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -164,7 +174,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
             , const $
                 Comprehension body
                     $  gofBefore
-                    ++ [ Generator (GenInExpr pat x)
+                    ++ [ Generator (GenInExpr pat (mkModifier x))
                        , Condition [essence| &i in &y |]
                        ]
                     ++ gofAfter
@@ -178,7 +188,8 @@ rule_Union = "set-union" `namedRule` theRule where
         (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, matchDef opToSet expr)
             _ -> na "rule_Union"
-        (x, y)             <- match opUnion expr
+        (mkModifier, s)    <- match opModifier expr
+        (x, y)             <- match opUnion s
         tx                 <- typeOf x
         case tx of
             TypeSet{}      -> return ()
@@ -193,11 +204,11 @@ rule_Union = "set-union" `namedRule` theRule where
                 (DomainInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gofBefore
-                    ++ [ Generator (GenInExpr pat x) ]
+                    ++ [ Generator (GenInExpr pat (mkModifier x)) ]
                     ++ gofAfter
                 , Comprehension body
                     $  gofBefore
-                    ++ [ Generator (GenInExpr pat y)
+                    ++ [ Generator (GenInExpr pat (mkModifier y))
                        , Condition [essence| !(&i in &x) |]
                        ]
                     ++ gofAfter
@@ -209,9 +220,10 @@ rule_Union = "set-union" `namedRule` theRule where
 rule_Difference :: Rule
 rule_Difference = "set-difference" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+        (gofBefore, (pat, iPat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
             _ -> na "rule_Difference"
+        (mkModifier, s)    <- match opModifier expr
         (x, y)             <- match opMinus s
         tx                 <- typeOf x
         case tx of
@@ -226,7 +238,7 @@ rule_Difference = "set-difference" `namedRule` theRule where
             , const $
                 Comprehension body
                     $  gofBefore
-                    ++ [ Generator (GenInExpr pat x)
+                    ++ [ Generator (GenInExpr pat (mkModifier x))
                        , Condition [essence| !(&i in &y) |]
                        ]
                     ++ gofAfter

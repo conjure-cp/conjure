@@ -21,9 +21,13 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpOr x) where
     typeOf p@(OpOr x) = do
         ty <- typeOf x
         case ty of
+            TypeList TypeAny -> return TypeBool
             TypeList TypeBool -> return TypeBool
+            TypeMatrix _ TypeAny -> return TypeBool
             TypeMatrix _ TypeBool -> return TypeBool
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
 
 instance EvaluateOp OpOr where
     evaluateOp (OpOr x) = ConstantBool . or <$> boolsOut x

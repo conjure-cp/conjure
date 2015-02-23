@@ -36,7 +36,7 @@ instance DomainSizeOf (Domain HasRepresentation Expression) Expression where
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
-    domainSizeOf d = gDomainSizeOf (forgetRepr "domainSizeOf" d)
+    domainSizeOf d = gDomainSizeOf (forgetRepr d)
 
 
 gDomainSizeOf
@@ -55,6 +55,8 @@ gDomainSizeOf (DomainInt rs ) = make opSum . fromList <$> mapM domainSizeOf rs
 gDomainSizeOf (DomainUnnamed _ x) = return x
 gDomainSizeOf (DomainTuple []) = fail "gDomainSizeOf: nullary tuple"
 gDomainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM gDomainSizeOf xs
+gDomainSizeOf (DomainRecord xs) = make opProduct . fromList <$> mapM (gDomainSizeOf . snd) xs
+gDomainSizeOf (DomainVariant xs) = make opSum . fromList <$> mapM (gDomainSizeOf . snd) xs
 gDomainSizeOf (DomainMatrix index inner) = make opPow <$> gDomainSizeOf inner <*> gDomainSizeOf index
 gDomainSizeOf (DomainSet _ (SetAttr sizeAttr) inner) = do
     innerSize <- gDomainSizeOf inner

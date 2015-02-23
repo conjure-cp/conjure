@@ -4,6 +4,7 @@ module Conjure.Language.Ops.Restrict where
 
 import Conjure.Prelude
 import Conjure.Language.Ops.Common
+import Conjure.Process.Enumerate ( enumerateDomain )
 
 
 data OpRestrict x = OpRestrict x {- the function -} x {- the domain -}
@@ -23,7 +24,15 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
             else raiseTypeError p
 
 instance EvaluateOp OpRestrict where
-    evaluateOp (OpRestrict f _dom) = return f -- TODO: filter out values
+    evaluateOp (OpRestrict (ConstantAbstract (AbsLitFunction xs)) domX) = do
+        dom       <- domainOut domX
+        valsInDom <- enumerateDomain (dom :: Domain () Constant)
+        return $ ConstantAbstract $ AbsLitFunction $ sortNub
+            [ x
+            | x@(a,_) <- xs
+            , a `elem` valsInDom
+            ]
+    evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
 
 instance SimplifyOp OpRestrict where
     simplifyOp _ _ = na "simplifyOp{OpRestrict}"

@@ -20,26 +20,27 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "Function1DPartial"  <- representationOf func
-        TypeFunction{}       <- typeOf func
-        [flags,values]       <- downX1 func
-        DomainMatrix index _ <- domainOf values
+        "Function1DPartial"        <- representationOf func
+        TypeFunction {}            <- typeOf func
+        DomainFunction _ _ index _ <- domainOf func
+        [flags,values]             <- downX1 func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1DPartial representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| (&j, &values[&j]) |]
+                    valuesIndexed = [essence| (&j, &values[&j]) |]
+                    flagsIndexed  = [essence|      &flags [&j]  |]
                 in
-                Comprehension (upd val body)
+                Comprehension (upd valuesIndexed body)
                     $  gofBefore
-                    ++ [ Generator (GenDomainNoRepr jPat index)
-                       , Condition [essence| &flags[&j] |]
+                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index))
+                       , Condition [essence| &flagsIndexed |]
                        ]
-                    ++ transformBi (upd val) gofAfter
+                    ++ transformBi (upd valuesIndexed) gofAfter
             )
     theRule _ = na "rule_Comprehension"
 
@@ -52,7 +53,7 @@ rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule`
         case tyTo of
             TypeBool -> na "function ? --> bool"
             _        -> return ()
-        [flags,values]      <- downX1 f
+        [flags,values] <- downX1 f
         return
             ( "Function image, Function1DPartial representation, not-a-bool"
             , const [essence| { &values[&x]
@@ -72,7 +73,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                 TypeFunction _ tyTo <- typeOf f
                 case tyTo of
                     TypeBool -> do
-                        [flags,values]      <- downX1 f
+                        [flags,values] <- downX1 f
                         tell $ return [essence| &flags[&x] |]
                         return [essence| &values[&x] |]
                     _ -> return ch
@@ -91,6 +92,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
 rule_InDefined :: Rule
 rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule where
     theRule [essence| &x in defined(&f) |] = do
+        TypeFunction{}      <- typeOf f
         "Function1DPartial" <- representationOf f
         [flags,_values]     <- downX1 f
         return ( "Function in defined, Function1DPartial representation"

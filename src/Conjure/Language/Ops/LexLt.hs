@@ -17,11 +17,13 @@ instance FromJSON  x => FromJSON  (OpLexLt x) where parseJSON = genericParseJSON
 instance BinaryOperator (OpLexLt x) where
     opLexeme _ = L_LexLt
 
-instance TypeOf x => TypeOf (OpLexLt x) where
-    typeOf (OpLexLt a b) = do
-        TypeMatrix{} <- typeOf a
-        TypeMatrix{} <- typeOf b
-        return TypeBool
+instance (TypeOf x, Pretty x) => TypeOf (OpLexLt x) where
+    typeOf p@(OpLexLt a b) = do
+        tyA <- typeOf a
+        tyB <- typeOf b
+        if typesUnify [TypeList TypeAny, tyA, tyB]
+            then return TypeBool
+            else raiseTypeError p
 
 instance EvaluateOp OpLexLt where
     evaluateOp (OpLexLt (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =

@@ -23,17 +23,18 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpParty where
-    evaluateOp op@(OpParty x (ConstantAbstract (AbsLitPartition xss))) =
+    evaluateOp op@(OpParty x p@(ConstantAbstract (AbsLitPartition xss))) = do
+        TypePartition tyInner <- typeOf p
         let
             outSet = [ xs
                      | xs <- xss
                      , x `elem` xs
                      ]
-        in
-            case outSet of
-                [s] -> return $ ConstantAbstract $ AbsLitSet s
-                []  -> fail $ "Element not found in partition:" <++> pretty op
-                _   -> fail $ "Element found in multiple parts of the partition:" <++> pretty op
+        case outSet of
+            [s] -> return $ ConstantAbstract $ AbsLitSet s
+            []  -> return $ mkUndef (TypeSet tyInner) $ "Element not found in partition:" <++> pretty op
+            _   -> return $ mkUndef (TypeSet tyInner) $ "Element found in multiple parts of the partition:"
+                                                                                                <++> pretty op
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
 instance SimplifyOp OpParty where

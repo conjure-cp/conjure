@@ -39,7 +39,7 @@ instance EvaluateOp OpTwoBars where
             -- cardinality of a domain
             DomainInConstant (DomainInt rs)      -> ConstantInt . length <$> rangesInts rs
 
-            _ -> fail $ "evaluateOp OpTwoBars" <+> pretty (show x)
+            _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 instance SimplifyOp OpTwoBars where
     simplifyOp _ _ = na "simplifyOp{OpTwoBars}"

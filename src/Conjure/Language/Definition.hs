@@ -268,7 +268,7 @@ data ModelInfo = ModelInfo
     , miUnnameds :: [(Name, Expression)]
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
-    , miRepresentationsTree :: [(Name, Tree (Maybe HasRepresentation))]
+    , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
     }
@@ -413,8 +413,21 @@ instance TypeOf Expression where
                         GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
             DeclNoRepr  _ _ dom -> typeOf dom
             DeclHasRepr _ _ dom -> typeOf dom
+            RecordField _ ty    -> return ty
+            VariantField _ ty   -> return ty
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
-    typeOf (Comprehension x _) = TypeList <$> typeOf x  -- TODO: do this properly, look into generators and filters
+    typeOf p@(Comprehension x gensOrConds) = do
+        forM_ gensOrConds $ \ gof -> case gof of
+            Generator{} -> return ()                    -- TODO: do this properly
+            Condition c -> do
+                ty <- typeOf c
+                case ty of
+                    TypeBool -> return ()
+                    _        -> fail $ vcat ["Condition is not boolean."
+                                            , "Condition:" <+> pretty c
+                                            , "In:" <+> pretty p
+                                            ]
+        TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
@@ -426,10 +439,13 @@ instance CanBeAnAlias Expression where
 instance OperatorContainer Expression where
     injectOp = Op
     projectOp (Op op) = return op
-    projectOp x = na ("Not an operator:" <++> pretty (show x))
+    projectOp x = fail ("Not an operator:" <++> pretty (show x))
 
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
+    nameOut (Reference nm _) = return nm
+    nameOut (Constant (ConstantField nm _)) = return nm
+    nameOut p = fail ("This expression isn't a 'name':" <+> pretty p)
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
@@ -548,6 +564,8 @@ data ReferenceTo
     | InComprehension Generator
     | DeclNoRepr      FindOrGiven Name (Domain () Expression)
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
+    | RecordField     Name Type         -- the type of the field with this name
+    | VariantField    Name Type         -- the type of the variant with this name
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
@@ -560,6 +578,8 @@ instance Pretty ReferenceTo where
     pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
     pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
+    pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
 
 
 ------------------------------------------------------------------------------------------------------------------------

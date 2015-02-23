@@ -36,6 +36,7 @@ Library
                      , Conjure.Language.Ops.Common
                      , Conjure.Language.Ops.Generated
 
+                     , Conjure.Language.Ops.Active
                      , Conjure.Language.Ops.AllDiff
                      , Conjure.Language.Ops.And
                      , Conjure.Language.Ops.Apart
@@ -51,6 +52,7 @@ Library
                      , Conjure.Language.Ops.Geq
                      , Conjure.Language.Ops.Gt
                      , Conjure.Language.Ops.Hist
+                     , Conjure.Language.Ops.Iff
                      , Conjure.Language.Ops.Imply
                      , Conjure.Language.Ops.In
                      , Conjure.Language.Ops.Indexing
@@ -121,6 +123,8 @@ Library
                      , Conjure.Representations.Combined
                      , Conjure.Representations.Primitive
                      , Conjure.Representations.Tuple
+                     , Conjure.Representations.Record
+                     , Conjure.Representations.Variant
                      , Conjure.Representations.Set.Occurrence
                      , Conjure.Representations.Set.Explicit
                      , Conjure.Representations.Set.ExplicitVarSizeWithMarker
@@ -140,6 +144,8 @@ Library
                      , Conjure.Rules.Definition
 
                      , Conjure.Rules.Vertical.Tuple
+                     , Conjure.Rules.Vertical.Record
+                     , Conjure.Rules.Vertical.Variant
                      , Conjure.Rules.Vertical.Matrix
 
                      , Conjure.Rules.Horizontal.Set

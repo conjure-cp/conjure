@@ -6,6 +6,8 @@ module Conjure.Language.Lenses where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Ops
 import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
@@ -442,23 +444,35 @@ opIndexing _ =
     )
 
 
-opIndexing'
+opMatrixIndexing
     :: ( OperatorContainer x
        , Pretty x
+       , TypeOf x
        , MonadFail m
        )
     => Proxy (m :: * -> *)
     -> ( x -> [x] -> x
        , x -> m (x,[x])
        )
-opIndexing' proxy =
+opMatrixIndexing _ =
     ( foldl (make opIndexing)
-    , \ p -> case projectOp p of
-                Just (MkOpIndexing (OpIndexing x i)) -> do
-                    (m,is) <- snd (opIndexing' proxy) x
-                    return (m, is ++ [i])
-                _ -> return (p, [])
+    , \ p -> do
+        (m, is) <- go p
+        if null is
+            then na ("Lenses.opMatrixIndexing:" <+> pretty p)
+            else return (m, is)
     )
+    where
+        go p = case projectOp p of
+            Just (MkOpIndexing (OpIndexing x i)) -> do
+                ty <- typeOf x
+                case ty of
+                    TypeMatrix{} -> return ()
+                    TypeList{} -> return ()
+                    _ -> na ("Lenses.opMatrixIndexing:" <+> pretty p)
+                (m,is) <- go x
+                return (m, is ++ [i])
+            _ -> return (p, [])
 
 
 opSlicing
@@ -903,6 +917,26 @@ opQuantifier _ =
     )
 
 
+opModifier
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x, x) -> x
+       , x -> m (x -> x, x)
+       )
+opModifier _ =
+    ( \ (mk, x) -> mk x
+    , \ p -> case projectOp p of
+        Just (MkOpToSet      (OpToSet      x)) -> return (injectOp . MkOpToSet      . OpToSet      , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (injectOp . MkOpToMSet     . OpToMSet     , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (injectOp . MkOpToRelation . OpToRelation , x)
+        Just (MkOpParts      (OpParts      x)) -> return (injectOp . MkOpParts      . OpParts      , x)
+        _                                      -> return (id                                       , p)
+    )
+
+
 opAllDiff
     :: ( OperatorContainer x
        , Pretty x
@@ -939,100 +973,144 @@ constantInt _ =
 matrixLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( Domain () Expression -> [Expression] -> Expression
-       , Expression -> m (Domain () Expression, [Expression])
+    -> ( Type -> Domain () Expression -> [Expression] -> Expression
+       , Expression -> m (Type, Domain () Expression, [Expression])
        )
 matrixLiteral _ =
-    ( \ index elems -> AbstractLiteral $ AbsLitMatrix index elems
-    , \ p -> case p of
-        Constant (ConstantAbstract (AbsLitMatrix index xs)) -> return (fmap Constant index, map Constant xs)
-        AbstractLiteral (AbsLitMatrix index xs) -> return (index, xs)
-        _ -> na ("Lenses.matrixLiteral:" <+> pretty p)
+    ( \ ty index elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitMatrix index elems)) ty
+            else        AbstractLiteral (AbsLitMatrix index elems)
+    , \ p -> do
+        ty          <- typeOf p
+        (index, xs) <- followAliases extract p
+        return (ty, index, xs)
     )
+    where
+        extract (Constant (ConstantAbstract (AbsLitMatrix index xs))) = return (fmap Constant index, map Constant xs)
+        extract (AbstractLiteral (AbsLitMatrix index xs)) = return (index, xs)
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.matrixLiteral:" <+> pretty p)
 
 
 setLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [Expression] -> Expression
-       , Expression -> m [Expression]
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
        )
 setLiteral _ =
-    ( AbstractLiteral . AbsLitSet
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitSet elems)) ty
+            else        AbstractLiteral (AbsLitSet elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitSet xs))) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitSet xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.setLiteral:" <+> pretty p)
 
 
 msetLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [Expression] -> Expression
-       , Expression -> m [Expression]
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
        )
 msetLiteral _ =
-    ( AbstractLiteral . AbsLitMSet
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitMSet elems)) ty
+            else        AbstractLiteral (AbsLitMSet elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitMSet xs))) = return (map Constant xs)
         extract (AbstractLiteral (AbsLitMSet xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.msetLiteral:" <+> pretty p)
 
 
 functionLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [(Expression,Expression)] -> Expression
-       , Expression -> m [(Expression,Expression)]
+    -> ( Type -> [(Expression,Expression)] -> Expression
+       , Expression -> m (Type, [(Expression,Expression)])
        )
 functionLiteral _ =
-    ( AbstractLiteral . AbsLitFunction
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitFunction elems)) ty
+            else        AbstractLiteral (AbsLitFunction elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitFunction xs))) = return [ (Constant a, Constant b) | (a,b) <- xs ]
         extract (AbstractLiteral (AbsLitFunction xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
 
 
 relationLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [[Expression]] -> Expression
-       , Expression -> m [[Expression]]
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
        )
 relationLiteral _ =
-    ( AbstractLiteral . AbsLitRelation
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitRelation elems)) ty
+            else        AbstractLiteral (AbsLitRelation elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitRelation xs))) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitRelation xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.relationLiteral:" <+> pretty p)
 
 
 partitionLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( [[Expression]] -> Expression
-       , Expression -> m [[Expression]]
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
        )
 partitionLiteral _ =
-    ( AbstractLiteral . AbsLitPartition
-    , followAliases extract
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPartition elems)) ty
+            else        AbstractLiteral (AbsLitPartition elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
     )
     where
         extract (Constant (ConstantAbstract (AbsLitPartition xs))) = return (map (map Constant) xs)
         extract (AbstractLiteral (AbsLitPartition xs)) = return xs
         extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.partitionLiteral:" <+> pretty p)
 
 
@@ -1071,6 +1149,25 @@ opPreImage _ =
             case op of
                 MkOpPreImage (OpPreImage x y) -> return (x,y)
                 _ -> na ("Lenses.opPreImage:" <++> pretty p)
+    )
+
+
+opActive
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> Name -> x
+       , x -> m (x,Name)
+       )
+opActive _ =
+    ( \ x y -> injectOp (MkOpActive (OpActive x y))
+    , \ p -> do
+            op <- projectOp p
+            case op of
+                MkOpActive (OpActive x y) -> return (x,y)
+                _ -> na ("Lenses.opActive:" <++> pretty p)
     )
 
 

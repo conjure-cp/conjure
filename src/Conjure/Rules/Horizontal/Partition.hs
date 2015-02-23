@@ -20,15 +20,15 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (_gofBefore@[], (pat, expr), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+        (_gofBefore@[], (pat, p), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opParts expr)
             _ -> na "rule_Comprehension_Literal"
-        let p = matchDef opParts expr
-        elems <- match partitionLiteral p
+        (TypePartition _, elems) <- match partitionLiteral p
         let f = lambdaToFunction pat body
         return
             ( "Comprehension on partition literals"
-            , const $ AbstractLiteral $ AbsLitMatrix
+            , const $ make matrixLiteral
+                        (TypeMatrix TypeInt TypeBool)
                         (DomainInt [RangeBounded 1 (fromInt (length elems))])
                         [ f lit
                         | e <- elems
@@ -57,7 +57,13 @@ rule_Neq = "partition-neq" `namedRule` theRule where
         TypePartition{} <- typeOf y
         return
             ( "Horizontal rule for partition dis-equality"
-            , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
             )
     theRule _ = na "rule_Neq"
 
@@ -174,3 +180,13 @@ rule_Card = "partition-card" `namedRule` theRule where
             ( "Cardinality of a partition"
             , const $ make opTwoBars $ make opParticipants partition
             )
+
+
+rule_In :: Rule
+rule_In = "partition-in" `namedRule` theRule where
+    theRule [essence| &x in &p |] = do
+        TypePartition{} <- typeOf p
+        return ( "Horizontal rule for partition-in."
+               , const [essence| &x in parts(&p) |]
+               )
+    theRule _ = na "rule_In"

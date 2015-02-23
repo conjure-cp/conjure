@@ -11,7 +11,7 @@ import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 relationAsMatrix :: forall m . MonadFail m => Representation m
@@ -27,12 +27,11 @@ relationAsMatrix = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "RelationAsMatrix"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainRelation "RelationAsMatrix" _ innerDomains') | all domainCanIndexMatrix innerDomains' = do
-            innerDomains <- mapM toIntDomain innerDomains'
+        downD (name, DomainRelation "RelationAsMatrix" _ innerDomains) | all domainCanIndexMatrix innerDomains = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( outName name
-                  , unroll (map (forgetRepr "Representation.RelationAsMatrix") innerDomains) DomainBool
+                  , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
         downD (name, domain) = na $ vcat [ "{downD} RelationAsMatrix"
                                          , "name:" <+> pretty name
@@ -41,13 +40,12 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1
-            (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains')
-                | all domainCanIndexMatrix innerDomains' = do
-            innerDomains <- mapM toIntDomain innerDomains'
+            (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains)
+                | all domainCanIndexMatrix innerDomains = do
             let cardinality fresh m =
                     let unroll _ [] = bug "RelationAsMatrix.cardinality.unroll []"
                         unroll n [((iPat, i), dom)] =
-                                [essence| sum &iPat : &dom . &n[&i] |]
+                                [essence| sum &iPat : &dom . toInt(&n[&i]) |]
                         unroll n (((iPat, i), dom) : rest) =
                             let r = unroll [essence| &n[&i] |] rest
                             in  [essence| sum &iPat : &dom . &r |]
@@ -71,10 +69,9 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainRelation "RelationAsMatrix" _ innerDomains'
+              , DomainRelation "RelationAsMatrix" _ innerDomains
               , ConstantAbstract (AbsLitRelation vals)
-              ) | all domainCanIndexMatrix innerDomains' = do
-            innerDomains <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomains')
+              ) | all domainCanIndexMatrix innerDomains = do
             let
                 check :: [Constant] -> Bool
                 check indices = indices `elem` vals
@@ -85,18 +82,16 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
             let
                 unrollC :: MonadFail m
-                        => [ ( Domain () Constant       -- the int domain
-                             , Domain () Constant       -- the actial domain
-                             ) ]
+                        => [Domain () Constant]
                         -> [Constant]               -- indices
                         -> m Constant
-                unrollC [(i,i')] prevIndices = do
-                    domVals <- domainValues i'
+                unrollC [i] prevIndices = do
+                    domVals <- domainValues i
                     return $ ConstantAbstract $ AbsLitMatrix i
                         [ ConstantBool $ check $ prevIndices ++ [val]
                         | val <- domVals ]
-                unrollC ((i,i'):is) prevIndices = do
-                    domVals <- domainValues i'
+                unrollC (i:is) prevIndices = do
+                    domVals <- domainValues i
                     matrixVals <- forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return $ ConstantAbstract $ AbsLitMatrix i matrixVals
@@ -105,12 +100,11 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
 
-            outConstant <- unrollC (zip (map (forgetRepr "Representation.RelationAsMatrix") innerDomains)
-                                        (map (forgetRepr "Representation.RelationAsMatrix") innerDomains')) []
+            outConstant <- unrollC (map forgetRepr innerDomains) []
 
             return $ Just
                 [ ( outName name
-                  , unrollD (map (forgetRepr "Representation.RelationAsMatrix") innerDomains) DomainBool
+                  , unrollD (map forgetRepr innerDomains) DomainBool
                   , outConstant
                   ) ]
 
@@ -121,9 +115,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains')) = do
-
-            innerDomains <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomains')
+        up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains)) =
             
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
@@ -146,13 +138,12 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                 Just v  -> index v is
                         index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
 
-                    indices' <- allIndices innerDomains'
                     indices  <- allIndices innerDomains
-                    vals     <- forM (zip indices indices') $ \ (these, these') -> do
+                    vals     <- forM indices $ \ these -> do
                         indexed <- index constant these
                         case indexed of
                             ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just these')
+                            ConstantBool True  -> return (Just these)
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty indexed
                                 , "When working on:" <+> pretty name

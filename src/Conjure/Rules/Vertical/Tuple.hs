@@ -20,8 +20,8 @@ rule_Tuple_Eq :: Rule
 rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opEq p
-        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple _ <- typeOf y
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -34,8 +34,8 @@ rule_Tuple_Neq :: Rule
 rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opNeq p
-        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple _ <- typeOf y
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -48,8 +48,8 @@ rule_Tuple_Lt :: Rule
 rule_Tuple_Lt = "tuple-lt" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opLt p
-        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple _ <- typeOf y
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -62,8 +62,8 @@ rule_Tuple_Leq :: Rule
 rule_Tuple_Leq = "tuple-leq" `namedRule` theRule where
     theRule p = do
         (x,y)       <- match opLeq p
-        TypeTuple _ <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple _ <- typeOf y
+        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeTuple{} <- typeOf y
         xs          <- downX1 x
         ys          <- downX1 y
         return

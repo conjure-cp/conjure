@@ -41,11 +41,11 @@ import Conjure.UI.TypeCheck ( typeCheckModel )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
-
 import Conjure.Rules.Definition
 
 import qualified Conjure.Rules.Vertical.Tuple as Vertical.Tuple
-
+import qualified Conjure.Rules.Vertical.Record as Vertical.Record
+import qualified Conjure.Rules.Vertical.Variant as Vertical.Variant
 import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
 
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
@@ -74,6 +74,7 @@ import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partiti
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
+import qualified Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -169,7 +170,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
         processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
-                ys <- applicableRules config rulesAtLevel (hole x)
+                ys <- applicableRules config rulesAtLevel x
                 return $ if null ys
                             then Nothing
                             else Just (x, ys)
@@ -179,6 +180,29 @@ remaining config model | Just modelZipper <- zipperBi model = do
         answers' <- forM (zip allNats answers) $ \ (nAnswer, (ruleName, (ruleText, ruleResult, hook))) -> do
             let ruleResultExpr = ruleResult freshNames'
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            let mtyBefore = typeOf (hole focus)
+            let mtyAfter  = typeOf ruleResultExpr
+            case (mtyBefore, mtyAfter) of
+                (Right tyBefore, Right tyAfter) ->
+                    if typesUnify [tyBefore, tyAfter]
+                        then return ()
+                        else bug $ vcat
+                                [ "Rule application changes type."
+                                , "Before:" <+> pretty tyBefore
+                                , "After :" <+> pretty tyAfter
+                                ]
+                (Left msg, _) -> bug $ vcat
+                                [ "Type error before rule application:" <+> pretty ruleName
+                                , "Expr1:" <+> pretty (hole focus)
+                                , "Expr2:" <+> pretty ruleResultExpr
+                                , "Error:" <+> pretty msg
+                                ]
+                (_, Left msg) -> bug $ vcat
+                                [ "Type error after rule application:" <+> pretty ruleName
+                                , "Expr1:" <+> pretty (hole focus)
+                                , "Expr2:" <+> pretty ruleResultExpr
+                                , "Error:" <+> pretty msg
+                                ]
             fullModelAfterHook <- hook fullModelBeforeHook
             return Answer
                 { aText = ruleName <> ":" <+> ruleText
@@ -469,7 +493,7 @@ updateDeclarations model =
         onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr "updateDeclarations" d)) | (n, d) <- outs]
+                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
 
     in
         model { mStatements = statements }
@@ -506,6 +530,37 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
     return m
 checkIfAllRefined m = return m
 
+
+sliceThemMatrices :: Monad m => Model -> m Model
+sliceThemMatrices model = do
+    let
+        -- nothing stays with a matrix type
+        -- we are doing this top down, so the first time we reach a matrix typed thing, we know it need to be sliced
+        -- no need to descend any further
+        onExpr :: Monad m => Expression -> m Expression
+        onExpr p = do
+            let isIndexedMatrix = do
+                    (m, is) <- match opMatrixIndexing p
+                    tyM     <- typeOf m
+                    return (m, is, tyM)
+            case isIndexedMatrix of
+                Nothing -> descendM onExpr p
+                Just (m, is, tyM) -> do
+                    let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
+                        nestingLevel (TypeList     a) = 1 + nestingLevel a
+                        nestingLevel _ = 0 :: Int
+                    let howMany = nestingLevel tyM - length is
+                    let unroll a 0 = a
+                        unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
+                    m'  <- descendM onExpr m
+                    is' <- mapM onExpr is
+                    let p' = make opMatrixIndexing m' is'
+                    return $ unroll p' howMany
+
+    statements <- descendBiM onExpr (mStatements model)
+    return model { mStatements = statements }
+
+
 prologue :: (MonadFail m, MonadLog m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
@@ -530,6 +585,7 @@ epilogue model = return model
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
@@ -539,32 +595,32 @@ applicableRules
     :: forall m . MonadLog m
     => Config
     -> [Rule]
-    -> Expression
+    -> Zipper Model Expression
     -> m [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
-    mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty x)
-                         return (rName r, runIdentity $ runExceptT $ rApply r x)
+    mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty (hole x))
+                         return (rName r, runIdentity $ runExceptT $ rApply r x (hole x))
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
             Left  failed -> unless ("N/A" `isPrefixOf` show failed) $ logFail $ vcat
                 [ " rule failed:" <+> rule
-                , "          on:" <+> pretty x
+                , "          on:" <+> pretty (hole x)
                 , "     message:" <+> failed
                 ]
             Right ys     -> logSuccess $ vcat
                 [ "rule applied:" <+> rule
-                , "          on:" <+> pretty x
+                , "          on:" <+> pretty (hole x)
                 , "     message:" <+> vcat (map fst3 ys)
                 ]
     return [ (name, (msg, out', hook))
            | (name, Right ress) <- mys
            , (msg, out, hook) <- ress
-           , let out' fresh = out fresh |> resolveNamesX |> bugFail     -- re-resolving names
+           , let out' fresh = out fresh |> resolveNamesX |> bugFail "applicableRules"   -- re-resolving names
            ]
 
 
@@ -607,19 +663,34 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_Index
 
+    , Vertical.Record.rule_Record_Eq
+    , Vertical.Record.rule_Record_Neq
+    , Vertical.Record.rule_Record_Leq
+    , Vertical.Record.rule_Record_Lt
+    , Vertical.Record.rule_Record_Index
+
+    , Vertical.Variant.rule_Variant_Eq
+    , Vertical.Variant.rule_Variant_Neq
+    , Vertical.Variant.rule_Variant_Leq
+    , Vertical.Variant.rule_Variant_Lt
+    , Vertical.Variant.rule_Variant_Index
+    , Vertical.Variant.rule_Variant_Active
+
     , Vertical.Matrix.rule_Comprehension_Literal
-    , Vertical.Matrix.rule_Comprehension_Literal_ContainsSet
+    , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet
     , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Matrix_Eq
+    , Vertical.Matrix.rule_Matrix_Neq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_MatrixLit_Eq
     , Vertical.Matrix.rule_MatrixLit_Neq
+    , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
@@ -637,6 +708,7 @@ verticalRules =
     , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Freq
 
     , Vertical.Function.Function1D.rule_Comprehension
+    , Vertical.Function.Function1D.rule_Comprehension_Defined
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension
@@ -702,7 +774,11 @@ horizontalRules =
     , Horizontal.MSet.rule_MaxMin
 
     , Horizontal.Function.rule_Comprehension_Literal
-    , Horizontal.Function.rule_Image_Literal
+    , Horizontal.Function.rule_Image_Bool
+    , Horizontal.Function.rule_Image_Int
+    , Horizontal.Function.rule_Comprehension_Image
+    , Horizontal.Function.rule_Image_Literal_Bool
+    , Horizontal.Function.rule_Image_Literal_Int
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_Leq
@@ -728,6 +804,10 @@ horizontalRules =
     , Horizontal.Relation.rule_Neq
     , Horizontal.Relation.rule_Leq
     , Horizontal.Relation.rule_Lt
+    , Horizontal.Relation.rule_Subset
+    , Horizontal.Relation.rule_SubsetEq
+    , Horizontal.Relation.rule_Supset
+    , Horizontal.Relation.rule_SupsetEq
 
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
@@ -739,6 +819,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Party
     , Horizontal.Partition.rule_Participants
     , Horizontal.Partition.rule_Card
+    , Horizontal.Partition.rule_In
 
     ]
 
@@ -762,15 +843,21 @@ otherRules =
         , rule_Bool_DontCare
         , rule_Int_DontCare
         , rule_Tuple_DontCare
+        , rule_Record_DontCare
+        , rule_Variant_DontCare
         , rule_Matrix_DontCare
         , rule_Abstract_DontCare
 
         , rule_ComplexAbsPat
 
         , rule_AttributeToConstraint
+
+        , rule_QuantifierShift
+
         ]
 
-    ,   rule_InlineConditions
+    ,   [ rule_InlineConditions
+        ]
 
     ]
 
@@ -786,7 +873,7 @@ delayedRules =
 
 
 rule_ChooseRepr :: Config -> Rule
-rule_ChooseRepr config = Rule "choose-repr" theRule where
+rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given] = do
         let domOpts = reprOptions inpDom
@@ -815,24 +902,29 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
 
             representations     = model |> mInfo |> miRepresentations
             representationsTree = model |> mInfo |> miRepresentationsTree
+                                        |> concatMap (\ (n, ds) -> map (n,) ds )
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mstructurals = do
+            mkStructurals :: MonadLog m => m [Expression]
+            mkStructurals = do
+                logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
-                gen  <- getStructurals downX1 domain
-                gen freshNames' ref >>= mapM resolveNamesX     -- re-resolving names
+                let structurals = bugFail "structurals" $ getStructurals downX1 domain >>= \ gen -> gen freshNames' ref
+                logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
+                let resolved    = bugFail "resolving st"$ mapM resolveNamesX structurals     -- re-resolving names
+                logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
+                return resolved
 
-            structurals = case mstructurals of
-                Left err -> bug ("rule_ChooseRepr.hook.structurals" <+> err)
-                Right s  -> s
-
+            addStructurals :: MonadLog m => Model -> m Model
             addStructurals
-                | forg == Given = id
-                | usedBefore = id
-                | null structurals = id
-                | otherwise = \ m ->
-                    m { mStatements = mStatements m ++ [SuchThat structurals] }
+                | forg == Given = return
+                | usedBefore = return
+                | otherwise = \ m -> do
+                    structurals <- mkStructurals
+                    return $ if null structurals
+                        then m
+                        else m { mStatements = mStatements m ++ [SuchThat structurals] }
 
             channels =
                 [ make opEq this that
@@ -843,31 +935,34 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
                 ]
 
             addChannels
-                | forg == Given = id
-                | usedBefore = id
-                | null channels = id
-                | otherwise = \ m ->
+                | forg == Given = return
+                | usedBefore = return
+                | null channels = return
+                | otherwise = \ m -> return
                     m { mStatements = mStatements m ++ [SuchThat channels] }
 
             recordThis
-                | usedBefore = id
+                | usedBefore = return
                 | otherwise = \ m ->
                 let
                     oldInfo = mInfo m
                     newInfo = oldInfo
-                        { miRepresentations     = miRepresentations     oldInfo ++ [(name, domain)]
-                        , miRepresentationsTree = miRepresentationsTree oldInfo ++ [(name, reprTree domain)]
+                        { miRepresentations     =  representations     ++ [(name, domain)]
+                        , miRepresentationsTree = (representationsTree ++ [(name, reprTree domain)])
+                                                |> sortBy (comparing fst)
+                                                |> groupBy ((==) `on` fst)
+                                                |> map (\ grp -> (fst (head grp), map snd grp) )
                         }
-                in  m { mInfo = newInfo }
+                in  return m { mInfo = newInfo }
 
             fixReprForOthers
-                | useChannelling = id           -- no-op, if channelling=yes
+                | useChannelling = return           -- no-op, if channelling=yes
                 | otherwise = \ m ->
                 let
                     f (Reference nm _) | nm == name = Reference nm (Just (DeclHasRepr forg name domain))
                     f x = x
                 in
-                    m { mStatements = transformBi f (mStatements m) }
+                    return m { mStatements = transformBi f (mStatements m) }
 
         logDebugVerbose $ vcat
             [ "Name        :" <+> pretty name
@@ -876,16 +971,15 @@ rule_ChooseRepr config = Rule "choose-repr" theRule where
             , "usedBefore? :" <+> pretty usedBefore
             ]
 
-        model
-            |> addStructurals       -- unless usedBefore: add structurals
-            |> addChannels          -- for each in previously recorded representation
-            |> recordThis           -- unless usedBefore: record (name, domain) as being used in the model
-            |> fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
-            |> return
+        return model
+            >>= addStructurals       -- unless usedBefore: add structurals
+            >>= addChannels          -- for each in previously recorded representation
+            >>= recordThis           -- unless usedBefore: record (name, domain) as being used in the model
+            >>= fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
 
 
 rule_ChooseReprForComprehension :: Rule
-rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule where
+rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
@@ -908,7 +1002,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
         return
             [ ( "Choosing representation for quantified variable" <+> pretty nm <+> "(with type:" <+> pretty ty <> ")"
-              , \ fresh -> bugFail $ do
+              , \ fresh -> bugFail "rule_ChooseReprForComprehension" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -936,7 +1030,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" theRule w
 
 
 rule_ChooseReprForLocals :: Rule
-rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
+rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body locals) = do
         (gofBefore, (nm, domain), gofAfter) <- matchFirst locals $ \ local -> case local of
@@ -964,7 +1058,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
 
         return
             [ ( "Choosing representation for local variable" <+> pretty nm
-              , \ fresh -> bugFail $ do
+              , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -976,7 +1070,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" theRule where
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
                                                     name
-                                                    (forgetRepr "rule_ChooseReprForLocals" dom))
+                                                    (forgetRepr dom))
                                    | (name, dom) <- outDomains ]
                                 ++ [ SuchThat structurals | not (null structurals) ]
                                 ++ transformBi updateRepr gofAfter
@@ -1207,6 +1301,28 @@ rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
                )
 
 
+rule_Record_DontCare :: Rule
+rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
+    theRule p = do
+        x            <- match opDontCare p
+        TypeRecord{} <- typeOf x
+        xs           <- downX1 x
+        return ( "dontCare handling for record"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
+rule_Variant_DontCare :: Rule
+rule_Variant_DontCare = "dontCare-variant" `namedRule` theRule where
+    theRule p = do
+        x             <- match opDontCare p
+        TypeVariant{} <- typeOf x
+        xs            <- downX1 x
+        return ( "dontCare handling for variant"
+               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               )
+
+
 rule_Matrix_DontCare :: Rule
 rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
     theRule p = do
@@ -1249,7 +1365,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
             ( "complex pattern on tuple patterns"
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        replacements = [ (p, make opIndexing' i (map fromInt is))
+                        replacements = [ (p, make opMatrixIndexing i (map fromInt is))
                                        | (p, is) <- genMappings pat
                                        ]
                         f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
@@ -1285,45 +1401,50 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
-rule_InlineConditions :: [Rule]
-rule_InlineConditions =
-    [ namedRule "condition-inside-and" $ ruleGen_InlineConditions opAnd opAndSkip
-    , namedRule "condition-inside-or"  $ ruleGen_InlineConditions opOr  opOrSkip
-    , namedRule "condition-inside-sum" $ ruleGen_InlineConditions opSum opSumSkip
-    , namedRule "condition-inside-max" $ ruleGen_InlineConditions opMax opMaxSkip
-    , namedRule "condition-inside-min" $ ruleGen_InlineConditions opMin opMinSkip
-    ]
-    where
-        opAndSkip b x = [essence| &b -> &x |]
-        opOrSkip  b x = [essence| &b /\ &x |]
-        opSumSkip b x = [essence| toInt(&b) * &x |]
-        opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
-        opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
+rule_InlineConditions :: Rule
+rule_InlineConditions = Rule "inline-conditions" theRule where
+    theRule z (Comprehension body gensOrConds) = do
+        let (toInline, toKeep) = mconcat
+                [ case gof of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[gof])
+                | gof <- gensOrConds
+                ]
+        theGuard <- case toInline of
+            []  -> fail "No condition to inline."
+            xs  -> return $ make opAnd $ fromList xs
+        (nameQ, opSkip) <- queryQ z
+        return [( "Inlining conditions, inside" <+> nameQ
+                , const $ Comprehension (opSkip theGuard body) toKeep
+                , return
+                )]
+    theRule _ _ = na "rule_InlineConditions"
 
-ruleGen_InlineConditions
-    :: MonadFail m
-    => (forall m1 . MonadFail m1
-            => Proxy (m1 :: * -> *)
-            -> ( Expression -> Expression , Expression -> m1 Expression )
-       )
-    -> (Expression -> Expression -> Expression)
-    -> Expression
-    -> m (Doc, [Name] -> Expression)
-ruleGen_InlineConditions opQ opSkip p = do
-    Comprehension body gensOrConds <- match opQ p
-    let (toInline, toKeep) = mconcat
-            [ case gof of
-                Condition x | categoryOf x == CatDecision -> ([x],[])
-                _ -> ([],[gof])
-            | gof <- gensOrConds
-            ]
-    theGuard <- case toInline of
-        []  -> fail "No condition to inline."
-        xs  -> return $ make opAnd $ fromList xs
-    return ( "Inlining conditions"
-           , const $ make opQ $
-               Comprehension (opSkip theGuard body) toKeep
-           )
+    -- keep going up, until finding a quantifier
+    -- when found, return the skipping operator for the quantifier
+    -- if none exists, do not apply the rule.
+    -- (or maybe we should call bug right ahead, it can't be anything else.)
+    queryQ z = do
+        let h = hole z
+        case ( match opAnd h
+             , match opOr h
+             , match opSum h
+             , match opMax h
+             , match opMin h ) of
+            (Just _, _, _, _, _) -> return ("and", opAndSkip )
+            (_, Just _, _, _, _) -> return ("or" , opOrSkip  )
+            (_, _, Just _, _, _) -> return ("sum", opSumSkip )
+            (_, _, _, Just _, _) -> return ("max", opMaxSkip )
+            (_, _, _, _, Just _) -> return ("min", opMinSkip )
+            _ -> case Zipper.up z of
+                Nothing -> fail "queryQ"
+                Just u  -> queryQ u
+
+    opAndSkip b x = [essence| &b -> &x |]
+    opOrSkip  b x = [essence| &b /\ &x |]
+    opSumSkip b x = [essence| toInt(&b) * &x |]
+    opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
+    opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
 
 rule_AttributeToConstraint :: Rule
@@ -1333,7 +1454,7 @@ rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
         let conv fresh = mkAttributeToConstraint dom attr mval fresh thing
         return
             ( "Converting an attribute to a constraint"
-            , bugFail . conv
+            , bugFail "rule_AttributeToConstraint" . conv
             )
     theRule _ = na "rule_AttributeToConstraint"
 
@@ -1344,6 +1465,9 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Domain{} = na "rule_FullEvaluate"
     theRule p = do
         constant <- instantiateExpression [] p
+        if null [() | ConstantUndefined{} <- universe constant]
+            then return ()
+            else na "rule_PartialEvaluate, undefined"
         return
             ( "Full evaluator"
             , const $ Constant constant
@@ -1365,3 +1489,28 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
             , const x'
             )
     theRule _ = na "rule_PartialEvaluate"
+
+
+-- | shifting quantifiers inwards, if they operate on a row of a 2d matrix,
+--   make them operate on the rows directly then index
+rule_QuantifierShift :: Rule
+rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, inner  )               <- match opQuantifier p
+        (matrix, indexer)               <- match opMatrixIndexing inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
+        case ty of
+            TypeMatrix{} -> return ()
+            TypeList{} -> return ()
+            _ -> na "rule_QuantifierShift"
+        let
+            
+        return
+            ( "Shifting quantifier inwards"
+            , const $ make opMatrixIndexing
+                        (make matrixLiteral
+                            TypeAny
+                            index
+                            (map mkQuan elems))
+                        indexer
+            )

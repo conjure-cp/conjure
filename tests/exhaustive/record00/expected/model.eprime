@@ -1,0 +1,16 @@
+language ESSENCE' 1.0
+
+find x_a: bool
+find x_b: int(0..9)
+find y_a: bool
+find y_b: int(0..9)
+find z_a: bool
+find z_b: int(0..9)
+such that
+    x_a,
+    x_b = 3,
+    y_a = false,
+    y_b = 4,
+    y_a = z_a,
+    y_b = z_b
+

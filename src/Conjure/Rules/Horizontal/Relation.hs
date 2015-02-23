@@ -22,8 +22,10 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match relationLiteral expr
-        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+        (TypeRelation taus, elems) <- match relationLiteral expr
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt (TypeTuple taus))
+                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
                             [ AbstractLiteral (AbsLitTuple row)
                             | row <- elems
                             ]
@@ -120,8 +122,13 @@ rule_Eq = "relation-eq" `namedRule` theRule where
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation equality"
-               , const $ make opEq (make opToSet x)
-                                   (make opToSet y)
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (forAll &iPat in &x . &i in &y)
+                            /\
+                            (forAll &iPat in &y . &i in &x)
+                        |]
                )
 
 
@@ -131,7 +138,13 @@ rule_Neq = "relation-neq" `namedRule` theRule where
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 
@@ -168,8 +181,7 @@ rule_Leq = "relation-leq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)     <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
         return ( "Horizontal rule for relation subsetEq"
@@ -177,6 +189,7 @@ rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence| forAll &iPat in (&x) . &i in &y |]
                )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule

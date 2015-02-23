@@ -83,20 +83,30 @@ prettyPrecBinOp envPrec op a b =
 
 intToInt :: (MonadFail m, TypeOf a) => a -> m Type
 intToInt a = do
-    TypeInt{} <- typeOf a
-    return TypeInt
+    tya <- typeOf a
+    case tya of
+        TypeInt -> return TypeInt
+        _       -> fail $ "Argument expected to be an int, but it is:" <++> pretty tya
+
 
 intToIntToInt :: (MonadFail m, TypeOf a) => a -> a -> m Type
 intToIntToInt a b = do
-    TypeInt{} <- typeOf a
-    TypeInt{} <- typeOf b
-    return TypeInt
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        (TypeInt, TypeInt) -> return TypeInt
+        (_, TypeInt)       -> fail $  "First argument expected to be an int, but it is:" <++> pretty tya
+        _                  -> fail $ "Second argument expected to be an int, but it is:" <++> pretty tyb
 
 boolToBoolToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
 boolToBoolToBool a b = do
-    TypeBool{} <- typeOf a
-    TypeBool{} <- typeOf b
-    return TypeBool
+    tya <- typeOf a
+    tyb <- typeOf b
+    case (tya, tyb) of
+        (TypeBool, TypeBool) -> return TypeBool
+        (_, TypeBool)        -> fail $  "First argument expected to be a bool, but it is:" <++> pretty tya
+        _                    -> fail $ "Second argument expected to be a bool, but it is:" <++> pretty tyb
+        
 
 sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
 sameToSameToBool a b = do
@@ -200,6 +210,8 @@ functionals =
     , LIdentifier "sum"
     , LIdentifier "product"
 
+    , L_active
+
     ]
 
 
@@ -229,10 +241,12 @@ valuesInIntDomain ranges =
         allValues = nub $ concat $ catMaybes allRanges
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
+boolsOut (TypedConstant c _) = boolsOut c
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Constant -> m [Int]
+intsOut (TypedConstant c _) = intsOut c
 intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
 intsOut b = return <$> intOut b
 

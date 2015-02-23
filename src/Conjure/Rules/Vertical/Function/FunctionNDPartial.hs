@@ -26,11 +26,14 @@ rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule`
             _        -> return ()
         [flags,values]      <- downX1 f
         TypeTuple ts        <- typeOf x
-        let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x 1)
-            index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
-        let flagsIndexed  = index flags  xArity
-        let valuesIndexed = index values xArity
+
+        let
+            toIndex   = [ [essence| &x[&k] |]
+                        | k' <- [1 .. length ts]
+                        , let k = fromInt k'
+                        ]
+            flagsIndexed  = make opMatrixIndexing flags  toIndex
+            valuesIndexed = make opMatrixIndexing values toIndex
 
         return ( "Function image, FunctionNDPartial representation, not-a-bool"
                , const [essence| { &valuesIndexed
@@ -77,12 +80,14 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
     theRule [essence| &x in defined(&f) |] = do
         "FunctionNDPartial" <- representationOf f
         [flags,_values]     <- downX1 f
-
         TypeTuple ts        <- typeOf x
-        let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x 1)
-            index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
-        let flagsIndexed  = index flags  xArity
+
+        let
+            toIndex   = [ [essence| &x[&k] |]
+                        | k' <- [1 .. length ts]
+                        , let k = fromInt k'
+                        ]
+            flagsIndexed  = make opMatrixIndexing flags  toIndex
 
         return ( "Function in defined, FunctionNDPartial representation"
                , const flagsIndexed
@@ -94,33 +99,30 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "FunctionNDPartial"           <- representationOf func
-        TypeFunction (TypeTuple ts) _ <- typeOf func
-        [flags,values]                <- downX1 func
-        valuesDom                     <- domainOf values
-        let (indexDomain,_)           =  getIndices valuesDom
-
-        let xArity          =  length ts
-        let index x m 1     = make opIndexing m                     (make opIndexing x 1)
-            index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
-        let flagsIndexed  x = index x flags  xArity
-        let valuesIndexed x = index x values xArity
-
+        "FunctionNDPartial"                   <- representationOf func
+        TypeFunction (TypeTuple ts) _         <- typeOf func
+        DomainFunction _ _ (DomainTuple ds) _ <- domainOf func
+        [flags,values]                        <- downX1 func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionNDPartial representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val' = valuesIndexed j
-                    val  = [essence| (&j, &val') |]
+                    toIndex   = [ [essence| &j[&k] |]
+                                | k' <- [1 .. length ts]
+                                , let k = fromInt k'
+                                ]
+                    flagsIndexed  = make opMatrixIndexing flags  toIndex
+                    valuesIndexed = make opMatrixIndexing values toIndex
+                    val           = [essence| (&j, &valuesIndexed) |]
                 in
                     Comprehension (upd val body)
                     $  gofBefore
-                    ++ [ Generator (GenDomainNoRepr jPat (DomainTuple indexDomain))
-                       , Condition (flagsIndexed j)
+                    ++ [ Generator (GenDomainNoRepr jPat (forgetRepr $ DomainTuple ds))
+                       , Condition flagsIndexed
                        ]
                     ++ transformBi (upd val) gofAfter
             )

@@ -13,7 +13,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 functionNDPartial :: forall m . MonadFail m => Representation m
@@ -37,16 +37,15 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
-                    (DomainTuple innerDomainFrs')
-                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
-            innerDomainFrs <- mapM toIntDomain innerDomainFrs'
+                    (DomainTuple innerDomainFrs)
+                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( nameFlags name
-                  , unroll (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) DomainBool
+                  , unroll (map forgetRepr innerDomainFrs) DomainBool
                   )
                 , ( nameValues name
-                  , unroll (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) innerDomainTo
+                  , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
         downD _ = na "{downD} FunctionNDPartial"
@@ -55,9 +54,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
         structuralCons f downX1
             (DomainFunction "FunctionNDPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
-                (DomainTuple innerDomainFrs')
-                innerDomainTo) | all domainCanIndexMatrix innerDomainFrs' = do
-            innerDomainFrs    <- mapM toIntDomain innerDomainFrs'
+                (DomainTuple innerDomainFrs)
+                innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let innerDomainFr =  DomainTuple innerDomainFrs
 
             let
@@ -158,12 +156,11 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downC ( name
               , DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
-                    (DomainTuple innerDomainFrs')
+                    (DomainTuple innerDomainFrs)
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
-              ) | all domainCanIndexMatrix innerDomainFrs' = do
+              ) | all domainCanIndexMatrix innerDomainFrs = do
             z <- zeroVal innerDomainTo
-            innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
@@ -177,13 +174,11 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let
                 unrollC :: MonadFail m
-                        => [ ( Domain () Constant       -- the int domain
-                             , Domain () Constant       -- the actial domain
-                             ) ]
+                        => [Domain () Constant]
                         -> [Constant]               -- indices
                         -> m (Constant, Constant)
-                unrollC [(i,i')] prevIndices = do
-                    domVals <- domainValues i'
+                unrollC [i] prevIndices = do
+                    domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
                     return ( ConstantAbstract $ AbsLitMatrix i
                                 [ case active val of
@@ -194,8 +189,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 [ fromMaybe z (active val)
                                 | val <- domVals ]
                            )
-                unrollC ((i,i'):is) prevIndices = do
-                    domVals <- domainValues i'
+                unrollC (i:is) prevIndices = do
+                    domVals <- domainValues i
                     (matrixFlags, matrixVals) <- liftM unzip $ forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return ( ConstantAbstract $ AbsLitMatrix i matrixFlags
@@ -206,16 +201,14 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                                      , "    prevIndices:" <+> pretty (show prevIndices)
                                                      ]
 
-            (outFlags, outValues) <- unrollC (zip (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs)
-                                                  (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs')
-                                             ) []
+            (outFlags, outValues) <- unrollC (map forgetRepr innerDomainFrs) []
             return $ Just
                 [ ( nameFlags name
-                  , unrollD (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) DomainBool
+                  , unrollD (map forgetRepr innerDomainFrs) DomainBool
                   , outFlags
                   )
                 , ( nameValues name
-                  , unrollD (map (forgetRepr "Representation.FunctionNDPartial") innerDomainFrs) innerDomainTo
+                  , unrollD (map forgetRepr innerDomainFrs) innerDomainTo
                   , outValues
                   )
                 ]
@@ -225,9 +218,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
                                 (FunctionAttr _ PartialityAttr_Partial _)
-                                (DomainTuple innerDomainFrs') _)) = do
-
-            innerDomainFrs <- fmap (fmap e2c) <$> mapM toIntDomain (fmap (fmap Constant) innerDomainFrs')
+                                (DomainTuple innerDomainFrs) _)) =
 
             case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just valuesMatrix) -> do
@@ -244,14 +235,13 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 Just v  -> index v is
                         index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
 
-                    indices' <- allIndices innerDomainFrs'
                     indices  <- allIndices innerDomainFrs
-                    vals     <- forM (zip indices indices') $ \ (these, these') -> do
+                    vals     <- forM indices $ \ these -> do
                         flag  <- index flagMatrix   these
                         value <- index valuesMatrix these
                         case flag of
                             ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just (ConstantAbstract (AbsLitTuple these'), value))
+                            ConstantBool True  -> return (Just (ConstantAbstract (AbsLitTuple these), value))
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty flag
                                 , "                           , and    :" <+> pretty value

@@ -21,16 +21,17 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "FunctionND" <- representationOf f
         [values]            <- downX1 f
-
         TypeTuple ts        <- typeOf x
-        let xArity          =  length ts
-        let index m 1     = make opIndexing m                   (make opIndexing x 1)
-            index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
-        let valuesIndexed = index values xArity
-
-        return ( "Function image, FunctionND representation"
-               , const valuesIndexed
-               )
+        let
+            toIndex   = [ [essence| &x[&k] |]
+                        | k' <- [1 .. length ts]
+                        , let k = fromInt k'
+                        ]
+            valuesIndexed = make opMatrixIndexing values toIndex
+        return
+            ( "Function image, FunctionND representation"
+            , const valuesIndexed
+            )
     theRule _ = na "rule_Image"
 
 
@@ -38,31 +39,28 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "FunctionND"                  <- representationOf func
-        TypeFunction (TypeTuple ts) _ <- typeOf func
-        [values]                      <- downX1 func
-        valuesDom                     <- domainOf values
-        let (indexDomain,_)           =  getIndices valuesDom
-
-        let xArity          =  length ts
-        let index x m 1     = make opIndexing m                     (make opIndexing x 1)
-            index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
-        let valuesIndexed x = index x values xArity
-
+        "FunctionND"                     <- representationOf func
+        TypeFunction (TypeTuple ts) _    <- typeOf func
+        DomainFunction _ _ indexDomain _ <- domainOf func
+        [values]                         <- downX1 func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionND representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val' = valuesIndexed j
-                    val  = [essence| (&j, &val') |]
+                    toIndex   = [ [essence| &j[&k] |]
+                                | k' <- [1 .. length ts]
+                                , let k = fromInt k'
+                                ]
+                    valuesIndexed = make opMatrixIndexing values toIndex
+                    val  = [essence| (&j, &valuesIndexed) |]
                 in
                     Comprehension (upd val body)
                         $  gofBefore
-                        ++ [ Generator (GenDomainNoRepr jPat (DomainTuple indexDomain)) ]
+                        ++ [ Generator (GenDomainNoRepr jPat (forgetRepr indexDomain)) ]
                         ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension"
@@ -73,24 +71,21 @@ rule_Comprehension_Defined = "function-comprehension_defined{FunctionND}" `named
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension"
-        func                          <- match opDefined expr
-        "FunctionND"                  <- representationOf func
-        [values]                      <- downX1 func
-        valuesDom                     <- domainOf values
-        let (indexDomain,_)           =  getIndices valuesDom
+            _ -> na "rule_Comprehension_Defined"
+        func                             <- match opDefined expr
+        "FunctionND"                     <- representationOf func
+        DomainFunction _ _ indexDomain _ <- domainOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionND representation"
             , \ fresh ->
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val  = j
+                    val = j
                 in
                     Comprehension (upd val body)
                         $  gofBefore
-                        ++ [ Generator (GenDomainNoRepr jPat (DomainTuple indexDomain)) ]
+                        ++ [ Generator (GenDomainNoRepr jPat (forgetRepr indexDomain)) ]
                         ++ transformBi (upd val) gofAfter
             )
-    theRule _ = na "rule_Comprehension"
-
+    theRule _ = na "rule_Comprehension_Defined"

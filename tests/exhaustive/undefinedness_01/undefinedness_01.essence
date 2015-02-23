@@ -1,0 +1,21 @@
+language Essence 1.3
+
+letting m be [1;int(1)]
+letting n be [true;int(1)]
+
+find x,y,z : bool
+
+such that x = (m[0] = 1)
+$ here m[0] is undefined
+$ which makes 1=m[0] false (not undefined, undefined bool == false)
+$ which makes x = false
+
+such that y = (n[0] = true)
+$ here n[0] is undefined, hence false
+$ true = false is false
+$ y = false
+
+such that z = (n[0] = false)
+$ here n[0] is undefined, hence false
+$ false = false is true
+$ z = true

@@ -54,6 +54,8 @@ data Domain r x
         (Maybe [(Name, Int)])       -- the mapping to integers, if available
     | DomainUnnamed Name x
     | DomainTuple [Domain r x]
+    | DomainRecord [(Name, Domain r x)]
+    | DomainVariant [(Name, Domain r x)]
     | DomainMatrix (Domain () x) (Domain r x)
     | DomainSet       r (SetAttr x) (Domain r x)
     | DomainMSet      r (MSetAttr x) (Domain r x)
@@ -104,6 +106,10 @@ typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
+typeOfDomain (DomainRecord        xs ) = TypeRecord     <$> sequence [ do t <- typeOf d ; return (n, t)
+                                                                     | (n,d) <- xs ]
+typeOfDomain (DomainVariant       xs ) = TypeVariant    <$> sequence [ do t <- typeOf d ; return (n, t)
+                                                                     | (n,d) <- xs ]
 typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeOf inn
 typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
 typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
@@ -137,20 +143,22 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainPartition () def (mappend x y)
     mappend d1 d2 = bug $ vcat ["Domain.mappend", pretty d1, pretty d2]
 
-forgetRepr :: (Pretty r, Pretty x) => Doc -> Domain r x -> Domain () x
-forgetRepr caller = defRepr (caller <+> "via forgetRepr")
+forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
+forgetRepr = defRepr
 
-defRepr :: (Default r2, Pretty r, Pretty x) => Doc -> Domain r x -> Domain r2 x
-defRepr caller = changeRepr (caller <+> "via defRepr") def
+defRepr :: (Default r2, Pretty r, Pretty x) => Domain r x -> Domain r2 x
+defRepr = changeRepr def
 
-changeRepr :: (Pretty r, Pretty x) => Doc -> r2 -> Domain r x -> Domain r2 x
-changeRepr _ rep = go
+changeRepr :: (Pretty r, Pretty x) => r2 -> Domain r x -> Domain r2 x
+changeRepr rep = go
     where
         go DomainBool = DomainBool
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
         go (DomainTuple ds) = DomainTuple (map go ds)
+        go (DomainRecord xs) = DomainRecord (map (second go) xs)
+        go (DomainVariant xs) = DomainVariant (map (second go) xs)
         go (DomainMatrix index inner) = DomainMatrix index (go inner)
         go (DomainSet _   attr d) =
             DomainSet rep attr (go d)
@@ -180,7 +188,9 @@ reprTree DomainBool{}    = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
-reprTree (DomainTuple as  ) = Tree Nothing (map reprTree as)
+reprTree (DomainTuple  as ) = Tree Nothing (map reprTree as)
+reprTree (DomainRecord as ) = Tree Nothing (map (reprTree . snd) as)
+reprTree (DomainVariant as) = Tree Nothing (map (reprTree . snd) as)
 reprTree (DomainMatrix _ a) = Tree Nothing [reprTree a]
 reprTree (DomainSet       r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainMSet      r _ a  ) = Tree (Just r) [reprTree a]
@@ -195,20 +205,25 @@ reprAtTopLevel :: Domain r x -> Maybe r
 reprAtTopLevel = rootLabel . reprTree
 
 applyReprTree :: (MonadFail m, Pretty x, Pretty r2, Default r) => Domain r2 x -> Tree (Maybe r) -> m (Domain r x)
-applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) = DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree dom@DomainBool{}    (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainInt{}     (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainEnum{}    (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainUnnamed{} (Tree Nothing []) = return (defRepr dom)
+applyReprTree (DomainTuple as  ) (Tree Nothing asRepr) =
+    DomainTuple <$> zipWithM applyReprTree as asRepr
+applyReprTree (DomainRecord as ) (Tree Nothing asRepr) =
+    (DomainRecord  . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
+applyReprTree (DomainVariant as) (Tree Nothing asRepr) =
+    (DomainVariant . zip (map fst as)) <$> zipWithM applyReprTree (map snd as) asRepr
 applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> applyReprTree a aRepr
 applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = DomainFunction r attr <$> applyReprTree a aRepr <*> applyReprTree b bRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
-applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr "applyReprTree" dom)
-applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr "applyReprTree" dom)
+applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
+applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
@@ -340,6 +355,19 @@ allSupportedAttributes =
     map (,0) [ "total"
              , "injective", "surjective", "bijective"
              , "complete", "regular"
+             ] ++
+    map (,0) [ "reflexive"
+             , "irreflexive"
+             , "coreflexive"
+             , "symmetric"
+             , "antiSymmetric"
+             , "aSymmetric"
+             , "transitive"
+             , "total"
+             , "Euclidean"
+             , "serial"
+             , "equivalence"
+             , "partialOrder"
              ]
 
 
@@ -366,6 +394,8 @@ addAttributeToDomain d@DomainInt{}       = const $ const $ return d
 addAttributeToDomain d@DomainEnum{}      = const $ const $ return d
 addAttributeToDomain d@DomainUnnamed{}   = const $ const $ return d
 addAttributeToDomain d@DomainTuple{}     = const $ const $ return d
+addAttributeToDomain d@DomainRecord{}    = const $ const $ return d
+addAttributeToDomain d@DomainVariant{}   = const $ const $ return d
 addAttributeToDomain d@DomainMatrix{}    = const $ const $ return d
 addAttributeToDomain d@DomainOp{}        = const $ const $ return d
 addAttributeToDomain d@DomainReference{} = const $ const $ return d
@@ -1016,6 +1046,16 @@ rangesInts = liftM (sortNub . concat) . mapM rangeInts
                                           return [x' .. y']
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
+expandRanges :: ExpressionLike c => [Range c] -> [Range c]
+expandRanges r =
+    case rangesInts r of
+        Nothing -> r
+        Just [] -> []
+        Just is ->
+            if [ minimum is .. maximum is ] == is
+                then [RangeBounded (fromInt (minimum is)) (fromInt (maximum is))]
+                else map (RangeSingle . fromInt) is
+
 
 data HasRepresentation = NoRepresentation | HasRepresentation Name
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -1047,6 +1087,12 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainTuple inners)
         = (if length inners < 2 then "tuple" else prEmpty)
         <+> prettyList prParens "," inners
+
+    pretty (DomainRecord xs) = "record" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
+
+    pretty (DomainVariant xs) = "variant" <+> prettyList prBraces ","
+        [ pretty nm <+> ":" <+> pretty d | (nm, d) <- xs ]
 
     pretty (DomainMatrix index innerNested)
         = "matrix indexed by" <+> prettyList prBrackets "," indices
@@ -1107,9 +1153,9 @@ instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
     pretty (HasRepresentation r) = pretty r
 
-normaliseDomain :: Ord c => (c -> c) -> Domain r c -> Domain r c
+normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool
-normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) rs
+normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) (expandRanges rs)
 normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
 normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
 normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)

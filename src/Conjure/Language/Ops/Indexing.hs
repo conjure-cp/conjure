@@ -3,6 +3,7 @@
 module Conjure.Language.Ops.Indexing where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Ops.Common
 
 
@@ -14,29 +15,80 @@ instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Show x, Pretty x, ExpressionLike x) => TypeOf (OpIndexing x) where
-    typeOf (OpIndexing m i) = do
+instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (OpIndexing x) where
+    typeOf p@(OpIndexing m i) = do
         tyM <- typeOf m
+        -- tyI <- typeOf i
+        let tyI = TypeAny
         case tyM of
-            TypeMatrix _ inn -> return inn
+            TypeMatrix tyIndex inn
+                | typesUnify [tyIndex, tyI] -> return inn
+                | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
+                    [ "The expression:"  <+> pretty p
+                    , "Indexing:"        <+> pretty m
+                    , "Expected type of index:" <+> pretty tyIndex
+                    , "Actual type of index  :" <+> pretty tyI
+                    ]
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
                 return (at inns (iInt-1))
-            _ -> fail ("Indexing something other than a matrix or a tuple:" <++> vcat [pretty m, pretty tyM])
+            TypeRecord inns  -> do
+                nm <- nameOut i
+                case lookup nm inns of
+                    Nothing -> fail $ "Record indexing with non-member field:" <++> vcat
+                        [ "The expression:" <+> pretty p
+                        , "Indexing:"       <+> pretty m
+                        , "With type:"      <+> pretty tyM
+                        ]
+                    Just ty -> return ty
+            TypeVariant inns -> do
+                nm <- nameOut i
+                case lookup nm inns of
+                    Nothing -> fail $ "Variant indexing with non-member field:" <++> vcat
+                        [ "The expression:" <+> pretty p
+                        , "Indexing:"       <+> pretty m
+                        , "With type:"      <+> pretty tyM
+                        ]
+                    Just ty -> return ty
+            _ -> fail $ "Indexing something other than a matrix or a tuple:" <++> vcat
+                    [ "The expression:" <+> pretty p
+                    , "Indexing:"       <+> pretty m
+                    , "With type:"      <+> pretty tyM
+                    ]
 
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do
+        ty   <- typeOf m
+        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                           TypeList tyTo     -> return tyTo
+                           _ -> fail "evaluateOp{OpIndexing}"
         indexVals <- valuesInIntDomain index
         case [ v | (i, v) <- zip indexVals vals, i == x ] of
             [v] -> return v
-            []  -> fail $ vcat [ "Matrix is not defined at this point:" <+> pretty x
-                               , "Matrix value:" <+> pretty m
-                               ]
-            _   -> fail $ vcat [ "Matrix is multiply defined at this point:" <+> pretty x
-                               , "Matrix value:" <+> pretty m
-                               ]
+            []  -> return $ mkUndef tyTo $ vcat
+                    [ "Matrix is not defined at this point:" <+> pretty x
+                    , "Matrix value:" <+> pretty m
+                    ]
+            _   -> return $ mkUndef tyTo $ vcat
+                    [ "Matrix is multiply defined at this point:" <+> pretty x
+                    , "Matrix value:" <+> pretty m
+                    ]
     evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantField name _)) =
+        case lookup name vals of
+            Nothing -> bug $ vcat
+                    [ "Record doesn't have a member with this name:" <+> pretty name
+                    , "Record:" <+> pretty rec
+                    ]
+            Just val -> return val
+    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name ty)) =
+        if name == name'
+            then return x
+            else return $ mkUndef ty $ vcat
+                    [ "Variant isn't set to a member with this name:" <+> pretty name
+                    , "Variant:" <+> pretty var
+                    ]
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
 instance SimplifyOp OpIndexing where

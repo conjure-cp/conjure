@@ -22,8 +22,11 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match msetLiteral expr
-        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)]) elems
+        (TypeMSet tau, elems) <- match msetLiteral expr
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt tau)
+                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            elems
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on mset literals"
@@ -43,10 +46,10 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet_Literal"
-        mset  <- match opToSet expr
-        elems <- match msetLiteral mset
+        mset                  <- match opToSet expr
+        (TypeMSet tau, elems) <- match msetLiteral mset
         let outLiteralDomain = mkDomainIntB 1 (fromInt $ length elems)
-        let outLiteral = make matrixLiteral outLiteralDomain elems
+        let outLiteral = make matrixLiteral (TypeMatrix TypeInt tau) outLiteralDomain elems
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on toSet of mset literals"
@@ -90,7 +93,12 @@ rule_Neq = "mset-neq" `namedRule` theRule where
         TypeMSet{} <- typeOf x
         TypeMSet{} <- typeOf y
         return ( "Horizontal rule for mset dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . freq(&x,&i) != freq(&y,&i)) \/
+                            (exists &iPat in &y . freq(&x,&i) != freq(&y,&i))
+                        |]
                )
     theRule _ = na "rule_Neq"
 

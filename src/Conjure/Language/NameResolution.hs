@@ -10,6 +10,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
 
@@ -17,7 +18,15 @@ resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
 resolveNames model = flip evalStateT (freshNames model, []) $ do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    duplicateNames <- gets (snd >>> map fst >>> histogram >>> filter (\ (_,n) -> n > 1 ) >>> map fst)
+    duplicateNames <- gets (snd                                 -- all names defined in the model
+                            >>> filter (\ (_,d) -> case d of
+                                    RecordField{}  -> False      -- filter out the RecordField's
+                                    VariantField{} -> False      --        and the VariantField's
+                                    _              -> True )
+                            >>> map fst                         -- strip the ReferenceTo's
+                            >>> histogram
+                            >>> filter (\ (_,n) -> n > 1 )      -- keep those that are defined multiple times
+                            >>> map fst)
     unless (null duplicateNames) $
         userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
     return model { mStatements = statements }
@@ -109,6 +118,8 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
             -> return p
         Just r  -> return (Reference nm (Just r))
 
+resolveX (AbstractLiteral lit) = AbstractLiteral <$> resolveAbsLit lit
+
 resolveX (Domain x) = Domain <$> resolveD x
 
 resolveX p@Comprehension{} = scope $ do
@@ -165,7 +176,36 @@ resolveD (DomainReference nm Nothing) = do
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> resolveD r
         Just x -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
+resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
+    d' <- resolveD d
+    t  <- typeOf d'
+    modify (second ((n, RecordField n t) :))
+    return (n, d')
+resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
+    d' <- resolveD d
+    t  <- typeOf d'
+    modify (second ((n, VariantField n t) :))
+    return (n, d')
 resolveD d = do
     d' <- descendM resolveD d
     mapM resolveX d'
 
+
+resolveAbsLit
+    :: ( MonadFail m
+       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       )
+    => AbstractLiteral Expression
+    -> m (AbstractLiteral Expression)
+resolveAbsLit p@(AbsLitVariant Nothing n x) = do
+    x'   <- resolveX x
+    mval <- gets snd
+    let
+        isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
+        isTheVariant _ = Nothing
+    case mapMaybe isTheVariant (map snd mval) of
+        (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
+        _ -> userErr ("Not a member of a variant type:" <+> pretty p)
+resolveAbsLit lit = do
+    lit' <- descendM resolveAbsLit lit
+    mapM resolveX lit'

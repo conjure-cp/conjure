@@ -27,7 +27,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
-              , DomainMatrix (forgetRepr "Representation.Occurrence" innerDomain) DomainBool
+              , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
         downD _ = na "{downD} Occurrence"
@@ -39,7 +39,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                 case refs of
                     [m] -> do
                         let (iPat, i) = quantifiedVar (fresh `at` 0)
-                            cardinality = [essence| sum &iPat : &innerDomain . &m[&i] |]
+                            cardinality = [essence| sum &iPat : &innerDomain . toInt(&m[&i]) |]
                         return (mkSizeCons attrs cardinality)
                     _ -> na "{structuralCons} Occurrence"
         structuralCons _ _ _ = na "{structuralCons} Occurrence"
@@ -52,8 +52,8 @@ setOccurrence = Representation chck downD structuralCons downC up
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just
                     [ ( outName name
-                      , DomainMatrix (forgetRepr "Representation.Occurrence" innerDomain) DomainBool
-                      , ConstantAbstract $ AbsLitMatrix (forgetRepr "Representation.Occurrence" innerDomain)
+                      , DomainMatrix (forgetRepr innerDomain) DomainBool
+                      , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
                           , let isIn = ConstantInt v `elem` constants

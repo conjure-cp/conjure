@@ -2,7 +2,7 @@
 
 module Conjure.Representations.Function.Function1D
     ( function1D
-    , domainValues, toIntDomain
+    , domainValues
     ) where
 
 -- conjure
@@ -36,24 +36,21 @@ function1D = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "Function1D"
                     (FunctionAttr _ PartialityAttr_Total _)
-                    innerDomainFr'
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr <- toIntDomain innerDomainFr'
-            return $ Just
-                [ ( outName name
-                  , DomainMatrix
-                      (forgetRepr "Representation.Function1D" innerDomainFr)
-                      innerDomainTo
-                  ) ]
+                    innerDomainFr
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
+            [ ( outName name
+              , DomainMatrix
+                  (forgetRepr innerDomainFr)
+                  innerDomainTo
+              ) ]
         downD _ = na "{downD} Function1D"
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
             (DomainFunction "Function1D"
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
-                innerDomainFr'
-                innerDomainTo) | domainCanIndexMatrix innerDomainFr' = do
-            innerDomainFr <- toIntDomain innerDomainFr'
+                innerDomainFr
+                innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
 
             let injectiveCons m = return $ [essence| allDiff(&m) |]
 
@@ -109,7 +106,6 @@ function1D = Representation chck downD structuralCons downC up
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
-            innerDomainFrInt <- fmap e2c <$> toIntDomain (fmap Constant innerDomainFr)
             froms            <- domainValues innerDomainFr
             valsOut          <- sequence
                 [ val
@@ -122,8 +118,8 @@ function1D = Representation chck downD structuralCons downC up
                 ]
             return $ Just
                 [ ( outName name
-                  , DomainMatrix (forgetRepr "Representation.Function1D" innerDomainFrInt) innerDomainTo
-                  , ConstantAbstract $ AbsLitMatrix (forgetRepr "Representation.Function1D" innerDomainFrInt) valsOut
+                  , DomainMatrix (forgetRepr innerDomainFr) innerDomainTo
+                  , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFr) valsOut
                   ) ]
         downC _ = na "{downC} Function1D"
 
@@ -160,12 +156,3 @@ domainValues dom =
         DomainBool -> return [ConstantBool False, ConstantBool True]
         DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
         _ -> fail ("domainValues, not supported:" <+> pretty dom)
-
-
-toIntDomain :: MonadFail m => Domain HasRepresentation Expression -> m (Domain HasRepresentation Expression)
-toIntDomain dom =
-    case dom of
-        DomainBool -> return (DomainInt [RangeBounded (fromInt 0) 1])
-        DomainInt{} -> return dom
-        _ -> fail ("toIntDomain, not supported:" <+> pretty dom)
-

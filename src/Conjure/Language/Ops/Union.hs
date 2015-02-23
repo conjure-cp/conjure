@@ -34,6 +34,11 @@ instance EvaluateOp OpUnion where
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
+    -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
+    evaluateOp (OpUnion (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) =
+        return $ ConstantAbstract $ AbsLitFunction $ sortNub (as ++ bs)
+    evaluateOp (OpUnion (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) =
+        return $ ConstantAbstract $ AbsLitRelation $ sortNub (as ++ bs)
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
 instance SimplifyOp OpUnion where

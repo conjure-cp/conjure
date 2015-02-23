@@ -43,7 +43,7 @@ mkBinOp op a b =
                     L_And       -> \ x y -> injectOp $ MkOpAnd       $ OpAnd     $ fromList [x,y]
                     L_Or        -> \ x y -> injectOp $ MkOpOr        $ OpOr      $ fromList [x,y]
                     L_Imply     -> \ x y -> injectOp $ MkOpImply     $ OpImply       x y
-                    L_Iff       -> \ x y -> injectOp $ MkOpEq        $ OpEq          x y
+                    L_Iff       -> \ x y -> injectOp $ MkOpIff       $ OpIff         x y
                     L_subset    -> \ x y -> injectOp $ MkOpSubset    $ OpSubset      x y
                     L_subsetEq  -> \ x y -> injectOp $ MkOpSubsetEq  $ OpSubsetEq    x y
                     L_supset    -> \ x y -> injectOp $ MkOpSupset    $ OpSupset      x y
@@ -52,6 +52,8 @@ mkBinOp op a b =
                     L_union     -> \ x y -> injectOp $ MkOpUnion     $ OpUnion       x y
                     L_LexLt     -> \ x y -> injectOp $ MkOpLexLt     $ OpLexLt       x y
                     L_LexLeq    -> \ x y -> injectOp $ MkOpLexLeq    $ OpLexLeq      x y
+                    L_LexGt     -> \ x y -> injectOp $ MkOpLexLt     $ OpLexLt       y x
+                    L_LexGeq    -> \ x y -> injectOp $ MkOpLexLeq    $ OpLexLeq      y x
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b
@@ -98,4 +100,6 @@ mkOp op xs =
             L_party        -> injectOp $ MkOpParty        $ OpParty        (atNote "party 1"    xs 0)
                                                                            (atNote "party 2"    xs 1)
             L_participants -> injectOp $ MkOpParticipants $ OpParticipants (headNote "participants takes a single argument." xs)
+            L_active       -> injectOp $ MkOpActive       $ OpActive       (atNote "active 1" xs 0)
+                                                                           (atNote "active 2" xs 1 |> nameOut |> fromMaybe (bug "active 2"))
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))

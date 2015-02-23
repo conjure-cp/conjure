@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Rules.Horizontal.Function where
 
@@ -22,8 +23,10 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
-        elems <- match functionLiteral expr
-        let outLiteral = make matrixLiteral (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+        (TypeFunction fr to, elems) <- match functionLiteral expr
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt (TypeTuple [fr,to]))
+                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]
@@ -40,25 +43,52 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Image_Literal :: Rule
-rule_Image_Literal = "function-image-literal" `namedRule` theRule where
-    theRule [essence| &lhs = &rhs |] = do
-        (func, arg) <- match opFunctionImage lhs
-        elems       <- match functionLiteral func
+rule_Image_Literal_Bool :: Rule
+rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
+    theRule p = do
+        (func, arg)                      <- match opFunctionImage p
+        (TypeFunction _ TypeBool, elems) <- match functionLiteral func
+        -- let argIsUndef = make opNot $ make opOr $ fromList
+        --         [ [essence| &a = &arg |]
+        --         | (a,_) <- elems
+        --         ]
         return $
             if null elems
                 then
                     ( "Image of empty function literal"
-                    , const [essence| false |]
+                    , const [essence| false |]                          -- undefined is false.
                     )
                 else
                     ( "Image of function literal"
-                    , const $ make opOr $ fromList
-                        [ [essence| (&a = &arg) /\ (&b = &rhs) |]
+                    , const $ make opOr $ fromList $
+                          [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
+                                                                        -- undefined is still false.
+                          | (a,b) <- elems
+                          ]
+                    )
+
+
+rule_Image_Literal_Int :: Rule
+rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
+    theRule p = do
+        (func, arg)                     <- match opFunctionImage p
+        (TypeFunction _ TypeInt, elems) <- match functionLiteral func
+        return
+            ( "Image of function literal"
+            , const $
+                let
+                    val = make opSum $ fromList $
+                        -- if this is ever true, the output is the value of b.
+                        [ [essence| toInt(&a = &arg) * &b |]
                         | (a,b) <- elems
                         ]
-                    )
-    theRule _ = na "rule_Image_Literal"
+                    argIsDef = make opOr $ fromList
+                        [ [essence| &a = &arg |]
+                        | (a,_) <- elems
+                        ]
+                in
+                    WithLocals val [SuchThat [argIsDef]]
+            )
 
 
 rule_Eq :: Rule
@@ -86,7 +116,13 @@ rule_Neq = "function-neq" `namedRule` theRule where
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return ( "Horizontal rule for function dis-equality"
-               , const [essence| !(&x = &y) |]
+               , \ fresh ->
+                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                    in  [essence|
+                            (exists &iPat in &x . !(&i in &y))
+                            \/
+                            (exists &iPat in &y . !(&i in &x))
+                        |]
                )
     theRule _ = na "rule_Neq"
 
@@ -193,7 +229,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                         (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenInExpr jPat func)
-                           , Condition ([essence| &j[2] = &img |])
+                           , Condition [essence| &j[2] = &img |]
                            ]
                         ++ transformBi (upd val) gofAfter
             )
@@ -318,3 +354,137 @@ rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
             ( "This is a function image."
             , const $ make opFunctionImage f arg
             )
+
+
+-- | image(f,x) can be nasty for non-total functions.
+--   1.   if f is a total function, it can readily be replaced by a set expression.
+--   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.
+--      a vertical rule is needed for such cases.
+--   2.2. if the return type is not "right", i.e. it is a bool or an int, i.e. sth we cannot quantify over,
+--        the vertical rule is harder.
+
+rule_Image_Bool :: Rule
+rule_Image_Bool = "function-image-bool" `namedRule` theRule where
+    theRule p = do
+        let
+            onChildren
+                :: MonadState (Maybe (Expression, Expression)) m
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                let
+                    try = do
+                        (func, arg) <- match opFunctionImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
+                        TypeFunction _ TypeBool <- typeOf func
+                        return (func, arg)
+                case try of
+                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
+                    Just (func, arg) -> do              -- just return it back unchanged
+                        seenBefore <- gets id
+                        case seenBefore of
+                            Nothing -> do
+                                modify $ const $ Just (func, arg)
+                                return id
+                            Just{}  ->
+                                return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Bool") return mFunc        -- Nothing signifies no relevant children
+        return
+            ( "Function image, bool."
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                in
+                    mkP $ make opOr $ Comprehension [essence| &i[2] |]
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+            )
+
+
+rule_Image_Int :: Rule
+rule_Image_Int = "function-image-int" `namedRule` theRule where
+    theRule p = do
+        let
+            onChildren
+                :: MonadState (Maybe (Expression, Expression)) m
+                => Expression
+                -> m (Expression -> Expression)
+            onChildren ch = do
+                let
+                    try = do
+                        (func, arg) <- match opFunctionImage ch
+                        case match opRestrict func of
+                            Nothing -> return ()
+                            Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
+                        TypeFunction _ TypeInt <- typeOf func
+                        return (func, arg)
+                case try of
+                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
+                    Just (func, arg) -> do              -- just return it back unchanged
+                        seenBefore <- gets id
+                        case seenBefore of
+                            Nothing -> do
+                                modify $ const $ Just (func, arg)
+                                return id
+                            Just{}  ->
+                                return (const ch)
+
+        let (children_, gen) = uniplate p
+        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
+        let
+            mkP :: Expression -> Expression
+            mkP new = gen $ fmap ($ new) genChildren
+        (func, arg) <- maybe (na "rule_Image_Int") return mFunc         -- Nothing signifies no relevant children
+        return
+            ( "Function image, int."
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    val = make opSum $ Comprehension [essence| &i[2] |]
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                    isDefined = [essence| &arg in defined(&func) |]
+                in
+                    mkP $ WithLocals val [SuchThat [isDefined]]
+            )
+
+
+rule_Comprehension_Image :: Rule
+rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Image"
+        (mkModifier, expr2) <- match opModifier expr
+        (func, arg) <- match opFunctionImage expr2
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the image of a function"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    (jPat, j) = quantifiedVar (fresh `at` 1)
+                in
+                    Comprehension
+                        (upd j body)
+                        $  gofBefore
+                        ++ [ Generator (GenInExpr iPat (mkModifier func))
+                           , Condition [essence| &i[1] = &arg |]
+                           , Generator (GenInExpr jPat [essence| &i[2] |])
+                           ]
+                        ++ transformBi (upd j) gofAfter
+            )
+    theRule _ = na "rule_Comprehension_Image"

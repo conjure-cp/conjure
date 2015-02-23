@@ -14,10 +14,14 @@ instance Hashable  x => Hashable  (OpParts x)
 instance ToJSON    x => ToJSON    (OpParts x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpParts x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpParts x) where
-    typeOf (OpParts x) = do
-        TypePartition a <- typeOf x
-        return (TypeSet (TypeSet a))
+instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
+    typeOf p@(OpParts x) = do
+        ty <- typeOf x
+        case ty of
+            TypePartition a -> return (TypeSet (TypeSet a))
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
 
 instance EvaluateOp OpParts where
     evaluateOp (OpParts (ConstantAbstract (AbsLitPartition xs))) =

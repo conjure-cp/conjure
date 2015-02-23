@@ -20,18 +20,27 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
         xTy <- typeOf x
         if typesUnify [xTy, from]
             then return to
-            else raiseTypeError p
+            else raiseTypeError $ vcat
+                [ pretty p
+                , "f     :" <+> pretty f
+                , "f type:" <+> pretty (TypeFunction from to)
+                , "x     :" <+> pretty x
+                , "x type:" <+> pretty xTy
+                ]
 
 instance EvaluateOp OpFunctionImage where
-    evaluateOp (OpFunctionImage (ConstantAbstract (AbsLitFunction xs)) a) =
+    evaluateOp (OpFunctionImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do
+        TypeFunction _ tyTo <- typeOf f
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return y
-            []  -> fail $ vcat [ "Function is not defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
-                               ]
-            _   -> fail $ vcat [ "Function is multiply defined at this point:" <+> pretty a
-                               , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
-                               ]
+            []  -> return $ mkUndef tyTo $ vcat
+                    [ "Function is not defined at this point:" <+> pretty a
+                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    ]
+            _   -> return $ mkUndef tyTo $ vcat
+                    [ "Function is multiply defined at this point:" <+> pretty a
+                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    ]
     evaluateOp op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty (show op)
 
 instance SimplifyOp OpFunctionImage where

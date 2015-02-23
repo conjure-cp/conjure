@@ -1,0 +1,11 @@
+language Essence 1.3
+
+find var1: bool
+find var2: bool
+such that
+    preImage(function(false --> true, false --> true)
+             -
+             function(false --> true, true --> true) intersect function(false --> false),
+             (false <-> true) in {false})
+    !=
+    toSet(mset(false, false)) union {true, 8 = -4, true /\ true}

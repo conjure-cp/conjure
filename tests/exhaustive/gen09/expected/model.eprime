@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var1_Function1DPartial_Values: matrix indexed by [bool] of bool
+such that
+    or([var1_Function1DPartial_Flags[q3] /\ !(q3 /\ false = var1_Function1DPartial_Values[q3]) | q3 : bool]) \/
+    !or([var1_Function1DPartial_Flags[q6] /\ (q6 /\ var1_Function1DPartial_Values[q6] = false) | q6 : bool]),
+    and([var1_Function1DPartial_Flags[q1] = false -> var1_Function1DPartial_Values[q1] = false | q1 : bool])
+

@@ -18,6 +18,8 @@ import Conjure.Language.TH
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
 import Conjure.Representations.Tuple
+import Conjure.Representations.Record
+import Conjure.Representations.Variant
 import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
@@ -132,6 +134,8 @@ dispatch domain = do
         DomainBool{}    -> primitive
         DomainInt{}     -> primitive
         DomainTuple{}   -> tuple
+        DomainRecord{}  -> record
+        DomainVariant{} -> variant
         DomainMatrix{}  -> matrix
         DomainSet r _ _ -> case r of
             "Occurrence"                    -> setOccurrence
@@ -165,7 +169,7 @@ dispatch domain = do
 --   We shouldn't have levels between representations in the long run.
 allReprs :: [[Representation (Either Doc)]]
 allReprs =
-    [ [ primitive, tuple, matrix
+    [ [ primitive, tuple, record, variant, matrix
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial

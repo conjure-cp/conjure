@@ -14,7 +14,7 @@ import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
-import Conjure.Representations.Function.Function1D ( domainValues, toIntDomain )
+import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 partitionOccurrence :: forall m . MonadFail m => Representation m
@@ -33,19 +33,18 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         nameNumParts name = mconcat [name, "_", "Occurrence", "_", "NumParts"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain')
-            | domainCanIndexMatrix innerDomain' = do
-            innerDomain <- toIntDomain innerDomain'
-            maxNbParts  <- domainSizeOf innerDomain
+        downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain)
+            | domainCanIndexMatrix innerDomain = do
+            maxNbParts <- domainSizeOf innerDomain
             return $ Just
                 [ ( nameFlags name
                   , DomainMatrix
-                      (forgetRepr "Representation.PartitionOccurrence" innerDomain)
+                      (forgetRepr innerDomain)
                       DomainBool
                   )
                 , ( nameParts name
                   , DomainMatrix
-                      (forgetRepr "Representation.PartitionOccurrence" innerDomain)
+                      (forgetRepr innerDomain)
                       (DomainInt [RangeBounded 1 maxNbParts])
                   )
                 , ( nameNumParts name
@@ -55,12 +54,10 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         downD _ = na "{downD} Occurrence"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons _ downX1 (DomainPartition _ attrs innerDomain')
-                | domainCanIndexMatrix innerDomain'
+        structuralCons _ downX1 (DomainPartition _ attrs innerDomain)
+                | domainCanIndexMatrix innerDomain
                 = do
-            innerDomain <- toIntDomain innerDomain'
             let
-
                 nbParticipants fresh flags =
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                     in  [essence|

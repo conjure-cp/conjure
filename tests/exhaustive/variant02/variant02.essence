@@ -1,0 +1,7 @@
+language Essence 1.4
+
+letting V be domain variant { a : bool, b : int(0,4) }
+
+find x : V
+such that active(x,a) -> x[a] = true
+such that active(x,b) -> x[b] = 0

@@ -18,14 +18,19 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
         case ty of
+            TypeList TypeAny -> return TypeInt
             TypeList TypeInt -> return TypeInt
+            TypeMatrix _ TypeAny -> return TypeInt
             TypeMatrix _ TypeInt -> return TypeInt
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
 
 instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut x
 
 instance SimplifyOp OpProduct where

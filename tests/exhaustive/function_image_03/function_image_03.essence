@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find b: bool
+find i : int(0..5)
+find x : int(1..2)
+
+such that image( function(5 --> false, 2 --> true) intersect
+                 function(5 --> false, x --> true)
+               , i
+               ) = b

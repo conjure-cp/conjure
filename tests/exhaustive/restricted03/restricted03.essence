@@ -1,0 +1,5 @@
+language Essence 1.3
+
+find x : function (injective) int(1..4) --> int(1..4)
+such that forAll i in defined(restrict(x, `int(1..2)`)) . x(i) % 2 = 0
+such that forAll i in defined(restrict(x, `int(3..4)`)) . x(i) % 2 = 1

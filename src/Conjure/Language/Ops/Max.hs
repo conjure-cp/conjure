@@ -25,10 +25,23 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMax x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMax where
-    evaluateOp (OpMax (ConstantAbstract (AbsLitMatrix _ xs))) = ConstantInt . maximum <$> concatMapM intsOut xs
-    evaluateOp (OpMax (ConstantAbstract (AbsLitSet      xs))) = ConstantInt . maximum <$> concatMapM intsOut xs
-    evaluateOp (OpMax (ConstantAbstract (AbsLitMSet     xs))) = ConstantInt . maximum <$> concatMapM intsOut xs
-    evaluateOp _ = na "evaluateOp{OpMin}"
+    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpMax (ConstantAbstract (AbsLitMatrix _ xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in max"
+            else ConstantInt (maximum is)
+    evaluateOp (OpMax (ConstantAbstract (AbsLitSet      xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in max"
+            else ConstantInt (maximum is)
+    evaluateOp (OpMax (ConstantAbstract (AbsLitMSet     xs))) = do
+        is <- concatMapM intsOut xs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in max"
+            else ConstantInt (maximum is)
+    evaluateOp _ = na "evaluateOp{OpMax}"
 
 instance SimplifyOp OpMax where
     simplifyOp _ _ = na "simplifyOp{OpMax}"

@@ -95,7 +95,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
