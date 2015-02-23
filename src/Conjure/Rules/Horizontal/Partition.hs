@@ -130,7 +130,8 @@ rule_Party = "partition-party" `namedRule` theRule where
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        (wanted, p) <- match opParty expr
+        (mkModifier, expr2) <- match opModifier expr
+        (wanted, p)         <- match opParty expr2
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on participants of a partition"
@@ -141,7 +142,7 @@ rule_Party = "partition-party" `namedRule` theRule where
                          $  gofBefore
                          ++ [ Generator (GenInExpr iPat (make opParts p))
                             , Condition [essence| &wanted in &i |]
-                            , Generator (GenInExpr jPat i)
+                            , Generator (GenInExpr jPat (mkModifier i))
                             ]
                          ++ transformBi (upd j) gofAfter
             )
