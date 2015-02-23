@@ -30,6 +30,7 @@ export BUILD_DOCS=${BUILD_DOCS:-no}
 export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
+export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
 # cabal-install-1.22.0.0 doesn't support the option --disable-executable-profiling
@@ -122,7 +123,11 @@ else
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
 fi
 
-# cabal update
+if [ $DEVELOPMENT_MODE = "yes" ]; then
+    echo "Skipping: cabal update"
+else
+    cabal update
+fi
 
 # installing happy
 if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION_CHECK})" ]; then
