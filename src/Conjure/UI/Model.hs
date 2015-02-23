@@ -800,6 +800,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Party
     , Horizontal.Partition.rule_Participants
     , Horizontal.Partition.rule_Card
+    , Horizontal.Partition.rule_In
 
     ]
 

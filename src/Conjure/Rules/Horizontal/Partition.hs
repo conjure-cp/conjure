@@ -180,3 +180,13 @@ rule_Card = "partition-card" `namedRule` theRule where
             ( "Cardinality of a partition"
             , const $ make opTwoBars $ make opParticipants partition
             )
+
+
+rule_In :: Rule
+rule_In = "partition-in" `namedRule` theRule where
+    theRule [essence| &x in &p |] = do
+        TypePartition{} <- typeOf p
+        return ( "Horizontal rule for partition-in."
+               , const [essence| &x in parts(&p) |]
+               )
+    theRule _ = na "rule_In"
