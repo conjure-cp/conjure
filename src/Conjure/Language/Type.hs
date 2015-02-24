@@ -31,6 +31,7 @@ data Type
     | TypeSet Type
     | TypeMSet Type
     | TypeFunction Type Type
+    | TypeSequence Type
     | TypeRelation [Type]
     | TypePartition Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -63,6 +64,7 @@ instance Pretty Type where
     pretty (TypeSet x) = "set of" <+> pretty x
     pretty (TypeMSet x) = "mset of" <+> pretty x
     pretty (TypeFunction fr to) = "function" <+> pretty fr <+> "-->" <+> pretty to
+    pretty (TypeSequence x) = "sequence of" <+> pretty x
     pretty (TypePartition x) = "partition from" <+> pretty x
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
@@ -96,6 +98,7 @@ typeUnify (TypeMatrix _ a) (TypeList b) = typeUnify a b
 typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
+typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
 typeUnify (TypeRelation as) (TypeRelation bs) = and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
 typeUnify _ _ = False
@@ -143,6 +146,7 @@ mostDefined = foldr f TypeAny
         f (TypeSet a) (TypeSet b) = TypeSet (f a b)
         f (TypeMSet a) (TypeMSet b) = TypeMSet (f a b)
         f (TypeFunction a1 a2) (TypeFunction b1 b2) = TypeFunction (f a1 b1) (f a2 b2)
+        f (TypeSequence a) (TypeSequence b) = TypeSequence (f a b)
         f (TypeRelation as) (TypeRelation bs) = TypeRelation (zipWith f as bs)
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
@@ -162,6 +166,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
+innerTypeOf (TypeSequence t) = return t
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
