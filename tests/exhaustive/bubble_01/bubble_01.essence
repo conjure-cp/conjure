@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find x,y,z : int(0..2)
+
+such that
+    x > 0,
+    y > 0,
+    x = {y / z @ such that z != 0}

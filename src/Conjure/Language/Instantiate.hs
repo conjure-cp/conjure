@@ -105,6 +105,15 @@ instantiateE (Domain (DomainReference name Nothing)) = do
             : prettyContext ctxt
 instantiateE (Domain domain) = DomainInConstant <$> instantiateD domain
 
+instantiateE (WithLocals b locals) = do
+    forM_ locals $ \ local -> case local of
+        SuchThat xs -> forM_ xs $ \ x -> do
+            constant <- instantiateE x
+            case constant of
+                ConstantBool True -> return ()
+                _                 -> fail $ "local:" <+> pretty constant
+        _ -> fail $ "local:" <+> pretty local
+    instantiateE b
 
 instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
