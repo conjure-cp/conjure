@@ -607,7 +607,8 @@ parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels
-    return (WithLocals i js)
+    let jsLocals = transformBi (\ forg -> if forg == Find then LocalFind else forg ) js
+    return (WithLocals i jsLocals)
 
 parseName :: Parser Name
 parseName = Name <$> identifierText
