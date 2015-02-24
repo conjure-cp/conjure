@@ -223,6 +223,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                     [ (helper fr a, helper to b)
                     | (a,b) <- vals ]
 
+            (DomainSequence _ _ inner, ConstantAbstract (AbsLitSequence vals)) ->
+                ConstantAbstract $ AbsLitSequence $ map (helper inner) vals
+
             (DomainRelation _ _ inners, ConstantAbstract (AbsLitRelation vals)) ->
                 ConstantAbstract $ AbsLitRelation
                     [ [ helper d c | (d,c) <- zip inners line ]
