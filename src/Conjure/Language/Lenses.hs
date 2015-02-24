@@ -1066,6 +1066,30 @@ functionLiteral _ =
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
 
 
+sequenceLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
+       )
+sequenceLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitSequence elems)) ty
+            else        AbstractLiteral (AbsLitSequence elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitSequence xs))) = return (map Constant xs)
+        extract (AbstractLiteral (AbsLitSequence xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.sequenceLiteral:" <+> pretty p)
+
+
 relationLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)

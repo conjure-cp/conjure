@@ -64,6 +64,8 @@ import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
+import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
+
 import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
@@ -611,6 +613,7 @@ allRules :: Config -> [[Rule]]
 allRules config =
     [ [ Horizontal.Function.rule_Mk_FunctionImage           -- this is a clean-up rule
                                                             -- it should run as early as possible.
+      , Horizontal.Sequence.rule_Mk_FunctionImage
       ]
     , [ rule_FullEvaluate
       ]
@@ -777,6 +780,28 @@ horizontalRules =
     , Horizontal.Function.rule_In
     , Horizontal.Function.rule_Restrict_Image
     , Horizontal.Function.rule_Restrict_Comprehension
+
+    , Horizontal.Sequence.rule_Comprehension_Literal
+    , Horizontal.Sequence.rule_Image_Bool
+    , Horizontal.Sequence.rule_Image_Int
+    , Horizontal.Sequence.rule_Comprehension_Image
+    , Horizontal.Sequence.rule_Image_Literal_Bool
+    , Horizontal.Sequence.rule_Image_Literal_Int
+    , Horizontal.Sequence.rule_Eq
+    , Horizontal.Sequence.rule_Neq
+    , Horizontal.Sequence.rule_Leq
+    , Horizontal.Sequence.rule_Lt
+    , Horizontal.Sequence.rule_Subset
+    , Horizontal.Sequence.rule_SubsetEq
+    , Horizontal.Sequence.rule_Supset
+    , Horizontal.Sequence.rule_SupsetEq
+    , Horizontal.Sequence.rule_Card
+    , Horizontal.Sequence.rule_Comprehension_PreImage
+    , Horizontal.Sequence.rule_Comprehension_Defined
+    , Horizontal.Sequence.rule_Comprehension_Range
+    , Horizontal.Sequence.rule_In
+    , Horizontal.Sequence.rule_Restrict_Image
+    , Horizontal.Sequence.rule_Restrict_Comprehension
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
