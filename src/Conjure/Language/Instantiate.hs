@@ -176,6 +176,7 @@ instantiateD (DomainMatrix index inner) = DomainMatrix <$> instantiateD index <*
 instantiateD (DomainSet       r attrs inner) = DomainSet r <$> instantiateSetAttr attrs <*> instantiateD inner
 instantiateD (DomainMSet      r attrs inner) = DomainMSet r <$> instantiateMSetAttr attrs <*> instantiateD inner
 instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> instantiateFunctionAttr attrs <*> instantiateD innerFr <*> instantiateD innerTo
+instantiateD (DomainSequence  r attrs inner) = DomainSequence r <$> instantiateSequenceAttr attrs <*> instantiateD inner
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateRelationAttr attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
 instantiateD (DomainOp {}) = bug "instantiateD DomainOp"
@@ -243,6 +244,17 @@ instantiateFunctionAttr
 instantiateFunctionAttr (FunctionAttr s p j) =
     FunctionAttr <$> instantiateSizeAttr s
                  <*> pure p
+                 <*> pure j
+
+
+instantiateSequenceAttr
+    :: ( MonadFail m
+       , MonadState [(Name, Expression)] m
+       )
+    => SequenceAttr Expression
+    -> m (SequenceAttr Constant)
+instantiateSequenceAttr (SequenceAttr s j) =
+    SequenceAttr <$> instantiateSizeAttr s
                  <*> pure j
 
 

@@ -10,6 +10,7 @@ module Conjure.Language.Domain
     , SetAttr(..), SizeAttr(..)
     , MSetAttr(..), OccurAttr(..)
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
+    , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
     , PartitionAttr(..)
     , AttrName(..)
@@ -60,6 +61,7 @@ data Domain r x
     | DomainSet       r (SetAttr x) (Domain r x)
     | DomainMSet      r (MSetAttr x) (Domain r x)
     | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
+    | DomainSequence  r (SequenceAttr x) (Domain r x)
     | DomainRelation  r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
@@ -114,6 +116,7 @@ typeOfDomain (DomainMatrix ind inn   ) = TypeMatrix     <$> typeOf ind <*> typeO
 typeOfDomain (DomainSet       _ _ x  ) = TypeSet        <$> typeOf x
 typeOfDomain (DomainMSet      _ _ x  ) = TypeMSet       <$> typeOf x
 typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf y
+typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
 typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
 typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
 typeOfDomain DomainOp{} = bug "typeOf DomainOp"
@@ -136,6 +139,8 @@ instance (Pretty x) => Monoid (Domain () x) where
         = DomainMSet () def (mappend x y)
     mappend (DomainFunction _ _ x1 x2) (DomainFunction _ _ y1 y2)
         = DomainFunction () def (mappend x1 y1) (mappend x2 y2)
+    mappend (DomainSequence _ _ x) (DomainSequence _ _ y)
+        = DomainSequence () def (mappend x y)
     mappend (DomainRelation _ _ xs) (DomainRelation _ _ ys)
         | length xs == length ys
         = DomainRelation () def (zipWith mappend xs ys)
@@ -166,6 +171,8 @@ changeRepr rep = go
             DomainMSet rep attr (go d)
         go (DomainFunction _   attr d1 d2) =
             DomainFunction rep attr (go d1) (go d2)
+        go (DomainSequence _   attr d) =
+            DomainSequence rep attr (go d)
         go (DomainRelation _   attr ds) =
             DomainRelation rep attr (map go ds)
         go (DomainPartition _   attr d) =
@@ -195,6 +202,7 @@ reprTree (DomainMatrix _ a) = Tree Nothing [reprTree a]
 reprTree (DomainSet       r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainMSet      r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
+reprTree (DomainSequence  r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
 reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
 reprTree DomainOp{}        = Tree Nothing []
@@ -219,6 +227,7 @@ applyReprTree (DomainMatrix b a) (Tree Nothing [aRepr]) = DomainMatrix b <$> app
 applyReprTree (DomainSet       _ attr a  ) (Tree (Just r) [aRepr]) = DomainSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainMSet      _ attr a  ) (Tree (Just r) [aRepr]) = DomainMSet r attr <$> applyReprTree a aRepr
 applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = DomainFunction r attr <$> applyReprTree a aRepr <*> applyReprTree b bRepr
+applyReprTree (DomainSequence  _ attr a  ) (Tree (Just r) [aRepr]) = DomainSequence r attr <$> applyReprTree a aRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
@@ -570,6 +579,80 @@ addAttributeToDomain domain@(DomainFunction r
                     , "For the domain:" <+> pretty domain
                     ]
 
+addAttributeToDomain domain@(DomainSequence r
+                            (SequenceAttr sizeAttr jectivityAttr)
+                            inner) = updater where
+    updater attr (Just val) = case attr of
+        AttrName_size ->
+            case sizeAttr of
+                SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
+                _               -> return $ DomainSequence r
+                                            (SequenceAttr (SizeAttr_Size val) jectivityAttr)
+                                            inner
+        AttrName_minSize -> do
+            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
+            case sizeAttr of
+                SizeAttr_Size{}       -> fails
+                SizeAttr_MinSize{}    -> fails
+                SizeAttr_MinMaxSize{} -> fails
+                SizeAttr_None{}       -> return $ DomainSequence r
+                                            (SequenceAttr (SizeAttr_MinSize val) jectivityAttr)
+                                            inner
+                SizeAttr_MaxSize maxS -> return $ DomainSequence r
+                                            (SequenceAttr (SizeAttr_MinMaxSize val maxS) jectivityAttr)
+                                            inner
+        AttrName_maxSize -> do
+            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
+            case sizeAttr of
+                SizeAttr_Size{}       -> fails
+                SizeAttr_MaxSize{}    -> fails
+                SizeAttr_MinMaxSize{} -> fails
+                SizeAttr_None{}       -> return $ DomainSequence r
+                                            (SequenceAttr (SizeAttr_MaxSize val) jectivityAttr)
+                                            inner
+                SizeAttr_MinSize minS -> return $ DomainSequence r
+                                            (SequenceAttr (SizeAttr_MinMaxSize minS val) jectivityAttr)
+                                            inner
+        _ ->
+            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+                        , "For the domain:" <+> pretty domain
+                        ]
+    updater "injective" Nothing = return $
+        case jectivityAttr of
+            JectivityAttr_None       -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Injective )
+                                            inner
+            JectivityAttr_Injective  -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Injective )
+                                            inner
+            JectivityAttr_Surjective -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Bijective )
+                                            inner
+            JectivityAttr_Bijective  -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Bijective )
+                                            inner
+    updater "surjective" Nothing = return $
+        case jectivityAttr of
+            JectivityAttr_None          -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Surjective)
+                                            inner
+            JectivityAttr_Injective     -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Bijective )
+                                            inner
+            JectivityAttr_Surjective    -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Surjective)
+                                            inner
+            JectivityAttr_Bijective     -> DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Bijective )
+                                            inner
+    updater "bijective" Nothing = return $ DomainSequence r
+                                            (SequenceAttr sizeAttr JectivityAttr_Bijective)
+                                            inner
+    updater attr _ =
+        fail $ vcat [ "Unsupported attribute" <+> pretty attr
+                    , "For the domain:" <+> pretty domain
+                    ]
+
 addAttributeToDomain domain@(DomainRelation r
                             (RelationAttr sizeAttr binRelAttr)
                             inners) = updater where
@@ -851,6 +934,22 @@ instance Pretty    JectivityAttr where
     pretty JectivityAttr_Bijective = "bijective"
 
 
+data SequenceAttr x
+    = SequenceAttr (SizeAttr x) JectivityAttr
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (SequenceAttr a)
+instance Hashable  a => Hashable  (SequenceAttr a)
+instance ToJSON    a => ToJSON    (SequenceAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (SequenceAttr a) where parseJSON = genericParseJSON jsonOptions
+instance Default (SequenceAttr a) where def = SequenceAttr def def
+instance Pretty a => Pretty (SequenceAttr a) where
+    pretty (SequenceAttr a b) =
+        let inside = filter (/=prEmpty) [pretty a, pretty b]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
 data RelationAttr a = RelationAttr (SizeAttr a) BinaryRelationAttrs
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 instance Serialize a => Serialize (RelationAttr a)
@@ -1113,6 +1212,9 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
             hang (pretty innerFrom) 4 $
                 "-->" <+> pretty innerTo
 
+    pretty (DomainSequence r attrs inner) =
+        hang ("sequence" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
+
     pretty (DomainRelation r attrs inners)
         = hang ("relation" <+> prettyAttrs r attrs <+> "of") 4 (prettyList prParens " *" inners)
 
@@ -1169,6 +1271,8 @@ normaliseDomain  norm (DomainMSet      r attr dom      ) = DomainMSet      r (fm
 normaliseDomain  norm (DomainFunction  r attr dom1 dom2) = DomainFunction  r (fmap norm attr)
                                                                              (normaliseDomain norm dom1)
                                                                              (normaliseDomain norm dom2)
+normaliseDomain  norm (DomainSequence  r attr dom      ) = DomainSequence  r (fmap norm attr)
+                                                                             (normaliseDomain norm dom)
 normaliseDomain  norm (DomainRelation  r attr doms     ) = DomainRelation  r (fmap norm attr)
                                                                              (map (normaliseDomain norm) doms)
 normaliseDomain  norm (DomainPartition r attr dom      ) = DomainPartition r (fmap norm attr)
