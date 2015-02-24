@@ -15,8 +15,10 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.Rules.Definition
+import Conjure.Language.Domain
+import Conjure.Language.Parser
 
-import Conjure.Bug(userErr)
+import Conjure.Bug(userErr,bug)
 -- import Conjure.UI.IO ( readModelFromFile )
 
 import qualified Data.Aeson as A
@@ -33,15 +35,15 @@ import qualified Data.IntSet as I
 
 import Data.Map(Map)
 import qualified Data.Map as M
-
+import Data.List(maximumBy)
 
 logFollow :: (MonadIO m, MonadLog m)
-          => Map (String,HoleHash) QuestionAnswered
+          => Map (String,HoleHash) [QuestionAnswered]
           -> Question -> [(Doc, Answer)] -> m [Answer]
 logFollow before q@Question{..} options = do
   logWarn ("-----")
-  logWarn ( "qhole       " <+>  pretty  qHole )
-  logWarn ( "qAscendants" <+> vcat (map (pretty . hash) qAscendants) )
+  logWarn ( "qhole       " <+>  pretty  qHole <+> (pretty . holeHash) qHole )
+  logWarn ( "qAscendants" <+> vcat (map (pretty . holeHash) qAscendants) )
 
   logWarn $ hang "Ans" 4 $
     vcat $ [ hang ("Answer" <+> pretty i) 8 $
@@ -53,74 +55,141 @@ logFollow before q@Question{..} options = do
   res <- case matching of
     Just a  -> do
       logWarn (vcat ["Matched with previous data"
-                    , "Question" <+> (pretty  qHole)
+                    , "Question" <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
                     , "Answer" <+> (pretty . aAnswer $ a) ])
       c <- storeChoice q a
       return [c]
     Nothing  -> do
-        logWarn (vcat ["No match for ", "question" <+> (pretty  qHole)])
+        logWarn (vcat ["No match for "
+                      , "question hole"  <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
+                      , "AsQuestionAnswered" <+> (pretty .groom)
+                                                 [ makeChoice q a |  (_,a) <- options ]
+                      ])
         mapM (storeChoice q . snd) options
 
   logWarn ("-----")
   return res
 
   where
+
     matching :: Maybe Answer
     matching =
-      case (catMaybes $ map f (map snd options))  of
+      case (catMaybes $ map haveMapping (map snd options))  of
            []    -> Nothing
            (x:_) -> return x
 
-    qAsSet = (I.fromList . map hash) qAscendants
-
-    f ans@Answer{..}
-        | Just a <- M.lookup (show aRuleName, hash qHole) before
-        , I.null (qAscendants_ a) == I.null qAsSet
-        || (not . I.null) (qAscendants_ a `I.intersection` qAsSet) =
+    haveMapping ans@Answer{..}
+        | Just aa <- M.lookup (show aRuleName, holeHash qHole) before
+        , Just a <- pickMapping aa =
            if process a ans then
                Just ans
            else
                Nothing
 
-    f _ =  Nothing
+        where
+          qAsSet = (I.fromList . map holeHash) qAscendants
 
-    -- FIXME compare domains
-    process AnsweredRepr{..} ans = aDom_ == getReprDomText ans
+          pickMapping :: [QuestionAnswered] -> Maybe QuestionAnswered
+          pickMapping = toMaybe . filter (\(_,i) -> i /= 0 ) .  map f
+
+          f a | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1)
+          f a = (a, I.size (qAscendants_ a `I.intersection` qAsSet))
+
+
+          -- toMaybe :: Show x => [x] -> Maybe x
+          toMaybe []      = Nothing
+          toMaybe [(x,_)] = Just x
+          toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) xs in
+                       case filter (\(_,i) -> i == maxSize ) xs of
+                         []      -> error "haveMapping toMaybe cannot happen"
+                         [(x,_)] -> Just x
+                         xx      -> error . show .vcat $ "Multiple matching mapping "
+                                          : map (pretty . show) xx
+
+
+    haveMapping _ =  Nothing
+
+
+
+    process AnsweredRepr{..} ans = compareDoms aDom_ (getReprFromAnswer ans)
     process AnsweredRule{} _     = True
 
 
 
+
+compareDoms :: Domain HasRepresentation Expression
+            -> Domain HasRepresentation Expression -> Bool
+-- compareDoms d1 d2 = d1 == d2
+compareDoms d1 d2 = getReps d1 == getReps d2
+-- compareDoms d1 d2 = error . show . vcat $ [ pretty  $ d1
+--                                           , pretty  $ d2
+--                                           , pretty . groom . getReps $ d1
+--                                           , pretty . groom . getReps $ d2
+--                                           ]
+
+    where
+    getReps :: Domain HasRepresentation Expression -> [Name]
+    getReps d = catMaybes [ getRep n | n <- universe d ]
+
+    getRep :: Domain HasRepresentation Expression -> Maybe Name
+    getRep (DomainSet (HasRepresentation r) _ _)         = Just r
+    getRep (DomainMSet (HasRepresentation r) _ _)        = Just r
+    getRep (DomainFunction (HasRepresentation r) _ _ _)  = Just r
+    getRep (DomainRelation (HasRepresentation r) _ _)    = Just r
+    getRep (DomainPartition (HasRepresentation r) _ _)   = Just r
+    getRep _ = Nothing
+
+
 storeChoice :: MonadLog m => Question -> Answer -> m Answer
 storeChoice q a = do
-  let qa = case (aRuleName a) of
+  let c = makeChoice q a
+  logWarn $ vcat ["storedChoice:"
+                 ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
+                 ,  pretty . groom $ c]
+  saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
+  return a
+
+makeChoice :: Question -> Answer -> QuestionAnswered
+makeChoice q a =  case (aRuleName a) of
                  "choose-repr" ->
                      AnsweredRepr
-                     { qHole_       = hash $ qHole q
-                     , qAscendants_ = I.fromList . map hash . qAscendants $ q
-                     , aDom_        = getReprDomText a
+                     { qHole_       = holeHash . qHole $  q
+                     , qAscendants_ = I.fromList . map holeHash . qAscendants $ q
+                     , aDom_        = getReprFromAnswer a
                      , aRuleName_   = show $ aRuleName a
                      }
                  _ ->
                      AnsweredRule
-                     { qHole_       = hash $ qHole q
-                     , qAscendants_ = I.fromList . map hash . qAscendants $ q
+                     { qHole_       = holeHash . qHole $  q
+                     , qAscendants_ = I.fromList . map holeHash . qAscendants $ q
                      , aRuleName_   = show $ aRuleName a
                      }
 
+holeHash :: (Show x, Pretty x) =>x  -> HoleHash
+holeHash = hash . show . pretty
 
-  saveToLog $ "LF: " <+> jsonToDoc qa  <+> "END:"
-  return a
+getReprFromAnswer ::   Answer -> Domain HasRepresentation Expression
+getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromAnswer")
+                          . getReprDomText
 
 
-getReprDomText :: Answer -> Text
-getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
+  where
+  unErr (Right r) = r
+  unErr (Left r)  = bug ("getReprFromAnswer unErr" <+> r)
+
+  getReprDomText :: Answer -> Text
+  getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
+
 
 -- Read from a json file
 type HoleHash = Int
-getAnswers :: (MonadIO m, MonadFail m ) => FilePath -> m (Map (String,HoleHash) QuestionAnswered)
+getAnswers :: (MonadIO m, MonadFail m )
+              => FilePath -> m (Map (String,HoleHash) [QuestionAnswered])
 getAnswers fp = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
-    Just (vs :: [QuestionAnswered])  -> return $ M.fromList [ ((aRuleName_ v, qHole_ v) ,v)  | v <- vs ]
+    Just (vs :: [QuestionAnswered])  -> do
+        putStrLn $ "BeforeToSet: " ++  (groom vs)
+        return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
 

@@ -244,7 +244,7 @@ data QuestionAnswered =
       {
         qHole_       :: Int
       , qAscendants_ :: IntSet
-      , aDom_        :: Text
+      , aDom_        :: Domain HasRepresentation Expression
       , aRuleName_   :: String  -- Doc has no Data or Ord instance
       }
     | AnsweredRule

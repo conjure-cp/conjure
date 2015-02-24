@@ -78,7 +78,7 @@ data Config = Config
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
-    , questionAnswers           :: Map (String,Int) QuestionAnswered
+    , questionAnswers           :: Map (String,Int) [QuestionAnswered]
     , smartFilenames            :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
