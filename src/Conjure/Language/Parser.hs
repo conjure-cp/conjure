@@ -704,6 +704,7 @@ parseLiteral = msum ( map try
     , AbstractLiteral <$> pSet
     , AbstractLiteral <$> pMSet
     , AbstractLiteral <$> pFunction
+    , AbstractLiteral <$> pSequence
     , AbstractLiteral <$> pRelation
     , AbstractLiteral <$> pPartition
     ] ) <?> "value"
@@ -769,6 +770,11 @@ parseLiteral = msum ( map try
             return (AbsLitFunction xs)
             where
                 inner = arrowedPair parseExpr
+
+        pSequence = do
+            lexeme L_sequence
+            xs <- parens (sepBy parseExpr comma)
+            return (AbsLitSequence xs)
 
         pRelation = do
             lexeme L_relation
