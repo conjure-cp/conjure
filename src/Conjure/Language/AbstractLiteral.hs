@@ -22,6 +22,7 @@ data AbstractLiteral x
     | AbsLitSet [x]
     | AbsLitMSet [x]
     | AbsLitFunction [(x, x)]
+    | AbsLitSequence [x]
     | AbsLitRelation [[x]]
     | AbsLitPartition [[x]]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -40,6 +41,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
     pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (AbsLitSequence  xs ) = "sequence"  <> prettyList prParens "," xs
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
@@ -69,6 +71,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
                                                     <*> (homoType (pretty p) <$> mapM (typeOf . snd) xs)
 
+    typeOf   (AbsLitSequence    [] ) = return (TypeSequence TypeAny)
+    typeOf p@(AbsLitSequence    xs ) = TypeSequence <$> (homoType (pretty p) <$> mapM typeOf xs)
+
     typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
     typeOf p@(AbsLitRelation    xss) = do
         ty <- homoType (pretty p) <$> mapM (typeOf . AbsLitTuple) xss
@@ -87,5 +92,6 @@ normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm 
 normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet                   $ sortNub $ map norm xs
 normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet                  $ sort    $ map norm xs
 normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction              $ sortNub [ (norm x, norm y) | (x, y) <- xs ]
+normaliseAbsLit norm (AbsLitSequence  xs ) = AbsLitSequence              $ sort    $ map norm xs
 normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation              $ sortNub $ map (map norm) xss
 normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition             $ sortNub $ map (sortNub . map norm) xss
