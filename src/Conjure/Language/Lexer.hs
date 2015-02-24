@@ -88,6 +88,9 @@ data Lexeme
     | L_surjective
     | L_bijective
 
+    -- type: sequence
+    | L_sequence
+
     -- type: relation
     | L_relation
 
@@ -311,6 +314,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     -- , ( L_injective, "injective" )
     -- , ( L_surjective, "surjective" )
     -- , ( L_bijective, "bijective" )
+    , ( L_sequence, "sequence" )
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
     -- , ( L_regular, "regular" )

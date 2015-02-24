@@ -207,6 +207,7 @@ parseDomainWithRepr
             , pMatrix, pTupleWithout, pTupleWith
             , pRecord, pVariant
             , pSet, pMSet, pFunction, pFunction'
+            , pSequence
             , pRelation
             , pPartition
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
@@ -300,6 +301,13 @@ parseDomainWithRepr
             (y,z) <- arrowedPair parseDomainWithRepr
             return $ DomainFunction r x y z
 
+        pSequence = do
+            lexeme L_sequence
+            r <- parseRepr
+            x <- parseSequenceAttr
+            y <- lexeme L_of >> parseDomainWithRepr
+            return $ DomainSequence r x y
+
         pRelation = do
             lexeme L_relation
             r  <- parseRepr
@@ -380,6 +388,25 @@ parseFunctionAttr = do
         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
     return (FunctionAttr size partiality jectivity)
+
+parseSequenceAttr :: Parser (SequenceAttr Expression)
+parseSequenceAttr = do
+    DomainAttributes attrs <- parseAttributes
+    size <- case filterSizey attrs of
+        [DANameValue "size"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+        [] -> return SizeAttr_None
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    jectivity  <- case filterJectivity attrs of
+        [] -> return JectivityAttr_None
+        [DAName "bijective" ] -> return JectivityAttr_Bijective
+        [DAName "injective" ] -> return JectivityAttr_Injective
+        [DAName "surjective"] -> return JectivityAttr_Surjective
+        [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    return (SequenceAttr size jectivity)
 
 parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
