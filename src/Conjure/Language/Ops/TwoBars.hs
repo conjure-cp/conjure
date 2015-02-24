@@ -32,12 +32,12 @@ instance EvaluateOp OpTwoBars where
             ConstantInt y                        -> return $ ConstantInt $ abs y
 
             -- cardinality of a constant
-            ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ length $ nub xs
-            ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ length       xs
-            ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ length $ nub xs
+            ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ genericLength $ nub xs
+            ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ genericLength       xs
+            ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ genericLength $ nub xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt rs)      -> ConstantInt . length <$> rangesInts rs
+            DomainInConstant (DomainInt rs)      -> ConstantInt . genericLength <$> rangesInts rs
 
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 

@@ -29,7 +29,7 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntB 1 (fromInt (length names))
+                            let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
                             if null (names `intersect` namesBefore)
                                 then modify ( ( [(ename, outDomain)]
                                               , zip names allNats
@@ -117,7 +117,7 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = mkDomainIntB 1 (fromInt (length names))
+                    let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
                     if null (names `intersect` namesBefore)
                         then modify ( ( [(ename, outDomain)]
                                       , zip names allNats
@@ -169,7 +169,7 @@ addEnumsAndUnnamedsBack
        , Pretty r, Pretty x
        )
     => [Name]                           -- unnamed types
-    -> [((Int, Name), Constant)]        -- a lookup table for enums
+    -> [((Integer, Name), Constant)]    -- a lookup table for enums
     -> Domain r x                       -- the domain we are working on
     -> Constant                         -- the constant with ints in place of enums & unnameds
     -> Constant                         -- the constant with enums & unnameds again

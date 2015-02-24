@@ -155,10 +155,10 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             , "With domain:" <+> pretty domain
                             ]
             z <- zeroVal innerDomain
-            let zeroes = replicate (maxSizeInt - length constants) z
+            let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
             let counts = map (ConstantInt . snd) constants
-            let falses = replicate (maxSizeInt - length constants) (ConstantInt 0)
+            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt 0)
 
             return $ Just
                 [ ( nameFlag name
@@ -182,7 +182,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             case constantMatrix of
                                 ConstantAbstract (AbsLitMatrix _ vals) ->
                                     return (name, ConstantAbstract $ AbsLitMSet $ concat
-                                                    [ replicate i v
+                                                    [ replicate (fromInteger i) v
                                                     | (ConstantInt i,v) <- zip flags vals
                                                     ] )
                                 _ -> fail $ vcat

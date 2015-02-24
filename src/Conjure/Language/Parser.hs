@@ -690,7 +690,7 @@ parseLiteral = msum ( map try
 
         pMatrix = do
             xs <- brackets (sepBy parseExpr comma)
-            let r = mkDomainIntB 1 (fromInt (length xs))
+            let r = mkDomainIntB 1 (fromInt (genericLength xs))
             return (AbsLitMatrix r xs)
 
         pMatrix' = brackets $ do

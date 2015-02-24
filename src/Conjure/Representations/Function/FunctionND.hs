@@ -56,7 +56,7 @@ functionND = Representation chck downD structuralCons downC up
             let innerDomainFr =  DomainTuple innerDomainFrs
 
             let
-                frArity = length innerDomainFrs
+                frArity = genericLength innerDomainFrs
 
                 index x m 1     = make opIndexing m                     (make opIndexing x 1)
                 index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))

@@ -29,7 +29,7 @@ rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule`
 
         let
             toIndex   = [ [essence| &x[&k] |]
-                        | k' <- [1 .. length ts]
+                        | k' <- [1 .. genericLength ts]
                         , let k = fromInt k'
                         ]
             flagsIndexed  = make opMatrixIndexing flags  toIndex
@@ -54,7 +54,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
                     TypeBool -> do
                         [flags,values]      <- downX1 f
                         TypeTuple ts        <- typeOf x
-                        let xArity          =  length ts
+                        let xArity          =  genericLength ts
                         let index m 1     = make opIndexing m                   (make opIndexing x 1)
                             index m arity = make opIndexing (index m (arity-1)) (make opIndexing x (fromInt arity))
                         let flagsIndexed  = index flags  xArity
@@ -84,7 +84,7 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
 
         let
             toIndex   = [ [essence| &x[&k] |]
-                        | k' <- [1 .. length ts]
+                        | k' <- [1 .. genericLength ts]
                         , let k = fromInt k'
                         ]
             flagsIndexed  = make opMatrixIndexing flags  toIndex
@@ -112,7 +112,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
                     toIndex   = [ [essence| &j[&k] |]
-                                | k' <- [1 .. length ts]
+                                | k' <- [1 .. genericLength ts]
                                 , let k = fromInt k'
                                 ]
                     flagsIndexed  = make opMatrixIndexing flags  toIndex

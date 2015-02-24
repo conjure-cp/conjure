@@ -109,7 +109,7 @@ mkFiniteOutermost (DomainSet () _ inner) = do
         , \ constants -> case constants of
                 [constant] -> do
                     set <- viewConstantSet constant
-                    let setSize = length $ nub set
+                    let setSize = genericLength $ nub set
                     innerValues <- innerF set
                     return $ innerValues ++ [(s, ConstantInt setSize)]
                 _ -> fail "mkFiniteOutermost: multiple values"
@@ -140,7 +140,7 @@ mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAtt
         , \ constants -> case constants of
                 [constant] -> do
                     function <- viewConstantFunction constant
-                    let functionSize = length $ nub function
+                    let functionSize = genericLength $ nub function
                     innerFrValues <- innerFrF (map fst function)
                     innerToValues <- innerToF (map snd function)
                     return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionSize)]
@@ -169,7 +169,7 @@ mkFiniteOutermost (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
         , \ constants -> case constants of
                 [constant] -> do
                     relation <- viewConstantRelation constant
-                    let relationSize = length $ nub relation
+                    let relationSize = genericLength $ nub relation
                     innersValues <- zipWithM ($) innersF (transpose relation)
                     return $ concat innersValues ++ [(s, ConstantInt relationSize)]
                 _ -> fail "mkFiniteOutermost: multiple values"
@@ -213,7 +213,7 @@ mkFiniteInner (DomainSet () _ inner) = do
         , s:innerExtras
         , \ constants -> do
                 sets <- mapM viewConstantSet constants
-                let setMaxSize = maximum $ map (length . nub) sets
+                let setMaxSize = maximum $ map (genericLength . nub) sets
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setMaxSize)]
         )
@@ -240,7 +240,7 @@ mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) i
         , s : innerFrExtras ++ innerToExtras
         , \ constants -> do
                 functions <- mapM viewConstantFunction constants
-                let functionMaxSize = maximum $ map (length . nub) functions
+                let functionMaxSize = maximum $ map (genericLength . nub) functions
                 innerFrValues <- innerFrF (map fst $ concat functions)
                 innerToValues <- innerToF (map snd $ concat functions)
                 return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionMaxSize)]
@@ -265,7 +265,7 @@ mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
         , s : concat innersExtras
         , \ constants -> do
                 relations <- mapM viewConstantRelation constants
-                let relationMaxSize = maximum $ map (length . nub) relations
+                let relationMaxSize = maximum $ map (genericLength . nub) relations
                 innersValues <- zipWithM ($) innersF (transpose $ concat relations)
                 return $ concat innersValues ++ [(s, ConstantInt relationMaxSize)]
         )
@@ -278,7 +278,7 @@ nextName = do
     modify (+1)
     return (Name ("p" `mappend` stringToText (show i)))
 
-viewConstantInt :: MonadFail m => Constant -> m Int
+viewConstantInt :: MonadFail m => Constant -> m Integer
 viewConstantInt (ConstantInt i) = return i
 viewConstantInt constant = fail ("Expecting an integer, but got:" <+> pretty constant)
 

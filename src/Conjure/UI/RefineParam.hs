@@ -41,7 +41,7 @@ refineParam eprimeModel essenceParam0 = do
     -- TODO: check if the same letting has multiple values for it
 
     let eprimeLettingsForEnums =
-            [ (nm, fromInt (length vals))
+            [ (nm, fromInt (genericLength vals))
             | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
             , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam0 |> mStatements
             , nm1 == nm2

@@ -49,9 +49,9 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
 
                         lit = AbstractLiteral $ AbsLitTuple
-                                    [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
+                                    [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
                         indexThis anyMatrix = make opMatrixIndexing anyMatrix
-                                    [ make opIndexing i (fromInt n) | n <- [1 .. length mIndices] ]
+                                    [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
 
                     in  Comprehension (upd lit body)
                             $  gofBefore

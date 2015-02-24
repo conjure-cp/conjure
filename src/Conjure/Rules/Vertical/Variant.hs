@@ -107,7 +107,7 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
             , const $ WithLocals
                 (atNote "Variant indexing" xs argInt)                   -- the value is projected   
                 [ SuchThat [ [essence| &xWhich = &argInt2 |] ]          -- the tag is equal to i
-                | let argInt2 = fromInt (argInt + 1)
+                | let argInt2 = fromInt (fromIntegral (argInt + 1))
                 ]                
             )
 
@@ -120,7 +120,7 @@ rule_Variant_Active = "variant-active" `namedRule` theRule where
         (xWhich:_)     <- downX1 x
         argInt         <- case findIndex (name==) (map fst ds) of
                             Nothing     -> fail "Variant indexing, not a member of the type."
-                            Just argInt -> return $ fromInt $ argInt + 1
+                            Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
         return
             ( "Variant active on:" <+> pretty p
             , const $ [essence| &xWhich = &argInt |]

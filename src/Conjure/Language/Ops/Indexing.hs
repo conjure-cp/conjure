@@ -32,7 +32,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
-                return (at inns (iInt-1))
+                return (at inns (fromInteger (iInt-1)))
             TypeRecord inns  -> do
                 nm <- nameOut i
                 case lookup nm inns of
@@ -74,7 +74,7 @@ instance EvaluateOp OpIndexing where
                     [ "Matrix is multiply defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]
-    evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (x-1))
+    evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (fromInteger (x-1)))
     evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat

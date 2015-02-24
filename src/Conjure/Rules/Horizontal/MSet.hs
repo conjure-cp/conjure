@@ -25,7 +25,7 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
         (TypeMSet tau, elems) <- match msetLiteral expr
         let outLiteral = make matrixLiteral
                             (TypeMatrix TypeInt tau)
-                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -48,7 +48,7 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
             _ -> na "rule_Comprehension_ToSet_Literal"
         mset                  <- match opToSet expr
         (TypeMSet tau, elems) <- match msetLiteral mset
-        let outLiteralDomain = mkDomainIntB 1 (fromInt $ length elems)
+        let outLiteralDomain = mkDomainIntB 1 (fromInt $ genericLength elems)
         let outLiteral = make matrixLiteral (TypeMatrix TypeInt tau) outLiteralDomain elems
         let upd val old = lambdaToFunction pat old val
         return

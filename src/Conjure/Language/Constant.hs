@@ -26,7 +26,7 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 
 data Constant
     = ConstantBool Bool
-    | ConstantInt Int
+    | ConstantInt Integer
     | ConstantEnum Name   {- name for the enum domain -}
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
@@ -80,7 +80,7 @@ instance ExpressionLike Constant where
     boolOut ConstantUndefined{} = return False
     boolOut c = fail ("Expecting a boolean, but found:" <+> pretty c)
 
-    fromList xs = ConstantAbstract $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ length xs)) xs
+    fromList xs = ConstantAbstract $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (ConstantAbstract (AbsLitMatrix _ xs)) = return xs
     listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
 

@@ -30,7 +30,7 @@ variant = Representation chck downD structuralCons downC up
 
         downD :: TypeOf_DownD m
         downD (name, DomainVariant ds) = return $ Just
-            $ (mkName name "_tag", defRepr $ mkDomainIntB 1 (fromInt (length ds)))
+            $ (mkName name "_tag", defRepr $ mkDomainIntB 1 (fromInt (genericLength ds)))
             : [ (mkName name n, d)
               | (n,d) <- ds
               ]
@@ -72,7 +72,7 @@ variant = Representation chck downD structuralCons downC up
             let dsForgotten = [ (n, defRepr d) | (n,d) <- ds ]
             case lookup (mkName name "_tag") ctxt of
                 Just (ConstantInt i) ->
-                    let iTag = at ds (i-1) |> fst
+                    let iTag = at ds (fromInteger (i-1)) |> fst
                         iName = mkName name iTag
                     in  case lookup iName ctxt of
                             Just val -> return (name, ConstantAbstract $ AbsLitVariant (Just dsForgotten) iTag val)

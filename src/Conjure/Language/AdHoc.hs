@@ -7,8 +7,8 @@ import Conjure.Language.Name
 
 
 class ExpressionLike a where
-    fromInt :: Int -> a
-    intOut :: MonadFail m => a -> m Int
+    fromInt :: Integer -> a
+    intOut :: MonadFail m => a -> m Integer
 
     fromBool :: Bool -> a
     boolOut :: MonadFail m => a -> m Bool

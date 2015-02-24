@@ -51,7 +51,7 @@ instance EvaluateOp OpMinus where
             bsHist = histogram bs
             allElems = sortNub (as++bs)
             outs =
-                [ replicate (countA - countB) e
+                [ replicate (fromInteger (countA - countB)) e
                 | e <- allElems
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)

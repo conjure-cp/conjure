@@ -29,7 +29,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =
-            [ (nm, fromInt (length vals))
+            [ (nm, fromInt (genericLength vals))
             | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
             , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements 
             , nm1 == nm2
@@ -62,7 +62,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
         return (name, origDomain, constant)
 
     let
-        intToEnumConstant :: [((Int, Name), Constant)]
+        intToEnumConstant :: [((Integer, Name), Constant)]
         intToEnumConstant = concat
             [ [ ((i,ename), ConstantEnum ename vals v)
               | (i,v) <- zip allNats vals

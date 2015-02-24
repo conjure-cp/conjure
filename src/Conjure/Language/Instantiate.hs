@@ -73,7 +73,7 @@ instantiateE (Comprehension body gensOrConds) = do
 
     constants <- loop gensOrConds
     return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt [RangeBounded 1 (fromInt (length constants))])
+        (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
         constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty

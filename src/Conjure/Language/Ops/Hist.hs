@@ -25,10 +25,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
 
 instance EvaluateOp OpHist where
     evaluateOp (OpHist (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt [RangeBounded 1 (fromInt $ length $ histogram cs)])
+        (DomainInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
         [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
     evaluateOp (OpHist (ConstantAbstract (AbsLitMatrix _ cs))) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt [RangeBounded 1 (fromInt $ length $ histogram cs)])
+        (DomainInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
         [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
     evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)
 

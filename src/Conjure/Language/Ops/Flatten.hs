@@ -31,7 +31,7 @@ instance EvaluateOp OpFlatten where
             flat c = [c]
         let flattened = flat m
         return (ConstantAbstract (AbsLitMatrix
-                    (DomainInt [RangeBounded 1 (fromInt (length flattened))])
+                    (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened))
 
 instance SimplifyOp OpFlatten where

@@ -24,22 +24,22 @@ enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom)
     inners <- enumerateDomain innerDom
     return
         [ ConstantAbstract (AbsLitSet vals)
-        | vals <- replicateM s inners
+        | vals <- replicateM (fromInteger s) inners
         , sorted vals
         ]
 enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) = do
     inners <- enumerateDomain innerDom
     sizes  <- case sizeAttr of
-        SizeAttr_None -> return [0 .. length inners]
+        SizeAttr_None -> return [0 .. genericLength inners]
         SizeAttr_Size (ConstantInt a) -> return [a]
-        SizeAttr_MinSize (ConstantInt a) -> return [a .. length inners]
+        SizeAttr_MinSize (ConstantInt a) -> return [a .. genericLength inners]
         SizeAttr_MaxSize (ConstantInt a) -> return [0 .. a]
         SizeAttr_MinMaxSize (ConstantInt a) (ConstantInt b) -> return [a .. b]
         _ -> fail $ "sizeAttr, not an int:" <+> pretty sizeAttr
     return
         [ ConstantAbstract (AbsLitSet vals)
         | s <- sizes
-        , vals <- replicateM s inners
+        , vals <- replicateM (fromInteger s) inners
         , sorted vals
         ]
 enumerateDomain d = fail $ "enumerateDomain:" <+> pretty d

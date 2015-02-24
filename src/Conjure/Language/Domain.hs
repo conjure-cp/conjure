@@ -51,7 +51,7 @@ data Domain r x
         Name
         (Maybe [Range Name])        -- subset of values for this domain
                                     -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
-        (Maybe [(Name, Int)])       -- the mapping to integers, if available
+        (Maybe [(Name, Integer)])   -- the mapping to integers, if available
     | DomainUnnamed Name x
     | DomainTuple [Domain r x]
     | DomainRecord [(Name, Domain r x)]
@@ -1037,7 +1037,7 @@ instance Arbitrary a => Arbitrary (Range a) where
         , RangeBounded <$> arbitrary <*> arbitrary
         ]
 
-rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Int]
+rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Integer]
 rangesInts = liftM (sortNub . concat) . mapM rangeInts
     where
         rangeInts (RangeSingle x) = return <$> intOut x
