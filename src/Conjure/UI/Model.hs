@@ -586,11 +586,12 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
+    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat1]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
-    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
+    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat2]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
 
