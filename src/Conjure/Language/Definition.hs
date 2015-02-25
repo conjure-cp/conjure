@@ -9,7 +9,8 @@ module Conjure.Language.Definition
     , initInfo
     , allContextsExceptReferences
 
-    , quantifiedVar, lambdaToFunction
+    , quantifiedVar, auxiliaryVar
+    , lambdaToFunction
 
     , e2c
 
@@ -473,6 +474,11 @@ quantifiedVar nm =
     let pat = Single nm
         ref = Reference nm Nothing
     in  (pat, ref)
+
+auxiliaryVar :: Name -> (Name, Expression)
+auxiliaryVar nm =
+    let ref = Reference nm Nothing
+    in  (nm, ref)
 
 
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression
