@@ -439,8 +439,8 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
                         (auxName, aux) = auxiliaryVar (fresh `at` 0)
                         (kPat, k) = quantifiedVar (fresh `at` 2)
                         (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k2 = [essence| &k[2] |]
-                        l2 = [essence| &l[2] |]
+                        k1 = [essence| &k[1] |]
+                        l1 = [essence| &l[1] |]
                     in
                         WithLocals
                             (fromBool True)
@@ -448,12 +448,12 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
                                     (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domFr)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
-                                    [essence| &k2 in &aux |]
+                                    [essence| &k1 in &aux |]
                                     [ Generator (GenInExpr kPat func) ]
                                 , make opAnd $
                                     Comprehension
                                         (make opOr $ Comprehension
-                                            [essence| &l2 = &k |]
+                                            [essence| &l1 = &k |]
                                             [ Generator (GenInExpr lPat func) ]
                                         )
                                         [ Generator (GenInExpr kPat aux) ]
