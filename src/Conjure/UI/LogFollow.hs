@@ -32,6 +32,8 @@ import qualified Text.PrettyPrint as Pr
 -- import Text.Read(read)
 
 import qualified Data.IntSet as I
+import qualified Data.Set as S
+
 
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -56,9 +58,10 @@ logFollow before q@Question{..} options = do
     Just a  -> do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
-                    , "Answer" <+> (pretty . aAnswer $ a) ])
-      c <- storeChoice q a
-      return [c]
+                    , "Answers" <+> (vcat $ map prettyAns  a) ])
+      -- c <- storeChoice q a
+      -- return [c]
+      mapM (storeChoice q ) a
     Nothing  -> do
         logWarn (vcat ["No match for "
                       , "question hole"  <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
@@ -72,47 +75,54 @@ logFollow before q@Question{..} options = do
 
   where
 
-    matching :: Maybe Answer
+    matching :: Maybe [Answer]
     matching =
       case (catMaybes $ map haveMapping (map snd options))  of
            []    -> Nothing
-           (x:_) -> return x
+           [x]   -> Just [x]
+           xs    -> Just xs
+           -- xs    -> error . show .vcat $ "matching multiple mappings" : map (prettyAns) xs
 
-    haveMapping ans@Answer{..}
-        | Just aa <- M.lookup (show aRuleName, holeHash qHole) before
-        , Just a <- pickMapping aa =
-           if process a ans then
-               Just ans
-           else
-               Nothing
+    prettyAns :: Answer -> Doc
+    prettyAns Answer{..} =  hang "Answer" 4 $ vcat [
+                             "aText"     <+> aText
+                           , "aAnswer"   <+> pretty aAnswer
+                           , "aRuleName" <+> pretty aRuleName
+                           ]
+
+    haveMapping ans@Answer{..} = do
+      previous <- M.lookup (show aRuleName, holeHash qHole) before
+      mappings <- pickMapping previous
+      case filter (process ans) mappings of
+        []  -> Nothing
+        [_] -> Just ans
+        _   -> Just ans
+        -- xs  -> error . show .vcat $ "haveMapping" : map (pretty . groom) xs
 
         where
           qAsSet = (I.fromList . map holeHash) qAscendants
 
-          pickMapping :: [QuestionAnswered] -> Maybe QuestionAnswered
-          pickMapping = toMaybe . filter (\(_,i) -> i /= 0 ) .  map f
+          pickMapping :: [QuestionAnswered] -> Maybe [QuestionAnswered]
+          pickMapping =  toMaybe . filter (\(_,i) -> i /= 0 ) .  map f
 
           f a | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1)
           f a = (a, I.size (qAscendants_ a `I.intersection` qAsSet))
 
-
           -- toMaybe :: Show x => [x] -> Maybe x
           toMaybe []      = Nothing
-          toMaybe [(x,_)] = Just x
+          toMaybe [(x,_)] = Just [x]
           toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) xs in
                        case filter (\(_,i) -> i == maxSize ) xs of
                          []      -> error "haveMapping toMaybe cannot happen"
-                         [(x,_)] -> Just x
-                         xx      -> error . show .vcat $ "Multiple matching mapping "
-                                          : map (pretty . show) xx
-
-
-    haveMapping _ =  Nothing
+                         xx      -> Just . map fst $ xx
 
 
 
-    process AnsweredRepr{..} ans = compareDoms aDom_ (getReprFromAnswer ans)
-    process AnsweredRule{} _     = True
+          process a AnsweredRepr{..} = compareDoms aDom_ (getReprFromAnswer a)
+          process _   AnsweredRule{}   = True
+
+
+
 
 
 
@@ -188,8 +198,8 @@ getAnswers :: (MonadIO m, MonadFail m )
 getAnswers fp = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just (vs :: [QuestionAnswered])  -> do
-        putStrLn $ "BeforeToSet: " ++  (groom vs)
-        return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- vs ]
+        -- putStrLn $ "BeforeToSet: " ++  (groom vs)
+        return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
 
@@ -199,3 +209,11 @@ saveToLog = log LogFollow
 
 jsonToDoc :: ToJSON a => a -> Doc
 jsonToDoc  = Pr.text . L.unpack . L.toLazyText . A.encodeToTextBuilder . toJSON
+
+
+nub2 :: (Ord a, Eq a) => [a] -> [a]
+nub2 l = go S.empty l
+  where
+    go _ [] = []
+    go s (x:xs) = if x `S.member` s then go s xs
+                                      else x : go (S.insert x s) xs
