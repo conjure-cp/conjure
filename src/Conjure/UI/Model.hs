@@ -1224,20 +1224,22 @@ rule_BubbleUp_ToAnd :: Rule
 rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
     theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
     theRule (WithLocals x locals) = do
-        TypeBool <- typeOf x
-        cons     <- onlyConstraints locals
-        let outs = x:cons
-        let out  = make opAnd $ fromList outs
+        TypeBool    <- typeOf x
+        (vars,cons) <- onlyConstraints locals
+        when (null cons) $ na "rule_BubbleUp_ToAnd"
+        let out = make opAnd $ fromList (x:cons)
         return
             ( "Converting a bubble into a conjunction."
-            , const out
+            , const $ if null vars
+                        then out
+                        else WithLocals out vars
             )
     theRule _ = na "rule_BubbleToAnd"
 
-    onlyConstraints :: MonadFail m => [Statement] -> m [Expression]
-    onlyConstraints [] = return []
-    onlyConstraints (SuchThat xs:rest) = (xs++) <$> onlyConstraints rest
-    onlyConstraints _ = fail "onlyConstraints: not a SuchThat"
+    onlyConstraints :: MonadFail m => [Statement] -> m ([Statement], [Expression])
+    onlyConstraints [] = return ([], [])
+    onlyConstraints (SuchThat xs:rest) = second (xs++) <$> onlyConstraints rest
+    onlyConstraints (decl:rest) = first (decl:) <$> onlyConstraints rest
 
 
 rule_BubbleUp_NotBoolYet :: Rule
