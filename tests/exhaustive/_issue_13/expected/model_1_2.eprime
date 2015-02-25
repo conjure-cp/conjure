@@ -2,19 +2,14 @@ language ESSENCE' 1.0
 
 find f_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
 find f_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
-find q3_Occurrence: matrix indexed by [int(1..3)] of bool
-find q8_ExplicitVarSizeWithMarker_Marker: int(0..3)
-find q8_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
+find q2_Occurrence: matrix indexed by [int(1..3)] of bool
+find q5_Explicit: matrix indexed by [int(1..3)] of int(1..3)
 such that
-    sum([q3_Occurrence[q4] | q4 : int(1..3)]) = 2,
-    and([f_Function1DPartial_Flags[q2] -> q3_Occurrence[f_Function1DPartial_Values[q2]] | q2 : int(1..3)]),
-    and([q3_Occurrence[q5] -> or([f_Function1DPartial_Flags[q7] /\ f_Function1DPartial_Values[q7] = q5 | q7 : int(1..3)]) | q5 : int(1..3)]),
-    sum([q12 <= q8_ExplicitVarSizeWithMarker_Marker | q12 : int(1..3)]) = 3,
-    and([q6 + 1 <= q8_ExplicitVarSizeWithMarker_Marker -> q8_ExplicitVarSizeWithMarker_Values[q6] < q8_ExplicitVarSizeWithMarker_Values[q6 + 1] | q6 : int(1..2)]),
-    and([q6 > q8_ExplicitVarSizeWithMarker_Marker -> q8_ExplicitVarSizeWithMarker_Values[q6] = 1 | q6 : int(1..3)]),
-    and([f_Function1DPartial_Flags[q9] -> or([q14 <= q8_ExplicitVarSizeWithMarker_Marker /\ q8_ExplicitVarSizeWithMarker_Values[q14] = q9 | q14 : int(1..3)])
-             | q9 : int(1..3)]),
-    and([q13 <= q8_ExplicitVarSizeWithMarker_Marker -> or([f_Function1DPartial_Flags[q10] /\ q10 = q8_ExplicitVarSizeWithMarker_Values[q13] | q10 : int(1..3)])
-             | q13 : int(1..3)]),
+    2 = sum([q2_Occurrence[q3] | q3 : int(1..3)]),
+    and([f_Function1DPartial_Flags[q6] -> q2_Occurrence[f_Function1DPartial_Values[q6]] | q6 : int(1..3)]),
+    and([q2_Occurrence[q4] -> or([f_Function1DPartial_Flags[q7] /\ f_Function1DPartial_Values[q7] = q4 | q7 : int(1..3)]) | q4 : int(1..3)]),
+    and([q5_Explicit[q8] < q5_Explicit[q8 + 1] | q8 : int(1..2)]),
+    and([f_Function1DPartial_Flags[q11] -> or([q5_Explicit[q13] = f_Function1DPartial_Values[q11] | q13 : int(1..3)]) | q11 : int(1..3)]),
+    and([or([f_Function1DPartial_Flags[q9] /\ f_Function1DPartial_Values[q9] = q5_Explicit[q12] | q9 : int(1..3)]) | q12 : int(1..3)]),
     and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)])
 

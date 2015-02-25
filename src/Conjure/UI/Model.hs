@@ -798,6 +798,8 @@ horizontalRules =
     , Horizontal.Function.rule_In
     , Horizontal.Function.rule_Restrict_Image
     , Horizontal.Function.rule_Restrict_Comprehension
+    , Horizontal.Function.rule_Comprehension_Defined_Size
+    , Horizontal.Function.rule_Comprehension_Range_Size
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
