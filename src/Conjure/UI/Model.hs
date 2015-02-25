@@ -514,6 +514,25 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
 checkIfAllRefined m = return m
 
 
+topLevelBubbles :: MonadFail m => Model -> m Model
+topLevelBubbles m = do
+    statements <- forM (mStatements m) $ \ st -> case st of
+        SuchThat xs -> do
+            (finds, xs') <- fmap unzip $ forM xs $ \ x -> case x of
+                WithLocals h locals -> do
+                    let finds = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
+                    let cons  = [ cs | SuchThat cs <- locals ]
+                    unless (length finds + length cons == length locals) $
+                        bug "topLevelBubbles contains unsupported statements"
+                    return (finds, h : concat cons)
+                _ -> return ([], [x])
+            return
+                $  [ Declaration (FindOrGiven Find nm dom) | (nm, dom) <- concat finds ]
+                ++ [ SuchThat (concat xs') ]
+        _ -> return [st]
+    return m { mStatements = concat statements }
+
+
 sliceThemMatrices :: Monad m => Model -> m Model
 sliceThemMatrices model = do
     let
@@ -567,6 +586,7 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
+    >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
