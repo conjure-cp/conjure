@@ -309,8 +309,8 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                         (jPat, j) = quantifiedVar (fresh `at` 1)
                         (kPat, k) = quantifiedVar (fresh `at` 2)
                         (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k1 = [essence| &k[1] |]
-                        l1 = [essence| &l[1] |]
+                        k2 = [essence| &k[2] |]
+                        l2 = [essence| &l[2] |]
                     in
                         WithLocals
                             (Comprehension
@@ -321,12 +321,12 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
-                                    [essence| &k1 in &aux |]
+                                    [essence| &k2 in &aux |]
                                     [ Generator (GenInExpr kPat func) ]
                                 , make opAnd $
                                     Comprehension
                                         (make opOr $ Comprehension
-                                            [essence| &l1 = &k |]
+                                            [essence| &l2 = &k |]
                                             [ Generator (GenInExpr lPat func) ]
                                         )
                                         [ Generator (GenInExpr kPat aux) ]
@@ -401,8 +401,8 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
                         (jPat, j) = quantifiedVar (fresh `at` 1)
                         (kPat, k) = quantifiedVar (fresh `at` 2)
                         (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k1 = [essence| &k[1] |]
-                        l1 = [essence| &l[1] |]
+                        k2 = [essence| &k[2] |]
+                        l2 = [essence| &l[2] |]
                     in
                         WithLocals
                             (Comprehension
@@ -413,12 +413,12 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
-                                    [essence| &k1 in &aux |]
+                                    [essence| &k2 in &aux |]
                                     [ Generator (GenInExpr kPat func) ]
                                 , make opAnd $
                                     Comprehension
                                         (make opOr $ Comprehension
-                                            [essence| &l1 = &k |]
+                                            [essence| &l2 = &k |]
                                             [ Generator (GenInExpr lPat func) ]
                                         )
                                         [ Generator (GenInExpr kPat aux) ]
