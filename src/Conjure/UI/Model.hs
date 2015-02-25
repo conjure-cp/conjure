@@ -517,20 +517,12 @@ checkIfAllRefined m = return m
 topLevelBubbles :: MonadFail m => Model -> m Model
 topLevelBubbles m = do
     statements <- forM (mStatements m) $ \ st -> case st of
-        SuchThat xs -> do
-            (finds, xs') <- fmap unzip $ forM xs $ \ x -> case x of
-                WithLocals h locals -> do
-                    let finds = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
-                    let cons  = [ cs | SuchThat cs <- locals ]
-                    unless (length finds + length cons == length locals) $
-                        bug "topLevelBubbles contains unsupported statements"
-                    return (finds, h : concat cons)
-                _ -> return ([], [x])
-            return
-                $  [ Declaration (FindOrGiven Find nm dom) | (nm, dom) <- concat finds ]
-                ++ [ SuchThat (concat xs') ]
-        _ -> return [st]
-    return m { mStatements = concat statements }
+        SuchThat xs ->
+            forM xs $ \ x -> case x of
+                WithLocals h locals -> return (locals ++ [SuchThat [h]])
+                _ -> return [SuchThat [x]]
+        _ -> return [[st]]
+    return m { mStatements = concat $ concat statements }
 
 
 sliceThemMatrices :: Monad m => Model -> m Model
