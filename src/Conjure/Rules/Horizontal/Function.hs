@@ -336,6 +336,98 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
     theRule _ = na "rule_Comprehension_Range"
 
 
+rule_Comprehension_Defined_Literal :: Rule
+rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Defined_Literal"
+        func <- match opDefined expr
+        (_ty, elems) <- match functionLiteral func
+        elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
+        let domFr = mconcat elemDoms
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over defined(f)"
+            , \ fresh ->
+                    let
+                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
+                        (kPat, k) = quantifiedVar (fresh `at` 2)
+                        (lPat, l) = quantifiedVar (fresh `at` 3)
+                        k1 = [essence| &k[1] |]
+                        l1 = [essence| &l[1] |]
+                    in
+                        WithLocals
+                            (Comprehension
+                                (upd j body)
+                                $  gofBefore
+                                ++ [ Generator (GenInExpr jPat aux) ]
+                                ++ transformBi (upd j) gofAfter)
+                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
+                            , SuchThat
+                                [ make opAnd $ Comprehension
+                                    [essence| &k1 in &aux |]
+                                    [ Generator (GenInExpr kPat func) ]
+                                , make opAnd $
+                                    Comprehension
+                                        (make opOr $ Comprehension
+                                            [essence| &l1 = &k |]
+                                            [ Generator (GenInExpr lPat func) ]
+                                        )
+                                        [ Generator (GenInExpr kPat aux) ]
+                                ]
+                            ]
+            )
+    theRule _ = na "rule_Comprehension_Defined_Literal"
+
+
+rule_Comprehension_Range_Literal :: Rule
+rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Range_Literal"
+        func <- match opRange expr
+        (_ty, elems) <- match functionLiteral func
+        elemDoms <- mapM (fmap forgetRepr . domainOf . snd) elems
+        let domTo = mconcat elemDoms
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over range(f)"
+            , \ fresh ->
+                    let
+                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
+                        (jPat, j) = quantifiedVar (fresh `at` 1)
+                        (kPat, k) = quantifiedVar (fresh `at` 2)
+                        (lPat, l) = quantifiedVar (fresh `at` 3)
+                        k1 = [essence| &k[1] |]
+                        l1 = [essence| &l[1] |]
+                    in
+                        WithLocals
+                            (Comprehension
+                                (upd j body)
+                                $  gofBefore
+                                ++ [ Generator (GenInExpr jPat aux) ]
+                                ++ transformBi (upd j) gofAfter)
+                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
+                            , SuchThat
+                                [ make opAnd $ Comprehension
+                                    [essence| &k1 in &aux |]
+                                    [ Generator (GenInExpr kPat func) ]
+                                , make opAnd $
+                                    Comprehension
+                                        (make opOr $ Comprehension
+                                            [essence| &l1 = &k |]
+                                            [ Generator (GenInExpr lPat func) ]
+                                        )
+                                        [ Generator (GenInExpr kPat aux) ]
+                                ]
+                            ]
+            )
+    theRule _ = na "rule_Comprehension_Range_Literal"
+
+
 rule_Comprehension_Defined_Size :: Rule
 rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule where
     theRule [essence| size(defined(&func), &n) |] = do
