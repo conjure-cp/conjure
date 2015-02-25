@@ -98,7 +98,7 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "FunctionNDPartial"                   <- representationOf func
@@ -120,10 +120,10 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
                     val           = [essence| (&j, &valuesIndexed) |]
                 in
                     Comprehension (upd val body)
-                    $  gofBefore
+                    $  gocBefore
                     ++ [ Generator (GenDomainNoRepr jPat (forgetRepr $ DomainTuple ds))
                        , Condition flagsIndexed
                        ]
-                    ++ transformBi (upd val) gofAfter
+                    ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension"

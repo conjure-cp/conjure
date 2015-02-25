@@ -982,7 +982,7 @@ rule_ChooseReprForComprehension :: Rule
 rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (nm, domain), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenDomainNoRepr (Single nm) domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForComprehension"
 
@@ -1010,11 +1010,11 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
                             = Reference nm (Just (DeclHasRepr Quantified nm thisDom))
                         updateRepr p = p
                     let out' = Comprehension (transform updateRepr body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Generator (GenDomainHasRepr name dom)
                                    | (name, dom) <- outDomains ]
                                 ++ map Condition structurals
-                                ++ transformBi updateRepr gofAfter
+                                ++ transformBi updateRepr gocAfter
                     out <- resolveNamesX out'
                     return out
               , return
@@ -1033,7 +1033,7 @@ rule_ChooseReprForLocals :: Rule
 rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body locals) = do
-        (gofBefore, (nm, domain), gofAfter) <- matchFirst locals $ \ local -> case local of
+        (gocBefore, (nm, domain), gocAfter) <- matchFirst locals $ \ local -> case local of
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
 
@@ -1041,7 +1041,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
             isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
             isReferencedWithoutRepr _ = False
 
-        unless (any isReferencedWithoutRepr (universeBi (body, gofBefore, gofAfter))) $
+        unless (any isReferencedWithoutRepr (universeBi (body, gocBefore, gocAfter))) $
             fail $ "This local variable seems to be handled before:" <+> pretty nm
 
         let domOpts = reprOptions domain
@@ -1066,14 +1066,14 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                         updateRepr p = p
                     let out' = WithLocals (transform updateRepr body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
                                                     name
                                                     (forgetRepr dom))
                                    | (name, dom) <- outDomains ]
                                 ++ [ SuchThat structurals | not (null structurals) ]
-                                ++ transformBi updateRepr gofAfter
+                                ++ transformBi updateRepr gocAfter
                     out <- resolveNamesX out'
                     return out
               , return
@@ -1184,7 +1184,7 @@ rule_BubbleUp_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
 rule_BubbleUp_Comprehension :: Rule
 rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
             _ -> na "rule_BubbleUp_Comprehension"
         locals' <- forM locals $ \ l -> case l of
@@ -1193,10 +1193,10 @@ rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule wher
         return
             ( "Bubble in the generator of a comprehension."
             , const $ Comprehension body
-                $  gofBefore
+                $  gocBefore
                 ++ [Generator (GenInExpr pat expr)]
                 ++ map Condition (concat locals')
-                ++ gofAfter
+                ++ gocAfter
             )
     theRule _ = na "rule_BubbleUp_Comprehension"
 
@@ -1205,16 +1205,16 @@ rule_BubbleUp_LocalInComprehension :: Rule
 rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
     theRule p = do
         (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
-        (gofBefore, (pat, expr, locals), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
             _ -> na "rule_BubbleUp_Comprehension"
         return
             ( "Bubble in the generator of a comprehension."
             , const $ WithLocals
                 ( mkQuan $ Comprehension body
-                    $  gofBefore
+                    $  gocBefore
                     ++ [Generator (GenInExpr pat expr)]
-                    ++ gofAfter
+                    ++ gocAfter
                 )
                 locals
             )
@@ -1357,7 +1357,7 @@ rule_Abstract_DontCare = "dontCare-abstract" `namedRule` theRule where
 rule_ComplexAbsPat :: Rule
 rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, domainOrExpr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, domainOrExpr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenDomainNoRepr pat@AbsPatTuple{} domain) -> return (pat, Left domain)
             Generator (GenInExpr       pat@AbsPatTuple{} expr)   -> return (pat, Right expr)
             _ -> na "rule_ComplexAbsPat"
@@ -1372,11 +1372,11 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
                         f x = x
                     in
                         Comprehension (transform f body)
-                            $  gofBefore
+                            $  gocBefore
                             ++ [ either (Generator . GenDomainNoRepr iPat)
                                         (Generator . GenInExpr       iPat)
                                         domainOrExpr ]
-                            ++ transformBi f gofAfter
+                            ++ transformBi f gocAfter
             )
     theRule _ = na "rule_ComplexAbsPat"
 
@@ -1405,10 +1405,10 @@ rule_InlineConditions :: Rule
 rule_InlineConditions = Rule "inline-conditions" theRule where
     theRule z (Comprehension body gensOrConds) = do
         let (toInline, toKeep) = mconcat
-                [ case gof of
+                [ case goc of
                     Condition x | categoryOf x == CatDecision -> ([x],[])
-                    _ -> ([],[gof])
-                | gof <- gensOrConds
+                    _ -> ([],[goc])
+                | goc <- gensOrConds
                 ]
         theGuard <- case toInline of
             []  -> fail "No condition to inline."

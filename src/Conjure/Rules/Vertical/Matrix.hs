@@ -21,7 +21,7 @@ import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (_, index, _elems) <- match matrixLiteral expr
@@ -32,9 +32,9 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                      val = make opIndexing expr i
                  in  Comprehension (upd val body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [Generator (GenDomainNoRepr iPat index)]
-                         ++ transformBi (upd val) gofAfter
+                         ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -54,7 +54,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
 rule_Comprehension_LiteralIndexed :: Rule
 rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
         (mkM, expr2)      <- match opModifier expr
@@ -68,9 +68,9 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                     (iPat, i) = quantifiedVar (fresh `at` 0)
                     comprehensions =
                         [ Comprehension (upd i body)
-                             $  gofBefore
+                             $  gocBefore
                              ++ [Generator (GenInExpr iPat (mkM el))]
-                             ++ transformBi (upd i) gofAfter
+                             ++ transformBi (upd i) gocAfter
                         | el <- elems
                         ]
                     core = AbstractLiteral $ AbsLitMatrix index comprehensions
@@ -83,7 +83,7 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
 rule_Comprehension_ToSet :: Rule
 rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet"
         matrix       <- match opToSet expr
@@ -96,9 +96,9 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
                      val  = make opIndexing i 1
                      over = make opHist matrix
                  in  Comprehension (upd val body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [Generator (GenInExpr iPat over)]
-                         ++ transformBi (upd val) gofAfter
+                         ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension_ToSet"
 
@@ -108,16 +108,16 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, innerBody, innerGof), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, innerBody, innerGof), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} (Comprehension innerBody innerGof)) -> return (pat, innerBody, innerGof)
             _ -> na "rule_Comprehension_Nested"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Nested matrix comprehension"
             , const $ Comprehension (upd innerBody body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ innerGof
-                         ++ transformBi (upd innerBody) gofAfter
+                         ++ transformBi (upd innerBody) gocAfter
             )
     theRule _ = na "rule_Comprehension_Nested"
 
@@ -134,25 +134,25 @@ withAuxVar nm dom f =
 rule_Comprehension_ToSet2 :: Rule
 rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
     theRule p = do
-        let lu (Comprehension body gof) = return (body, gof)
+        let lu (Comprehension body goc) = return (body, goc)
             lu (Reference _ (Just (Alias ref))) = lu ref
             lu _ = fail "not a comprehension"
         inToSet     <- match opToSet p
-        (body, gof) <- lu inToSet
+        (body, goc) <- lu inToSet
         domBody     <- domainOf body
         return
             ( "Vertical rule for comprehension over matrix-hist"
             , \ fresh -> withAuxVar
                     (fresh `at` 0)
                     (DomainSet () def (forgetRepr domBody)) $ \ aux ->
-                        make opAnd $ Comprehension [essence| &body in &aux |] gof
+                        make opAnd $ Comprehension [essence| &body in &aux |] goc
             )
 
 
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Hist"
         matrix               <- match opHist expr
@@ -182,11 +182,11 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
                             ])
                     |]
                  in  Comprehension (upd val body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [ Generator (GenDomainNoRepr iPat index)
                             , Condition [essence| ! &appearsBefore |]
                             ]
-                         ++ transformBi (upd val) gofAfter
+                         ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension_Hist"
 
@@ -338,7 +338,7 @@ rule_Matrix_Leq_Decompose = "matrix-leq-tuple" `namedRule` theRule where
 rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, singleVal), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, singleVal), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenDomainHasRepr patName (DomainInt [RangeSingle a])) -> return (Single patName, a)
             Generator (GenDomainHasRepr patName (DomainInt [RangeBounded a b])) | a == b -> return (Single patName, a)
             _ -> na "rule_Comprehension_SingletonDomain"
@@ -346,11 +346,11 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
         return
             ( "Removing matrix-comprehension of a singleton int domain"
             , const $
-                if null gofBefore && null gofAfter
+                if null gocBefore && null gocAfter
                     then AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 1) [upd singleVal body]
                     else Comprehension (upd singleVal body)
-                         $  gofBefore
-                         ++ transformBi (upd singleVal) gofAfter
+                         $  gocBefore
+                         ++ transformBi (upd singleVal) gocAfter
             )
     theRule _ = na "rule_Comprehension_SingletonDomain"
 

@@ -394,7 +394,7 @@ instance TypeOf Expression where
             VariantField _ ty   -> return ty
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf p@(Comprehension x gensOrConds) = do
-        forM_ gensOrConds $ \ gof -> case gof of
+        forM_ gensOrConds $ \ goc -> case goc of
             Generator{} -> return ()                    -- TODO: do this properly
             Condition c -> do
                 ty <- typeOf c

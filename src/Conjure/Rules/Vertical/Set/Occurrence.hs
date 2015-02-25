@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, iPat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, iPat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
@@ -31,11 +31,11 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
             ( "Vertical rule for set-comprehension, Occurrence representation"
             , const $
                 Comprehension body
-                    $  gofBefore
+                    $  gocBefore
                     ++ [ Generator (GenDomainNoRepr pat index)
                        , Condition [essence| &m[&i] |]
                        ]
-                    ++ gofAfter
+                    ++ gocAfter
             )
     theRule _ = na "rule_Comprehension"
 
@@ -43,7 +43,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pats, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pats, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr (AbsPatSet pats) expr) -> return (pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         -- assert pats are Single{}
@@ -58,7 +58,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
             ( "Vertical rule for set-comprehension, Occurrence representation"
             , const $
                 Comprehension body $ concat
-                    [ gofBefore
+                    [ gocBefore
                     , concat
                         [ [ Generator (GenDomainNoRepr (Single pat) index)
                           , Condition [essence| &m[&patX] |]
@@ -75,7 +75,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
                         , let beforeX = Reference before Nothing
                         , let patX = Reference pat Nothing
                         ]
-                    , gofAfter
+                    , gocAfter
                     ]
             )
     theRule _ = na "rule_PowerSet_Comprehension"

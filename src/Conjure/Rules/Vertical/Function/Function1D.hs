@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "Function1D"               <- representationOf func
@@ -36,9 +36,9 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
                 in
                     Comprehension
                        (upd valuesIndexed body)
-                       $  gofBefore
+                       $  gocBefore
                        ++ [Generator (GenDomainNoRepr jPat (forgetRepr index))]
-                       ++ transformBi (upd valuesIndexed) gofAfter
+                       ++ transformBi (upd valuesIndexed) gocAfter
                )
     theRule _ = na "rule_Comprehension"
 
@@ -46,7 +46,7 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
 rule_Comprehension_Defined :: Rule
 rule_Comprehension_Defined = "function-comprehension_defined{Function1D}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         func                       <- match opDefined expr
@@ -61,9 +61,9 @@ rule_Comprehension_Defined = "function-comprehension_defined{Function1D}" `named
                     val = j
                 in
                     Comprehension (upd val body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index)) ]
-                        ++ transformBi (upd val) gofAfter
+                        ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension_Defined"
 

@@ -21,7 +21,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
         (TypeFunction fr to, elems) <- match functionLiteral expr
@@ -37,9 +37,9 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                  in  Comprehension (upd i body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gofAfter
+                         ++ transformBi (upd i) gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -214,7 +214,7 @@ rule_Leq = "function-leq" `namedRule` theRule where
 rule_Comprehension_PreImage :: Rule
 rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
@@ -228,11 +228,11 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
                 in
                     Comprehension
                         (upd val body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenInExpr jPat func)
                            , Condition [essence| &j[2] = &img |]
                            ]
-                        ++ transformBi (upd val) gofAfter
+                        ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension_PreImage"
 
@@ -251,7 +251,7 @@ rule_Card = "function-cardinality" `namedRule` theRule where
 rule_Comprehension_Defined :: Rule
 rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined"
         func <- match opDefined expr
@@ -271,9 +271,9 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
                         WithLocals
                             (Comprehension
                                 (upd j body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gofAfter)
+                                ++ transformBi (upd j) gocAfter)
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
@@ -295,7 +295,7 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
 rule_Comprehension_Range :: Rule
 rule_Comprehension_Range = "function-range" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
@@ -315,9 +315,9 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                         WithLocals
                             (Comprehension
                                 (upd j body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gofAfter)
+                                ++ transformBi (upd j) gocAfter)
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
@@ -339,7 +339,7 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
 rule_Comprehension_Defined_Literal :: Rule
 rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined_Literal"
         func <- match opDefined expr
@@ -361,9 +361,9 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
                         WithLocals
                             (Comprehension
                                 (upd j body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gofAfter)
+                                ++ transformBi (upd j) gocAfter)
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
@@ -385,7 +385,7 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
 rule_Comprehension_Range_Literal :: Rule
 rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range_Literal"
         func <- match opRange expr
@@ -407,9 +407,9 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
                         WithLocals
                             (Comprehension
                                 (upd j body)
-                                $  gofBefore
+                                $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gofAfter)
+                                ++ transformBi (upd j) gocAfter)
                             [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
                             , SuchThat
                                 [ make opAnd $ Comprehension
@@ -526,7 +526,7 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
 rule_Restrict_Comprehension :: Rule
 rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (iPat, iPatName, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (iPat, iPatName, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, dom) <- match opRestrict expr
@@ -537,11 +537,11 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
                         i = Reference iPatName Nothing
                     in
                         Comprehension body
-                            $  gofBefore
+                            $  gocBefore
                             ++ [ Generator (GenInExpr iPat func)
                                , Condition [essence| exists &jPat : &dom . &j = &i[1] |]
                                ]
-                            ++ gofAfter
+                            ++ gocAfter
             )
     theRule _ = na "rule_Restrict_Comprehension"
 
@@ -663,7 +663,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
 rule_Comprehension_Image :: Rule
 rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
@@ -681,11 +681,11 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
                 in
                     Comprehension
                         (upd j body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenInExpr iPat (mkModifier func))
                            , Condition [essence| &i[1] = &arg |]
                            , Generator (GenInExpr jPat [essence| &i[2] |])
                            ]
-                        ++ transformBi (upd j) gofAfter
+                        ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Comprehension_Image"

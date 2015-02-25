@@ -14,7 +14,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "relation-map_in_expr{RelationAsSet}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, rel), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, rel), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension"
         TypeRelation{}         <- typeOf rel
@@ -24,8 +24,8 @@ rule_Comprehension = "relation-map_in_expr{RelationAsSet}" `namedRule` theRule w
             ( "Vertical rule for map_in_expr for relation domains, RelationAsSet representation."
             , const $
                 Comprehension body
-                    $  gofBefore
+                    $  gocBefore
                     ++ [ Generator (GenInExpr pat set) ]
-                    ++ gofAfter
+                    ++ gocAfter
             )
     theRule _ = na "rule_Comprehension"
