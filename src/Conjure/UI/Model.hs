@@ -839,6 +839,8 @@ otherRules =
         , rule_BubbleUp_LocalInComprehension
         , rule_BubbleUp_ToAnd
         , rule_BubbleUp_NotBoolYet
+        , rule_BubbleUp_VarDecl
+        , rule_BubbleUp_LiftVars
 
         , rule_Bool_DontCare
         , rule_Int_DontCare
@@ -1201,6 +1203,27 @@ rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule wher
     theRule _ = na "rule_BubbleUp_Comprehension"
 
 
+rule_BubbleUp_VarDecl :: Rule
+rule_BubbleUp_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
+    theRule Comprehension{} = na "rule_BubbleUp_VarDecl Comprehension"
+    theRule WithLocals{}    = na "rule_BubbleUp_VarDecl WithLocals"
+    theRule p = do
+        let
+            f x@(WithLocals y locals) = do
+                let decls = [ decl | decl@Declaration{} <- locals ]
+                if length decls == length locals
+                    then tell decls >> return y         -- no cons, all decls
+                    else               return x
+            f x = return x
+        (p', collected) <- runWriterT (descendM f p)
+        when (null collected) $
+            na "rule_BubbleUp_VarDecl doesn't have any bubbly children"
+        return
+            ( "Bubbling up only declarations, no constraints in the bubble."
+            , const $ WithLocals p' collected
+            )
+
+
 rule_BubbleUp_LocalInComprehension :: Rule
 rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
     theRule p = do
@@ -1249,10 +1272,12 @@ rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
     theRule p = do
         let
             f x@(WithLocals y locals) = do
+                let decls = [ () | Declaration{} <- locals ]
                 ty <- typeOf y
                 case ty of
-                    TypeBool ->                return x
-                    _        -> tell locals >> return y
+                    TypeBool                                 ->                return x
+                    _        | length decls == length locals ->                return x     -- if all are decls
+                    _                                        -> tell locals >> return y
             f x = return x
         (p', collected) <- runWriterT (descendM f p)
         when (null collected) $
@@ -1261,6 +1286,42 @@ rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             ( "Bubbling up, not reached a relational context yet."
             , const $ WithLocals p' collected
             )
+
+
+rule_BubbleUp_LiftVars :: Rule
+rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
+    theRule (Comprehension (WithLocals body locals) gensOrConds) = do
+
+        let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
+        unless (length decls == length locals) $ na "rule_BubbleUp_LiftVars"
+
+        (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
+            _ -> na "rule_BubbleUp_LiftVars"
+
+        let patRef = Reference patName Nothing
+
+        let declsLifted =
+                [ Declaration (FindOrGiven LocalFind nm domLifted)
+                | (nm, dom) <- decls
+                , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
+                ]
+
+        let upd (Reference nm _) | nm `elem` map fst decls
+                = let r = Reference nm Nothing
+                  in  [essence| &r[&patRef] |]
+            upd r = r
+
+        return
+            ( "rule_BubbleUp_LiftVars"
+            , const $ WithLocals
+                         (Comprehension (transform upd body)
+                             $  transformBi upd gocBefore
+                             ++ [Generator (GenDomainHasRepr patName indexDomain)]
+                             ++ transformBi upd gocAfter)
+                          declsLifted
+            )
+    theRule _ = na "rule_BubbleUp_LiftVars"
 
 
 rule_Bool_DontCare :: Rule
