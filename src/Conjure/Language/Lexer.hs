@@ -230,6 +230,9 @@ data Lexeme
 
     | L_LeftArrow
 
+    | L_substrings
+    | L_subsequences
+
     deriving (Eq, Ord, Show, Generic)
 
 instance Hashable Lexeme
@@ -413,6 +416,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_DotLeq          , ".<="   )
 
     , ( L_LeftArrow       , "<-"   )
+
+    , ( L_substrings      , "substrings"   )
+    , ( L_subsequences    , "subsequences" )
 
     ]
 
