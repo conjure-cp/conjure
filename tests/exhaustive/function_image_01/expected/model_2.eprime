@@ -6,11 +6,11 @@ find x: int(1..2)
 find q3_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find q3_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 such that
-    sum([([false, true; int(1..2)][q1] = b) * [5, x; int(1..2)][q1] | q1 : int(1..2)]) = i,
     q3_ExplicitVarSizeWithFlags_Flags[2] -> q3_ExplicitVarSizeWithFlags_Values[1] < q3_ExplicitVarSizeWithFlags_Values[2],
     and([q3_ExplicitVarSizeWithFlags_Flags[q2] = false -> q3_ExplicitVarSizeWithFlags_Values[q2] = false | q2 : int(1..2)]),
     q3_ExplicitVarSizeWithFlags_Flags[2] -> q3_ExplicitVarSizeWithFlags_Flags[1],
     and([or([q3_ExplicitVarSizeWithFlags_Flags[q9] /\ q3_ExplicitVarSizeWithFlags_Values[q9] = [false, true; int(1..2)][q5] | q9 : int(1..2)]) | q5 : int(1..2)]),
     and([q3_ExplicitVarSizeWithFlags_Flags[q4] -> or([[false, true; int(1..2)][q6] = q3_ExplicitVarSizeWithFlags_Values[q4] | q6 : int(1..2)]) | q4 : int(1..2)]),
+    sum([([false, true; int(1..2)][q1] = b) * [5, x; int(1..2)][q1] | q1 : int(1..2)]) = i,
     or([q3_ExplicitVarSizeWithFlags_Flags[q7] /\ q3_ExplicitVarSizeWithFlags_Values[q7] = b | q7 : int(1..2)])
 
