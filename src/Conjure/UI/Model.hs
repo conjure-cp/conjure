@@ -834,12 +834,12 @@ otherRules =
 
         , rule_DomainCardinality
 
-        , rule_BubbleUp_MergeNested
-        , rule_BubbleUp_Comprehension
-        , rule_BubbleUp_LocalInComprehension
-        , rule_BubbleUp_ToAnd
-        , rule_BubbleUp_NotBoolYet
-        , rule_BubbleUp_VarDecl
+        -- , rule_BubbleUp_MergeNested
+        -- , rule_BubbleUp_Comprehension
+        -- , rule_BubbleUp_LocalInComprehension
+        -- , rule_BubbleUp_ToAnd
+        -- , rule_BubbleUp_NotBoolYet
+        -- , rule_BubbleUp_VarDecl
         , rule_BubbleUp_LiftVars
 
         , rule_Bool_DontCare
@@ -1293,7 +1293,9 @@ rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
     theRule (Comprehension (WithLocals body locals) gensOrConds) = do
 
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
-        unless (length decls == length locals) $ na "rule_BubbleUp_LiftVars"
+        let cons' = [ xs | SuchThat xs <- locals ]
+        unless (length decls + length cons' == length locals) $ na "rule_BubbleUp_LiftVars"
+        let cons = concat cons'
 
         (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
@@ -1301,16 +1303,21 @@ rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
 
         let patRef = Reference patName Nothing
 
+        let upd (Reference nm _) | nm `elem` map fst decls
+                = let r = Reference nm Nothing
+                  in  [essence| &r[&patRef] |]
+            upd r = r
+
         let declsLifted =
                 [ Declaration (FindOrGiven LocalFind nm domLifted)
                 | (nm, dom) <- decls
                 , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
                 ]
 
-        let upd (Reference nm _) | nm `elem` map fst decls
-                = let r = Reference nm Nothing
-                  in  [essence| &r[&patRef] |]
-            upd r = r
+        let consLifted =
+                [ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
+                | c <- transformBi upd cons
+                ]
 
         return
             ( "rule_BubbleUp_LiftVars"
@@ -1319,7 +1326,7 @@ rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                              $  transformBi upd gocBefore
                              ++ [Generator (GenDomainHasRepr patName indexDomain)]
                              ++ transformBi upd gocAfter)
-                          declsLifted
+                          (declsLifted ++ [SuchThat consLifted])
             )
     theRule _ = na "rule_BubbleUp_LiftVars"
 
