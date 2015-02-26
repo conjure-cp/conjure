@@ -122,31 +122,32 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Nested"
 
 
-withAuxVar :: Name -> Domain () Expression -> (Expression -> Expression) -> Expression
-withAuxVar nm dom f =
-    WithLocals
-        (Reference nm Nothing)
-        [ Declaration (FindOrGiven LocalFind nm dom)
-        , SuchThat [f (Reference nm Nothing)]
-        ]
-
-
-rule_Comprehension_ToSet2 :: Rule
-rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
-    theRule p = do
-        let lu (Comprehension body goc) = return (body, goc)
-            lu (Reference _ (Just (Alias ref))) = lu ref
-            lu _ = fail "not a comprehension"
-        inToSet     <- match opToSet p
-        (body, goc) <- lu inToSet
-        domBody     <- domainOf body
-        return
-            ( "Vertical rule for comprehension over matrix-hist"
-            , \ fresh -> withAuxVar
-                    (fresh `at` 0)
-                    (DomainSet () def (forgetRepr domBody)) $ \ aux ->
-                        make opAnd $ Comprehension [essence| &body in &aux |] goc
-            )
+-- withAuxVar :: Name -> Domain () Expression -> (Expression -> Expression) -> Expression
+-- withAuxVar nm dom f =
+--     WithLocals
+--         (Reference nm Nothing)
+--         [ Declaration (FindOrGiven LocalFind nm dom)
+--         , SuchThat [f (Reference nm Nothing)]
+--         ]
+--         []
+--
+--
+-- rule_Comprehension_ToSet2 :: Rule
+-- rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
+--     theRule p = do
+--         let lu (Comprehension body goc) = return (body, goc)
+--             lu (Reference _ (Just (Alias ref))) = lu ref
+--             lu _ = fail "not a comprehension"
+--         inToSet     <- match opToSet p
+--         (body, goc) <- lu inToSet
+--         domBody     <- domainOf body
+--         return
+--             ( "Vertical rule for comprehension over matrix-hist"
+--             , \ fresh -> withAuxVar
+--                     (fresh `at` 0)
+--                     (DomainSet () def (forgetRepr domBody)) $ \ aux ->
+--                         make opAnd $ Comprehension [essence| &body in &aux |] goc
+--             )
 
 
 rule_Comprehension_Hist :: Rule

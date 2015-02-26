@@ -607,8 +607,20 @@ parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels
-    let jsLocals = transformBi (\ forg -> if forg == Find then LocalFind else forg ) js
-    return (WithLocals i jsLocals)
+    let auxNames =
+            [ nm
+            | Declaration (FindOrGiven Find nm _) <- js ]
+    let auxDecls =
+            [ Declaration (FindOrGiven LocalFind nm dom)
+            | Declaration (FindOrGiven Find nm dom) <- js ]
+    let refersToAux = any (`elem` auxNames) . universeBi
+    let (auxCons, otherCons) = partitionEithers
+            [ if refersToAux x then Left x else Right x
+            | SuchThat xs <- js
+            , x <- xs
+            ]
+    let auxs = auxDecls ++ [SuchThat auxCons]
+    return (WithLocals i auxs otherCons)
 
 parseName :: Parser Name
 parseName = Name <$> identifierText

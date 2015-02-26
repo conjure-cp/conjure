@@ -25,7 +25,8 @@ attributeAsConstraints m = do
 
 
 attributeAsConstraints_OnLocals :: MonadFail m => Expression -> m Expression
-attributeAsConstraints_OnLocals (WithLocals h st) = WithLocals h <$> attributeAsConstraints_OnStmts st
+attributeAsConstraints_OnLocals (WithLocals h st bobs) =
+    WithLocals h <$> attributeAsConstraints_OnStmts st <*> pure bobs
 attributeAsConstraints_OnLocals x = return x
 
 

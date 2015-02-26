@@ -396,7 +396,7 @@ oneSuchThat m =
                 others ++ [SuchThat (combine suchThats)]
 
         onLocals :: Expression -> Expression
-        onLocals (WithLocals x locals) = WithLocals x (onStatements locals)
+        onLocals (WithLocals x locals bobs) = WithLocals x (onStatements locals) bobs
         onLocals x = x
 
         collect :: Statement -> ([Statement], [Expression])
@@ -519,7 +519,7 @@ topLevelBubbles m = do
     statements <- forM (mStatements m) $ \ st -> case st of
         SuchThat xs ->
             forM xs $ \ x -> case x of
-                WithLocals h locals -> return (locals ++ [SuchThat [h]])
+                WithLocals h auxs bobs -> return (auxs ++ [SuchThat bobs, SuchThat [h]])
                 _ -> return [SuchThat [x]]
         _ -> return [[st]]
     return m { mStatements = concat $ concat statements }
@@ -632,7 +632,7 @@ allRules config =
     , paramRules
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
-      , rule_ChooseReprForLocals
+      -- , rule_ChooseReprForLocals
       ]
     , verticalRules
     , horizontalRules
@@ -677,7 +677,7 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet
-    , Vertical.Matrix.rule_Comprehension_ToSet2
+    -- , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
@@ -840,7 +840,7 @@ otherRules =
         -- , rule_BubbleUp_ToAnd
         -- , rule_BubbleUp_NotBoolYet
         -- , rule_BubbleUp_VarDecl
-        , rule_BubbleUp_LiftVars
+        -- , rule_BubbleUp_LiftVars
 
         , rule_Bool_DontCare
         , rule_Int_DontCare
@@ -1031,63 +1031,63 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
         gen fresh ref
 
 
-rule_ChooseReprForLocals :: Rule
-rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
-
-    theRule (WithLocals body locals) = do
-        (gocBefore, (nm, domain), gocAfter) <- matchFirst locals $ \ local -> case local of
-            Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
-            _ -> na "rule_ChooseReprForLocals"
-
-        let
-            isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
-            isReferencedWithoutRepr _ = False
-
-        unless (any isReferencedWithoutRepr (universeBi (body, gocBefore, gocAfter))) $
-            fail $ "This local variable seems to be handled before:" <+> pretty nm
-
-        let domOpts = reprOptions domain
-        when (null domOpts) $
-            bug $ "No representation matches this beast:" <++> pretty domain
-
-        let genOptions =
-                [ \ fresh -> do
-                    outs <- downD (nm, dom)
-                    structurals <- mkStructurals fresh nm dom
-                    return (dom, outs, structurals)
-                | dom <- domOpts
-                ]
-
-        return
-            [ ( "Choosing representation for local variable" <+> pretty nm
-              , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
-                    option <- genOption fresh
-                    let (thisDom, outDomains, structurals) = option
-                    let updateRepr (Reference nm' _)
-                            | nm == nm'
-                            = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
-                        updateRepr p = p
-                    let out' = WithLocals (transform updateRepr body)
-                                $  gocBefore
-                                ++ [ Declaration (FindOrGiven
-                                                    LocalFind
-                                                    name
-                                                    (forgetRepr dom))
-                                   | (name, dom) <- outDomains ]
-                                ++ [ SuchThat structurals | not (null structurals) ]
-                                ++ transformBi updateRepr gocAfter
-                    out <- resolveNamesX out'
-                    return out
-              , return
-              )
-            | genOption <- genOptions
-            ]
-    theRule _ = na "rule_ChooseReprForLocals"
-
-    mkStructurals fresh name domain = do
-        let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
-        gen  <- getStructurals downX1 domain
-        gen fresh ref
+-- rule_ChooseReprForLocals :: Rule
+-- rule_ChooseReprForLocals = Rule "choose-repr-for-auxs" (const theRule) where
+--
+--     theRule (WithLocals body auxs bobs) = do
+--         (gocBefore, (nm, domain), gocAfter) <- matchFirst auxs $ \ local -> case local of
+--             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
+--             _ -> na "rule_ChooseReprForLocals"
+--
+--         let
+--             isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
+--             isReferencedWithoutRepr _ = False
+--
+--         unless (any isReferencedWithoutRepr (universeBi (body, gocBefore, gocAfter))) $
+--             fail $ "This local variable seems to be handled before:" <+> pretty nm
+--
+--         let domOpts = reprOptions domain
+--         when (null domOpts) $
+--             bug $ "No representation matches this beast:" <++> pretty domain
+--
+--         let genOptions =
+--                 [ \ fresh -> do
+--                     outs <- downD (nm, dom)
+--                     structurals <- mkStructurals fresh nm dom
+--                     return (dom, outs, structurals)
+--                 | dom <- domOpts
+--                 ]
+--
+--         return
+--             [ ( "Choosing representation for local variable" <+> pretty nm
+--               , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
+--                     option <- genOption fresh
+--                     let (thisDom, outDomains, structurals) = option
+--                     let updateRepr (Reference nm' _)
+--                             | nm == nm'
+--                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
+--                         updateRepr p = p
+--                     let out' = WithLocals (transform updateRepr body)
+--                                 $  gocBefore
+--                                 ++ [ Declaration (FindOrGiven
+--                                                     LocalFind
+--                                                     name
+--                                                     (forgetRepr dom))
+--                                    | (name, dom) <- outDomains ]
+--                                 ++ [ SuchThat structurals | not (null structurals) ]
+--                                 ++ transformBi updateRepr gocAfter
+--                     out <- resolveNamesX out'
+--                     return out
+--               , return
+--               )
+--             | genOption <- genOptions
+--             ]
+--     theRule _ = na "rule_ChooseReprForLocals"
+--
+--     mkStructurals fresh name domain = do
+--         let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
+--         gen  <- getStructurals downX1 domain
+--         gen fresh ref
 
 
 rule_GeneratorsFirst :: Rule
@@ -1173,162 +1173,162 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             _ -> na "rule_DomainCardinality"
 
 
-rule_BubbleUp_MergeNested :: Rule
-rule_BubbleUp_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
-    theRule (WithLocals (WithLocals body locals1) locals2) =
-        return
-            ( "Merging nested bubbles"
-            , const $ WithLocals body (locals1 ++ locals2)
-            )
-    theRule _ = na "rule_BubbleUp_MergeNested"
-
-
-rule_BubbleUp_Comprehension :: Rule
-rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
-            _ -> na "rule_BubbleUp_Comprehension"
-        locals' <- forM locals $ \ l -> case l of
-            SuchThat xs -> return xs
-            _ -> fail ("rule_BubbleUp_Comprehension, not a SuchThat:" <+> pretty l)
-        return
-            ( "Bubble in the generator of a comprehension."
-            , const $ Comprehension body
-                $  gocBefore
-                ++ [Generator (GenInExpr pat expr)]
-                ++ map Condition (concat locals')
-                ++ gocAfter
-            )
-    theRule _ = na "rule_BubbleUp_Comprehension"
-
-
-rule_BubbleUp_VarDecl :: Rule
-rule_BubbleUp_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
-    theRule Comprehension{} = na "rule_BubbleUp_VarDecl Comprehension"
-    theRule WithLocals{}    = na "rule_BubbleUp_VarDecl WithLocals"
-    theRule p = do
-        let
-            f x@(WithLocals y locals) = do
-                let decls = [ decl | decl@Declaration{} <- locals ]
-                if length decls == length locals
-                    then tell decls >> return y         -- no cons, all decls
-                    else               return x
-            f x = return x
-        (p', collected) <- runWriterT (descendM f p)
-        when (null collected) $
-            na "rule_BubbleUp_VarDecl doesn't have any bubbly children"
-        return
-            ( "Bubbling up only declarations, no constraints in the bubble."
-            , const $ WithLocals p' collected
-            )
-
-
-rule_BubbleUp_LocalInComprehension :: Rule
-rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
-    theRule p = do
-        (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
-        (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
-            _ -> na "rule_BubbleUp_Comprehension"
-        return
-            ( "Bubble in the generator of a comprehension."
-            , const $ WithLocals
-                ( mkQuan $ Comprehension body
-                    $  gocBefore
-                    ++ [Generator (GenInExpr pat expr)]
-                    ++ gocAfter
-                )
-                locals
-            )
-
-
-rule_BubbleUp_ToAnd :: Rule
-rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
-    theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
-    theRule (WithLocals x locals) = do
-        TypeBool    <- typeOf x
-        (vars,cons) <- onlyConstraints locals
-        when (null cons) $ na "rule_BubbleUp_ToAnd"
-        let out = make opAnd $ fromList (x:cons)
-        return
-            ( "Converting a bubble into a conjunction."
-            , const $ if null vars
-                        then out
-                        else WithLocals out vars
-            )
-    theRule _ = na "rule_BubbleToAnd"
-
-    onlyConstraints :: MonadFail m => [Statement] -> m ([Statement], [Expression])
-    onlyConstraints [] = return ([], [])
-    onlyConstraints (SuchThat xs:rest) = second (xs++) <$> onlyConstraints rest
-    onlyConstraints (decl:rest) = first (decl:) <$> onlyConstraints rest
-
-
-rule_BubbleUp_NotBoolYet :: Rule
-rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
-    theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet Comprehension"
-    theRule WithLocals{}    = na "rule_BubbleUp_NotBoolYet WithLocals"
-    theRule p = do
-        let
-            f x@(WithLocals y locals) = do
-                let decls = [ () | Declaration{} <- locals ]
-                ty <- typeOf y
-                case ty of
-                    TypeBool                                 ->                return x
-                    _        | length decls == length locals ->                return x     -- if all are decls
-                    _                                        -> tell locals >> return y
-            f x = return x
-        (p', collected) <- runWriterT (descendM f p)
-        when (null collected) $
-            na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
-        return
-            ( "Bubbling up, not reached a relational context yet."
-            , const $ WithLocals p' collected
-            )
-
-
-rule_BubbleUp_LiftVars :: Rule
-rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
-    theRule (Comprehension (WithLocals body locals) gensOrConds) = do
-
-        let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
-        let cons' = [ xs | SuchThat xs <- locals ]
-        unless (length decls + length cons' == length locals) $ na "rule_BubbleUp_LiftVars"
-        let cons = concat cons'
-
-        (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
-            _ -> na "rule_BubbleUp_LiftVars"
-
-        let patRef = Reference patName Nothing
-
-        let upd (Reference nm _) | nm `elem` map fst decls
-                = let r = Reference nm Nothing
-                  in  [essence| &r[&patRef] |]
-            upd r = r
-
-        let declsLifted =
-                [ Declaration (FindOrGiven LocalFind nm domLifted)
-                | (nm, dom) <- decls
-                , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
-                ]
-
-        let consLifted =
-                [ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
-                | c <- transformBi upd cons
-                ]
-
-        return
-            ( "rule_BubbleUp_LiftVars"
-            , const $ WithLocals
-                         (Comprehension (transform upd body)
-                             $  transformBi upd gocBefore
-                             ++ [Generator (GenDomainHasRepr patName indexDomain)]
-                             ++ transformBi upd gocAfter)
-                          (declsLifted ++ [SuchThat consLifted])
-            )
-    theRule _ = na "rule_BubbleUp_LiftVars"
+-- rule_BubbleUp_MergeNested :: Rule
+-- rule_BubbleUp_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
+--     theRule (WithLocals (WithLocals body locals1) locals2) =
+--         return
+--             ( "Merging nested bubbles"
+--             , const $ WithLocals body (locals1 ++ locals2)
+--             )
+--     theRule _ = na "rule_BubbleUp_MergeNested"
+--
+--
+-- rule_BubbleUp_Comprehension :: Rule
+-- rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
+--     theRule (Comprehension body gensOrConds) = do
+--         (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+--             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
+--             _ -> na "rule_BubbleUp_Comprehension"
+--         locals' <- forM locals $ \ l -> case l of
+--             SuchThat xs -> return xs
+--             _ -> fail ("rule_BubbleUp_Comprehension, not a SuchThat:" <+> pretty l)
+--         return
+--             ( "Bubble in the generator of a comprehension."
+--             , const $ Comprehension body
+--                 $  gocBefore
+--                 ++ [Generator (GenInExpr pat expr)]
+--                 ++ map Condition (concat locals')
+--                 ++ gocAfter
+--             )
+--     theRule _ = na "rule_BubbleUp_Comprehension"
+--
+--
+-- rule_BubbleUp_VarDecl :: Rule
+-- rule_BubbleUp_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
+--     theRule Comprehension{} = na "rule_BubbleUp_VarDecl Comprehension"
+--     theRule WithLocals{}    = na "rule_BubbleUp_VarDecl WithLocals"
+--     theRule p = do
+--         let
+--             f x@(WithLocals y locals) = do
+--                 let decls = [ decl | decl@Declaration{} <- locals ]
+--                 if length decls == length locals
+--                     then tell decls >> return y         -- no cons, all decls
+--                     else               return x
+--             f x = return x
+--         (p', collected) <- runWriterT (descendM f p)
+--         when (null collected) $
+--             na "rule_BubbleUp_VarDecl doesn't have any bubbly children"
+--         return
+--             ( "Bubbling up only declarations, no constraints in the bubble."
+--             , const $ WithLocals p' collected
+--             )
+--
+--
+-- rule_BubbleUp_LocalInComprehension :: Rule
+-- rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
+--     theRule p = do
+--         (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
+--         (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+--             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
+--             _ -> na "rule_BubbleUp_Comprehension"
+--         return
+--             ( "Bubble in the generator of a comprehension."
+--             , const $ WithLocals
+--                 ( mkQuan $ Comprehension body
+--                     $  gocBefore
+--                     ++ [Generator (GenInExpr pat expr)]
+--                     ++ gocAfter
+--                 )
+--                 locals
+--             )
+--
+--
+-- rule_BubbleUp_ToAnd :: Rule
+-- rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
+--     theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
+--     theRule (WithLocals x locals) = do
+--         TypeBool    <- typeOf x
+--         (vars,cons) <- onlyConstraints locals
+--         when (null cons) $ na "rule_BubbleUp_ToAnd"
+--         let out = make opAnd $ fromList (x:cons)
+--         return
+--             ( "Converting a bubble into a conjunction."
+--             , const $ if null vars
+--                         then out
+--                         else WithLocals out vars
+--             )
+--     theRule _ = na "rule_BubbleToAnd"
+--
+--     onlyConstraints :: MonadFail m => [Statement] -> m ([Statement], [Expression])
+--     onlyConstraints [] = return ([], [])
+--     onlyConstraints (SuchThat xs:rest) = second (xs++) <$> onlyConstraints rest
+--     onlyConstraints (decl:rest) = first (decl:) <$> onlyConstraints rest
+--
+--
+-- rule_BubbleUp_NotBoolYet :: Rule
+-- rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
+--     theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet Comprehension"
+--     theRule WithLocals{}    = na "rule_BubbleUp_NotBoolYet WithLocals"
+--     theRule p = do
+--         let
+--             f x@(WithLocals y locals) = do
+--                 let decls = [ () | Declaration{} <- locals ]
+--                 ty <- typeOf y
+--                 case ty of
+--                     TypeBool                                 ->                return x
+--                     _        | length decls == length locals ->                return x     -- if all are decls
+--                     _                                        -> tell locals >> return y
+--             f x = return x
+--         (p', collected) <- runWriterT (descendM f p)
+--         when (null collected) $
+--             na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
+--         return
+--             ( "Bubbling up, not reached a relational context yet."
+--             , const $ WithLocals p' collected
+--             )
+--
+--
+-- rule_BubbleUp_LiftVars :: Rule
+-- rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
+--     theRule (Comprehension (WithLocals body locals) gensOrConds) = do
+--
+--         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
+--         let cons' = [ xs | SuchThat xs <- locals ]
+--         unless (length decls + length cons' == length locals) $ na "rule_BubbleUp_LiftVars"
+--         let cons = concat cons'
+--
+--         (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+--             Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
+--             _ -> na "rule_BubbleUp_LiftVars"
+--
+--         let patRef = Reference patName Nothing
+--
+--         let upd (Reference nm _) | nm `elem` map fst decls
+--                 = let r = Reference nm Nothing
+--                   in  [essence| &r[&patRef] |]
+--             upd r = r
+--
+--         let declsLifted =
+--                 [ Declaration (FindOrGiven LocalFind nm domLifted)
+--                 | (nm, dom) <- decls
+--                 , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
+--                 ]
+--
+--         let consLifted =
+--                 [ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
+--                 | c <- transformBi upd cons
+--                 ]
+--
+--         return
+--             ( "rule_BubbleUp_LiftVars"
+--             , const $ WithLocals
+--                          (Comprehension (transform upd body)
+--                              $  transformBi upd gocBefore
+--                              ++ [Generator (GenDomainHasRepr patName indexDomain)]
+--                              ++ transformBi upd gocAfter)
+--                           (declsLifted ++ [SuchThat consLifted])
+--             )
+--     theRule _ = na "rule_BubbleUp_LiftVars"
 
 
 rule_Bool_DontCare :: Rule

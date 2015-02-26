@@ -88,7 +88,7 @@ rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
                         | (a,_) <- elems
                         ]
                 in
-                    WithLocals val [SuchThat [argIsDef]]
+                    WithLocals val [] [argIsDef]
             )
 
 
@@ -288,6 +288,7 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Defined"
 
@@ -332,6 +333,7 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Range"
 
@@ -378,6 +380,7 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Defined_Literal"
 
@@ -424,6 +427,7 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Range_Literal"
 
@@ -459,6 +463,7 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Defined_Size"
 
@@ -494,6 +499,7 @@ rule_Comprehension_Range_Size = "function-range-size" `namedRule` theRule where
                                         [ Generator (GenInExpr kPat aux) ]
                                 ]
                             ]
+                            []
             )
     theRule _ = na "rule_Comprehension_Range_Size"
 
@@ -519,7 +525,7 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) [SuchThat [bob]]
+                    in  WithLocals (make opFunctionImage func arg) [] [bob]
             )
 
 
@@ -656,7 +662,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
                         ]
                     isDefined = [essence| &arg in defined(&func) |]
                 in
-                    mkP $ WithLocals val [SuchThat [isDefined]]
+                    mkP $ WithLocals val [] [isDefined]
             )
 
 
