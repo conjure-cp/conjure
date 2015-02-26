@@ -358,10 +358,13 @@ instance Pretty Expression where
     prettyPrec _ (AbstractLiteral x) = pretty x
     prettyPrec _ (Domain x) = "`" <> pretty x <> "`"
     prettyPrec _ (Reference x _) = pretty x
-    prettyPrec _ (WithLocals x auxs bobs) = vcat [ "{" <+> pretty x
-                                                 , "@" <+> vcat (map pretty (auxs ++ [SuchThat bobs]))
-                                                 , "}"
-                                                 ]
+    prettyPrec _ (WithLocals x auxs bobs) =
+        let stmts = auxs ++ if null bobs then []
+                                         else [SuchThat bobs]
+        in  vcat [ "{" <+> pretty x
+                 , "@" <+> vcat (map pretty stmts)
+                 , "}"
+                 ]
     prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
     prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
