@@ -520,13 +520,17 @@ checkIfAllRefined m = return m
 
 topLevelBubbles :: MonadFail m => Model -> m Model
 topLevelBubbles m = do
-    statements <- forM (mStatements m) $ \ st -> case st of
-        SuchThat xs ->
-            forM xs $ \ x -> case x of
-                WithLocals h auxs bobs -> return (auxs ++ [SuchThat bobs, SuchThat [h]])
-                _ -> return [SuchThat [x]]
-        _ -> return [[st]]
-    return m { mStatements = concat $ concat statements }
+    let
+        onStmt (SuchThat xs) = onExprs xs
+        onStmt s = [s]
+
+        onExpr (WithLocals h auxs bobs) = (auxs ++ [SuchThat bobs, SuchThat [h]]) |> onStmts
+        onExpr x = [SuchThat [x]]
+
+        onStmts = concatMap onStmt
+        onExprs = concatMap onExpr
+
+    return m { mStatements = onStmts (mStatements m) }
 
 
 sliceThemMatrices :: Monad m => Model -> m Model
@@ -582,12 +586,11 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
-    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat1]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
-    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat2]"
+    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
 
@@ -636,7 +639,7 @@ allRules config =
     , paramRules
     , [ rule_ChooseRepr config
       , rule_ChooseReprForComprehension
-      -- , rule_ChooseReprForLocals
+      , rule_ChooseReprForLocals
       ]
     , verticalRules
     , horizontalRules
@@ -1035,63 +1038,65 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
         gen fresh ref
 
 
--- rule_ChooseReprForLocals :: Rule
--- rule_ChooseReprForLocals = Rule "choose-repr-for-auxs" (const theRule) where
---
---     theRule (WithLocals body auxs bobs) = do
---         (gocBefore, (nm, domain), gocAfter) <- matchFirst auxs $ \ local -> case local of
---             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
---             _ -> na "rule_ChooseReprForLocals"
---
---         let
---             isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
---             isReferencedWithoutRepr _ = False
---
---         unless (any isReferencedWithoutRepr (universeBi (body, gocBefore, gocAfter))) $
---             fail $ "This local variable seems to be handled before:" <+> pretty nm
---
---         let domOpts = reprOptions domain
---         when (null domOpts) $
---             bug $ "No representation matches this beast:" <++> pretty domain
---
---         let genOptions =
---                 [ \ fresh -> do
---                     outs <- downD (nm, dom)
---                     structurals <- mkStructurals fresh nm dom
---                     return (dom, outs, structurals)
---                 | dom <- domOpts
---                 ]
---
---         return
---             [ ( "Choosing representation for local variable" <+> pretty nm
---               , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
---                     option <- genOption fresh
---                     let (thisDom, outDomains, structurals) = option
---                     let updateRepr (Reference nm' _)
---                             | nm == nm'
---                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
---                         updateRepr p = p
---                     let out' = WithLocals (transform updateRepr body)
---                                 $  gocBefore
---                                 ++ [ Declaration (FindOrGiven
---                                                     LocalFind
---                                                     name
---                                                     (forgetRepr dom))
---                                    | (name, dom) <- outDomains ]
---                                 ++ [ SuchThat structurals | not (null structurals) ]
---                                 ++ transformBi updateRepr gocAfter
---                     out <- resolveNamesX out'
---                     return out
---               , return
---               )
---             | genOption <- genOptions
---             ]
---     theRule _ = na "rule_ChooseReprForLocals"
---
---     mkStructurals fresh name domain = do
---         let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
---         gen  <- getStructurals downX1 domain
---         gen fresh ref
+rule_ChooseReprForLocals :: Rule
+rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
+
+    theRule (WithLocals body locals bobs) = do
+        (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
+            Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
+            _ -> na "rule_ChooseReprForLocals"
+
+        let
+            isReferencedWithoutRepr (Reference nm' (Just DeclNoRepr{})) | nm == nm' = True
+            isReferencedWithoutRepr _ = False
+
+        unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
+            fail $ "This local variable seems to be handled before:" <+> pretty nm
+
+        let domOpts = reprOptions domain
+        when (null domOpts) $
+            bug $ "No representation matches this beast:" <++> pretty domain
+
+        let genOptions =
+                [ \ fresh -> do
+                    outs <- downD (nm, dom)
+                    structurals <- mkStructurals fresh nm dom
+                    return (dom, outs, structurals)
+                | dom <- domOpts
+                ]
+
+        return
+            [ ( "Choosing representation for local variable" <+> pretty nm
+              , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
+                    option <- genOption fresh
+                    let (thisDom, outDomains, structurals) = option
+                    let updateRepr (Reference nm' _)
+                            | nm == nm'
+                            = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
+                        updateRepr p = p
+                    let out' = WithLocals (transform updateRepr body)
+                                (  stmtBefore
+                                ++ [ Declaration (FindOrGiven
+                                                    LocalFind
+                                                    name
+                                                    (forgetRepr dom))
+                                   | (name, dom) <- outDomains ]
+                                ++ [ SuchThat structurals | not (null structurals) ]
+                                ++ transformBi updateRepr stmtAfter
+                                )
+                                (transformBi updateRepr bobs)
+                    out <- resolveNamesX out'
+                    return out
+              , return
+              )
+            | genOption <- genOptions
+            ]
+    theRule _ = na "rule_ChooseReprForLocals"
+
+    mkStructurals fresh name domain = do
+        let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
+        gen  <- getStructurals downX1 domain
+        gen fresh ref
 
 
 rule_GeneratorsFirst :: Rule
