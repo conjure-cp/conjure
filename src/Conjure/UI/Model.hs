@@ -72,6 +72,10 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
+import qualified Conjure.Rules.BubbleUp as BubbleUp
+import qualified Conjure.Rules.DontCare as DontCare
+
+
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
 import qualified Data.Generics.Uniplate.Zipper as Zipper ( up )
@@ -834,21 +838,21 @@ otherRules =
 
         , rule_DomainCardinality
 
-        -- , rule_BubbleUp_MergeNested
-        -- , rule_BubbleUp_Comprehension
-        -- , rule_BubbleUp_LocalInComprehension
-        -- , rule_BubbleUp_ToAnd
-        -- , rule_BubbleUp_NotBoolYet
-        -- , rule_BubbleUp_VarDecl
-        -- , rule_BubbleUp_LiftVars
+        -- , BubbleUp.rule_MergeNested
+        -- , BubbleUp.rule_Comprehension
+        -- , BubbleUp.rule_LocalInComprehension
+        -- , BubbleUp.rule_ToAnd
+        -- , BubbleUp.rule_NotBoolYet
+        -- , BubbleUp.rule_VarDecl
+        , BubbleUp.rule_LiftVars
 
-        , rule_Bool_DontCare
-        , rule_Int_DontCare
-        , rule_Tuple_DontCare
-        , rule_Record_DontCare
-        , rule_Variant_DontCare
-        , rule_Matrix_DontCare
-        , rule_Abstract_DontCare
+        , DontCare.rule_Bool
+        , DontCare.rule_Int
+        , DontCare.rule_Tuple
+        , DontCare.rule_Record
+        , DontCare.rule_Variant
+        , DontCare.rule_Matrix
+        , DontCare.rule_Abstract
 
         , rule_ComplexAbsPat
 
@@ -1171,257 +1175,6 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
                             in  [essence| sum([ 1 | &iPat : &d ]) |]
                     )
             _ -> na "rule_DomainCardinality"
-
-
--- rule_BubbleUp_MergeNested :: Rule
--- rule_BubbleUp_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
---     theRule (WithLocals (WithLocals body locals1) locals2) =
---         return
---             ( "Merging nested bubbles"
---             , const $ WithLocals body (locals1 ++ locals2)
---             )
---     theRule _ = na "rule_BubbleUp_MergeNested"
---
---
--- rule_BubbleUp_Comprehension :: Rule
--- rule_BubbleUp_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
---     theRule (Comprehension body gensOrConds) = do
---         (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---             _ -> na "rule_BubbleUp_Comprehension"
---         locals' <- forM locals $ \ l -> case l of
---             SuchThat xs -> return xs
---             _ -> fail ("rule_BubbleUp_Comprehension, not a SuchThat:" <+> pretty l)
---         return
---             ( "Bubble in the generator of a comprehension."
---             , const $ Comprehension body
---                 $  gocBefore
---                 ++ [Generator (GenInExpr pat expr)]
---                 ++ map Condition (concat locals')
---                 ++ gocAfter
---             )
---     theRule _ = na "rule_BubbleUp_Comprehension"
---
---
--- rule_BubbleUp_VarDecl :: Rule
--- rule_BubbleUp_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
---     theRule Comprehension{} = na "rule_BubbleUp_VarDecl Comprehension"
---     theRule WithLocals{}    = na "rule_BubbleUp_VarDecl WithLocals"
---     theRule p = do
---         let
---             f x@(WithLocals y locals) = do
---                 let decls = [ decl | decl@Declaration{} <- locals ]
---                 if length decls == length locals
---                     then tell decls >> return y         -- no cons, all decls
---                     else               return x
---             f x = return x
---         (p', collected) <- runWriterT (descendM f p)
---         when (null collected) $
---             na "rule_BubbleUp_VarDecl doesn't have any bubbly children"
---         return
---             ( "Bubbling up only declarations, no constraints in the bubble."
---             , const $ WithLocals p' collected
---             )
---
---
--- rule_BubbleUp_LocalInComprehension :: Rule
--- rule_BubbleUp_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
---     theRule p = do
---         (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
---         (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---             Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---             _ -> na "rule_BubbleUp_Comprehension"
---         return
---             ( "Bubble in the generator of a comprehension."
---             , const $ WithLocals
---                 ( mkQuan $ Comprehension body
---                     $  gocBefore
---                     ++ [Generator (GenInExpr pat expr)]
---                     ++ gocAfter
---                 )
---                 locals
---             )
---
---
--- rule_BubbleUp_ToAnd :: Rule
--- rule_BubbleUp_ToAnd = "bubble-to-and" `namedRule` theRule where
---     theRule (WithLocals x []) = return ("Empty bubble is no bubble", const x)
---     theRule (WithLocals x locals) = do
---         TypeBool    <- typeOf x
---         (vars,cons) <- onlyConstraints locals
---         when (null cons) $ na "rule_BubbleUp_ToAnd"
---         let out = make opAnd $ fromList (x:cons)
---         return
---             ( "Converting a bubble into a conjunction."
---             , const $ if null vars
---                         then out
---                         else WithLocals out vars
---             )
---     theRule _ = na "rule_BubbleToAnd"
---
---     onlyConstraints :: MonadFail m => [Statement] -> m ([Statement], [Expression])
---     onlyConstraints [] = return ([], [])
---     onlyConstraints (SuchThat xs:rest) = second (xs++) <$> onlyConstraints rest
---     onlyConstraints (decl:rest) = first (decl:) <$> onlyConstraints rest
---
---
--- rule_BubbleUp_NotBoolYet :: Rule
--- rule_BubbleUp_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
---     theRule Comprehension{} = na "rule_BubbleUp_NotBoolYet Comprehension"
---     theRule WithLocals{}    = na "rule_BubbleUp_NotBoolYet WithLocals"
---     theRule p = do
---         let
---             f x@(WithLocals y locals) = do
---                 let decls = [ () | Declaration{} <- locals ]
---                 ty <- typeOf y
---                 case ty of
---                     TypeBool                                 ->                return x
---                     _        | length decls == length locals ->                return x     -- if all are decls
---                     _                                        -> tell locals >> return y
---             f x = return x
---         (p', collected) <- runWriterT (descendM f p)
---         when (null collected) $
---             na "rule_BubbleUp_NotBoolYet doesn't have any bubbly children"
---         return
---             ( "Bubbling up, not reached a relational context yet."
---             , const $ WithLocals p' collected
---             )
---
---
--- rule_BubbleUp_LiftVars :: Rule
--- rule_BubbleUp_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
---     theRule (Comprehension (WithLocals body locals) gensOrConds) = do
---
---         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
---         let cons' = [ xs | SuchThat xs <- locals ]
---         unless (length decls + length cons' == length locals) $ na "rule_BubbleUp_LiftVars"
---         let cons = concat cons'
---
---         (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---             Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
---             _ -> na "rule_BubbleUp_LiftVars"
---
---         let patRef = Reference patName Nothing
---
---         let upd (Reference nm _) | nm `elem` map fst decls
---                 = let r = Reference nm Nothing
---                   in  [essence| &r[&patRef] |]
---             upd r = r
---
---         let declsLifted =
---                 [ Declaration (FindOrGiven LocalFind nm domLifted)
---                 | (nm, dom) <- decls
---                 , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
---                 ]
---
---         let consLifted =
---                 [ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
---                 | c <- transformBi upd cons
---                 ]
---
---         return
---             ( "rule_BubbleUp_LiftVars"
---             , const $ WithLocals
---                          (Comprehension (transform upd body)
---                              $  transformBi upd gocBefore
---                              ++ [Generator (GenDomainHasRepr patName indexDomain)]
---                              ++ transformBi upd gocAfter)
---                           (declsLifted ++ [SuchThat consLifted])
---             )
---     theRule _ = na "rule_BubbleUp_LiftVars"
-
-
-rule_Bool_DontCare :: Rule
-rule_Bool_DontCare = "dontCare-bool" `namedRule` theRule where
-    theRule p = do
-        x          <- match opDontCare p
-        DomainBool <- domainOf x
-        return ( "dontCare value for bools is false."
-               , const $ make opEq x (fromBool False)
-               )
-
-
-rule_Int_DontCare :: Rule
-rule_Int_DontCare = "dontCare-int" `namedRule` theRule where
-    theRule p = do
-        x                          <- match opDontCare p
-        xDomain@(DomainInt ranges) <- domainOf x
-        let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
-        let val = case ranges of
-                [] -> raiseBug
-                (r:_) -> case r of
-                    RangeOpen -> raiseBug
-                    RangeSingle v -> v
-                    RangeLowerBounded v -> v
-                    RangeUpperBounded v -> v
-                    RangeBounded v _ -> v
-        return ( "dontCare value for this integer is" <+> pretty val
-               , const $ make opEq x val
-               )
-
-
-rule_Tuple_DontCare :: Rule
-rule_Tuple_DontCare = "dontCare-tuple" `namedRule` theRule where
-    theRule p = do
-        x           <- match opDontCare p
-        TypeTuple{} <- typeOf x
-        xs          <- downX1 x
-        return ( "dontCare handling for tuple"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
-               )
-
-
-rule_Record_DontCare :: Rule
-rule_Record_DontCare = "dontCare-record" `namedRule` theRule where
-    theRule p = do
-        x            <- match opDontCare p
-        TypeRecord{} <- typeOf x
-        xs           <- downX1 x
-        return ( "dontCare handling for record"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
-               )
-
-
-rule_Variant_DontCare :: Rule
-rule_Variant_DontCare = "dontCare-variant" `namedRule` theRule where
-    theRule p = do
-        x             <- match opDontCare p
-        TypeVariant{} <- typeOf x
-        xs            <- downX1 x
-        return ( "dontCare handling for variant"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
-               )
-
-
-rule_Matrix_DontCare :: Rule
-rule_Matrix_DontCare = "dontCare-matrix" `namedRule` theRule where
-    theRule p = do
-        x                    <- match opDontCare p
-        DomainMatrix index _ <- domainOf x
-        return ( "dontCare handling for matrix"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
-               )
-
-
-rule_Abstract_DontCare :: Rule
-rule_Abstract_DontCare = "dontCare-abstract" `namedRule` theRule where
-    theRule p = do
-        x  <- match opDontCare p
-        ty <- typeOf x
-        case ty of
-            TypeSet       {} -> return ()
-            TypeMSet      {} -> return ()
-            TypeFunction  {} -> return ()
-            TypeRelation  {} -> return ()
-            TypePartition {} -> return ()
-            _ -> na "not a known abstract domain"
-        hasRepresentation x
-        xs <- downX1 x
-        return ( "dontCare handling for an abstract domain"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
-               )
 
 
 rule_ComplexAbsPat :: Rule
