@@ -797,6 +797,9 @@ horizontalRules =
     , Horizontal.Function.rule_Restrict_Comprehension
     , Horizontal.Function.rule_Comprehension_Defined_Size
     , Horizontal.Function.rule_Comprehension_Range_Size
+    , Horizontal.Function.rule_Defined_Intersect
+    , Horizontal.Function.rule_DefinedOrRange_Union
+    , Horizontal.Function.rule_DefinedOrRange_Difference
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection

@@ -689,3 +689,93 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
                         ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Comprehension_Image"
+
+
+rule_Defined_Intersect :: Rule
+rule_Defined_Intersect = "function-Defined-intersect" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_Defined_Intersect"
+        f       <- match opDefined expr
+        (x, y)  <- match opIntersect f
+        tx      <- typeOf x
+        case tx of
+            TypeFunction{} -> return ()
+            _              -> fail "type incompatibility in intersect operator"
+        let i = Reference iPat Nothing
+        return
+            ( "Horizontal rule for function intersection"
+            , const $
+                Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr pat (make opDefined x))
+                       , Condition [essence| (&i, image(&x,&i)) in &y |]
+                       ]
+                    ++ gocAfter
+            )
+    theRule _ = na "rule_Defined_Intersect"
+
+
+rule_DefinedOrRange_Union :: Rule
+rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_DefinedOrRange_Union"
+        (mk, f) <- match opDefinedOrRange expr
+        (x, y)  <- match opUnion f
+        tx      <- typeOf x
+        case tx of
+            TypeFunction{} -> return ()
+            _              -> fail "type incompatibility in union operator"
+        let mkx = mk x
+        let mky = mk y
+        let i = Reference iPat Nothing
+        return
+            ( "Horizontal rule for function union"
+            , const $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                (DomainInt [RangeBounded 1 2])
+                [ Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr pat mkx) ]
+                    ++ gocAfter
+                , Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr pat mky)
+                       , Condition [essence| !(&i in &mkx) |]
+                       ]
+                    ++ gocAfter
+                ]
+            )
+    theRule _ = na "rule_DefinedOrRange_Union"
+
+
+rule_DefinedOrRange_Difference :: Rule
+rule_DefinedOrRange_Difference = "function-DefinedOrRange-difference" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, iPat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@(Single iPat) expr) -> return (pat, iPat, expr)
+            _ -> na "rule_DefinedOrRange_Difference"
+        (mk, f) <- match opDefinedOrRange expr
+        (x, y)  <- match opMinus f
+        tx      <- typeOf x
+        case tx of
+            TypeFunction{} -> return ()
+            _              -> fail "type incompatibility in difference operator"
+        let mkx = mk x
+        let mky = mk y
+        let i = Reference iPat Nothing
+        return
+            ( "Horizontal rule for function difference"
+            , const $
+                Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr pat mkx)
+                       , Condition [essence| !(&i in &mky) |]
+                       ]
+                    ++ gocAfter
+            )
+    theRule _ = na "rule_DefinedOrRange_Difference"
+
+
