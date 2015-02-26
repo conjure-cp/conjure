@@ -29,7 +29,7 @@ import qualified Text.Parsec as P ( runParser )
 import qualified Data.Text as T
 
 -- containers
-import Data.Set as S ( null, fromList, toList )
+import qualified Data.Set as S ( null, fromList, toList )
 
 
 parseModel :: Parser Model
@@ -634,8 +634,17 @@ parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels
-    let jsLocals = transformBi (\ forg -> if forg == Find then LocalFind else forg ) js
-    return (WithLocals i jsLocals)
+    let decls =
+            [ Declaration (FindOrGiven LocalFind nm dom)
+            | Declaration (FindOrGiven Find nm dom) <- js ]
+    let cons = concat
+            [ xs
+            | SuchThat xs <- js
+            ]
+    let locals = if null decls
+                    then Right cons
+                    else Left (decls ++ [SuchThat cons])
+    return (WithLocals i locals)
 
 parseName :: Parser Name
 parseName = Name <$> identifierText

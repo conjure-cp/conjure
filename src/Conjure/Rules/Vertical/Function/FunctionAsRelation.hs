@@ -94,7 +94,7 @@ rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule wher
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "FunctionAsRelation" <- representationOf func
@@ -103,8 +103,8 @@ rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` th
             ( "Mapping over a function, FunctionAsRelation representation"
             , const $
                 Comprehension body
-                    $  gofBefore
+                    $  gocBefore
                     ++ [ Generator (GenInExpr pat rel) ]
-                    ++ gofAfter
+                    ++ gocAfter
             )
     theRule _ = na "rule_Comprehension"

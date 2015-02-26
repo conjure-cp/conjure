@@ -1,0 +1,22 @@
+language ESSENCE' 1.0
+
+given p1: int
+given f_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
+given f_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
+find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
+find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
+find q5_Occurrence: matrix indexed by [int(0, 1)] of bool
+find q10_Occurrence: matrix indexed by [int(0, 1)] of bool
+such that
+    and([q5_Occurrence[q2] | q2 : int(0, 1), f_Function1DPartial_Flags[q2]]),
+    and([q5_Occurrence[q7] -> or([q9 = q7 | q9 : int(0, 1), f_Function1DPartial_Flags[q9]]) | q7 : int(0, 1)]),
+    and([fprime_Function1DPartial_Flags[q8] -> q10_Occurrence[q8] | q8 : int(0, 1)]),
+    and([q10_Occurrence[q12] -> or([fprime_Function1DPartial_Flags[q14] /\ q14 = q12 | q14 : int(0, 1)]) | q12 : int(0, 1)]),
+    and([fprime_Function1DPartial_Values[q3] = f_Function1DPartial_Values[q3] /\ fprime_Function1DPartial_Flags[q3]
+             | q3 : int(0, 1), f_Function1DPartial_Flags[q3]]),
+    and([fprime_Function1DPartial_Flags[q4] -> f_Function1DPartial_Values[q4] = fprime_Function1DPartial_Values[q4] /\ f_Function1DPartial_Flags[q4]
+             | q4 : int(0, 1)]),
+    and([q5_Occurrence[q6] -> fprime_Function1DPartial_Flags[q6] | q6 : int(0, 1)]),
+    and([q10_Occurrence[q11] -> f_Function1DPartial_Flags[q11] | q11 : int(0, 1)]),
+    and([fprime_Function1DPartial_Flags[q1] = false -> fprime_Function1DPartial_Values[q1] = 0 | q1 : int(0, 1)])
+

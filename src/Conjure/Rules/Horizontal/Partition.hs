@@ -16,11 +16,11 @@ import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchF
 import Conjure.Representations ( downX1 )
 
 
--- TODO: when _gofBefore and _gofAfter are /= []
+-- TODO: when _gocBefore and _gocAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (_gofBefore@[], (pat, p), _gofAfter@[]) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (_gocBefore@[], (pat, p), _gocAfter@[]) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opParts expr)
             _ -> na "rule_Comprehension_Literal"
         (TypePartition _, elems) <- match partitionLiteral p
@@ -127,7 +127,7 @@ rule_Apart = "partition-apart" `namedRule` theRule where
 rule_Party :: Rule
 rule_Party = "partition-party" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (mkModifier, expr2) <- match opModifier expr
@@ -139,12 +139,12 @@ rule_Party = "partition-party" `namedRule` theRule where
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                      (jPat, j) = quantifiedVar (fresh `at` 1)
                  in  Comprehension (upd j body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [ Generator (GenInExpr iPat (make opParts p))
                             , Condition [essence| &wanted in &i |]
                             , Generator (GenInExpr jPat (mkModifier i))
                             ]
-                         ++ transformBi (upd j) gofAfter
+                         ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Party"
 
@@ -152,7 +152,7 @@ rule_Party = "partition-party" `namedRule` theRule where
 rule_Participants :: Rule
 rule_Participants = "partition-participants" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         p <- match opParticipants expr
@@ -163,11 +163,11 @@ rule_Participants = "partition-participants" `namedRule` theRule where
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                      (jPat, j) = quantifiedVar (fresh `at` 1)
                  in  Comprehension (upd j body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [ Generator (GenInExpr iPat (make opParts p))
                             , Generator (GenInExpr jPat i)
                             ]
-                         ++ transformBi (upd j) gofAfter
+                         ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Participants"
 

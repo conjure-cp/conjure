@@ -198,6 +198,24 @@ opRange _ =
     )
 
 
+opDefinedOrRange
+    :: ( OperatorContainer x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x, x) -> x
+       , x -> m (x -> x, x)
+       )
+opDefinedOrRange _ =
+    ( \ (mk, x) -> mk x
+    , \ p -> case projectOp p of
+        Just (MkOpDefined (OpDefined x)) -> return (injectOp . MkOpDefined . OpDefined , x)
+        Just (MkOpRange   (OpRange   x)) -> return (injectOp . MkOpRange   . OpRange   , x)
+        _                                -> na ("Lenses.opDefinedOrRange" <++> pretty p)
+    )
+
+
 opRestrict
     :: MonadFail m
     => Proxy (m :: * -> *)

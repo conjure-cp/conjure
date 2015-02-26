@@ -1,9 +1,0 @@
-language ESSENCE' 1.0
-
-find b: bool
-find i: int(0..5)
-find x: int(1..2)
-such that
-    sum([([false, true; int(1..2)][q1] = b) * [5, x; int(1..2)][q1] | q1 : int(1..2)]) = i,
-    or([[false, true; int(1..2)][q3] = b | q3 : int(1..2)])
-

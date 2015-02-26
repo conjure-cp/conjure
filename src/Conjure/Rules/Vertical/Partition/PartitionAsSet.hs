@@ -14,7 +14,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
         let p                =  matchDef opParts expr
@@ -29,8 +29,8 @@ rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRu
                     val = j
                 in
                     Comprehension (upd val body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenInExpr jPat s) ]
-                        ++ transformBi (upd val) gofAfter
+                        ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension"

@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
@@ -34,9 +34,9 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
                     val = [essence| &m[&j] |]
                 in
                     Comprehension (upd val body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index) ]
-                        ++ transformBi (upd val) gofAfter
+                        ++ transformBi (upd val) gocAfter
             )
     theRule _ = na "rule_Comprehension"
 
@@ -44,7 +44,7 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         s                    <- match opPowerSet expr
@@ -62,7 +62,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
                         [ [essence| &m[&j] |] | (_,j) <- outPats ]
                 in
                     Comprehension (upd val body) $ concat
-                        [ gofBefore
+                        [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index) ]
                             | (pat,_) <- take 1 outPats
@@ -73,7 +73,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
                               ]
                             | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
                             ]
-                        , transformBi (upd val) gofAfter
+                        , transformBi (upd val) gocAfter
                         ]
             )
     theRule _ = na "rule_PowerSet_Comprehension"

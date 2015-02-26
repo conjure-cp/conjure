@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, s), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
         TypeSet{}                   <- typeOf s
@@ -34,11 +34,11 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
                     val = [essence| &values[&j] |]
                 in
                     Comprehension (upd val body)
-                        $  gofBefore
+                        $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
                            , Condition [essence| &j <= &marker |]
                            ]
-                        ++ transformBi (upd val) gofAfter
+                        ++ transformBi (upd val) gocAfter
                )
     theRule _ = na "rule_Comprehension"
 
@@ -46,7 +46,7 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         s                           <- match opPowerSet expr
@@ -64,7 +64,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
                         [ [essence| &j <= &marker |] | (_,j) <- outPats ]
                 in
                     Comprehension (upd val body) $ concat
-                        [ gofBefore
+                        [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
                               , Condition [essence| &patX <= &marker |]
@@ -78,7 +78,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
                               ]
                             | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
                             ]
-                        , transformBi (upd val) gofAfter
+                        , transformBi (upd val) gocAfter
                         ]
             )
     theRule _ = na "rule_PowerSet_Comprehension"

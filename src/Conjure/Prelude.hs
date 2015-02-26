@@ -90,7 +90,7 @@ import Control.Category          as X ( (<<<), (>>>) )
 
 import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
-import Data.Either       as X ( Either(..), either, lefts, rights )
+import Data.Either       as X ( Either(..), either, lefts, rights, partitionEithers )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy

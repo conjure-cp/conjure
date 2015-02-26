@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension_Literal"
         (TypeRelation taus, elems) <- match relationLiteral expr
@@ -35,9 +35,9 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                  in  Comprehension (upd i body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gofAfter
+                         ++ transformBi (upd i) gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -47,7 +47,7 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
 rule_Comprehension_Projection :: Rule
 rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension_Projection"
         (rel, args)    <- match opRelationProj expr
@@ -72,10 +72,10 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
                 in
                     Comprehension
                        (upd val body)
-                       $  gofBefore
+                       $  gocBefore
                        ++ [Generator (GenInExpr jPat rel)]
                        ++ conditions
-                       ++ transformBi (upd val) gofAfter
+                       ++ transformBi (upd val) gocAfter
                )
     theRule _ = na "rule_Comprehension_Projection"
 
@@ -83,7 +83,7 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
 rule_PowerSet_Comprehension :: Rule
 rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (setPat, setPatNum, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
         let upd val old      = lambdaToFunction setPat old val
@@ -98,7 +98,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
                         [ j | (_,j) <- outPats ]
                 in
                     Comprehension (upd val body) $ concat
-                        [ gofBefore
+                        [ gocBefore
                         , concat
                             [ [ Generator (GenInExpr pat rel) ]
                             | (pat,_) <- take 1 outPats
@@ -109,7 +109,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
                               ]
                             | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
                             ]
-                        , transformBi (upd val) gofAfter
+                        , transformBi (upd val) gocAfter
                         ]
             )
     theRule _ = na "rule_PowerSet_Comprehension"
