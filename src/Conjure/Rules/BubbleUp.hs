@@ -173,9 +173,10 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                           (declsLifted ++ [SuchThat consLifted])
                           []
             )
+    theRule WithLocals{} = na "rule_LiftVars"
     theRule p = do
         let
-            f x@(WithLocals y locals@(_:_) []) = do
+            f (WithLocals y locals@(_:_) []) = do
                 tell locals
                 return y
             f x = return x
