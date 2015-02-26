@@ -29,7 +29,7 @@ instance EvaluateOp OpUnion where
             allElems = sortNub (as++bs)
         in
             return $ ConstantAbstract $ AbsLitMSet $ concat
-                [ replicate (max countA countB) e
+                [ replicate (fromInteger (max countA countB)) e
                 | e <- allElems
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)

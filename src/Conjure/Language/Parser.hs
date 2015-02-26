@@ -607,7 +607,8 @@ parseWithLocals = braces $ do
     i  <- parseExpr
     lexeme L_At
     js <- parseTopLevels
-    return (WithLocals i js)
+    let jsLocals = transformBi (\ forg -> if forg == Find then LocalFind else forg ) js
+    return (WithLocals i jsLocals)
 
 parseName :: Parser Name
 parseName = Name <$> identifierText
@@ -690,7 +691,7 @@ parseLiteral = msum ( map try
 
         pMatrix = do
             xs <- brackets (sepBy parseExpr comma)
-            let r = mkDomainIntB 1 (fromInt (length xs))
+            let r = mkDomainIntB 1 (fromInt (genericLength xs))
             return (AbsLitMatrix r xs)
 
         pMatrix' = brackets $ do

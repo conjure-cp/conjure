@@ -456,7 +456,7 @@ instance ExpressionLike Expression where
     boolOut (Constant c) = boolOut c
     boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
 
-    fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ length xs)) xs
+    fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs
     listOut (Constant (ConstantAbstract (AbsLitMatrix _ xs))) = return (map Constant xs)
     listOut c = fail ("Expecting a matrix literal, but found:" <+> pretty c)
@@ -480,7 +480,7 @@ instance Real Expression where
 
 instance Enum Expression where
     fromEnum = bug "fromEnum {Expression}"
-    toEnum = fromInt
+    toEnum = fromInt . fromIntegral
     succ a = a + 1
     pred a = a - 1
     enumFrom x = x : enumFrom (succ x)
@@ -519,7 +519,7 @@ lambdaToFunction (AbsPatTuple ts) body = \ p ->
             Constant (ConstantAbstract (AbsLitTuple xs)) -> map Constant xs
             AbstractLiteral (AbsLitTuple xs) -> xs
             _ -> [ Op (MkOpIndexing (OpIndexing p i))
-                 | i' <- take (length ts) allNats
+                 | i' <- [ 1 .. genericLength ts ]
                  , let i = fromInt i'
                  ]
     in
@@ -617,7 +617,7 @@ instance Pretty AbstractPattern where
 patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing
 patternToExpr (AbsPatTuple  ts) = AbstractLiteral $ AbsLitTuple  $ map patternToExpr ts
-patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix (DomainInt [RangeBounded 1 (fromInt (length ts))])
+patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix (DomainInt [RangeBounded 1 (fromInt (genericLength ts))])
                                                                  $ map patternToExpr ts
 patternToExpr (AbsPatSet    ts) = AbstractLiteral $ AbsLitSet    $ map patternToExpr ts
 patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"

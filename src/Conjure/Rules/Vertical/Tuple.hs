@@ -99,5 +99,5 @@ rule_Tuple_Index = "tuple-index" `namedRule` theRule where
         ts          <- downX1 t
         return
             ( "Tuple indexing on:" <+> pretty p
-            , const $ atNote "Tuple indexing" ts (iInt-1)
+            , const $ atNote "Tuple indexing" ts (fromInteger (iInt-1))
             )

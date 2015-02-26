@@ -24,7 +24,7 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
         TypeTuple ts        <- typeOf x
         let
             toIndex   = [ [essence| &x[&k] |]
-                        | k' <- [1 .. length ts]
+                        | k' <- [1 .. genericLength ts]
                         , let k = fromInt k'
                         ]
             valuesIndexed = make opMatrixIndexing values toIndex
@@ -52,7 +52,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
                 let
                     (jPat, j) = quantifiedVar (fresh `at` 0)
                     toIndex   = [ [essence| &j[&k] |]
-                                | k' <- [1 .. length ts]
+                                | k' <- [1 .. genericLength ts]
                                 , let k = fromInt k'
                                 ]
                     valuesIndexed = make opMatrixIndexing values toIndex

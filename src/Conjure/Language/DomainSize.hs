@@ -23,7 +23,7 @@ class DomainSizeOf a x where
 instance DomainSizeOf Constant Int where
     domainSizeOf = const (return 1)
 
-instance DomainSizeOf (Domain r Constant) Int where
+instance DomainSizeOf (Domain r Constant) Integer where
     domainSizeOf = domainSizeConstant
 
 instance DomainSizeOf (Domain r Constant) Constant where
@@ -110,7 +110,7 @@ instance ( ExpressionLike x
 
 
 -- Nothing means an infinite domain
-domainSizeConstant :: MonadFail m => Domain r Constant -> m Int
+domainSizeConstant :: MonadFail m => Domain r Constant -> m Integer
 domainSizeConstant DomainBool{} = return 2
 domainSizeConstant (DomainInt rs) = domainSizeConstantRanges rs
 domainSizeConstant DomainEnum{} = fail "domainSizeConstant: Unknown for given enum."
@@ -137,8 +137,8 @@ domainSizeConstant (DomainRelation  {}) = bug "not implemented: domainSizeConsta
 domainSizeConstant (DomainPartition {}) = bug "not implemented: domainSizeConstant DomainPartition"
 domainSizeConstant _                    = bug "not implemented: domainSizeConstant"
 
-domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Int
-domainSizeConstantRanges = liftM length . valuesInIntDomain
+domainSizeConstantRanges :: MonadFail m => [Range Constant] -> m Integer
+domainSizeConstantRanges = liftM genericLength . valuesInIntDomain
 
 nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
 nchoosek f n k = f n `div` (f k * f (n-k))

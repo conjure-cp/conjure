@@ -26,7 +26,7 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
         (TypeFunction fr to, elems) <- match functionLiteral expr
         let outLiteral = make matrixLiteral
                             (TypeMatrix TypeInt (TypeTuple [fr,to]))
-                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]

@@ -85,6 +85,7 @@ echo "BUILD_DOCS      : ${BUILD_DOCS}"
 echo "BUILD_TESTS     : ${BUILD_TESTS}"
 echo "RUN_TESTS       : ${RUN_TESTS}"
 echo "COVERAGE        : ${COVERAGE}"
+echo "DEVELOPMENT_MODE: ${DEVELOPMENT_MODE}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH

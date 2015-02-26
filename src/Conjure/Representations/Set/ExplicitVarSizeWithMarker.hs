@@ -110,11 +110,11 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                             , "With domain:" <+> pretty domain
                             ]
             z <- zeroVal innerDomain
-            let zeroes = replicate (maxSizeInt - length constants) z
+            let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
             return $ Just
                 [ ( nameMarker name
                   , defRepr (indexDomain 0)
-                  , ConstantInt (length constants)
+                  , ConstantInt (genericLength constants)
                   )
                 , ( nameValues name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -131,7 +131,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                         ConstantInt card ->
                             case constantMatrix of
                                 ConstantAbstract (AbsLitMatrix _ vals) ->
-                                    return (name, ConstantAbstract (AbsLitSet (take card vals)))
+                                    return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix

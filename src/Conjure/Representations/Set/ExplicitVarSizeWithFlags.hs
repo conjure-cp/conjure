@@ -126,10 +126,10 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                             , "With domain:" <+> pretty domain
                             ]
             z <- zeroVal innerDomain
-            let zeroes = replicate (maxSizeInt - length constants) z
+            let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
             let trues  = replicate (length constants)              (ConstantBool True)
-            let falses = replicate (maxSizeInt - length constants) (ConstantBool False)
+            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantBool False)
 
             return $ Just
                 [ ( nameFlag name

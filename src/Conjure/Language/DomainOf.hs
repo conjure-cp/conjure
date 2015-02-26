@@ -94,7 +94,7 @@ instance DomainOf Expression Expression where
             DomainMatrix _ inner -> return inner
             DomainTuple inners -> do
                 iInt <- intOut i
-                return $ atNote "domainOfInternal" inners (iInt-1)
+                return $ atNote "domainOfInternal" inners (fromInteger (iInt-1))
             _ -> fail "domainOfInternal, OpIndexing, not a matrix or tuple"
 
     domainOfInternal (Op (MkOpRestrict (OpRestrict f (Domain d)))) = do

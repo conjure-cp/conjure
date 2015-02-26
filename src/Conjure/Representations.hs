@@ -33,7 +33,7 @@ onConstant (ConstantAbstract (AbsLitTuple xs)) = return (map Constant xs)
 onConstant (ConstantAbstract (AbsLitRecord xs)) = return (map (Constant . snd) xs)
 onConstant (ConstantAbstract (AbsLitVariant (Just t) n x))
     | Just i <- findIndex (n==) (map fst t)
-    , let iExpr = fromInt (i+1)
+    , let iExpr = fromInt (fromIntegral (i+1))
     = return $ iExpr : [ if n == n'
                             then Constant x
                             else ExpressionMetaVar "zeroVal for variant"
@@ -51,7 +51,7 @@ onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
 --                                             -- zeroVal doesn't work on `Domain r Expression`s
 onAbstractLiteral (AbsLitVariant (Just t) n x)
     | Just i <- findIndex (n==) (map fst t)
-    , let iExpr = fromInt (i+1)
+    , let iExpr = fromInt (fromIntegral (i+1))
     = return $ iExpr : [ if n == n'
                             then x
                             else ExpressionMetaVar "zeroVal for variant"

@@ -25,7 +25,7 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
         (TypeRelation taus, elems) <- match relationLiteral expr
         let outLiteral = make matrixLiteral
                             (TypeMatrix TypeInt (TypeTuple taus))
-                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple row)
                             | row <- elems
                             ]
@@ -93,7 +93,7 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
             ( "Horizontal rule for powerSet relation-comprehension"
             , \ fresh ->
                 let outPats =
-                        [ quantifiedVar (fresh `at` i) | i <- take setPatNum allNats ]
+                        [ quantifiedVar (fresh `at` fromInteger i) | i <- take setPatNum allNats ]
                     val = AbstractLiteral $ AbsLitSet
                         [ j | (_,j) <- outPats ]
                 in

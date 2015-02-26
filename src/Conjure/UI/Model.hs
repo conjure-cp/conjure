@@ -210,13 +210,15 @@ remaining config model | Just modelZipper <- zipperBi model = do
                 , aAnswer = ruleResultExpr
                 , aFullModel = fullModelAfterHook
                                 |> addToTrail config
-                                            nQuestion [1 .. length questions]
+                                            (fromInteger nQuestion)
+                                            [1 .. length questions]
                                             (("Focus:" <+> pretty (hole focus))
                                              : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                                | i <- allNats
                                                | c <- tail (ascendants focus)
                                                ])
-                                            nAnswer   [1 .. length answers]
+                                            (fromInteger nAnswer)
+                                            [1 .. length answers]
                                             [ruleName <> ":" <+> ruleText]
                 }
         return Question
@@ -1365,7 +1367,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
             ( "complex pattern on tuple patterns"
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        replacements = [ (p, make opMatrixIndexing i (map fromInt is))
+                        replacements = [ (p, make opMatrixIndexing i (map (fromInt . fromIntegral) is))
                                        | (p, is) <- genMappings pat
                                        ]
                         f x@(Reference nm _) = fromMaybe x (lookup nm replacements)

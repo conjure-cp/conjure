@@ -37,7 +37,7 @@ instance Pretty r => ZeroVal (Domain r Constant) where
             getMin (SizeAttr_MinMaxSize x _) = returnInt x
         z <- zeroVal inner
         minSize <- getMin attrs
-        return $ ConstantAbstract $ AbsLitSet $ replicate minSize z
+        return $ ConstantAbstract $ AbsLitSet $ replicate (fromInteger minSize) z
 
     -- zeroVal (DomainSet       _ attr d) = DomainSet () attr (forgetRepr d)
     -- zeroVal (DomainMSet      _ attr d) = DomainMSet () attr (forgetRepr d)

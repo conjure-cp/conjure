@@ -94,7 +94,7 @@ import Data.Either       as X ( Either(..), either, lefts, rights )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
 import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
                               , group, groupBy, sort, sortBy
-                              , genericLength, genericIndex
+                              , genericLength, genericIndex, genericTake
                               , isSuffixOf, isPrefixOf, isInfixOf
                               , subsequences, transpose, elemIndex
                               , replicate, length
@@ -303,7 +303,7 @@ instance Eq Doc where
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
 
-allNats :: [Int]
+allNats :: [Integer]
 allNats = [1..]
 
 
@@ -487,8 +487,8 @@ runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
             (liftIO $ putStrLn $ Pr.renderStyle (Pr.style { Pr.lineLength = 200 }) msg)
         each _ = return ()
 
-histogram :: Ord a => [a] -> [(a,Int)]
-histogram = map (head &&& length) . group . sort
+histogram :: Ord a => [a] -> [(a, Integer)]
+histogram = map (head &&& genericLength) . group . sort
 
 sh :: Sh a -> IO a
 sh = shelly . print_stdout False . print_stderr False

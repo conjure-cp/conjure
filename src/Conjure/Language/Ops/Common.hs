@@ -32,7 +32,7 @@ import Conjure.Language.Domain as X
 import Conjure.Language.TypeOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
-import Conjure.Language.Lexer  as X ( Lexeme(..), textToLexeme, lexemeFace )
+import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 
 
 -- | Assume: the input is already normalised.
@@ -216,7 +216,7 @@ functionals =
 
 
 -- this probably shouldn't be in this module, should refactor later
-valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Int]
+valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
 valuesInIntDomain ranges =
     if isFinite
         then return allValues
@@ -224,7 +224,7 @@ valuesInIntDomain ranges =
 
     where
 
-        allRanges :: [Maybe [Int]]
+        allRanges :: [Maybe [Integer]]
         allRanges =
             [ vals
             | r <- ranges
@@ -237,7 +237,7 @@ valuesInIntDomain ranges =
         isFinite :: Bool
         isFinite = Nothing `notElem` allRanges
 
-        allValues :: [Int]
+        allValues :: [Integer]
         allValues = nub $ concat $ catMaybes allRanges
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
@@ -245,7 +245,7 @@ boolsOut (TypedConstant c _) = boolsOut c
 boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
-intsOut :: MonadFail m => Constant -> m [Int]
+intsOut :: MonadFail m => Constant -> m [Integer]
 intsOut (TypedConstant c _) = intsOut c
 intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
 intsOut b = return <$> intOut b

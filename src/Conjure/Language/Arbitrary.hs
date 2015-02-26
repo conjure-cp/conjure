@@ -104,7 +104,7 @@ arbitraryDomainAndConstant = sized dispatch
 
         intBounded :: Gen (Domain r Constant, Gen Constant)
         intBounded = do
-            l <- choose (0 :: Int, 100)
+            l <- choose (0 :: Integer, 100)
             u <- choose (l, 200)
             return ( DomainInt [RangeBounded (ConstantInt l) (ConstantInt u)]
                    , ConstantInt <$> choose (l,u)
@@ -112,16 +112,16 @@ arbitraryDomainAndConstant = sized dispatch
 
         intSingles :: Gen (Domain r Constant, Gen Constant)
         intSingles = do
-            count <- choose (1 :: Int, 20)
-            vals  <- vectorOf count (choose (0 :: Int, 100))
+            count <- choose (1 :: Integer, 20)
+            vals  <- vectorOf (fromInteger count) (choose (0 :: Integer, 100))
             return ( DomainInt (map (RangeSingle . ConstantInt) vals)
                    , ConstantInt <$> pickFromList vals
                    )
 
         intMixed :: Gen (Domain r Constant, Gen Constant)
         intMixed = do
-            let single = RangeSingle . ConstantInt <$> choose (0 :: Int, 100)
-            let pair = do l <- choose (0 :: Int, 100)
+            let single = RangeSingle . ConstantInt <$> choose (0 :: Integer, 100)
+            let pair = do l <- choose (0 :: Integer, 100)
                           u <- choose (l, 200)
                           return $ RangeBounded (ConstantInt l) (ConstantInt u)
 
@@ -176,7 +176,7 @@ arbitraryDomainAndConstant = sized dispatch
                 Right indexSize -> do
                     (innerDomain, innerConstantGen) <- dispatch (smaller depth)
                     return ( DomainMatrix indexDomain innerDomain
-                           , do innerConstants <- vectorOf indexSize innerConstantGen
+                           , do innerConstants <- vectorOf (fromInteger indexSize) innerConstantGen
                                 return $ ConstantAbstract $ AbsLitMatrix indexDomain innerConstants
                            )
 
@@ -189,7 +189,7 @@ arbitraryDomainAndConstant = sized dispatch
             let sizeUpTo = case domainSizeConstant dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
-            size <- choose (0 :: Int, sizeUpTo)
+            size <- choose (0 :: Integer, sizeUpTo)
             repr <- pickFromList ["Explicit"] -- no other representation yet!
             let domainOut =
                     DomainSet
@@ -203,7 +203,7 @@ arbitraryDomainAndConstant = sized dispatch
                                                 , pretty domainOut
                                                 ])
                                 else do
-                                    elems <- vectorOf size constantGen
+                                    elems <- vectorOf (fromInteger size) constantGen
                                     let sorted = sort $ nub elems
                                     if length sorted == length elems
                                         then return $ ConstantAbstract $ AbsLitSet sorted
@@ -220,13 +220,13 @@ arbitraryDomainAndConstant = sized dispatch
             let sizeUpTo = case domainSizeConstant dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
-            maxSize <- choose (0 :: Int, sizeUpTo)
+            maxSize <- choose (0 :: Integer, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             return ( DomainSet (HasRepresentation repr)
                                (SetAttr (SizeAttr_MaxSize (ConstantInt maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
-                        elems <- vectorOf numElems constantGen
+                        elems <- vectorOf (fromInteger numElems) constantGen
                         let sorted = sort $ nub elems
                         return $ ConstantAbstract $ AbsLitSet sorted
                    )
@@ -237,7 +237,7 @@ arbitraryDomainAndConstant = sized dispatch
             let sizeUpTo = case domainSizeConstant dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
-            minSize <- choose (0 :: Int, sizeUpTo)
+            minSize <- choose (0 :: Integer, sizeUpTo)
             maxSize <- choose (minSize, sizeUpTo)
             repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
             let domainOut =
@@ -255,9 +255,9 @@ arbitraryDomainAndConstant = sized dispatch
                                                 ])
                                 else do
                                     numElems <- choose (minSize, maxSize)
-                                    elems <- vectorOf numElems constantGen
+                                    elems <- vectorOf (fromInteger numElems) constantGen
                                     let sorted = sort $ nub elems
-                                    if length sorted >= minSize
+                                    if genericLength sorted >= minSize
                                         then return $ ConstantAbstract $ AbsLitSet sorted
                                         else try (n+1)
                      in try (1 :: Int)

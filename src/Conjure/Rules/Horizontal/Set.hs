@@ -27,7 +27,7 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
         (TypeSet tau, elems) <- match setLiteral expr
         let outLiteral = make matrixLiteral
                             (TypeMatrix TypeInt tau)
-                            (DomainInt [RangeBounded 1 (fromInt $ length elems)])
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return

@@ -17,7 +17,7 @@ rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRu
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
-        p                    <- match opParts expr
+        let p                =  matchDef opParts expr
         TypePartition{}      <- typeOf p
         "PartitionAsSet"     <- representationOf p
         [s]                  <- downX1 p

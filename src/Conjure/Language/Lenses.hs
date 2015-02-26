@@ -959,8 +959,8 @@ opAllDiff _ =
 constantInt
     :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( Int -> Expression
-       , Expression -> m Int
+    -> ( Integer -> Expression
+       , Expression -> m Integer
        )
 constantInt _ =
     ( Constant . ConstantInt

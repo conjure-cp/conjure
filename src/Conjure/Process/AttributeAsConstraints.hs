@@ -18,9 +18,22 @@ import Conjure.Language.TH
 --   Complain for any remaining AACs.
 attributeAsConstraints :: MonadFail m => Model -> m Model
 attributeAsConstraints m = do
+    let statements0 = mStatements m
+    statements1 <- transformBiM attributeAsConstraints_OnLocals statements0
+    statements2 <- attributeAsConstraints_OnStmts statements1
+    return m { mStatements = statements2 }
+
+
+attributeAsConstraints_OnLocals :: MonadFail m => Expression -> m Expression
+attributeAsConstraints_OnLocals (WithLocals h st) = WithLocals h <$> attributeAsConstraints_OnStmts st
+attributeAsConstraints_OnLocals x = return x
+
+
+attributeAsConstraints_OnStmts :: MonadFail m => [Statement] -> m [Statement]
+attributeAsConstraints_OnStmts statements0 = do
 
     -- collecting top level attribute-as-constraints
-    (statements1, topLevelAACs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of
+    (statements1, topLevelAACs) <- runWriterT $ forM statements0 $ \ st -> case st of
         Where xs -> do
             xs1 <- liftM concat $ forM xs $ \ x -> case x of
                 Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
@@ -45,7 +58,7 @@ attributeAsConstraints m = do
             return (Declaration (FindOrGiven forg name domain'))
         _ -> return st
 
-    return m { mStatements = statements2 }
+    return statements2
 
 
 mkAttributeToConstraint

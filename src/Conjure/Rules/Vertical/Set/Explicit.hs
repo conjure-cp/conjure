@@ -57,7 +57,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
             ( "Vertical rule for set-comprehension, Explicit representation"
             , \ fresh ->
                 let outPats =
-                        [ quantifiedVar (fresh `at` i) | i <- take setPatNum allNats ]
+                        [ quantifiedVar (fresh `at` fromIntegral i) | i <- take setPatNum allNats ]
                     val = AbstractLiteral $ AbsLitSet
                         [ [essence| &m[&j] |] | (_,j) <- outPats ]
                 in
