@@ -380,9 +380,7 @@ nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
 
 
 oneSuchThat :: Model -> Model
-oneSuchThat m =
-    let outStatements = transformBi onLocals (mStatements m)
-    in  m { mStatements = onStatements outStatements }
+oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 
     where
 
@@ -398,10 +396,6 @@ oneSuchThat m =
                       |> second nub                                             -- uniq
             in
                 others ++ [SuchThat (combine suchThats)]
-
-        onLocals :: Expression -> Expression
-        onLocals (WithLocals x locals bobs) = WithLocals x (onStatements locals) bobs
-        onLocals x = x
 
         collect :: Statement -> ([Statement], [Expression])
         collect (SuchThat s) = ([], s)
@@ -842,11 +836,11 @@ otherRules =
 
         , rule_DomainCardinality
 
-        -- , BubbleUp.rule_MergeNested
+        , BubbleUp.rule_MergeNested
         -- , BubbleUp.rule_Comprehension
         -- , BubbleUp.rule_LocalInComprehension
-        -- , BubbleUp.rule_ToAnd
-        -- , BubbleUp.rule_NotBoolYet
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_NotBoolYet
         -- , BubbleUp.rule_VarDecl
         , BubbleUp.rule_LiftVars
 
