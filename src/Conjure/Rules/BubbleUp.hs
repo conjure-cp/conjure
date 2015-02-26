@@ -171,7 +171,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                 ]
 
         let consLifted =
-                [ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
+                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
                 | c <- transformBi upd cons
                 ]
 
