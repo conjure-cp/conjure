@@ -519,7 +519,8 @@ topLevelBubbles m = do
         onStmt (SuchThat xs) = onExprs xs
         onStmt s = [s]
 
-        onExpr (WithLocals h auxs bobs) = (auxs ++ [SuchThat bobs, SuchThat [h]]) |> onStmts
+        onExpr (WithLocals h (Left  locals)) = (          locals  ++ [SuchThat [h]]) |> onStmts
+        onExpr (WithLocals h (Right locals)) = ([SuchThat locals] ++ [SuchThat [h]]) |> onStmts
         onExpr x = [SuchThat [x]]
 
         onStmts = concatMap onStmt
@@ -1036,7 +1037,7 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
 rule_ChooseReprForLocals :: Rule
 rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
-    theRule (WithLocals body locals bobs) = do
+    theRule (WithLocals body (Left locals)) = do
         (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
@@ -1069,7 +1070,7 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
                             | nm == nm'
                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                         updateRepr p = p
-                    let out' = WithLocals (transform updateRepr body)
+                    let out' = WithLocals (transform updateRepr body) $ Left
                                 (  stmtBefore
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
@@ -1079,7 +1080,6 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
                                 ++ [ SuchThat structurals | not (null structurals) ]
                                 ++ transformBi updateRepr stmtAfter
                                 )
-                                (transformBi updateRepr bobs)
                     out <- resolveNamesX out'
                     return out
               , return

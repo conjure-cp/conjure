@@ -88,7 +88,7 @@ rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
                         | (a,_) <- elems
                         ]
                 in
-                    WithLocals val [] [argIsDef]
+                    WithLocals val (Right [argIsDef])
             )
 
 
@@ -274,21 +274,20 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
                                 $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
                                 ++ transformBi (upd j) gocAfter)
-                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k1 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l1 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k1 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l1 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Defined"
 
@@ -319,21 +318,20 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                                 $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
                                 ++ transformBi (upd j) gocAfter)
-                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k2 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l2 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k2 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l2 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Range"
 
@@ -366,21 +364,20 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
                                 $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
                                 ++ transformBi (upd j) gocAfter)
-                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k1 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l1 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k1 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l1 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Defined_Literal"
 
@@ -413,21 +410,20 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
                                 $  gocBefore
                                 ++ [ Generator (GenInExpr jPat aux) ]
                                 ++ transformBi (upd j) gocAfter)
-                            [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k2 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l2 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k2 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l2 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Range_Literal"
 
@@ -448,22 +444,21 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
                     in
                         WithLocals
                             (fromBool True)
-                            [ Declaration (FindOrGiven LocalFind auxName
-                                    (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domFr)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k1 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l1 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName
+                                          (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domFr)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k1 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l1 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Defined_Size"
 
@@ -484,22 +479,21 @@ rule_Comprehension_Range_Size = "function-range-size" `namedRule` theRule where
                     in
                         WithLocals
                             (fromBool True)
-                            [ Declaration (FindOrGiven LocalFind auxName
-                                    (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domTo)))
-                            , SuchThat
-                                [ make opAnd $ Comprehension
-                                    [essence| &k2 in &aux |]
-                                    [ Generator (GenInExpr kPat func) ]
-                                , make opAnd $
-                                    Comprehension
-                                        (make opOr $ Comprehension
-                                            [essence| &l2 = &k |]
-                                            [ Generator (GenInExpr lPat func) ]
-                                        )
-                                        [ Generator (GenInExpr kPat aux) ]
-                                ]
-                            ]
-                            []
+                            (Left [ Declaration (FindOrGiven LocalFind auxName
+                                          (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domTo)))
+                                  , SuchThat
+                                      [ make opAnd $ Comprehension
+                                          [essence| &k2 in &aux |]
+                                          [ Generator (GenInExpr kPat func) ]
+                                      , make opAnd $
+                                          Comprehension
+                                              (make opOr $ Comprehension
+                                                  [essence| &l2 = &k |]
+                                                  [ Generator (GenInExpr lPat func) ]
+                                              )
+                                              [ Generator (GenInExpr kPat aux) ]
+                                      ]
+                                  ])
             )
     theRule _ = na "rule_Comprehension_Range_Size"
 
@@ -525,7 +519,7 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) [] [bob]
+                    in  WithLocals (make opFunctionImage func arg) (Right [bob])
             )
 
 
@@ -662,7 +656,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
                         ]
                     isDefined = [essence| &arg in defined(&func) |]
                 in
-                    mkP $ WithLocals val [] [isDefined]
+                    mkP $ WithLocals val (Right [isDefined])
             )
 
 
