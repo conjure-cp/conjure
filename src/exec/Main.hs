@@ -59,7 +59,10 @@ mainWithArgs Modelling{..} = do
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
     answers <- case jsonChoices of
-                 Just f  -> getAnswers f
+                 Just f  -> do
+                   ff <- getAnswers f
+                   logWarn ("QuestionAnswereds" <+> (pretty . groom) ff )
+                   return ff
                  Nothing -> return def
 
 

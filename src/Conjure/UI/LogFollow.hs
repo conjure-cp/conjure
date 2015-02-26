@@ -78,10 +78,20 @@ logFollow before q@Question{..} options = do
     matching :: Maybe [Answer]
     matching =
       case (catMaybes $ map haveMapping (map snd options))  of
-           []    -> Nothing
-           [x]   -> Just [x]
-           xs    -> Just xs
+           []        -> Nothing
+           [(x,_)]   -> Just [x]
+           xs        -> case maxes xs of
+                          []      -> error "matching no max"
+                          -- [(x,_)] -> Just [x]
+                          xx -> Just . map fst $ xx
+                          -- xx      -> error . show .vcat $ "matching multiple mappings"
+                          --            : map ( \(r,t) -> pretty (prettyAns r, pretty t)
+                                           -- ) xx
            -- xs    -> error . show .vcat $ "matching multiple mappings" : map (prettyAns) xs
+
+    -- maxes :: (Ord x, Eq x) => [x] -> [x]
+    maxes xs = let (_,maxSize) = maximumBy (compare `on` snd) xs
+               in  filter (\(_,i) -> i == maxSize ) xs
 
     prettyAns :: Answer -> Doc
     prettyAns Answer{..} =  hang "Answer" 4 $ vcat [
@@ -93,16 +103,16 @@ logFollow before q@Question{..} options = do
     haveMapping ans@Answer{..} = do
       previous <- M.lookup (show aRuleName, holeHash qHole) before
       mappings <- pickMapping previous
-      case filter (process ans) mappings of
+      case filter (process ans . fst) mappings of
         []  -> Nothing
-        [_] -> Just ans
-        _   -> Just ans
+        -- [_] -> Just ans
+        ( (_,i) :_)   -> Just (ans,i)
         -- xs  -> error . show .vcat $ "haveMapping" : map (pretty . groom) xs
 
         where
           qAsSet = (I.fromList . map holeHash) qAscendants
 
-          pickMapping :: [QuestionAnswered] -> Maybe [QuestionAnswered]
+          pickMapping :: [QuestionAnswered] -> Maybe [(QuestionAnswered,Int)]
           pickMapping =  toMaybe . filter (\(_,i) -> i /= 0 ) .  map f
 
           f a | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1)
@@ -110,11 +120,12 @@ logFollow before q@Question{..} options = do
 
           -- toMaybe :: Show x => [x] -> Maybe x
           toMaybe []      = Nothing
-          toMaybe [(x,_)] = Just [x]
+          -- toMaybe [(x,_)] = Just [x]
+          toMaybe [x] = Just [x]
           toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) xs in
                        case filter (\(_,i) -> i == maxSize ) xs of
                          []      -> error "haveMapping toMaybe cannot happen"
-                         xx      -> Just . map fst $ xx
+                         xx      -> Just xx
 
 
 
