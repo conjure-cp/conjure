@@ -29,7 +29,7 @@ import qualified Text.Parsec as P ( runParser )
 import qualified Data.Text as T
 
 -- containers
-import Data.Set as S ( null, fromList, toList )
+import qualified Data.Set as S ( null, fromList, toList )
 
 
 parseModel :: Parser Model
@@ -619,7 +619,8 @@ parseWithLocals = braces $ do
             | SuchThat xs <- js
             , x <- xs
             ]
-    let auxs = auxDecls ++ [SuchThat auxCons]
+    let auxCons' = if null auxCons then [] else [SuchThat auxCons]
+    let auxs = auxDecls ++ auxCons'
     return (WithLocals i auxs otherCons)
 
 parseName :: Parser Name
