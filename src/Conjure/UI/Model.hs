@@ -512,6 +512,7 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
                     AbstractLiteral AbsLitMatrix{} -> return []
                     Constant ConstantAbstract{} -> returnMsg x
                     AbstractLiteral{} -> returnMsg x
+                    WithLocals{} -> returnMsg x
                     _ -> return []
     unless (null fails) (fail (vcat fails))
     return m
