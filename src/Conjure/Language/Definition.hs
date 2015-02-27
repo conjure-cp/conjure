@@ -46,7 +46,10 @@ import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.Ops
+
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
+import Conjure.Language.RepresentationOf
 
 -- aeson
 import Data.Aeson ( (.=), (.:) )
@@ -416,6 +419,80 @@ instance TypeOf Expression where
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
+instance DomainOf Expression Expression where
+    domainOf (Reference _ (Just refTo)) = domainOf refTo
+    domainOf (Constant x) = fmap Constant <$> domainOf x
+    domainOf (AbstractLiteral x) = domainOf x
+    domainOf (Op x) = domainOf x
+
+    -- -- TODO: each operator should be calculating domains
+    -- domainOf [essence| &x * &y |] = do
+    --     xDom <- domainOf x
+    --     yDom <- domainOf y
+    --     -- TODO: domainOf has to be able to generate uniq names
+    --     let (iPat, i) = quantifiedVar "i"
+    --     let (jPat, j) = quantifiedVar "j"
+    --     let core = [essence| [ &i * &j
+    --                          | &iPat : &xDom
+    --                          , &jPat : &yDom
+    --                          ]
+    --                        |]
+    --     let a    = [essence| min(&core) |]
+    --     let b    = [essence| max(&core) |]
+    --     return $ DomainOfResultNoRepr $ DomainInt [RangeBounded a b]
+    --
+    -- domainOf (Op (MkOpIndexing (OpIndexing m i))) = do
+    --     iType <- typeOf i
+    --     case iType of
+    --         TypeBool{} -> return ()
+    --         TypeInt{} -> return ()
+    --         _ -> fail "domainOf, OpIndexing, not a bool or int index"
+    --     mDor  <- domainOf m
+    --     onDOR mDor $ \ mDom -> case mDom of
+    --         DomainMatrix _ inner -> return inner
+    --         DomainTuple inners -> do
+    --             iInt <- intOut i
+    --             return $ atNote "domainOf" inners (fromInteger (iInt-1))
+    --         _ -> fail "domainOf, OpIndexing, not a matrix or tuple"
+    --
+    -- domainOf (Op (MkOpDefined (OpDefined f))) = do
+    --     fDor <- domainOf f
+    --     onDOR fDor $ \ fDom -> case fDom of
+    --         DomainFunction _ _ fr _ -> return $ DomainSet def def fr
+    --         _ -> fail "domainOf, OpDefined, not a function"
+    --
+    -- domainOf (Op (MkOpRange (OpRange f))) = do
+    --     fDor <- domainOf f
+    --     onDOR fDor $ \ fDom -> case fDom of
+    --         DomainFunction _ _ _ to -> return $ DomainSet def def to
+    --         _ -> fail "domainOf, OpRange, not a function"
+    --
+    -- domainOf (Op (MkOpRestrict (OpRestrict f (Domain d)))) = do
+    --     fDor <- domainOf f
+    --     onDOR fDor $ \ fDom -> case fDom of
+    --         DomainFunction fRepr a fr to -> do
+    --             let d' = case reprAtTopLevel fr of
+    --                         Nothing -> defRepr      d
+    --                         Just r  -> changeRepr r d
+    --             return (DomainFunction fRepr a d' to)
+    --         _ -> fail "domainOf, OpRestrict, not a function"
+
+    domainOf x = fail ("domainOf{Expression} 1:" <+> pretty (show x))
+
+instance RepresentationOf Expression where
+    representationTreeOf (Reference _ (Just (DeclHasRepr _ _ dom))) = return (reprTree dom)
+    representationTreeOf (Op (MkOpIndexing (OpIndexing m i))) = do
+        iType <- typeOf i
+        case iType of
+            TypeBool{} -> return ()
+            TypeInt{} -> return ()
+            _ -> fail "representationOf, OpIndexing, not a bool or int index"
+        mTree <- representationTreeOf m
+        case mTree of
+            Tree _ [r] -> return r
+            _ -> fail "domainOf, OpIndexing, not a matrix"
+    representationTreeOf _ = fail "doesn't seem to have a representation"
+
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x
     isAlias _ = Nothing
@@ -569,6 +646,14 @@ instance Pretty ReferenceTo where
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+
+instance DomainOf ReferenceTo Expression where
+    domainOf (Alias x) = domainOf x
+    domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
+    domainOf (DeclNoRepr  _ _ dom) = return dom
+    domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
+    domainOf RecordField{}  = fail "domainOf-ReferenceTo-ReferenceTo"
+    domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
 
 
 ------------------------------------------------------------------------------------------------------------------------

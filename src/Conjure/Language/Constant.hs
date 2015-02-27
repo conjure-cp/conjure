@@ -16,6 +16,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.AbstractLiteral
 
+import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
@@ -58,6 +59,16 @@ instance TypeOf Constant where
     typeOf (DomainInConstant dom)     = typeOf dom
     typeOf (TypedConstant _ ty)       = return ty
     typeOf (ConstantUndefined _ ty)   = return ty
+
+instance DomainOf Constant Constant where
+    domainOf ConstantBool{}             = return DomainBool
+    domainOf i@ConstantInt{}            = return $ DomainInt [RangeSingle i]
+    domainOf (ConstantEnum defn _ _ )   = return (DomainEnum defn Nothing Nothing)
+    domainOf ConstantField{}            = fail "DomainOf-Constant-ConstantField"
+    domainOf (ConstantAbstract x)       = domainOf x
+    domainOf (DomainInConstant dom)     = return dom
+    domainOf (TypedConstant x _)        = domainOf x
+    domainOf ConstantUndefined{}        = fail "DomainOf-Constant-ConstantUndefined"
 
 instance Pretty Constant where
     pretty (ConstantBool False)          = "false"
