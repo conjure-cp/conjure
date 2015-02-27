@@ -13,7 +13,7 @@ module Conjure.UI.Model
     , pickFirst
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
-    , Strategy(..), Config(..), parseStrategy, prologue
+    , Strategy(..), Config(..), parseStrategy
     ) where
 
 import Conjure.Prelude
@@ -85,8 +85,6 @@ import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 import Conjure.UI.LogFollow(logFollow, storeChoice)
-
-
 
 
 outputModels
