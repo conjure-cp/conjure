@@ -168,7 +168,22 @@ storeChoice q a = do
                  ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
                  ,  pretty . groom $ c]
   saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
-  return a
+  let a' = a{aFullModel = addQuestionAnswered (aFullModel a) c }
+  return $ a'
+
+addQuestionAnswered :: Model -> QuestionAnswered -> Model
+addQuestionAnswered model qa = model { mInfo = newInfo }
+
+  where
+    storeLogFollow = True
+
+    oldInfo = mInfo model
+    newInfo = oldInfo { miQuestionAnswered =
+                            if storeLogFollow
+                            then miQuestionAnswered oldInfo ++ [qa]
+                            else []
+                       }
+
 
 makeChoice :: Question -> Answer -> QuestionAnswered
 makeChoice q a =  case (aRuleName a) of

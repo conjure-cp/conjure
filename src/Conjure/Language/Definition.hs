@@ -60,6 +60,8 @@ import qualified Data.Text as T
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
 import Data.IntSet(IntSet)
+import qualified Data.IntSet as I
+
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -256,9 +258,13 @@ data QuestionAnswered =
 
 
 
-instance ToJSON   QuestionAnswered where toJSON    = genericToJSON jsonOptions
-instance FromJSON QuestionAnswered where parseJSON = genericParseJSON jsonOptions
+instance ToJSON    QuestionAnswered where toJSON    = genericToJSON jsonOptions
+instance FromJSON  QuestionAnswered where parseJSON = genericParseJSON jsonOptions
 instance Serialize QuestionAnswered
+instance Hashable  QuestionAnswered
+instance Hashable  IntSet  where
+    hashWithSalt s i = hashWithSalt s  (I.toList i)
+
 
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
@@ -271,6 +277,7 @@ data ModelInfo = ModelInfo
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
+    , miQuestionAnswered :: [QuestionAnswered]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -285,7 +292,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
