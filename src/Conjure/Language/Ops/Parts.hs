@@ -23,8 +23,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance Pretty x => DomainOf (OpParts x) x where
-    domainOf op = na $ "evaluateOp{OpParts}:" <++> pretty op
+instance (Pretty x, DomainOf x x) => DomainOf (OpParts x) x where
+    domainOf (OpParts p) = do
+        dom <- domainOf p
+        case dom of
+            DomainPartition _ _ inner -> return $ DomainSet def def $ DomainSet def def inner
+            _ -> fail "domainOf, OpParts, not a partition"
 
 instance EvaluateOp OpParts where
     evaluateOp (OpParts (ConstantAbstract (AbsLitPartition xs))) =
