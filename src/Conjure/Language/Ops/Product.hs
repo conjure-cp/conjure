@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Product where
 
@@ -25,6 +26,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
+
+instance (Pretty x, ExpressionLike x) => DomainOf (OpProduct x) x where
+    domainOf op = na $ "evaluateOp{OpProduct}:" <++> pretty op
 
 instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times

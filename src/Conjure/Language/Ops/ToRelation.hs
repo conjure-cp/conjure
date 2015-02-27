@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.ToRelation where
 
@@ -20,6 +21,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToRelation x) where
         case tx of
             TypeFunction i j -> return (TypeRelation [i,j])
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpToRelation x) x where
+    domainOf op = na $ "evaluateOp{OpToRelation}:" <++> pretty op
 
 instance EvaluateOp OpToRelation where
     evaluateOp (OpToRelation (ConstantAbstract (AbsLitFunction xs))) =

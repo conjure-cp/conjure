@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Subset where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpSubset x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
+
+instance Pretty x => DomainOf (OpSubset x) x where
+    domainOf op = na $ "evaluateOp{OpSubset}:" <++> pretty op
 
 instance EvaluateOp OpSubset where
     evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =

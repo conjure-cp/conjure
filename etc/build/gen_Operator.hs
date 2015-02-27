@@ -61,6 +61,13 @@ main = do
               ]
 
             , [ ""
+              , "instance (Pretty x, ExpressionLike x) => DomainOf (Ops x) x where"
+              ]
+            , [ "    domainOf (" ++ patModifier m ++ ") = domainOf x"
+              | m <- modules
+              ]
+
+            , [ ""
               , "instance EvaluateOp Ops where"
               ]
             , [ "    evaluateOp (" ++ patModifier m ++ ") = evaluateOp x"

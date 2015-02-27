@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Hist where
 
@@ -22,6 +23,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
             TypeMatrix _ aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
             TypeList     aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpHist x) x where
+    domainOf op = na $ "evaluateOp{OpHist}:" <++> pretty op
 
 instance EvaluateOp OpHist where
     evaluateOp (OpHist (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantAbstract $ AbsLitMatrix

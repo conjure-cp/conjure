@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.RelationProj where
 
@@ -47,6 +48,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                             loop _ _ = raiseTypeError p
                         TypeRelation <$> loop xs ts'
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpRelationProj x) x where
+    domainOf op = na $ "evaluateOp{OpRelationProj}:" <++> pretty op
 
 instance EvaluateOp OpRelationProj where
     evaluateOp (OpRelationProj (ConstantAbstract (AbsLitRelation xss)) mas) = do

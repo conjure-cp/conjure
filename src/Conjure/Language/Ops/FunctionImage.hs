@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.FunctionImage where
 
@@ -27,6 +28,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFunctionImage x) where
                 , "x     :" <+> pretty x
                 , "x type:" <+> pretty xTy
                 ]
+
+instance Pretty x => DomainOf (OpFunctionImage x) x where
+    domainOf op = na $ "evaluateOp{OpFunctionImage}:" <++> pretty op
 
 instance EvaluateOp OpFunctionImage where
     evaluateOp (OpFunctionImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do

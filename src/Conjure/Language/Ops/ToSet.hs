@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.ToSet where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
             TypeMatrix _ i   -> return (TypeSet i)
             TypeList i       -> return (TypeSet i)
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpToSet x) x where
+    domainOf op = na $ "evaluateOp{OpToSet}:" <++> pretty op
 
 instance EvaluateOp OpToSet where
     evaluateOp (OpToSet (ConstantAbstract (AbsLitMatrix _ xs))) =

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Eq where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpEq x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpEq x) where
     typeOf (OpEq a b) = sameToSameToBool a b
+
+instance Pretty x => DomainOf (OpEq x) x where
+    domainOf op = na $ "evaluateOp{OpEq}:" <++> pretty op
 
 instance EvaluateOp OpEq where
     evaluateOp (OpEq ConstantUndefined{} _) = return $ fromBool False

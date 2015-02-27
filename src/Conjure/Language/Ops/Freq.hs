@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Freq where
 
@@ -21,6 +22,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         if tyA `typeUnify` tyB
             then return TypeInt
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpFreq x) x where
+    domainOf op = na $ "evaluateOp{OpFreq}:" <++> pretty op
 
 instance EvaluateOp OpFreq where
     evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Together where
 
@@ -22,6 +23,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
         case pTy of
             TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
+
+instance Pretty x => DomainOf (OpTogether x) x where
+    domainOf op = na $ "evaluateOp{OpTogether}:" <++> pretty op
 
 instance EvaluateOp OpTogether where
     evaluateOp (OpTogether x y (ConstantAbstract (AbsLitPartition xss))) =

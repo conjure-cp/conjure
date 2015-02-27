@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Supset where
 
@@ -20,6 +21,9 @@ instance BinaryOperator (OpSupset x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf (OpSupset a b) = sameToSameToBool a b
+
+instance Pretty x => DomainOf (OpSupset x) x where
+    domainOf op = na $ "evaluateOp{OpSupset}:" <++> pretty op
 
 instance EvaluateOp OpSupset where
     evaluateOp (OpSupset a b) = evaluateOp (OpSubset b a)

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Sum where
 
@@ -25,6 +26,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
+
+instance (Pretty x, ExpressionLike x) => DomainOf (OpSum x) x where
+    domainOf op = na $ "evaluateOp{OpSum}:" <++> pretty op
 
 instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus

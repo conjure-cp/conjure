@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Parts where
 
@@ -22,6 +23,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
+
+instance Pretty x => DomainOf (OpParts x) x where
+    domainOf op = na $ "evaluateOp{OpParts}:" <++> pretty op
 
 instance EvaluateOp OpParts where
     evaluateOp (OpParts (ConstantAbstract (AbsLitPartition xs))) =

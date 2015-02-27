@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.AttributeAsConstraint where
 
@@ -19,6 +20,9 @@ instance FromJSON  x => FromJSON  (OpAttributeAsConstraint x) where parseJSON = 
 instance TypeOf x => TypeOf (OpAttributeAsConstraint x) where
     -- TODO
     typeOf OpAttributeAsConstraint{} = return TypeBool
+
+instance Pretty x => DomainOf (OpAttributeAsConstraint x) x where
+    domainOf op = na $ "evaluateOp{OpAttributeAsConstraint}:" <++> pretty op
 
 instance EvaluateOp OpAttributeAsConstraint where
     -- TODO

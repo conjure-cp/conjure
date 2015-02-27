@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.PowerSet where
 
@@ -19,6 +20,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPowerSet x) where
         case tx of
             TypeSet i -> return (TypeSet (TypeSet i))
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpPowerSet x) x where
+    domainOf op = na $ "evaluateOp{OpPowerSet}:" <++> pretty op
 
 instance EvaluateOp OpPowerSet where
     evaluateOp (OpPowerSet (ConstantAbstract (AbsLitSet xs))) =

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.LexLt where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLt x) where
         if typesUnify [TypeList TypeAny, tyA, tyB]
             then return TypeBool
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpLexLt x) x where
+    domainOf op = na $ "evaluateOp{OpLexLt}:" <++> pretty op
 
 instance EvaluateOp OpLexLt where
     evaluateOp (OpLexLt (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =

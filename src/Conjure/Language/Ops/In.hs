@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.In where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
         if tyA `typeUnify` tyBInner
             then return TypeBool
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpIn x) x where
+    domainOf op = na $ "evaluateOp{OpIn}:" <++> pretty op
 
 instance EvaluateOp OpIn where
     evaluateOp (OpIn c (ConstantAbstract (AbsLitSet      cs))) = return $ ConstantBool $ elem c cs

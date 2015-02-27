@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.ToInt where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
                 , "Expected type bool."
                 , "But got:" <+> pretty ty
                 ]
+
+instance Pretty x => DomainOf (OpToInt x) x where
+    domainOf op = na $ "evaluateOp{OpToInt}:" <++> pretty op
 
 instance EvaluateOp OpToInt where
     evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt 0)

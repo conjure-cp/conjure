@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Pow where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpPow x) where
 
 instance TypeOf x => TypeOf (OpPow x) where
     typeOf (OpPow a b) = intToIntToInt a b
+
+instance Pretty x => DomainOf (OpPow x) x where
+    domainOf op = na $ "evaluateOp{OpPow}:" <++> pretty op
 
 instance EvaluateOp OpPow where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

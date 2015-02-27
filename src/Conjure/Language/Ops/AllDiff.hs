@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.AllDiff where
 
@@ -21,6 +22,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             TypeList{} -> return TypeBool
             TypeMatrix{} -> return TypeBool
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpAllDiff x) x where
+    domainOf op = na $ "evaluateOp{OpAllDiff}:" <++> pretty op
 
 instance EvaluateOp OpAllDiff where
     evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =

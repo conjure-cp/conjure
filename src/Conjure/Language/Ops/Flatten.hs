@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Flatten where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
             TypeList n -> return (TypeList (flattenType n))
             TypeMatrix _ n -> return (TypeList (flattenType n))
             _ -> raiseTypeError p
+
+instance Pretty x => DomainOf (OpFlatten x) x where
+    domainOf op = na $ "evaluateOp{OpFlatten}:" <++> pretty op
 
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do

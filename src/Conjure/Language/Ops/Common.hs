@@ -30,6 +30,7 @@ import Conjure.Language.Constant as X
 import Conjure.Language.Type as X
 import Conjure.Language.Domain as X
 import Conjure.Language.TypeOf as X
+import Conjure.Language.DomainOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
 import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )

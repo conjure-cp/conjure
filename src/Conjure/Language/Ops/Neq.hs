@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Neq where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpNeq x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
     typeOf (OpNeq a b) = sameToSameToBool a b
+
+instance Pretty x => DomainOf (OpNeq x) x where
+    domainOf op = na $ "evaluateOp{OpNeq}:" <++> pretty op
 
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq ConstantUndefined{} _) = return $ fromBool False

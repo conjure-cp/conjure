@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Restrict where
 
@@ -22,6 +23,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
         if typesUnify [from, from']
             then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpRestrict x) x where
+    domainOf op = na $ "evaluateOp{OpRestrict}:" <++> pretty op
 
 instance EvaluateOp OpRestrict where
     evaluateOp (OpRestrict (ConstantAbstract (AbsLitFunction xs)) domX) = do

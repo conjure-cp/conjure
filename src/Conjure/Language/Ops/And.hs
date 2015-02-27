@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.And where
 
@@ -28,6 +29,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpAnd x) where
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
+
+instance (Pretty x, ExpressionLike x) => DomainOf (OpAnd x) x where
+    domainOf op = na $ "evaluateOp{OpAnd}:" <++> pretty op
 
 instance EvaluateOp OpAnd where
     evaluateOp (OpAnd x) = ConstantBool . and <$> boolsOut x

@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Mod where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpMod x) where
 
 instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
+
+instance Pretty x => DomainOf (OpMod x) x where
+    domainOf op = na $ "evaluateOp{OpMod}:" <++> pretty op
 
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

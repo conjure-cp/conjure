@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Active where
 
@@ -29,6 +30,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpActive x) where
                                        , "First argument has to be a variant type."
                                        , pretty ty
                                        ]
+
+instance Pretty x => DomainOf (OpActive x) x where
+    domainOf op = na $ "evaluateOp{OpActive}:" <++> pretty op
 
 instance EvaluateOp OpActive where
     evaluateOp (OpActive (ConstantAbstract (AbsLitVariant _ n1 _)) n2) = return $ fromBool $ n1 == n2

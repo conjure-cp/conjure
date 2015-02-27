@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Iff where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpIff x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpIff x) where
     typeOf (OpIff a b) = boolToBoolToBool a b
+
+instance Pretty x => DomainOf (OpIff x) x where
+    domainOf op = na $ "evaluateOp{OpIff}:" <++> pretty op
 
 instance EvaluateOp OpIff where
     evaluateOp (OpIff (ConstantBool x) (ConstantBool y)) = return $ ConstantBool $ x == y

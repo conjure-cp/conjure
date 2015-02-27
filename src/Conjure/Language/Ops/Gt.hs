@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Gt where
 
@@ -19,6 +20,9 @@ instance BinaryOperator (OpGt x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
     typeOf (OpGt a b) = sameToSameToBool a b
+
+instance Pretty x => DomainOf (OpGt x) x where
+    domainOf op = na $ "evaluateOp{OpGt}:" <++> pretty op
 
 instance EvaluateOp OpGt where
     evaluateOp (OpGt x y) = return $ ConstantBool $ x > y

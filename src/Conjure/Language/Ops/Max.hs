@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Max where
 
@@ -23,6 +24,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMax x) where
             TypeSet TypeInt -> return TypeInt
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
+
+instance (Pretty x, ExpressionLike x) => DomainOf (OpMax x) x where
+    domainOf op = na $ "evaluateOp{OpMax}:" <++> pretty op
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

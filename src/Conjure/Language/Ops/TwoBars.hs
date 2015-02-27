@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.TwoBars where
 
@@ -24,6 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
             TypeFunction{} -> return ()
             _              -> raiseTypeError p
         return TypeInt
+
+instance Pretty x => DomainOf (OpTwoBars x) x where
+    domainOf op = na $ "evaluateOp{OpTwoBars}:" <++> pretty op
 
 instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =

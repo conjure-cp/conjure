@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Factorial where
 
@@ -16,6 +17,9 @@ instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParse
 
 instance TypeOf x => TypeOf (OpFactorial x) where
     typeOf (OpFactorial a) = do TypeInt <- typeOf a ; return TypeInt
+
+instance Pretty x => DomainOf (OpFactorial x) x where
+    domainOf op = na $ "evaluateOp{OpFactorial}:" <++> pretty op
 
 instance EvaluateOp OpFactorial where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

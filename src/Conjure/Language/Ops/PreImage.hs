@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.PreImage where
 
@@ -21,6 +22,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
         if typesUnify [xTy, to]
             then return (TypeSet from)
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpPreImage x) x where
+    domainOf op = na $ "evaluateOp{OpPreImage}:" <++> pretty op
 
 instance EvaluateOp OpPreImage where
     evaluateOp (OpPreImage (ConstantAbstract (AbsLitFunction xs)) a) =

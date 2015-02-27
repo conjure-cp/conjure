@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Indexing where
 
@@ -56,6 +57,9 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     , "Indexing:"       <+> pretty m
                     , "With type:"      <+> pretty tyM
                     ]
+
+instance Pretty x => DomainOf (OpIndexing x) x where
+    domainOf op = na $ "evaluateOp{OpIndexing}:" <++> pretty op
 
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do

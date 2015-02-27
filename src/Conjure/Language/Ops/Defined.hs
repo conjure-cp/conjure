@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Defined where
 
@@ -18,6 +19,9 @@ instance TypeOf x => TypeOf (OpDefined x) where
     typeOf (OpDefined x) = do
         TypeFunction a _ <- typeOf x
         return (TypeSet a)
+
+instance Pretty x => DomainOf (OpDefined x) x where
+    domainOf op = na $ "evaluateOp{OpDefined}:" <++> pretty op
 
 instance EvaluateOp OpDefined where
     evaluateOp (OpDefined (ConstantAbstract (AbsLitFunction xs))) =

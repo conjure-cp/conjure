@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Party where
 
@@ -21,6 +22,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
         case pTy of
             TypePartition pTyInner | typesUnify [xTy, pTyInner] -> return $ TypeSet $ mostDefined [xTy, pTyInner]
             _ -> raiseTypeError inp
+
+instance Pretty x => DomainOf (OpParty x) x where
+    domainOf op = na $ "evaluateOp{OpParty}:" <++> pretty op
 
 instance EvaluateOp OpParty where
     evaluateOp op@(OpParty x p@(ConstantAbstract (AbsLitPartition xss))) = do

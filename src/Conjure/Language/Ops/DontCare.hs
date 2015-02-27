@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.DontCare where
 
@@ -16,6 +17,9 @@ instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = genericParseJ
 
 instance TypeOf x => TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
+
+instance Pretty x => DomainOf (OpDontCare x) x where
+    domainOf op = na $ "evaluateOp{OpDontCare}:" <++> pretty op
 
 instance EvaluateOp OpDontCare where
     evaluateOp op = na $ "evaluateOp{OpDontcare}:" <++> pretty (show op)

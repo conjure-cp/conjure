@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Range where
 
@@ -18,6 +19,9 @@ instance TypeOf x => TypeOf (OpRange x) where
     typeOf (OpRange x) = do
         TypeFunction _ a <- typeOf x
         return (TypeSet a)
+
+instance Pretty x => DomainOf (OpRange x) x where
+    domainOf op = na $ "evaluateOp{OpRange}:" <++> pretty op
 
 instance EvaluateOp OpRange where
     evaluateOp (OpRange (ConstantAbstract (AbsLitFunction xs))) =

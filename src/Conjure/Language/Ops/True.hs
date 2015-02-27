@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.True where
 
@@ -16,6 +17,9 @@ instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = genericParseJSON 
 
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
+
+instance Pretty x => DomainOf (OpTrue x) x where
+    domainOf op = na $ "evaluateOp{OpTrue}:" <++> pretty op
 
 instance EvaluateOp OpTrue where
     evaluateOp _ = return (fromBool True)

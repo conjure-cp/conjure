@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Min where
 
@@ -23,6 +24,9 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
             TypeSet TypeInt -> return TypeInt
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
+
+instance (Pretty x, ExpressionLike x) => DomainOf (OpMin x) x where
+    domainOf op = na $ "evaluateOp{OpMin}:" <++> pretty op
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

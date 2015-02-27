@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Negate where
 
@@ -16,6 +17,9 @@ instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = genericParseJSO
 
 instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
+
+instance Pretty x => DomainOf (OpNegate x) x where
+    domainOf op = na $ "evaluateOp{OpNegate}:" <++> pretty op
 
 instance EvaluateOp OpNegate where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

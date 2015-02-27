@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Ops.Minus where
 
@@ -32,6 +33,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
         if typesUnify [tya, tyb]
             then return $ mostDefined [tya,tyb]
             else raiseTypeError p
+
+instance Pretty x => DomainOf (OpMinus x) x where
+    domainOf op = na $ "evaluateOp{OpMinus}:" <++> pretty op
 
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
