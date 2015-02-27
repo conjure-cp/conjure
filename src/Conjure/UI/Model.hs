@@ -1167,15 +1167,16 @@ rule_DomainCardinality :: Rule
 rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
     theRule p = do
         maybeDomain <- match opTwoBars p
-        case maybeDomain of
-            Reference _ (Just (Alias (Domain d))) ->
-                return
-                    ( "Cardinality of a domain"
-                    , \ fresh ->
-                            let (iPat, _) = quantifiedVar (fresh `at` 0)
-                            in  [essence| sum([ 1 | &iPat : &d ]) |]
-                    )
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
             _ -> na "rule_DomainCardinality"
+        return
+            ( "Cardinality of a domain"
+            , \ fresh ->
+                    let (iPat, _) = quantifiedVar (fresh `at` 0)
+                    in  [essence| sum([ 1 | &iPat : &d ]) |]
+            )
 
 
 rule_ComplexAbsPat :: Rule

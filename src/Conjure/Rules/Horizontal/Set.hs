@@ -306,6 +306,9 @@ rule_Card :: Rule
 rule_Card = "set-card" `namedRule` theRule where
     theRule p = do
         s         <- match opTwoBars p
+        case s of
+            Domain{} -> na "rule_Card"
+            _        -> return ()
         TypeSet{} <- typeOf s
         return ( "Horizontal rule for set cardinality."
                , \ fresh ->
