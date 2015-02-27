@@ -19,7 +19,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Parser
 
 import Conjure.Bug(userErr,bug)
--- import Conjure.UI.IO ( readModelFromFile )
+import Conjure.UI.IO ( readModelFromFile )
 
 import qualified Data.Aeson as A
 import qualified Data.Aeson.Encode as A
@@ -38,6 +38,8 @@ import qualified Data.Set as S
 import Data.Map(Map)
 import qualified Data.Map as M
 import Data.List(maximumBy)
+import System.FilePath(takeExtension)
+
 
 logFollow :: (MonadIO m, MonadLog m)
           => Config
@@ -214,17 +216,21 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
   getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
 
 
--- Read from a json file
 type HoleHash = Int
 getAnswers :: (MonadIO m, MonadFail m )
               => FilePath -> m (Map (String,HoleHash) [QuestionAnswered])
-getAnswers fp = do
+
+getAnswers fp | takeExtension fp  == ".json" = do -- Read from a json file
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just (vs :: [QuestionAnswered])  -> do
         -- putStrLn $ "BeforeToSet: " ++  (groom vs)
         return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
+
+getAnswers fp = do
+  Model{mInfo=ModelInfo{miQuestionAnswered=vs}} <- readModelFromFile fp
+  return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
 
 saveToLog :: MonadLog m => Doc -> m ()
 saveToLog = log LogFollow
