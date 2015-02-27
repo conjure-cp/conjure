@@ -20,8 +20,12 @@ instance TypeOf x => TypeOf (OpDefined x) where
         TypeFunction a _ <- typeOf x
         return (TypeSet a)
 
-instance Pretty x => DomainOf (OpDefined x) x where
-    domainOf op = na $ "evaluateOp{OpDefined}:" <++> pretty op
+instance (Pretty x, DomainOf x x) => DomainOf (OpDefined x) x where
+    domainOf (OpDefined f) = do
+        fDom <- domainOf f
+        case fDom of
+            DomainFunction _ _ fr _ -> return $ DomainSet def def fr
+            _ -> fail "domainOf, OpDefined, not a function"
 
 instance EvaluateOp OpDefined where
     evaluateOp (OpDefined (ConstantAbstract (AbsLitFunction xs))) =

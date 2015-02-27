@@ -217,9 +217,13 @@ Library
                      , vector
 
     default-extensions:
+        FlexibleContexts
+        FlexibleInstances
+        MultiParamTypeClasses
         NoImplicitPrelude
         OverloadedStrings
         ScopedTypeVariables
+        TypeOperators
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

@@ -424,59 +424,6 @@ instance DomainOf Expression Expression where
     domainOf (Constant x) = fmap Constant <$> domainOf x
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Op x) = domainOf x
-
-    -- -- TODO: each operator should be calculating domains
-    -- domainOf [essence| &x * &y |] = do
-    --     xDom <- domainOf x
-    --     yDom <- domainOf y
-    --     -- TODO: domainOf has to be able to generate uniq names
-    --     let (iPat, i) = quantifiedVar "i"
-    --     let (jPat, j) = quantifiedVar "j"
-    --     let core = [essence| [ &i * &j
-    --                          | &iPat : &xDom
-    --                          , &jPat : &yDom
-    --                          ]
-    --                        |]
-    --     let a    = [essence| min(&core) |]
-    --     let b    = [essence| max(&core) |]
-    --     return $ DomainOfResultNoRepr $ DomainInt [RangeBounded a b]
-    --
-    -- domainOf (Op (MkOpIndexing (OpIndexing m i))) = do
-    --     iType <- typeOf i
-    --     case iType of
-    --         TypeBool{} -> return ()
-    --         TypeInt{} -> return ()
-    --         _ -> fail "domainOf, OpIndexing, not a bool or int index"
-    --     mDor  <- domainOf m
-    --     onDOR mDor $ \ mDom -> case mDom of
-    --         DomainMatrix _ inner -> return inner
-    --         DomainTuple inners -> do
-    --             iInt <- intOut i
-    --             return $ atNote "domainOf" inners (fromInteger (iInt-1))
-    --         _ -> fail "domainOf, OpIndexing, not a matrix or tuple"
-    --
-    -- domainOf (Op (MkOpDefined (OpDefined f))) = do
-    --     fDor <- domainOf f
-    --     onDOR fDor $ \ fDom -> case fDom of
-    --         DomainFunction _ _ fr _ -> return $ DomainSet def def fr
-    --         _ -> fail "domainOf, OpDefined, not a function"
-    --
-    -- domainOf (Op (MkOpRange (OpRange f))) = do
-    --     fDor <- domainOf f
-    --     onDOR fDor $ \ fDom -> case fDom of
-    --         DomainFunction _ _ _ to -> return $ DomainSet def def to
-    --         _ -> fail "domainOf, OpRange, not a function"
-    --
-    -- domainOf (Op (MkOpRestrict (OpRestrict f (Domain d)))) = do
-    --     fDor <- domainOf f
-    --     onDOR fDor $ \ fDom -> case fDom of
-    --         DomainFunction fRepr a fr to -> do
-    --             let d' = case reprAtTopLevel fr of
-    --                         Nothing -> defRepr      d
-    --                         Just r  -> changeRepr r d
-    --             return (DomainFunction fRepr a d' to)
-    --         _ -> fail "domainOf, OpRestrict, not a function"
-
     domainOf x = fail ("domainOf{Expression} 1:" <+> pretty (show x))
 
 instance RepresentationOf Expression where
@@ -492,6 +439,11 @@ instance RepresentationOf Expression where
             Tree _ [r] -> return r
             _ -> fail "domainOf, OpIndexing, not a matrix"
     representationTreeOf _ = fail "doesn't seem to have a representation"
+
+instance Domain () Expression :< Expression where
+    inject = Domain
+    project (Domain x) = return x
+    project x = fail ("projecting Domain out of Expression:" <+> pretty x)
 
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x

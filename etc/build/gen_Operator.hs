@@ -21,7 +21,7 @@ main = do
 
     let outText = unlines $ concat
             [ [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}"
-              , "{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}"
+              , "{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, UndecidableInstances #-}"
               , ""
               , "module Conjure.Language.Ops.Generated" ]
             , [ "    ( Ops(..)"
@@ -61,7 +61,12 @@ main = do
               ]
 
             , [ ""
-              , "instance (Pretty x, ExpressionLike x) => DomainOf (Ops x) x where"
+              , "instance ( Pretty x"
+              , "         , ExpressionLike x"
+              , "         , DomainOf x x"
+              , "         , TypeOf x"
+              , "         , Domain () x :< x"
+              , "         ) => DomainOf (Ops x) x where"
               ]
             , [ "    domainOf (" ++ patModifier m ++ ") = domainOf x"
               | m <- modules

@@ -20,8 +20,12 @@ instance TypeOf x => TypeOf (OpRange x) where
         TypeFunction _ a <- typeOf x
         return (TypeSet a)
 
-instance Pretty x => DomainOf (OpRange x) x where
-    domainOf op = na $ "evaluateOp{OpRange}:" <++> pretty op
+instance (Pretty x, DomainOf x x) => DomainOf (OpRange x) x where
+    domainOf (OpRange f) = do
+        fDom <- domainOf f
+        case fDom of
+            DomainFunction _ _ _ to -> return $ DomainSet def def to
+            _ -> fail "domainOf, OpRange, not a function"
 
 instance EvaluateOp OpRange where
     evaluateOp (OpRange (ConstantAbstract (AbsLitFunction xs))) =

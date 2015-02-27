@@ -12,10 +12,14 @@ refreeze:
 
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
+	    -XFlexibleContexts                         \
+	    -XFlexibleInstances                        \
+	    -XMultiParamTypeClasses                    \
 	    -XNoImplicitPrelude                        \
 	    -XOverloadedStrings                        \
-	    -XScopedTypeVariables                      \
 	    -XQuasiQuotes                              \
+	    -XScopedTypeVariables                      \
+	    -XTypeOperators                            \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \

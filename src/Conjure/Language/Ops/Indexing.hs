@@ -58,8 +58,20 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     , "With type:"      <+> pretty tyM
                     ]
 
-instance Pretty x => DomainOf (OpIndexing x) x where
-    domainOf op = na $ "evaluateOp{OpIndexing}:" <++> pretty op
+instance (Pretty x, ExpressionLike x, DomainOf x x, TypeOf x) => DomainOf (OpIndexing x) x where
+    domainOf (OpIndexing m i) = do
+        iType <- typeOf i
+        case iType of
+            TypeBool{} -> return ()
+            TypeInt{} -> return ()
+            _ -> fail "domainOf, OpIndexing, not a bool or int index"
+        mDom <- domainOf m
+        case mDom of
+            DomainMatrix _ inner -> return inner
+            DomainTuple inners -> do
+                iInt <- intOut i
+                return $ atNote "domainOf" inners (fromInteger (iInt-1))
+            _ -> fail "domainOf, OpIndexing, not a matrix or tuple"
 
 instance EvaluateOp OpIndexing where
     evaluateOp (OpIndexing m@(ConstantAbstract (AbsLitMatrix (DomainInt index) vals)) (ConstantInt x)) = do

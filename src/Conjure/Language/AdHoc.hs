@@ -26,3 +26,8 @@ class DomainContainer a dom where
 
 class CanBeAnAlias a where
     isAlias :: a -> Maybe a
+
+
+class (:<) a b where
+    inject :: a -> b
+    project :: MonadFail m => b -> m a
