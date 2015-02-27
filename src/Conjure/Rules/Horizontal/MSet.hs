@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (TypeMSet tau, elems) <- match msetLiteral expr
@@ -33,9 +33,9 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
                  in  Comprehension (upd i body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gofAfter
+                         ++ transformBi (upd i) gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -43,7 +43,7 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
 rule_Comprehension_ToSet_Literal :: Rule
 rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet_Literal"
         mset                  <- match opToSet expr
@@ -59,14 +59,14 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
                      iIndexed = [essence| &outLiteral[&i] |]
                      jIndexed = [essence| &outLiteral[&j] |]
                  in  Comprehension (upd iIndexed body)
-                         $  gofBefore
+                         $  gocBefore
                          ++ [ Generator (GenDomainNoRepr iPat outLiteralDomain)
                             , Condition [essence|
                                 !(exists &jPat : &outLiteralDomain .
                                     (&j < &i) /\ (&iIndexed = &jIndexed))
                                         |]
                             ]
-                         ++ transformBi (upd iIndexed) gofAfter
+                         ++ transformBi (upd iIndexed) gocAfter
             )
     theRule _ = na "rule_Comprehension_ToSet_Literal"
 

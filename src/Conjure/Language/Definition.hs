@@ -9,7 +9,8 @@ module Conjure.Language.Definition
     , initInfo
     , allContextsExceptReferences
 
-    , quantifiedVar, lambdaToFunction
+    , quantifiedVar, auxiliaryVar
+    , lambdaToFunction
 
     , e2c
 
@@ -351,7 +352,7 @@ data Expression
     | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
     | Reference Name (Maybe ReferenceTo)
-    | WithLocals Expression [Statement]
+    | WithLocals Expression (Either AuxiliaryVars DefinednessConstraints)
     | Comprehension Expression [GeneratorOrCondition]
     | Typed Expression Type
     | Op (Ops Expression)
@@ -362,6 +363,9 @@ instance Serialize Expression
 instance Hashable  Expression
 instance ToJSON    Expression where toJSON = genericToJSON jsonOptions
 instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
+
+type AuxiliaryVars = [Statement]
+type DefinednessConstraints = [Expression]
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
@@ -385,10 +389,14 @@ instance Pretty Expression where
     prettyPrec _ (AbstractLiteral x) = pretty x
     prettyPrec _ (Domain x) = "`" <> pretty x <> "`"
     prettyPrec _ (Reference x _) = pretty x
-    prettyPrec _ (WithLocals x ss) = vcat [ "{" <+> pretty x
-                                          , "@" <+> vcat (map pretty ss)
-                                          , "}"
-                                          ]
+    prettyPrec _ (WithLocals x (Left  locals)) = vcat [ "{" <+> pretty x
+                                                      , "@" <+> vcat (map pretty locals)
+                                                      , "}"
+                                                      ]
+    prettyPrec _ (WithLocals x (Right locals)) = vcat [ "{" <+> pretty x
+                                                      , "@" <+> pretty (SuchThat locals)
+                                                      , "}"
+                                                      ]
     prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
     prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
@@ -424,7 +432,7 @@ instance TypeOf Expression where
             VariantField _ ty   -> return ty
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf p@(Comprehension x gensOrConds) = do
-        forM_ gensOrConds $ \ gof -> case gof of
+        forM_ gensOrConds $ \ goc -> case goc of
             Generator{} -> return ()                    -- TODO: do this properly
             Condition c -> do
                 ty <- typeOf c
@@ -504,6 +512,11 @@ quantifiedVar nm =
     let pat = Single nm
         ref = Reference nm Nothing
     in  (pat, ref)
+
+auxiliaryVar :: Name -> (Name, Expression)
+auxiliaryVar nm =
+    let ref = Reference nm Nothing
+    in  (nm, ref)
 
 
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression

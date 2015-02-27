@@ -29,7 +29,7 @@ rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
 rule_Comprehension :: Rule
 rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, rel), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, rel), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
             _ -> na "rule_Comprehension"
         let upd val old        =  lambdaToFunction pat old val
@@ -54,10 +54,10 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
                                     [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
 
                     in  Comprehension (upd lit body)
-                            $  gofBefore
+                            $  gocBefore
                             ++ [ Generator (GenDomainNoRepr iPat (DomainTuple mIndices))
                                , Condition (indexThis m)
                                ]
-                            ++ transformBi (upd lit) gofAfter
+                            ++ transformBi (upd lit) gocAfter
                )
     theRule _ = na "rule_Comprehension"

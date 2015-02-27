@@ -97,6 +97,18 @@ instance DomainOf Expression Expression where
                 return $ atNote "domainOfInternal" inners (fromInteger (iInt-1))
             _ -> fail "domainOfInternal, OpIndexing, not a matrix or tuple"
 
+    domainOfInternal (Op (MkOpDefined (OpDefined f))) = do
+        fDor <- domainOfInternal f
+        onDOR fDor $ \ fDom -> case fDom of
+            DomainFunction _ _ fr _ -> return $ DomainSet def def fr
+            _ -> fail "domainOfInternal, OpDefined, not a function"
+
+    domainOfInternal (Op (MkOpRange (OpRange f))) = do
+        fDor <- domainOfInternal f
+        onDOR fDor $ \ fDom -> case fDom of
+            DomainFunction _ _ _ to -> return $ DomainSet def def to
+            _ -> fail "domainOfInternal, OpRange, not a function"
+
     domainOfInternal (Op (MkOpRestrict (OpRestrict f (Domain d)))) = do
         fDor <- domainOfInternal f
         onDOR fDor $ \ fDom -> case fDom of

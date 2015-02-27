@@ -19,7 +19,7 @@ import Conjure.Representations ( downX1 )
 rule_Comprehension :: Rule
 rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gofBefore, (pat, func), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
+        (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "Function1DPartial"        <- representationOf func
@@ -36,11 +36,11 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
                     flagsIndexed  = [essence|      &flags [&j]  |]
                 in
                 Comprehension (upd valuesIndexed body)
-                    $  gofBefore
+                    $  gocBefore
                     ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index))
                        , Condition [essence| &flagsIndexed |]
                        ]
-                    ++ transformBi (upd valuesIndexed) gofAfter
+                    ++ transformBi (upd valuesIndexed) gocAfter
             )
     theRule _ = na "rule_Comprehension"
 
