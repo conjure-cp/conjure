@@ -10,7 +10,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Ops ( OperatorContainer(..), valuesInIntDomain )
+import Conjure.Language.Expression.Op ( OperatorContainer(..), valuesInIntDomain )
 import Conjure.Language.Lenses
 import Conjure.Language.Pretty
 

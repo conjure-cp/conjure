@@ -7,7 +7,7 @@ module Conjure.Language.Instantiate
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
@@ -128,7 +128,7 @@ instantiateOp
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
-    => Ops Expression
+    => Op Expression
     -> m Constant
 instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap (stripTyped . normaliseConstant)
     where

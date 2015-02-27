@@ -12,7 +12,7 @@ module Conjure.Rules.Definition
 
 import Conjure.Prelude
 import Conjure.Language.Definition
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf
 

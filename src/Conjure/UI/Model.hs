@@ -25,7 +25,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.Sanity ( sanityChecks )

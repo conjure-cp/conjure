@@ -9,11 +9,9 @@ import Control.Exception ( catch, IOException )
 
 main :: IO ()
 main = do
-    let modulesDir = "src/Conjure/Language/Ops"
+    let modulesDir = "src/Conjure/Language/Expression/Op"
     modules <- sort . map (head . splitOn '.')
                     . filter (".hs" `isSuffixOf`)
-                    . filter (/="Generated.hs")
-                    . filter (/="Common.hs")
                 <$> getDirectoryContents modulesDir
     let datName = "Operator"
     let consModifier m = "MkOp" ++ m ++ " (Op" ++ m ++ " x)"
@@ -23,8 +21,8 @@ main = do
             [ [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}"
               , "{-# LANGUAGE UndecidableInstances #-}"
               , ""
-              , "module Conjure.Language.Ops.Generated" ]
-            , [ "    ( Ops(..)"
+              , "module Conjure.Language.Expression.Op.Internal.Generated" ]
+            , [ "    ( Op(..)"
               , "    , valuesInIntDomain"
               ]
             , [ "    , Op" ++ m ++ "(..)" | m <- modules ]
@@ -32,29 +30,29 @@ main = do
               , ""
               , "-- conjure"
               , "import Conjure.Prelude"
-              , "import Conjure.Language.Ops.Common"
+              , "import Conjure.Language.Expression.Op.Internal.Common"
               , ""
               ]
 
-            , [ "import Conjure.Language.Ops." ++ m
+            , [ "import Conjure.Language.Expression.Op." ++ m
               | m <- modules
               ]
 
             , [ ""
-              , "data Ops x"
+              , "data Op x"
               ]
             , [ "    = " ++ consModifier (head modules)        ]
             , [ "    | " ++ consModifier m | m <- tail modules ]
             , [ "    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)"
               , ""
-              , "instance Serialize x => Serialize (Ops x)"
-              , "instance Hashable  x => Hashable  (Ops x)"
-              , "instance ToJSON    x => ToJSON    (Ops x) where toJSON = genericToJSON jsonOptions"
-              , "instance FromJSON  x => FromJSON  (Ops x) where parseJSON = genericParseJSON jsonOptions"
+              , "instance Serialize x => Serialize (Op x)"
+              , "instance Hashable  x => Hashable  (Op x)"
+              , "instance ToJSON    x => ToJSON    (Op x) where toJSON = genericToJSON jsonOptions"
+              , "instance FromJSON  x => FromJSON  (Op x) where parseJSON = genericParseJSON jsonOptions"
               ]
 
             , [ ""
-              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Ops x) where"
+              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Op x) where"
               ]
             , [ "    typeOf (" ++ patModifier m ++ ") = typeOf x"
               | m <- modules
@@ -66,28 +64,28 @@ main = do
               , "         , DomainOf x x"
               , "         , TypeOf x"
               , "         , Domain () x :< x"
-              , "         ) => DomainOf (Ops x) x where"
+              , "         ) => DomainOf (Op x) x where"
               ]
             , [ "    domainOf (" ++ patModifier m ++ ") = domainOf x"
               | m <- modules
               ]
 
             , [ ""
-              , "instance EvaluateOp Ops where"
+              , "instance EvaluateOp Op where"
               ]
             , [ "    evaluateOp (" ++ patModifier m ++ ") = evaluateOp x"
               | m <- modules
               ]
 
             , [ ""
-              , "instance SimplifyOp Ops where"
+              , "instance SimplifyOp Op where"
               ]
             , [ "    simplifyOp inj (" ++ patModifier m ++ ") = simplifyOp (inj . MkOp" ++ m ++ ") x"
               | m <- modules
               ]
 
             , [ ""
-              , "instance (Pretty x, ExpressionLike x) => Pretty (Ops x) where"
+              , "instance (Pretty x, ExpressionLike x) => Pretty (Op x) where"
               ]
             , [ "    prettyPrec prec (" ++ patModifier m ++ ") = prettyPrec prec x"
               | m <- modules
@@ -95,16 +93,16 @@ main = do
 
             ]
 
-    outText' <- catch (Just <$> readFile (modulesDir ++ "/Generated.hs"))
+    outText' <- catch (Just <$> readFile (modulesDir ++ "/Internal/Generated.hs"))
                       (\ (e :: IOException) -> return Nothing )
     if and [ Just (length outText) /= (length <$> outText')
            , Just outText /= outText'
            ]
         then do
-            putStrLn $ "Generating " ++ modulesDir ++ "/Generated.hs"
-            writeFile (modulesDir ++ "/Generated.hs") outText
+            putStrLn $ "Generating " ++ modulesDir ++ "/Internal/Generated.hs"
+            writeFile (modulesDir ++ "/Internal/Generated.hs") outText
         else
-            putStrLn $ "Reusing " ++ modulesDir ++ "/Generated.hs"
+            putStrLn $ "Reusing " ++ modulesDir ++ "/Internal/Generated.hs"
 
 splitOn :: Char -> String -> [String]
 splitOn _ [] = []

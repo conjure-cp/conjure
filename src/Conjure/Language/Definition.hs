@@ -44,7 +44,7 @@ import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
 import Conjure.Language.Domain
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 
 import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
@@ -326,7 +326,7 @@ data Expression
     | WithLocals Expression (Either AuxiliaryVars DefinednessConstraints)
     | Comprehension Expression [GeneratorOrCondition]
     | Typed Expression Type
-    | Op (Ops Expression)
+    | Op (Op Expression)
     | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
