@@ -71,6 +71,7 @@ data Config = Config
     , logRuleFails              :: Bool
     , logRuleSuccesses          :: Bool
     , logRuleAttempts           :: Bool
+    , logChoices                :: Bool
     , strategyQ                 :: Strategy
     , strategyA                 :: Strategy
     , outputDirectory           :: FilePath
@@ -90,6 +91,7 @@ instance Default Config where
         , logRuleFails              = False
         , logRuleSuccesses          = False
         , logRuleAttempts           = False
+        , logChoices                = False
         , strategyQ                 = Interactive
         , strategyA                 = Interactive
         , outputDirectory           = "conjure-output"

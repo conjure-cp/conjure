@@ -40,9 +40,9 @@ import qualified Data.Map as M
 import Data.List(maximumBy)
 
 logFollow :: (MonadIO m, MonadLog m)
-          => Map (String,HoleHash) [QuestionAnswered]
+          => Config
           -> Question -> [(Doc, Answer)] -> m [Answer]
-logFollow before q@Question{..} options = do
+logFollow config q@Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole <+> (pretty . holeHash) qHole )
   logWarn ( "qAscendants" <+> vcat (map (pretty . holeHash) qAscendants) )
@@ -61,20 +61,21 @@ logFollow before q@Question{..} options = do
                     , "Answers" <+> (vcat $ map prettyAns  a) ])
       -- c <- storeChoice q a
       -- return [c]
-      mapM (storeChoice q ) a
+      mapM (storeChoice config q ) a
     Nothing  -> do
         logWarn (vcat ["No match for "
                       , "question hole"  <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
                       , "AsQuestionAnswered" <+> (pretty .groom)
                                                  [ makeChoice q a |  (_,a) <- options ]
                       ])
-        mapM (storeChoice q . snd) options
+        mapM (storeChoice config q . snd) options
 
   logWarn ("-----")
   return res
 
   where
-
+    before :: Map (String,HoleHash) [QuestionAnswered]
+    before = questionAnswers config
     matching :: Maybe [Answer]
     matching =
       case (catMaybes $ map haveMapping (map snd options))  of
@@ -161,28 +162,24 @@ compareDoms d1 d2 = getReps d1 == getReps d2
     getRep _ = Nothing
 
 
-storeChoice :: MonadLog m => Question -> Answer -> m Answer
-storeChoice q a = do
+storeChoice :: MonadLog m => Config -> Question -> Answer -> m Answer
+storeChoice config q a = do
   let c = makeChoice q a
   logWarn $ vcat ["storedChoice:"
                  ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
                  ,  pretty . groom $ c]
   saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
-  let a' = a{aFullModel = addQuestionAnswered (aFullModel a) c }
+  let a' = a{aFullModel = addQuestionAnswered (logChoices config) (aFullModel a) c }
   return $ a'
 
-addQuestionAnswered :: Model -> QuestionAnswered -> Model
-addQuestionAnswered model qa = model { mInfo = newInfo }
+addQuestionAnswered :: Bool -> Model -> QuestionAnswered -> Model
+addQuestionAnswered False m _ =  m
+addQuestionAnswered _  model qa = model { mInfo = newInfo }
 
   where
-    storeLogFollow = True
-
     oldInfo = mInfo model
-    newInfo = oldInfo { miQuestionAnswered =
-                            if storeLogFollow
-                            then miQuestionAnswered oldInfo ++ [qa]
-                            else []
-                       }
+    newInfo = oldInfo { miQuestionAnswered = miQuestionAnswered oldInfo ++ [qa]
+                      }
 
 
 makeChoice :: Question -> Answer -> QuestionAnswered

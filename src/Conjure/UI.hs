@@ -24,6 +24,7 @@ data UI
         , logRuleFails              :: Bool
         , logRuleSuccesses          :: Bool
         , logRuleAttempts           :: Bool
+        , logChoices                :: Bool
         -- flags related to modelling decisions
         , strategyQ                 :: String
         , strategyA                 :: String
@@ -32,7 +33,7 @@ data UI
         , seed                      :: Maybe Int
         , limitModels               :: Maybe Int
         , limitTime                 :: Maybe Int
-        , jsonChoices               :: Maybe FilePath
+        , savedChoices              :: Maybe FilePath
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -116,6 +117,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
+        , logChoices       = False &= name "log-choices"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Store the choices in a way that can be reused be by -al"
         , strategyQ        = "f"   &= typ "STRATEGY"
                                    &= name "strategy-q"
                                    &= name "q"
@@ -134,6 +139,8 @@ ui = modes
                                    &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
                                            \Moreover, c (for compact) can be used to pick the most 'compact' option \
                                            \at every decision point.\n\
+                                           \ l (for follow log) tries to pick the given choices \n\
+                                           \ as far as possible \n\
                                            \Default value: ai"
         , channelling = True       &= name "channelling"
                                    &= groupname "Model generation"
@@ -162,12 +169,12 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
-        , jsonChoices      = def   &= typFile
-                                   &= name "json-choices"
-                                   &= name "j"
+        , savedChoices     = def   &= typFile
+                                   &= name "choices"
                                    &= groupname "Model generation"
                                    &= explicit
-                                   &= help "Choices to Use if possible \n"
+                                   &= help "Choices to use if possible for -al \
+                                            \can either be a eprime file (created by --logChoices), or a json file "
 
         }                          &= name "modelling"
                                    &= explicit

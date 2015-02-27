@@ -58,7 +58,7 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    answers <- case jsonChoices of
+    answers <- case savedChoices of
                  Just f  -> do
                    ff <- getAnswers f
                    logWarn ("QuestionAnswereds" <+> (pretty . groom) ff )
@@ -73,6 +73,7 @@ mainWithArgs Modelling{..} = do
             , Config.logRuleFails            = logRuleFails
             , Config.logRuleSuccesses        = logRuleSuccesses
             , Config.logRuleAttempts         = logRuleAttempts
+            , Config.logChoices              = logChoices
             , Config.strategyQ               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
                                                          (parseStrategy strategyQ)
                 |> (\ s ->

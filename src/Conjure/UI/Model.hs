@@ -297,20 +297,20 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
 executeAnswerStrategy :: (MonadIO m, MonadLog m)
                       => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [Answer]
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
-executeAnswerStrategy _  q [(doc, option)] (viewAuto -> (_, True)) = do
+executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
-    c <- storeChoice q option
+    c <- storeChoice config q option
     return [c]
 
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> return [minimumBy compactCompareAnswer (map snd options)]
 
-        FollowLog -> logFollow (questionAnswers config) question options
+        FollowLog -> logFollow config question options
 
         AtRandom -> do
           picked <-  executeStrategy options st
-          newAns <- storeChoice question $ headNote "AtRandom no choice" picked
+          newAns <- storeChoice config question $ headNote "AtRandom no choice" picked
           -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
           return [newAns]
 
@@ -1506,7 +1506,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             TypeList{} -> return ()
             _ -> na "rule_QuantifierShift"
         let
-            
+
         return
             ( "Shifting quantifier inwards"
             , const $ make opMatrixIndexing
