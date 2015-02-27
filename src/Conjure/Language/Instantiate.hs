@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain

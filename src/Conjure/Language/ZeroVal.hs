@@ -1,6 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
-
 module Conjure.Language.ZeroVal ( zeroVal ) where
 
 -- conjure

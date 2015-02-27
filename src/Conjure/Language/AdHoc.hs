@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses #-}
-
 module Conjure.Language.AdHoc where
 
 import Conjure.Prelude

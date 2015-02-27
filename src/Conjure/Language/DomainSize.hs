@@ -1,5 +1,3 @@
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances, FlexibleContexts #-}
-
 module Conjure.Language.DomainSize
     ( domainSizeConstant
     , valuesInIntDomain

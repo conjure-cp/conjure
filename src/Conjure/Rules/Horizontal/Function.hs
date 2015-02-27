@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Rules.Horizontal.Function where
 

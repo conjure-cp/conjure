@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Representations
     ( downD, downC, up
     , downD1, downC1, up1
