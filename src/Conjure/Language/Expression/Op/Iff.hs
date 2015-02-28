@@ -27,11 +27,11 @@ instance EvaluateOp OpIff where
     evaluateOp (OpIff (ConstantBool x) (ConstantBool y)) = return $ ConstantBool $ x == y
     evaluateOp _ = na "evaluateOp{OpIff}"
 
-instance SimplifyOp OpIff where
-    simplifyOp _ (OpIff a b)
+instance SimplifyOp OpIff x where
+    simplifyOp (OpIff a b)
         | fromBool True == a = return b
         | fromBool True == b = return a
-    simplifyOp _ _ = na "simplifyOp{OpIff}"
+    simplifyOp _ = na "simplifyOp{OpIff}"
 
 instance Pretty x => Pretty (OpIff x) where
     prettyPrec prec op@(OpIff a b) = prettyPrecBinOp prec [op] a b

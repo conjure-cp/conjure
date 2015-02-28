@@ -30,8 +30,8 @@ instance EvaluateOp OpPowerSet where
             | ys <- subsequences (sortNub xs) ]
     evaluateOp op = na $ "evaluateOp{OpPowerSet}:" <++> pretty (show op)
 
-instance SimplifyOp OpPowerSet where
-    simplifyOp _ _ = na "simplifyOp{OpPowerSet}"
+instance SimplifyOp OpPowerSet x where
+    simplifyOp _ = na "simplifyOp{OpPowerSet}"
 
 instance Pretty x => Pretty (OpPowerSet x) where
     prettyPrec _ (OpPowerSet a) = "powerSet" <> prParens (pretty a)

@@ -40,8 +40,8 @@ instance EvaluateOp OpSlicing where
             return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
         _ -> na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 
-instance SimplifyOp OpSlicing where
-    simplifyOp _ _ = na "simplifyOp{OpSlicing}"
+instance SimplifyOp OpSlicing x where
+    simplifyOp _ = na "simplifyOp{OpSlicing}"
 
 instance Pretty x => Pretty (OpSlicing x) where
     prettyPrec _ (OpSlicing m a b) = pretty m <> prBrackets (pretty a <> ".." <> pretty b)

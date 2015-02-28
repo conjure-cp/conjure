@@ -6,6 +6,7 @@ install:
 preinstall:
 	@bash etc/build/version.sh
 	@runhaskell etc/build/gen_Operator.hs
+	@runhaskell etc/build/gen_Expression.hs
 
 refreeze:
 	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )

@@ -26,12 +26,12 @@ instance Pretty x => DomainOf (OpImply x) x where
 instance EvaluateOp OpImply where
     evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
 
-instance SimplifyOp OpImply where
-    simplifyOp _ (OpImply a b)
+instance SimplifyOp OpImply x where
+    simplifyOp (OpImply a b)
         | fromBool True  == a = return b
         | fromBool False == a = return $ fromBool True
         | fromBool True  == b = return $ fromBool True
-    simplifyOp _ _ = na "simplifyOp{OpImply}"
+    simplifyOp _ = na "simplifyOp{OpImply}"
 
 instance Pretty x => Pretty (OpImply x) where
     prettyPrec prec op@(OpImply a b) = prettyPrecBinOp prec [op] a b

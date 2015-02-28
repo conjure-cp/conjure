@@ -24,8 +24,8 @@ instance EvaluateOp OpFactorial where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut x
 
-instance SimplifyOp OpFactorial where
-    simplifyOp _ _ = na "simplifyOp{OpFactorial}"
+instance SimplifyOp OpFactorial x where
+    simplifyOp _ = na "simplifyOp{OpFactorial}"
 
 instance Pretty x => Pretty (OpFactorial x) where
     prettyPrec _ (OpFactorial a) = "factorial" <> prParens (pretty a)

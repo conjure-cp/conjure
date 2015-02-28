@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Or where
 
@@ -35,18 +36,18 @@ instance (Pretty x, ExpressionLike x) => DomainOf (OpOr x) x where
 instance EvaluateOp OpOr where
     evaluateOp (OpOr x) = ConstantBool . or <$> boolsOut x
 
-instance SimplifyOp OpOr where
-    simplifyOp _ (OpOr x)
+instance (OpOr x :< x) => SimplifyOp OpOr x where
+    simplifyOp (OpOr x)
         | Just xs <- listOut x
         , let filtered = filter (/= fromBool True) xs
         , length filtered /= length xs      -- there were true's
         = return $ fromBool True
-    simplifyOp inj (OpOr x)
+    simplifyOp (OpOr x)
         | Just xs <- listOut x
         , let filtered = filter (/= fromBool False) xs
         , length filtered /= length xs      -- there were false's
-        = return $ inj $ OpOr $ fromList filtered
-    simplifyOp _ _ = na "simplifyOp{OpOr}"
+        = return $ inject $ OpOr $ fromList filtered
+    simplifyOp _ = na "simplifyOp{OpOr}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpOr x) where
     prettyPrec prec op@(OpOr x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b

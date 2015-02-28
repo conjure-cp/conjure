@@ -37,8 +37,8 @@ instance EvaluateOp OpIn where
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 
-instance SimplifyOp OpIn where
-    simplifyOp _ _ = na "simplifyOp{OpIn}"
+instance SimplifyOp OpIn x where
+    simplifyOp _ = na "simplifyOp{OpIn}"
 
 instance Pretty x => Pretty (OpIn x) where
     prettyPrec prec op@(OpIn a b) = prettyPrecBinOp prec [op] a b

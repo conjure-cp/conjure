@@ -34,8 +34,8 @@ instance EvaluateOp OpToInt where
     evaluateOp (OpToInt ConstantUndefined{})  = return (ConstantInt 0)
     evaluateOp op = na $ "evaluateOp{OpToInt}:" <++> pretty (show op)
 
-instance SimplifyOp OpToInt where
-    simplifyOp _ _ = na "simplifyOp{OpToInt}"
+instance SimplifyOp OpToInt x where
+    simplifyOp _ = na "simplifyOp{OpToInt}"
 
 instance Pretty x => Pretty (OpToInt x) where
     prettyPrec _ (OpToInt a) = "toInt" <> prParens (pretty a)

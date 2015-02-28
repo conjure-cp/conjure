@@ -17,6 +17,7 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
@@ -1302,7 +1303,7 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
 rule_PartialEvaluate :: Rule
 rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
     theRule (Op x) = do
-        x' <- simplifyOp injectOp x
+        x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
             [ "rule_PartialEvaluate, simplifier returns the input unchanged."
             , "input:" <+> vcat [ pretty (Op x)

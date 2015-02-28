@@ -29,8 +29,8 @@ instance EvaluateOp OpFreq where
     evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
-instance SimplifyOp OpFreq where
-    simplifyOp _ _ = na "simplifyOp{OpFreq}"
+instance SimplifyOp OpFreq x where
+    simplifyOp _ = na "simplifyOp{OpFreq}"
 
 instance Pretty x => Pretty (OpFreq x) where
     prettyPrec _ (OpFreq a b) = "freq" <> prettyList prParens "," [a,b]

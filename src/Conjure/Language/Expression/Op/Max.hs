@@ -46,8 +46,8 @@ instance EvaluateOp OpMax where
             else ConstantInt (maximum is)
     evaluateOp _ = na "evaluateOp{OpMax}"
 
-instance SimplifyOp OpMax where
-    simplifyOp _ _ = na "simplifyOp{OpMax}"
+instance SimplifyOp OpMax x where
+    simplifyOp _ = na "simplifyOp{OpMax}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpMax x) where
     prettyPrec _ (OpMax x) | Just [a,b] <- listOut x = "max" <> prettyList prParens "," [a,b]

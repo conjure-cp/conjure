@@ -37,8 +37,8 @@ instance EvaluateOp OpFlatten where
                     (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened))
 
-instance SimplifyOp OpFlatten where
-    simplifyOp _ _ = na "simplifyOp{OpFlatten}"
+instance SimplifyOp OpFlatten x where
+    simplifyOp _ = na "simplifyOp{OpFlatten}"
 
 instance Pretty x => Pretty (OpFlatten x) where
     prettyPrec _ (OpFlatten m) = "flatten" <> prParens (pretty m)

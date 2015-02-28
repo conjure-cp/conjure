@@ -29,8 +29,8 @@ instance EvaluateOp OpParticipants where
         return $ ConstantAbstract $ AbsLitSet $ sort $ concat xss
     evaluateOp op = na $ "evaluateOp{OpParticipants}:" <++> pretty (show op)
 
-instance SimplifyOp OpParticipants where
-    simplifyOp _ _ = na "simplifyOp{OpParticipants}"
+instance SimplifyOp OpParticipants x where
+    simplifyOp _ = na "simplifyOp{OpParticipants}"
 
 instance Pretty x => Pretty (OpParticipants x) where
     prettyPrec _ (OpParticipants a) = "participants" <> prParens (pretty a)

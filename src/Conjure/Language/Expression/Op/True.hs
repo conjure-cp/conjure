@@ -23,8 +23,8 @@ instance Pretty x => DomainOf (OpTrue x) x where
 instance EvaluateOp OpTrue where
     evaluateOp _ = return (fromBool True)
 
-instance SimplifyOp OpTrue where
-    simplifyOp _ _ = na "simplifyOp{OpTrue}"
+instance SimplifyOp OpTrue x where
+    simplifyOp _ = na "simplifyOp{OpTrue}"
 
 instance Pretty x => Pretty (OpTrue x) where
     prettyPrec _ (OpTrue a) = "true" <> prParens (pretty a)

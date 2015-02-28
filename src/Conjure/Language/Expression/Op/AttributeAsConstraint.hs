@@ -27,8 +27,8 @@ instance EvaluateOp OpAttributeAsConstraint where
     -- TODO
     evaluateOp _ = return (ConstantBool True)
 
-instance SimplifyOp OpAttributeAsConstraint where
-    simplifyOp _ _ = na "simplifyOp{OpAttributeAsConstraint}"
+instance SimplifyOp OpAttributeAsConstraint x where
+    simplifyOp _ = na "simplifyOp{OpAttributeAsConstraint}"
 
 instance Pretty x => Pretty (OpAttributeAsConstraint x) where
     prettyPrec _ (OpAttributeAsConstraint x attr Nothing   ) = pretty attr <> prParens (pretty x)

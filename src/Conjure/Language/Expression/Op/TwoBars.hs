@@ -4,6 +4,7 @@ module Conjure.Language.Expression.Op.TwoBars where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.DomainSizeOf
 
 
 data OpTwoBars x = OpTwoBars x
@@ -41,11 +42,12 @@ instance EvaluateOp OpTwoBars where
 
             -- cardinality of a domain
             DomainInConstant (DomainInt rs)      -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant dom                 -> domainSizeOf dom
 
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
-instance SimplifyOp OpTwoBars where
-    simplifyOp _ _ = na "simplifyOp{OpTwoBars}"
+instance SimplifyOp OpTwoBars x where
+    simplifyOp _ = na "simplifyOp{OpTwoBars}"
 
 instance Pretty x => Pretty (OpTwoBars x) where
     prettyPrec _ (OpTwoBars a) = "|" <> pretty a <> "|"

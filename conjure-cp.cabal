@@ -32,6 +32,8 @@ Library
                      , Conjure.Language.Lenses
                      , Conjure.Language.TH
 
+                     , Conjure.Language.Expression.Internal.Generated
+
                      , Conjure.Language.Expression.Op
                      , Conjure.Language.Expression.Op.Internal.Common
                      , Conjure.Language.Expression.Op.Internal.Generated
@@ -95,8 +97,12 @@ Library
                      , Conjure.Language.Expression.Op.Union
 
                      -- and some operations on the language constructs
+                     , Conjure.Language.CategoryOf
+                     , Conjure.Language.TypeOf
+                     , Conjure.Language.DomainOf
+                     , Conjure.Language.DomainSizeOf
+                     , Conjure.Language.RepresentationOf
                      , Conjure.Language.Arbitrary
-                     , Conjure.Language.DomainSize
                      , Conjure.Language.Instantiate
                      , Conjure.Language.ModelDiff
                      , Conjure.Language.ModelStats
@@ -104,10 +110,6 @@ Library
                      , Conjure.Language.Parser
                      , Conjure.Language.Pretty
                      , Conjure.Language.NameResolution
-                     , Conjure.Language.CategoryOf
-                     , Conjure.Language.TypeOf
-                     , Conjure.Language.DomainOf
-                     , Conjure.Language.RepresentationOf
                      , Conjure.Language.ZeroVal
                      , Conjure.Process.Sanity
                      , Conjure.Process.Enums

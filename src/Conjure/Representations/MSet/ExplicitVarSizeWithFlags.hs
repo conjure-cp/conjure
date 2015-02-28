@@ -8,7 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Lenses
 import Conjure.Language.TH
-import Conjure.Language.DomainSize
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal

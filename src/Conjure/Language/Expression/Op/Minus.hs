@@ -74,8 +74,8 @@ instance EvaluateOp OpMinus where
             else ConstantAbstract (AbsLitFunction outs)
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
-instance SimplifyOp OpMinus where
-    simplifyOp _ _ = na "simplifyOp{OpMinus}"
+instance SimplifyOp OpMinus x where
+    simplifyOp _ = na "simplifyOp{OpMinus}"
 
 instance Pretty x => Pretty (OpMinus x) where
     prettyPrec prec op@(OpMinus a b) = prettyPrecBinOp prec [op] a b

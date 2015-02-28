@@ -46,8 +46,8 @@ instance EvaluateOp OpSubset where
             ]
     evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
 
-instance SimplifyOp OpSubset where
-    simplifyOp _ _ = na "simplifyOp{OpSubset}"
+instance SimplifyOp OpSubset x where
+    simplifyOp _ = na "simplifyOp{OpSubset}"
 
 instance Pretty x => Pretty (OpSubset x) where
     prettyPrec prec op@(OpSubset a b) = prettyPrecBinOp prec [op] a b

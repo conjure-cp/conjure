@@ -59,8 +59,8 @@ instance EvaluateOp OpIntersect where
             else ConstantAbstract $ AbsLitRelation outs
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
-instance SimplifyOp OpIntersect where
-    simplifyOp _ _ = na "simplifyOp{OpIntersect}"
+instance SimplifyOp OpIntersect x where
+    simplifyOp _ = na "simplifyOp{OpIntersect}"
 
 instance Pretty x => Pretty (OpIntersect x) where
     prettyPrec prec op@(OpIntersect a b) = prettyPrecBinOp prec [op] a b

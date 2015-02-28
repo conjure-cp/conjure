@@ -27,8 +27,8 @@ instance Pretty x => DomainOf (OpSupset x) x where
 instance EvaluateOp OpSupset where
     evaluateOp (OpSupset a b) = evaluateOp (OpSubset b a)
 
-instance SimplifyOp OpSupset where
-    simplifyOp _ _ = na "simplifyOp{OpSupset}"
+instance SimplifyOp OpSupset x where
+    simplifyOp _ = na "simplifyOp{OpSupset}"
 
 instance Pretty x => Pretty (OpSupset x) where
     prettyPrec prec op@(OpSupset a b) = prettyPrecBinOp prec [op] a b

@@ -106,8 +106,8 @@ instance EvaluateOp OpIndexing where
                     ]
     evaluateOp op = na $ "evaluateOp{OpIndexing}:" <++> pretty (show op)
 
-instance SimplifyOp OpIndexing where
-    simplifyOp _ _ = na "simplifyOp{OpIndexing}"
+instance SimplifyOp OpIndexing x where
+    simplifyOp _ = na "simplifyOp{OpIndexing}"
 
 instance Pretty x => Pretty (OpIndexing x) where
     prettyPrec _ (OpIndexing  a b) = pretty a <> prBrackets (pretty b)

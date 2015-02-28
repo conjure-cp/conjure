@@ -73,8 +73,8 @@ instance EvaluateOp OpRelationProj where
         evaluateOp (OpFunctionImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
-instance SimplifyOp OpRelationProj where
-    simplifyOp _ _ = na "simplifyOp{OpRelationProj}"
+instance SimplifyOp OpRelationProj x where
+    simplifyOp _ = na "simplifyOp{OpRelationProj}"
 
 instance Pretty x => Pretty (OpRelationProj x) where
     prettyPrec _ (OpRelationProj a bs) = pretty a <> prettyList prParens "," (map pr bs)

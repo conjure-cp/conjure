@@ -6,9 +6,9 @@ module Conjure.Representations.Set.Occurrence ( setOccurrence ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant
 import Conjure.Language.TH
 import Conjure.Language.Pretty
-import Conjure.Language.DomainSize ( valuesInIntDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 

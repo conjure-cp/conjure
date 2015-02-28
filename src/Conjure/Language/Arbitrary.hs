@@ -15,7 +15,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
-import Conjure.Language.DomainSize ( domainSizeConstant )
+import Conjure.Language.DomainSizeOf ( domainSizeOf )
 
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), Gen, sized, choose, oneof, vectorOf, sample' )
@@ -171,7 +171,7 @@ arbitraryDomainAndConstant = sized dispatch
         matrix :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         matrix depth = do
             (indexDomain, _) <- int
-            case domainSizeConstant indexDomain of
+            case domainSizeOf indexDomain of
                 Left err -> bug err
                 Right indexSize -> do
                     (innerDomain, innerConstantGen) <- dispatch (smaller depth)
@@ -186,7 +186,7 @@ arbitraryDomainAndConstant = sized dispatch
         setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setFixed depth = do
             (dom, constantGen) <- dispatch (smaller depth)
-            let sizeUpTo = case domainSizeConstant dom of
+            let sizeUpTo = case domainSizeOf dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
             size <- choose (0 :: Integer, sizeUpTo)
@@ -217,7 +217,7 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
-            let sizeUpTo = case domainSizeConstant dom of
+            let sizeUpTo = case domainSizeOf dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
             maxSize <- choose (0 :: Integer, sizeUpTo)
@@ -234,7 +234,7 @@ arbitraryDomainAndConstant = sized dispatch
         setBoundedMinMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMinMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
-            let sizeUpTo = case domainSizeConstant dom of
+            let sizeUpTo = case domainSizeOf dom of
                                 Left err -> bug err
                                 Right s  -> min 10 s
             minSize <- choose (0 :: Integer, sizeUpTo)

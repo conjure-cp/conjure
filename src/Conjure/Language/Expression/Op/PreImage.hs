@@ -30,8 +30,8 @@ instance EvaluateOp OpPreImage where
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
     evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
 
-instance SimplifyOp OpPreImage where
-    simplifyOp _ _ = na "simplifyOp{OpPreImage}"
+instance SimplifyOp OpPreImage x where
+    simplifyOp _ = na "simplifyOp{OpPreImage}"
 
 instance Pretty x => Pretty (OpPreImage x) where
     prettyPrec _ (OpPreImage a b) = "preImage" <> prettyList prParens "," [a,b]

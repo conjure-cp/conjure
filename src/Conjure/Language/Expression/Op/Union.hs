@@ -44,8 +44,8 @@ instance EvaluateOp OpUnion where
         return $ ConstantAbstract $ AbsLitRelation $ sortNub (as ++ bs)
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 
-instance SimplifyOp OpUnion where
-    simplifyOp _ _ = na "simplifyOp{OpUnion}"
+instance SimplifyOp OpUnion x where
+    simplifyOp _ = na "simplifyOp{OpUnion}"
 
 instance Pretty x => Pretty (OpUnion x) where
     prettyPrec prec op@(OpUnion a b) = prettyPrecBinOp prec [op] a b

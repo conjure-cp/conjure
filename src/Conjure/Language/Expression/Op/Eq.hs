@@ -28,11 +28,11 @@ instance EvaluateOp OpEq where
     evaluateOp (OpEq _ ConstantUndefined{}) = return $ fromBool False
     evaluateOp (OpEq x y) = return $ ConstantBool $ x == y
 
-instance SimplifyOp OpEq where
-    simplifyOp _ (OpEq a b)
+instance SimplifyOp OpEq x where
+    simplifyOp (OpEq a b)
         | fromBool True == a = return b
         | fromBool True == b = return a
-    simplifyOp _ _ = na "simplifyOp{OpEq}"
+    simplifyOp _ = na "simplifyOp{OpEq}"
 
 instance Pretty x => Pretty (OpEq x) where
     prettyPrec prec op@(OpEq a b) = prettyPrecBinOp prec [op] a b

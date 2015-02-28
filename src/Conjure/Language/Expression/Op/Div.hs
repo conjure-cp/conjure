@@ -29,8 +29,8 @@ instance EvaluateOp OpDiv where
         | y /= 0    = ConstantInt <$> (div <$> intOut x <*> intOut y)
         | otherwise = return $ mkUndef TypeInt $ "division by zero:" <+> pretty p
 
-instance SimplifyOp OpDiv where
-    simplifyOp _ _ = na "simplifyOp{OpDiv}"
+instance SimplifyOp OpDiv x where
+    simplifyOp _ = na "simplifyOp{OpDiv}"
 
 instance Pretty x => Pretty (OpDiv x) where
     prettyPrec prec op@(OpDiv a b) = prettyPrecBinOp prec [op] a b

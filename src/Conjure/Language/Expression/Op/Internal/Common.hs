@@ -6,8 +6,6 @@ module Conjure.Language.Expression.Op.Internal.Common
     , BinaryOperator(..)
     , boolsOut, intsOut
 
-    , valuesInIntDomain
-
     , prettyPrecBinOp
     , Fixity(..), operators, functionals
 
@@ -41,13 +39,12 @@ import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 class EvaluateOp op where
     evaluateOp :: MonadFail m => op Constant -> m Constant
 
-class SimplifyOp op where
+class SimplifyOp op x where
     simplifyOp :: ( MonadFail m
                   , Eq x
                   , Num x
                   , ExpressionLike x
-                  ) => (op x -> x)  -- how to inject the op guy back to an ExpressionLike
-                    -> op x         -- the input
+                  ) => op x         -- the input
                     -> m x          -- the simplified output (or failure if it cannot be simplified)
 
 class BinaryOperator op where
@@ -215,31 +212,6 @@ functionals =
 
     ]
 
-
--- this probably shouldn't be in this module, should refactor later
-valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
-valuesInIntDomain ranges =
-    if isFinite
-        then return allValues
-        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
-
-    where
-
-        allRanges :: [Maybe [Integer]]
-        allRanges =
-            [ vals
-            | r <- ranges
-            , let vals = case r of
-                    RangeSingle (ConstantInt x) -> return [x]
-                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
-                    _ -> Nothing
-            ]
-
-        isFinite :: Bool
-        isFinite = Nothing `notElem` allRanges
-
-        allValues :: [Integer]
-        allValues = nub $ concat $ catMaybes allRanges
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (TypedConstant c _) = boolsOut c

@@ -29,8 +29,8 @@ instance EvaluateOp OpMod where
         | y /= 0    = ConstantInt <$> (mod <$> intOut x <*> intOut y)
         | otherwise = return $ mkUndef TypeInt $ "modulo zero:" <+> pretty p
 
-instance SimplifyOp OpMod where
-    simplifyOp _ _ = na "simplifyOp{OpMod}"
+instance SimplifyOp OpMod x where
+    simplifyOp _ = na "simplifyOp{OpMod}"
 
 instance Pretty x => Pretty (OpMod x) where
     prettyPrec prec op@(OpMod a b) = prettyPrecBinOp prec [op] a b

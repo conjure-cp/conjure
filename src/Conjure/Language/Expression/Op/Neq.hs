@@ -28,8 +28,8 @@ instance EvaluateOp OpNeq where
     evaluateOp (OpNeq _ ConstantUndefined{}) = return $ fromBool False
     evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
 
-instance SimplifyOp OpNeq where
-    simplifyOp _ _ = na "simplifyOp{OpNeq}"
+instance SimplifyOp OpNeq x where
+    simplifyOp _ = na "simplifyOp{OpNeq}"
 
 instance Pretty x => Pretty (OpNeq x) where
     prettyPrec prec op@(OpNeq a b) = prettyPrecBinOp prec [op] a b

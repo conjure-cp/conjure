@@ -26,8 +26,8 @@ instance Pretty x => DomainOf (OpGt x) x where
 instance EvaluateOp OpGt where
     evaluateOp (OpGt x y) = return $ ConstantBool $ x > y
 
-instance SimplifyOp OpGt where
-    simplifyOp _ _ = na "simplifyOp{OpGt}"
+instance SimplifyOp OpGt x where
+    simplifyOp _ = na "simplifyOp{OpGt}"
 
 instance Pretty x => Pretty (OpGt x) where
     prettyPrec prec op@(OpGt a b) = prettyPrecBinOp prec [op] a b

@@ -40,8 +40,8 @@ instance EvaluateOp OpParty where
                                                                                                 <++> pretty op
     evaluateOp op = na $ "evaluateOp{OpParty}:" <++> pretty (show op)
 
-instance SimplifyOp OpParty where
-    simplifyOp _ _ = na "simplifyOp{OpParty}"
+instance SimplifyOp OpParty x where
+    simplifyOp _ = na "simplifyOp{OpParty}"
 
 instance Pretty x => Pretty (OpParty x) where
     prettyPrec _ (OpParty a b) = "party" <> prettyList prParens "," [a,b]

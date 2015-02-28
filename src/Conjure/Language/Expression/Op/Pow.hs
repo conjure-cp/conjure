@@ -29,8 +29,8 @@ instance EvaluateOp OpPow where
         | y >= 0    = ConstantInt <$> ((^) <$> intOut x <*> intOut y)
         | otherwise = return $ mkUndef TypeInt $ "negative exponent:" <+> pretty p
 
-instance SimplifyOp OpPow where
-    simplifyOp _ _ = na "simplifyOp{OpPow}"
+instance SimplifyOp OpPow x where
+    simplifyOp _ = na "simplifyOp{OpPow}"
 
 instance Pretty x => Pretty (OpPow x) where
     prettyPrec prec op@(OpPow a b) = prettyPrecBinOp prec [op] a b

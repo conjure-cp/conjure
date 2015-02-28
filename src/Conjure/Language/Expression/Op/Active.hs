@@ -37,8 +37,8 @@ instance EvaluateOp OpActive where
     evaluateOp (OpActive (ConstantAbstract (AbsLitVariant _ n1 _)) n2) = return $ fromBool $ n1 == n2
     evaluateOp op = na $ "evaluateOp{OpActive}:" <++> pretty (show op)
 
-instance SimplifyOp OpActive where
-    simplifyOp _ _ = na "simplifyOp{OpActive}"
+instance SimplifyOp OpActive x where
+    simplifyOp _ = na "simplifyOp{OpActive}"
 
 instance Pretty x => Pretty (OpActive x) where
     prettyPrec _ (OpActive a b) = "active" <> prettyList prParens "," [pretty a, pretty b]

@@ -29,8 +29,8 @@ instance EvaluateOp OpToRelation where
         return $ ConstantAbstract $ AbsLitRelation $ sortNub [ [a,b] | (a,b) <- xs ]
     evaluateOp op = na $ "evaluateOp{OpToRelation}:" <++> pretty (show op)
 
-instance SimplifyOp OpToRelation where
-    simplifyOp _ _ = na "simplifyOp{OpToRelation}"
+instance SimplifyOp OpToRelation x where
+    simplifyOp _ = na "simplifyOp{OpToRelation}"
 
 instance Pretty x => Pretty (OpToRelation x) where
     prettyPrec _ (OpToRelation a) = "toRelation" <> prParens (pretty a)

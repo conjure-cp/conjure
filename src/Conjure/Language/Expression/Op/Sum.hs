@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Sum where
 
@@ -36,13 +37,13 @@ instance EvaluateOp OpSum where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut x
 
-instance SimplifyOp OpSum where
-    simplifyOp inj (OpSum x)
+instance (OpSum x :< x) => SimplifyOp OpSum x where
+    simplifyOp (OpSum x)
         | Just xs <- listOut x
         , let filtered = filter (/=0) xs
         , length filtered /= length xs      -- there were 0's
-        = return $ inj $ OpSum $ fromList filtered
-    simplifyOp _ _ = na "simplifyOp{OpSum}"
+        = return $ inject $ OpSum $ fromList filtered
+    simplifyOp _ = na "simplifyOp{OpSum}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
     prettyPrec prec op@(OpSum x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b

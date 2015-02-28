@@ -23,8 +23,8 @@ instance Pretty x => DomainOf (OpNot x) x where
 instance EvaluateOp OpNot where
     evaluateOp (OpNot x) = ConstantBool . not <$> boolOut x
 
-instance SimplifyOp OpNot where
-    simplifyOp _ _ = na "simplifyOp{OpNot}"
+instance SimplifyOp OpNot x where
+    simplifyOp _ = na "simplifyOp{OpNot}"
 
 instance Pretty x => Pretty (OpNot x) where
     prettyPrec _ (OpNot a) = "!" <> prettyPrec 10000 a

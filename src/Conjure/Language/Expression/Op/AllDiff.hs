@@ -30,8 +30,8 @@ instance EvaluateOp OpAllDiff where
         return $ ConstantBool $ length vals == length (nub vals)
     evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
 
-instance SimplifyOp OpAllDiff where
-    simplifyOp _ _ = na "simplifyOp{OpAllDiff}"
+instance SimplifyOp OpAllDiff x where
+    simplifyOp _ = na "simplifyOp{OpAllDiff}"
 
 instance Pretty x => Pretty (OpAllDiff x) where
     prettyPrec _ (OpAllDiff a) = "allDiff" <> prParens (pretty a)
