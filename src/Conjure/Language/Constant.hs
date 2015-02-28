@@ -104,9 +104,6 @@ intPow = (^)
 domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
 domainSizeOfRanges = liftM genericLength . valuesInIntDomain
 
-nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
-nchoosek f n k = f n `div` (f k * f (n-k))
-
 instance DomainSizeOf Constant Constant where
     domainSizeOf = fmap ConstantInt . domainSizeOf
 
