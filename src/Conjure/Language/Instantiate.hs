@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
@@ -9,7 +7,7 @@ module Conjure.Language.Instantiate
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
@@ -130,7 +128,7 @@ instantiateOp
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
        )
-    => Ops Expression
+    => Op Expression
     -> m Constant
 instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap (stripTyped . normaliseConstant)
     where
@@ -159,6 +157,7 @@ instantiateD
        )
     => Domain r Expression
     -> m (Domain r Constant)
+instantiateD DomainAny = return DomainAny
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do

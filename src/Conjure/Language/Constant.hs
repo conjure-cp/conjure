@@ -1,8 +1,8 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
+    , valuesInIntDomain
     , normaliseConstant
     , validateConstantForDomain
     , mkUndef, isUndef
@@ -16,6 +16,8 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.AbstractLiteral
 
+import Conjure.Language.DomainOf
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
@@ -58,6 +60,52 @@ instance TypeOf Constant where
     typeOf (DomainInConstant dom)     = typeOf dom
     typeOf (TypedConstant _ ty)       = return ty
     typeOf (ConstantUndefined _ ty)   = return ty
+
+instance DomainOf Constant Constant where
+    domainOf ConstantBool{}             = return DomainBool
+    domainOf i@ConstantInt{}            = return $ DomainInt [RangeSingle i]
+    domainOf (ConstantEnum defn _ _ )   = return (DomainEnum defn Nothing Nothing)
+    domainOf ConstantField{}            = fail "DomainOf-Constant-ConstantField"
+    domainOf (ConstantAbstract x)       = domainOf x
+    domainOf (DomainInConstant dom)     = return dom
+    domainOf (TypedConstant x _)        = domainOf x
+    domainOf ConstantUndefined{}        = fail "DomainOf-Constant-ConstantUndefined"
+
+instance DomainSizeOf Constant Integer where
+    domainSizeOf DomainBool{} = return 2
+    domainSizeOf (DomainInt rs) = domainSizeOfRanges rs
+    domainSizeOf DomainEnum{} = fail "domainSizeOf: Unknown for given enum."
+    domainSizeOf (DomainTuple ds) = product <$> mapM domainSizeOf ds
+    domainSizeOf (DomainMatrix index inner) = intPow <$> domainSizeOf inner <*> domainSizeOf index
+    domainSizeOf (DomainSet _ (SetAttr attrs) inner) =
+        case attrs of
+            SizeAttr_None -> do
+                innerSize <- domainSizeOf inner
+                return (2 `intPow` innerSize)
+            SizeAttr_Size (ConstantInt size) -> do
+                innerSize <- domainSizeOf inner
+                return (nchoosek (product . enumFromTo 1) innerSize size)
+            SizeAttr_MaxSize (ConstantInt maxSize) -> do
+                innerSize <- domainSizeOf inner
+                return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [0 .. maxSize] ]
+            SizeAttr_MinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
+                innerSize <- domainSizeOf inner
+                return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
+            _ -> fail "domainSizeOf"
+    domainSizeOf (DomainMSet      {}) = bug "not implemented: domainSizeOf DomainMSet"
+    domainSizeOf (DomainFunction  {}) = bug "not implemented: domainSizeOf DomainFunction"
+    domainSizeOf (DomainRelation  {}) = bug "not implemented: domainSizeOf DomainRelation"
+    domainSizeOf (DomainPartition {}) = bug "not implemented: domainSizeOf DomainPartition"
+    domainSizeOf _                    = bug "not implemented: domainSizeOf"
+
+intPow :: Integer -> Integer -> Integer
+intPow = (^)
+
+domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
+domainSizeOfRanges = liftM genericLength . valuesInIntDomain
+
+instance DomainSizeOf Constant Constant where
+    domainSizeOf = fmap ConstantInt . domainSizeOf
 
 instance Pretty Constant where
     pretty (ConstantBool False)          = "false"
@@ -124,6 +172,31 @@ instance Num Constant where
     signum (ConstantInt x) = ConstantInt (signum x)
     signum x = bug $ vcat [ "Num Constant signum", "x:" <+> pretty x ]
     fromInteger = ConstantInt . fromInteger
+
+
+valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
+valuesInIntDomain ranges =
+    if isFinite
+        then return allValues
+        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
+
+    where
+
+        allRanges :: [Maybe [Integer]]
+        allRanges =
+            [ vals
+            | r <- ranges
+            , let vals = case r of
+                    RangeSingle (ConstantInt x) -> return [x]
+                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
+                    _ -> Nothing
+            ]
+
+        isFinite :: Bool
+        isFinite = Nothing `notElem` allRanges
+
+        allValues :: [Integer]
+        allValues = nub $ concat $ catMaybes allRanges
 
 
 -- | Assuming both the value and the domain are normalised

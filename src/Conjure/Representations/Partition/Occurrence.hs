@@ -9,7 +9,7 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Domain
-import Conjure.Language.DomainSize
+import Conjure.Language.DomainSizeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal

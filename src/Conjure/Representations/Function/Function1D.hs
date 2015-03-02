@@ -9,7 +9,9 @@ module Conjure.Representations.Function.Function1D
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.DomainSize
+import Conjure.Language.Constant
+import Conjure.Language.DomainSizeOf
+import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal

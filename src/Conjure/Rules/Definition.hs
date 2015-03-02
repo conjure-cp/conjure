@@ -12,9 +12,9 @@ module Conjure.Rules.Definition
 
 import Conjure.Prelude
 import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Ops
-import Conjure.Language.DomainOf
+import Conjure.Language.Expression.Op
+
+import Conjure.Language.RepresentationOf
 
 import Data.Map(Map)
 import Data.Generics.Uniplate.Zipper ( Zipper )
@@ -132,30 +132,6 @@ isAtomic :: Expression -> Bool
 isAtomic Reference{} = True
 isAtomic (Op (MkOpIndexing (OpIndexing a _))) = isAtomic a
 isAtomic _ = False
-
-
-representationOf :: MonadFail m => Expression -> m Name
-representationOf x = do
-    dor <- domainOfInternal x
-    case dor :: DomainOfResult Expression of
-        DomainOfResultNoRepr{} -> fail "doesn't seem to have a representation"
-        DomainOfResultHasRepr dom ->
-            case reprAtTopLevel dom of
-                Nothing -> fail "doesn't seem to have a representation"
-                Just NoRepresentation -> fail "doesn't seem to have a representation"
-                Just (HasRepresentation r) -> return r
-
-
-hasRepresentation :: MonadFail m => Expression -> m ()
-hasRepresentation x = do
-    dor <- domainOfInternal x
-    case dor :: DomainOfResult Expression of
-        DomainOfResultNoRepr{} -> fail "doesn't seem to have a representation"
-        DomainOfResultHasRepr dom ->
-            case reprAtTopLevel dom of
-                Nothing -> fail "doesn't seem to have a representation"
-                Just NoRepresentation -> fail "doesn't seem to have a representation"
-                Just HasRepresentation{} -> return ()
 
 
 matchFirst

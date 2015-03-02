@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-{-# LANGUAGE FlexibleInstances #-}
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE TupleSections #-}
@@ -19,6 +17,7 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
@@ -27,7 +26,7 @@ import Conjure.Language.TypeOf
 import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression )
 import Conjure.Process.Sanity ( sanityChecks )
@@ -1186,15 +1185,16 @@ rule_DomainCardinality :: Rule
 rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
     theRule p = do
         maybeDomain <- match opTwoBars p
-        case maybeDomain of
-            Reference _ (Just (Alias (Domain d))) ->
-                return
-                    ( "Cardinality of a domain"
-                    , \ fresh ->
-                            let (iPat, _) = quantifiedVar (fresh `at` 0)
-                            in  [essence| sum([ 1 | &iPat : &d ]) |]
-                    )
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
             _ -> na "rule_DomainCardinality"
+        return
+            ( "Cardinality of a domain"
+            , \ fresh ->
+                    let (iPat, _) = quantifiedVar (fresh `at` 0)
+                    in  [essence| sum([ 1 | &iPat : &d ]) |]
+            )
 
 
 rule_ComplexAbsPat :: Rule
@@ -1320,7 +1320,7 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
 rule_PartialEvaluate :: Rule
 rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
     theRule (Op x) = do
-        x' <- simplifyOp injectOp x
+        x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
             [ "rule_PartialEvaluate, simplifier returns the input unchanged."
             , "input:" <+> vcat [ pretty (Op x)

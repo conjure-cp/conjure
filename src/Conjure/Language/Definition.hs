@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Definition
@@ -46,8 +45,12 @@ import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
 import Conjure.Language.Domain
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
+
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
+import Conjure.Language.RepresentationOf
+
 
 -- aeson
 import Data.Aeson ( (.=), (.:) )
@@ -355,7 +358,7 @@ data Expression
     | WithLocals Expression (Either AuxiliaryVars DefinednessConstraints)
     | Comprehension Expression [GeneratorOrCondition]
     | Typed Expression Type
-    | Op (Ops Expression)
+    | Op (Op Expression)
     | ExpressionMetaVar String
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -446,6 +449,37 @@ instance TypeOf Expression where
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
+
+instance DomainOf Expression Expression where
+    domainOf (Reference _ (Just refTo)) = domainOf refTo
+    domainOf (Constant x) = fmap Constant <$> domainOf x
+    domainOf (AbstractLiteral x) = domainOf x
+    domainOf (Op x) = domainOf x
+    domainOf x = fail ("domainOf{Expression} 1:" <+> pretty (show x))
+
+instance RepresentationOf Expression where
+    representationTreeOf (Reference _ (Just (DeclHasRepr _ _ dom))) = return (reprTree dom)
+    representationTreeOf (Op (MkOpIndexing (OpIndexing m i))) = do
+        iType <- typeOf i
+        case iType of
+            TypeBool{} -> return ()
+            TypeInt{} -> return ()
+            _ -> fail "representationOf, OpIndexing, not a bool or int index"
+        mTree <- representationTreeOf m
+        case mTree of
+            Tree _ [r] -> return r
+            _ -> fail "domainOf, OpIndexing, not a matrix"
+    representationTreeOf _ = fail "doesn't seem to have a representation"
+
+instance Domain () Expression :< Expression where
+    inject = Domain
+    project (Domain x) = return x
+    project x = fail ("projecting Domain out of Expression:" <+> pretty x)
+
+instance Op Expression :< Expression where
+    inject = Op
+    project (Op x) = return x
+    project x = fail ("projecting Op out of Expression:" <+> pretty x)
 
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x
@@ -600,6 +634,14 @@ instance Pretty ReferenceTo where
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+
+instance DomainOf ReferenceTo Expression where
+    domainOf (Alias x) = domainOf x
+    domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
+    domainOf (DeclNoRepr  _ _ dom) = return dom
+    domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
+    domainOf RecordField{}  = fail "domainOf-ReferenceTo-ReferenceTo"
+    domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
 
 
 ------------------------------------------------------------------------------------------------------------------------
