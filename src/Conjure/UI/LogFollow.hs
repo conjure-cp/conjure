@@ -3,8 +3,6 @@
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ViewPatterns #-}
 
-
-
 module Conjure.UI.LogFollow
     ( logFollow
     , storeChoice
@@ -43,8 +41,10 @@ import System.FilePath(takeExtension)
 import Data.Global(declareIORef)
 import Data.IORef(readIORef, IORef, writeIORef)
 
-type HoleHash = Int
-type AnswerStore =  Map (String,Int) (Set QuestionAnswered)
+type HoleHash    = Int
+type GenOrd      = Int
+type Pref         = Int
+type AnswerStore =  Map HoleHash (Set (QuestionAnswered, GenOrd) )
 
 answeredRef :: IORef AnswerStore
 answeredRef = declareIORef "answeredRefGlobal" M.empty
@@ -54,11 +54,15 @@ refAnswers fp = do
   answered <- liftIO $ getAnswersFromFile fp
   liftIO $ writeIORef answeredRef answered
 
-giveAnswers :: IO AnswerStore
-giveAnswers = readIORef answeredRef
+giveAnswers :: (MonadIO m) => m AnswerStore
+giveAnswers = liftIO $ readIORef answeredRef
+
+putAnswers :: (MonadIO m) => AnswerStore -> m ()
+putAnswers store = liftIO $ writeIORef answeredRef store
 
 
-logFollow :: (MonadIO m, MonadLog m)
+
+logFollow  :: (MonadIO m, MonadLog m)
           => Config
           -> Question -> [(Doc, Answer)] -> m [Answer]
 logFollow config q@Question{..} options = do
@@ -71,16 +75,16 @@ logFollow config q@Question{..} options = do
                   vcat ["text" <+> pretty aText, "ansE" <+> pretty aAnswer]
            |  (_,Answer{..}) <- options | i <- allNats ]
 
-  before <- liftIO $ giveAnswers
+  before <- giveAnswers
 
   res <- case matching before of
-    Just a  -> do
+    Just (a, newStore)  -> do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
-                    , "Answers" <+> (vcat $ map prettyAns  a) ])
-      -- c <- storeChoice q a
-      -- return [c]
-      mapM (storeChoice config q ) a
+                    , "Answer" <+> (prettyAns  a) ])
+      putAnswers newStore
+      mapM (storeChoice config q ) [a]
+
     Nothing  -> do
         logWarn (vcat ["No match for "
                       , "question hole"  <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
@@ -93,24 +97,6 @@ logFollow config q@Question{..} options = do
   return res
 
   where
-    matching ::  AnswerStore -> Maybe [Answer]
-    matching before =
-      case (catMaybes $ map (haveMapping before) (map snd options))  of
-           []        -> Nothing
-           [(x,_)]   -> Just [x]
-           xs        -> case maxes xs of
-                          []      -> error "matching no max"
-                          -- [(x,_)] -> Just [x]
-                          xx -> Just . map fst $ xx
-                          -- xx      -> error . show .vcat $ "matching multiple mappings"
-                          --            : map ( \(r,t) -> pretty (prettyAns r, pretty t)
-                                           -- ) xx
-           -- xs    -> error . show .vcat $ "matching multiple mappings" : map (prettyAns) xs
-
-    -- maxes :: (Ord x, Eq x) => [x] -> [x]
-    maxes xs = let (_,maxSize) = maximumBy (compare `on` snd) xs
-               in  filter (\(_,i) -> i == maxSize ) xs
-
     prettyAns :: Answer -> Doc
     prettyAns Answer{..} =  hang "Answer" 4 $ vcat [
                              "aText"     <+> aText
@@ -118,38 +104,85 @@ logFollow config q@Question{..} options = do
                            , "aRuleName" <+> pretty aRuleName
                            ]
 
-    haveMapping :: AnswerStore -> Answer -> Maybe (Answer, Int)
-    haveMapping before ans@Answer{..} = do
-      previous <- M.lookup (show aRuleName, holeHash qHole) before
-      mappings <- pickMapping previous
-      case filter (process ans . fst) (S.toList mappings) of
-        []  -> Nothing
-        -- [_] -> Just ans
-        ( (_,i) :_)   -> Just (ans,i)
-        -- xs  -> error . show .vcat $ "haveMapping" : map (pretty . groom) xs
+    matching :: AnswerStore -> Maybe (Answer, AnswerStore)
+    matching before = do
+        qsMatches  <- M.lookup (holeHash qHole) before
+        ascMatches <- nullSetMay $ setMapMaybe (ascMatch) qsMatches
+        optsMatches <- nullListMay $ mapMaybe (optionMatch ascMatches) (map snd options)
 
-        where
-          qAsSet = (I.fromList . map holeHash) qAscendants
-
-          pickMapping :: Set QuestionAnswered -> Maybe ( Set (QuestionAnswered,Int) )
-          pickMapping =  toMaybe . S.filter (\(_,i) -> i /= 0 ) .  S.map f
-
-          f a | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1)
-          f a = (a, I.size (qAscendants_ a `I.intersection` qAsSet))
-
-          -- toMaybe :: Show x => [x] -> Maybe x
-          toMaybe s | S.null s    = Nothing
-          -- toMaybe [(x,_)] = Just [x]
-          toMaybe s | S.size s == 1 = Just s
-          toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) (S.toList xs) in
-                       case filter (\(_,i) -> i == maxSize ) (S.toList xs) of
-                         []      -> error "haveMapping toMaybe cannot happen"
-                         xx      -> Just $ S.fromList xx
+        let maxAsc        = maximumBy (compare `on` fou4) optsMatches
+            maxAscMatches = filter (\t -> fou4 t == fou4 maxAsc ) optsMatches
+            minMatch      = minimumBy (compare `on` fou3) maxAscMatches
+            newSet        = S.delete (fou23 minMatch) qsMatches
+            newStore      = M.insert (holeHash qHole) newSet before
 
 
+        Just (fou1 minMatch, newStore)
 
-          process a AnsweredRepr{..} = compareDoms aDom_ (getReprFromAnswer a)
-          process _   AnsweredRule{}   = True
+    ascMatch :: (QuestionAnswered, GenOrd) -> Maybe (QuestionAnswered,  GenOrd, Pref)
+    ascMatch (q,_) = error "d"
+
+    optionMatch :: Set (QuestionAnswered, GenOrd, Pref) -> Answer
+                -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
+    optionMatch ls a = error "dd"
+
+    nullSetMay :: Set a -> Maybe (Set a)
+    nullSetMay s | S.null s = Nothing
+    nullSetMay s = Just s
+
+    nullListMay  :: [a] -> Maybe [a]
+    nullListMay  [] = Nothing
+    nullListMay  xs = Just xs
+
+    setMapMaybe :: (a -> Maybe b) -> Set a -> Set b
+    setMapMaybe = error "d"
+
+
+
+    -- matching ::  AnswerStore -> Maybe [Answer]
+    -- matching before =
+    --   case (catMaybes $ map (haveMapping before) (map snd options))  of
+    --        []        -> Nothing
+    --        [(x,_)]   -> Just [x]
+    --        xs        -> case maxes xs of
+    --                       []      -> error "matching no max"
+    --                       xx -> Just . map fst $ xx
+
+    -- maxes xs = let (_,maxSize) = maximumBy (compare `on` snd) xs
+    --            in  filter (\(_,i) -> i == maxSize ) xs
+
+
+
+    -- haveMapping :: AnswerStore -> Answer -> Maybe (Answer, Pref)
+    -- haveMapping before ans@Answer{..} = do
+    --   previous <- M.lookup (show aRuleName, holeHash qHole) before
+    --   mappings <- pickMapping previous
+    --   case filter (process ans . fst) (S.toList mappings) of
+    --     []  -> Nothing
+    --     ( (_,i) :_)   -> Just (ans,i)
+
+    --     where
+    --       qAsSet = (I.fromList . map holeHash) qAscendants
+
+    --       pickMapping :: Set (QuestionAnswered, GenOrd)
+    --                   -> Maybe ( Set (QuestionAnswered,Pref,GenOrd) )
+    --       pickMapping =  _f . S.filter (\(_,i,_) -> i /= 0 ) .  S.map f
+
+    --       f :: (QuestionAnswered, GenOrd) -> (QuestionAnswered, Pref, GenOrd)
+    --       f (a,ord) | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1, ord)
+    --       f (a,ord) = (a, I.size (qAscendants_ a `I.intersection` qAsSet), ord)
+
+    --       toMaybe s | S.null s    = Nothing
+    --       toMaybe s | S.size s == 1 = Just s
+    --       toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) (S.toList xs) in
+    --                    case filter (\(_,i) -> i == maxSize ) (S.toList xs) of
+    --                      []      -> error "haveMapping toMaybe cannot happen"
+    --                      xx      -> Just $ S.fromList xx
+
+
+
+    --       process a AnsweredRepr{..} = compareDoms aDom_ (getReprFromAnswer a)
+    --       process _   AnsweredRule{}   = True
 
 
 
@@ -237,13 +270,19 @@ getAnswersFromFile fp | takeExtension fp  == ".json" = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just (vs ::  [QuestionAnswered])  -> do
         -- putStrLn $ "BeforeToSet: " ++  (groom vs)
-        return $ M.fromListWith (S.union) [ ((aRuleName_ v, qHole_ v) , S.singleton v)  | v <- vs ]
+        return $ M.fromListWith (S.union) [ ((qHole_ v) , S.singleton (v, i))
+                                                | v <- vs
+                                                | i <- [0..]
+                                          ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
 -- Read from a eprime file
 getAnswersFromFile fp = do
   Model{mInfo=ModelInfo{miQuestionAnswered=vs}} <- readModelFromFile fp
-  return $ M.fromListWith (S.union) [ ((aRuleName_ v, qHole_ v) , S.singleton v )  | v <- vs ]
+  return $ M.fromListWith (S.union) [ (( qHole_ v) , S.singleton (v,i) )
+                                          | v <- vs
+                                          | i <- [0..]
+                                    ]
 
 saveToLog :: MonadLog m => Doc -> m ()
 saveToLog = log LogFollow
@@ -256,9 +295,14 @@ jsonToDoc  = Pr.text . L.unpack . L.toLazyText . A.encodeToTextBuilder . toJSON
 holeHash :: (Show x, Pretty x) =>x  -> HoleHash
 holeHash = hash . show . pretty
 
-nub2 :: (Ord a, Eq a) => [a] -> [a]
-nub2 l = go S.empty l
-  where
-    go _ [] = []
-    go s (x:xs) = if x `S.member` s then go s xs
-                                      else x : go (S.insert x s) xs
+fou1 :: (a,b,c,d) -> a
+fou1 (a,_,_,_) = a
+
+fou4 :: (a,b,c,d) -> d
+fou4 (_,_,_,d) = d
+
+fou3 :: (a,b,c,d) -> c
+fou3 (_,_,c,_) = c
+
+fou23 :: (a,b,c,d) -> (b,c)
+fou23 (_,b,c,_) = (b,c)
