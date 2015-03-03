@@ -65,6 +65,8 @@ import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
 import Data.IntSet(IntSet)
 import qualified Data.IntSet as I
+import Data.Set(Set)
+import qualified Data.Set as S
 
 
 
@@ -269,6 +271,9 @@ instance Hashable  QuestionAnswered
 instance Hashable  IntSet  where
     hashWithSalt s i = hashWithSalt s  (I.toList i)
 
+instance Hashable a => Hashable (Set a) where
+    hashWithSalt s i = hashWithSalt s  (S.toList i)
+
 
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
@@ -292,7 +297,7 @@ modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . 
 
 instance Serialize ModelInfo
 instance Hashable  ModelInfo
-instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
+instance ToJSON    ModelInfo where  toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where

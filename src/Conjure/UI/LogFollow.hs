@@ -32,8 +32,8 @@ import qualified Text.PrettyPrint as Pr
 -- import Text.Read(read)
 
 import qualified Data.IntSet as I
+import Data.Set(Set)
 import qualified Data.Set as S
-
 
 import Data.Map(Map)
 import qualified Data.Map as M
@@ -44,7 +44,7 @@ import Data.Global(declareIORef)
 import Data.IORef(readIORef, IORef, writeIORef)
 
 type HoleHash = Int
-type AnswerStore =  Map (String,Int) [QuestionAnswered]
+type AnswerStore =  Map (String,Int) (Set QuestionAnswered)
 
 answeredRef :: IORef AnswerStore
 answeredRef = declareIORef "answeredRefGlobal" M.empty
@@ -118,10 +118,11 @@ logFollow config q@Question{..} options = do
                            , "aRuleName" <+> pretty aRuleName
                            ]
 
+    haveMapping :: AnswerStore -> Answer -> Maybe (Answer, Int)
     haveMapping before ans@Answer{..} = do
       previous <- M.lookup (show aRuleName, holeHash qHole) before
       mappings <- pickMapping previous
-      case filter (process ans . fst) mappings of
+      case filter (process ans . fst) (S.toList mappings) of
         []  -> Nothing
         -- [_] -> Just ans
         ( (_,i) :_)   -> Just (ans,i)
@@ -130,20 +131,20 @@ logFollow config q@Question{..} options = do
         where
           qAsSet = (I.fromList . map holeHash) qAscendants
 
-          pickMapping :: [QuestionAnswered] -> Maybe [(QuestionAnswered,Int)]
-          pickMapping =  toMaybe . filter (\(_,i) -> i /= 0 ) .  map f
+          pickMapping :: Set QuestionAnswered -> Maybe ( Set (QuestionAnswered,Int) )
+          pickMapping =  toMaybe . S.filter (\(_,i) -> i /= 0 ) .  S.map f
 
           f a | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1)
           f a = (a, I.size (qAscendants_ a `I.intersection` qAsSet))
 
           -- toMaybe :: Show x => [x] -> Maybe x
-          toMaybe []      = Nothing
+          toMaybe s | S.null s    = Nothing
           -- toMaybe [(x,_)] = Just [x]
-          toMaybe [x] = Just [x]
-          toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) xs in
-                       case filter (\(_,i) -> i == maxSize ) xs of
+          toMaybe s | S.size s == 1 = Just s
+          toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) (S.toList xs) in
+                       case filter (\(_,i) -> i == maxSize ) (S.toList xs) of
                          []      -> error "haveMapping toMaybe cannot happen"
-                         xx      -> Just xx
+                         xx      -> Just $ S.fromList xx
 
 
 
@@ -234,15 +235,15 @@ getAnswersFromFile :: (MonadIO m, MonadFail m )
  -- Read from a json file
 getAnswersFromFile fp | takeExtension fp  == ".json" = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
-    Just (vs :: [QuestionAnswered])  -> do
+    Just (vs ::  [QuestionAnswered])  -> do
         -- putStrLn $ "BeforeToSet: " ++  (groom vs)
-        return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
+        return $ M.fromListWith (S.union) [ ((aRuleName_ v, qHole_ v) , S.singleton v)  | v <- vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
 -- Read from a eprime file
 getAnswersFromFile fp = do
   Model{mInfo=ModelInfo{miQuestionAnswered=vs}} <- readModelFromFile fp
-  return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
+  return $ M.fromListWith (S.union) [ ((aRuleName_ v, qHole_ v) , S.singleton v )  | v <- vs ]
 
 saveToLog :: MonadLog m => Doc -> m ()
 saveToLog = log LogFollow
