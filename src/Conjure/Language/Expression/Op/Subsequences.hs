@@ -1,9 +1,9 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 
-module Conjure.Language.Ops.Subsequences where
+module Conjure.Language.Expression.Op.Subsequences where
 
 import Conjure.Prelude
-import Conjure.Language.Ops.Common
+import Conjure.Language.Expression.Op.Internal.Common
 
 
 data OpSubsequences x = OpSubsequences x            -- the sequence
@@ -27,11 +27,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubsequences x) where
             (TypeSequence{}, TypeInt) -> return (TypeSet tya)
             _ -> raiseTypeError p
 
+instance DomainOf (OpSubsequences x) x where
+    domainOf _ = fail "domainOf{OpSubsequences}"
+
 instance EvaluateOp OpSubsequences where
     evaluateOp op = na $ "evaluateOp{OpSubsequences}:" <++> pretty (show op)
 
-instance SimplifyOp OpSubsequences where
-    simplifyOp _ _ = na "simplifyOp{OpSubsequences}"
+instance SimplifyOp OpSubsequences x where
+    simplifyOp _ = na "simplifyOp{OpSubsequences}"
 
 instance Pretty x => Pretty (OpSubsequences x) where
     prettyPrec _ (OpSubsequences a b) = "subsequences" <> prettyList prParens "," xs

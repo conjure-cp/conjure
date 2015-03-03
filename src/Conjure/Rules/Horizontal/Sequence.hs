@@ -85,7 +85,7 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
                     len = fromInt $ genericLength elems
                     argIsDef = [essence| &arg <= &len |]
                 in
-                    WithLocals val [SuchThat [argIsDef]]
+                    WithLocals val (Right [argIsDef])
             )
 
 
@@ -316,7 +316,7 @@ rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) [SuchThat [bob]]
+                    in  WithLocals (make opFunctionImage func arg) (Right [bob])
             )
 
 
@@ -453,7 +453,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         ]
                     isDefined = [essence| &arg in defined(&func) |]
                 in
-                    mkP $ WithLocals val [SuchThat [isDefined]]
+                    mkP $ WithLocals val (Right [isDefined])
             )
 
 

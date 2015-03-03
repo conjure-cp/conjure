@@ -110,6 +110,9 @@ instance (DomainOf a a, Pretty a) => DomainOf (AbstractLiteral a) a where
                                                 <$> (mconcat <$> mapM (domainOf . fst) xs)
                                                 <*> (mconcat <$> mapM (domainOf . snd) xs)
 
+    domainOf (AbsLitSequence    [] ) = return (DomainSequence def def DomainAny)
+    domainOf (AbsLitSequence    xs ) = DomainSequence def def <$> (mconcat <$> mapM domainOf xs)
+
     domainOf (AbsLitRelation    [] ) = return (DomainRelation def def [])
     domainOf (AbsLitRelation    xss) = do
         ty <- mconcat <$> mapM (domainOf . AbsLitTuple) xss
