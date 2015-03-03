@@ -1,8 +1,8 @@
 language ESSENCE' 1.0
 
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
-find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (2 - 1))] of bool
-find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (2 - 1))] of int(1..2)
+find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
 such that
     or([s_ExplicitVarSizeWithFlags_Flags[q3] /\ s_ExplicitVarSizeWithFlags_Values[q3] = sum([s_Occurrence[q2] | q2 : int(1..2)]) | q3 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],

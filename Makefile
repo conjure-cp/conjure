@@ -5,17 +5,24 @@ install:
 
 preinstall:
 	@bash etc/build/version.sh
+	@mkdir -p src/Conjure/Language/Expression/Internal
+	@mkdir -p src/Conjure/Language/Expression/Op/Internal
 	@runhaskell etc/build/gen_Operator.hs
+	@runhaskell etc/build/gen_Expression.hs
 
 refreeze:
 	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )
 
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
+	    -XFlexibleContexts                         \
+	    -XFlexibleInstances                        \
+	    -XMultiParamTypeClasses                    \
 	    -XNoImplicitPrelude                        \
 	    -XOverloadedStrings                        \
-	    -XScopedTypeVariables                      \
 	    -XQuasiQuotes                              \
+	    -XScopedTypeVariables                      \
+	    -XTypeOperators                            \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \

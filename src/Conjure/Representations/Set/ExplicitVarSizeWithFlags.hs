@@ -7,7 +7,8 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.TH
-import Conjure.Language.DomainSize
+import Conjure.Language.DomainSizeOf
+import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal

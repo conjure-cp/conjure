@@ -1,10 +1,8 @@
 language ESSENCE' 1.0
 
-find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..2 ** (1 + (2 - 1)))
-find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
-        matrix indexed by [int(1..2 ** (1 + (2 - 1)))] of int(0..1 + (2 - 1))
-find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..2 ** (1 + (2 - 1))), int(1..1 + (2 - 1))] of int(1..2)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..4)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of int(0..2)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4), int(1..2)] of int(1..2)
 such that
     or([!(and([q8 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
                [or([q11 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\

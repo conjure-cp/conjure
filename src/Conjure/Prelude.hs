@@ -1,6 +1,4 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
-{-# LANGUAGE FlexibleInstances #-}
-{-# LANGUAGE FlexibleContexts #-}
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
@@ -44,6 +42,7 @@ module Conjure.Prelude
     , scope
     , allFiles, allFilesWithSuffix
     , setRandomSeed, randomRIO
+    , nchoosek
     ) where
 
 import GHC.Err as X ( error )
@@ -513,3 +512,6 @@ allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
 
 setRandomSeed :: Int -> IO ()
 setRandomSeed = setStdGen . mkStdGen
+
+nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
+nchoosek f n k = f n `div` (f k * f (n-k))

@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.Representations
     ( downD, downC, up
     , downD1, downC1, up1
@@ -13,7 +11,7 @@ import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Type
-import Conjure.Language.Ops
+import Conjure.Language.Expression.Op
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Representations.Combined
@@ -71,7 +69,7 @@ onReference nm refTo =
         RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
         VariantField{}            -> fail ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
-onOp :: MonadFail m => Ops Expression -> m [Expression]
+onOp :: MonadFail m => Op Expression -> m [Expression]
 onOp p@(MkOpIndexing (OpIndexing m i)) = do
     ty <- typeOf m
     case ty of

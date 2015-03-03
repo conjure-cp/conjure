@@ -1,5 +1,3 @@
-{-# LANGUAGE FlexibleContexts #-}
-
 module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure

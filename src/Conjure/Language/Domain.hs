@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
 
@@ -46,7 +45,8 @@ import Data.Set as S ( Set, empty, toList, singleton, union )
 
 
 data Domain r x
-    = DomainBool
+    = DomainAny
+    | DomainBool
     | DomainInt [Range x]
     | DomainEnum
         Name
@@ -103,6 +103,7 @@ instance TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
 typeOfDomain :: MonadFail m => Domain r x -> m Type
+typeOfDomain DomainAny                 = return TypeAny
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
@@ -157,6 +158,7 @@ defRepr = changeRepr def
 changeRepr :: (Pretty r, Pretty x) => r2 -> Domain r x -> Domain r2 x
 changeRepr rep = go
     where
+        go DomainAny  = DomainAny
         go DomainBool = DomainBool
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
@@ -191,6 +193,7 @@ instance ToJSON    a => ToJSON    (Tree a) where toJSON = genericToJSON jsonOpti
 instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON jsonOptions
 
 reprTree :: Domain r x -> Tree (Maybe r)
+reprTree DomainAny{}     = Tree Nothing []
 reprTree DomainBool{}    = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
@@ -398,6 +401,7 @@ addAttributeToDomain
     -> Maybe x                                      -- the value for the attribute
     -> m (Domain r x)                               -- the modified domain
 
+addAttributeToDomain d@DomainAny{}       = const $ const $ return d
 addAttributeToDomain d@DomainBool{}      = const $ const $ return d
 addAttributeToDomain d@DomainInt{}       = const $ const $ return d
 addAttributeToDomain d@DomainEnum{}      = const $ const $ return d
@@ -1171,7 +1175,8 @@ instance Default HasRepresentation where
     def = NoRepresentation
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
-    -- domain.*
+
+    pretty DomainAny = "?"
 
     pretty DomainBool = "bool"
 

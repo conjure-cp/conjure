@@ -2,97 +2,120 @@
 
 import Control.Applicative ( (<$>) )
 import Data.Maybe ( Maybe(..) )
-import Data.List ( sort, isSuffixOf )
+import Data.List ( sort, isSuffixOf, intercalate )
 import System.Directory ( getDirectoryContents )
 import Control.Exception ( catch, IOException )
 
 
 main :: IO ()
 main = do
-    let modulesDir = "src/Conjure/Language/Ops"
-    modules <- sort . map (head . splitOn '.')
-                    . filter (".hs" `isSuffixOf`)
-                    . filter (/="Generated.hs")
-                    . filter (/="Common.hs")
-                <$> getDirectoryContents modulesDir
+    let opDir   = "src/Conjure/Language/Expression/Op"
+    let outFile = opDir ++ "/Internal/Generated.hs"
+    operators <- sort . map (head . splitOn '.')
+                      . filter (".hs" `isSuffixOf`)
+                  <$> getDirectoryContents opDir
     let datName = "Operator"
     let consModifier m = "MkOp" ++ m ++ " (Op" ++ m ++ " x)"
     let patModifier m = "MkOp" ++ m ++ " x"
 
     let outText = unlines $ concat
             [ [ "{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}"
-              , "{-# LANGUAGE MultiParamTypeClasses, FlexibleInstances #-}"
+              , "{-# LANGUAGE UndecidableInstances #-}"
               , ""
-              , "module Conjure.Language.Ops.Generated" ]
-            , [ "    ( Ops(..)"
+              , "module Conjure.Language.Expression.Op.Internal.Generated" ]
+            , [ "    ( Op(..)"
               , "    , valuesInIntDomain"
               ]
-            , [ "    , Op" ++ m ++ "(..)" | m <- modules ]
+            , [ "    , Op" ++ m ++ "(..)" | m <- operators ]
             , [ "    ) where"
               , ""
               , "-- conjure"
               , "import Conjure.Prelude"
-              , "import Conjure.Language.Ops.Common"
+              , "import Conjure.Language.Expression.Op.Internal.Common"
               , ""
               ]
 
-            , [ "import Conjure.Language.Ops." ++ m
-              | m <- modules
+            , [ "import Conjure.Language.Expression.Op." ++ m
+              | m <- operators
               ]
 
             , [ ""
-              , "data Ops x"
+              , "data Op x"
               ]
-            , [ "    = " ++ consModifier (head modules)        ]
-            , [ "    | " ++ consModifier m | m <- tail modules ]
+            , [ "    = " ++ consModifier (head operators)        ]
+            , [ "    | " ++ consModifier m | m <- tail operators ]
             , [ "    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)"
               , ""
-              , "instance Serialize x => Serialize (Ops x)"
-              , "instance Hashable  x => Hashable  (Ops x)"
-              , "instance ToJSON    x => ToJSON    (Ops x) where toJSON = genericToJSON jsonOptions"
-              , "instance FromJSON  x => FromJSON  (Ops x) where parseJSON = genericParseJSON jsonOptions"
+              , "instance Serialize x => Serialize (Op x)"
+              , "instance Hashable  x => Hashable  (Op x)"
+              , "instance ToJSON    x => ToJSON    (Op x) where toJSON = genericToJSON jsonOptions"
+              , "instance FromJSON  x => FromJSON  (Op x) where parseJSON = genericParseJSON jsonOptions"
+              , ""
+              , ""
               ]
 
+            , concat
+                [ [ "instance Op" ++ m ++ " x :< Op x where"
+                  , "    inject = MkOp" ++ m
+                  , "    project (MkOp" ++ m ++ " x) = return x"
+                  , "    project _ = fail \"projecting Op" ++ m ++ "\""
+                  ]
+                | m <- operators
+                ]
+
             , [ ""
-              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Ops x) where"
+              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Op x) where"
               ]
             , [ "    typeOf (" ++ patModifier m ++ ") = typeOf x"
-              | m <- modules
+              | m <- operators
               ]
 
             , [ ""
-              , "instance EvaluateOp Ops where"
+              , "instance ( Pretty x"
+              , "         , ExpressionLike x"
+              , "         , DomainOf x x"
+              , "         , TypeOf x"
+              , "         , Domain () x :< x"
+              , "         ) => DomainOf (Op x) x where"
+              ]
+            , [ "    domainOf (" ++ patModifier m ++ ") = domainOf x"
+              | m <- operators
+              ]
+
+            , [ ""
+              , "instance EvaluateOp Op where"
               ]
             , [ "    evaluateOp (" ++ patModifier m ++ ") = evaluateOp x"
-              | m <- modules
+              | m <- operators
               ]
 
             , [ ""
-              , "instance SimplifyOp Ops where"
+              , let context = intercalate "\n         , " [ "Op" ++ m ++ " x :< x" | m <- operators ]
+                in  "instance ( " ++ context ++ ") => SimplifyOp Op x where"
               ]
-            , [ "    simplifyOp inj (" ++ patModifier m ++ ") = simplifyOp (inj . MkOp" ++ m ++ ") x"
-              | m <- modules
+            , [ "    simplifyOp (" ++ patModifier m ++ ") = simplifyOp x"
+              | m <- operators
               ]
 
             , [ ""
-              , "instance (Pretty x, ExpressionLike x) => Pretty (Ops x) where"
+              , "instance (Pretty x, ExpressionLike x) => Pretty (Op x) where"
               ]
             , [ "    prettyPrec prec (" ++ patModifier m ++ ") = prettyPrec prec x"
-              | m <- modules
+              | m <- operators
               ]
 
             ]
 
-    outText' <- catch (Just <$> readFile (modulesDir ++ "/Generated.hs"))
+    outText' <- catch (Just <$> readFile outFile)
                       (\ (e :: IOException) -> return Nothing )
     if and [ Just (length outText) /= (length <$> outText')
            , Just outText /= outText'
            ]
         then do
-            putStrLn $ "Generating " ++ modulesDir ++ "/Generated.hs"
-            writeFile (modulesDir ++ "/Generated.hs") outText
+            putStrLn $ "Generating " ++ outFile
+            writeFile outFile outText
         else
-            putStrLn $ "Reusing " ++ modulesDir ++ "/Generated.hs"
+            putStrLn $ "Reusing " ++ outFile
 
 splitOn :: Char -> String -> [String]
 splitOn _ [] = []
