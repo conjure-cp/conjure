@@ -311,6 +311,7 @@ rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
     theRule p = do
         (func', arg) <- match opFunctionImage p
         (func , dom) <- match opRestrict func'
+        TypeSequence{} <- typeOf func
         return
             ( "Sequence image on a restricted sequence."
             , \ fresh ->

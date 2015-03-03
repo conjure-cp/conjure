@@ -513,6 +513,7 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
     theRule p = do
         (func', arg) <- match opFunctionImage p
         (func , dom) <- match opRestrict func'
+        TypeFunction{} <- typeOf func
         return
             ( "Function image on a restricted function."
             , \ fresh ->
