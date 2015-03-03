@@ -8,7 +8,7 @@
 module Conjure.UI.LogFollow
     ( logFollow
     , storeChoice
-    , getAnswers
+    , refAnswers
     ) where
 
 import Conjure.Prelude
@@ -40,6 +40,23 @@ import qualified Data.Map as M
 import Data.List(maximumBy)
 import System.FilePath(takeExtension)
 
+import Data.Global(declareIORef)
+import Data.IORef(readIORef, IORef, writeIORef)
+
+type HoleHash = Int
+type AnswerStore =  Map (String,Int) [QuestionAnswered]
+
+answeredRef :: IORef AnswerStore
+answeredRef = declareIORef "answeredRefGlobal" M.empty
+
+refAnswers :: (MonadIO m) => FilePath ->  m ()
+refAnswers fp = do
+  answered <- liftIO $ getAnswersFromFile fp
+  liftIO $ writeIORef answeredRef answered
+
+giveAnswers :: IO AnswerStore
+giveAnswers = readIORef answeredRef
+
 
 logFollow :: (MonadIO m, MonadLog m)
           => Config
@@ -54,9 +71,9 @@ logFollow config q@Question{..} options = do
                   vcat ["text" <+> pretty aText, "ansE" <+> pretty aAnswer]
            |  (_,Answer{..}) <- options | i <- allNats ]
 
+  before <- liftIO $ giveAnswers
 
-
-  res <- case matching of
+  res <- case matching before of
     Just a  -> do
       logWarn (vcat ["Matched with previous data"
                     , "Question" <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
@@ -76,11 +93,9 @@ logFollow config q@Question{..} options = do
   return res
 
   where
-    before :: Map (String,HoleHash) [QuestionAnswered]
-    before = questionAnswers config
-    matching :: Maybe [Answer]
-    matching =
-      case (catMaybes $ map haveMapping (map snd options))  of
+    matching ::  AnswerStore -> Maybe [Answer]
+    matching before =
+      case (catMaybes $ map (haveMapping before) (map snd options))  of
            []        -> Nothing
            [(x,_)]   -> Just [x]
            xs        -> case maxes xs of
@@ -103,7 +118,7 @@ logFollow config q@Question{..} options = do
                            , "aRuleName" <+> pretty aRuleName
                            ]
 
-    haveMapping ans@Answer{..} = do
+    haveMapping before ans@Answer{..} = do
       previous <- M.lookup (show aRuleName, holeHash qHole) before
       mappings <- pickMapping previous
       case filter (process ans . fst) mappings of
@@ -200,9 +215,6 @@ makeChoice q a =  case (aRuleName a) of
                      , aRuleName_   = show $ aRuleName a
                      }
 
-holeHash :: (Show x, Pretty x) =>x  -> HoleHash
-holeHash = hash . show . pretty
-
 getReprFromAnswer ::   Answer -> Domain HasRepresentation Expression
 getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromAnswer")
                           . getReprDomText
@@ -216,19 +228,19 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
   getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
 
 
-type HoleHash = Int
-getAnswers :: (MonadIO m, MonadFail m )
-              => FilePath -> m (Map (String,HoleHash) [QuestionAnswered])
+getAnswersFromFile :: (MonadIO m, MonadFail m )
+              => FilePath -> m AnswerStore
 
-getAnswers fp | takeExtension fp  == ".json" = do -- Read from a json file
+ -- Read from a json file
+getAnswersFromFile fp | takeExtension fp  == ".json" = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just (vs :: [QuestionAnswered])  -> do
         -- putStrLn $ "BeforeToSet: " ++  (groom vs)
         return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
 
-
-getAnswers fp = do
+-- Read from a eprime file
+getAnswersFromFile fp = do
   Model{mInfo=ModelInfo{miQuestionAnswered=vs}} <- readModelFromFile fp
   return $ M.fromListWith (++) [ ((aRuleName_ v, qHole_ v) ,[v])  | v <- nub2 vs ]
 
@@ -239,6 +251,9 @@ saveToLog = log LogFollow
 jsonToDoc :: ToJSON a => a -> Doc
 jsonToDoc  = Pr.text . L.unpack . L.toLazyText . A.encodeToTextBuilder . toJSON
 
+
+holeHash :: (Show x, Pretty x) =>x  -> HoleHash
+holeHash = hash . show . pretty
 
 nub2 :: (Ord a, Eq a) => [a] -> [a]
 nub2 l = go S.empty l

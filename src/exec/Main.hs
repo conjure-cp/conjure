@@ -12,7 +12,7 @@ import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel )
-import Conjure.UI.LogFollow (getAnswers)
+import Conjure.UI.LogFollow (refAnswers)
 
 import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.ModelDiff ( modelDiffIO )
@@ -58,12 +58,9 @@ mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
-    answers <- case savedChoices of
-                 Just f  -> do
-                   ff <- getAnswers f
-                   logWarn ("QuestionAnswereds" <+> (pretty . groom) ff )
-                   return ff
-                 Nothing -> return def
+    case savedChoices of
+      Just f  -> refAnswers f
+      Nothing -> return ()
 
 
     let config = Config.Config
@@ -87,7 +84,6 @@ mainWithArgs Modelling{..} = do
             , Config.parameterRepresentation = parameterRepresentation
             , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart          = numberingStart
-            , Config.questionAnswers         = answers
             , Config.smartFilenames          = smartFilenames
             }
     outputModels config model

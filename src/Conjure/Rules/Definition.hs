@@ -16,9 +16,7 @@ import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf
 
-import Data.Map(Map)
 import Data.Generics.Uniplate.Zipper ( Zipper )
-
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
@@ -79,7 +77,6 @@ data Config = Config
     , parameterRepresentation   :: Bool
     , limitModels               :: Maybe Int
     , numberingStart            :: Int
-    , questionAnswers           :: Map (String,Int) [QuestionAnswered]
     , smartFilenames            :: Bool
     }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -99,7 +96,6 @@ instance Default Config where
         , parameterRepresentation   = True
         , limitModels               = Nothing
         , numberingStart            = 1
-        , questionAnswers           = def
         , smartFilenames            = False
         }
 

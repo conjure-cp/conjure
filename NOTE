@@ -1,0 +1,7 @@
+for global-variables I did the following
+
+hg clone ssh://hg@bitbucket.org/jmg/global-variables
+cd global-variables
+hg checkout release
+cd ..
+cabal install ./global-variables
