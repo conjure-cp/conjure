@@ -327,6 +327,7 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
             Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, dom) <- match opRestrict expr
+        TypeSequence{} <- typeOf func
         return
             ( "Mapping over restrict(func, dom)"
             , \ fresh ->
@@ -465,6 +466,7 @@ rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule wh
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
         (func, arg) <- match opImage expr2
+        TypeSequence{} <- typeOf func
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences

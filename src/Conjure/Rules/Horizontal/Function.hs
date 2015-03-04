@@ -205,6 +205,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
+        TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the preImage of a function"
@@ -330,6 +331,7 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined_Literal"
         func <- match opDefined expr
+        TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
         elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
         let domFr = mconcat elemDoms
@@ -376,6 +378,7 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range_Literal"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
         elemDoms <- mapM (fmap forgetRepr . domainOf . snd) elems
         let domTo = mconcat elemDoms
@@ -518,6 +521,7 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
             Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, dom) <- match opRestrict expr
+        TypeFunction{} <- typeOf func
         return
             ( "Mapping over restrict(func, dom)"
             , \ fresh ->
@@ -656,6 +660,7 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
         (func, arg) <- match opImage expr2
+        TypeFunction{} <- typeOf func
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
