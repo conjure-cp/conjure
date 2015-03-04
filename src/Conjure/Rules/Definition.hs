@@ -79,7 +79,7 @@ data Config = Config
     , numberingStart            :: Int
     , smartFilenames            :: Bool
     }
-    deriving (Eq, Ord, Show, Data, Typeable)
+    deriving (Eq, Ord, Read, Show, Data, Typeable)
 
 instance Default Config where
     def = Config
