@@ -29,6 +29,14 @@ instance DomainOf (OpSubsequence x) x where
     domainOf _ = fail "domainOf{OpSubsequence}"
 
 instance EvaluateOp OpSubsequence where
+    evaluateOp (OpSubsequence
+        (ConstantAbstract (AbsLitSequence xs))
+        (ConstantAbstract (AbsLitSequence ys))) =
+            return $ fromBool $
+                or [ and (zipWith (==) xs zs) 
+                   | zs <- subsequences ys
+                   , length zs >= length xs
+                   ]
     evaluateOp op = na $ "evaluateOp{OpSubsequence}:" <++> pretty (show op)
 
 instance SimplifyOp OpSubsequence x where

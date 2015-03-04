@@ -103,6 +103,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
                               , head, init, tail, last
+                              , inits, tails
                               , findIndex
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
