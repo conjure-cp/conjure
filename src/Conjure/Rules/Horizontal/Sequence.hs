@@ -511,19 +511,17 @@ rule_Substring = "substring" `namedRule` theRule where
         let maxSize = [essence| max([&aMaxSize, &bMaxSize]) |]
 
         return
-            ( "substring on 2 ExplicitBounded strings"
+            ( "Horizontal rule for substring on 2 sequences"
             , \ fresh ->
                 let
                     (iPat, i) = quantifiedVar (fresh `at` 0)
                     (jPat, j) = quantifiedVar (fresh `at` 1)
                 in  make opOr $ Comprehension
                         (make opAnd $ Comprehension
-                            [essence| image(&a, &i + &j) = image(&b, &i + &j) |]
-                            [ Generator (GenDomainNoRepr jPat $ mkDomainIntB 1 aMaxSize)
-                            , Condition [essence| &i + &j <= |&a| |]
-                            , Condition [essence| &i + &j <= |&b| |]
+                            [essence| &j[2] = image(&b, &i + &j[1]) |]
+                            [ Generator (GenInExpr jPat a)
                             ]
                         )
-                        [ Generator (GenDomainNoRepr iPat $ mkDomainIntB 1 maxSize) ]
+                        [ Generator (GenDomainNoRepr iPat $ mkDomainIntB 0 [essence| &maxSize - 1 |])]
             )
     theRule _ = na "rule_Substring"

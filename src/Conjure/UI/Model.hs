@@ -733,7 +733,10 @@ verticalRules =
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
 
+    , Vertical.Sequence.ExplicitBounded.rule_Comprehension
     , Vertical.Sequence.ExplicitBounded.rule_Card
+    , Vertical.Sequence.ExplicitBounded.rule_Image_Bool
+    , Vertical.Sequence.ExplicitBounded.rule_Image_NotABool
 
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
