@@ -14,10 +14,13 @@ instance Hashable  x => Hashable  (OpDefined x)
 instance ToJSON    x => ToJSON    (OpDefined x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpDefined x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpDefined x) where
-    typeOf (OpDefined x) = do
-        TypeFunction a _ <- typeOf x
-        return (TypeSet a)
+instance (Pretty x, TypeOf x) => TypeOf (OpDefined x) where
+    typeOf p@(OpDefined x) = do
+        ty <- typeOf x
+        case ty of
+            TypeFunction a _ -> return (TypeSet a)
+            TypeSequence _   -> return (TypeSet TypeInt)
+            _                -> raiseTypeError p
 
 instance (Pretty x, DomainOf x x) => DomainOf (OpDefined x) x where
     domainOf (OpDefined f) = do

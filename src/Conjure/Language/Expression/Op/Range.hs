@@ -14,10 +14,13 @@ instance Hashable  x => Hashable  (OpRange x)
 instance ToJSON    x => ToJSON    (OpRange x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpRange x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpRange x) where
-    typeOf (OpRange x) = do
-        TypeFunction _ a <- typeOf x
-        return (TypeSet a)
+instance (Pretty x, TypeOf x) => TypeOf (OpRange x) where
+    typeOf p@(OpRange x) = do
+        ty <- typeOf x
+        case ty of
+            TypeFunction _ a -> return (TypeSet a)
+            TypeSequence a   -> return (TypeSet a)
+            _                -> raiseTypeError p
 
 instance (Pretty x, DomainOf x x) => DomainOf (OpRange x) x where
     domainOf (OpRange f) = do
