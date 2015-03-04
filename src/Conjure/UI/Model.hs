@@ -305,7 +305,10 @@ executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
 
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
-        Compact -> return [minimumBy compactCompareAnswer (map snd options)]
+        Compact -> do
+                   let mi = minimumBy compactCompareAnswer (map snd options)
+                   c <- storeChoice config question mi
+                   return [c]
 
         FollowLog -> logFollow config question options
 
@@ -315,7 +318,9 @@ executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
           -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
           return [newAns]
 
-        _  -> executeStrategy options st
+        _  -> do
+          cs <- executeStrategy options st
+          mapM (storeChoice config question) cs
 
 
 
