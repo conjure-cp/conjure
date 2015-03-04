@@ -1,11 +1,17 @@
 language ESSENCE' 1.0
 
 given a: int
-find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of int(0..min(2, 1 + (a - 1)))
-find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..a)
+find x_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..2)] of int(0..min([2, 1 + (a - 1); int(1..2)]))
+find x_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..2)] of int(1..a)
 such that
-    x_ExplicitVarSizeWithFlags_Flags[2] > 0 -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
-    and([x_ExplicitVarSizeWithFlags_Flags[q1] = 0 -> x_ExplicitVarSizeWithFlags_Values[q1] = 1 | q1 : int(1..2)]),
-    x_ExplicitVarSizeWithFlags_Flags[2] > 0 -> x_ExplicitVarSizeWithFlags_Flags[1] > 0,
+    x_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
+    x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
+    and([x_ExplicitVarSizeWithFlags_Flags[q1] = 0 ->
+         x_ExplicitVarSizeWithFlags_Values[q1] = 1
+             | q1 : int(1..2)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
+    x_ExplicitVarSizeWithFlags_Flags[1] > 0,
     2 = sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2)])
 
