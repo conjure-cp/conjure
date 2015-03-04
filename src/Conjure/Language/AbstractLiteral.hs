@@ -87,7 +87,6 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
 instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a where
 
-    domainOf (AbsLitTuple        []) = return (DomainTuple [])
     domainOf (AbsLitTuple        xs) = DomainTuple  <$> mapM domainOf xs
 
     domainOf (AbsLitRecord       xs) = DomainRecord <$> sequence [ do t <- domainOf x ; return (n,t)
@@ -96,16 +95,12 @@ instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a wher
     domainOf (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the domain of variant literal."
     domainOf (AbsLitVariant (Just t) _ _) = return (DomainVariant t)
 
-    domainOf (AbsLitMatrix _   []  ) = return (DomainMatrix DomainAny DomainAny)
     domainOf (AbsLitMatrix ind inn ) = DomainMatrix ind <$> (mconcat <$> mapM domainOf inn)
 
-    domainOf (AbsLitSet         [] ) = return (DomainSet def def DomainAny)
     domainOf (AbsLitSet         xs ) = DomainSet def def <$> (mconcat <$> mapM domainOf xs)
 
-    domainOf (AbsLitMSet        [] ) = return (DomainMSet def def DomainAny)
     domainOf (AbsLitMSet        xs ) = DomainMSet def def <$> (mconcat <$> mapM domainOf xs)
 
-    domainOf (AbsLitFunction    [] ) = return (DomainFunction def def DomainAny DomainAny)
     domainOf (AbsLitFunction    xs ) = DomainFunction def def
                                                 <$> (mconcat <$> mapM (domainOf . fst) xs)
                                                 <*> (mconcat <$> mapM (domainOf . snd) xs)
@@ -116,14 +111,12 @@ instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a wher
         in
             DomainSequence def attr <$> (mconcat <$> mapM domainOf xs)
 
-    domainOf (AbsLitRelation    [] ) = return (DomainRelation def def [])
     domainOf (AbsLitRelation    xss) = do
         ty <- mconcat <$> mapM (domainOf . AbsLitTuple) xss
         case ty of
             DomainTuple ts -> return (DomainRelation def def ts)
             _ -> bug "expecting DomainTuple in domainOf"
 
-    domainOf (AbsLitPartition   [] ) = return (DomainPartition def def DomainAny) 
     domainOf (AbsLitPartition   xss) = DomainPartition def def <$> (mconcat <$> mapM domainOf (concat xss))
 
 normaliseAbsLit :: (Ord c, ExpressionLike c) => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
