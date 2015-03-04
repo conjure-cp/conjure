@@ -16,7 +16,9 @@ import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf
 
+-- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper )
+
 
 type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
