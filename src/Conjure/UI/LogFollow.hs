@@ -135,6 +135,7 @@ logFollow config q@Question{..} options = do
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
     optionMatch ls a = error "dd"
 
+
     nullSetMay :: Set a -> Maybe (Set a)
     nullSetMay s | S.null s = Nothing
     nullSetMay s = Just s
@@ -143,8 +144,8 @@ logFollow config q@Question{..} options = do
     nullListMay  [] = Nothing
     nullListMay  xs = Just xs
 
-    setMapMaybe :: (a -> Maybe b) -> Set a -> Set b
-    setMapMaybe = error "d"
+    setMapMaybe :: (Ord b) => (a -> Maybe b) -> Set a -> Set b
+    setMapMaybe f = S.map (fromJustNote "setMapMaybe") . S.filter isJust . S.map f
 
 
 
