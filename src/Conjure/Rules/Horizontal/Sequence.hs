@@ -525,3 +525,49 @@ rule_Substring = "substring" `namedRule` theRule where
                         [ Generator (GenDomainNoRepr iPat $ mkDomainIntB 0 [essence| &maxSize - 1 |])]
             )
     theRule _ = na "rule_Substring"
+
+
+rule_Subsequence :: Rule
+rule_Subsequence = "subsequence" `namedRule` theRule where
+    theRule [essence| &a subsequence &b |] = do
+        TypeSequence{} <- typeOf a
+        TypeSequence{} <- typeOf b
+ 
+        DomainSequence _ (SequenceAttr aSizeAttr _) _ <- domainOf a
+        aMaxSize <- case aSizeAttr of
+                    SizeAttr_Size x -> return x
+                    SizeAttr_MaxSize x -> return x
+                    SizeAttr_MinMaxSize _ x -> return x
+                    _ -> fail "rule_Subsequence maxSize"
+
+        DomainSequence _ (SequenceAttr bSizeAttr _) _ <- domainOf b
+        bMaxSize <- case bSizeAttr of
+                    SizeAttr_Size x -> return x
+                    SizeAttr_MaxSize x -> return x
+                    SizeAttr_MinMaxSize _ x -> return x
+                    _ -> fail "rule_Subsequence maxSize"
+
+        return
+            ( "Horizontal rule for subsequence on 2 sequences"
+            , \ fresh ->
+                let
+                    (auxName, aux) = auxiliaryVar (fresh `at` 0)
+                    (iPat, i) = quantifiedVar (fresh `at` 1)
+                in
+                    WithLocals
+                        [essence|
+                            and([ &i[2] = image(&b, image(&aux, &i[1]))
+                                | &iPat <- &a
+                                ])
+                        |]
+                        (Left [ Declaration (FindOrGiven LocalFind auxName
+                                      (DomainSequence def (SequenceAttr aSizeAttr def) (mkDomainIntB 1 bMaxSize)))
+                              , SuchThat
+                                  [ [essence| and([ image(&aux, &i-1) < image(&aux, &i)
+                                                  | &iPat : int(2..&aMaxSize)
+                                                  ])
+                                    |]
+                                  ]
+                              ])
+            )
+    theRule _ = na "rule_Subsequence"

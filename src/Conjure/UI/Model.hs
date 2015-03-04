@@ -834,6 +834,7 @@ horizontalRules =
     , Horizontal.Sequence.rule_Restrict_Image
     , Horizontal.Sequence.rule_Restrict_Comprehension
     , Horizontal.Sequence.rule_Substring
+    , Horizontal.Sequence.rule_Subsequence
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection
