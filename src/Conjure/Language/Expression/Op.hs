@@ -69,7 +69,7 @@ mkOp op xs =
             "twoBars"   -> inject (MkOpTwoBars   (OpTwoBars   (headNote "twoBars takes a single argument"   xs)))
             "factorial" -> inject (MkOpFactorial (OpFactorial (headNote "factorial takes a single argument" xs)))
             _     -> bug ("Unknown operator:" <+> vcat [pretty op, pretty $ show $ textToLexeme op])
-            -- _     -> opFunctionImage (fromName (Name op)) xs
+            -- _     -> opImage (fromName (Name op)) xs
         Just l -> case l of
             L_true         -> inject $ MkOpTrue         $ OpTrue         (headNote "true takes a single argument."     xs)
             L_toInt        -> inject $ MkOpToInt        $ OpToInt        (headNote "toInt takes a single argument."    xs)

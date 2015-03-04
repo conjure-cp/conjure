@@ -34,7 +34,7 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
 rule_Image_Literal_Bool :: Rule
 rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
     theRule p = do
-        (func, arg)                      <- match opFunctionImage p
+        (func, arg)                      <- match opImage p
         (TypeFunction _ TypeBool, elems) <- match functionLiteral func
         -- let argIsUndef = make opNot $ make opOr $ fromList
         --         [ [essence| &a = &arg |]
@@ -59,7 +59,7 @@ rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule wher
 rule_Image_Literal_Int :: Rule
 rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
     theRule p = do
-        (func, arg)                     <- match opFunctionImage p
+        (func, arg)                     <- match opImage p
         (TypeFunction _ TypeInt, elems) <- match functionLiteral func
         return
             ( "Image of function literal"
@@ -499,7 +499,7 @@ rule_In = "function-in" `namedRule` theRule where
 rule_Restrict_Image :: Rule
 rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
     theRule p = do
-        (func', arg) <- match opFunctionImage p
+        (func', arg) <- match opImage p
         (func , dom) <- match opRestrict func'
         TypeFunction{} <- typeOf func
         return
@@ -507,7 +507,7 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) (Right [bob])
+                    in  WithLocals (make opImage func arg) (Right [bob])
             )
 
 
@@ -534,14 +534,14 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
-rule_Mk_FunctionImage :: Rule
-rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
+rule_Mk_Image :: Rule
+rule_Mk_Image = "mk-function-image" `namedRule` theRule where
     theRule p = do
         (f, [Just arg]) <- match opRelationProj p
         TypeFunction{}  <- typeOf f
         return
             ( "This is a function image."
-            , const $ make opFunctionImage f arg
+            , const $ make opImage f arg
             )
 
 
@@ -563,7 +563,7 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
@@ -610,7 +610,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
@@ -655,7 +655,7 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
-        (func, arg) <- match opFunctionImage expr2
+        (func, arg) <- match opImage expr2
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions

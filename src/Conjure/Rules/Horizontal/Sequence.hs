@@ -21,10 +21,11 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
             ( "Comprehension on sequence literals"
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
+                     val = [essence| (&i, &outLiteral[&i]) |]
+                 in  Comprehension (upd val body)
                          $  gofBefore
-                         ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gofAfter
+                         ++ [Generator (GenDomainNoRepr iPat $ mkDomainIntB 1 (fromInt $ genericLength elems))]
+                         ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -32,7 +33,7 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
 rule_Image_Literal_Bool :: Rule
 rule_Image_Literal_Bool = "sequence-image-literal-bool" `namedRule` theRule where
     theRule p = do
-        (func, arg)                    <- match opFunctionImage p
+        (func, arg)                    <- match opImage p
         (TypeSequence TypeBool, elems) <- match sequenceLiteral func
         -- let argIsUndef = make opNot $ make opOr $ fromList
         --         [ [essence| &a = &arg |]
@@ -58,7 +59,7 @@ rule_Image_Literal_Bool = "sequence-image-literal-bool" `namedRule` theRule wher
 rule_Image_Literal_Int :: Rule
 rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
     theRule p = do
-        (func, arg)                   <- match opFunctionImage p
+        (func, arg)                   <- match opImage p
         (TypeSequence TypeInt, elems) <- match sequenceLiteral func
         return
             ( "Image of sequence literal"
@@ -307,7 +308,7 @@ rule_In = "sequence-in" `namedRule` theRule where
 rule_Restrict_Image :: Rule
 rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
     theRule p = do
-        (func', arg) <- match opFunctionImage p
+        (func', arg) <- match opImage p
         (func , dom) <- match opRestrict func'
         TypeSequence{} <- typeOf func
         return
@@ -315,7 +316,7 @@ rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) (Right [bob])
+                    in  WithLocals (make opImage func arg) (Right [bob])
             )
 
 
@@ -342,14 +343,14 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
-rule_Mk_FunctionImage :: Rule
-rule_Mk_FunctionImage = "mk-sequence-image" `namedRule` theRule where
+rule_Mk_Image :: Rule
+rule_Mk_Image = "mk-sequence-image" `namedRule` theRule where
     theRule p = do
         (f, [Just arg]) <- match opRelationProj p
         TypeSequence{}  <- typeOf f
         return
             ( "This is a sequence image."
-            , const $ make opFunctionImage f arg
+            , const $ make opImage f arg
             )
 
 
@@ -371,7 +372,7 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
@@ -418,7 +419,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted sequences
@@ -463,7 +464,7 @@ rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
-        (func, arg) <- match opFunctionImage expr2
+        (func, arg) <- match opImage expr2
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted sequences
@@ -517,7 +518,7 @@ rule_Substring = "substring" `namedRule` theRule where
                     (jPat, j) = quantifiedVar (fresh `at` 1)
                 in  make opOr $ Comprehension
                         (make opAnd $ Comprehension
-                            [essence| &a(&i + &j) = &b(&i + &j) |]
+                            [essence| image(&a, &i + &j) = image(&b, &i + &j) |]
                             [ Generator (GenDomainNoRepr jPat $ mkDomainIntB 1 aMaxSize)
                             , Condition [essence| &i + &j <= |&a| |]
                             , Condition [essence| &i + &j <= |&b| |]

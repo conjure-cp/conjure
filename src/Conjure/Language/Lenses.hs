@@ -383,7 +383,7 @@ opParticipants _ =
     )
 
 
-opFunctionImage
+opImage
     :: ( Op x :< x
        , Pretty x
        , MonadFail m
@@ -392,13 +392,13 @@ opFunctionImage
     -> ( x -> x -> x
        , x -> m (x, x)
        )
-opFunctionImage _ =
-    ( \ x y -> inject $ MkOpFunctionImage $ OpFunctionImage x y
+opImage _ =
+    ( \ x y -> inject $ MkOpImage $ OpImage x y
     , \ p -> do
             op <- project p
             case op of
-                MkOpFunctionImage (OpFunctionImage x y) -> return (x,y)
-                _ -> na ("Lenses.opFunctionImage:" <++> pretty p)
+                MkOpImage (OpImage x y) -> return (x,y)
+                _ -> na ("Lenses.opImage:" <++> pretty p)
     )
 
 

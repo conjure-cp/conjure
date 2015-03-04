@@ -630,9 +630,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ Horizontal.Function.rule_Mk_FunctionImage           -- this is a clean-up rule
+    [ [ Horizontal.Function.rule_Mk_Image           -- this is a clean-up rule
                                                             -- it should run as early as possible.
-      , Horizontal.Sequence.rule_Mk_FunctionImage
+      , Horizontal.Sequence.rule_Mk_Image
       ]
     , [ rule_FullEvaluate
       ]

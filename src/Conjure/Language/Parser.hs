@@ -626,7 +626,7 @@ parseOthers = [ parseFunctional l
             lexeme l
             xs <- parens $ parseExpr `sepBy1` comma
             return $ case (l,xs) of
-                (L_image, [y,z]) -> Op $ MkOpFunctionImage $ OpFunctionImage y z
+                (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
                 _ -> mkOp (fromString $ show $ lexemeFace l) xs
 
 parseWithLocals :: Parser Expression
