@@ -120,7 +120,16 @@ logFollow config q@Question{..} options = do
         Just (fou1 minMatch, newStore)
 
     ascMatch :: (QuestionAnswered, GenOrd) -> Maybe (QuestionAnswered,  GenOrd, Pref)
-    ascMatch (q,_) = error "d"
+    ascMatch x = case f x of
+                   (_,_,0) -> Nothing
+                   y       -> Just y
+
+      where
+      qAsSet = (I.fromList . map holeHash) qAscendants
+
+      f :: (QuestionAnswered, GenOrd) -> (QuestionAnswered, GenOrd, Pref)
+      f (a,ord) | (I.null (qAscendants_ a) && I.null qAsSet) = (a, ord, 1)
+      f (a,ord) = (a, ord, I.size (qAscendants_ a `I.intersection` qAsSet))
 
     optionMatch :: Set (QuestionAnswered, GenOrd, Pref) -> Answer
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
