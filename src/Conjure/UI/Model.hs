@@ -63,6 +63,9 @@ import qualified Conjure.Rules.Vertical.Function.FunctionND as Vertical.Function
 import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.Function.FunctionNDPartial
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
+import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
+import qualified Conjure.Rules.Vertical.Sequence.ExplicitBounded as Vertical.Sequence.ExplicitBounded
+
 import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
 import qualified Conjure.Rules.Vertical.Relation.RelationAsSet as Vertical.Relation.RelationAsSet
@@ -118,7 +121,7 @@ outputModels config model = do
                                        |> concat
                                 else paddedNum i
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    liftIO $ writeFile filename (renderWide eprime)
+                    liftIO $ writeFile filename (renderNormal eprime)
                     return (i+1)
 
     Pipes.foldM each
@@ -627,8 +630,9 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ Horizontal.Function.rule_Mk_FunctionImage           -- this is a clean-up rule
+    [ [ Horizontal.Function.rule_Mk_Image           -- this is a clean-up rule
                                                             -- it should run as early as possible.
+      , Horizontal.Sequence.rule_Mk_Image
       ]
     , [ rule_FullEvaluate
       ]
@@ -729,6 +733,11 @@ verticalRules =
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
 
+    , Vertical.Sequence.ExplicitBounded.rule_Comprehension
+    , Vertical.Sequence.ExplicitBounded.rule_Card
+    , Vertical.Sequence.ExplicitBounded.rule_Image_Bool
+    , Vertical.Sequence.ExplicitBounded.rule_Image_NotABool
+
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
@@ -802,6 +811,30 @@ horizontalRules =
     , Horizontal.Function.rule_Defined_Intersect
     , Horizontal.Function.rule_DefinedOrRange_Union
     , Horizontal.Function.rule_DefinedOrRange_Difference
+
+    , Horizontal.Sequence.rule_Comprehension_Literal
+    , Horizontal.Sequence.rule_Image_Bool
+    , Horizontal.Sequence.rule_Image_Int
+    , Horizontal.Sequence.rule_Comprehension_Image
+    , Horizontal.Sequence.rule_Image_Literal_Bool
+    , Horizontal.Sequence.rule_Image_Literal_Int
+    , Horizontal.Sequence.rule_Eq
+    , Horizontal.Sequence.rule_Neq
+    , Horizontal.Sequence.rule_Leq
+    , Horizontal.Sequence.rule_Lt
+    , Horizontal.Sequence.rule_Subset
+    , Horizontal.Sequence.rule_SubsetEq
+    , Horizontal.Sequence.rule_Supset
+    , Horizontal.Sequence.rule_SupsetEq
+    , Horizontal.Sequence.rule_Card
+    , Horizontal.Sequence.rule_Comprehension_PreImage
+    , Horizontal.Sequence.rule_Comprehension_Defined
+    , Horizontal.Sequence.rule_Comprehension_Range
+    , Horizontal.Sequence.rule_In
+    , Horizontal.Sequence.rule_Restrict_Image
+    , Horizontal.Sequence.rule_Restrict_Comprehension
+    , Horizontal.Sequence.rule_Substring
+    , Horizontal.Sequence.rule_Subsequence
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection

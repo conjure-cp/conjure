@@ -2,14 +2,7 @@
 
 module Conjure.Rules.Vertical.Function.FunctionAsRelation where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.TH
-import Conjure.Language.Lenses
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 -- TODO: this is incomplete

@@ -2,18 +2,7 @@
 
 module Conjure.Rules.Vertical.Tuple where
 
-import Conjure.Prelude
-import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Type
-import Conjure.Language.Pretty
-import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-
-import Conjure.Rules.Definition ( Rule(..), namedRule )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 rule_Tuple_Eq :: Rule

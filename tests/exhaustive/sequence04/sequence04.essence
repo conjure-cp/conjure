@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find x : sequence (size 4) of int(1..3)
+
+such that
+    forAll i : int(1..3) . !(sequence(i,i) substring x),
+    sequence(1,2) substring x,
+    sequence(2,3) substring x

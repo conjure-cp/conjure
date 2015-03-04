@@ -30,6 +30,7 @@ import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
 import Conjure.Representations.Function.FunctionNDPartial
 import Conjure.Representations.Function.FunctionAsRelation
+import Conjure.Representations.Sequence.ExplicitBounded
 import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
@@ -153,6 +154,9 @@ dispatch domain = do
             "FunctionNDPartial"             -> functionNDPartial
             "FunctionAsRelation"            -> functionAsRelation dispatch
             _ -> nope
+        DomainSequence r _ _ -> case r of
+            "ExplicitBounded"               -> sequenceExplicitBounded
+            _ -> nope
         DomainRelation r _ _ -> case r of
             "RelationAsMatrix"              -> relationAsMatrix
             "RelationAsSet"                 -> relationAsSet dispatch
@@ -173,6 +177,7 @@ allReprs =
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
+      , sequenceExplicitBounded
       , relationAsMatrix
       -- , partitionOccurrence
       ]

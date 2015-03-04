@@ -1,5 +1,7 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
@@ -410,7 +412,7 @@ instance TypeOf Expression where
                 ty <- typeOf c
                 case ty of
                     TypeBool -> return ()
-                    _        -> fail $ vcat ["Condition is not boolean."
+                    _        -> fail $ vcat [ "Condition is not boolean."
                                             , "Condition:" <+> pretty c
                                             , "In:" <+> pretty p
                                             ]
@@ -419,7 +421,9 @@ instance TypeOf Expression where
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
-instance DomainOf Expression Expression where
+instance
+    ( Monoid (Domain () Constant)
+    ) => DomainOf Expression Expression where
     domainOf (Reference _ (Just refTo)) = domainOf refTo
     domainOf (Constant x) = fmap Constant <$> domainOf x
     domainOf (AbstractLiteral x) = domainOf x
@@ -450,14 +454,13 @@ instance Op Expression :< Expression where
     project (Op x) = return x
     project x = fail ("projecting Op out of Expression:" <+> pretty x)
 
+instance Op Constant :< Constant where
+    inject x = bug ("injecting Op into a Constant:" <+> pretty x)
+    project x = fail ("projecting Op out of a Constant:" <+> pretty x)
+
 instance CanBeAnAlias Expression where
     isAlias (Reference _ (Just (Alias x))) = Just x
     isAlias _ = Nothing
-
-instance OperatorContainer Expression where
-    injectOp = Op
-    projectOp (Op op) = return op
-    projectOp x = fail ("Not an operator:" <++> pretty (show x))
 
 instance ReferenceContainer Expression where
     fromName nm = Reference nm Nothing
@@ -604,7 +607,9 @@ instance Pretty ReferenceTo where
     pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
 
-instance DomainOf ReferenceTo Expression where
+instance
+    ( Monoid (Domain () Constant)
+    ) => DomainOf ReferenceTo Expression where
     domainOf (Alias x) = domainOf x
     domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
     domainOf (DeclNoRepr  _ _ dom) = return dom

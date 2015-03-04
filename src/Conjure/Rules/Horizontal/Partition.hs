@@ -2,18 +2,7 @@
 
 module Conjure.Rules.Horizontal.Partition where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
-import Conjure.Language.Pretty
-import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 -- TODO: when _gocBefore and _gocAfter are /= []

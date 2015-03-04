@@ -8,4 +8,7 @@ import Conjure.Language.Domain
 
 
 class DomainOf a x | a -> x where
-    domainOf :: MonadFail m => a -> m (Domain () x)
+    domainOf ::
+        ( MonadFail m
+        , Monoid (Domain () x)              -- ability to "combine" domains
+        ) => a -> m (Domain () x)

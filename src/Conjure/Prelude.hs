@@ -103,6 +103,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
                               , head, init, tail, last
+                              , inits, tails
                               , findIndex
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
@@ -118,7 +119,7 @@ import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
 
 -- safe
-import Safe as X ( at, atNote, readMay, readNote, headNote, fromJustNote )
+import Safe as X ( at, atNote, atMay, readMay, readNote, headNote, fromJustNote )
 
 -- hashable
 import Data.Hashable as X ( Hashable(..), hash )

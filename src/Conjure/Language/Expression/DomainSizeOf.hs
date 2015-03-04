@@ -5,7 +5,9 @@ module Conjure.Language.Expression.DomainSizeOf where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.AdHoc
 import Conjure.Language.Domain
+import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Expression.Op
 import Conjure.Language.Lenses
 
@@ -65,7 +67,7 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf d = fail ("not implemented: domainSizeOf:" <+> pretty d)
 
 
-domainSizeOfRange :: (OperatorContainer a, ExpressionLike a, Pretty a, MonadFail m, Num a) => Range a -> m a
+domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a) => Range a -> m a
 domainSizeOfRange RangeSingle{} = return 1
 domainSizeOfRange (RangeBounded l u) = return $ make opSum $ fromList [1, make opMinus u l]
 domainSizeOfRange r = fail ("domainSizeOf infinite range:" <+> pretty r)

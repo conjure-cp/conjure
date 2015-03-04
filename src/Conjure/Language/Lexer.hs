@@ -87,6 +87,9 @@ data Lexeme
     | L_surjective
     | L_bijective
 
+    -- type: sequence
+    | L_sequence
+
     -- type: relation
     | L_relation
 
@@ -226,6 +229,11 @@ data Lexeme
 
     | L_LeftArrow
 
+    | L_subsequence
+    | L_subsequences
+    | L_substring
+    | L_substrings
+
     deriving (Eq, Ord, Show, Generic)
 
 instance Hashable Lexeme
@@ -310,6 +318,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     -- , ( L_injective, "injective" )
     -- , ( L_surjective, "surjective" )
     -- , ( L_bijective, "bijective" )
+    , ( L_sequence, "sequence" )
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
     -- , ( L_regular, "regular" )
@@ -408,6 +417,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_DotLeq          , ".<="   )
 
     , ( L_LeftArrow       , "<-"   )
+
+    , ( L_subsequence     , "subsequence"  )
+    , ( L_substring       , "substring"    )
 
     ]
 
