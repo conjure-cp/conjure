@@ -99,6 +99,4 @@ mkOp op xs =
             L_participants -> inject $ MkOpParticipants $ OpParticipants (headNote "participants takes a single argument." xs)
             L_active       -> inject $ MkOpActive       $ OpActive       (atNote "active 1" xs 0)
                                                                            (atNote "active 2" xs 1 |> nameOut |> fromMaybe (bug "active 2"))
-            L_subsequences -> inject $ MkOpSubsequences $ OpSubsequences (atNote "subsequences 1" xs 0) (atMay xs 1)
-            L_substrings   -> inject $ MkOpSubstrings   $ OpSubstrings   (atNote "substrings 1" xs 0) (atMay xs 1)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))

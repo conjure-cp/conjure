@@ -419,9 +419,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_LeftArrow       , "<-"   )
 
     , ( L_subsequence     , "subsequence"  )
-    , ( L_subsequences    , "subsequences" )
     , ( L_substring       , "substring"    )
-    , ( L_substrings      , "substrings"   )
 
     ]
 
