@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns #-}
+{-# OPTIONS_GHC -fno-warn-orphans #-}
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
@@ -63,11 +64,9 @@ import qualified Data.Text as T
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
+-- intSet
 import Data.IntSet(IntSet)
 import qualified Data.IntSet as I
-import Data.Set(Set)
-import qualified Data.Set as S
-
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -270,9 +269,6 @@ instance Serialize QuestionAnswered
 instance Hashable  QuestionAnswered
 instance Hashable  IntSet  where
     hashWithSalt s i = hashWithSalt s  (I.toList i)
-
-instance Hashable a => Hashable (Set a) where
-    hashWithSalt s i = hashWithSalt s  (S.toList i)
 
 
 data ModelInfo = ModelInfo
