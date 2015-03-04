@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.AbstractLiteral where
 
@@ -7,6 +8,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.Domain
+-- import Conjure.Language.Domain.Monoid
 import Conjure.Language.Type
 import Conjure.Language.AdHoc
 
@@ -85,7 +87,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
-instance (DomainOf a a, Pretty a) => DomainOf (AbstractLiteral a) a where
+instance (Monoid (Domain() a), DomainOf a a, ExpressionLike a, Pretty a) => DomainOf (AbstractLiteral a) a where
 
     domainOf (AbsLitTuple        []) = return (DomainTuple [])
     domainOf (AbsLitTuple        xs) = DomainTuple  <$> mapM domainOf xs
@@ -110,8 +112,11 @@ instance (DomainOf a a, Pretty a) => DomainOf (AbstractLiteral a) a where
                                                 <$> (mconcat <$> mapM (domainOf . fst) xs)
                                                 <*> (mconcat <$> mapM (domainOf . snd) xs)
 
-    domainOf (AbsLitSequence    [] ) = return (DomainSequence def def DomainAny)
-    domainOf (AbsLitSequence    xs ) = DomainSequence def def <$> (mconcat <$> mapM domainOf xs)
+    domainOf (AbsLitSequence    xs ) =
+        let
+            attr = SequenceAttr (SizeAttr_Size (fromInt $ genericLength xs)) def
+        in
+            DomainSequence def attr <$> (mconcat <$> mapM domainOf xs)
 
     domainOf (AbsLitRelation    [] ) = return (DomainRelation def def [])
     domainOf (AbsLitRelation    xss) = do

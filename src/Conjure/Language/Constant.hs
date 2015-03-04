@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
@@ -61,7 +62,9 @@ instance TypeOf Constant where
     typeOf (TypedConstant _ ty)       = return ty
     typeOf (ConstantUndefined _ ty)   = return ty
 
-instance DomainOf Constant Constant where
+instance
+    ( Monoid (Domain () Constant)
+    ) => DomainOf Constant Constant where
     domainOf ConstantBool{}             = return DomainBool
     domainOf i@ConstantInt{}            = return $ DomainInt [RangeSingle i]
     domainOf (ConstantEnum defn _ _ )   = return (DomainEnum defn Nothing Nothing)
@@ -71,7 +74,7 @@ instance DomainOf Constant Constant where
     domainOf (TypedConstant x _)        = domainOf x
     domainOf ConstantUndefined{}        = fail "DomainOf-Constant-ConstantUndefined"
 
-instance DomainSizeOf Constant Integer where
+instance (Monoid (Domain () Constant)) => DomainSizeOf Constant Integer where
     domainSizeOf DomainBool{} = return 2
     domainSizeOf (DomainInt rs) = domainSizeOfRanges rs
     domainSizeOf DomainEnum{} = fail "domainSizeOf: Unknown for given enum."
@@ -104,7 +107,7 @@ intPow = (^)
 domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
 domainSizeOfRanges = liftM genericLength . valuesInIntDomain
 
-instance DomainSizeOf Constant Constant where
+instance Monoid (Domain () Constant) => DomainSizeOf Constant Constant where
     domainSizeOf = fmap ConstantInt . domainSizeOf
 
 instance Pretty Constant where
