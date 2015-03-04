@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.AbstractLiteral where
 
@@ -8,7 +7,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Name
 import Conjure.Language.Domain
--- import Conjure.Language.Domain.Monoid
 import Conjure.Language.Type
 import Conjure.Language.AdHoc
 
@@ -87,7 +85,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
-instance (Monoid (Domain() a), DomainOf a a, ExpressionLike a, Pretty a) => DomainOf (AbstractLiteral a) a where
+instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a where
 
     domainOf (AbsLitTuple        []) = return (DomainTuple [])
     domainOf (AbsLitTuple        xs) = DomainTuple  <$> mapM domainOf xs
