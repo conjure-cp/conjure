@@ -1,6 +1,7 @@
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
+    , trySimplify
     ) where
 
 -- conjure
@@ -13,6 +14,12 @@ import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate
 
+
+trySimplify :: Expression -> Expression
+-- if the expression can be evaluated into a Constant, do it.
+trySimplify x | Just c <- instantiateExpression [] x = Constant c
+-- otherwise, try the same on its children
+trySimplify x = descend trySimplify x
 
 instantiateExpression
     :: MonadFail m

@@ -1,11 +1,11 @@
 language ESSENCE' 1.0
 
 find x_Occurrence: matrix indexed by [int(2..5)] of bool
-find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + (5 - 2))
-find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (5 - 2))] of int(2..5)
+find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(2..5)
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
-find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (5 - 2))] of bool
-find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (5 - 2))] of int(2..5)
+find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
+find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
 such that
     and([x_Occurrence[i] /\ y_Occurrence[j] -> i + 2 = j | i : int(2..5), j : int(2..5)]),
     1 <= sum([x_Occurrence[q1] | q1 : int(2..5)]),

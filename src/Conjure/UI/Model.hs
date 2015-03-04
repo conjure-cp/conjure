@@ -28,7 +28,7 @@ import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
-import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
 import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
@@ -495,7 +495,10 @@ updateDeclarations model =
         onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [Declaration (FindOrGiven forg n (forgetRepr d)) | (n, d) <- outs]
+                Right outs -> [ Declaration (FindOrGiven forg n d')
+                              | (n, d) <- outs
+                              , let d' = fmap trySimplify $ forgetRepr d
+                              ]
 
     in
         model { mStatements = statements }
