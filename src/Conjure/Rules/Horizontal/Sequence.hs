@@ -9,6 +9,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
+import Conjure.Language.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH
 
@@ -215,6 +216,7 @@ rule_Comprehension_PreImage = "sequence-preImage" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
+        TypeSequence{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the preImage of a sequence"
@@ -236,35 +238,43 @@ rule_Comprehension_PreImage = "sequence-preImage" `namedRule` theRule where
 
 rule_Card :: Rule
 rule_Card = "sequence-cardinality" `namedRule` theRule where
-    theRule [essence| |&f| |] = do
-        TypeSequence{} <- typeOf f
-        return
-            ( "Sequence cardinality"
-            , const [essence| |toSet(&f)| |]
-            )
+    theRule [essence| |&s| |] = do
+        TypeSequence{} <- typeOf s
+        return ( "Horizontal rule for sequence cardinality."
+               , \ fresh ->
+                    let (iPat, _) = quantifiedVar (fresh `at` 0)
+                    in  [essence| sum &iPat in &s . 1 |]
+               )
     theRule _ = na "rule_Card"
 
 
--- | TODO: This may allow repetitions.
 rule_Comprehension_Defined :: Rule
 rule_Comprehension_Defined = "sequence-defined" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gofBefore, (pat, expr), gofAfter) <- matchFirst gensOrConds $ \ gof -> case gof of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_PreImage"
-        func <- match opDefined expr
+            _ -> na "rule_Comprehension_Defined"
+        s                                            <- match opDefined expr
+        DomainSequence _ (SequenceAttr sizeAttr _) _ <- domainOf s
+        maxSize <- case sizeAttr of
+                    SizeAttr_Size x -> return x
+                    SizeAttr_MaxSize x -> return x
+                    SizeAttr_MinMaxSize _ x -> return x
+                    _ -> fail "rule_Comprehension_Defined maxSize"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
             , \ fresh ->
                     let
                         (jPat, j) = quantifiedVar (fresh `at` 0)
-                        val = [essence| &j[1] |]
+                        val = j
                     in
                         Comprehension
                             (upd val body)
                             $  gofBefore
-                            ++ [ Generator (GenInExpr jPat func) ]
+                            ++ [ Generator (GenDomainNoRepr jPat $ mkDomainIntB 1 maxSize)
+                               , Condition [essence| &j <= |&s| |]
+                               ]
                             ++ transformBi (upd val) gofAfter
             )
     theRule _ = na "rule_Comprehension_Defined"
@@ -278,6 +288,7 @@ rule_Comprehension_Range = "sequence-range" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         func <- match opRange expr
+        TypeSequence{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over range(f)"
