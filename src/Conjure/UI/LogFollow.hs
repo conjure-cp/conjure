@@ -138,7 +138,10 @@ logFollow config q@Question{..} options = do
 
       where
       f :: (QuestionAnswered, GenOrd, Pref) -> Bool
-      f _ = error "dd"
+      f (qa,_,_) | (aRuleName_ qa) /= (show $ aRuleName a) = False
+
+      f (AnsweredRule{},_,_)  = True
+      f (AnsweredRepr{aDom_=dom},_,_) = compareDoms dom (getReprFromAnswer a)
 
       minMaySet :: Set (QuestionAnswered, GenOrd, Pref)
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
@@ -161,57 +164,6 @@ logFollow config q@Question{..} options = do
 
     setMapMaybe :: (Ord b) => (a -> Maybe b) -> Set a -> Set b
     setMapMaybe f = S.map (fromJustNote "setMapMaybe") . S.filter isJust . S.map f
-
-
-
-    -- matching ::  AnswerStore -> Maybe [Answer]
-    -- matching before =
-    --   case (catMaybes $ map (haveMapping before) (map snd options))  of
-    --        []        -> Nothing
-    --        [(x,_)]   -> Just [x]
-    --        xs        -> case maxes xs of
-    --                       []      -> error "matching no max"
-    --                       xx -> Just . map fst $ xx
-
-    -- maxes xs = let (_,maxSize) = maximumBy (compare `on` snd) xs
-    --            in  filter (\(_,i) -> i == maxSize ) xs
-
-
-
-    -- haveMapping :: AnswerStore -> Answer -> Maybe (Answer, Pref)
-    -- haveMapping before ans@Answer{..} = do
-    --   previous <- M.lookup (show aRuleName, holeHash qHole) before
-    --   mappings <- pickMapping previous
-    --   case filter (process ans . fst) (S.toList mappings) of
-    --     []  -> Nothing
-    --     ( (_,i) :_)   -> Just (ans,i)
-
-    --     where
-    --       qAsSet = (I.fromList . map holeHash) qAscendants
-
-    --       pickMapping :: Set (QuestionAnswered, GenOrd)
-    --                   -> Maybe ( Set (QuestionAnswered,Pref,GenOrd) )
-    --       pickMapping =  _f . S.filter (\(_,i,_) -> i /= 0 ) .  S.map f
-
-    --       f :: (QuestionAnswered, GenOrd) -> (QuestionAnswered, Pref, GenOrd)
-    --       f (a,ord) | (I.null (qAscendants_ a) && I.null qAsSet) = (a, 1, ord)
-    --       f (a,ord) = (a, I.size (qAscendants_ a `I.intersection` qAsSet), ord)
-
-    --       toMaybe s | S.null s    = Nothing
-    --       toMaybe s | S.size s == 1 = Just s
-    --       toMaybe xs = let (_,maxSize) = maximumBy (compare `on` snd) (S.toList xs) in
-    --                    case filter (\(_,i) -> i == maxSize ) (S.toList xs) of
-    --                      []      -> error "haveMapping toMaybe cannot happen"
-    --                      xx      -> Just $ S.fromList xx
-
-
-
-    --       process a AnsweredRepr{..} = compareDoms aDom_ (getReprFromAnswer a)
-    --       process _   AnsweredRule{}   = True
-
-
-
-
 
 
 
