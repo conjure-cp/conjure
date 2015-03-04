@@ -37,7 +37,9 @@ import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 -- | Assume: the input is already normalised.
 --   Make sure the output is normalised.
 class EvaluateOp op where
-    evaluateOp :: MonadFail m => op Constant -> m Constant
+    evaluateOp :: ( MonadFail m
+                  , Monoid (Domain () Constant)                 -- ability to "combine" domains
+                  ) => op Constant -> m Constant
 
 class SimplifyOp op x where
     simplifyOp :: ( MonadFail m
@@ -137,39 +139,41 @@ data Fixity = FNone | FLeft | FRight
 
 operators :: [(Lexeme,Fixity,Int)]
 operators =
-    [ ( L_Plus      , FLeft  ,  600 )
-    , ( L_Minus     , FLeft  ,  600 )
-    , ( L_Times     , FLeft  ,  700 )
-    , ( L_Div       , FLeft  ,  700 )
-    , ( L_Mod       , FLeft  ,  700 )
-    , ( L_Pow       , FRight ,  800 )
-    , ( L_Lt        , FNone  ,  400 )
-    , ( L_Leq       , FNone  ,  400 )
-    , ( L_Gt        , FNone  ,  400 )
-    , ( L_Geq       , FNone  ,  400 )
-    , ( L_Neq       , FNone  ,  400 )
-    , ( L_Eq        , FNone  ,  400 )
-    , ( L_Or        , FLeft  ,  110 )
-    , ( L_And       , FLeft  ,  120 )
-    , ( L_Imply     , FNone  ,   50 )
-    , ( L_Iff       , FNone  ,   50 )
-    , ( L_union     , FLeft  ,  600 )
-    , ( L_intersect , FLeft  ,  700 )
-    , ( L_subset    , FNone  ,  400 )
-    , ( L_subsetEq  , FNone  ,  400 )
-    , ( L_supset    , FNone  ,  400 )
-    , ( L_supsetEq  , FNone  ,  400 )
-    , ( L_in        , FNone  ,  550 )
+    [ ( L_Plus        , FLeft  ,  600 )
+    , ( L_Minus       , FLeft  ,  600 )
+    , ( L_Times       , FLeft  ,  700 )
+    , ( L_Div         , FLeft  ,  700 )
+    , ( L_Mod         , FLeft  ,  700 )
+    , ( L_Pow         , FRight ,  800 )
+    , ( L_Lt          , FNone  ,  400 )
+    , ( L_Leq         , FNone  ,  400 )
+    , ( L_Gt          , FNone  ,  400 )
+    , ( L_Geq         , FNone  ,  400 )
+    , ( L_Neq         , FNone  ,  400 )
+    , ( L_Eq          , FNone  ,  400 )
+    , ( L_Or          , FLeft  ,  110 )
+    , ( L_And         , FLeft  ,  120 )
+    , ( L_Imply       , FNone  ,   50 )
+    , ( L_Iff         , FNone  ,   50 )
+    , ( L_union       , FLeft  ,  600 )
+    , ( L_intersect   , FLeft  ,  700 )
+    , ( L_subset      , FNone  ,  400 )
+    , ( L_subsetEq    , FNone  ,  400 )
+    , ( L_supset      , FNone  ,  400 )
+    , ( L_supsetEq    , FNone  ,  400 )
+    , ( L_subsequence , FNone  ,  400 )
+    , ( L_substring   , FNone  ,  400 )
+    , ( L_in          , FNone  ,  550 )
     -- , ( L_Colon     , FNone  ,   10 )
-    , ( L_HasRepr   , FNone  ,   10 )
-    , ( L_HasType   , FNone  ,   10 )
-    , ( L_HasDomain , FNone  ,   10 )
-    , ( L_LexLt     , FNone  ,  400 )
-    , ( L_LexLeq    , FNone  ,  400 )
-    , ( L_LexGt     , FNone  ,  400 )
-    , ( L_LexGeq    , FNone  ,  400 )
-    , ( L_DotLt     , FNone  ,  400 )
-    , ( L_DotLeq    , FNone  ,  400 )
+    , ( L_HasRepr     , FNone  ,   10 )
+    , ( L_HasType     , FNone  ,   10 )
+    , ( L_HasDomain   , FNone  ,   10 )
+    , ( L_LexLt       , FNone  ,  400 )
+    , ( L_LexLeq      , FNone  ,  400 )
+    , ( L_LexGt       , FNone  ,  400 )
+    , ( L_LexGeq      , FNone  ,  400 )
+    , ( L_DotLt       , FNone  ,  400 )
+    , ( L_DotLeq      , FNone  ,  400 )
     ]
 
 functionals :: [Lexeme]

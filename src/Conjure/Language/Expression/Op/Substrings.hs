@@ -16,9 +16,6 @@ instance Hashable  x => Hashable  (OpSubstrings x)
 instance ToJSON    x => ToJSON    (OpSubstrings x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSubstrings x) where parseJSON = genericParseJSON jsonOptions
 
-instance BinaryOperator (OpSubstrings x) where
-    opLexeme _ = L_substrings
-
 instance (TypeOf x, Pretty x) => TypeOf (OpSubstrings x) where
     typeOf p@(OpSubstrings a b) = do
         tyb <- maybe (return TypeInt) typeOf b

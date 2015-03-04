@@ -229,8 +229,10 @@ data Lexeme
 
     | L_LeftArrow
 
-    | L_substrings
+    | L_subsequence
     | L_subsequences
+    | L_substring
+    | L_substrings
 
     deriving (Eq, Ord, Show, Generic)
 
@@ -416,8 +418,10 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_LeftArrow       , "<-"   )
 
-    , ( L_substrings      , "substrings"   )
+    , ( L_subsequence     , "subsequence"  )
     , ( L_subsequences    , "subsequences" )
+    , ( L_substring       , "substring"    )
+    , ( L_substrings      , "substrings"   )
 
     ]
 
