@@ -106,8 +106,8 @@ logFollow config q@Question{..} options = do
 
     matching :: AnswerStore -> Maybe (Answer, AnswerStore)
     matching before = do
-        qsMatches  <- M.lookup (holeHash qHole) before
-        ascMatches <- nullSetMay $ setMapMaybe (ascMatch) qsMatches
+        qsMatches   <- M.lookup (holeHash qHole) before
+        ascMatches  <- nullSetMay $ setMapMaybe (ascMatch) qsMatches
         optsMatches <- nullListMay $ mapMaybe (optionMatch ascMatches) (map snd options)
 
         let maxAsc        = maximumBy (compare `on` fou4) optsMatches
