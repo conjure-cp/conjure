@@ -133,7 +133,22 @@ logFollow config q@Question{..} options = do
 
     optionMatch :: Set (QuestionAnswered, GenOrd, Pref) -> Answer
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
-    optionMatch ls a = error "dd"
+    optionMatch ls a =  minMaySet $ S.filter f ls
+
+
+      where
+      f :: (QuestionAnswered, GenOrd, Pref) -> Bool
+      f _ = error "dd"
+
+      minMaySet :: Set (QuestionAnswered, GenOrd, Pref)
+                -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
+      minMaySet s | S.null s = Nothing
+      minMaySet s =
+          let maxAsc        = maximumBy (compare `on` thd3) (S.toList s)
+              maxAscMatches = filter (\t -> thd3 t == thd3 maxAsc ) (S.toList s)
+              (b,c,d)      = minimumBy (compare `on` snd3) maxAscMatches
+          in  Just (a, b,c,d)
+
 
 
     nullSetMay :: Set a -> Maybe (Set a)
