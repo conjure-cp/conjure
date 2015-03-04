@@ -64,6 +64,7 @@ import qualified Conjure.Rules.Vertical.Function.FunctionNDPartial as Vertical.F
 import qualified Conjure.Rules.Vertical.Function.FunctionAsRelation as Vertical.Function.FunctionAsRelation
 
 import qualified Conjure.Rules.Horizontal.Sequence as Horizontal.Sequence
+import qualified Conjure.Rules.Vertical.Sequence.ExplicitBounded as Vertical.Sequence.ExplicitBounded
 
 import qualified Conjure.Rules.Horizontal.Relation as Horizontal.Relation
 import qualified Conjure.Rules.Vertical.Relation.RelationAsMatrix as Vertical.Relation.RelationAsMatrix
@@ -732,6 +733,8 @@ verticalRules =
     , Vertical.Function.FunctionAsRelation.rule_Comprehension
     , Vertical.Function.FunctionAsRelation.rule_Image_Eq
 
+    , Vertical.Sequence.ExplicitBounded.rule_Card
+
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
 
@@ -827,6 +830,7 @@ horizontalRules =
     , Horizontal.Sequence.rule_In
     , Horizontal.Sequence.rule_Restrict_Image
     , Horizontal.Sequence.rule_Restrict_Comprehension
+    , Horizontal.Sequence.rule_Substring
 
     , Horizontal.Relation.rule_Comprehension_Literal
     , Horizontal.Relation.rule_Comprehension_Projection

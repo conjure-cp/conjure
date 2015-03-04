@@ -2,15 +2,7 @@
 
 module Conjure.Rules.BubbleUp where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
-import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, matchFirst )
+import Conjure.Rules.Import
 
 
 rule_MergeNested :: Rule

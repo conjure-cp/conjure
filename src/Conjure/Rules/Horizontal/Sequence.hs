@@ -1,21 +1,8 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE FlexibleContexts #-}
 
 module Conjure.Rules.Horizontal.Sequence where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
-import Conjure.Language.Pretty
-import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 rule_Comprehension_Literal :: Rule
@@ -498,3 +485,44 @@ rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule wh
                         ++ transformBi (upd j) gofAfter
             )
     theRule _ = na "rule_Comprehension_Image"
+
+
+rule_Substring :: Rule
+rule_Substring = "substring" `namedRule` theRule where
+    theRule [essence| &a substring &b |] = do
+        TypeSequence{} <- typeOf a
+        TypeSequence{} <- typeOf b
+
+        DomainSequence _ (SequenceAttr aSizeAttr _) _ <- domainOf a
+        aMaxSize <- case aSizeAttr of
+                    SizeAttr_Size x -> return x
+                    SizeAttr_MaxSize x -> return x
+                    SizeAttr_MinMaxSize _ x -> return x
+                    _ -> fail "rule_Substring maxSize"
+
+        DomainSequence _ (SequenceAttr bSizeAttr _) _ <- domainOf b
+        bMaxSize <- case bSizeAttr of
+                    SizeAttr_Size x -> return x
+                    SizeAttr_MaxSize x -> return x
+                    SizeAttr_MinMaxSize _ x -> return x
+                    _ -> fail "rule_Substring maxSize"
+
+        let maxSize = [essence| max([&aMaxSize, &bMaxSize]) |]
+
+        return
+            ( "substring on 2 ExplicitBounded strings"
+            , \ fresh ->
+                let
+                    (iPat, i) = quantifiedVar (fresh `at` 0)
+                    (jPat, j) = quantifiedVar (fresh `at` 1)
+                in  make opOr $ Comprehension
+                        (make opAnd $ Comprehension
+                            [essence| &a(&i + &j) = &b(&i + &j) |]
+                            [ Generator (GenDomainNoRepr jPat $ mkDomainIntB 1 aMaxSize)
+                            , Condition [essence| &i + &j <= |&a| |]
+                            , Condition [essence| &i + &j <= |&b| |]
+                            ]
+                        )
+                        [ Generator (GenDomainNoRepr iPat $ mkDomainIntB 1 maxSize) ]
+            )
+    theRule _ = na "rule_Substring"

@@ -2,18 +2,7 @@
 
 module Conjure.Rules.Vertical.Set.Explicit where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Type
-import Conjure.Language.Domain
-import Conjure.Language.DomainOf
-import Conjure.Language.TypeOf
-import Conjure.Language.TH
-import Conjure.Language.Lenses
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, representationOf, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 rule_Comprehension :: Rule
