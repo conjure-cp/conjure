@@ -47,7 +47,7 @@ data Strategy
     | Compact
     | FollowLog
     | Auto Strategy
-    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+    deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
 
 instance Default Strategy where def = Auto Interactive
 
