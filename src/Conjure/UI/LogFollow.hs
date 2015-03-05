@@ -236,7 +236,9 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
   unErr (Left r)  = bug ("getReprFromAnswer unErr" <+> r)
 
   getReprDomText :: Answer -> Text
-  getReprDomText a =  T.split (== '˸') (T.pack . renderNormal . aText $ a) `at` 1
+  getReprDomText = T.pack                                       -- convert to text
+                 . intercalate ":" . tail . splitOn ":"         -- drop the first thing up to :
+                 . renderNormal . aText                         -- aText into String
 
 
 getAnswersFromFile :: (MonadIO m, MonadFail m )
