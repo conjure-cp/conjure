@@ -9,12 +9,16 @@ find s_Explicit: matrix indexed by [int(1..q1)] of int(1..2)
 such that
     and([s_Occurrence[q5] -> f_Function1DPartial_Flags[q5] | q5 : int(1..2)]),
     and([s_Occurrence[i] /\ i != min([s_Explicit[q9] | q9 : int(1..q1)]) ->
-         and([f_Function1DPartial_Values[i] > f_Function1DPartial_Values[min([s_Explicit[q7] | q7 : int(1..q1)])], f_Function1DPartial_Flags[i],
+         and([f_Function1DPartial_Values[i] >
+              f_Function1DPartial_Values[min([s_Explicit[q7] | q7 : int(1..q1)])],
+              f_Function1DPartial_Flags[i],
               f_Function1DPartial_Flags[min([s_Explicit[q8] | q8 : int(1..q1)])]; int(1..3)])
              | i : int(1..2)]),
     q1 = sum([s_Occurrence[q2] | q2 : int(1..2)]),
-    and([f_Function1DPartial_Flags[q3] = false -> f_Function1DPartial_Values[q3] = 1 | q3 : int(1..2)]),
+    and([f_Function1DPartial_Flags[q3] = false -> f_Function1DPartial_Values[q3] = 1
+             | q3 : int(1..2)]),
     and([s_Explicit[q4] < s_Explicit[q4 + 1] | q4 : int(1..q1 - 1)]),
     and([s_Occurrence[s_Explicit[q10]] | q10 : int(1..q1)]),
-    and([s_Occurrence[q6] -> or([s_Explicit[q12] = q6 | q12 : int(1..q1)]) | q6 : int(1..2)])
+    and([s_Occurrence[q6] -> or([s_Explicit[q12] = q6 | q12 : int(1..q1)])
+             | q6 : int(1..2)])
 

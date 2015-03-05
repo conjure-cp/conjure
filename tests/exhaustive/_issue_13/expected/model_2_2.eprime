@@ -6,10 +6,20 @@ find q2_Explicit: matrix indexed by [int(1..2)] of int(1..3)
 find q5_Explicit: matrix indexed by [int(1..3)] of int(1..3)
 such that
     q2_Explicit[1] < q2_Explicit[2],
-    and([f_Function1DPartial_Flags[q6] -> or([q2_Explicit[q8] = f_Function1DPartial_Values[q6] | q8 : int(1..2)]) | q6 : int(1..3)]),
-    and([or([f_Function1DPartial_Flags[q4] /\ f_Function1DPartial_Values[q4] = q2_Explicit[q7] | q4 : int(1..3)]) | q7 : int(1..2)]),
+    and([f_Function1DPartial_Flags[q6] ->
+         or([q2_Explicit[q8] = f_Function1DPartial_Values[q6] | q8 : int(1..2)])
+             | q6 : int(1..3)]),
+    and([or([f_Function1DPartial_Flags[q4] /\
+             f_Function1DPartial_Values[q4] = q2_Explicit[q7]
+                 | q4 : int(1..3)])
+             | q7 : int(1..2)]),
     and([q5_Explicit[q9] < q5_Explicit[q9 + 1] | q9 : int(1..2)]),
-    and([f_Function1DPartial_Flags[q12] -> or([q5_Explicit[q14] = q12 | q14 : int(1..3)]) | q12 : int(1..3)]),
-    and([or([f_Function1DPartial_Flags[q10] /\ q10 = q5_Explicit[q13] | q10 : int(1..3)]) | q13 : int(1..3)]),
-    and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)])
+    and([f_Function1DPartial_Flags[q12] ->
+         or([q5_Explicit[q14] = q12 | q14 : int(1..3)])
+             | q12 : int(1..3)]),
+    and([or([f_Function1DPartial_Flags[q10] /\ q10 = q5_Explicit[q13]
+                 | q10 : int(1..3)])
+             | q13 : int(1..3)]),
+    and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 1
+             | q1 : int(1..3)])
 

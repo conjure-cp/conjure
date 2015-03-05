@@ -5,15 +5,25 @@ find y: int(7, 8)
 find z: bool
 such that
     x =
-    sum([or([i_ExplicitVarSizeWithMarker_Values_1[q3] = y /\ i_ExplicitVarSizeWithMarker_Values_2[q3] = z
+    sum([or([i_ExplicitVarSizeWithMarker_Values_1[q3] = y /\
+             i_ExplicitVarSizeWithMarker_Values_2[q3] = z
                  | q3 : int(1..2), q3 <= i_ExplicitVarSizeWithMarker_Marker])
-             | i_ExplicitVarSizeWithMarker_Marker : int(0..2), i_ExplicitVarSizeWithMarker_Values_1 : matrix indexed by [int(1..2)] of int(7..9),
+             | i_ExplicitVarSizeWithMarker_Marker : int(0..2),
+               i_ExplicitVarSizeWithMarker_Values_1 : matrix indexed by [int(1..2)] of int(7..9),
                i_ExplicitVarSizeWithMarker_Values_2 : matrix indexed by [int(1..2)] of bool,
                2 <= i_ExplicitVarSizeWithMarker_Marker ->
-               i_ExplicitVarSizeWithMarker_Values_1[1] < i_ExplicitVarSizeWithMarker_Values_1[2] \/
-               i_ExplicitVarSizeWithMarker_Values_1[1] = i_ExplicitVarSizeWithMarker_Values_1[2] /\
-               i_ExplicitVarSizeWithMarker_Values_2[1] < i_ExplicitVarSizeWithMarker_Values_2[2],
-               and([q1 > i_ExplicitVarSizeWithMarker_Marker -> i_ExplicitVarSizeWithMarker_Values_1[q1] = 7 /\ i_ExplicitVarSizeWithMarker_Values_2[q1] = false
+               i_ExplicitVarSizeWithMarker_Values_1[1] <
+               i_ExplicitVarSizeWithMarker_Values_1[2]
+               \/
+               i_ExplicitVarSizeWithMarker_Values_1[1] =
+               i_ExplicitVarSizeWithMarker_Values_1[2]
+               /\
+               i_ExplicitVarSizeWithMarker_Values_2[1] <
+               i_ExplicitVarSizeWithMarker_Values_2[2],
+               and([q1 > i_ExplicitVarSizeWithMarker_Marker ->
+                    i_ExplicitVarSizeWithMarker_Values_1[q1] = 7 /\
+                    i_ExplicitVarSizeWithMarker_Values_2[q1] = false
                         | q1 : int(1..2)]),
-               1 <= i_ExplicitVarSizeWithMarker_Marker, i_ExplicitVarSizeWithMarker_Marker <= 2])
+               1 <= i_ExplicitVarSizeWithMarker_Marker,
+               i_ExplicitVarSizeWithMarker_Marker <= 2])
 

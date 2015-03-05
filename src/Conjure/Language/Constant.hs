@@ -281,7 +281,12 @@ validateConstantForDomain
     d@(DomainFunction _ _ dFrom dTo) = nested c d $ do
         mapM_ (flip validateConstantForDomain dFrom . fst) vals
         mapM_ (flip validateConstantForDomain dTo   . snd) vals
-        
+
+validateConstantForDomain
+    c@(ConstantAbstract (AbsLitSequence vals))
+    d@(DomainSequence _ _ dInner) = nested c d $
+        mapM_ (`validateConstantForDomain` dInner) vals
+
 validateConstantForDomain
     c@(ConstantAbstract (AbsLitRelation valss))
     d@(DomainRelation _ _ dInners) = nested c d $

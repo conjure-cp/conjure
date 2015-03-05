@@ -157,7 +157,7 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     s <- ignoreLogs $ translateSolution eprimeModel def eprimeSolution
                     let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
-                    writeFile filename (renderWide s)
+                    writeFile filename (renderNormal s)
 
 
 savileRowWithParams :: String -> TestDirFiles -> FilePath -> FilePath -> TestTree
@@ -167,7 +167,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
         param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
         eprimeParam <- liftIO $ ignoreLogs $ refineParam model param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-        liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderWide eprimeParam)
+        liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
         _stdoutSR <- run "savilerow" $
             [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
             , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
@@ -190,7 +190,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                         Left err -> assertFailure $ renderNormal err
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
-                            writeFile filename (renderWide s)
+                            writeFile filename (renderNormal s)
 
 
 validateSolutionNoParam :: TestDirFiles -> FilePath -> TestTree
@@ -245,7 +245,7 @@ checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step 
                 g <- readModelFromFile generatedPath
                 case modelDiff e g of
                     Nothing -> return ()
-                    Just msg -> assertFailure $ renderWide $ "files differ:" <+> msg
+                    Just msg -> assertFailure $ renderNormal $ "files differ:" <+> msg
             else assertFailure $ "file doesn't exist: " ++ generatedPath
 
 equalNumberOfSolutions :: TestDirFiles -> TestTree

@@ -28,6 +28,8 @@ Library
                      , Conjure.Language.Constant
                      , Conjure.Language.AbstractLiteral
                      , Conjure.Language.Domain
+                     , Conjure.Language.Domain.Monoid
+                     , Conjure.Language.Domain.AddAttributes
                      , Conjure.Language.Type
                      , Conjure.Language.Lenses
                      , Conjure.Language.TH
@@ -51,11 +53,11 @@ Library
                      , Conjure.Language.Expression.Op.Factorial
                      , Conjure.Language.Expression.Op.Flatten
                      , Conjure.Language.Expression.Op.Freq
-                     , Conjure.Language.Expression.Op.FunctionImage
                      , Conjure.Language.Expression.Op.Geq
                      , Conjure.Language.Expression.Op.Gt
                      , Conjure.Language.Expression.Op.Hist
                      , Conjure.Language.Expression.Op.Iff
+                     , Conjure.Language.Expression.Op.Image
                      , Conjure.Language.Expression.Op.Imply
                      , Conjure.Language.Expression.Op.In
                      , Conjure.Language.Expression.Op.Indexing
@@ -83,8 +85,10 @@ Library
                      , Conjure.Language.Expression.Op.RelationProj
                      , Conjure.Language.Expression.Op.Restrict
                      , Conjure.Language.Expression.Op.Slicing
+                     , Conjure.Language.Expression.Op.Subsequence
                      , Conjure.Language.Expression.Op.Subset
                      , Conjure.Language.Expression.Op.SubsetEq
+                     , Conjure.Language.Expression.Op.Substring
                      , Conjure.Language.Expression.Op.Sum
                      , Conjure.Language.Expression.Op.Supset
                      , Conjure.Language.Expression.Op.SupsetEq
@@ -139,6 +143,7 @@ Library
                      , Conjure.Representations.Function.FunctionND
                      , Conjure.Representations.Function.FunctionNDPartial
                      , Conjure.Representations.Function.FunctionAsRelation
+                     , Conjure.Representations.Sequence.ExplicitBounded
                      , Conjure.Representations.Relation.RelationAsMatrix
                      , Conjure.Representations.Relation.RelationAsSet
                      , Conjure.Representations.Partition.Occurrence
@@ -146,6 +151,7 @@ Library
 
                      -- definitions of rules
                      , Conjure.Rules.Definition
+                     , Conjure.Rules.Import
 
                      , Conjure.Rules.Vertical.Tuple
                      , Conjure.Rules.Vertical.Record
@@ -167,6 +173,9 @@ Library
                      , Conjure.Rules.Vertical.Function.FunctionND
                      , Conjure.Rules.Vertical.Function.FunctionNDPartial
                      , Conjure.Rules.Vertical.Function.FunctionAsRelation
+
+                     , Conjure.Rules.Horizontal.Sequence
+                     , Conjure.Rules.Vertical.Sequence.ExplicitBounded
 
                      , Conjure.Rules.Horizontal.Relation
                      , Conjure.Rules.Vertical.Relation.RelationAsMatrix

@@ -23,6 +23,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
             TypeSet{}      -> return ()
             TypeMSet{}     -> return ()
             TypeFunction{} -> return ()
+            TypeSequence{} -> return ()
             _              -> raiseTypeError p
         return TypeInt
 
@@ -39,6 +40,7 @@ instance EvaluateOp OpTwoBars where
             ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ genericLength $ nub xs
             ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ genericLength       xs
             ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ genericLength $ nub xs
+            ConstantAbstract (AbsLitSequence xs) -> return $ ConstantInt $ genericLength       xs
 
             -- cardinality of a domain
             DomainInConstant (DomainInt rs)      -> ConstantInt . genericLength <$> rangesInts rs

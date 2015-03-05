@@ -5,6 +5,7 @@ find y: int(7, 8)
 such that
     x =
     sum([i_Occurrence[y] * j
-             | i_Occurrence : matrix indexed by [int(7..8)] of bool, j : int(7..8), 1 <= sum([i_Occurrence[q1] | q1 : int(7..8)]),
+             | i_Occurrence : matrix indexed by [int(7..8)] of bool, j : int(7..8),
+               1 <= sum([i_Occurrence[q1] | q1 : int(7..8)]),
                sum([i_Occurrence[q1] | q1 : int(7..8)]) <= 2, i_Occurrence[j]])
 

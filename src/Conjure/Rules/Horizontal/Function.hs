@@ -2,19 +2,7 @@
 
 module Conjure.Rules.Horizontal.Function where
 
-import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
-import Conjure.Language.Pretty
-import Conjure.Language.DomainOf
-import Conjure.Language.TypeOf
-import Conjure.Language.Lenses
-import Conjure.Language.TH
-
-import Conjure.Rules.Definition ( Rule(..), namedRule, hasRepresentation, matchFirst )
-
-import Conjure.Representations ( downX1 )
+import Conjure.Rules.Import
 
 
 rule_Comprehension_Literal :: Rule
@@ -46,7 +34,7 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
 rule_Image_Literal_Bool :: Rule
 rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
     theRule p = do
-        (func, arg)                      <- match opFunctionImage p
+        (func, arg)                      <- match opImage p
         (TypeFunction _ TypeBool, elems) <- match functionLiteral func
         -- let argIsUndef = make opNot $ make opOr $ fromList
         --         [ [essence| &a = &arg |]
@@ -71,7 +59,7 @@ rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule wher
 rule_Image_Literal_Int :: Rule
 rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
     theRule p = do
-        (func, arg)                     <- match opFunctionImage p
+        (func, arg)                     <- match opImage p
         (TypeFunction _ TypeInt, elems) <- match functionLiteral func
         return
             ( "Image of function literal"
@@ -217,6 +205,7 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, img) <- match opPreImage expr
+        TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the preImage of a function"
@@ -342,6 +331,7 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined_Literal"
         func <- match opDefined expr
+        TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
         elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
         let domFr = mconcat elemDoms
@@ -388,6 +378,7 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range_Literal"
         func <- match opRange expr
+        TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
         elemDoms <- mapM (fmap forgetRepr . domainOf . snd) elems
         let domTo = mconcat elemDoms
@@ -511,14 +502,15 @@ rule_In = "function-in" `namedRule` theRule where
 rule_Restrict_Image :: Rule
 rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
     theRule p = do
-        (func', arg) <- match opFunctionImage p
+        (func', arg) <- match opImage p
         (func , dom) <- match opRestrict func'
+        TypeFunction{} <- typeOf func
         return
             ( "Function image on a restricted function."
             , \ fresh ->
                     let (iPat, i) = quantifiedVar (fresh `at` 0)
                         bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opFunctionImage func arg) (Right [bob])
+                    in  WithLocals (make opImage func arg) (Right [bob])
             )
 
 
@@ -529,6 +521,7 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
             Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
             _ -> na "rule_Comprehension_PreImage"
         (func, dom) <- match opRestrict expr
+        TypeFunction{} <- typeOf func
         return
             ( "Mapping over restrict(func, dom)"
             , \ fresh ->
@@ -545,14 +538,14 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
-rule_Mk_FunctionImage :: Rule
-rule_Mk_FunctionImage = "mk-function-image" `namedRule` theRule where
+rule_Mk_Image :: Rule
+rule_Mk_Image = "mk-function-image" `namedRule` theRule where
     theRule p = do
         (f, [Just arg]) <- match opRelationProj p
         TypeFunction{}  <- typeOf f
         return
             ( "This is a function image."
-            , const $ make opFunctionImage f arg
+            , const $ make opImage f arg
             )
 
 
@@ -574,7 +567,7 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
@@ -621,7 +614,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             onChildren ch = do
                 let
                     try = do
-                        (func, arg) <- match opFunctionImage ch
+                        (func, arg) <- match opImage ch
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
@@ -666,7 +659,8 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
         (mkModifier, expr2) <- match opModifier expr
-        (func, arg) <- match opFunctionImage expr2
+        (func, arg) <- match opImage expr2
+        TypeFunction{} <- typeOf func
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions

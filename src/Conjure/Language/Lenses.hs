@@ -47,7 +47,7 @@ matchDefs fs inp =
 
 
 opMinus
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -56,9 +56,9 @@ opMinus
        , x -> m (x,x)
        )
 opMinus _ =
-    ( \ x y -> injectOp (MkOpMinus (OpMinus x y))
+    ( \ x y -> inject (MkOpMinus (OpMinus x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpMinus (OpMinus x y) -> return (x,y)
                 _ -> na ("Lenses.opMinus:" <++> pretty p)
@@ -66,7 +66,7 @@ opMinus _ =
 
 
 opDiv
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -75,9 +75,9 @@ opDiv
        , x -> m (x,x)
        )
 opDiv _ =
-    ( \ x y -> injectOp (MkOpDiv (OpDiv x y))
+    ( \ x y -> inject (MkOpDiv (OpDiv x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpDiv (OpDiv x y) -> return (x,y)
                 _ -> na ("Lenses.opDiv:" <++> pretty p)
@@ -85,7 +85,7 @@ opDiv _ =
 
 
 opMod
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -94,9 +94,9 @@ opMod
        , x -> m (x,x)
        )
 opMod _ =
-    ( \ x y -> injectOp (MkOpMod (OpMod x y))
+    ( \ x y -> inject (MkOpMod (OpMod x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpMod (OpMod x y) -> return (x,y)
                 _ -> na ("Lenses.opMod:" <++> pretty p)
@@ -104,7 +104,7 @@ opMod _ =
 
 
 opPow
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -113,9 +113,9 @@ opPow
        , x -> m (x,x)
        )
 opPow _ =
-    ( \ x y -> injectOp (MkOpPow (OpPow x y))
+    ( \ x y -> inject (MkOpPow (OpPow x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpPow (OpPow x y) -> return (x,y)
                 _ -> na ("Lenses.opPow:" <++> pretty p)
@@ -123,7 +123,7 @@ opPow _ =
 
 
 opNegate
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -132,9 +132,9 @@ opNegate
        , x -> m x
        )
 opNegate _ =
-    ( injectOp . MkOpNegate . OpNegate
+    ( inject . MkOpNegate . OpNegate
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpNegate (OpNegate x) -> return x
                 _ -> na ("Lenses.opNegate:" <++> pretty p)
@@ -142,7 +142,7 @@ opNegate _ =
 
 
 opDontCare
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -151,9 +151,9 @@ opDontCare
        , x -> m x
        )
 opDontCare _ =
-    ( injectOp . MkOpDontCare . OpDontCare
+    ( inject . MkOpDontCare . OpDontCare
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpDontCare (OpDontCare x) -> return x
                 _ -> na ("Lenses.opDontCare:" <++> pretty p)
@@ -161,7 +161,7 @@ opDontCare _ =
 
 
 opDefined
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -170,9 +170,9 @@ opDefined
        , x -> m x
        )
 opDefined _ =
-    ( injectOp . MkOpDefined . OpDefined
+    ( inject . MkOpDefined . OpDefined
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpDefined (OpDefined x) -> return x
                 _ -> na ("Lenses.opDefined:" <++> pretty p)
@@ -180,7 +180,7 @@ opDefined _ =
 
 
 opRange
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -189,9 +189,9 @@ opRange
        , x -> m x
        )
 opRange _ =
-    ( injectOp . MkOpRange . OpRange
+    ( inject . MkOpRange . OpRange
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpRange (OpRange x) -> return x
                 _ -> na ("Lenses.opRange:" <++> pretty p)
@@ -199,7 +199,7 @@ opRange _ =
 
 
 opDefinedOrRange
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -209,9 +209,9 @@ opDefinedOrRange
        )
 opDefinedOrRange _ =
     ( \ (mk, x) -> mk x
-    , \ p -> case projectOp p of
-        Just (MkOpDefined (OpDefined x)) -> return (injectOp . MkOpDefined . OpDefined , x)
-        Just (MkOpRange   (OpRange   x)) -> return (injectOp . MkOpRange   . OpRange   , x)
+    , \ p -> case project p of
+        Just (MkOpDefined (OpDefined x)) -> return (inject . MkOpDefined . OpDefined , x)
+        Just (MkOpRange   (OpRange   x)) -> return (inject . MkOpRange   . OpRange   , x)
         _                                -> na ("Lenses.opDefinedOrRange" <++> pretty p)
     )
 
@@ -223,7 +223,7 @@ opRestrict
        , Expression -> m (Expression, Domain () Expression)
        )
 opRestrict _ =
-    ( \ x d -> injectOp $ MkOpRestrict $ OpRestrict x (Domain d)
+    ( \ x d -> inject $ MkOpRestrict $ OpRestrict x (Domain d)
     , followAliases extract
     )
     where
@@ -232,7 +232,7 @@ opRestrict _ =
 
 
 opToInt
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -241,9 +241,9 @@ opToInt
        , x -> m x
        )
 opToInt _ =
-    ( injectOp . MkOpToInt . OpToInt
+    ( inject . MkOpToInt . OpToInt
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpToInt (OpToInt x) -> return x
                 _ -> na ("Lenses.opToInt:" <++> pretty p)
@@ -251,7 +251,7 @@ opToInt _ =
 
 
 opPowerSet
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -260,9 +260,9 @@ opPowerSet
        , x -> m x
        )
 opPowerSet _ =
-    ( injectOp . MkOpPowerSet . OpPowerSet
+    ( inject . MkOpPowerSet . OpPowerSet
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpPowerSet (OpPowerSet x) -> return x
                 _ -> na ("Lenses.opPowerSet:" <++> pretty p)
@@ -270,7 +270,7 @@ opPowerSet _ =
 
 
 opToSet
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -279,9 +279,9 @@ opToSet
        , x -> m x
        )
 opToSet _ =
-    ( injectOp . MkOpToSet . OpToSet
+    ( inject . MkOpToSet . OpToSet
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpToSet (OpToSet x) -> return x
                 _ -> na ("Lenses.opToSet:" <++> pretty p)
@@ -289,7 +289,7 @@ opToSet _ =
 
 
 opToMSet
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -298,9 +298,9 @@ opToMSet
        , x -> m x
        )
 opToMSet _ =
-    ( injectOp . MkOpToMSet . OpToMSet
+    ( inject . MkOpToMSet . OpToMSet
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpToMSet (OpToMSet x) -> return x
                 _ -> na ("Lenses.opToMSet:" <++> pretty p)
@@ -308,7 +308,7 @@ opToMSet _ =
 
 
 opToRelation
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -317,9 +317,9 @@ opToRelation
        , x -> m x
        )
 opToRelation _ =
-    ( injectOp . MkOpToRelation . OpToRelation
+    ( inject . MkOpToRelation . OpToRelation
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpToRelation (OpToRelation x) -> return x
                 _ -> na ("Lenses.opToRelation:" <++> pretty p)
@@ -327,7 +327,7 @@ opToRelation _ =
 
 
 opParts
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -336,9 +336,9 @@ opParts
        , x -> m x
        )
 opParts _ =
-    ( injectOp . MkOpParts . OpParts
+    ( inject . MkOpParts . OpParts
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpParts (OpParts x) -> return x
                 _ -> na ("Lenses.opParts:" <++> pretty p)
@@ -346,7 +346,7 @@ opParts _ =
 
 
 opParty
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -355,9 +355,9 @@ opParty
        , x -> m (x, x)
        )
 opParty _ =
-    ( \ x y -> injectOp $ MkOpParty $ OpParty x y
+    ( \ x y -> inject $ MkOpParty $ OpParty x y
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpParty (OpParty x y) -> return (x,y)
                 _ -> na ("Lenses.opParty:" <++> pretty p)
@@ -365,7 +365,7 @@ opParty _ =
 
 
 opParticipants
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -374,17 +374,17 @@ opParticipants
        , x -> m x
        )
 opParticipants _ =
-    ( injectOp . MkOpParticipants . OpParticipants
+    ( inject . MkOpParticipants . OpParticipants
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpParticipants (OpParticipants x) -> return x
                 _ -> na ("Lenses.opParticipants:" <++> pretty p)
     )
 
 
-opFunctionImage
-    :: ( OperatorContainer x
+opImage
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -392,18 +392,18 @@ opFunctionImage
     -> ( x -> x -> x
        , x -> m (x, x)
        )
-opFunctionImage _ =
-    ( \ x y -> injectOp $ MkOpFunctionImage $ OpFunctionImage x y
+opImage _ =
+    ( \ x y -> inject $ MkOpImage $ OpImage x y
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
-                MkOpFunctionImage (OpFunctionImage x y) -> return (x,y)
-                _ -> na ("Lenses.opFunctionImage:" <++> pretty p)
+                MkOpImage (OpImage x y) -> return (x,y)
+                _ -> na ("Lenses.opImage:" <++> pretty p)
     )
 
 
 opRelationProj
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -412,9 +412,9 @@ opRelationProj
        , x -> m (x, [Maybe x])
        )
 opRelationProj _ =
-    ( \ x ys -> injectOp $ MkOpRelationProj $ OpRelationProj x ys
+    ( \ x ys -> inject $ MkOpRelationProj $ OpRelationProj x ys
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpRelationProj (OpRelationProj x ys) -> return (x,ys)
                 _ -> na ("Lenses.opRelationProj:" <++> pretty p)
@@ -422,7 +422,7 @@ opRelationProj _ =
 
 
 opRelationImage
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -431,9 +431,9 @@ opRelationImage
        , x -> m (x, [x])
        )
 opRelationImage _ =
-    ( \ x ys -> injectOp $ MkOpRelationProj $ OpRelationProj x (map Just ys)
+    ( \ x ys -> inject $ MkOpRelationProj $ OpRelationProj x (map Just ys)
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpRelationProj (OpRelationProj x ys)
                     | let ys' = catMaybes ys
@@ -444,7 +444,7 @@ opRelationImage _ =
 
 
 opIndexing
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -453,9 +453,9 @@ opIndexing
        , x -> m (x,x)
        )
 opIndexing _ =
-    ( \ x y -> injectOp (MkOpIndexing (OpIndexing x y))
+    ( \ x y -> inject (MkOpIndexing (OpIndexing x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpIndexing (OpIndexing x y) -> return (x,y)
                 _ -> na ("Lenses.opIndexing:" <++> pretty p)
@@ -463,7 +463,7 @@ opIndexing _ =
 
 
 opMatrixIndexing
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , TypeOf x
        , MonadFail m
@@ -481,7 +481,7 @@ opMatrixIndexing _ =
             else return (m, is)
     )
     where
-        go p = case projectOp p of
+        go p = case project p of
             Just (MkOpIndexing (OpIndexing x i)) -> do
                 ty <- typeOf x
                 case ty of
@@ -494,7 +494,7 @@ opMatrixIndexing _ =
 
 
 opSlicing
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -503,9 +503,9 @@ opSlicing
        , x -> m (x, Maybe x, Maybe x)
        )
 opSlicing _ =
-    ( \ x y z -> injectOp (MkOpSlicing (OpSlicing x y z))
+    ( \ x y z -> inject (MkOpSlicing (OpSlicing x y z))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpSlicing (OpSlicing x y z) -> return (x,y,z)
                 _ -> na ("Lenses.opSlicing:" <++> pretty p)
@@ -513,7 +513,7 @@ opSlicing _ =
 
 
 opFlatten
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -522,9 +522,9 @@ opFlatten
        , x -> m x
        )
 opFlatten _ =
-    ( injectOp . MkOpFlatten . OpFlatten
+    ( inject . MkOpFlatten . OpFlatten
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpFlatten (OpFlatten x) -> return x
                 _ -> na ("Lenses.opFlatten:" <++> pretty p)
@@ -532,7 +532,7 @@ opFlatten _ =
 
 
 opIn
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -541,9 +541,9 @@ opIn
        , x -> m (x,x)
        )
 opIn _ =
-    ( \ x y -> injectOp (MkOpIn (OpIn x y))
+    ( \ x y -> inject (MkOpIn (OpIn x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpIn (OpIn x y) -> return (x,y)
                 _ -> na ("Lenses.opIn:" <++> pretty p)
@@ -551,7 +551,7 @@ opIn _ =
 
 
 opFreq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -560,9 +560,9 @@ opFreq
        , x -> m (x,x)
        )
 opFreq _ =
-    ( \ x y -> injectOp (MkOpFreq (OpFreq x y))
+    ( \ x y -> inject (MkOpFreq (OpFreq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpFreq (OpFreq x y) -> return (x,y)
                 _ -> na ("Lenses.opFreq:" <++> pretty p)
@@ -570,7 +570,7 @@ opFreq _ =
 
 
 opHist
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -579,9 +579,9 @@ opHist
        , x -> m x
        )
 opHist _ =
-    ( injectOp . MkOpHist . OpHist
+    ( inject . MkOpHist . OpHist
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpHist (OpHist x) -> return x
                 _ -> na ("Lenses.opHist:" <++> pretty p)
@@ -589,7 +589,7 @@ opHist _ =
 
 
 opIntersect
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -598,9 +598,9 @@ opIntersect
        , x -> m (x,x)
        )
 opIntersect _ =
-    ( \ x y -> injectOp (MkOpIntersect (OpIntersect x y))
+    ( \ x y -> inject (MkOpIntersect (OpIntersect x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpIntersect (OpIntersect x y) -> return (x,y)
                 _ -> na ("Lenses.opIntersect:" <++> pretty p)
@@ -608,7 +608,7 @@ opIntersect _ =
 
 
 opUnion
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -617,9 +617,9 @@ opUnion
        , x -> m (x,x)
        )
 opUnion _ =
-    ( \ x y -> injectOp (MkOpUnion (OpUnion x y))
+    ( \ x y -> inject (MkOpUnion (OpUnion x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpUnion (OpUnion x y) -> return (x,y)
                 _ -> na ("Lenses.opUnion:" <++> pretty p)
@@ -627,7 +627,7 @@ opUnion _ =
 
 
 opSubsetEq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -636,9 +636,9 @@ opSubsetEq
        , x -> m (x,x)
        )
 opSubsetEq _ =
-    ( \ x y -> injectOp (MkOpSubsetEq (OpSubsetEq x y))
+    ( \ x y -> inject (MkOpSubsetEq (OpSubsetEq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpSubsetEq (OpSubsetEq x y) -> return (x,y)
                 _ -> na ("Lenses.opSubsetEq:" <++> pretty p)
@@ -646,7 +646,7 @@ opSubsetEq _ =
 
 
 opEq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -655,9 +655,9 @@ opEq
        , x -> m (x,x)
        )
 opEq _ =
-    ( \ x y -> injectOp (MkOpEq (OpEq x y))
+    ( \ x y -> inject (MkOpEq (OpEq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpEq (OpEq x y) -> return (x,y)
                 _ -> na ("Lenses.opEq:" <++> pretty p)
@@ -665,7 +665,7 @@ opEq _ =
 
 
 opNeq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -674,9 +674,9 @@ opNeq
        , x -> m (x,x)
        )
 opNeq _ =
-    ( \ x y -> injectOp (MkOpNeq (OpNeq x y))
+    ( \ x y -> inject (MkOpNeq (OpNeq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpNeq (OpNeq x y) -> return (x,y)
                 _ -> na ("Lenses.opNeq:" <++> pretty p)
@@ -684,7 +684,7 @@ opNeq _ =
 
 
 opLt
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -693,9 +693,9 @@ opLt
        , x -> m (x,x)
        )
 opLt _ =
-    ( \ x y -> injectOp (MkOpLt (OpLt x y))
+    ( \ x y -> inject (MkOpLt (OpLt x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpLt (OpLt x y) -> return (x,y)
                 _ -> na ("Lenses.opLt:" <++> pretty p)
@@ -703,7 +703,7 @@ opLt _ =
 
 
 opLeq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -712,9 +712,9 @@ opLeq
        , x -> m (x,x)
        )
 opLeq _ =
-    ( \ x y -> injectOp (MkOpLeq (OpLeq x y))
+    ( \ x y -> inject (MkOpLeq (OpLeq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpLeq (OpLeq x y) -> return (x,y)
                 _ -> na ("Lenses.opLeq:" <++> pretty p)
@@ -722,7 +722,7 @@ opLeq _ =
 
 
 opGt
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -731,9 +731,9 @@ opGt
        , x -> m (x,x)
        )
 opGt _ =
-    ( \ x y -> injectOp (MkOpGt (OpGt x y))
+    ( \ x y -> inject (MkOpGt (OpGt x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpGt (OpGt x y) -> return (x,y)
                 _ -> na ("Lenses.opGt:" <++> pretty p)
@@ -741,7 +741,7 @@ opGt _ =
 
 
 opGeq
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -750,9 +750,9 @@ opGeq
        , x -> m (x,x)
        )
 opGeq _ =
-    ( \ x y -> injectOp (MkOpGeq (OpGeq x y))
+    ( \ x y -> inject (MkOpGeq (OpGeq x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpGeq (OpGeq x y) -> return (x,y)
                 _ -> na ("Lenses.opGeq:" <++> pretty p)
@@ -760,7 +760,7 @@ opGeq _ =
 
 
 opOr
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -769,9 +769,9 @@ opOr
        , x -> m x
        )
 opOr _ =
-    ( injectOp . MkOpOr . OpOr
+    ( inject . MkOpOr . OpOr
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpOr (OpOr xs) -> return xs
                 _ -> na ("Lenses.opOr:" <++> pretty p)
@@ -779,7 +779,7 @@ opOr _ =
 
 
 opAnd
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -788,9 +788,9 @@ opAnd
        , x -> m x
        )
 opAnd _ =
-    ( injectOp . MkOpAnd . OpAnd
+    ( inject . MkOpAnd . OpAnd
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpAnd (OpAnd xs) -> return xs
                 _ -> na ("Lenses.opAnd:" <++> pretty p)
@@ -798,7 +798,7 @@ opAnd _ =
 
 
 opMax
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -807,9 +807,9 @@ opMax
        , x -> m x
        )
 opMax _ =
-    ( injectOp . MkOpMax . OpMax
+    ( inject . MkOpMax . OpMax
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpMax (OpMax xs) -> return xs
                 _ -> na ("Lenses.opMax:" <++> pretty p)
@@ -817,7 +817,7 @@ opMax _ =
 
 
 opMin
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -826,9 +826,9 @@ opMin
        , x -> m x
        )
 opMin _ =
-    ( injectOp . MkOpMin . OpMin
+    ( inject . MkOpMin . OpMin
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpMin (OpMin xs) -> return xs
                 _ -> na ("Lenses.opMin:" <++> pretty p)
@@ -836,7 +836,7 @@ opMin _ =
 
 
 opImply
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -845,9 +845,9 @@ opImply
        , x -> m (x,x)
        )
 opImply _ =
-    ( \ x y -> injectOp (MkOpImply (OpImply x y))
+    ( \ x y -> inject (MkOpImply (OpImply x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpImply (OpImply x y) -> return (x,y)
                 _ -> na ("Lenses.opImply:" <++> pretty p)
@@ -855,7 +855,7 @@ opImply _ =
 
 
 opNot
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -864,9 +864,9 @@ opNot
        , x -> m x
        )
 opNot _ =
-    ( injectOp . MkOpNot . OpNot
+    ( inject . MkOpNot . OpNot
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpNot (OpNot x) -> return x
                 _ -> na ("Lenses.opNot:" <++> pretty p)
@@ -874,7 +874,7 @@ opNot _ =
 
 
 opProduct
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -883,9 +883,9 @@ opProduct
        , x -> m x
        )
 opProduct _ =
-    ( injectOp . MkOpProduct . OpProduct
+    ( inject . MkOpProduct . OpProduct
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpProduct (OpProduct x) -> return x
                 _ -> na ("Lenses.opProduct:" <++> pretty p)
@@ -893,7 +893,7 @@ opProduct _ =
 
 
 opSum
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -902,9 +902,9 @@ opSum
        , x -> m x
        )
 opSum _ =
-    ( injectOp . MkOpSum . OpSum
+    ( inject . MkOpSum . OpSum
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpSum (OpSum x) -> return x
                 _ -> na ("Lenses.opSum:" <++> pretty p)
@@ -912,7 +912,7 @@ opSum _ =
 
 
 opQuantifier
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -923,20 +923,20 @@ opQuantifier
 opQuantifier _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
-                MkOpAnd     (OpAnd     x) -> return (injectOp . MkOpAnd     . OpAnd     , x)
-                MkOpOr      (OpOr      x) -> return (injectOp . MkOpOr      . OpOr      , x)
-                MkOpSum     (OpSum     x) -> return (injectOp . MkOpSum     . OpSum     , x)
-                MkOpProduct (OpProduct x) -> return (injectOp . MkOpProduct . OpProduct , x)
-                MkOpMax     (OpMax     x) -> return (injectOp . MkOpMax     . OpMax     , x)
-                MkOpMin     (OpMin     x) -> return (injectOp . MkOpMin     . OpMin     , x)
+                MkOpAnd     (OpAnd     x) -> return (inject . MkOpAnd     . OpAnd     , x)
+                MkOpOr      (OpOr      x) -> return (inject . MkOpOr      . OpOr      , x)
+                MkOpSum     (OpSum     x) -> return (inject . MkOpSum     . OpSum     , x)
+                MkOpProduct (OpProduct x) -> return (inject . MkOpProduct . OpProduct , x)
+                MkOpMax     (OpMax     x) -> return (inject . MkOpMax     . OpMax     , x)
+                MkOpMin     (OpMin     x) -> return (inject . MkOpMin     . OpMin     , x)
                 _ -> na ("Lenses.opQuantifier:" <++> pretty p)
     )
 
 
 opModifier
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -946,17 +946,17 @@ opModifier
        )
 opModifier _ =
     ( \ (mk, x) -> mk x
-    , \ p -> case projectOp p of
-        Just (MkOpToSet      (OpToSet      x)) -> return (injectOp . MkOpToSet      . OpToSet      , x)
-        Just (MkOpToMSet     (OpToMSet     x)) -> return (injectOp . MkOpToMSet     . OpToMSet     , x)
-        Just (MkOpToRelation (OpToRelation x)) -> return (injectOp . MkOpToRelation . OpToRelation , x)
-        Just (MkOpParts      (OpParts      x)) -> return (injectOp . MkOpParts      . OpParts      , x)
+    , \ p -> case project p of
+        Just (MkOpToSet      (OpToSet      x)) -> return (inject . MkOpToSet      . OpToSet      , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet     , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation , x)
+        Just (MkOpParts      (OpParts      x)) -> return (inject . MkOpParts      . OpParts      , x)
         _                                      -> return (id                                       , p)
     )
 
 
 opAllDiff
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -965,9 +965,9 @@ opAllDiff
        , x -> m x
        )
 opAllDiff _ =
-    ( injectOp . MkOpAllDiff . OpAllDiff
+    ( inject . MkOpAllDiff . OpAllDiff
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpAllDiff (OpAllDiff x) -> return x
                 _ -> na ("Lenses.opAllDiff:" <++> pretty p)
@@ -1084,6 +1084,30 @@ functionLiteral _ =
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
 
 
+sequenceLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Type -> [Expression] -> Expression
+       , Expression -> m (Type, [Expression])
+       )
+sequenceLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitSequence elems)) ty
+            else        AbstractLiteral (AbsLitSequence elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitSequence xs))) = return (map Constant xs)
+        extract (AbstractLiteral (AbsLitSequence xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.sequenceLiteral:" <+> pretty p)
+
+
 relationLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)
@@ -1133,7 +1157,7 @@ partitionLiteral _ =
 
 
 opTwoBars
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -1142,9 +1166,9 @@ opTwoBars
        , x -> m x
        )
 opTwoBars _ =
-    ( injectOp . MkOpTwoBars . OpTwoBars
+    ( inject . MkOpTwoBars . OpTwoBars
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpTwoBars (OpTwoBars x) -> return x
                 _ -> na ("Lenses.opTwoBars:" <++> pretty p)
@@ -1152,7 +1176,7 @@ opTwoBars _ =
 
 
 opPreImage
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -1161,9 +1185,9 @@ opPreImage
        , x -> m (x,x)
        )
 opPreImage _ =
-    ( \ x y -> injectOp (MkOpPreImage (OpPreImage x y))
+    ( \ x y -> inject (MkOpPreImage (OpPreImage x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpPreImage (OpPreImage x y) -> return (x,y)
                 _ -> na ("Lenses.opPreImage:" <++> pretty p)
@@ -1171,7 +1195,7 @@ opPreImage _ =
 
 
 opActive
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -1180,9 +1204,9 @@ opActive
        , x -> m (x,Name)
        )
 opActive _ =
-    ( \ x y -> injectOp (MkOpActive (OpActive x y))
+    ( \ x y -> inject (MkOpActive (OpActive x y))
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpActive (OpActive x y) -> return (x,y)
                 _ -> na ("Lenses.opActive:" <++> pretty p)
@@ -1190,7 +1214,7 @@ opActive _ =
 
 
 opFactorial
-    :: ( OperatorContainer x
+    :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
@@ -1199,9 +1223,9 @@ opFactorial
        , x -> m x
        )
 opFactorial _ =
-    ( injectOp . MkOpFactorial . OpFactorial
+    ( inject . MkOpFactorial . OpFactorial
     , \ p -> do
-            op <- projectOp p
+            op <- project p
             case op of
                 MkOpFactorial (OpFactorial x) -> return x
                 _ -> na ("Lenses.opFactorial:" <++> pretty p)

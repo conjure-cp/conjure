@@ -15,6 +15,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Domain.AddAttributes
 import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
@@ -206,6 +207,7 @@ parseDomainWithRepr
             , pMatrix, pTupleWithout, pTupleWith
             , pRecord, pVariant
             , pSet, pMSet, pFunction, pFunction'
+            , pSequence
             , pRelation
             , pPartition
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
@@ -299,6 +301,13 @@ parseDomainWithRepr
             (y,z) <- arrowedPair parseDomainWithRepr
             return $ DomainFunction r x y z
 
+        pSequence = do
+            lexeme L_sequence
+            r <- parseRepr
+            x <- parseSequenceAttr
+            y <- lexeme L_of >> parseDomainWithRepr
+            return $ DomainSequence r x y
+
         pRelation = do
             lexeme L_relation
             r  <- parseRepr
@@ -379,6 +388,25 @@ parseFunctionAttr = do
         [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
     return (FunctionAttr size partiality jectivity)
+
+parseSequenceAttr :: Parser (SequenceAttr Expression)
+parseSequenceAttr = do
+    DomainAttributes attrs <- parseAttributes
+    size <- case filterSizey attrs of
+        [DANameValue "size"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+        [] -> return SizeAttr_None
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    jectivity  <- case filterJectivity attrs of
+        [] -> return JectivityAttr_None
+        [DAName "bijective" ] -> return JectivityAttr_Bijective
+        [DAName "injective" ] -> return JectivityAttr_Injective
+        [DAName "surjective"] -> return JectivityAttr_Surjective
+        [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
+        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    return (SequenceAttr size jectivity)
 
 parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
@@ -598,7 +626,7 @@ parseOthers = [ parseFunctional l
             lexeme l
             xs <- parens $ parseExpr `sepBy1` comma
             return $ case (l,xs) of
-                (L_image, [y,z]) -> Op $ MkOpFunctionImage $ OpFunctionImage y z
+                (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
                 _ -> mkOp (fromString $ show $ lexemeFace l) xs
 
 parseWithLocals :: Parser Expression
@@ -685,6 +713,7 @@ parseLiteral = msum ( map try
     , AbstractLiteral <$> pSet
     , AbstractLiteral <$> pMSet
     , AbstractLiteral <$> pFunction
+    , AbstractLiteral <$> pSequence
     , AbstractLiteral <$> pRelation
     , AbstractLiteral <$> pPartition
     ] ) <?> "value"
@@ -750,6 +779,11 @@ parseLiteral = msum ( map try
             return (AbsLitFunction xs)
             where
                 inner = arrowedPair parseExpr
+
+        pSequence = do
+            lexeme L_sequence
+            xs <- parens (sepBy parseExpr comma)
+            return (AbsLitSequence xs)
 
         pRelation = do
             lexeme L_relation

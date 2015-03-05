@@ -4,9 +4,14 @@ given p1: int
 given p2: int
 given p3: int
 given p4: int
-given a_Explicit_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..p1)] of int(0..p2)
-given a_Explicit_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..p1), int(1..p2)] of int(p3..p4)
+given a_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..p1)] of int(0..p2)
+given a_Explicit_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..p1), int(1..p2)] of int(p3..p4)
 find x: int(-1000..1000)
 such that
-    x = max([max([a_Explicit_ExplicitVarSizeWithMarker_Values[q1, q3] | q3 : int(1..p2), q3 <= a_Explicit_ExplicitVarSizeWithMarker_Marker[q1]]) | q1 : int(1..p1)])
+    x =
+    max([max([a_Explicit_ExplicitVarSizeWithMarker_Values[q1, q3]
+                  | q3 : int(1..p2), q3 <= a_Explicit_ExplicitVarSizeWithMarker_Marker[q1]])
+             | q1 : int(1..p1)])
 

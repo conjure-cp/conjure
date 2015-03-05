@@ -23,6 +23,7 @@ data AbstractLiteral x
     | AbsLitSet [x]
     | AbsLitMSet [x]
     | AbsLitFunction [(x, x)]
+    | AbsLitSequence [x]
     | AbsLitRelation [[x]]
     | AbsLitPartition [[x]]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -41,6 +42,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
     pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (AbsLitSequence  xs ) = "sequence"  <> prettyList prParens "," xs
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
 
@@ -70,6 +72,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
                                                     <*> (homoType (pretty p) <$> mapM (typeOf . snd) xs)
 
+    typeOf   (AbsLitSequence    [] ) = return (TypeSequence TypeAny)
+    typeOf p@(AbsLitSequence    xs ) = TypeSequence <$> (homoType (pretty p) <$> mapM typeOf xs)
+
     typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
     typeOf p@(AbsLitRelation    xss) = do
         ty <- homoType (pretty p) <$> mapM (typeOf . AbsLitTuple) xss
@@ -80,9 +85,8 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
 
-instance (DomainOf a a, Pretty a) => DomainOf (AbstractLiteral a) a where
+instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a where
 
-    domainOf (AbsLitTuple        []) = return (DomainTuple [])
     domainOf (AbsLitTuple        xs) = DomainTuple  <$> mapM domainOf xs
 
     domainOf (AbsLitRecord       xs) = DomainRecord <$> sequence [ do t <- domainOf x ; return (n,t)
@@ -91,28 +95,28 @@ instance (DomainOf a a, Pretty a) => DomainOf (AbstractLiteral a) a where
     domainOf (AbsLitVariant Nothing  _ _) = fail "Cannot calculate the domain of variant literal."
     domainOf (AbsLitVariant (Just t) _ _) = return (DomainVariant t)
 
-    domainOf (AbsLitMatrix _   []  ) = return (DomainMatrix DomainAny DomainAny)
     domainOf (AbsLitMatrix ind inn ) = DomainMatrix ind <$> (mconcat <$> mapM domainOf inn)
 
-    domainOf (AbsLitSet         [] ) = return (DomainSet def def DomainAny)
     domainOf (AbsLitSet         xs ) = DomainSet def def <$> (mconcat <$> mapM domainOf xs)
 
-    domainOf (AbsLitMSet        [] ) = return (DomainMSet def def DomainAny)
     domainOf (AbsLitMSet        xs ) = DomainMSet def def <$> (mconcat <$> mapM domainOf xs)
 
-    domainOf (AbsLitFunction    [] ) = return (DomainFunction def def DomainAny DomainAny)
     domainOf (AbsLitFunction    xs ) = DomainFunction def def
                                                 <$> (mconcat <$> mapM (domainOf . fst) xs)
                                                 <*> (mconcat <$> mapM (domainOf . snd) xs)
 
-    domainOf (AbsLitRelation    [] ) = return (DomainRelation def def [])
+    domainOf (AbsLitSequence    xs ) =
+        let
+            attr = SequenceAttr (SizeAttr_Size (fromInt $ genericLength xs)) def
+        in
+            DomainSequence def attr <$> (mconcat <$> mapM domainOf xs)
+
     domainOf (AbsLitRelation    xss) = do
         ty <- mconcat <$> mapM (domainOf . AbsLitTuple) xss
         case ty of
             DomainTuple ts -> return (DomainRelation def def ts)
             _ -> bug "expecting DomainTuple in domainOf"
 
-    domainOf (AbsLitPartition   [] ) = return (DomainPartition def def DomainAny) 
     domainOf (AbsLitPartition   xss) = DomainPartition def def <$> (mconcat <$> mapM domainOf (concat xss))
 
 normaliseAbsLit :: (Ord c, ExpressionLike c) => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
@@ -123,5 +127,6 @@ normaliseAbsLit norm (AbsLitMatrix d  xs ) = AbsLitMatrix (normaliseDomain norm 
 normaliseAbsLit norm (AbsLitSet       xs ) = AbsLitSet                   $ sortNub $ map norm xs
 normaliseAbsLit norm (AbsLitMSet      xs ) = AbsLitMSet                  $ sort    $ map norm xs
 normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction              $ sortNub [ (norm x, norm y) | (x, y) <- xs ]
+normaliseAbsLit norm (AbsLitSequence  xs ) = AbsLitSequence              $           map norm xs
 normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation              $ sortNub $ map (map norm) xss
 normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition             $ sortNub $ map (sortNub . map norm) xss

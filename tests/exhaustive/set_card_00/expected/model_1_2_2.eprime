@@ -2,11 +2,24 @@ language ESSENCE' 1.0
 
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
-find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
+find s_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..2)] of int(1..2)
 such that
-    or([q3 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q3] = sum([s_Occurrence[q2] | q2 : int(1..2)]) | q3 : int(1..2)]),
-    2 <= s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
-    and([q1 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q1] = 1 | q1 : int(1..2)]),
-    and([q5 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q5]] | q5 : int(1..2)]),
-    and([s_Occurrence[q4] -> or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q7] = q4 | q7 : int(1..2)]) | q4 : int(1..2)])
+    or([q3 <= s_ExplicitVarSizeWithMarker_Marker /\
+        s_ExplicitVarSizeWithMarker_Values[q3] =
+        sum([s_Occurrence[q2] | q2 : int(1..2)])
+            | q3 : int(1..2)]),
+    2 <= s_ExplicitVarSizeWithMarker_Marker ->
+    s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
+    and([q1 > s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q1] = 1
+             | q1 : int(1..2)]),
+    and([q5 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q5]]
+             | q5 : int(1..2)]),
+    and([s_Occurrence[q4] ->
+         or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q7] = q4
+                 | q7 : int(1..2)])
+             | q4 : int(1..2)])
 
