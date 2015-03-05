@@ -235,9 +235,11 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
   unErr (Right r) = r
   unErr (Left r)  = bug ("getReprFromAnswer unErr" <+> r)
 
+  -- the expected format is always the following:
+  -- "choose-repr: Choosing representation for <VARNAME>: <DOMAIN>"
   getReprDomText :: Answer -> Text
   getReprDomText = T.pack                                       -- convert to text
-                 . intercalate "@" . tail . splitOn "@"         -- drop the first thing up to :
+                 . intercalate ":" . tail . tail . splitOn ":"  -- drop the first two things seperated by :'s
                  . renderNormal . aText                         -- aText into String
 
 

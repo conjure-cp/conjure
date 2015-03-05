@@ -940,7 +940,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         let options =
                 [ (msg, const out, hook)
                 | dom <- domOpts
-                , let msg = "Choosing representation for" <+> pretty nm <> "@" <++> pretty dom
+                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook (channelling config) forg nm dom
                 ]
