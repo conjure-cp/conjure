@@ -237,7 +237,7 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
 
   getReprDomText :: Answer -> Text
   getReprDomText = T.pack                                       -- convert to text
-                 . intercalate ":" . tail . splitOn ":"         -- drop the first thing up to :
+                 . intercalate "@" . tail . splitOn "@"         -- drop the first thing up to :
                  . renderNormal . aText                         -- aText into String
 
 
