@@ -189,6 +189,9 @@ Library
                      , Conjure.UI.TypeCheck
 
                      , Conjure.UI.LogFollow
+                     
+                     , Data.Global
+                     , Data.Global.Registry
 
     build-depends    : base
                      , aeson
@@ -220,7 +223,7 @@ Library
                      , uniplate
                      , unordered-containers
                      , vector
-                     , global-variables
+                     , stm
 
     default-extensions:
         FlexibleContexts
