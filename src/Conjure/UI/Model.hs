@@ -37,6 +37,7 @@ import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inli
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.LogFollow( logFollow, storeChoice )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
@@ -85,8 +86,6 @@ import qualified Data.Generics.Uniplate.Zipper as Zipper ( up )
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
-
-import Conjure.UI.LogFollow(logFollow, storeChoice)
 
 
 outputModels
@@ -305,26 +304,20 @@ executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
     c <- storeChoice config q option
     return [c]
-
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> do
-                   let mi = minimumBy compactCompareAnswer (map snd options)
-                   c <- storeChoice config question mi
-                   return [c]
-
+            let mi = minimumBy compactCompareAnswer (map snd options)
+            c <- storeChoice config question mi
+            return [c]
         FollowLog -> logFollow config question options
-
         AtRandom -> do
           picked <-  executeStrategy options st
           newAns <- storeChoice config question $ headNote "AtRandom no choice" picked
-          -- logInfo ("NewAns:" <+> (pretty . show $ newAns))
           return [newAns]
-
         _  -> do
           cs <- executeStrategy options st
           mapM (storeChoice config question) cs
-
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -370,7 +363,7 @@ allFixedQs :: Config -> Driver
 allFixedQs c = strategyToDriver c PickFirst PickAll
 
 pickFirst :: Config -> Driver
-pickFirst c= strategyToDriver c PickFirst PickFirst
+pickFirst c = strategyToDriver c PickFirst PickFirst
 
 interactive :: Config -> Driver
 interactive c = strategyToDriver c Interactive Interactive
@@ -379,7 +372,7 @@ interactiveFixedQs :: Config -> Driver
 interactiveFixedQs c = strategyToDriver c PickFirst Interactive
 
 interactiveFixedQsAutoA :: Config -> Driver
-interactiveFixedQsAutoA  c = strategyToDriver c PickFirst (Auto Interactive)
+interactiveFixedQsAutoA c = strategyToDriver c PickFirst (Auto Interactive)
 
 
 
@@ -947,7 +940,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         let options =
                 [ (msg, const out, hook)
                 | dom <- domOpts
-                , let msg = "Choosing representation for" <+> pretty nm <> "˸" <++> pretty dom
+                , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook (channelling config) forg nm dom
                 ]
@@ -1387,8 +1380,6 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             TypeMatrix{} -> return ()
             TypeList{} -> return ()
             _ -> na "rule_QuantifierShift"
-        let
-
         return
             ( "Shifting quantifier inwards"
             , const $ make opMatrixIndexing

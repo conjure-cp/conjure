@@ -1,7 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Definition
@@ -66,10 +65,9 @@ import qualified Data.Text as T
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
--- intSet
-import Data.IntSet(IntSet)
+-- containers
+import Data.IntSet ( IntSet )
 import qualified Data.IntSet as I
-
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Model ---------------------------------------------------------------------------------------------------------------
@@ -248,31 +246,6 @@ instance Pretty FindOrGiven where
 -- ModelInfo -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-data QuestionAnswered =
-      AnsweredRepr
-      {
-        qHole_       :: Int
-      , qAscendants_ :: IntSet
-      , aDom_        :: Domain HasRepresentation Expression
-      , aRuleName_   :: String  -- Doc has no Data or Ord instance
-      }
-    | AnsweredRule
-      {
-        qHole_       :: Int
-      , qAscendants_ :: IntSet
-      , aRuleName_   :: String  -- Doc has no Data or Ord instance
-      } deriving (Eq, Ord, Show, Data, Typeable, Generic)
-
-
-
-instance ToJSON    QuestionAnswered where toJSON    = genericToJSON jsonOptions
-instance FromJSON  QuestionAnswered where parseJSON = genericParseJSON jsonOptions
-instance Serialize QuestionAnswered
-instance Hashable  QuestionAnswered
-instance Hashable  IntSet  where
-    hashWithSalt s i = hashWithSalt s  (I.toList i)
-
-
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
@@ -295,7 +268,7 @@ modelInfoJSONOptions = jsonOptions { JSON.fieldLabelModifier = onHead toLower . 
 
 instance Serialize ModelInfo
 instance Hashable  ModelInfo
-instance ToJSON    ModelInfo where  toJSON = genericToJSON modelInfoJSONOptions
+instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
@@ -327,6 +300,27 @@ initInfo model = model { mInfo = info }
             , miEnumLettings = [ d      | Declaration d@LettingDomainDefnEnum{}        <- mStatements model ]
             , miUnnameds     = [ (nm,s) | Declaration (LettingDomainDefnUnnamed nm s)  <- mStatements model ]
             }
+
+
+data QuestionAnswered =
+      AnsweredRepr
+      { qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aDom_        :: Domain HasRepresentation Expression
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      }
+    | AnsweredRule
+      { qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      } deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance ToJSON    QuestionAnswered where toJSON    = genericToJSON jsonOptions
+instance FromJSON  QuestionAnswered where parseJSON = genericParseJSON jsonOptions
+instance Serialize QuestionAnswered
+instance Hashable  QuestionAnswered
+instance Hashable  IntSet where
+    hashWithSalt s i = hashWithSalt s (I.toList i)
 
 
 ------------------------------------------------------------------------------------------------------------------------

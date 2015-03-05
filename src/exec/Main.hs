@@ -6,13 +6,13 @@ import Conjure.Prelude
 import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel )
-import Conjure.UI.Model ( parseStrategy, outputModels)
+import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel )
-import Conjure.UI.LogFollow (refAnswers)
+import Conjure.UI.LogFollow ( refAnswers )
 
 import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.ModelDiff ( modelDiffIO )
@@ -30,7 +30,6 @@ import System.Console.CmdArgs ( cmdArgs )
 
 main :: IO ()
 main = do
-
     input <- cmdArgs ui
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (groom input))
@@ -61,7 +60,6 @@ mainWithArgs Modelling{..} = do
     case savedChoices of
       Just f  -> refAnswers f
       Nothing -> return ()
-
 
     let config = Config.Config
             { Config.outputDirectory         = outputDirectory
@@ -192,3 +190,9 @@ mainWithArgs TypeCheck{..} =
 --              full channelling + one redundant refinement
 --              up to n different refinements
 --          ...
+
+
+
+
+
+

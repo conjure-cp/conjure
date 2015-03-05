@@ -47,7 +47,7 @@ data Strategy
     | Compact
     | FollowLog
     | Auto Strategy
-    deriving (Eq, Ord, Show, Read, Data, Typeable, Generic)
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
 instance Default Strategy where def = Auto Interactive
 
@@ -81,7 +81,7 @@ data Config = Config
     , numberingStart            :: Int
     , smartFilenames            :: Bool
     }
-    deriving (Eq, Ord, Read, Show, Data, Typeable)
+    deriving (Eq, Ord, Show, Read, Data, Typeable)
 
 instance Default Config where
     def = Config
