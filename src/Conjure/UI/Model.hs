@@ -37,6 +37,7 @@ import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inli
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.LogFollow( logFollow, storeChoice )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
@@ -141,7 +142,7 @@ toCompletion config@Config{..} m = do
     logInfo $ modelInfo m2
     loopy m2
     where
-        driver = strategyToDriver strategyQ strategyA
+        driver = strategyToDriver config strategyQ strategyA
         loopy model = do
             logDebug $ "[loopy]" <+> pretty model
             qs <- remaining config model
@@ -208,6 +209,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
             fullModelAfterHook <- hook fullModelBeforeHook
             return Answer
                 { aText = ruleName <> ":" <+> ruleText
+                , aRuleName = ruleName
                 , aAnswer = ruleResultExpr
                 , aFullModel = fullModelAfterHook
                                 |> addToTrail config
@@ -230,8 +232,8 @@ remaining config model | Just modelZipper <- zipperBi model = do
 remaining _ _ = return []
 
 
-strategyToDriver :: Strategy -> Strategy -> Driver
-strategyToDriver strategyQ strategyA questions = do
+strategyToDriver :: Config -> Strategy -> Strategy -> Driver
+strategyToDriver config strategyQ strategyA questions = do
     let optionsQ =
             [ (doc, q)
             | (n, q) <- zip allNats questions
@@ -251,7 +253,7 @@ strategyToDriver strategyQ strategyA questions = do
                         nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
                                                                        , pretty (aAnswer a) ]
                 ]
-        pickedAs <- executeAnswerStrategy optionsA strategyA
+        pickedAs <- executeAnswerStrategy config pickedQ optionsA strategyA
         return (map aFullModel pickedAs)
 
 
@@ -292,17 +294,30 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [picked]
         Compact -> bug "executeStrategy: Compact"
+        FollowLog -> bug "executeStrategy: FollowLog"
 
 
-executeAnswerStrategy :: (MonadIO m, MonadLog m) => [(Doc, Answer)] -> Strategy -> m [Answer]
-executeAnswerStrategy [] _ = bug "executeStrategy: nothing to choose from"
-executeAnswerStrategy [(doc, option)] (viewAuto -> (_, True)) = do
+executeAnswerStrategy :: (MonadIO m, MonadLog m)
+                      => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [Answer]
+executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
+executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
-    return [option]
-executeAnswerStrategy options st@(viewAuto -> (strategy, _)) =
+    c <- storeChoice config q option
+    return [c]
+executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
-        Compact -> return [minimumBy compactCompareAnswer (map snd options)]
-        _       -> executeStrategy options st
+        Compact -> do
+            let mi = minimumBy compactCompareAnswer (map snd options)
+            c <- storeChoice config question mi
+            return [c]
+        FollowLog -> logFollow config question options
+        AtRandom -> do
+          picked <-  executeStrategy options st
+          newAns <- storeChoice config question $ headNote "AtRandom no choice" picked
+          return [newAns]
+        _  -> do
+          cs <- executeStrategy options st
+          mapM (storeChoice config question) cs
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -344,20 +359,20 @@ addToTrail Config{..}
             }
 
 
-allFixedQs :: Driver
-allFixedQs = strategyToDriver PickFirst PickAll
+allFixedQs :: Config -> Driver
+allFixedQs c = strategyToDriver c PickFirst PickAll
 
-pickFirst :: Driver
-pickFirst = strategyToDriver PickFirst PickFirst
+pickFirst :: Config -> Driver
+pickFirst c = strategyToDriver c PickFirst PickFirst
 
-interactive :: Driver
-interactive = strategyToDriver Interactive Interactive
+interactive :: Config -> Driver
+interactive c = strategyToDriver c Interactive Interactive
 
-interactiveFixedQs :: Driver
-interactiveFixedQs = strategyToDriver PickFirst Interactive
+interactiveFixedQs :: Config -> Driver
+interactiveFixedQs c = strategyToDriver c PickFirst Interactive
 
-interactiveFixedQsAutoA :: Driver
-interactiveFixedQsAutoA = strategyToDriver PickFirst (Auto Interactive)
+interactiveFixedQsAutoA :: Config -> Driver
+interactiveFixedQsAutoA c = strategyToDriver c PickFirst (Auto Interactive)
 
 
 
@@ -1365,8 +1380,6 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             TypeMatrix{} -> return ()
             TypeList{} -> return ()
             _ -> na "rule_QuantifierShift"
-        let
-            
         return
             ( "Shifting quantifier inwards"
             , const $ make opMatrixIndexing

@@ -33,7 +33,9 @@ data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
     , aFullModel :: Model
-    }
+    , aRuleName  :: Doc
+    } deriving (Show)
+
 
 type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
 
@@ -43,6 +45,7 @@ data Strategy
     | Interactive
     | AtRandom
     | Compact
+    | FollowLog
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -59,6 +62,7 @@ parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
 parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy "c" = return Compact
+parseStrategy "l" = return FollowLog
 parseStrategy _ = Nothing
 
 data Config = Config
@@ -67,6 +71,7 @@ data Config = Config
     , logRuleFails              :: Bool
     , logRuleSuccesses          :: Bool
     , logRuleAttempts           :: Bool
+    , logChoices                :: Bool
     , strategyQ                 :: Strategy
     , strategyA                 :: Strategy
     , outputDirectory           :: FilePath
@@ -85,6 +90,7 @@ instance Default Config where
         , logRuleFails              = False
         , logRuleSuccesses          = False
         , logRuleAttempts           = False
+        , logChoices                = False
         , strategyQ                 = Interactive
         , strategyA                 = Interactive
         , outputDirectory           = "conjure-output"

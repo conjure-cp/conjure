@@ -34,7 +34,7 @@ ghci:
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
 	    -Werror                                    \
-	    `find src -name *.hs | grep -v Main`
+	    `find src -name *.hs | grep -v Main | grep -v '\.#'`
 
 clean:
 	@bash etc/build/clean.sh

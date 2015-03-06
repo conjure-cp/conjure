@@ -142,7 +142,7 @@ import Text.Parsec ( ParsecT )
 import Text.PrettyPrint as X
     ( Doc
     , (<>), (<+>), ($$)
-    , hang, nest, punctuate 
+    , hang, nest, punctuate
     , hcat, vcat, fsep, hsep, sep
     )
 
@@ -427,6 +427,7 @@ class (Functor m, Applicative m, Monad m) => MonadLog m where
 
 data LogLevel
     = LogNone
+    | LogFollow
     | LogInfo
     | LogWarn
     | LogDebug

@@ -19,6 +19,7 @@ module Conjure.Language.Definition
     , ModelInfo(..), Decision(..)
     , Statement(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
+    , QuestionAnswered(..)
 
     , Name(..)
     , Expression(..), ReferenceTo(..)
@@ -64,6 +65,9 @@ import qualified Data.Text as T
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
+-- containers
+import Data.IntSet ( IntSet )
+import qualified Data.IntSet as I
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Model ---------------------------------------------------------------------------------------------------------------
@@ -253,6 +257,7 @@ data ModelInfo = ModelInfo
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
+    , miQuestionAnswered :: [QuestionAnswered]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -267,7 +272,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -295,6 +300,27 @@ initInfo model = model { mInfo = info }
             , miEnumLettings = [ d      | Declaration d@LettingDomainDefnEnum{}        <- mStatements model ]
             , miUnnameds     = [ (nm,s) | Declaration (LettingDomainDefnUnnamed nm s)  <- mStatements model ]
             }
+
+
+data QuestionAnswered =
+      AnsweredRepr
+      { qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aDom_        :: Domain HasRepresentation Expression
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      }
+    | AnsweredRule
+      { qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      } deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance ToJSON    QuestionAnswered where toJSON    = genericToJSON jsonOptions
+instance FromJSON  QuestionAnswered where parseJSON = genericParseJSON jsonOptions
+instance Serialize QuestionAnswered
+instance Hashable  QuestionAnswered
+instance Hashable  IntSet where
+    hashWithSalt s i = hashWithSalt s (I.toList i)
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -681,7 +707,7 @@ data Generator
      | GenInExpr        AbstractPattern Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-instance Pretty Generator where     
+instance Pretty Generator where
     pretty (GenDomainNoRepr  pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenDomainHasRepr pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x

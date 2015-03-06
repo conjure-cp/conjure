@@ -197,6 +197,11 @@ Library
                      , Conjure.UI.ValidateSolution
                      , Conjure.UI.TypeCheck
 
+                     , Conjure.UI.LogFollow
+                     
+                     , Data.Global
+                     , Data.Global.Registry
+
     build-depends    : base
                      , aeson
                      , bytestring
@@ -227,6 +232,7 @@ Library
                      , uniplate
                      , unordered-containers
                      , vector
+                     , stm
 
     default-extensions:
         FlexibleContexts
@@ -283,7 +289,7 @@ test-suite conjure-testing
     build-depends    : conjure-cp
                      , base
                      , bytestring
-                     , containers 
+                     , containers
                      , shelly
                      , tasty
                      , tasty-ant-xml
@@ -307,4 +313,3 @@ test-suite conjure-testing
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
-
