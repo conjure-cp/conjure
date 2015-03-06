@@ -162,7 +162,7 @@ logFollow config q@Question{..} options = do
     nullListMay  [] = Nothing
     nullListMay  xs = Just xs
 
-    setMapMaybe :: (Ord b) => (a -> Maybe b) -> Set a -> Set b
+    setMapMaybe :: (Ord a, Ord b) => (a -> Maybe b) -> Set a -> Set b
     setMapMaybe f = S.map (fromJustNote "setMapMaybe") . S.filter isJust . S.map f
 
 
