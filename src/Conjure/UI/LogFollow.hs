@@ -88,7 +88,7 @@ logFollow config q@Question{..} options = do
     Nothing  -> do
         logWarn (vcat ["No match for "
                       , "question hole"  <+> (pretty  qHole) <+> (pretty . holeHash $ qHole)
-                      , "AsQuestionAnswered" <+> (pretty .groom)
+                      , "AsQuestionAnswered" <+> (pretty . show)
                                                  [ makeChoice q a |  (_,a) <- options ]
                       ])
         mapM (storeChoice config q . snd) options
@@ -173,8 +173,8 @@ compareDoms :: Domain HasRepresentation Expression
 compareDoms d1 d2 = getReps d1 == getReps d2
 -- compareDoms d1 d2 = error . show . vcat $ [ pretty  $ d1
 --                                           , pretty  $ d2
---                                           , pretty . groom . getReps $ d1
---                                           , pretty . groom . getReps $ d2
+--                                           , pretty . show . getReps $ d1
+--                                           , pretty . show . getReps $ d2
 --                                           ]
 
     where
@@ -195,7 +195,7 @@ storeChoice config q a = do
   let c = makeChoice q a
   logWarn $ vcat ["storedChoice:"
                  ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
-                 ,  pretty . groom $ c]
+                 ,  pretty . show $ c]
   saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
   let a' = a{aFullModel = addQuestionAnswered (logChoices config) (aFullModel a) c }
   return $ a'
@@ -250,7 +250,7 @@ getAnswersFromFile :: (MonadIO m, MonadFail m )
 getAnswersFromFile fp | takeExtension fp  == ".json" = do
   liftIO $ fmap A.decode (B.readFile fp) >>= \case
     Just (vs ::  [QuestionAnswered])  -> do
-        -- putStrLn $ "BeforeToSet: " ++  (groom vs)
+        -- putStrLn $ "BeforeToSet: " ++  (show vs)
         return $ M.fromListWith (S.union) [ ((qHole_ v) , S.singleton (v, i))
                                                 | v <- vs
                                                 | i <- [0..]

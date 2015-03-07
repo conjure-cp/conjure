@@ -161,9 +161,6 @@ import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
 -- pipes
 import qualified Pipes
 
--- groom
-import Text.Groom as X ( groom )
-
 -- shelly
 import Shelly ( Sh, shelly, print_stdout, print_stderr )
 

@@ -32,7 +32,7 @@ main :: IO ()
 main = do
     input <- cmdArgs ui
     let workload = runLoggerPipeIO (logLevel input) $ do
-            logDebug ("Command line options: " <+> pretty (groom input))
+            logDebug ("Command line options: " <+> pretty (show input))
             mainWithArgs input
     case limitTime input of
         Just sec | sec > 0 -> do
