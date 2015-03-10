@@ -19,12 +19,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
     typeOf p@(OpTwoBars a) = do
         ty <- typeOf a
         case ty of
-            TypeInt{}      -> return ()
-            TypeSet{}      -> return ()
-            TypeMSet{}     -> return ()
-            TypeFunction{} -> return ()
-            TypeSequence{} -> return ()
-            _              -> raiseTypeError p
+            TypeInt{}       -> return ()
+            TypeSet{}       -> return ()
+            TypeMSet{}      -> return ()
+            TypeFunction{}  -> return ()
+            TypeSequence{}  -> return ()
+            TypeRelation{}  -> return ()
+            TypePartition{} -> return ()
+            _               -> raiseTypeError p
         return TypeInt
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) x where
@@ -37,10 +39,12 @@ instance EvaluateOp OpTwoBars where
             ConstantInt y                        -> return $ ConstantInt $ abs y
 
             -- cardinality of a constant
-            ConstantAbstract (AbsLitSet xs)      -> return $ ConstantInt $ genericLength $ nub xs
-            ConstantAbstract (AbsLitMSet xs)     -> return $ ConstantInt $ genericLength       xs
-            ConstantAbstract (AbsLitFunction xs) -> return $ ConstantInt $ genericLength $ nub xs
-            ConstantAbstract (AbsLitSequence xs) -> return $ ConstantInt $ genericLength       xs
+            ConstantAbstract (AbsLitSet       xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            ConstantAbstract (AbsLitMSet      xs) -> return $ ConstantInt $ genericLength                xs
+            ConstantAbstract (AbsLitFunction  xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            ConstantAbstract (AbsLitSequence  xs) -> return $ ConstantInt $ genericLength                xs
+            ConstantAbstract (AbsLitRelation  xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            ConstantAbstract (AbsLitPartition xs) -> return $ ConstantInt $ genericLength $ nub $ concat xs
 
             -- cardinality of a domain
             DomainInConstant (DomainInt rs)      -> ConstantInt . genericLength <$> rangesInts rs
