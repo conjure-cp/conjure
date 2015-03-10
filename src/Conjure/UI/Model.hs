@@ -708,8 +708,6 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
-    , Vertical.Matrix.rule_MatrixLit_Eq
-    , Vertical.Matrix.rule_MatrixLit_Neq
     , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Card

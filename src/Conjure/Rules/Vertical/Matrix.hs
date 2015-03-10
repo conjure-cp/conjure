@@ -183,70 +183,41 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
 rule_Matrix_Eq :: Rule
 rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
     theRule p = do
-        (x,y)                <- match opEq p
-        TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeMatrix{}         <- typeOf y
-        index <- case (domainOf x, domainOf y) of
-            (Just (DomainMatrix index _), _) -> return index
-            (_, Just (DomainMatrix index _)) -> return index
-            (Just _, _) -> na "rule_Matrix_Eq"
-            (_, Just _) -> na "rule_Matrix_Eq"
-            _ -> na "Equality constraint between two matrices, but domainOf doesn't work on either."
+        (x,y)                 <- match opEq p
+        TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeMatrix{}          <- typeOf y
+        DomainMatrix indexX _ <- domainOf x
+        DomainMatrix indexY _ <- domainOf y
         return
             ( "Horizontal rule for matrix ="
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  [essence| forAll &iPat : &index . &x[&i] = &y[&i] |]
+                     (jPat, j) = quantifiedVar (fresh `at` 1)
+                 in  [essence| (forAll &iPat : &indexX . &x[&i] = &y[&i])
+                                /\
+                               (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
+                                /\
+                               (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
+                             |]
             )
 
 
 rule_Matrix_Neq :: Rule
 rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
     theRule p = do
-        (x,y)                <- match opNeq p
-        TypeMatrix{}         <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeMatrix{}         <- typeOf y
-        index <- case (domainOf x, domainOf y) of
-            (Just (DomainMatrix index _), _) -> return index
-            (_, Just (DomainMatrix index _)) -> return index
-            (Just _, _) -> na "rule_Matrix_Neq"
-            (_, Just _) -> na "rule_Matrix_Neq"
-            _ -> na "Neq constraint between two matrices, but domainOf doesn't work on either."
+        (x,y)                 <- match opNeq p
+        TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeMatrix{}          <- typeOf y
+        DomainMatrix indexX _ <- domainOf x
+        DomainMatrix indexY _ <- domainOf y
         return
             ( "Horizontal rule for matrix !="
             , \ fresh ->
                  let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  [essence| exists &iPat : &index . &x[&i] != &y[&i] |]
-            )
-
-
-rule_MatrixLit_Eq :: Rule
-rule_MatrixLit_Eq = "matrix-lit-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opEq p
-        (_, _, xElems) <- match matrixLiteral x
-        (_, _, yElems) <- match matrixLiteral y
-        return
-            ( "Horizontal rule for matrix literal equality"
-            , const $
-                if length xElems == length yElems
-                    then make opAnd $ fromList $ zipWith (make opEq) xElems yElems
-                    else fromBool False
-            )
-
-
-rule_MatrixLit_Neq :: Rule
-rule_MatrixLit_Neq = "matrix-lit-neq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opNeq p
-        (_, _, xElems) <- match matrixLiteral x
-        (_, _, yElems) <- match matrixLiteral y
-        return
-            ( "Horizontal rule for matrix literal equality"
-            , const $ 
-                if length xElems == length yElems
-                    then make opNot $ make opAnd $ fromList $ zipWith (make opEq) xElems yElems
-                    else fromBool True
+                 in  [essence| (exists &iPat : &indexX . &x[&i] != &y[&i])
+                                 \/
+                               (exists &iPat : &indexY . &x[&i] != &y[&i])
+                             |]
             )
 
 
