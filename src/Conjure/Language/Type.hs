@@ -151,14 +151,14 @@ mostDefined = foldr f TypeAny
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
 
-homoType :: Doc -> [Type] -> Type
-homoType msg [] = userErr $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
+homoType :: MonadFail m => Doc -> [Type] -> m Type
+homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
 homoType msg xs =
     if typesUnify xs
-        then mostDefined xs
-        else userErr $ vcat [ "Not uniformly typed:" <+> msg
-                            , "Involved types are:" <+> vcat (map pretty xs)
-                            ]
+        then return (mostDefined xs)
+        else fail $ vcat [ "Not uniformly typed:" <+> msg
+                         , "Involved types are:" <+> vcat (map pretty xs)
+                         ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
 innerTypeOf (TypeList t) = return t

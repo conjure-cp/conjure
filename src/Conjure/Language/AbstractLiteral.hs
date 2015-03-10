@@ -60,30 +60,30 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
         return (n, dt)
 
     typeOf   (AbsLitMatrix _   []  ) = return (TypeMatrix TypeAny TypeAny)
-    typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) <$> mapM typeOf inn)
+    typeOf p@(AbsLitMatrix ind inn ) = TypeMatrix   <$> typeOf ind <*> (homoType (pretty p) =<< mapM typeOf inn)
 
     typeOf   (AbsLitSet         [] ) = return (TypeSet TypeAny)
-    typeOf p@(AbsLitSet         xs ) = TypeSet      <$> (homoType (pretty p) <$> mapM typeOf xs)
+    typeOf p@(AbsLitSet         xs ) = TypeSet      <$> (homoType (pretty p) =<< mapM typeOf xs)
 
     typeOf   (AbsLitMSet        [] ) = return (TypeMSet TypeAny)
-    typeOf p@(AbsLitMSet        xs ) = TypeMSet     <$> (homoType (pretty p) <$> mapM typeOf xs)
+    typeOf p@(AbsLitMSet        xs ) = TypeMSet     <$> (homoType (pretty p) =<< mapM typeOf xs)
 
     typeOf   (AbsLitFunction    [] ) = return (TypeFunction TypeAny TypeAny)
-    typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) <$> mapM (typeOf . fst) xs)
-                                                    <*> (homoType (pretty p) <$> mapM (typeOf . snd) xs)
+    typeOf p@(AbsLitFunction    xs ) = TypeFunction <$> (homoType (pretty p) =<< mapM (typeOf . fst) xs)
+                                                    <*> (homoType (pretty p) =<< mapM (typeOf . snd) xs)
 
     typeOf   (AbsLitSequence    [] ) = return (TypeSequence TypeAny)
-    typeOf p@(AbsLitSequence    xs ) = TypeSequence <$> (homoType (pretty p) <$> mapM typeOf xs)
+    typeOf p@(AbsLitSequence    xs ) = TypeSequence <$> (homoType (pretty p) =<< mapM typeOf xs)
 
     typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
     typeOf p@(AbsLitRelation    xss) = do
-        ty <- homoType (pretty p) <$> mapM (typeOf . AbsLitTuple) xss
+        ty <- homoType (pretty p) =<< mapM (typeOf . AbsLitTuple) xss
         case ty of
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
 
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
-    typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) <$> mapM typeOf (concat xss))
+    typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
 
 instance (DomainOf a a, ExpressionLike a) => DomainOf (AbstractLiteral a) a where
 
