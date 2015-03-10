@@ -553,8 +553,10 @@ sliceThemMatrices :: Monad m => Model -> m Model
 sliceThemMatrices model = do
     let
         -- nothing stays with a matrix type
-        -- we are doing this top down, so the first time we reach a matrix typed thing, we know it need to be sliced
-        -- no need to descend any further
+        -- we are doing this top down
+        -- when we reach a matrix-typed expression, we know it needs to be sliced
+        -- we descend otherwise
+        -- we also descend into components of the matrix-typed expression during slicing
         onExpr :: Monad m => Expression -> m Expression
         onExpr p = do
             let isIndexedMatrix = do
