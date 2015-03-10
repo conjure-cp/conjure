@@ -17,7 +17,7 @@ module Conjure.Language.Domain
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
-    , mkDomainBool, mkDomainInt, mkDomainIntB
+    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainAny
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
@@ -43,7 +43,7 @@ import Data.Set as S ( Set, empty, toList )
 
 
 data Domain r x
-    = DomainAny
+    = DomainAny Text Type
     | DomainBool
     | DomainInt [Range x]
     | DomainEnum
@@ -76,6 +76,9 @@ mkDomainInt = DomainInt
 mkDomainIntB :: x -> x -> Domain () x
 mkDomainIntB l u = DomainInt [RangeBounded l u]
 
+mkDomainAny :: Doc -> Type -> Domain r x
+mkDomainAny reason ty = DomainAny (stringToText $ show reason) ty
+
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
 instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
 instance (ToJSON    r, ToJSON    x) => ToJSON    (Domain r x) where toJSON = genericToJSON jsonOptions
@@ -101,7 +104,7 @@ instance TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
 typeOfDomain :: MonadFail m => Domain r x -> m Type
-typeOfDomain DomainAny                 = return TypeAny
+typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
@@ -132,7 +135,7 @@ defRepr = changeRepr def
 changeRepr :: (Pretty r, Pretty x) => r2 -> Domain r x -> Domain r2 x
 changeRepr rep = go
     where
-        go DomainAny  = DomainAny
+        go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
@@ -685,7 +688,7 @@ instance Default HasRepresentation where
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
-    pretty DomainAny = "?"
+    pretty DomainAny{} = "?"
 
     pretty DomainBool = "bool"
 

@@ -165,7 +165,7 @@ instantiateD
        )
     => Domain r Expression
     -> m (Domain r Constant)
-instantiateD DomainAny = return DomainAny
+instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
