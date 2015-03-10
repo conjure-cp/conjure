@@ -10,6 +10,7 @@ module Conjure.Language.Domain.Monoid where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Expression.Op
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
@@ -26,14 +27,16 @@ instance
     , Pretty r
     , Default r
     ) => Monoid (Domain r x) where
-    mempty = DomainMetaVar "mempty"
-    mappend DomainMetaVar{} d = d
-    mappend d DomainMetaVar{} = d
+    mempty = DomainAny "mempty" TypeAny
+    mappend DomainAny{} d = d
+    mappend d DomainAny{} = d
     mappend DomainBool DomainBool = DomainBool
     mappend (DomainInt r1) (DomainInt r2) = DomainInt (mappend r1 r2)
     mappend (DomainTuple xs) (DomainTuple ys)
         | length xs == length ys
         = DomainTuple (zipWith mappend xs ys)
+    mappend (DomainMatrix x1 x2) (DomainMatrix y1 y2)
+        = DomainMatrix (mappend x1 y1) (mappend x2 y2)
     mappend (DomainSet _ _ x) (DomainSet _ _ y)
         = DomainSet def def (mappend x y)
     mappend (DomainMSet _ _ x) (DomainMSet _ _ y)
