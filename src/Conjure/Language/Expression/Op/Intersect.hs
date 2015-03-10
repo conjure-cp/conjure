@@ -20,8 +20,8 @@ instance BinaryOperator (OpIntersect x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 
-instance Pretty x => DomainOf (OpIntersect x) x where
-    domainOf op = na $ "evaluateOp{OpIntersect}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpIntersect x) x where
+    domainOf op = mkDomainAny ("OpIntersect:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpIntersect where
     evaluateOp p@(OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do

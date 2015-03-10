@@ -25,8 +25,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
             then return TypeBool
             else raiseTypeError p
 
-instance Pretty x => DomainOf (OpIn x) x where
-    domainOf op = na $ "evaluateOp{OpIn}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpIn x) x where
+    domainOf op = mkDomainAny ("OpIn:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpIn where
     evaluateOp (OpIn c (ConstantAbstract (AbsLitSet      cs))) = return $ ConstantBool $ elem c cs

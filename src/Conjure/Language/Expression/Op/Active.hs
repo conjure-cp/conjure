@@ -30,8 +30,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpActive x) where
                                        , pretty ty
                                        ]
 
-instance Pretty x => DomainOf (OpActive x) x where
-    domainOf op = na $ "evaluateOp{OpActive}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpActive x) x where
+    domainOf op = mkDomainAny ("OpActive:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpActive where
     evaluateOp (OpActive (ConstantAbstract (AbsLitVariant _ n1 _)) n2) = return $ fromBool $ n1 == n2

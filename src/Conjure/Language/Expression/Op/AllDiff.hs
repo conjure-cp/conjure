@@ -22,8 +22,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             TypeMatrix{} -> return TypeBool
             _ -> raiseTypeError p
 
-instance Pretty x => DomainOf (OpAllDiff x) x where
-    domainOf op = na $ "evaluateOp{OpAllDiff}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpAllDiff x) x where
+    domainOf op = mkDomainAny ("OpAllDiff:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpAllDiff where
     evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =

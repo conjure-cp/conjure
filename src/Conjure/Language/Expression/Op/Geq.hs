@@ -20,8 +20,8 @@ instance BinaryOperator (OpGeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpGeq x) where
     typeOf (OpGeq a b) = sameToSameToBool a b
 
-instance Pretty x => DomainOf (OpGeq x) x where
-    domainOf op = na $ "evaluateOp{OpGeq}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpGeq x) x where
+    domainOf op = mkDomainAny ("OpGeq:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpGeq where
     evaluateOp (OpGeq x y) = return $ ConstantBool $ x >= y

@@ -22,8 +22,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
             then return TypeInt
             else raiseTypeError p
 
-instance Pretty x => DomainOf (OpFreq x) x where
-    domainOf op = na $ "evaluateOp{OpFreq}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) x where
+    domainOf op = mkDomainAny ("OpFreq:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpFreq where
     evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]

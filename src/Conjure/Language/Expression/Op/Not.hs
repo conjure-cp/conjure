@@ -17,8 +17,8 @@ instance FromJSON  x => FromJSON  (OpNot x) where parseJSON = genericParseJSON j
 instance TypeOf x => TypeOf (OpNot x) where
     typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
 
-instance Pretty x => DomainOf (OpNot x) x where
-    domainOf op = na $ "evaluateOp{OpNot}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpNot x) x where
+    domainOf op = mkDomainAny ("OpNot:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpNot where
     evaluateOp (OpNot x) = ConstantBool . not <$> boolOut x

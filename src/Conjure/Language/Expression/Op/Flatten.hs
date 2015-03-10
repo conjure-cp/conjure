@@ -25,8 +25,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
             TypeMatrix _ n -> return (TypeList (flattenType n))
             _ -> raiseTypeError p
 
-instance Pretty x => DomainOf (OpFlatten x) x where
-    domainOf op = na $ "evaluateOp{OpFlatten}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) x where
+    domainOf op = mkDomainAny ("OpFlatten:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do

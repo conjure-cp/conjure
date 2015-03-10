@@ -20,8 +20,8 @@ instance BinaryOperator (OpSubsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubsetEq x) where
     typeOf (OpSubsetEq a b) = sameToSameToBool a b
 
-instance Pretty x => DomainOf (OpSubsetEq x) x where
-    domainOf op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpSubsetEq x) x where
+    domainOf op = mkDomainAny ("OpSubsetEq:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpSubsetEq where
     evaluateOp (OpSubsetEq (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =

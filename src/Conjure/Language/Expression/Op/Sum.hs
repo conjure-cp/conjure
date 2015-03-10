@@ -27,8 +27,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance (Pretty x, ExpressionLike x) => DomainOf (OpSum x) x where
-    domainOf op = na $ "evaluateOp{OpSum}:" <++> pretty op
+instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpSum x) x where
+    domainOf op = mkDomainAny ("OpSum:" <++> pretty op) <$> typeOf op
 
 instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus

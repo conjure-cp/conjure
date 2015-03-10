@@ -21,8 +21,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToRelation x) where
             TypeFunction i j -> return (TypeRelation [i,j])
             _ -> raiseTypeError p
 
-instance Pretty x => DomainOf (OpToRelation x) x where
-    domainOf op = na $ "evaluateOp{OpToRelation}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpToRelation x) x where
+    domainOf op = mkDomainAny ("OpToRelation:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpToRelation where
     evaluateOp (OpToRelation (ConstantAbstract (AbsLitFunction xs))) =

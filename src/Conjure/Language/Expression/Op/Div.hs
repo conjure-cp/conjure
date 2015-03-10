@@ -20,8 +20,8 @@ instance BinaryOperator (OpDiv x) where
 instance TypeOf x => TypeOf (OpDiv x) where
     typeOf (OpDiv a b) = intToIntToInt a b
 
-instance Pretty x => DomainOf (OpDiv x) x where
-    domainOf op = na $ "evaluateOp{OpDiv}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpDiv x) x where
+    domainOf op = mkDomainAny ("OpDiv:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpDiv where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

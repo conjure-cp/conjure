@@ -24,8 +24,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMax x) where
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
 
-instance (Pretty x, ExpressionLike x) => DomainOf (OpMax x) x where
-    domainOf op = na $ "evaluateOp{OpMax}:" <++> pretty op
+instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpMax x) x where
+    domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

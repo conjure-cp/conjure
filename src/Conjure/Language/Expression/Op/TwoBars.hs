@@ -27,8 +27,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
             _              -> raiseTypeError p
         return TypeInt
 
-instance Pretty x => DomainOf (OpTwoBars x) x where
-    domainOf op = na $ "evaluateOp{OpTwoBars}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) x where
+    domainOf op = mkDomainAny ("OpTwoBars:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =

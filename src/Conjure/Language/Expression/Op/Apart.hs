@@ -23,8 +23,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpApart x) where
             TypePartition pTyInner | typesUnify [xTy, yTy, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
 
-instance Pretty x => DomainOf (OpApart x) x where
-    domainOf op = na $ "evaluateOp{OpApart}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpApart x) x where
+    domainOf op = mkDomainAny ("OpApart:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpApart where
     evaluateOp (OpApart x y (ConstantAbstract (AbsLitPartition xss))) =

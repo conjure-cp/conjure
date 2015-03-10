@@ -23,8 +23,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSlicing x) where
             _ -> raiseTypeError p
         return ty
 
-instance Pretty x => DomainOf (OpSlicing x) x where
-    domainOf op = na $ "evaluateOp{OpSlicing}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpSlicing x) x where
+    domainOf op = mkDomainAny ("OpSlicing:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpSlicing where
     evaluateOp op@(OpSlicing m lb ub) = case m of

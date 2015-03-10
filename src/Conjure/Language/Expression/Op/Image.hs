@@ -32,8 +32,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
                 , "x type:" <+> pretty xTy
                 ]
 
-instance Pretty x => DomainOf (OpImage x) x where
-    domainOf op = na $ "evaluateOp{OpImage}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpImage x) x where
+    domainOf op = mkDomainAny ("OpImage:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpImage where
     evaluateOp (OpImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do

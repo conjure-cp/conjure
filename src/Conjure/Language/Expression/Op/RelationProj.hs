@@ -48,8 +48,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                         TypeRelation <$> loop xs ts'
             _ -> raiseTypeError p
 
-instance Pretty x => DomainOf (OpRelationProj x) x where
-    domainOf op = na $ "evaluateOp{OpRelationProj}:" <++> pretty op
+instance (Pretty x, TypeOf x) => DomainOf (OpRelationProj x) x where
+    domainOf op = mkDomainAny ("OpRelationProj:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpRelationProj where
     evaluateOp (OpRelationProj (ConstantAbstract (AbsLitRelation xss)) mas) = do
