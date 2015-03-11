@@ -99,16 +99,21 @@ if [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     ghc --version
 else
     echo "GHC version ${GHC_VERSION} not found. Installing."
-    GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM}" etc/build/ghc_urls.txt | cut -d ' ' -f 3)
-    URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
-    wget -c "${URL}"
-    tar xvjf "${GHC_TARBALL}"
-    pushd "ghc-${GHC_VERSION}"
-    mkdir -p "${HOME}/.tools/ghc"
-    ./configure --prefix="${HOME}/.tools/ghc/${GHC_VERSION}"
-    make install
-    popd
-    rm -rf "${GHC_TARBALL}" "ghc-${GHC_VERSION}"
+    if [ "$(grep ${GHC_VERSION} ${PLATFORM} etc/build/ghc_urls.txt)" ]; then
+        GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM}" etc/build/ghc_urls.txt | cut -d ' ' -f 3)
+        URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
+        wget -c "${URL}"
+        tar xvjf "${GHC_TARBALL}"
+        pushd "ghc-${GHC_VERSION}"
+        mkdir -p "${HOME}/.tools/ghc"
+        ./configure --prefix="${HOME}/.tools/ghc/${GHC_VERSION}"
+        make install
+        popd
+        rm -rf "${GHC_TARBALL}" "ghc-${GHC_VERSION}"
+    else
+        echo "Cannot download GHC version ${GHC_VERSION} for platform ${PLATFORM}."
+        exit 1
+    fi
 fi
 
 # installing cabal-install
