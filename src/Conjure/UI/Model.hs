@@ -812,6 +812,7 @@ horizontalRules =
     , Horizontal.Function.rule_SubsetEq
     , Horizontal.Function.rule_Supset
     , Horizontal.Function.rule_SupsetEq
+    , Horizontal.Function.rule_Inverse
     , Horizontal.Function.rule_Card
     , Horizontal.Function.rule_Comprehension_PreImage
     , Horizontal.Function.rule_Comprehension_Defined

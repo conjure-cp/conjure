@@ -1,6 +1,7 @@
 module Conjure.Process.Enumerate ( enumerateDomain, enumerateInConstant ) where
 
 import Conjure.Prelude
+import Conjure.Language.AdHoc
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
@@ -57,10 +58,16 @@ enumerateRange RangeUpperBounded{} = fail "enumerateRange RangeUpperBounded"
 
 enumerateInConstant :: MonadFail m => Constant -> m [Constant]
 enumerateInConstant constant = case constant of
-    ConstantAbstract (AbsLitMatrix _ xs) -> return xs
-    ConstantAbstract (AbsLitSet      xs) -> return xs
-    ConstantAbstract (AbsLitMSet     xs) -> return xs
-    ConstantAbstract (AbsLitRelation xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
+    ConstantAbstract (AbsLitMatrix _  xs) -> return xs
+    ConstantAbstract (AbsLitSet       xs) -> return xs
+    ConstantAbstract (AbsLitMSet      xs) -> return xs
+    ConstantAbstract (AbsLitFunction  xs) -> return [ ConstantAbstract (AbsLitTuple [i,j]) | (i,j) <- xs ]
+    ConstantAbstract (AbsLitSequence  xs) -> return [ ConstantAbstract (AbsLitTuple [i,j])
+                                                    | (i',j) <- zip allNats xs
+                                                    , let i = fromInt i'
+                                                    ]
+    ConstantAbstract (AbsLitRelation  xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
+    ConstantAbstract (AbsLitPartition xs) -> return $ map (ConstantAbstract . AbsLitSet) xs
     _ -> fail $ vcat [ "enumerateInConstant"
                      , "constant:" <+> pretty constant
                      ]

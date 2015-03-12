@@ -138,31 +138,31 @@ rule_Subset = "function-subset" `namedRule` theRule where
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
         return
-            ( "Horizontal rule for set subset"
+            ( "Horizontal rule for function subset"
             , const [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
-rule_Supset = "set-supset" `namedRule` theRule where
+rule_Supset = "function-supset" `namedRule` theRule where
     theRule [essence| &a supset &b |] = do
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
         return
-            ( "Horizontal rule for set supset"
+            ( "Horizontal rule for function supset"
             , const [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
-rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
+rule_SupsetEq = "function-subsetEq" `namedRule` theRule where
     theRule [essence| &a supsetEq &b |] = do
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
         return
-            ( "Horizontal rule for set supsetEq"
+            ( "Horizontal rule for function supsetEq"
             , const [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
@@ -196,6 +196,24 @@ rule_Leq = "function-leq" `namedRule` theRule where
         return ( "Horizontal rule for function <=" <+> pretty (make opLeq ma mb)
                , const $ make opLeq ma mb
                )
+
+
+rule_Inverse :: Rule
+rule_Inverse = "function-inverse" `namedRule` theRule where
+    theRule [essence| inverse(&a, &b) |] = do
+        TypeFunction{} <- typeOf a
+        TypeFunction{} <- typeOf b
+        return
+            ( "Horizontal rule for function inverse"
+            , \ fresh ->
+                let (iPat, i) = quantifiedVar (fresh `at` 0)
+                in  [essence|
+                        (forAll &iPat in &a . &b(&i[2]) = &i[1])
+                            /\
+                        (forAll &iPat in &b . &a(&i[2]) = &i[1])
+                    |]
+            )
+    theRule _ = na "rule_Inverse"
 
 
 rule_Comprehension_PreImage :: Rule

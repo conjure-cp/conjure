@@ -204,6 +204,7 @@ functionals =
     , L_flatten
     , L_normIndices
     , L_indices
+    , L_inverse
 
     , L_true
 
