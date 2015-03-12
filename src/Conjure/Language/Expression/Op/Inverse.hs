@@ -27,7 +27,9 @@ instance DomainOf (OpInverse x) x where
 
 instance EvaluateOp OpInverse where
     evaluateOp (OpInverse (ConstantAbstract (AbsLitFunction xs)) (ConstantAbstract (AbsLitFunction ys))) =
-        return $ ConstantBool $ and [ (x2,x1) `elem` ys | (x1,x2) <- xs ]
+        return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]
+                                             , [ (j,i) `elem` xs | (i,j) <- ys ]
+                                             ]
     evaluateOp op = na $ "evaluateOp{OpInverse}:" <++> pretty (show op)
 
 instance SimplifyOp OpInverse x where
