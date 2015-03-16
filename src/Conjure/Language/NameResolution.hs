@@ -210,6 +210,4 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
     case mapMaybe isTheVariant (map snd mval) of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
         _ -> userErr ("Not a member of a variant type:" <+> pretty p)
-resolveAbsLit lit = do
-    lit' <- descendM resolveAbsLit lit
-    mapM resolveX lit'
+resolveAbsLit lit = descendBiM resolveX lit
