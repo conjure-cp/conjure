@@ -5,24 +5,28 @@ module Conjure.Rules.Horizontal.Partition where
 import Conjure.Rules.Import
 
 
--- TODO: when _gocBefore and _gocAfter are /= []
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (_gocBefore@[], (pat, p), _gocAfter@[]) <- matchFirst gensOrConds $ \ goc -> case goc of
+        (gocBefore, (pat, p), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opParts expr)
             _ -> na "rule_Comprehension_Literal"
-        (TypePartition _, elems) <- match partitionLiteral p
-        let f = lambdaToFunction pat body
+        (TypePartition tau, elems) <- match partitionLiteral p
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt (TypeSet tau))
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
+                            [ AbstractLiteral (AbsLitSet e)
+                            | e <- elems
+                            ]
+        let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on partition literals"
-            , const $ make matrixLiteral
-                        (TypeMatrix TypeInt TypeBool)
-                        (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
-                        [ f lit
-                        | e <- elems
-                        , let lit = AbstractLiteral (AbsLitSet e)
-                        ]
+            , \ fresh ->
+                 let (iPat, i) = quantifiedVar (fresh `at` 0)
+                 in  Comprehension (upd i body)
+                         $  gocBefore
+                         ++ [Generator (GenInExpr iPat outLiteral)]
+                         ++ transformBi (upd i) gocAfter
             )
     theRule _ = na "rule_Comprehension_PartitionLiteral"
 
