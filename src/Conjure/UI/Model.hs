@@ -12,6 +12,7 @@ module Conjure.UI.Model
     , interactive, interactiveFixedQs, interactiveFixedQsAutoA
     , allFixedQs
     , Strategy(..), Config(..), parseStrategy
+    , nbUses
     ) where
 
 import Conjure.Prelude
@@ -37,7 +38,7 @@ import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inli
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
-import Conjure.UI.LogFollow( logFollow, storeChoice )
+import Conjure.UI.LogFollow ( logFollow, storeChoice )
 
 import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
 
