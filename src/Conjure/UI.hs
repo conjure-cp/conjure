@@ -58,19 +58,20 @@ data UI
         , limitTime        :: Maybe Int
         }
     | Diff
-        { file1    :: FilePath
-        , file2    :: FilePath
-        , logLevel :: LogLevel
+        { file1            :: FilePath
+        , file2            :: FilePath
+        , logLevel         :: LogLevel
         , limitTime        :: Maybe Int
         }
     | TypeCheck
-        { essence  :: FilePath
-        , logLevel :: LogLevel
+        { essence          :: FilePath
+        , logLevel         :: LogLevel
         , limitTime        :: Maybe Int
         }
     | Split
-        { essence         :: FilePath
-        , outputDirectory :: FilePath
+        { essence          :: FilePath
+        , outputDirectory  :: FilePath
+        , limitTime        :: Maybe Int
         }
     deriving (Eq, Ord, Show, Data, Typeable)
 
@@ -307,6 +308,9 @@ ui = modes
                                    &= explicit
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
         }                          &= help "Split an Essence files to various smaller files. Useful for testing."
 
     ]                              &= program "conjure"
