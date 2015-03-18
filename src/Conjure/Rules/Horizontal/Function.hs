@@ -676,7 +676,7 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
-        (mkModifier, expr2) <- match opModifier expr
+        (mkModifier, expr2) <- match opModifierNoP expr
         (func, arg) <- match opImage expr2
         TypeFunction{} <- typeOf func
         case match opRestrict func of

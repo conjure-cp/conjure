@@ -951,7 +951,26 @@ opModifier _ =
         Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet     , x)
         Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation , x)
         Just (MkOpParts      (OpParts      x)) -> return (inject . MkOpParts      . OpParts      , x)
-        _                                      -> return (id                                       , p)
+        _                                      -> return (id                                     , p)
+    )
+
+
+opModifierNoP
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x, x) -> x
+       , x -> m (x -> x, x)
+       )
+opModifierNoP _ =
+    ( \ (mk, x) -> mk x
+    , \ p -> case project p of
+        Just (MkOpToSet      (OpToSet      x)) -> return (inject . MkOpToSet      . OpToSet      , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet     , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation , x)
+        _                                      -> return (id                                     , p)
     )
 
 
