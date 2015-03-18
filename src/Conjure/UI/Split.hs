@@ -34,19 +34,22 @@ split
     => Model
     -> Producer Model m ()
 split m = do
-    let toPermute Declaration{} = False
-        toPermute SearchOrder{} = False
-        toPermute Where{}       = True
-        toPermute Objective{}   = True
-        toPermute SuchThat{}    = True
-    let (decls, statements) = partition toPermute (mStatements m)
-    forM_ (subsequences statements |> tail          -- drop the first, contains nothing
-                                   |> init          -- drop the last,  contains everything
-                                   ) $ \ stmts -> do
-        let m' = m { mStatements = decls ++ stmts }
-        Pipes.yield (removeUnusedDecls m')
-    forM_ decls $ \ decl -> do
-        Pipes.yield m { mStatements = [decl] }
+    let upd stmts = m { mStatements = stmts }
+    let toPermute st@Declaration{} = Right st
+        toPermute st@SearchOrder{} = Right st
+        toPermute (Where xs)       = Left [Where [x] | x <- xs]
+        toPermute st@Objective{}   = Left [st]
+        toPermute (SuchThat xs)    = Left [SuchThat [x] | x <- xs]
+    let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
+    forM_ (statements
+            |> concat
+            |> nub                  -- remove duplicates
+            |> subsequences         -- generate all subsequences
+            |> tail                 -- drop the first, contains nothing
+          ) $ \ stmts -> do
+        Pipes.yield $ removeUnusedDecls $ upd $ decls ++ stmts
+    forM_ (nub decls) $ \ decl -> do
+        Pipes.yield $ upd [decl]
 
 
 removeUnusedDecls :: Model -> Model
