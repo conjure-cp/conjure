@@ -71,6 +71,7 @@ data UI
     | Split
         { essence          :: FilePath
         , outputDirectory  :: FilePath
+        , logLevel         :: LogLevel
         , limitTime        :: Maybe Int
         }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -308,6 +309,10 @@ ui = modes
                                    &= explicit
                                    &= help "Output directory. Generated models will be saved here.\n\
                                            \Default value: 'conjure-output'"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
