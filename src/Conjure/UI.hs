@@ -68,6 +68,10 @@ data UI
         , logLevel :: LogLevel
         , limitTime        :: Maybe Int
         }
+    | Split
+        { essence         :: FilePath
+        , outputDirectory :: FilePath
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -292,6 +296,19 @@ ui = modes
         }                          &= name "type-check"
                                    &= explicit
                                    &= help "Type-checking a single Essence file."
+    , Split
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
+        , outputDirectory  = "conjure-output"
+                                   &= typDir
+                                   &= name "output-directory"
+                                   &= name "o"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output directory. Generated models will be saved here.\n\
+                                           \Default value: 'conjure-output'"
+        }                          &= help "Split an Essence files to various smaller files. Useful for testing."
+
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)
