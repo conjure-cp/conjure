@@ -536,15 +536,18 @@ checkIfAllRefined m = return m
 topLevelBubbles :: MonadFail m => Model -> m Model
 topLevelBubbles m = do
     let
-        onStmt (SuchThat xs) = onExprs xs
+        onStmt (SuchThat xs) = onExprs SuchThat xs
+        onStmt (Where    xs) = onExprs Where    xs
+        onStmt (Objective obj (WithLocals h (Left  locals))) = (          locals  ++ [Objective obj h]) |> onStmts
+        onStmt (Objective obj (WithLocals h (Right locals))) = ([SuchThat locals] ++ [Objective obj h]) |> onStmts
         onStmt s = [s]
 
-        onExpr (WithLocals h (Left  locals)) = (          locals  ++ [SuchThat [h]]) |> onStmts
-        onExpr (WithLocals h (Right locals)) = ([SuchThat locals] ++ [SuchThat [h]]) |> onStmts
-        onExpr x = [SuchThat [x]]
+        onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts
+        onExpr wrap (WithLocals h (Right locals)) = ([wrap locals] ++ [wrap [h]]) |> onStmts
+        onExpr wrap x = [wrap [x]]
 
         onStmts = concatMap onStmt
-        onExprs = concatMap onExpr
+        onExprs wrap = concatMap (onExpr wrap)
 
     return m { mStatements = onStmts (mStatements m) }
 
