@@ -120,3 +120,12 @@ conjure type-check [OPTIONS] ESSENCE_FILE
 Logging & Output:
      --log-level=LOGLEVEL        Log level.
      --limit-time=INT            Time limit in seconds. (CPU time).
+
+conjure split [OPTIONS] ESSENCE_FILE
+  Split an Essence files to various smaller files. Useful for testing.
+
+Logging & Output:
+  -o --output-directory=DIR      Output directory. Generated models will be
+                                 saved here. Default value: 'conjure-output'
+     --log-level=LOGLEVEL        Log level.
+     --limit-time=INT            Time limit in seconds. (CPU time).
