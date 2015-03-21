@@ -475,6 +475,7 @@ filterBinRel = filterAttrName
     , "aSymmetric"
     , "transitive"
     , "total"
+    , "connex"
     , "Euclidean"
     , "serial"
     , "equivalence"

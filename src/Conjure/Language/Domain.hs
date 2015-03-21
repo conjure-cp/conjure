@@ -261,6 +261,7 @@ data AttrName
     | AttrName_antiSymmetric
     | AttrName_aSymmetric
     | AttrName_transitive
+    | AttrName_connex
     | AttrName_Euclidean
     | AttrName_serial
     | AttrName_equivalence
@@ -297,6 +298,7 @@ instance Pretty AttrName where
     pretty AttrName_antiSymmetric = "antiSymmetric"
     pretty AttrName_aSymmetric = "aSymmetric"
     pretty AttrName_transitive = "transitive"
+    pretty AttrName_connex = "connex"
     pretty AttrName_Euclidean = "Euclidean"
     pretty AttrName_serial = "serial"
     pretty AttrName_equivalence = "equivalence"
@@ -327,6 +329,7 @@ instance IsString AttrName where
     fromString "antiSymmetric" = AttrName_antiSymmetric
     fromString "aSymmetric" = AttrName_aSymmetric
     fromString "transitive" = AttrName_transitive
+    fromString "connex" = AttrName_connex
     fromString "Euclidean" = AttrName_Euclidean
     fromString "serial" = AttrName_serial
     fromString "equivalence" = AttrName_equivalence
@@ -504,6 +507,7 @@ data BinaryRelationAttr
     | BinRelAttr_ASymmetric
     | BinRelAttr_Transitive
     | BinRelAttr_Total
+    | BinRelAttr_Connex
     | BinRelAttr_Euclidean
     | BinRelAttr_Serial
     | BinRelAttr_Equivalence
@@ -522,6 +526,7 @@ instance Pretty BinaryRelationAttr where
     pretty BinRelAttr_ASymmetric    = "aSymmetric"
     pretty BinRelAttr_Transitive    = "transitive"
     pretty BinRelAttr_Total         = "total"
+    pretty BinRelAttr_Connex        = "connex"
     pretty BinRelAttr_Euclidean     = "Euclidean"
     pretty BinRelAttr_Serial        = "serial"
     pretty BinRelAttr_Equivalence   = "equivalence"
@@ -536,6 +541,7 @@ readBinRel AttrName_antiSymmetric = return BinRelAttr_AntiSymmetric
 readBinRel AttrName_aSymmetric    = return BinRelAttr_ASymmetric
 readBinRel AttrName_transitive    = return BinRelAttr_Transitive
 readBinRel AttrName_total         = return BinRelAttr_Total
+readBinRel AttrName_connex        = return BinRelAttr_Connex
 readBinRel AttrName_Euclidean     = return BinRelAttr_Euclidean
 readBinRel AttrName_serial        = return BinRelAttr_Serial
 readBinRel AttrName_equivalence   = return BinRelAttr_Equivalence
@@ -553,6 +559,7 @@ readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
 -- transitive       forAll x,y,z : T . rel(x,y) /\ rel(y,z) -> rel(x,z)
 --
 -- total            forAll x,y : T . rel(x,y) \/ rel(y,x)
+-- connex           forAll x,y : T . rel(x,y) \/ rel(y,x) \/ x = y
 -- Euclidean        forAll x,y,z : T . rel(x,y) /\ rel(x,z) -> rel(y,z)
 -- serial           forAll x : T . exists y : T . rel(x,y)
 -- equivalence      reflexive + symmetric + transitive

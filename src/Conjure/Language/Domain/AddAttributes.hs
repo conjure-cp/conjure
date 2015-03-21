@@ -36,6 +36,7 @@ allSupportedAttributes =
              , "aSymmetric"
              , "transitive"
              , "total"
+             , "connex"
              , "Euclidean"
              , "serial"
              , "equivalence"
@@ -332,7 +333,7 @@ addAttributeToDomain domain@(DomainRelation r
     supportedBinRel =
         [ "reflexive", "irreflexive", "coreflexive"
         , "symmetric", "antiSymmetric", "aSymmetric"
-        , "transitive", "total", "Euclidean"
+        , "transitive", "total", "connex", "Euclidean"
         , "serial", "equivalence", "partialOrder"
         ]
     updater attr (Just val) = case attr of

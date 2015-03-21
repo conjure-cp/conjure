@@ -38,6 +38,7 @@ mkBinRelCons (BinaryRelationAttrs binRelAttrs) fresh dom rel = concatMap one (S.
     one BinRelAttr_ASymmetric    = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> !(&rel(&y,&x)) |]
     one BinRelAttr_Transitive    = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
     one BinRelAttr_Total         = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
+    one BinRelAttr_Connex        = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y) |]
     one BinRelAttr_Euclidean     = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
     one BinRelAttr_Serial        = return [essence| forAll &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]
     one BinRelAttr_Equivalence   = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
@@ -54,6 +55,7 @@ mkBinRelCons (BinaryRelationAttrs binRelAttrs) fresh dom rel = concatMap one (S.
 -- transitive       forAll x,y,z : T . rel(x,y) /\ rel(y,z) -> rel(x,z)
 --
 -- total            forAll x,y : T . rel(x,y) \/ rel(y,x)
+-- connex           forAll x,y : T . rel(x,y) \/ rel(y,x) \/ x = y
 -- Euclidean        forAll x,y,z : T . rel(x,y) /\ rel(x,z) -> rel(y,z)
 -- serial           forAll x : T . exists y : T . rel(x,y)
 -- equivalence      reflexive + symmetric + transitive
