@@ -168,11 +168,11 @@ rule_Participants = "partition-participants" `namedRule` theRule where
 rule_Card :: Rule
 rule_Card = "partition-card" `namedRule` theRule where
     theRule p = do
-        partition       <- match opTwoBars p
-        TypePartition{} <- typeOf partition
+        partition_      <- match opTwoBars p
+        TypePartition{} <- typeOf partition_
         return
             ( "Cardinality of a partition"
-            , const $ make opTwoBars $ make opParticipants partition
+            , const $ make opTwoBars $ make opParticipants partition_
             )
 
 

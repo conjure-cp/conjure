@@ -7,6 +7,7 @@ import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
+import Conjure.UI.Split ( outputSplittedModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
@@ -116,7 +117,9 @@ mainWithArgs Diff{..} =
 mainWithArgs TypeCheck{..} =
     join $ typeCheckModel
         <$> readModelFromFile essence
-
+mainWithArgs Split{..} = do
+    model <- readModelFromFile essence
+    outputSplittedModels outputDirectory model
 
 
 

@@ -97,7 +97,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , isSuffixOf, isPrefixOf, isInfixOf
                               , subsequences, transpose, elemIndex
                               , replicate, length
-                              , (++), map, concat, null, filter, reverse, lookup, elem, unlines, words
+                              , (++), map, concat, null, reverse, lookup, elem, unlines, words
                               , zipWith, concatMap, all, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, foldr1, foldl, any
                               , unzip3, repeat, dropWhile, unwords, intersect
@@ -105,6 +105,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , head, init, tail, last
                               , inits, tails
                               , findIndex
+                              , filter, partition
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
