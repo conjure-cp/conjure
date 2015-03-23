@@ -217,7 +217,7 @@ getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals dow
 --   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
 matrix :: forall m . MonadFail m => Representation m
-matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
+matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp searchStrategy
 
     where
 
@@ -347,3 +347,5 @@ matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
         matrixUp _ _ = na "{matrixUp}"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> matrixDownD p

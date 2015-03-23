@@ -15,7 +15,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 function1DPartial :: forall m . MonadFail m => Representation m
-function1DPartial = Representation chck downD structuralCons downC up
+function1DPartial = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -36,7 +36,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         downD (name, DomainFunction "Function1DPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = withDefaultSearchStrategy
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
             [ ( nameFlags name
               , DomainMatrix
                   (forgetRepr innerDomainFr)
@@ -205,3 +205,5 @@ function1DPartial = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Function1DPartial"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

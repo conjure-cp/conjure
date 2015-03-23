@@ -3,8 +3,7 @@
 
 module Conjure.Representations.Internal
     ( Representation(..)
-    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
-    , SearchStrategy(..), withDefaultSearchStrategy
+    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up, TypeOf_SearchStrategy
     , DomainX, DomainC
     , rDownToX
     ) where
@@ -30,11 +29,12 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation (m :: * -> *) = Representation
-    { rCheck      :: TypeOf_ReprCheck  m
-    , rDownD      :: TypeOf_DownD      m
-    , rStructural :: TypeOf_Structural m
-    , rDownC      :: TypeOf_DownC      m
-    , rUp         :: TypeOf_Up         m
+    { rCheck          :: TypeOf_ReprCheck      m
+    , rDownD          :: TypeOf_DownD          m
+    , rStructural     :: TypeOf_Structural     m
+    , rDownC          :: TypeOf_DownC          m
+    , rUp             :: TypeOf_Up             m
+    , rSearchStrategy :: TypeOf_SearchStrategy m
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =
@@ -45,11 +45,9 @@ type TypeOf_ReprCheck (m :: * -> *) =
 
 type TypeOf_DownD (m :: * -> *) =
                  (Name, DomainX Expression)
-    -> m (Maybe ( [(Name, DomainX Expression)]      -- the representation
-                , SearchStrategy
-                ))
+    -> m (Maybe [(Name, DomainX Expression)])
 
-data SearchStrategy = DefaultSearchStrategy | CustomSearchStrategy [Expression]
+type TypeOf_SearchStrategy (m :: * -> *) = (Name, DomainX Expression) -> m [SearchOrder]
 
 type TypeOf_Structural (m :: * -> *) =
        (DomainX Expression -> m ([Name] -> Expression -> m [Expression]))
@@ -81,14 +79,7 @@ rDownToX
 rDownToX repr forg name domain = do
     mpairs <- rDownD repr (name, domain)
     return $ case mpairs of
-        Nothing -> []
-        Just (pairs, _search) ->
-            [ Reference n (Just (DeclHasRepr forg n d))
-            | (n,d) <- pairs
-            ]
-
-
-withDefaultSearchStrategy :: Monad m => [(Name, DomainX Expression)]
-                        -> m (Maybe ([(Name, DomainX Expression)], SearchStrategy))
-withDefaultSearchStrategy xs = return (Just (xs, DefaultSearchStrategy))
-
+        Nothing    -> []
+        Just pairs -> [ Reference n (Just (DeclHasRepr forg n d))
+                      | (n,d) <- pairs
+                      ]

@@ -16,7 +16,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithMarker :: forall m . MonadFail m => Representation m
-setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
+setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -37,7 +37,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
-            withDefaultSearchStrategy
+            return $ Just
                 [ ( nameMarker name
                   , defRepr (indexDomain 0)
                   )
@@ -158,3 +158,5 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

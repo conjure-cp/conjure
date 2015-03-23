@@ -18,7 +18,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 partitionOccurrence :: forall m . MonadFail m => Representation m
-partitionOccurrence = Representation chck downD structuralCons downC up
+partitionOccurrence = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -36,7 +36,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain)
             | domainCanIndexMatrix innerDomain = do
             maxNbParts <- domainSizeOf innerDomain
-            withDefaultSearchStrategy
+            return $ Just
                 [ ( nameFlags name
                   , DomainMatrix
                       (forgetRepr innerDomain)
@@ -205,3 +205,6 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

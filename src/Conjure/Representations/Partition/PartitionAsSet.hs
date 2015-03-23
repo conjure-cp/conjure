@@ -18,7 +18,7 @@ partitionAsSet
     :: forall m . MonadFail m
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
-partitionAsSet dispatch = Representation chck downD structuralCons downC up
+partitionAsSet dispatch = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -43,7 +43,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
-            withDefaultSearchStrategy [ ( outName name , outDom ) ]
+            return $ Just [ ( outName name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ fresh inpRel -> do
@@ -153,3 +153,6 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

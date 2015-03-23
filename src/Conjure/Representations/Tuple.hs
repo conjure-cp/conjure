@@ -16,7 +16,7 @@ import Data.Text ( pack )
 
 
 tuple :: forall m . MonadFail m => Representation m
-tuple = Representation chck downD structuralCons downC up
+tuple = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -27,7 +27,7 @@ tuple = Representation chck downD structuralCons downC up
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainTuple ds) = withDefaultSearchStrategy
+        downD (name, DomainTuple ds) = return $ Just
             [ (mkName name i, d)
             | i <- [1..]
             | d <- ds
@@ -72,3 +72,5 @@ tuple = Representation chck downD structuralCons downC up
             return (name, ConstantAbstract (AbsLitTuple vals))
         up _ _ = na "{up}"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

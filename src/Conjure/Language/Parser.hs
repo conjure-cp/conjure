@@ -168,11 +168,17 @@ parseTopLevels = do
                 , do
                     lexeme L_branching
                     lexeme L_on
-                    xs <- brackets $ parseExpr `sepBy` comma
-                    return [ SearchOrder (map MkSearchOrder xs) ]
+                    xs <- brackets $ parseSearchOrder `sepBy` comma
+                    return [ SearchOrder xs ]
                     <?> "branching on"
                 ]
     concat <$> some one
+
+parseSearchOrder :: Parser SearchOrder
+parseSearchOrder = msum [try pBranchingOn, pCut]
+    where
+        pBranchingOn = BranchingOn <$> parseName
+        pCut = Cut <$> parseExpr
 
 parseRange :: Parser a -> Parser (Range a)
 parseRange p = msum [try pRange, pSingle]

@@ -14,7 +14,7 @@ import Conjure.Representations.Common
 
 
 setOccurrence :: forall m . MonadFail m => Representation m
-setOccurrence = Representation chck downD structuralCons downC up
+setOccurrence = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -25,7 +25,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "Occurrence"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = withDefaultSearchStrategy
+        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
@@ -88,3 +88,5 @@ setOccurrence = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Occurrence"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

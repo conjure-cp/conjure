@@ -15,7 +15,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 relationAsMatrix :: forall m . MonadFail m => Representation m
-relationAsMatrix = Representation chck downD structuralCons downC up
+relationAsMatrix = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -29,7 +29,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainRelation "RelationAsMatrix" _ innerDomains) | all domainCanIndexMatrix innerDomains = do
             let unroll is j = foldr DomainMatrix j is
-            withDefaultSearchStrategy
+            return $ Just
                 [ ( outName name
                   , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
@@ -158,3 +158,5 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                         , "domain:" <+> pretty domain
                                         ]
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

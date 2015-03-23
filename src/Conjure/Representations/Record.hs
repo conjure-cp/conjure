@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 record :: forall m . MonadFail m => Representation m
-record = Representation chck downD structuralCons downC up
+record = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -28,7 +28,7 @@ record = Representation chck downD structuralCons downC up
         mkName name n = mconcat [name, "_", n]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainRecord ds) = withDefaultSearchStrategy
+        downD (name, DomainRecord ds) = return $ Just
             [ (mkName name n, d)
             | (n,d) <- ds
             ]
@@ -73,3 +73,5 @@ record = Representation chck downD structuralCons downC up
             return (name, ConstantAbstract (AbsLitRecord vals))
         up _ _ = na "{up}"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

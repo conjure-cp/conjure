@@ -15,7 +15,7 @@ import Conjure.Representations.Internal
 
 
 variant :: forall m . MonadFail m => Representation m
-variant = Representation chck downD structuralCons downC up
+variant = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -29,7 +29,7 @@ variant = Representation chck downD structuralCons downC up
         mkName name n = mconcat [name, "_", n]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainVariant ds) = withDefaultSearchStrategy
+        downD (name, DomainVariant ds) = return $ Just
             $ (mkName name "_tag", defRepr $ mkDomainIntB 1 (fromInt (genericLength ds)))
             : [ (mkName name n, d)
               | (n,d) <- ds
@@ -97,3 +97,5 @@ variant = Representation chck downD structuralCons downC up
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up}"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

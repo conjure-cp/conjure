@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 
 
 setExplicit :: forall m . MonadFail m => Representation m
-setExplicit = Representation chck downD structuralCons downC up
+setExplicit = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -24,7 +24,7 @@ setExplicit = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "Explicit"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = withDefaultSearchStrategy
+        downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
             [ ( outName name
               , DomainMatrix
                   (DomainInt [RangeBounded 1 size])
@@ -100,3 +100,5 @@ setExplicit = Representation chck downD structuralCons downC up
                                 ]
         up _ _ = na "{up} Explicit"
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

@@ -184,7 +184,7 @@ instance Pretty Statement where
 -- Objective -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-newtype SearchOrder = MkSearchOrder Expression
+data SearchOrder = BranchingOn Name | Cut Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize SearchOrder
@@ -193,7 +193,8 @@ instance ToJSON    SearchOrder where toJSON = genericToJSON jsonOptions
 instance FromJSON  SearchOrder where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty SearchOrder where
-    pretty (MkSearchOrder x) = pretty x
+    pretty (BranchingOn x) = pretty x
+    pretty (Cut x) = pretty x
 
 
 ------------------------------------------------------------------------------------------------------------------------

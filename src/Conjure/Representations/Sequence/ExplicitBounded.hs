@@ -14,7 +14,7 @@ import Conjure.Representations.Common
 
 
 sequenceExplicitBounded :: forall m . MonadFail m => Representation m
-sequenceExplicitBounded = Representation chck downD structuralCons downC up
+sequenceExplicitBounded = Representation chck downD structuralCons downC up searchStrategy
 
     where
 
@@ -37,7 +37,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         downD :: TypeOf_DownD m
         downD (name, DomainSequence "ExplicitBounded" (SequenceAttr (SizeAttr_Size size) _) innerDomain) =
-            withDefaultSearchStrategy
+            return $ Just
                 [ ( nameMarker name
                   , DomainInt [RangeBounded size size]
                   )
@@ -48,7 +48,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   ) ]
         downD (name, DomainSequence "ExplicitBounded" (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
-            withDefaultSearchStrategy
+            return $ Just
                 [ ( nameMarker name
                   , DomainInt [RangeBounded 0 maxSize]
                   )
@@ -196,3 +196,5 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
 
+        searchStrategy :: TypeOf_SearchStrategy m
+        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p
