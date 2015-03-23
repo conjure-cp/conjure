@@ -25,7 +25,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "Occurrence"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
+        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = withDefaultSearchStrategy
             [ ( outName name
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )

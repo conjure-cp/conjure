@@ -56,7 +56,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             maxOccur <- getMaxOccur attrs innerDomain
             let indexDomain =           mkDomainIntB 1 maxSize
             let flagDomain  = defRepr $ mkDomainIntB 0 maxOccur
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameFlag name
                   , DomainMatrix indexDomain flagDomain
                   )

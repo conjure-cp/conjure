@@ -17,7 +17,7 @@ module Conjure.Language.Definition
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
-    , Statement(..), Objective(..)
+    , Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
     , QuestionAnswered(..)
 
@@ -161,7 +161,7 @@ instance Pretty LanguageVersion where
 
 data Statement
     = Declaration Declaration
-    | SearchOrder [Name]
+    | SearchOrder [SearchOrder]
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
@@ -178,6 +178,22 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- Objective -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+newtype SearchOrder = MkSearchOrder Expression
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize SearchOrder
+instance Hashable  SearchOrder
+instance ToJSON    SearchOrder where toJSON = genericToJSON jsonOptions
+instance FromJSON  SearchOrder where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty SearchOrder where
+    pretty (MkSearchOrder x) = pretty x
 
 
 ------------------------------------------------------------------------------------------------------------------------

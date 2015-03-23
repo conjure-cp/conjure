@@ -39,7 +39,7 @@ function1D = Representation chck downD structuralCons downC up
         downD (name, DomainFunction "Function1D"
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = withDefaultSearchStrategy
             [ ( outName name
               , DomainMatrix
                   (forgetRepr innerDomainFr)

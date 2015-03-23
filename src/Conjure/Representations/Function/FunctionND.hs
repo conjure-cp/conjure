@@ -39,7 +39,7 @@ functionND = Representation chck downD structuralCons downC up
                     (DomainTuple innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameValues name
                   , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )

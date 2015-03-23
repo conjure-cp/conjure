@@ -37,7 +37,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         downD :: TypeOf_DownD m
         downD (name, DomainSequence "ExplicitBounded" (SequenceAttr (SizeAttr_Size size) _) innerDomain) =
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameMarker name
                   , DomainInt [RangeBounded size size]
                   )
@@ -48,7 +48,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   ) ]
         downD (name, DomainSequence "ExplicitBounded" (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameMarker name
                   , DomainInt [RangeBounded 0 maxSize]
                   )

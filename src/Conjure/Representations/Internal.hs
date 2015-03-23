@@ -4,6 +4,7 @@
 module Conjure.Representations.Internal
     ( Representation(..)
     , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
+    , SearchStrategy(..), withDefaultSearchStrategy
     , DomainX, DomainC
     , rDownToX
     ) where
@@ -44,7 +45,11 @@ type TypeOf_ReprCheck (m :: * -> *) =
 
 type TypeOf_DownD (m :: * -> *) =
                  (Name, DomainX Expression)
-    -> m (Maybe [(Name, DomainX Expression)])
+    -> m (Maybe ( [(Name, DomainX Expression)]      -- the representation
+                , SearchStrategy
+                ))
+
+data SearchStrategy = DefaultSearchStrategy | CustomSearchStrategy [Expression]
 
 type TypeOf_Structural (m :: * -> *) =
        (DomainX Expression -> m ([Name] -> Expression -> m [Expression]))
@@ -76,7 +81,14 @@ rDownToX
 rDownToX repr forg name domain = do
     mpairs <- rDownD repr (name, domain)
     return $ case mpairs of
-        Nothing    -> []
-        Just pairs -> [ Reference n (Just (DeclHasRepr forg n d))
-                      | (n,d) <- pairs
-                      ]
+        Nothing -> []
+        Just (pairs, _search) ->
+            [ Reference n (Just (DeclHasRepr forg n d))
+            | (n,d) <- pairs
+            ]
+
+
+withDefaultSearchStrategy :: Monad m => [(Name, DomainX Expression)]
+                        -> m (Maybe ([(Name, DomainX Expression)], SearchStrategy))
+withDefaultSearchStrategy xs = return (Just (xs, DefaultSearchStrategy))
+

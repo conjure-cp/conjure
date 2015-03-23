@@ -29,7 +29,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainRelation "RelationAsMatrix" _ innerDomains) | all domainCanIndexMatrix innerDomains = do
             let unroll is j = foldr DomainMatrix j is
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( outName name
                   , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]

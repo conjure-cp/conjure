@@ -39,7 +39,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameFlag name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
                   )

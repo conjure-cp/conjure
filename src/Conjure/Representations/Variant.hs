@@ -29,7 +29,7 @@ variant = Representation chck downD structuralCons downC up
         mkName name n = mconcat [name, "_", n]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainVariant ds) = return $ Just
+        downD (name, DomainVariant ds) = withDefaultSearchStrategy
             $ (mkName name "_tag", defRepr $ mkDomainIntB 1 (fromInt (genericLength ds)))
             : [ (mkName name n, d)
               | (n,d) <- ds

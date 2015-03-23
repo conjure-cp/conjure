@@ -28,7 +28,7 @@ record = Representation chck downD structuralCons downC up
         mkName name n = mconcat [name, "_", n]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainRecord ds) = return $ Just
+        downD (name, DomainRecord ds) = withDefaultSearchStrategy
             [ (mkName name n, d)
             | (n,d) <- ds
             ]

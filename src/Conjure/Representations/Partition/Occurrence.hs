@@ -36,7 +36,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain)
             | domainCanIndexMatrix innerDomain = do
             maxNbParts <- domainSizeOf innerDomain
-            return $ Just
+            withDefaultSearchStrategy
                 [ ( nameFlags name
                   , DomainMatrix
                       (forgetRepr innerDomain)

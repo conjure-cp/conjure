@@ -27,7 +27,7 @@ tuple = Representation chck downD structuralCons downC up
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainTuple ds) = return $ Just
+        downD (name, DomainTuple ds) = withDefaultSearchStrategy
             [ (mkName name i, d)
             | i <- [1..]
             | d <- ds

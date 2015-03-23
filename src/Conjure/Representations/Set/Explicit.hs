@@ -24,7 +24,7 @@ setExplicit = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "Explicit"]
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
+        downD (name, DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = withDefaultSearchStrategy
             [ ( outName name
               , DomainMatrix
                   (DomainInt [RangeBounded 1 size])

@@ -41,7 +41,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
-            return $ Just [ ( outName name , outDom ) ]
+            withDefaultSearchStrategy [ ( outName name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
