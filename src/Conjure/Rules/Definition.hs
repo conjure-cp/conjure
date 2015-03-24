@@ -66,20 +66,26 @@ parseStrategy "l" = return FollowLog
 parseStrategy _ = Nothing
 
 data Config = Config
-    { logLevel                  :: LogLevel
-    , verboseTrail              :: Bool
-    , logRuleFails              :: Bool
-    , logRuleSuccesses          :: Bool
-    , logRuleAttempts           :: Bool
-    , logChoices                :: Bool
-    , strategyQ                 :: Strategy
-    , strategyA                 :: Strategy
-    , outputDirectory           :: FilePath
-    , channelling               :: Bool
-    , parameterRepresentation   :: Bool
-    , limitModels               :: Maybe Int
-    , numberingStart            :: Int
-    , smartFilenames            :: Bool
+    { logLevel                   :: LogLevel
+    , verboseTrail               :: Bool
+    , logRuleFails               :: Bool
+    , logRuleSuccesses           :: Bool
+    , logRuleAttempts            :: Bool
+    , logChoices                 :: Bool
+    , strategyQ                  :: Strategy
+    , strategyA                  :: Strategy
+    , representations            :: Strategy
+    , representationsFinds       :: Strategy
+    , representationsGivens      :: Strategy
+    , representationsAuxiliaries :: Strategy
+    , representationsQuantifieds :: Strategy
+    , representationsCuts        :: Strategy
+    , outputDirectory            :: FilePath
+    , channelling                :: Bool
+    , parameterRepresentation    :: Bool
+    , limitModels                :: Maybe Int
+    , numberingStart             :: Int
+    , smartFilenames             :: Bool
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 

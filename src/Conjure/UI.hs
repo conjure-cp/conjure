@@ -13,27 +13,33 @@ import System.Console.CmdArgs hiding ( Default(..) )
 
 data UI
     = Modelling
-        { essence                   :: FilePath       -- essence, mandatory
+        { essence                    :: FilePath       -- essence, mandatory
         -- flags related to output
-        , outputDirectory           :: FilePath
-        , numberingStart            :: Int
-        , smartFilenames            :: Bool
+        , outputDirectory            :: FilePath
+        , numberingStart             :: Int
+        , smartFilenames             :: Bool
         -- flags related to logging
-        , logLevel                  :: LogLevel
-        , verboseTrail              :: Bool
-        , logRuleFails              :: Bool
-        , logRuleSuccesses          :: Bool
-        , logRuleAttempts           :: Bool
-        , logChoices                :: Bool
+        , logLevel                   :: LogLevel
+        , verboseTrail               :: Bool
+        , logRuleFails               :: Bool
+        , logRuleSuccesses           :: Bool
+        , logRuleAttempts            :: Bool
+        , logChoices                 :: Bool
         -- flags related to modelling decisions
-        , strategyQ                 :: String
-        , strategyA                 :: String
-        , channelling               :: Bool
-        , parameterRepresentation   :: Bool
-        , seed                      :: Maybe Int
-        , limitModels               :: Maybe Int
-        , limitTime                 :: Maybe Int
-        , savedChoices              :: Maybe FilePath
+        , strategyQ                  :: String
+        , strategyA                  :: String
+        , representations            :: Maybe String        -- (def: strategyA)
+        , representationsFinds       :: Maybe String        -- (def: representations)
+        , representationsGivens      :: Maybe String        -- (def: representations)
+        , representationsAuxiliaries :: Maybe String        -- (def: representations)
+        , representationsQuantifieds :: Maybe String        -- (def: representations)
+        , representationsCuts        :: Maybe String        -- (def: representations)
+        , channelling                :: Bool
+        , parameterRepresentation    :: Bool
+        , seed                       :: Maybe Int
+        , limitModels                :: Maybe Int
+        , limitTime                  :: Maybe Int
+        , savedChoices               :: Maybe FilePath
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
@@ -145,9 +151,51 @@ ui = modes
                                    &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
                                            \Moreover, c (for compact) can be used to pick the most 'compact' option \
                                            \at every decision point.\n\
-                                           \ l (for follow log) tries to pick the given choices \n\
-                                           \ as far as possible \n\
+                                           \ l (for follow log) tries to pick the given choices\n\
+                                           \ as far as possible\n\
                                            \Default value: ai"
+        , representations = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation.\n\
+                                           \Default value: same as --strategy-a"
+        , representationsFinds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-finds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a decision variable.\n\
+                                           \Default value: same as --representations"
+        , representationsGivens = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-givens"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a parameter.\n\
+                                           \Default value: same as --representations"
+        , representationsAuxiliaries = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-auxiliaries"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
+                                           \Default value: same as --representations"
+        , representationsQuantifieds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-quantifieds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a quantified variable.\n\
+                                           \Default value: same as --representations"
+        , representationsCuts = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-cuts"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
+                                           \Default value: same as --representations-cuts"
         , channelling = True       &= name "channelling"
                                    &= groupname "Model generation"
                                    &= explicit

@@ -63,27 +63,51 @@ mainWithArgs Modelling{..} = do
       Nothing -> return ()
 
     let config = Config.Config
-            { Config.outputDirectory         = outputDirectory
-            , Config.logLevel                = logLevel
-            , Config.verboseTrail            = verboseTrail
-            , Config.logRuleFails            = logRuleFails
-            , Config.logRuleSuccesses        = logRuleSuccesses
-            , Config.logRuleAttempts         = logRuleAttempts
-            , Config.logChoices              = logChoices
-            , Config.strategyQ               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
+            { Config.outputDirectory            = outputDirectory
+            , Config.logLevel                   = logLevel
+            , Config.verboseTrail               = verboseTrail
+            , Config.logRuleFails               = logRuleFails
+            , Config.logRuleSuccesses           = logRuleSuccesses
+            , Config.logRuleAttempts            = logRuleAttempts
+            , Config.logChoices                 = logChoices
+            , Config.strategyQ                  = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
                                                          (parseStrategy strategyQ)
                 |> (\ s ->
                     if fst (viewAuto s) == Compact
                         then userErr "The Compact heuristic isn't supported for questions."
                         else s
                    )
-            , Config.strategyA               = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
-                                                         (parseStrategy strategyA)
-            , Config.channelling             = channelling
-            , Config.parameterRepresentation = parameterRepresentation
-            , Config.limitModels             = if limitModels == Just 0 then Nothing else limitModels
-            , Config.numberingStart          = numberingStart
-            , Config.smartFilenames          = smartFilenames
+            , Config.strategyA                  = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
+                                                            (parseStrategy strategyA)
+            , Config.representations            =
+                    case representations of
+                        Nothing -> Config.strategyA config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.representationsFinds       =
+                    case representationsFinds of
+                        Nothing -> Config.representations config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.representationsGivens      =
+                    case representationsGivens of
+                        Nothing -> Config.representations config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.representationsAuxiliaries =
+                    case representationsAuxiliaries of
+                        Nothing -> Config.representations config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.representationsQuantifieds =
+                    case representationsQuantifieds of
+                        Nothing -> Config.representations config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.representationsCuts        =
+                    case representationsCuts of
+                        Nothing -> Config.representations config
+                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.channelling                = channelling
+            , Config.parameterRepresentation    = parameterRepresentation
+            , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
+            , Config.numberingStart             = numberingStart
+            , Config.smartFilenames             = smartFilenames
             }
     outputModels config model
 mainWithArgs RefineParam{..} = do
