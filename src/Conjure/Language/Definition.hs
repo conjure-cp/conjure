@@ -59,9 +59,6 @@ import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
--- text
-import qualified Data.Text as T
-
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
@@ -102,10 +99,12 @@ instance Pretty Model where
 freshNames :: Model -> [Name]
 freshNames model = newNames
     where
-        newNames = [ Name name
-                   | i <- allNats
-                   , let name = "q" `mappend` stringToText (show i)
-                   , not (or [name `T.isPrefixOf` usedName | Name usedName <- usedNames])
+        newNames = [ name
+                   | i <- [1..]
+                   , let name = MachineName "q" i []
+                   , not (or [ ("q",i) == (base,n)
+                             | MachineName base n _ <- usedNames
+                             ])
                    ]
         usedNames = universeBi model :: [Name]
 

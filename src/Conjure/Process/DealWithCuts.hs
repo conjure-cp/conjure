@@ -50,10 +50,8 @@ dealWithCuts m = flip evalStateT (St 1 False []) $ do
             _ -> return [statement]
     return m { mStatements = concat statements }
 
-
 nextName :: MonadState St m => m Name
 nextName = do
     !i <- gets varCounter
     modify $ \ st -> st { varCounter = succ (varCounter st) }
-    return (Name ("cut" `mappend` stringToText (show i)))
-    -- return (GeneratedName "cut" i)
+    return (MachineName "cut" i [])

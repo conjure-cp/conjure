@@ -275,7 +275,7 @@ nextName :: MonadState Int m => m Name
 nextName = do
     !i <- gets id
     modify succ
-    return (Name ("p" `mappend` stringToText (show i)))
+    return (MachineName "p" i [])
 
 viewConstantInt :: MonadFail m => Constant -> m Integer
 viewConstantInt (ConstantInt i) = return i
