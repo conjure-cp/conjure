@@ -15,7 +15,13 @@ import Test.QuickCheck ( Arbitrary(..), choose )
 
 
 data Name = Name Text | MachineName Text Int [Text]
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Show, Data, Typeable, Generic)
+
+instance Eq Name where
+    (==) = (==) `on` (show . pretty)
+
+instance Ord Name where
+    compare = compare `on` (show . pretty)
 
 instance Serialize Name
 instance Hashable  Name
