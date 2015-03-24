@@ -16,7 +16,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithMarker :: forall m . MonadFail m => Representation m
-setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up searchStrategy
+setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
     where
 
@@ -157,6 +157,3 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

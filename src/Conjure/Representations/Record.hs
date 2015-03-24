@@ -14,7 +14,7 @@ import Conjure.Representations.Internal
 
 
 record :: forall m . MonadFail m => Representation m
-record = Representation chck downD structuralCons downC up searchStrategy
+record = Representation chck downD structuralCons downC up
 
     where
 
@@ -72,6 +72,3 @@ record = Representation chck downD structuralCons downC up searchStrategy
             -- TODO: check if (length ds == length vals)
             return (name, ConstantAbstract (AbsLitRecord vals))
         up _ _ = na "{up}"
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

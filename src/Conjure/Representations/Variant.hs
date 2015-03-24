@@ -15,7 +15,7 @@ import Conjure.Representations.Internal
 
 
 variant :: forall m . MonadFail m => Representation m
-variant = Representation chck downD structuralCons downC up searchStrategy
+variant = Representation chck downD structuralCons downC up
 
     where
 
@@ -96,6 +96,3 @@ variant = Representation chck downD structuralCons downC up searchStrategy
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up}"
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

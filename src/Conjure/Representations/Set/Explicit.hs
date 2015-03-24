@@ -12,7 +12,7 @@ import Conjure.Representations.Internal
 
 
 setExplicit :: forall m . MonadFail m => Representation m
-setExplicit = Representation chck downD structuralCons downC up searchStrategy
+setExplicit = Representation chck downD structuralCons downC up
 
     where
 
@@ -99,6 +99,3 @@ setExplicit = Representation chck downD structuralCons downC up searchStrategy
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up} Explicit"
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

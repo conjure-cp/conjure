@@ -14,7 +14,7 @@ import Conjure.Representations.Common
 
 
 sequenceExplicitBounded :: forall m . MonadFail m => Representation m
-sequenceExplicitBounded = Representation chck downD structuralCons downC up searchStrategy
+sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
 
@@ -195,6 +195,3 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up sear
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

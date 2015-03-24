@@ -15,7 +15,7 @@ relationAsSet
     :: forall m . MonadFail m
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
-relationAsSet dispatch = Representation chck downD structuralCons downC up searchStrategy
+relationAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
 
@@ -116,6 +116,3 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up searc
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

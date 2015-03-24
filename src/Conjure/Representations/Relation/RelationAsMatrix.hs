@@ -15,7 +15,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 relationAsMatrix :: forall m . MonadFail m => Representation m
-relationAsMatrix = Representation chck downD structuralCons downC up searchStrategy
+relationAsMatrix = Representation chck downD structuralCons downC up
 
     where
 
@@ -157,6 +157,3 @@ relationAsMatrix = Representation chck downD structuralCons downC up searchStrat
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

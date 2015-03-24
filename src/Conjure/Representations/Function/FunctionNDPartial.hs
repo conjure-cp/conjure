@@ -17,7 +17,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 functionNDPartial :: forall m . MonadFail m => Representation m
-functionNDPartial = Representation chck downD structuralCons downC up searchStrategy
+functionNDPartial = Representation chck downD structuralCons downC up
 
     where
 
@@ -265,6 +265,3 @@ functionNDPartial = Representation chck downD structuralCons downC up searchStra
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionNDPartial"
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

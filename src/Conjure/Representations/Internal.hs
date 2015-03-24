@@ -3,7 +3,7 @@
 
 module Conjure.Representations.Internal
     ( Representation(..)
-    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up, TypeOf_SearchStrategy
+    , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
     , DomainX, DomainC
     , rDownToX
     ) where
@@ -34,7 +34,6 @@ data Representation (m :: * -> *) = Representation
     , rStructural     :: TypeOf_Structural     m
     , rDownC          :: TypeOf_DownC          m
     , rUp             :: TypeOf_Up             m
-    , rSearchStrategy :: TypeOf_SearchStrategy m
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =
@@ -46,8 +45,6 @@ type TypeOf_ReprCheck (m :: * -> *) =
 type TypeOf_DownD (m :: * -> *) =
                  (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
-
-type TypeOf_SearchStrategy (m :: * -> *) = (Name, DomainX Expression) -> m [SearchOrder]
 
 type TypeOf_Structural (m :: * -> *) =
        (DomainX Expression -> m ([Name] -> Expression -> m [Expression]))

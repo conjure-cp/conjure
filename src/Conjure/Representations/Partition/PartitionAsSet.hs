@@ -18,7 +18,7 @@ partitionAsSet
     :: forall m . MonadFail m
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
-partitionAsSet dispatch = Representation chck downD structuralCons downC up searchStrategy
+partitionAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
 
@@ -153,6 +153,3 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up sear
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

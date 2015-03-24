@@ -14,7 +14,7 @@ import Conjure.Representations.Common
 
 
 setOccurrence :: forall m . MonadFail m => Representation m
-setOccurrence = Representation chck downD structuralCons downC up searchStrategy
+setOccurrence = Representation chck downD structuralCons downC up
 
     where
 
@@ -87,6 +87,3 @@ setOccurrence = Representation chck downD structuralCons downC up searchStrategy
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Occurrence"
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

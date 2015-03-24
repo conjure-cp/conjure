@@ -18,7 +18,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 partitionOccurrence :: forall m . MonadFail m => Representation m
-partitionOccurrence = Representation chck downD structuralCons downC up searchStrategy
+partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
 
@@ -205,6 +205,3 @@ partitionOccurrence = Representation chck downD structuralCons downC up searchSt
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p

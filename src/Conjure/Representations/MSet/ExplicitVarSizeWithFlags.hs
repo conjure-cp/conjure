@@ -17,7 +17,7 @@ import Conjure.Representations.Common
 
 
 msetExplicitVarSizeWithFlags :: forall m . MonadFail m => Representation m
-msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up searchStrategy
+msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
 
@@ -210,6 +210,3 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-
-        searchStrategy :: TypeOf_SearchStrategy m
-        searchStrategy p = map (BranchingOn . fst) . fromJustNote "searchStrategy" <$> downD p
