@@ -32,9 +32,6 @@ import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 
--- text
-import qualified Data.Text as T
-
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 
@@ -688,7 +685,7 @@ instance ToJSON    HasRepresentation where toJSON = genericToJSON jsonOptions
 instance FromJSON  HasRepresentation where parseJSON = genericParseJSON jsonOptions
 
 instance IsString  HasRepresentation where
-    fromString = HasRepresentation . Name . T.pack
+    fromString = HasRepresentation . fromString
 
 instance Default HasRepresentation where
     def = NoRepresentation

@@ -36,6 +36,7 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
+import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
@@ -487,6 +488,14 @@ updateDeclarations model =
                 Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
                 Declaration LettingDomainDefnEnum{}    -> []
                 Declaration LettingDomainDefnUnnamed{} -> []
+                SearchOrder orders -> return $ SearchOrder $ concat
+                    [ case order of
+                        BranchingOn nm ->
+                            let domains = [ d | (n, d) <- representations, n == nm ]
+                            in  nub $ concatMap (onEachDomainSearch nm) domains
+                        Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
+                    | order <- orders
+                    ]
                 _ -> [inStatement]
 
         onEachDomain forg nm domain =
@@ -495,6 +504,13 @@ updateDeclarations model =
                 Right outs -> [ Declaration (FindOrGiven forg n d')
                               | (n, d) <- outs
                               , let d' = fmap trySimplify $ forgetRepr d
+                              ]
+
+        onEachDomainSearch nm domain =
+            case downD (nm, domain) of
+                Left err -> bug err
+                Right outs -> [ BranchingOn n
+                              | (n, _) <- outs
                               ]
 
     in
@@ -600,6 +616,7 @@ prologue model = return model
     >>= \ m -> typeCheckModel m >> return m
                                       >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
+    >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 

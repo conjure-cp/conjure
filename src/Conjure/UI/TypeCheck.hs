@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE LambdaCase #-}
 
 module Conjure.UI.TypeCheck ( typeCheckModel ) where
 
@@ -28,14 +29,27 @@ typeCheckModel model0 = do
     errs <- execWriterT $ forM (mStatements model1) $ \ st ->
         case st of
             Declaration{} -> return ()
-            SearchOrder{} -> return ()
+            SearchOrder xs -> forM_ xs $ \case
+                BranchingOn{} -> return ()                      -- TODO: check if the name is defined
+                Cut x -> do
+                    mty <- runExceptT $ typeOf x
+                    case mty of
+                        Right TypeBool{} -> return ()
+                        Left err -> tell
+                            [ "In a 'branching on' statement:" <++> pretty x
+                            , "Error:" <++> pretty err
+                            ]
+                        Right ty -> tell
+                            [ "In a 'branching on' statement:" <++> pretty x
+                            , "Expected type `bool`, but got:" <++> pretty ty
+                            ]
             Where xs -> forM_ xs $ \ x -> do
                 mty <- runExceptT $ typeOf x
                 case mty of
                     Right TypeBool{} -> return ()
                     Left err -> tell
                         [ "In a 'where' statement:" <++> pretty x
-                        , "Error::" <++> pretty err
+                        , "Error:" <++> pretty err
                         ]
                     Right ty -> tell
                         [ "In a 'where' statement:" <++> pretty x
