@@ -13,18 +13,18 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
 
-resolveNames :: (MonadLog m, MonadFail m) => Model -> m Model
-resolveNames model = flip evalStateT (freshNames model, []) $ do
+resolveNames :: (MonadLog m, MonadFail m, NameGen m) => Model -> m Model
+resolveNames model = flip evalStateT [] $ do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    duplicateNames <- gets (snd                                 -- all names defined in the model
+    duplicateNames <- gets (id                                   -- all names defined in the model
                             >>> filter (\ (_,d) -> case d of
                                     RecordField{}  -> False      -- filter out the RecordField's
                                     VariantField{} -> False      --        and the VariantField's
                                     _              -> True )
-                            >>> map fst                         -- strip the ReferenceTo's
+                            >>> map fst                          -- strip the ReferenceTo's
                             >>> histogram
-                            >>> filter (\ (_,n) -> n > 1 )      -- keep those that are defined multiple times
+                            >>> filter (\ (_,n) -> n > 1 )       -- keep those that are defined multiple times
                             >>> map fst)
     unless (null duplicateNames) $
         userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
@@ -32,7 +32,8 @@ resolveNames model = flip evalStateT (freshNames model, []) $ do
 
 shadowing
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => Expression
     -> m Expression
@@ -43,21 +44,17 @@ shadowing p@(Comprehension _ is) = do
             , let pat = generatorPat gen
             , let names = [ n | n@Name{} <- universeBi pat ]
             ]
-    ctxt <- gets snd
+    ctxt <- gets id
     let shadows = [ g | g <- generators, g `elem` map fst ctxt ]
-    let nextName = do
-            (names,ctxt') <- gets id
-            modify $ const (tail names, ctxt')
-            return (head names)
-    shadowsNew <- forM shadows $ \ s -> do n <- nextName ; return (s,n)
+    shadowsNew <- forM shadows $ \ s -> do n <- nextName "p" ; return (s,n)
     let f n = fromMaybe n (lookup n shadowsNew)
     return (transformBi f p)
 shadowing p = return p
 
 
-resolveNamesX :: MonadFail m => Expression -> m Expression
+resolveNamesX :: (MonadFail m, NameGen m) => Expression -> m Expression
 resolveNamesX x = do
-    x' <- evalStateT (resolveX x) ([],[])
+    x' <- evalStateT (resolveX x) []
     mapM_ check (universe x')
     return x'
 
@@ -69,7 +66,8 @@ check _ = return ()
 
 resolveStatement
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => Statement
     -> m Statement
@@ -80,11 +78,11 @@ resolveStatement st =
             case decl of
                 FindOrGiven forg nm dom       -> do
                     dom' <- resolveD dom
-                    modify (second ((nm, DeclNoRepr forg nm dom') :))
+                    modify ((nm, DeclNoRepr forg nm dom') :)
                     return (Declaration (FindOrGiven forg nm dom'))
                 Letting nm x                  -> do
                     x' <- resolveX x
-                    modify (second ((nm, Alias x') :))
+                    modify ((nm, Alias x') :)
                     return (Declaration (Letting nm x'))
                 _ -> fail ("Unexpected declaration:" <+> pretty st)
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
@@ -95,13 +93,14 @@ resolveStatement st =
 
 resolveSearchOrder
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => SearchOrder
     -> m SearchOrder
 resolveSearchOrder (BranchingOn nm) = do
-    ctxt <- gets snd
-    mval <- gets (lookup nm . snd)
+    ctxt <- gets id
+    mval <- gets (lookup nm)
     case mval of
         Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
                                : ("Bindings in context:" : prettyContext ctxt)
@@ -114,21 +113,22 @@ resolveSearchOrder (Cut x) =
 
 resolveX
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => Expression
     -> m Expression
 
 resolveX (Reference nm Nothing) = do
-    ctxt <- gets snd
-    mval <- gets (lookup nm . snd)
+    ctxt <- gets id
+    mval <- gets (lookup nm)
     case mval of
         Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
                                : ("Bindings in context:" : prettyContext ctxt)
         Just r  -> return (Reference nm (Just r))
 
 resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving
-    mval <- gets (lookup nm . snd)
+    mval <- gets (lookup nm)
     case mval of
         Nothing -> return p                             -- hence, do not fail if not in the context
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
@@ -166,7 +166,7 @@ resolveX p@Comprehension{} = scope $ do
                             let gen'' = GenInExpr pat expr'
                             return ( gen'' , InComprehension gen'' )
                     forM_ (universeBi (generatorPat gen)) $ \ nm ->
-                        modify (second ((nm, refto) :))
+                        modify ((nm, refto) :)
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
             x' <- resolveX x
@@ -188,13 +188,14 @@ resolveX x = descendM resolveX x
 
 resolveD
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => Domain () Expression
     -> m (Domain () Expression)
 resolveD (DomainReference _ (Just d)) = resolveD d
 resolveD (DomainReference nm Nothing) = do
-    mval <- gets (lookup nm . snd)
+    mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> resolveD r
@@ -202,12 +203,12 @@ resolveD (DomainReference nm Nothing) = do
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOf d'
-    modify (second ((n, RecordField n t) :))
+    modify ((n, RecordField n t) :)
     return (n, d')
 resolveD (DomainVariant ds) = fmap DomainVariant $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOf d'
-    modify (second ((n, VariantField n t) :))
+    modify ((n, VariantField n t) :)
     return (n, d')
 resolveD d = do
     d' <- descendM resolveD d
@@ -216,13 +217,14 @@ resolveD d = do
 
 resolveAbsLit
     :: ( MonadFail m
-       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
        )
     => AbstractLiteral Expression
     -> m (AbstractLiteral Expression)
 resolveAbsLit p@(AbsLitVariant Nothing n x) = do
     x'   <- resolveX x
-    mval <- gets snd
+    mval <- gets id
     let
         isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
         isTheVariant _ = Nothing
