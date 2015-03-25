@@ -54,6 +54,10 @@ instance Monad m => NameGen (NameGenM m) where
                 return $ MachineName k i []
     updateNameGenState = modify . const . M.fromList
 
+instance NameGen (Either Doc) where
+    nextName _ = fail "nextName{Either Doc}"
+    updateNameGenState _ = fail "updateNameGenState{Either Doc}"
+
 runNameGen :: Monad m => NameGenM m a -> m a
 runNameGen (NameGenM comp) = evalStateT comp initState
     where initState = M.empty
