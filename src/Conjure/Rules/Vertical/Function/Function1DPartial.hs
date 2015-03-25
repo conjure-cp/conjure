@@ -18,13 +18,11 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1DPartial representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    valuesIndexed = [essence| (&j, &values[&j]) |]
-                    flagsIndexed  = [essence|      &flags [&j]  |]
-                in
-                Comprehension (upd valuesIndexed body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let valuesIndexed = [essence| (&j, &values[&j]) |]
+                let flagsIndexed  = [essence|      &flags [&j]  |]
+                return $ Comprehension (upd valuesIndexed body)
                     $  gocBefore
                     ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index))
                        , Condition [essence| &flagsIndexed |]
@@ -45,10 +43,10 @@ rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule`
         [flags,values] <- downX1 f
         return
             ( "Function image, Function1DPartial representation, not-a-bool"
-            , const [essence| { &values[&x]
-                              @ such that &flags[&x]
-                              }
-                            |]
+            , return [essence| { &values[&x]
+                               @ such that &flags[&x]
+                               }
+                             |]
             )
     theRule _ = na "rule_Image_NotABool"
 
@@ -74,7 +72,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                 let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Function image, Function1DPartial representation, bool"
-                    , const [essence| { &p' @ such that &flagsCombined } |]
+                    , return [essence| { &p' @ such that &flagsCombined } |]
                     )
 
 
@@ -84,7 +82,8 @@ rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule wh
         TypeFunction{}      <- typeOf f
         "Function1DPartial" <- representationOf f
         [flags,_values]     <- downX1 f
-        return ( "Function in defined, Function1DPartial representation"
-               , const [essence| &flags[&x] |]
-               )
+        return
+            ( "Function in defined, Function1DPartial representation"
+            , return [essence| &flags[&x] |]
+            )
     theRule _ = na "rule_InDefined"

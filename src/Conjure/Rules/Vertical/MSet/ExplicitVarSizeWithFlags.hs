@@ -18,11 +18,10 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for mset-comprehension, ExplicitVarSizeWithFlags representation"
-            , \ fresh ->
-                let (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &values[&j] |]
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &values[&j] |]
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
                            , Condition [essence| &flags[&j] > 0 |]
@@ -40,15 +39,15 @@ rule_Freq = "mset-freq{ExplicitVarSizeWithFlags}" `namedRule` theRule where
         "ExplicitVarSizeWithFlags" <- representationOf mset
         [flags, values]            <- downX1 mset
         DomainMatrix index _       <- domainOf values
-        return ( "Vertical rule for mset-freq, ExplicitVarSizeWithFlags representation"
-               , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
+        return
+            ( "Vertical rule for mset-freq, ExplicitVarSizeWithFlags representation"
+            , do
+                (iPat, i) <- quantifiedVar
+                return
                     [essence|
                         sum([ &flags[&i]
                             | &iPat : &index
                             , &values[&i] = &x
                             ])
                     |]
-               )
+            )

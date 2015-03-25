@@ -11,9 +11,10 @@ rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
         "RelationAsMatrix"  <- representationOf rel
         [m]                 <- downX1 rel
         let unroll = foldl (make opIndexing)
-        return ( "relation image, RelationAsMatrix representation"
-               , const $ unroll m args
-               )
+        return
+            ( "relation image, RelationAsMatrix representation"
+            , return $ unroll m args
+            )
 
 
 rule_Comprehension :: Rule
@@ -34,20 +35,21 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
         -- Q j in (indices...) , filter(f) . f(tuple)
 
         -- let out fresh = unroll m [] (zip [ quantifiedVar fr TypeInt | fr <- fresh ] mIndices)
-        return ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+        return
+            ( "Vertical rule for map_in_expr for relation domains, RelationAsMatrix representation."
+            , do
+                (iPat, i) <- quantifiedVar
 
-                        lit = AbstractLiteral $ AbsLitTuple
-                                    [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
-                        indexThis anyMatrix = make opMatrixIndexing anyMatrix
-                                    [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
+                let lit = AbstractLiteral $ AbsLitTuple
+                                 [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
+                let indexThis anyMatrix = make opMatrixIndexing anyMatrix
+                                 [ make opIndexing i (fromInt n) | n <- [1 .. genericLength mIndices] ]
 
-                    in  Comprehension (upd lit body)
-                            $  gocBefore
-                            ++ [ Generator (GenDomainNoRepr iPat (DomainTuple mIndices))
-                               , Condition (indexThis m)
-                               ]
-                            ++ transformBi (upd lit) gocAfter
-               )
+                return $ Comprehension (upd lit body)
+                         $  gocBefore
+                         ++ [ Generator (GenDomainNoRepr iPat (DomainTuple mIndices))
+                            , Condition (indexThis m)
+                            ]
+                         ++ transformBi (upd lit) gocAfter
+            )
     theRule _ = na "rule_Comprehension"

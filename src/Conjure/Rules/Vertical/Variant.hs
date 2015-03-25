@@ -15,7 +15,7 @@ rule_Variant_Eq = "variant-eq" `namedRule` theRule where
         (yWhich:ys)   <- downX1 y
         return
             ( "Horizontal rule for variant equality"
-            , const $ make opAnd $ fromList
+            , return $ make opAnd $ fromList
                 [ [essence| &xWhich = &yWhich |]                        -- the tags are eq
                 , onTagged (make opEq) xWhich xs ys                     -- and the tagged values are eq
                 ]
@@ -32,7 +32,7 @@ rule_Variant_Neq = "variant-neq" `namedRule` theRule where
         (yWhich:ys)   <- downX1 y
         return
             ( "Horizontal rule for variant !="
-            , const $ make opOr $ fromList
+            , return $ make opOr $ fromList
                 [ [essence| &xWhich != &yWhich |]                       -- either the tags are diff
                 , make opAnd $ fromList
                     [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
@@ -52,7 +52,7 @@ rule_Variant_Lt = "variant-lt" `namedRule` theRule where
         (yWhich:ys)   <- downX1 y
         return
             ( "Horizontal rule for variant <"
-            , const $ make opOr $ fromList
+            , return $ make opOr $ fromList
                 [ [essence| &xWhich < &yWhich |]                        -- either the tags are <
                 , make opAnd $ fromList
                     [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
@@ -72,7 +72,7 @@ rule_Variant_Leq = "variant-leq" `namedRule` theRule where
         (yWhich:ys)   <- downX1 y
         return
             ( "Horizontal rule for variant <="
-            , const $ make opOr $ fromList
+            , return $ make opOr $ fromList
                 [ [essence| &xWhich < &yWhich |]                        -- either the tags are <
                 , make opAnd $ fromList
                     [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
@@ -94,7 +94,7 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
                             Just argInt -> return argInt
         return
             ( "Variant indexing on:" <+> pretty p
-            , const $ WithLocals
+            , return $ WithLocals
                 (atNote "Variant indexing" xs argInt)                   -- the value is projected
                 (Right [ [essence| &xWhich = &argInt2 |]                -- the tag is equal to i
                        | let argInt2 = fromInt (fromIntegral (argInt + 1))
@@ -113,7 +113,7 @@ rule_Variant_Active = "variant-active" `namedRule` theRule where
                             Just argInt -> return $ fromInt $ fromIntegral $ argInt + 1
         return
             ( "Variant active on:" <+> pretty p
-            , const $ [essence| &xWhich = &argInt |]
+            , return $ [essence| &xWhich = &argInt |]
             )
 
 

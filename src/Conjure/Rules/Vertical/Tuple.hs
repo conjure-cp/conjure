@@ -15,7 +15,7 @@ rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple equality"
-            , const $ make opAnd $ fromList $ zipWith (make opEq) xs ys
+            , return $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 
@@ -29,7 +29,7 @@ rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple !="
-            , const $ make opNot $ make opAnd $ fromList $ zipWith (make opEq) xs ys
+            , return $ make opNot $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 
@@ -43,7 +43,7 @@ rule_Tuple_Lt = "tuple-lt" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple <"
-            , const $ decomposeLexLt p xs ys
+            , return $ decomposeLexLt p xs ys
             )
 
 
@@ -57,7 +57,7 @@ rule_Tuple_Leq = "tuple-leq" `namedRule` theRule where
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple <="
-            , const $ decomposeLexLeq p xs ys
+            , return $ decomposeLexLeq p xs ys
             )
 
 
@@ -88,5 +88,5 @@ rule_Tuple_Index = "tuple-index" `namedRule` theRule where
         ts          <- downX1 t
         return
             ( "Tuple indexing on:" <+> pretty p
-            , const $ atNote "Tuple indexing" ts (fromInteger (iInt-1))
+            , return $ atNote "Tuple indexing" ts (fromInteger (iInt-1))
             )

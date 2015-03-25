@@ -18,12 +18,10 @@ rule_Comprehension = "function-comprehension{Function1D}" `namedRule` theRule wh
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1D representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    valuesIndexed = [essence| (&j, &values[&j]) |]
-                in
-                    Comprehension
+            , do
+                (jPat, j) <- quantifiedVar
+                let valuesIndexed = [essence| (&j, &values[&j]) |]
+                return $ Comprehension
                        (upd valuesIndexed body)
                        $  gocBefore
                        ++ [Generator (GenDomainNoRepr jPat (forgetRepr index))]
@@ -44,12 +42,10 @@ rule_Comprehension_Defined = "function-comprehension_defined{Function1D}" `named
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, Function1D representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = j
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = j
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat (forgetRepr index)) ]
                         ++ transformBi (upd val) gocAfter
@@ -65,6 +61,6 @@ rule_Image = "function-image{Function1D}" `namedRule` theRule where
         [values]        <- downX1 func
         return
             ( "Function image, Function1D representation"
-            , const [essence| &values[&x] |]
+            , return [essence| &values[&x] |]
             )
     theRule _ = na "rule_Image"

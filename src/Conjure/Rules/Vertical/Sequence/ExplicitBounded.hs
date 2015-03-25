@@ -23,12 +23,10 @@ rule_Comprehension = "sequence-comprehension{ExplicitBounded}" `namedRule` theRu
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a sequence, ExplicitBounded representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    val = [essence| (&i, &sValues[&i]) |]
-                in
-                    Comprehension
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = [essence| (&i, &sValues[&i]) |]
+                return $ Comprehension
                        (upd val body)
                        $  gocBefore
                        ++ [ Generator (GenDomainNoRepr iPat (mkDomainIntB 1 maxSize))
@@ -45,9 +43,10 @@ rule_Card = "sequence-cardinality{ExplicitBounded}" `namedRule` theRule where
         TypeSequence{}    <- typeOf s
         "ExplicitBounded" <- representationOf s
         [sLength, _]      <- downX1 s
-        return ( "Vertical rule for sequence cardinality."
-               , const sLength
-               )
+        return
+            ( "Vertical rule for sequence cardinality."
+            , return sLength
+            )
     theRule _ = na "rule_Card"
 
 
@@ -62,10 +61,10 @@ rule_Image_NotABool = "sequence-image{ExplicitBounded}-not-a-bool" `namedRule` t
         [sLength,sValues] <- downX1 sequ
         return
             ( "Sequence image, ExplicitBounded representation, not-a-bool"
-            , const [essence| { &sValues[&x]
-                              @ such that &x <= &sLength
-                              }
-                            |]
+            , return [essence| { &sValues[&x]
+                               @ such that &x <= &sLength
+                               }
+                             |]
             )
     theRule _ = na "rule_Image_NotABool"
 
@@ -91,5 +90,5 @@ rule_Image_Bool = "sequence-image{ExplicitBounded}-bool" `namedRule` theRule whe
                 let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Sequence image, ExplicitBounded representation, bool"
-                    , const [essence| { &p' @ such that &flagsCombined } |]
+                    , return [essence| { &p' @ such that &flagsCombined } |]
                     )

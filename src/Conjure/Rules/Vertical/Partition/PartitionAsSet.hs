@@ -16,11 +16,10 @@ rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRu
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, PartitionAsSet representation"
-            , \ fresh ->
-                let (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = j
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = j
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenInExpr jPat s) ]
                         ++ transformBi (upd val) gocAfter

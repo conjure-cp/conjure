@@ -15,7 +15,7 @@ rule_Record_Eq = "record-eq" `namedRule` theRule where
         ys           <- downX1 y
         return
             ( "Horizontal rule for record equality"
-            , const $ make opAnd $ fromList $ zipWith (make opEq) xs ys
+            , return $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 
@@ -29,7 +29,7 @@ rule_Record_Neq = "record-neq" `namedRule` theRule where
         ys           <- downX1 y
         return
             ( "Horizontal rule for record !="
-            , const $ make opNot $ make opAnd $ fromList $ zipWith (make opEq) xs ys
+            , return $ make opNot $ make opAnd $ fromList $ zipWith (make opEq) xs ys
             )
 
 
@@ -43,7 +43,7 @@ rule_Record_Lt = "record-lt" `namedRule` theRule where
         ys           <- downX1 y
         return
             ( "Horizontal rule for record <"
-            , const $ decomposeLexLt p xs ys
+            , return $ decomposeLexLt p xs ys
             )
 
 
@@ -57,7 +57,7 @@ rule_Record_Leq = "record-leq" `namedRule` theRule where
         ys           <- downX1 y
         return
             ( "Horizontal rule for record <="
-            , const $ decomposeLexLeq p xs ys
+            , return $ decomposeLexLeq p xs ys
             )
 
 
@@ -91,5 +91,5 @@ rule_Record_Index = "record-index" `namedRule` theRule where
         ts            <- downX1 t
         return
             ( "Record indexing on:" <+> pretty p
-            , const $ atNote "Record indexing" ts iInt
+            , return $ atNote "Record indexing" ts iInt
             )
