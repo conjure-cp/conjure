@@ -2,8 +2,8 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Conjure.Rules.Definition
-    ( Rule(..), RuleResult, namedRule
-    , Question(..), Answer(..)
+    ( Rule(..), RuleResult(..), namedRule
+    , Question(..), QuestionType(..), Answer(..)
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
@@ -24,10 +24,21 @@ type LogOr a = Either (LogLevel, Doc) a
 type LogOrModel = LogOr Model
 
 data Question = Question
-    { qHole       :: Expression
+    { qType       :: QuestionType
+    , qHole       :: Expression
     , qAscendants :: [Expression]
     , qAnswers    :: [Answer]
     }
+
+data QuestionType
+    = ChooseRepr
+    | ChooseRepr_Find
+    | ChooseRepr_Given
+    | ChooseRepr_Auxiliary
+    | ChooseRepr_Quantified
+    | ChooseRepr_Cut
+    | ExpressionRefinement
+    deriving (Eq, Ord, Show)
 
 data Answer = Answer
     { aText      :: Doc
@@ -91,27 +102,34 @@ data Config = Config
 
 instance Default Config where
     def = Config
-        { logLevel                  = LogNone
-        , verboseTrail              = False
-        , logRuleFails              = False
-        , logRuleSuccesses          = False
-        , logRuleAttempts           = False
-        , logChoices                = False
-        , strategyQ                 = Interactive
-        , strategyA                 = Interactive
-        , outputDirectory           = "conjure-output"
-        , channelling               = True
-        , parameterRepresentation   = True
-        , limitModels               = Nothing
-        , numberingStart            = 1
-        , smartFilenames            = False
+        { logLevel                   = LogNone
+        , verboseTrail               = False
+        , logRuleFails               = False
+        , logRuleSuccesses           = False
+        , logRuleAttempts            = False
+        , logChoices                 = False
+        , strategyQ                  = Interactive
+        , strategyA                  = Interactive
+        , representations            = Interactive
+        , representationsFinds       = Interactive
+        , representationsGivens      = Interactive
+        , representationsAuxiliaries = Interactive
+        , representationsQuantifieds = Interactive
+        , representationsCuts        = Interactive
+        , outputDirectory            = "conjure-output"
+        , channelling                = True
+        , parameterRepresentation    = True
+        , limitModels                = Nothing
+        , numberingStart             = 1
+        , smartFilenames             = False
         }
 
-type RuleResult m =
-        ( Doc                     -- describe this transformation
-        , [Name] -> Expression    -- the result
-        , Model -> m Model        -- post-application hook
-        )
+data RuleResult m = RuleResult
+    { ruleResultDescr :: Doc                    -- describe this transformation
+    , ruleResultType  :: QuestionType
+    , ruleResult      :: [Name] -> Expression   -- the result
+    , ruleResultHook  :: Model -> m Model       -- post-application hook
+    }
 
 data Rule = Rule
     { rName  :: Doc
@@ -127,7 +145,7 @@ namedRule
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ _z x -> let addId (d, y) = (d, y, return)
+    , rApply = \ _z x -> let addId (d, y) = RuleResult d ExpressionRefinement y return
                          in  liftM (return . addId) (f x)
     }
 

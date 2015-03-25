@@ -106,7 +106,10 @@ resolveSearchOrder (BranchingOn nm) = do
         Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
                                : ("Bindings in context:" : prettyContext ctxt)
         Just{}  -> return (BranchingOn nm)
-resolveSearchOrder (Cut x) = Cut <$> resolveX x
+resolveSearchOrder (Cut x) =
+    let f Find = CutFind
+        f forg = forg
+    in  Cut . transformBi f <$> resolveX x
 
 
 resolveX

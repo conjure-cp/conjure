@@ -243,7 +243,9 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 
-data FindOrGiven = Find | Given | Quantified | LocalFind
+data FindOrGiven = Find | Given | Quantified
+        | CutFind           -- references to variables used in the definition of a cut
+        | LocalFind         -- references to variables used inside WithLocals. i.e. auxiliaries.
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize FindOrGiven
@@ -255,6 +257,7 @@ instance Pretty FindOrGiven where
     pretty Find = "find"
     pretty Given = "given"
     pretty Quantified = "quantified"
+    pretty CutFind = "find"
     pretty LocalFind = "find"
 
 

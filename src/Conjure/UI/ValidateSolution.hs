@@ -62,6 +62,12 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 , "This should never happen."
                 , "Statement:" <+> pretty st
                 ]
+        Declaration (FindOrGiven CutFind _ _) ->
+            fail $ vcat
+                [ "A 'cut' decision variable at the top level."
+                , "This should never happen."
+                , "Statement:" <+> pretty st
+                ]
         Declaration (Letting nm val) -> modify ((nm, val) :)
         Declaration (GivenDomainDefnEnum nm) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
