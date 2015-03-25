@@ -304,10 +304,25 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = ignoreLogs . outputModels def { strategyQ = PickFirst
-                                             , strategyA = PickAll
-                                             , outputDirectory = dir
-                                             , parameterRepresentation = True
-                                             , channelling = True
-                                             , smartFilenames = True
-                                             }
+modelAll dir = ignoreLogs . outputModels Config
+    { logLevel                   = LogNone
+    , verboseTrail               = False
+    , logRuleFails               = False
+    , logRuleSuccesses           = False
+    , logRuleAttempts            = False
+    , logChoices                 = False
+    , strategyQ                  = PickFirst
+    , strategyA                  = PickAll
+    , representations            = PickAll
+    , representationsFinds       = PickAll
+    , representationsGivens      = PickAll
+    , representationsAuxiliaries = PickAll
+    , representationsQuantifieds = PickAll
+    , representationsCuts        = PickAll
+    , outputDirectory            = dir
+    , channelling                = True
+    , parameterRepresentation    = True
+    , limitModels                = Nothing
+    , numberingStart             = 1
+    , smartFilenames             = True
+    }
