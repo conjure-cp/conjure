@@ -5,7 +5,6 @@
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts
-    , freshNames
     , languageEprime
     , initInfo
     , allContextsExceptReferences
@@ -34,6 +33,8 @@ module Conjure.Language.Definition
     , tupleLitIfNeeded
     , patternToExpr
 
+    , module Conjure.Language.NameGen
+
     ) where
 
 -- conjure
@@ -43,6 +44,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
 
 import Conjure.Language.Name
+import Conjure.Language.NameGen ( NameGen(..), NameGenState )
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
@@ -95,18 +97,6 @@ instance Pretty Model where
         , [""]
         , [pretty info | info /= def]
         ]
-
-freshNames :: Model -> [Name]
-freshNames model = newNames
-    where
-        newNames = [ name
-                   | i <- [1..]
-                   , let name = MachineName "q" i []
-                   , not (or [ ("q",i) == (base,n)
-                             | MachineName base n _ <- usedNames
-                             ])
-                   ]
-        usedNames = universeBi model :: [Name]
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
@@ -277,6 +267,7 @@ data ModelInfo = ModelInfo
     , miTrailCompact :: [(Int,[Int])]
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
+    , miNameGenState :: [(Text, Int)]
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -291,7 +282,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -558,16 +549,18 @@ e2c :: Expression -> Constant
 e2c (Constant c) = c
 e2c x = bug ("e2c, not a constant:" <+> pretty x)
 
-quantifiedVar :: Name -> (AbstractPattern, Expression)
-quantifiedVar nm =
+quantifiedVar :: NameGen m => m (AbstractPattern, Expression)
+quantifiedVar = do
+    nm <- nextName "q"
     let pat = Single nm
         ref = Reference nm Nothing
-    in  (pat, ref)
+    return (pat, ref)
 
-auxiliaryVar :: Name -> (Name, Expression)
-auxiliaryVar nm =
+auxiliaryVar :: NameGen m => m (Name, Expression)
+auxiliaryVar = do
+    nm <- nextName "aux"
     let ref = Reference nm Nothing
-    in  (nm, ref)
+    return (nm, ref)
 
 
 lambdaToFunction :: AbstractPattern -> Expression -> Expression -> Expression
