@@ -47,12 +47,11 @@ type TypeOf_DownD (m :: * -> *) =
     -> m (Maybe [(Name, DomainX Expression)])
 
 type TypeOf_Structural (m :: * -> *) =
-       (DomainX Expression -> m ([Name] -> Expression -> m [Expression]))
+       (DomainX Expression -> m (Expression -> m [Expression]))
                                                     -- other structural constraints for inner domains
     -> (Expression -> m [Expression])               -- general downX1
     -> DomainX Expression                           -- this domain
-    -> m (     [Name]                               -- a source of fresh names
-          ->    Expression                          -- the original variable, before refinement
+    -> m (      Expression                          -- the original variable, before refinement
           -> m [Expression]                         -- structural constraints
          )
 

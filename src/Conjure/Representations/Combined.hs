@@ -216,7 +216,7 @@ getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals dow
 --   This rule handles the plumbing for matrices.
 --   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
-matrix :: forall m . MonadFail m => Representation m
+matrix :: forall m . (MonadFail m, NameGen m) => Representation m
 matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
 
     where
@@ -238,7 +238,7 @@ matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
                 innerStructuralCons fresh inpMatrix = do
-                    let (iPat, i) = quantifiedVar (headInf fresh)
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
                     -- preparing structural constraints for the inner guys
