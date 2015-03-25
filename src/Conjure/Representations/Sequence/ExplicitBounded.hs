@@ -13,7 +13,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-sequenceExplicitBounded :: forall m . MonadFail m => Representation m
+sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m) => Representation m
 sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
@@ -62,58 +62,56 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSequence "ExplicitBounded" (SequenceAttr (SizeAttr_Size size) _) innerDomain) = do
             let
-                innerStructuralCons fresh values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                innerStructuralCons values = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &values[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh sequ -> do
+            return $ \ sequ -> do
                 refs <- downX1 sequ
                 case refs of
                     [_marker,values] -> do
-                        isc <- innerStructuralCons fresh values
+                        isc <- innerStructuralCons values
                         return $ concat [ isc
                                         ]
                     _ -> na "{structuralCons} ExplicitBounded"
         structuralCons f downX1 (DomainSequence "ExplicitBounded" (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
             let
-
-                dontCareAfterMarker fresh marker values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                dontCareAfterMarker marker values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &i > &marker ->
                                 dontCare(&values[&i])
                         |]
 
-                innerStructuralCons fresh marker values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                innerStructuralCons marker values = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &values[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh sequ -> do
+            return $ \ sequ -> do
                 refs <- downX1 sequ
                 case refs of
-                    [marker,values] -> do
-                        isc <- innerStructuralCons fresh marker values
-                        return $ concat [ dontCareAfterMarker fresh marker values
-                                        , mkSizeCons sizeAttr marker
-                                        , isc
-                                        ]
+                    [marker,values] ->
+                        concat <$> sequence
+                            [ dontCareAfterMarker marker values
+                            , return (mkSizeCons sizeAttr marker)
+                            , innerStructuralCons marker values
+                            ]
                     _ -> na "{structuralCons} ExplicitBounded"
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitBounded"
