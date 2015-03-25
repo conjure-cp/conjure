@@ -64,8 +64,7 @@ Model generation:
                                              --representations
      --representations-givens=STRATEGY       Strategy to use when choosing a
                                              representation for a parameter.
-                                             Default value: same as
-                                             --representations
+                                             Default value: c (for compact)
      --representations-auxiliaries=STRATEGY  Strategy to use when choosing a
                                              representation for an auxiliary
                                              variable. Default value: same as
@@ -84,12 +83,6 @@ Model generation:
                                              false: Do not produce channelled
                                              models.     true : Produce
                                              channelled models.
-     --parameter-representation              Representation selection for
-                                             abstract parameters. Can be true
-                                             or false. (false by default)
-                                             false: Select a single
-                                             representation.     true : Select
-                                             multiple representations.
      --seed=INT                              The seed for the random number
                                              generator.
      --limit-models=INT                      Maximum number of models to
