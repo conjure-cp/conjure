@@ -20,7 +20,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) =
             DomainFunction "FunctionAsRelation" attrs <$> f innerDomainFr <*> f innerDomainTo
         chck _ _ = []

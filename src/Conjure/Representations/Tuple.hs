@@ -20,7 +20,7 @@ tuple = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainTuple ds) = DomainTuple <$> mapM f ds
         chck _ _ = []
 

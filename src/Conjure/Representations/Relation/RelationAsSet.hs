@@ -19,7 +19,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainRelation _ attrs innerDomains) =
             DomainRelation "RelationAsSet" attrs <$> mapM f innerDomains
         chck _ _ = []

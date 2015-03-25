@@ -22,7 +22,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainPartition _ attrs innerDomain)
             | domainCanIndexMatrix innerDomain
             = DomainPartition "Occurrence" attrs <$> f innerDomain

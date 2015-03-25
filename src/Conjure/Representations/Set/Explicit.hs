@@ -16,7 +16,7 @@ setExplicit = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainSet _ attrs@(SetAttr SizeAttr_Size{}) innerDomain) =
             DomainSet "Explicit" attrs <$> f innerDomain
         chck _ _ = []

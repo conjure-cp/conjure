@@ -21,7 +21,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainMSet _ attrs innerDomain) =
             DomainMSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
         chck _ _ = []

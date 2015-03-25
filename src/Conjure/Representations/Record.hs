@@ -18,7 +18,7 @@ record = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainRecord ds) =
             let names = map fst ds
                 outDoms = mapM (f . snd) ds

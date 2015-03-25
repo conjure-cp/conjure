@@ -18,7 +18,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainSequence _ attrs@(SequenceAttr sizeAttr _) innerDomain) | hasMaxSize sizeAttr =
             DomainSequence "ExplicitBounded" attrs <$> f innerDomain
         chck _ _ = []
