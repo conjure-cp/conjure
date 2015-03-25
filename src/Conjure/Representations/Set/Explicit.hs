@@ -11,7 +11,7 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-setExplicit :: forall m . MonadFail m => Representation m
+setExplicit :: forall m . (MonadFail m, NameGen m) => Representation m
 setExplicit = Representation chck downD structuralCons downC up
 
     where
@@ -35,34 +35,33 @@ setExplicit = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet "Explicit" (SetAttr (SizeAttr_Size size)) innerDomain) = do
             let
-                ordering fresh m =
-                    let
-                        (iPat, i) = quantifiedVar fresh
-                    in return -- for list
+                ordering m = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             forAll &iPat : int(1..&size-1) .
                                 &m[&i] < &m[&i+1]
                         |]
 
-                innerStructuralCons fresh m = do
-                    let (iPat, i) = quantifiedVar (headInf fresh)
+                innerStructuralCons m = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &m[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh ref -> do
+            return $ \ ref -> do
                 refs <- downX1 ref
                 case refs of
-                    [m] -> do
-                        isc <- innerStructuralCons fresh m
-                        return $ concat [ ordering (headInf fresh) m
-                                        , isc
-                                        ]
+                    [m] -> 
+                        concat <$> sequence
+                            [ ordering m
+                            , innerStructuralCons m
+                            ]
                     _ -> na "{structuralCons} Explicit"
         structuralCons _ _ _ = na "{structuralCons} Explicit"
 

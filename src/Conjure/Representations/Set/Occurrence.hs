@@ -13,7 +13,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setOccurrence :: forall m . MonadFail m => Representation m
+setOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
 setOccurrence = Representation chck downD structuralCons downC up
 
     where
@@ -34,12 +34,12 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
-            return $ \ fresh set -> do
+            return $ \ set -> do
                 refs <- downX1 set
                 case refs of
                     [m] -> do
-                        let (iPat, i) = quantifiedVar (fresh `at` 0)
-                            cardinality = [essence| sum &iPat : &innerDomain . toInt(&m[&i]) |]
+                        (iPat, i) <- quantifiedVar
+                        let cardinality = [essence| sum &iPat : &innerDomain . toInt(&m[&i]) |]
                         return (mkSizeCons attrs cardinality)
                     _ -> na "{structuralCons} Occurrence"
         structuralCons _ _ _ = na "{structuralCons} Occurrence"

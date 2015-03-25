@@ -15,7 +15,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithMarker :: forall m . MonadFail m => Representation m
+setExplicitVarSizeWithMarker :: forall m . (MonadFail m, NameGen m) => Representation m
 setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
     where
@@ -51,45 +51,43 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
-                orderingUpToMarker fresh marker values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                orderingUpToMarker marker values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &i + 1 <= &marker ->
                                 &values[&i] < &values[&i+1]
                         |]
 
-                dontCareAfterMarker fresh marker values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                dontCareAfterMarker marker values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &i > &marker ->
                                 dontCare(&values[&i])
                         |]
 
-                innerStructuralCons fresh marker values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                innerStructuralCons marker values = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &values[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh set -> do
+            return $ \ set -> do
                 refs <- downX1 set
                 case refs of
-                    [marker,values] -> do
-                        isc <- innerStructuralCons fresh marker values
-                        return $ concat [ orderingUpToMarker  fresh marker values
-                                        , dontCareAfterMarker fresh marker values
-                                        , mkSizeCons attrs marker
-                                        , isc
-                                        ]
+                    [marker,values] ->
+                        concat <$> sequence
+                            [ orderingUpToMarker  marker values
+                            , dontCareAfterMarker marker values
+                            , return (mkSizeCons attrs marker)
+                            , innerStructuralCons marker values
+                            ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithMarker"
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithMarker"

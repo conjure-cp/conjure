@@ -15,7 +15,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithFlags :: forall m . MonadFail m => Representation m
+setExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m) => Representation m
 setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
@@ -53,58 +53,53 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         structuralCons f downX1 (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
-                orderingWhenFlagged fresh flags values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                orderingWhenFlagged flags values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &values[&i] < &values[&i+1]
                         |]
 
-                dontCareWhenNotFlagged fresh flags values= return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                dontCareWhenNotFlagged flags values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &flags[&i] = false -> dontCare(&values[&i])
                         |]
 
-                flagsToTheLeft fresh flags = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
+                flagsToTheLeft flags = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &flags[&i]
                         |]
 
-                cardinality fresh flags =
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in
-                        [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
+                cardinality flags = do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| sum &iPat : int(1..&maxSize) . toInt(&flags[&i]) |]
 
-                innerStructuralCons fresh flags values = do
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
+                innerStructuralCons flags values = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] -> &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop = [essence| &values[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh set -> do
+            return $ \ set -> do
                 refs <- downX1 set
                 case refs of
-                    [flags, values] -> do
-                        isc <- innerStructuralCons fresh flags values
-                        return $ concat [ orderingWhenFlagged    fresh flags values
-                                        , dontCareWhenNotFlagged fresh flags values
-                                        , flagsToTheLeft         fresh flags
-                                        , mkSizeCons attrs (cardinality fresh flags)
-                                        , isc
-                                        ]
+                    [flags, values] ->
+                        concat <$> sequence
+                            [ orderingWhenFlagged    flags values
+                            , dontCareWhenNotFlagged flags values
+                            , flagsToTheLeft         flags
+                            , mkSizeCons attrs <$> cardinality flags
+                            , innerStructuralCons flags values
+                            ]
                     _ -> na "{structuralCons} ExplicitVarSizeWithFlags"
 
         structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithFlags"
