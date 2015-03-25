@@ -12,7 +12,7 @@ import Conjure.Representations.Common
 
 
 relationAsSet
-    :: forall m . MonadFail m
+    :: forall m . (MonadFail m, NameGen m)
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
 relationAsSet dispatch = Representation chck downD structuralCons downC up
@@ -43,31 +43,30 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 inDom = do
             let
-                innerStructuralCons fresh rel = do
+                innerStructuralCons rel = do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    innerStructuralConsGen fresh rel
+                    innerStructuralConsGen rel
 
-            return $ \ fresh rel -> do
+            return $ \ rel -> do
                 refs <- downX1 rel
                 case refs of
                     [set] -> do
-                        isc <- innerStructuralCons fresh set
                         binRelCons <- case inDom of
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
                                 | binRelAttrs == def
                                     -> return []
                                 | innerDomain1 == innerDomain2
-                                    -> return $ mkBinRelCons binRelAttrs fresh innerDomain1 rel
+                                    -> mkBinRelCons binRelAttrs innerDomain1 rel
                                 | otherwise
                                     -> fail "Binary relation between different domains."
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
                                     -> fail "Non-binary relation has binary relation attributes."
                             _ -> return []
-                        return $ concat
-                            [ isc
-                            , binRelCons
+                        concat <$> sequence
+                            [ innerStructuralCons set
+                            , return binRelCons
                             ]
                     _ -> na $ vcat [ "{structuralCons} RelationAsSet"
                                    , pretty inDom
