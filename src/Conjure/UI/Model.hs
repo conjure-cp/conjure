@@ -972,9 +972,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook (channelling config) forg nm dom
                 ]
-        return $ if forg == Given && parameterRepresentation config == False
-                    then take 1 options
-                    else options
+        return options
     theRule _ = na "rule_ChooseRepr"
 
     mkHook useChannelling   -- whether to use channelling or not

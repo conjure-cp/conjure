@@ -104,7 +104,6 @@ mainWithArgs Modelling{..} = do
                         Nothing -> Config.representations config
                         Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
             , Config.channelling                = channelling
-            , Config.parameterRepresentation    = parameterRepresentation
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames

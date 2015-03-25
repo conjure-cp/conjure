@@ -93,7 +93,6 @@ data Config = Config
     , representationsCuts        :: Strategy
     , outputDirectory            :: FilePath
     , channelling                :: Bool
-    , parameterRepresentation    :: Bool
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -118,7 +117,6 @@ instance Default Config where
         , representationsCuts        = Interactive
         , outputDirectory            = "conjure-output"
         , channelling                = True
-        , parameterRepresentation    = True
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False

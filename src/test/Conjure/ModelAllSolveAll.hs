@@ -321,7 +321,6 @@ modelAll dir = ignoreLogs . outputModels Config
     , representationsCuts        = PickAll
     , outputDirectory            = dir
     , channelling                = True
-    , parameterRepresentation    = True
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True

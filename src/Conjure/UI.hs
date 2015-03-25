@@ -30,12 +30,11 @@ data UI
         , strategyA                  :: String
         , representations            :: Maybe String        -- (def: strategyA)
         , representationsFinds       :: Maybe String        -- (def: representations)
-        , representationsGivens      :: Maybe String        -- (def: representations)
+        , representationsGivens      :: Maybe String        -- (def: c)
         , representationsAuxiliaries :: Maybe String        -- (def: representations)
         , representationsQuantifieds :: Maybe String        -- (def: representations)
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
-        , parameterRepresentation    :: Bool
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -174,7 +173,7 @@ ui = modes
                                    &= groupname "Model generation"
                                    &= explicit
                                    &= help "Strategy to use when choosing a representation for a parameter.\n\
-                                           \Default value: same as --representations"
+                                           \Default value: c (for compact)"
         , representationsAuxiliaries = Nothing
                                    &= typ "STRATEGY"
                                    &= name "representations-auxiliaries"
@@ -203,14 +202,6 @@ ui = modes
                                            \Can be true or false. (true by default)\n\
                                            \    false: Do not produce channelled models.\n\
                                            \    true : Produce channelled models."
-        , parameterRepresentation = False
-                                   &= name "parameter-representation"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Representation selection for abstract parameters.\n\
-                                           \Can be true or false. (false by default)\n\
-                                           \    false: Select a single representation.\n\
-                                           \    true : Select multiple representations."
         , seed = Nothing           &= name "seed"
                                    &= groupname "Model generation"
                                    &= explicit
