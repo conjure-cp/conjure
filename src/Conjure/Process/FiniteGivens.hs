@@ -17,7 +17,7 @@ import Conjure.Language.Instantiate ( instantiateExpression )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens
-    :: (MonadFail m, MonadLog m)
+    :: (MonadFail m, MonadLog m, NameGen m)
     => Model
     -> m Model
 finiteGivens m = flip evalStateT 1 $ do
@@ -32,7 +32,7 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam
-    :: (MonadFail m, MonadLog m)
+    :: (MonadFail m, MonadLog m, NameGen m)
     => Model                                -- eprime
     -> Model                                -- essence-param
     -> m (Model, [Name])                    -- essence-param
@@ -67,7 +67,7 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 --   for example, this means adding a size attribute at the outer-most level
 --   and adding a maxSize attribute at the inner levels.
 mkFinite
-    :: (MonadState Int m, MonadFail m)
+    :: (MonadState Int m, MonadFail m, NameGen m)
     => Domain () Expression
     -> m ( Domain () Expression                 -- "finite" domain
          , [Name]                               -- extra givens
@@ -81,7 +81,7 @@ mkFinite d = return (d, [], const (return []))
 
 
 mkFiniteOutermost
-    :: (MonadState Int m, MonadFail m)
+    :: (MonadState Int m, MonadFail m, NameGen m)
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
@@ -100,7 +100,7 @@ mkFiniteOutermost (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainSet () _ inner) = do
-    s <- nextName
+    s <- nextName "p"
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
         ( DomainSet () (SetAttr (SizeAttr_Size (fromName s))) inner'
@@ -128,7 +128,7 @@ mkFiniteOutermost (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) inn
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
-    s <- nextName
+    s <- nextName "p"
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
     (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
     return
@@ -158,7 +158,7 @@ mkFiniteOutermost (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inner
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
-    s <- nextName
+    s <- nextName "p"
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
     return
         ( DomainRelation ()
@@ -177,15 +177,15 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 
 mkFiniteInner
-    :: (MonadState Int m, MonadFail m)
+    :: (MonadState Int m, MonadFail m, NameGen m)
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
          , [Constant] -> m [(Name, Constant)]
          )
 mkFiniteInner (DomainInt []) = do
-    fr <- nextName
-    to <- nextName
+    fr <- nextName "p"
+    to <- nextName "p"
     return
         ( DomainInt [RangeBounded (fromName fr) (fromName to)]
         , [fr, to]
@@ -205,7 +205,7 @@ mkFiniteInner (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
                 innerF (concat sets)
         )
 mkFiniteInner (DomainSet () _ inner) = do
-    s <- nextName
+    s <- nextName "p"
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
         ( DomainSet () (SetAttr (SizeAttr_MaxSize (fromName s))) inner'
@@ -229,7 +229,7 @@ mkFiniteInner (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr
                 return $ innerFrValues ++ innerToValues
         )
 mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
-    s <- nextName
+    s <- nextName "p"
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
     (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
     return
@@ -255,7 +255,7 @@ mkFiniteInner (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) =
                 return $ concat innersValues
         )
 mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
-    s <- nextName
+    s <- nextName "p"
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
     return
         ( DomainRelation ()
@@ -270,12 +270,6 @@ mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
         )
 mkFiniteInner d = return (d, [], const (return []))
 
-
-nextName :: MonadState Int m => m Name
-nextName = do
-    !i <- gets id
-    modify succ
-    return (MachineName "p" i [])
 
 viewConstantInt :: MonadFail m => Constant -> m Integer
 viewConstantInt (ConstantInt i) = return i

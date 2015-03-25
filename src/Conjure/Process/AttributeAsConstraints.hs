@@ -64,21 +64,20 @@ attributeAsConstraints_OnStmts statements0 = do
 
 
 mkAttributeToConstraint
-    :: (MonadFail m, Pretty r, Eq r)
+    :: (NameGen m, MonadFail m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
     -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
-    -> [Name]
     -> Expression                                   -- the input thing
     -> m Expression                                 -- the constraint
 
-mkAttributeToConstraint domain attr mval fresh x = flip evalStateT fresh $ do
+mkAttributeToConstraint domain attr mval x = do
     gen  <- attributeToConstraint domain attr mval
     cons <- gen x
     return cons
 
 attributeToConstraint
-    :: (MonadState [Name] m, MonadFail m, Pretty r, Eq r)
+    :: (NameGen m, MonadFail m, Pretty r, Eq r)
     => Domain r Expression                          -- the input domain
     -> AttrName                                     -- the name of the attribute
     -> Maybe Expression                             -- the value for the attribute
@@ -98,12 +97,10 @@ attributeToConstraint domain@DomainMSet{} = generator where
     generator "minSize"  (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize"  (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
     generator "minOccur" (Just val) = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in &x . freq(&x,&i) >= &val |]
     generator "maxOccur" (Just val) = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in &x . freq(&x,&i) <= &val |]
     generator attr _ =
         fail $ vcat [ "Unsupported attribute:" <+> pretty attr
@@ -115,16 +112,13 @@ attributeToConstraint domain@(DomainFunction _ _ inF inT) = generator where
     generator "minSize"  (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize"  (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
     generator "total"      Nothing  = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat : &inF . &i in defined(&x) |]
     generator "injective"  Nothing  = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| allDiff([ &x(&i) | &iPat : &inF ]) |]
     generator "surjective" Nothing  = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat : &inT . &i in range(&x) |]
     generator "bijective"  Nothing  = return $ \ x -> do
         a <- generator "injective"  Nothing >>= \ gen -> gen x
@@ -141,74 +135,44 @@ attributeToConstraint domain@(DomainRelation _ _ [dom,dom2]) | dom == dom2 = gen
     generator "maxSize"  (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
 
     generator "reflexive" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
+        (xP, x) <- quantifiedVar
         return [essence| forAll &xP           : &dom . &rel(&x,&x) |]
     generator "irreflexive" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
+        (xP, x) <- quantifiedVar
         return [essence| forAll &xP           : &dom . !(&rel(&x,&x)) |]
     generator "coreflexive" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &x=&y |]
     generator "symmetric" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &rel(&y,&x) |]
     generator "antiSymmetric" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) /\ &rel(&y,&x) -> &x=&y |]
     generator "aSymmetric" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> !(&rel(&y,&x)) |]
     generator "transitive" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        fresh2 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
-            (zP, z) = quantifiedVar fresh2
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
+        (zP, z) <- quantifiedVar
         return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
     generator "total" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
     generator "Euclidean" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        fresh2 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
-            (zP, z) = quantifiedVar fresh2
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
+        (zP, z) <- quantifiedVar
         return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
     generator "serial" Nothing = return $ \ rel -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let
-            (xP, x) = quantifiedVar fresh0
-            (yP, y) = quantifiedVar fresh1
+        (xP, x) <- quantifiedVar
+        (yP, y) <- quantifiedVar
         return [essence| forAll &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]
     generator "equivalence"  Nothing = return $ \ rel -> do
         a <- generator "reflexive"  Nothing >>= \ gen -> gen rel
@@ -242,26 +206,20 @@ attributeToConstraint domain@(DomainPartition _ _ inner) = generator where
     generator "minNumParts" (Just val) = return $ \ x -> return [essence| |parts(&x)| >= &val |]
     generator "maxNumParts" (Just val) = return $ \ x -> return [essence| |parts(&x)| <= &val |]
     generator "partSize"    (Just val) = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in parts(&x) . |&i|  = &val |]
     generator "minPartSize" (Just val) = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in parts(&x) . |&i| >= &val |]
     generator "maxPartSize" (Just val) = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in parts(&x) . |&i| <= &val |]
     generator "complete" Nothing = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
+        (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat : &inner . &i in participants(&x) |]
     generator "regular" Nothing = return $ \ x -> do
-        fresh0 <- gets head ; modify tail
-        fresh1 <- gets head ; modify tail
-        let (iPat, i) = quantifiedVar fresh0
-            (jPat, j) = quantifiedVar fresh1
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
         return [essence| forAll &iPat, &jPat in parts(&x) . |&i| = |&j| |]
     generator attr _ =
         fail $ vcat [ "Unsupported attribute:" <+> pretty attr
