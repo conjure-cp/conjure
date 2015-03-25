@@ -22,7 +22,7 @@ refineParam
     -> Model      -- essence param
     -> m Model    -- eprime param
 
-refineParam eprimeModel essenceParam0 = do
+refineParam eprimeModel essenceParam0 = runNameGen $ do
 
     essenceParam1 <- removeEnumsFromParam eprimeModel essenceParam0
     (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1

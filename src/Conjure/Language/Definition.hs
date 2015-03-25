@@ -44,7 +44,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
 
 import Conjure.Language.Name
-import Conjure.Language.NameGen ( NameGen(..), NameGenState )
+import Conjure.Language.NameGen ( NameGen(..), NameGenState, runNameGen )
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type

@@ -23,7 +23,7 @@ translateSolution
     -> Model      -- essence param
     -> Model      -- eprime solution
     -> m Model    -- essence solution
-translateSolution eprimeModel essenceParam' eprimeSolution = do
+translateSolution eprimeModel essenceParam' eprimeSolution = runNameGen $ do
 
     eprimeParam  <- refineParam eprimeModel essenceParam'
     essenceParam <- removeEnumsFromParam eprimeModel essenceParam'

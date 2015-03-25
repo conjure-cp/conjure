@@ -92,7 +92,7 @@ outputModels
     => Config
     -> Model
     -> m ()
-outputModels config model = do
+outputModels config model = runNameGen $ do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
 
@@ -132,7 +132,7 @@ outputModels config model = do
 
 
 toCompletion
-    :: (MonadIO m, MonadFail m)
+    :: (MonadIO m, MonadFail m, NameGen m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
@@ -155,12 +155,11 @@ toCompletion config m = do
 
 
 remaining
-    :: MonadLog m
+    :: (MonadLog m, NameGen m)
     => Config
     -> Model
     -> m [Question]
 remaining config model | Just modelZipper <- zipperBi model = do
-    let freshNames' = freshNames model
     let
         loopLevels :: Monad m => [m [a]] -> m [a]
         loopLevels [] = return []
@@ -169,7 +168,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: MonadLog m => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
+        processLevel :: (MonadLog m, NameGen m) => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
                 ys <- applicableRules config rulesAtLevel x
@@ -180,7 +179,8 @@ remaining config model | Just modelZipper <- zipperBi model = do
     questions <- loopLevels $ map processLevel (allRules config)
     forM (zip allNats questions) $ \ (nQuestion, (focus, answers0)) -> do
         answers1 <- forM (zip allNats answers0) $ \ (nAnswer, (ruleName, RuleResult{..})) -> do
-            let ruleResultExpr = ruleResult freshNames'
+            updateNameGenState $ model |> mInfo |> miNameGenState
+            ruleResultExpr <- ruleResult
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
@@ -597,7 +597,7 @@ sliceThemMatrices model = do
     return model { mStatements = statements }
 
 
-prologue :: (MonadFail m, MonadLog m) => Model -> m Model
+prologue :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
     >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
@@ -630,7 +630,7 @@ epilogue model = return model
 
 
 applicableRules
-    :: forall m . MonadLog m
+    :: forall m . (MonadLog m, NameGen m)
     => Config
     -> [Rule]
     -> Zipper Model Expression
@@ -658,7 +658,9 @@ applicableRules Config{..} rulesAtLevel x = do
     return [ (name, res {ruleResult = ruleResult'})
            | (name, Right ress) <- mys
            , res <- ress
-           , let ruleResult' fresh = ruleResult res fresh
+           , let ruleResult' = do
+                    rResult <- ruleResult res
+                    return $ rResult
                        |> resolveNamesX
                        |> bugFail "applicableRules"   -- re-resolving names
            ]
@@ -964,7 +966,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                     Given   -> ChooseRepr_Given
                                     CutFind -> ChooseRepr_Cut
                                     _       -> bug "rule_ChooseRepr ruleResultType"
-                             , ruleResult = const out
+                             , ruleResult = return out
                              , ruleResultHook = hook
                              }
                 | dom <- domOpts
@@ -982,8 +984,6 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
            model = do
         let
 
-            freshNames' = freshNames model
-
             representations     = model |> mInfo |> miRepresentations
             representationsTree = model |> mInfo |> miRepresentationsTree
                                         |> concatMap (\ (n, ds) -> map (n,) ds )
@@ -994,7 +994,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             mkStructurals = do
                 logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
-                let structurals = bugFail "structurals" $ getStructurals downX1 domain >>= \ gen -> gen freshNames' ref
+                let structurals = bugFail "structurals" $ getStructurals downX1 domain >>= \ gen -> gen ref
                 logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
                 let resolved    = bugFail "resolving st"$ mapM resolveNamesX structurals     -- re-resolving names
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
@@ -1077,9 +1077,9 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
             bug $ "No representation matches this beast:" <++> pretty domain
 
         let genOptions =
-                [ \ fresh -> do
+                [ do
                     outs <- downD (nm, dom)
-                    structurals <- mkStructurals fresh nm dom
+                    structurals <- mkStructurals nm dom
                     return (dom, outs, structurals)
                 | dom <- domOpts
                 ]
@@ -1089,8 +1089,8 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
                 { ruleResultDescr = "Choosing representation for quantified variable" <+> pretty nm
                                         <+> "(with type:" <+> pretty ty <> ")"
                 , ruleResultType = ChooseRepr_Quantified
-                , ruleResult = \ fresh -> bugFail "rule_ChooseReprForComprehension" $ do
-                    option <- genOption fresh
+                , ruleResult = bugFailT "rule_ChooseReprForComprehension" $ do
+                    option <- genOption
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
                             | nm == nm'
@@ -1110,10 +1110,10 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
             ]
     theRule _ = na "rule_ChooseReprForComprehension"
 
-    mkStructurals fresh name domain = do
+    mkStructurals name domain = do
         let ref = Reference name (Just (DeclHasRepr Quantified name domain))
         gen  <- getStructurals downX1 domain
-        gen fresh ref
+        gen ref
 
 
 rule_ChooseReprForLocals :: Rule
@@ -1136,9 +1136,9 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
             bug $ "No representation matches this beast:" <++> pretty domain
 
         let genOptions =
-                [ \ fresh -> do
+                [ do
                     outs <- downD (nm, dom)
-                    structurals <- mkStructurals fresh nm dom
+                    structurals <- mkStructurals nm dom
                     return (dom, outs, structurals)
                 | dom <- domOpts
                 ]
@@ -1147,8 +1147,8 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
             [ RuleResult
                 { ruleResultDescr = "Choosing representation for local variable" <+> pretty nm
                 , ruleResultType = ChooseRepr_Auxiliary
-                , ruleResult = \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
-                    option <- genOption fresh
+                , ruleResult = bugFailT "rule_ChooseReprForLocals" $ do
+                    option <- genOption
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
                             | nm == nm'
@@ -1172,10 +1172,10 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
             ]
     theRule _ = na "rule_ChooseReprForLocals"
 
-    mkStructurals fresh name domain = do
+    mkStructurals name domain = do
         let ref = Reference name (Just (DeclHasRepr LocalFind name domain))
         gen  <- getStructurals downX1 domain
-        gen fresh ref
+        gen ref
 
 
 rule_GeneratorsFirst :: Rule
@@ -1187,7 +1187,7 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
         when (gensOrConds == gensOrConds') $ na "rule_GeneratorsFirst"
         return
             ( "Generators come first."
-            , const $ Comprehension body gensOrConds'
+            , return $ Comprehension body gensOrConds'
             )
     theRule _ = na "rule_GeneratorsFirst"
 
@@ -1198,7 +1198,7 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
         case ref of
             Reference _ (Just DeclHasRepr{}) ->
                 return ( "Remove the argument from true."
-                       , const $ Constant $ ConstantBool True
+                       , return $ Constant $ ConstantBool True
                        )
             _ -> fail "The argument of true doesn't have a representation."
     theRule _ = na "rule_TrueIsNoOp"
@@ -1214,7 +1214,7 @@ rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
             TypeInt{}  -> return ()
             _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
-               , const x
+               , return x
                )
 
 
@@ -1230,18 +1230,17 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         DomainMatrix index _ <- domainOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty
-            , \ fresh ->
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in
-                        [essence|
-                            and([ &m[&i] != &m[&j]
-                                | &iPat : &index
-                                , &jPat : &index
-                                , &i < &j
-                                ])
-                        |]
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                return
+                    [essence|
+                        and([ &m[&i] != &m[&j]
+                            | &iPat : &index
+                            , &jPat : &index
+                            , &i < &j
+                            ])
+                    |]
             )
     theRule _ = na "rule_Decompose_AllDiff"
 
@@ -1256,9 +1255,9 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             _ -> na "rule_DomainCardinality"
         return
             ( "Cardinality of a domain"
-            , \ fresh ->
-                    let (iPat, _) = quantifiedVar (fresh `at` 0)
-                    in  [essence| sum([ 1 | &iPat : &d ]) |]
+            , do
+                (iPat, _) <- quantifiedVar
+                return [essence| sum([ 1 | &iPat : &d ]) |]
             )
 
 
@@ -1271,15 +1270,14 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
             _ -> na "rule_ComplexAbsPat"
         return
             ( "complex pattern on tuple patterns"
-            , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        replacements = [ (p, make opMatrixIndexing i (map (fromInt . fromIntegral) is))
-                                       | (p, is) <- genMappings pat
-                                       ]
-                        f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
-                        f x = x
-                    in
-                        Comprehension (transform f body)
+            , do
+                (iPat, i) <- quantifiedVar
+                let replacements = [ (p, make opMatrixIndexing i (map (fromInt . fromIntegral) is))
+                                   | (p, is) <- genMappings pat
+                                   ]
+                let f x@(Reference nm _) = fromMaybe x (lookup nm replacements)
+                    f x = x
+                return $ Comprehension (transform f body)
                             $  gocBefore
                             ++ [ either (Generator . GenDomainNoRepr iPat)
                                         (Generator . GenInExpr       iPat)
@@ -1327,7 +1325,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             [ RuleResult
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
                 , ruleResultType  = ExpressionRefinement
-                , ruleResult      = const $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
                 , ruleResultHook  = return
                 } ]
     theRule _ _ = na "rule_InlineConditions"
@@ -1362,11 +1360,11 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
 rule_AttributeToConstraint :: Rule
 rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
     theRule (Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint thing attr mval))) = do
-        dom  <- domainOf thing
-        let conv fresh = mkAttributeToConstraint dom attr mval fresh thing
+        dom <- domainOf thing
+        let conv = mkAttributeToConstraint dom attr mval thing
         return
             ( "Converting an attribute to a constraint"
-            , bugFail "rule_AttributeToConstraint" . conv
+            , bugFailT "rule_AttributeToConstraint" conv
             )
     theRule _ = na "rule_AttributeToConstraint"
 
@@ -1382,7 +1380,7 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
             else na "rule_PartialEvaluate, undefined"
         return
             ( "Full evaluator"
-            , const $ Constant constant
+            , return $ Constant constant
             )
 
 
@@ -1398,7 +1396,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
             ]
         return
             ( "Partial evaluator"
-            , const x'
+            , return x'
             )
     theRule _ = na "rule_PartialEvaluate"
 
@@ -1417,7 +1415,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             _ -> na "rule_QuantifierShift"
         return
             ( "Shifting quantifier inwards"
-            , const $ make opMatrixIndexing
+            , return $ make opMatrixIndexing
                         (make matrixLiteral
                             TypeAny
                             index

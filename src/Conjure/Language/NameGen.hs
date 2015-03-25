@@ -24,6 +24,7 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
              , MonadLog
              , MonadTrans
              , MonadState NameGenState
+             , MonadIO
              )
 
 class Monad m => NameGen m where
