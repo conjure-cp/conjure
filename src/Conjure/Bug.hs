@@ -1,6 +1,6 @@
 module Conjure.Bug
     ( bug
-    , bugFail
+    , bugFail, bugFailT
     , userErr
     ) where
 
@@ -26,6 +26,13 @@ bug message = error $ unlines
 bugFail :: Doc -> Either Doc a -> a
 bugFail loc (Left err) = bug (vcat ["BUGFAIL at" <+> loc, err])
 bugFail _   (Right x) = x
+
+bugFailT :: Monad m => Doc -> ExceptT m a -> m a
+bugFailT loc comp = do
+    res <- runExceptT comp
+    case res of
+        Left err -> bug (vcat ["BUGFAIL at" <+> loc, err])
+        Right x  -> return x
 
 -- call this function instead of "error"
 -- in case of a user error.

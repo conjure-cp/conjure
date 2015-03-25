@@ -131,7 +131,7 @@ data RuleResult m = RuleResult
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . (MonadLog m, NameGen m)
+    , rApply :: forall m . (Functor m, Applicative m, Monad m, MonadLog m, NameGen m)
              => Zipper Model Expression            -- to query context
              -> Expression
              -> ExceptT Identity [RuleResult m]
@@ -140,7 +140,7 @@ data Rule = Rule
 
 namedRule
     :: Doc
-    -> (forall m . NameGen m => Expression -> ExceptT Identity (Doc, m Expression))
+    -> (forall m . (Functor m, Applicative m, Monad m, NameGen m) => Expression -> ExceptT Identity (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm

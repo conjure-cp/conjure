@@ -38,6 +38,10 @@ instance (NameGen m, Monoid w) => NameGen (WriterT w m) where
     nextName = lift . nextName
     updateNameGenState = lift . updateNameGenState
 
+instance NameGen m => NameGen (ExceptT m) where
+    nextName = lift . nextName
+    updateNameGenState = lift . updateNameGenState
+
 instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     nextName = lift . nextName
     updateNameGenState = lift . updateNameGenState
@@ -58,9 +62,9 @@ instance NameGen (Either Doc) where
     nextName _ = fail "nextName{Either Doc}"
     updateNameGenState _ = fail "updateNameGenState{Either Doc}"
 
-instance NameGen (ExceptT Identity) where
-    nextName _ = fail "nextName{ExceptT Identity}"
-    updateNameGenState _ = fail "updateNameGenState{ExceptT Identity}"
+instance NameGen Identity where
+    nextName _ = fail "nextName{Identity}"
+    updateNameGenState _ = fail "updateNameGenState{Identity}"
 
 runNameGen :: Monad m => NameGenM m a -> m a
 runNameGen (NameGenM comp) = evalStateT comp initState

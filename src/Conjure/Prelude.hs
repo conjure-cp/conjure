@@ -379,6 +379,9 @@ instance (Monad m) => Monad (ExceptT m) where
             Right x -> runExceptT (k x)
     fail = ExceptT . return . Left . stringToDoc
 
+instance MonadTrans ExceptT where
+    lift comp = ExceptT (Right `liftM` comp)
+
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
 --   it can be run in any monad that implements MonadFail.
