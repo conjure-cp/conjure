@@ -17,7 +17,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-partitionOccurrence :: forall m . MonadFail m => Representation m
+partitionOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
 partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
@@ -58,15 +58,13 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 | domainCanIndexMatrix innerDomain
                 = do
             let
-                nbParticipants fresh flags =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            sum &iPat : &innerDomain . toInt(&flags[&i])
-                        |]
+                nbParticipants flags = do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| sum &iPat : &innerDomain . toInt(&flags[&i]) |]
 
-                numPartsCons fresh flags parts numPartsVar =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  return -- for list
+                numPartsCons flags parts numPartsVar = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             &numPartsVar =
                             max(flatten(
@@ -79,10 +77,10 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
                 -- nbParticipants
 
-                noGaps fresh flags parts numPartsVar =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (pPat, p) = quantifiedVar (fresh `at` 1)
-                    in  return -- for list
+                noGaps flags parts numPartsVar = do
+                    (iPat, i) <- quantifiedVar
+                    (pPat, p) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             and([ or([ &flags[&i] /\ &parts[&i] = &p    $ the part has to contain elems
                                      | &iPat : &innerDomain
@@ -92,52 +90,52 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-                dontCares fresh flag parts =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  return -- for list
+                dontCares flag parts = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             and([ !&flag[&i] -> dontCare(&parts[&i])
                                 | &iPat : &innerDomain
                                 ])
                         |]
 
-                regular fresh rel | isRegular attrs =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in  return -- for list
+                regular rel | isRegular attrs = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             and([ |&i| = |&j|
                                 | &iPat <- parts(&rel)
                                 , &jPat <- parts(&rel)
                                 ])
                         |]
-                regular _ _ = []
+                regular _ = return []
 
-                complete fresh flags | isComplete attrs =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  return -- for list
+                complete flags | isComplete attrs = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             and([ &flags[&i]
                                 | &iPat : &innerDomain
                                 ])
                         |]
-                complete _ _ = []
+                complete _ = return []
 
                 -- participantsCardinality rel =
-                --     let (iPat, i) = quantifiedVar (fresh `at` 0)
+                --     let (iPat, i) <- quantifiedVar
                 --     in  [essence| sum([ |&i| | &iPat <- &rel ]) |]
 
-            return $ \ fresh inpPartition -> do
+            return $ \ inpPartition -> do
                 [flags, parts, numPartsVar] <- downX1 inpPartition
-                return $ concat
-                    [ mkSizeCons (participantsSize attrs) (nbParticipants fresh flags)
-                    , mkSizeCons (partsNum         attrs) numPartsVar
+                concat <$> sequence
+                    [ mkSizeCons (participantsSize attrs) <$> nbParticipants flags
+                    , return $ mkSizeCons (partsNum         attrs) numPartsVar
                     -- , mkSizeCons  (participantsCardinality rel)
-                    , numPartsCons fresh flags parts numPartsVar
-                    , regular      fresh inpPartition
-                    , complete     fresh flags
-                    , noGaps       fresh flags parts numPartsVar
-                    , dontCares    fresh flags parts
+                    , numPartsCons flags parts numPartsVar
+                    , regular      inpPartition
+                    , complete     flags
+                    , noGaps       flags parts numPartsVar
+                    , dontCares    flags parts
                     ]
         structuralCons _ _ domain = na $ vcat [ "{structuralCons} Occurrence"
                                               , "domain:" <+> pretty domain
