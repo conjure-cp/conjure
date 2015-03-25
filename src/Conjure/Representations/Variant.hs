@@ -14,7 +14,7 @@ import Conjure.Language.TH
 import Conjure.Representations.Internal
 
 
-variant :: forall m . MonadFail m => Representation m
+variant :: forall m . (MonadFail m, NameGen m) => Representation m
 variant = Representation chck downD structuralCons downC up
 
     where
@@ -39,22 +39,22 @@ variant = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainVariant ds) = do
             let
-                innerStructuralCons fresh which thisIndex thisRef thisDom = do
+                innerStructuralCons which thisIndex thisRef thisDom = do
                     let activeZone b = [essence| &which = &thisIndex -> &b |]
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f thisDom
-                    outs <- innerStructuralConsGen fresh thisRef
+                    outs <- innerStructuralConsGen thisRef
                     return (map activeZone outs)
 
                 dontCares which thisIndex thisRef =
                     [essence| &which != &thisIndex -> dontCare(&thisRef) |]
 
-            return $ \ fresh rec -> do
+            return $ \ rec -> do
                 (which:refs) <- downX1 rec
                 (sort . concat) <$> sequence
                     [ do
-                        isc <- innerStructuralCons fresh which (fromInt i) ref dom
-                        let dcs = dontCares              which (fromInt i) ref
+                        isc <- innerStructuralCons which (fromInt i) ref dom
+                        let dcs = dontCares        which (fromInt i) ref
                         return (dcs:isc)
                     | (i, ref, (_, dom)) <- zip3 [1..] refs ds
                     ]

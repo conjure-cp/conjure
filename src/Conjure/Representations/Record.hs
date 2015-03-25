@@ -13,7 +13,7 @@ import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 
 
-record :: forall m . MonadFail m => Representation m
+record :: forall m . (MonadFail m, NameGen m) => Representation m
 record = Representation chck downD structuralCons downC up
 
     where
@@ -35,12 +35,12 @@ record = Representation chck downD structuralCons downC up
         downD _ = na "{downD}"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainRecord ds) = return $ \ fresh tup -> do
+        structuralCons f downX1 (DomainRecord ds) = return $ \ tup -> do
             refs <- downX1 tup
             concat <$> sequence
                 [ do
                     innerStructuralConsGen <- f dom
-                    outs                   <- innerStructuralConsGen (tail fresh) ref
+                    outs                   <- innerStructuralConsGen ref
                     return outs
                 | (ref, (_n, dom)) <- zip refs ds
                 ]
