@@ -99,4 +99,3 @@ setExplicit = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up} Explicit"
-

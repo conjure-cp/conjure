@@ -265,4 +265,3 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionNDPartial"
-

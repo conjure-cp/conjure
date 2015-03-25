@@ -29,11 +29,11 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation (m :: * -> *) = Representation
-    { rCheck      :: TypeOf_ReprCheck  m
-    , rDownD      :: TypeOf_DownD      m
-    , rStructural :: TypeOf_Structural m
-    , rDownC      :: TypeOf_DownC      m
-    , rUp         :: TypeOf_Up         m
+    { rCheck          :: TypeOf_ReprCheck      m
+    , rDownD          :: TypeOf_DownD          m
+    , rStructural     :: TypeOf_Structural     m
+    , rDownC          :: TypeOf_DownC          m
+    , rUp             :: TypeOf_Up             m
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =

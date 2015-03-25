@@ -195,4 +195,3 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
-

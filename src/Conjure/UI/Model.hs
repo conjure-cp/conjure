@@ -8,9 +8,6 @@
 
 module Conjure.UI.Model
     ( outputModels
-    , pickFirst
-    , interactive, interactiveFixedQs, interactiveFixedQsAutoA
-    , allFixedQs
     , Strategy(..), Config(..), parseStrategy
     , nbUses
     ) where
@@ -36,6 +33,7 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
+import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
@@ -138,12 +136,12 @@ toCompletion
     => Config
     -> Model
     -> Producer LogOrModel m ()
-toCompletion config@Config{..} m = do
+toCompletion config m = do
     m2 <- prologue m
     logInfo $ modelInfo m2
     loopy m2
     where
-        driver = strategyToDriver config strategyQ strategyA
+        driver = strategyToDriver config
         loopy model = do
             logDebug $ "[loopy]" <+> pretty model
             qs <- remaining config model
@@ -180,8 +178,8 @@ remaining config model | Just modelZipper <- zipperBi model = do
                             else Just (x, ys)
 
     questions <- loopLevels $ map processLevel (allRules config)
-    forM (zip allNats questions) $ \ (nQuestion, (focus, answers)) -> do
-        answers' <- forM (zip allNats answers) $ \ (nAnswer, (ruleName, (ruleText, ruleResult, hook))) -> do
+    forM (zip allNats questions) $ \ (nQuestion, (focus, answers0)) -> do
+        answers1 <- forM (zip allNats answers0) $ \ (nAnswer, (ruleName, RuleResult{..})) -> do
             let ruleResultExpr = ruleResult freshNames'
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
             let mtyBefore = typeOf (hole focus)
@@ -207,34 +205,42 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                 , "Expr2:" <+> pretty ruleResultExpr
                                 , "Error:" <+> pretty msg
                                 ]
-            fullModelAfterHook <- hook fullModelBeforeHook
-            return Answer
-                { aText = ruleName <> ":" <+> ruleText
-                , aRuleName = ruleName
-                , aAnswer = ruleResultExpr
-                , aFullModel = fullModelAfterHook
-                                |> addToTrail config
-                                            (fromInteger nQuestion)
-                                            [1 .. length questions]
-                                            (("Focus:" <+> pretty (hole focus))
-                                             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                               | i <- allNats
-                                               | c <- tail (ascendants focus)
-                                               ])
-                                            (fromInteger nAnswer)
-                                            [1 .. length answers]
-                                            [ruleName <> ":" <+> ruleText]
-                }
+            fullModelAfterHook <- ruleResultHook fullModelBeforeHook
+            return
+                ( Answer
+                    { aText = ruleName <> ":" <+> ruleResultDescr
+                    , aRuleName = ruleName
+                    , aAnswer = ruleResultExpr
+                    , aFullModel = fullModelAfterHook
+                                    |> addToTrail config
+                                                (fromInteger nQuestion)
+                                                [1 .. length questions]
+                                                (("Focus:" <+> pretty (hole focus))
+                                                 : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                                   | i <- allNats
+                                                   | c <- tail (ascendants focus)
+                                                   ])
+                                                (fromInteger nAnswer)
+                                                [1 .. length answers0]
+                                                [ruleName <> ":" <+> ruleResultDescr]
+                    }
+                , ruleResultType
+                )
+        let qTypes = map snd answers1
+        qType' <- if all (head qTypes ==) (tail qTypes)
+                    then return (head qTypes)
+                    else bug "Rules of different rule kinds applicable, this is a bug."
         return Question
-            { qHole = hole focus
+            { qType = qType'
+            , qHole = hole focus
             , qAscendants = tail (ascendants focus)
-            , qAnswers = answers'
+            , qAnswers = map fst answers1
             }
 remaining _ _ = return []
 
 
-strategyToDriver :: Config -> Strategy -> Strategy -> Driver
-strategyToDriver config strategyQ strategyA questions = do
+strategyToDriver :: Config -> Driver
+strategyToDriver config questions = do
     let optionsQ =
             [ (doc, q)
             | (n, q) <- zip allNats questions
@@ -245,7 +251,7 @@ strategyToDriver config strategyQ strategyA questions = do
                            | c <- qAscendants q
                            ]
             ]
-    pickedQs <- executeStrategy optionsQ strategyQ
+    pickedQs <- executeStrategy optionsQ (strategyQ config)
     fmap concat $ forM pickedQs $ \ pickedQ -> do
         let optionsA =
                 [ (doc, a)
@@ -254,7 +260,15 @@ strategyToDriver config strategyQ strategyA questions = do
                         nest 4 $ "Answer" <+> pretty n <> ":" <+> vcat [ pretty (aText a)
                                                                        , pretty (aAnswer a) ]
                 ]
-        pickedAs <- executeAnswerStrategy config pickedQ optionsA strategyA
+        let strategyA' = case qType pickedQ of
+                ChooseRepr            -> representations
+                ChooseRepr_Find       -> representationsFinds
+                ChooseRepr_Given      -> representationsGivens
+                ChooseRepr_Auxiliary  -> representationsAuxiliaries
+                ChooseRepr_Quantified -> representationsQuantifieds
+                ChooseRepr_Cut        -> representationsCuts
+                ExpressionRefinement  -> strategyA
+        pickedAs <- executeAnswerStrategy config pickedQ optionsA (strategyA' config)
         return (map aFullModel pickedAs)
 
 
@@ -358,23 +372,6 @@ addToTrail Config{..}
             , dOptions = nAnswers
             , dDecision = nAnswer
             }
-
-
-allFixedQs :: Config -> Driver
-allFixedQs c = strategyToDriver c PickFirst PickAll
-
-pickFirst :: Config -> Driver
-pickFirst c = strategyToDriver c PickFirst PickFirst
-
-interactive :: Config -> Driver
-interactive c = strategyToDriver c Interactive Interactive
-
-interactiveFixedQs :: Config -> Driver
-interactiveFixedQs c = strategyToDriver c PickFirst Interactive
-
-interactiveFixedQsAutoA :: Config -> Driver
-interactiveFixedQsAutoA c = strategyToDriver c PickFirst (Auto Interactive)
-
 
 
 -- | Add a true-constraint, for every decision variable and
@@ -487,6 +484,14 @@ updateDeclarations model =
                 Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
                 Declaration LettingDomainDefnEnum{}    -> []
                 Declaration LettingDomainDefnUnnamed{} -> []
+                SearchOrder orders -> return $ SearchOrder $ concat
+                    [ case order of
+                        BranchingOn nm ->
+                            let domains = [ d | (n, d) <- representations, n == nm ]
+                            in  nub $ concatMap (onEachDomainSearch nm) domains
+                        Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
+                    | order <- orders
+                    ]
                 _ -> [inStatement]
 
         onEachDomain forg nm domain =
@@ -495,6 +500,13 @@ updateDeclarations model =
                 Right outs -> [ Declaration (FindOrGiven forg n d')
                               | (n, d) <- outs
                               , let d' = fmap trySimplify $ forgetRepr d
+                              ]
+
+        onEachDomainSearch nm domain =
+            case downD (nm, domain) of
+                Left err -> bug err
+                Right outs -> [ BranchingOn n
+                              | (n, _) <- outs
                               ]
 
     in
@@ -600,6 +612,7 @@ prologue model = return model
     >>= \ m -> typeCheckModel m >> return m
                                       >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
+    >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
@@ -640,12 +653,14 @@ applicableRules Config{..} rulesAtLevel x = do
             Right ys     -> logSuccess $ vcat
                 [ "rule applied:" <+> rule
                 , "          on:" <+> pretty (hole x)
-                , "     message:" <+> vcat (map fst3 ys)
+                , "     message:" <+> vcat (map ruleResultDescr ys)
                 ]
-    return [ (name, (msg, out', hook))
+    return [ (name, res {ruleResult = ruleResult'})
            | (name, Right ress) <- mys
-           , (msg, out, hook) <- ress
-           , let out' fresh = out fresh |> resolveNamesX |> bugFail "applicableRules"   -- re-resolving names
+           , res <- ress
+           , let ruleResult' fresh = ruleResult res fresh
+                       |> resolveNamesX
+                       |> bugFail "applicableRules"   -- re-resolving names
            ]
 
 
@@ -938,20 +953,26 @@ delayedRules =
 rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
-    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given] = do
+    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given, CutFind] = do
         let domOpts = reprOptions inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
         let options =
-                [ (msg, const out, hook)
+                [ RuleResult { ruleResultDescr = msg
+                             , ruleResultType = case forg of
+                                    Find    -> ChooseRepr_Find
+                                    Given   -> ChooseRepr_Given
+                                    CutFind -> ChooseRepr_Cut
+                                    _       -> bug "rule_ChooseRepr ruleResultType"
+                             , ruleResult = const out
+                             , ruleResultHook = hook
+                             }
                 | dom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
                 , let hook = mkHook (channelling config) forg nm dom
                 ]
-        return $ if forg == Given && parameterRepresentation config == False
-                    then take 1 options
-                    else options
+        return options
     theRule _ = na "rule_ChooseRepr"
 
     mkHook useChannelling   -- whether to use channelling or not
@@ -1064,8 +1085,11 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
                 ]
 
         return
-            [ ( "Choosing representation for quantified variable" <+> pretty nm <+> "(with type:" <+> pretty ty <> ")"
-              , \ fresh -> bugFail "rule_ChooseReprForComprehension" $ do
+            [ RuleResult
+                { ruleResultDescr = "Choosing representation for quantified variable" <+> pretty nm
+                                        <+> "(with type:" <+> pretty ty <> ")"
+                , ruleResultType = ChooseRepr_Quantified
+                , ruleResult = \ fresh -> bugFail "rule_ChooseReprForComprehension" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -1080,8 +1104,8 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
                                 ++ transformBi updateRepr gocAfter
                     out <- resolveNamesX out'
                     return out
-              , return
-              )
+                , ruleResultHook = return
+                }
             | genOption <- genOptions
             ]
     theRule _ = na "rule_ChooseReprForComprehension"
@@ -1120,8 +1144,10 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
                 ]
 
         return
-            [ ( "Choosing representation for local variable" <+> pretty nm
-              , \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
+            [ RuleResult
+                { ruleResultDescr = "Choosing representation for local variable" <+> pretty nm
+                , ruleResultType = ChooseRepr_Auxiliary
+                , ruleResult = \ fresh -> bugFail "rule_ChooseReprForLocals" $ do
                     option <- genOption fresh
                     let (thisDom, outDomains, structurals) = option
                     let updateRepr (Reference nm' _)
@@ -1140,8 +1166,8 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
                                 )
                     out <- resolveNamesX out'
                     return out
-              , return
-              )
+                , ruleResultHook = return
+                }
             | genOption <- genOptions
             ]
     theRule _ = na "rule_ChooseReprForLocals"
@@ -1283,6 +1309,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
+-- this rule doesn't `namedRule` because it need access to ascendants through the zipper
 rule_InlineConditions :: Rule
 rule_InlineConditions = Rule "inline-conditions" theRule where
     theRule z (Comprehension body gensOrConds) = do
@@ -1296,10 +1323,13 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             []  -> fail "No condition to inline."
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
-        return [( "Inlining conditions, inside" <+> nameQ
-                , const $ Comprehension (opSkip theGuard body) toKeep
-                , return
-                )]
+        return
+            [ RuleResult
+                { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
+                , ruleResultType  = ExpressionRefinement
+                , ruleResult      = const $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResultHook  = return
+                } ]
     theRule _ _ = na "rule_InlineConditions"
 
     -- keep going up, until finding a quantifier

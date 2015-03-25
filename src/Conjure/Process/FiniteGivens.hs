@@ -274,8 +274,8 @@ mkFiniteInner d = return (d, [], const (return []))
 nextName :: MonadState Int m => m Name
 nextName = do
     !i <- gets id
-    modify (+1)
-    return (Name ("p" `mappend` stringToText (show i)))
+    modify succ
+    return (MachineName "p" i [])
 
 viewConstantInt :: MonadFail m => Constant -> m Integer
 viewConstantInt (ConstantInt i) = return i

@@ -87,10 +87,29 @@ resolveStatement st =
                     modify (second ((nm, Alias x') :))
                     return (Declaration (Letting nm x'))
                 _ -> fail ("Unexpected declaration:" <+> pretty st)
-        SearchOrder{} -> return st
+        SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
+
+
+resolveSearchOrder
+    :: ( MonadFail m
+       , MonadState ([Name], [(Name, ReferenceTo)]) m
+       )
+    => SearchOrder
+    -> m SearchOrder
+resolveSearchOrder (BranchingOn nm) = do
+    ctxt <- gets snd
+    mval <- gets (lookup nm . snd)
+    case mval of
+        Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
+                               : ("Bindings in context:" : prettyContext ctxt)
+        Just{}  -> return (BranchingOn nm)
+resolveSearchOrder (Cut x) =
+    let f Find = CutFind
+        f forg = forg
+    in  Cut . transformBi f <$> resolveX x
 
 
 resolveX

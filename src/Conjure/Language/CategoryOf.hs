@@ -50,6 +50,7 @@ instance CategoryOf FindOrGiven where
     categoryOf Find = CatDecision
     categoryOf Given = CatParameter
     categoryOf Quantified = CatQuantified
+    categoryOf CutFind = CatDecision
     categoryOf LocalFind = CatDecision
 
 

@@ -72,4 +72,3 @@ record = Representation chck downD structuralCons downC up
             -- TODO: check if (length ds == length vals)
             return (name, ConstantAbstract (AbsLitRecord vals))
         up _ _ = na "{up}"
-

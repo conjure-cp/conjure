@@ -346,4 +346,3 @@ matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
                     let values = map snd mid4
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
         matrixUp _ _ = na "{matrixUp}"
-

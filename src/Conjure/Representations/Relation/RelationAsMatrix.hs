@@ -157,4 +157,3 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
-

@@ -17,7 +17,7 @@ module Conjure.Language.Definition
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
-    , Statement(..), Objective(..)
+    , Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
     , QuestionAnswered(..)
 
@@ -59,9 +59,6 @@ import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
 
--- text
-import qualified Data.Text as T
-
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 
@@ -102,10 +99,12 @@ instance Pretty Model where
 freshNames :: Model -> [Name]
 freshNames model = newNames
     where
-        newNames = [ Name name
-                   | i <- allNats
-                   , let name = "q" `mappend` stringToText (show i)
-                   , not (or [name `T.isPrefixOf` usedName | Name usedName <- usedNames])
+        newNames = [ name
+                   | i <- [1..]
+                   , let name = MachineName "q" i []
+                   , not (or [ ("q",i) == (base,n)
+                             | MachineName base n _ <- usedNames
+                             ])
                    ]
         usedNames = universeBi model :: [Name]
 
@@ -161,7 +160,7 @@ instance Pretty LanguageVersion where
 
 data Statement
     = Declaration Declaration
-    | SearchOrder [Name]
+    | SearchOrder [SearchOrder]
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
@@ -178,6 +177,23 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- Objective -----------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+data SearchOrder = BranchingOn Name | Cut Expression
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize SearchOrder
+instance Hashable  SearchOrder
+instance ToJSON    SearchOrder where toJSON = genericToJSON jsonOptions
+instance FromJSON  SearchOrder where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty SearchOrder where
+    pretty (BranchingOn x) = pretty x
+    pretty (Cut x) = pretty x
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -227,7 +243,9 @@ instance Pretty Declaration where
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
 
 
-data FindOrGiven = Find | Given | Quantified | LocalFind
+data FindOrGiven = Find | Given | Quantified
+        | CutFind           -- references to variables used in the definition of a cut
+        | LocalFind         -- references to variables used inside WithLocals. i.e. auxiliaries.
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize FindOrGiven
@@ -239,6 +257,7 @@ instance Pretty FindOrGiven where
     pretty Find = "find"
     pretty Given = "given"
     pretty Quantified = "quantified"
+    pretty CutFind = "find"
     pretty LocalFind = "find"
 
 
