@@ -13,7 +13,7 @@ import Conjure.Representations.Internal
 
 
 functionAsRelation
-    :: forall m . MonadFail m
+    :: forall m . (MonadFail m, NameGen m)
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
 functionAsRelation dispatch = Representation chck downD structuralCons downC up
@@ -47,16 +47,15 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
         structuralCons f downX1
                 inDom@(DomainFunction _
                         (FunctionAttr _ partilityAttr jectivityAttr)
-                        innerDomainFr innerDomainTo) = return $ \ fresh func -> do
+                        innerDomainFr innerDomainTo) = return $ \ func -> do
             refs <- downX1 func
             let
-                partialityCons rel = return $ -- list
+                partialityCons rel =
                     case partilityAttr of
-                        PartialityAttr_Partial ->
-                            let
-                                (iPat, i) = quantifiedVar (fresh `at` 0)
-                                (jPat, j) = quantifiedVar (fresh `at` 1)
-                            in
+                        PartialityAttr_Partial -> do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
                                 [essence|
                                     forAll &iPat : &innerDomainFr .
                                         1 >= sum([ 1
@@ -64,11 +63,10 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                                 , &j[1] = &i
                                                 ])
                                 |]
-                        PartialityAttr_Total ->
-                            let
-                                (iPat, i) = quantifiedVar (fresh `at` 0)
-                                (jPat, j) = quantifiedVar (fresh `at` 1)
-                            in
+                        PartialityAttr_Total -> do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
                                 [essence|
                                     forAll &iPat : &innerDomainFr .
                                         1 =  sum([ 1
@@ -78,16 +76,15 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                 |]
 
                 jectivityCons rel = case jectivityAttr of
-                    JectivityAttr_None       -> []
+                    JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons rel
                     JectivityAttr_Surjective -> surjectiveCons rel
-                    JectivityAttr_Bijective  -> injectiveCons rel ++ surjectiveCons rel
+                    JectivityAttr_Bijective  -> (++) <$> injectiveCons rel <*> surjectiveCons rel
 
-                injectiveCons rel = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in
+                injectiveCons rel = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             and([ &i[1] != &j[1] -> &i[2] != &j[2]
                                 | &iPat <- &rel
@@ -95,11 +92,10 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-                surjectiveCons rel = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in
+                surjectiveCons rel = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainTo .
                                 exists &jPat in &rel .
@@ -110,11 +106,10 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                 [rel] -> do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    cons                   <- innerStructuralConsGen fresh rel
-                    return $ concat
-                        [ partialityCons rel
+                    concat <$> sequence
+                        [ innerStructuralConsGen rel
+                        , partialityCons rel
                         , jectivityCons rel
-                        , cons
                         ]
                 _ -> na $ vcat [ "{structuralCons} FunctionAsRelation"
                                , pretty inDom

@@ -16,7 +16,7 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionNDPartial :: forall m . MonadFail m => Representation m
+functionNDPartial :: forall m . (MonadFail m, NameGen m) => Representation m
 functionNDPartial = Representation chck downD structuralCons downC up
 
     where
@@ -64,16 +64,14 @@ functionNDPartial = Representation chck downD structuralCons downC up
                 index x m 1     = make opIndexing m                     (make opIndexing x 1)
                 index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
 
-            let injectiveCons fresh flags values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-
-                        flagsIndexedI  = index i flags  frArity
-                        valuesIndexedI = index i values frArity
-                        flagsIndexedJ  = index j flags  frArity
-                        valuesIndexedJ = index j values frArity
-                    in
+            let injectiveCons flags values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let flagsIndexedI  = index i flags  frArity
+                    let valuesIndexedI = index i values frArity
+                    let flagsIndexedJ  = index j flags  frArity
+                    let valuesIndexedJ = index j values frArity
+                    return $ return $ -- list
                         [essence|
                             and([ &valuesIndexedI != &valuesIndexedJ
                                 | &iPat : &innerDomainFr
@@ -84,69 +82,63 @@ functionNDPartial = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-            let surjectiveCons fresh flags values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
+            let surjectiveCons flags values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
 
-                        flagsIndexed  = index j flags  frArity
-                        valuesIndexed = index j values frArity
-                    in
+                    let flagsIndexed  = index j flags  frArity
+                    let valuesIndexed = index j values frArity
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainTo .
                                 exists &jPat : &innerDomainFr .
                                     &flagsIndexed /\ &valuesIndexed = &i
                         |]
 
-            let jectivityCons fresh flags values = case jectivityAttr of
-                    JectivityAttr_None       -> []
-                    JectivityAttr_Injective  -> injectiveCons  fresh flags values
-                    JectivityAttr_Surjective -> surjectiveCons fresh flags values
-                    JectivityAttr_Bijective  -> injectiveCons  fresh flags values
-                                             ++ surjectiveCons fresh flags values
+            let jectivityCons flags values = case jectivityAttr of
+                    JectivityAttr_None       -> return []
+                    JectivityAttr_Injective  -> injectiveCons  flags values
+                    JectivityAttr_Surjective -> surjectiveCons flags values
+                    JectivityAttr_Bijective  -> (++) <$> injectiveCons  flags values
+                                                     <*> surjectiveCons flags values
 
-            let cardinality fresh flags =
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        flagsIndexed  = index i flags  frArity
-                    in
-                        [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
+            let cardinality flags = do
+                    (iPat, i) <- quantifiedVar
+                    let flagsIndexed  = index i flags  frArity
+                    return [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
 
-            let dontCareInactives fresh flags values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-
-                        flagsIndexed  = index i flags  frArity
-                        valuesIndexed = index i values frArity
-                    in
+            let dontCareInactives flags values = do
+                    (iPat, i) <- quantifiedVar
+                    let flagsIndexed  = index i flags  frArity
+                    let valuesIndexed = index i values frArity
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainFr . &flagsIndexed = false ->
                                 dontCare(&valuesIndexed)
                         |]
 
-            let innerStructuralCons fresh flags values = do
-                    let (iPat, i) = quantifiedVar (headInf fresh)
-                        flagsIndexed  = index i flags  frArity
-                        valuesIndexed = index i values frArity
+            let innerStructuralCons flags values = do
+                    (iPat, i) <- quantifiedVar
+                    let flagsIndexed  = index i flags  frArity
+                    let valuesIndexed = index i values frArity
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &flagsIndexed -> &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomainTo
 
                     let inLoop = valuesIndexed
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh rel -> do
+            return $ \ rel -> do
                 refs <- downX1 rel
                 case refs of
-                    [flags,values] -> do
-                        isc <- innerStructuralCons fresh flags values
-                        return $ concat
-                            [ jectivityCons fresh flags values
-                            , dontCareInactives fresh flags values
-                            , mkSizeCons sizeAttr (cardinality fresh flags)
-                            , isc
+                    [flags,values] ->
+                        concat <$> sequence
+                            [ jectivityCons flags values
+                            , dontCareInactives flags values
+                            , mkSizeCons sizeAttr <$> cardinality flags
+                            , innerStructuralCons flags values
                             ]
                     _ -> na "{structuralCons} FunctionNDPartial"
 
