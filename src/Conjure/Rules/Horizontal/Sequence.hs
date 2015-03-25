@@ -19,10 +19,10 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on sequence literals"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     val = [essence| (&i, &outLiteral[&i]) |]
-                 in  Comprehension (upd val body)
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = [essence| (&i, &outLiteral[&i]) |]
+                return $ Comprehension (upd val body)
                          $  gofBefore
                          ++ [Generator (GenDomainNoRepr iPat $ mkDomainIntB 1 (fromInt $ genericLength elems))]
                          ++ transformBi (upd val) gofAfter
@@ -43,11 +43,11 @@ rule_Image_Literal_Bool = "sequence-image-literal-bool" `namedRule` theRule wher
             if null elems
                 then
                     ( "Image of empty sequence literal"
-                    , const [essence| false |]                          -- undefined is false.
+                    , return [essence| false |]                          -- undefined is false.
                     )
                 else
                     ( "Image of sequence literal"
-                    , const $ make opOr $ fromList $
+                    , return $ make opOr $ fromList $
                           [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
                                                                         -- undefined is still false.
                           | (a',b) <- zip allNats elems
@@ -63,7 +63,7 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
         (TypeSequence TypeInt, elems) <- match sequenceLiteral func
         return
             ( "Image of sequence literal"
-            , const $
+            , return $
                 let
                     val = make opSum $ fromList $
                         -- if this is ever true, the output is the value of b.
@@ -84,17 +84,19 @@ rule_Eq = "sequence-eq" `namedRule` theRule where
         (x,y)          <- match opEq p
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
-        return ( "Horizontal rule for sequence equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (forAll &iPat in &x . &y(&i[1]) = &i[2])
-                                /\
-                            (forAll &iPat in &y . &x(&i[1]) = &i[2])
-                                /\
-                            defined(&x) = defined(&y)
-                        |]
-               )
+        return
+            ( "Horizontal rule for sequence equality"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return
+                     [essence|
+                         (forAll &iPat in &x . &y(&i[1]) = &i[2])
+                             /\
+                         (forAll &iPat in &y . &x(&i[1]) = &i[2])
+                             /\
+                         defined(&x) = defined(&y)
+                     |]
+            )
 
 
 rule_Neq :: Rule
@@ -102,15 +104,17 @@ rule_Neq = "sequence-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
-        return ( "Horizontal rule for sequence dis-equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (exists &iPat in &x . !(&i in &y))
-                            \/
-                            (exists &iPat in &y . !(&i in &x))
-                        |]
-               )
+        return
+            ( "Horizontal rule for sequence dis-equality"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return
+                     [essence|
+                         (exists &iPat in &x . !(&i in &y))
+                         \/
+                         (exists &iPat in &y . !(&i in &x))
+                     |]
+            )
     theRule _ = na "rule_Neq"
 
 
@@ -120,15 +124,17 @@ rule_SubsetEq = "sequence-subsetEq" `namedRule` theRule where
         (x,y)          <- match opSubsetEq p
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
-        return ( "Horizontal rule for sequence subsetEq"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (forAll &iPat in &x . &y(&i[1]) = &i[2])
-                                /\
-                            defined(&x) subsetEq defined(&y)
-                        |]
-               )
+        return
+            ( "Horizontal rule for sequence subsetEq"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return
+                     [essence|
+                         (forAll &iPat in &x . &y(&i[1]) = &i[2])
+                             /\
+                         defined(&x) subsetEq defined(&y)
+                     |]
+            )
 
 
 rule_Subset :: Rule
@@ -138,7 +144,7 @@ rule_Subset = "sequence-subset" `namedRule` theRule where
         TypeSequence{} <- typeOf b
         return
             ( "Horizontal rule for set subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
@@ -150,7 +156,7 @@ rule_Supset = "set-supset" `namedRule` theRule where
         TypeSequence{} <- typeOf b
         return
             ( "Horizontal rule for set supset"
-            , const [essence| &b subset &a |]
+            , return [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
@@ -162,7 +168,7 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
         TypeSequence{} <- typeOf b
         return
             ( "Horizontal rule for set supsetEq"
-            , const [essence| &b subsetEq &a |]
+            , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -177,9 +183,10 @@ rule_Lt = "sequence-lt" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for sequence <" <+> pretty (make opLt ma mb)
-               , const $ make opLt ma mb
-               )
+        return
+            ( "Horizontal rule for sequence <" <+> pretty (make opLt ma mb)
+            , return $ make opLt ma mb
+            )
 
 
 rule_Leq :: Rule
@@ -192,9 +199,10 @@ rule_Leq = "sequence-leq" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for sequence <=" <+> pretty (make opLeq ma mb)
-               , const $ make opLeq ma mb
-               )
+        return
+            ( "Horizontal rule for sequence <=" <+> pretty (make opLeq ma mb)
+            , return $ make opLeq ma mb
+            )
 
 
 rule_Comprehension_PreImage :: Rule
@@ -208,12 +216,10 @@ rule_Comprehension_PreImage = "sequence-preImage" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the preImage of a sequence"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &j[1] |]
-                in
-                    Comprehension
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &j[1] |]
+                return $ Comprehension
                         (upd val body)
                         $  gofBefore
                         ++ [ Generator (GenInExpr jPat func)
@@ -228,11 +234,12 @@ rule_Card :: Rule
 rule_Card = "sequence-cardinality" `namedRule` theRule where
     theRule [essence| |&s| |] = do
         TypeSequence{} <- typeOf s
-        return ( "Horizontal rule for sequence cardinality."
-               , \ fresh ->
-                    let (iPat, _) = quantifiedVar (fresh `at` 0)
-                    in  [essence| sum &iPat in &s . 1 |]
-               )
+        return
+            ( "Horizontal rule for sequence cardinality."
+            , do
+                (iPat, _) <- quantifiedVar
+                return [essence| sum &iPat in &s . 1 |]
+            )
     theRule _ = na "rule_Card"
 
 
@@ -252,12 +259,10 @@ rule_Comprehension_Defined = "sequence-defined" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
-            , \ fresh ->
-                    let
-                        (jPat, j) = quantifiedVar (fresh `at` 0)
-                        val = j
-                    in
-                        Comprehension
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = j
+                return $ Comprehension
                             (upd val body)
                             $  gofBefore
                             ++ [ Generator (GenDomainNoRepr jPat $ mkDomainIntB 1 maxSize)
@@ -280,12 +285,10 @@ rule_Comprehension_Range = "sequence-range" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over range(f)"
-            , \ fresh ->
-                    let
-                        (jPat, j) = quantifiedVar (fresh `at` 0)
-                        val = [essence| &j[2] |]
-                    in
-                        Comprehension
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &j[2] |]
+                return $ Comprehension
                             (upd val body)
                             $  gofBefore
                             ++ [ Generator (GenInExpr jPat func) ]
@@ -300,7 +303,7 @@ rule_In = "sequence-in" `namedRule` theRule where
         TypeSequence{} <- typeOf f
         return
             ( "Sequence membership to sequence image."
-            , const [essence| &f(&x[1]) = &x[2] |]
+            , return [essence| &f(&x[1]) = &x[2] |]
             )
     theRule _ = na "rule_In"
 
@@ -313,10 +316,10 @@ rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
         TypeSequence{} <- typeOf func
         return
             ( "Sequence image on a restricted sequence."
-            , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opImage func arg) (Right [bob])
+            , do
+                (iPat, i) <- quantifiedVar
+                let bob = [essence| exists &iPat : &dom . &i = &arg |]
+                return $ WithLocals (make opImage func arg) (Right [bob])
             )
 
 
@@ -330,11 +333,10 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
         TypeSequence{} <- typeOf func
         return
             ( "Mapping over restrict(func, dom)"
-            , \ fresh ->
-                    let (jPat, j) = quantifiedVar (fresh `at` 0)
-                        i = Reference iPatName Nothing
-                    in
-                        Comprehension body
+            , do
+                (jPat, j) <- quantifiedVar
+                let i = Reference iPatName Nothing
+                return $ Comprehension body
                             $  gofBefore
                             ++ [ Generator (GenInExpr iPat func)
                                , Condition [essence| exists &jPat : &dom . &j = &i[1] |]
@@ -351,7 +353,7 @@ rule_Mk_Image = "mk-sequence-image" `namedRule` theRule where
         TypeSequence{}  <- typeOf f
         return
             ( "This is a sequence image."
-            , const $ make opImage f arg
+            , return $ make opImage f arg
             )
 
 
@@ -398,11 +400,9 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
         (func, arg) <- maybe (na "rule_Image_Bool") return mFunc        -- Nothing signifies no relevant children
         return
             ( "Sequence image, bool."
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    mkP $ make opOr $ Comprehension [essence| &i[2] |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ mkP $ make opOr $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
@@ -445,16 +445,14 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
         (func, arg) <- maybe (na "rule_Image_Int") return mFunc         -- Nothing signifies no relevant children
         return
             ( "Sequence image, int."
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    val = make opSum $ Comprehension [essence| &i[2] |]
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = make opSum $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
                     isDefined = [essence| &arg in defined(&func) |]
-                in
-                    mkP $ WithLocals val (Right [isDefined])
+                return $ mkP $ WithLocals val (Right [isDefined])
             )
 
 
@@ -473,12 +471,10 @@ rule_Comprehension_Image = "sequence-image-comprehension" `namedRule` theRule wh
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the image of a sequence"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    (jPat, j) = quantifiedVar (fresh `at` 1)
-                in
-                    Comprehension
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                return $ Comprehension
                         (upd j body)
                         $  gofBefore
                         ++ [ Generator (GenInExpr iPat (mkModifier func))
@@ -514,11 +510,10 @@ rule_Substring = "substring" `namedRule` theRule where
 
         return
             ( "Horizontal rule for substring on 2 sequences"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    (jPat, j) = quantifiedVar (fresh `at` 1)
-                in  make opOr $ Comprehension
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                return $ make opOr $ Comprehension
                         (make opAnd $ Comprehension
                             [essence| &j[2] = image(&b, &i + &j[1]) |]
                             [ Generator (GenInExpr jPat a)
@@ -551,12 +546,10 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
 
         return
             ( "Horizontal rule for subsequence on 2 sequences"
-            , \ fresh ->
-                let
-                    (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                    (iPat, i) = quantifiedVar (fresh `at` 1)
-                in
-                    WithLocals
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (iPat, i) <- quantifiedVar
+                return $ WithLocals
                         [essence|
                             and([ &i[2] = image(&b, image(&aux, &i[1]))
                                 | &iPat <- &a

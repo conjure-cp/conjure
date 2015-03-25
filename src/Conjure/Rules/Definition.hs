@@ -125,26 +125,28 @@ instance Default Config where
 data RuleResult m = RuleResult
     { ruleResultDescr :: Doc                    -- describe this transformation
     , ruleResultType  :: QuestionType
-    , ruleResult      :: [Name] -> Expression   -- the result
+    , ruleResult      :: m Expression           -- the result
     , ruleResultHook  :: Model -> m Model       -- post-application hook
     }
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . MonadLog m => Zipper Model Expression            -- to query context
-                                      -> Expression
-                                      -> ExceptT Identity [RuleResult m]
+    , rApply :: forall m . (MonadLog m, NameGen m)
+             => Zipper Model Expression            -- to query context
+             -> Expression
+             -> ExceptT Identity [RuleResult m]
                 -- fail in a rule just means that the rule isn't applicable
     }
 
 namedRule
     :: Doc
-    -> (forall m . MonadFail m => Expression -> m (Doc, [Name] -> Expression))
+    -> (forall m . NameGen m => Expression -> ExceptT Identity (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ _z x -> let addId (d, y) = RuleResult d ExpressionRefinement y return
-                         in  liftM (return . addId) (f x)
+    , rApply = \ _z x -> do
+        (rResultDescr, rResult) <- f x
+        return [RuleResult rResultDescr ExpressionRefinement rResult return]
     }
 
 

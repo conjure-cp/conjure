@@ -21,12 +21,12 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on function literals"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
-                         $  gocBefore
-                         ++ [Generator (GenInExpr iPat outLiteral)]
-                         ++ transformBi (upd i) gocAfter
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ Comprehension (upd i body)
+                    $  gocBefore
+                    ++ [Generator (GenInExpr iPat outLiteral)]
+                    ++ transformBi (upd i) gocAfter
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -44,11 +44,11 @@ rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule wher
             if null elems
                 then
                     ( "Image of empty function literal"
-                    , const [essence| false |]                          -- undefined is false.
+                    , return [essence| false |]                          -- undefined is false.
                     )
                 else
                     ( "Image of function literal"
-                    , const $ make opOr $ fromList $
+                    , return $ make opOr $ fromList $
                           [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
                                                                         -- undefined is still false.
                           | (a,b) <- elems
@@ -63,7 +63,7 @@ rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
         (TypeFunction _ TypeInt, elems) <- match functionLiteral func
         return
             ( "Image of function literal"
-            , const $
+            , return $
                 let
                     val = make opSum $ fromList $
                         -- if this is ever true, the output is the value of b.
@@ -85,17 +85,18 @@ rule_Eq = "function-eq" `namedRule` theRule where
         (x,y)          <- match opEq p
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
-        return ( "Horizontal rule for function equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
+        return
+            ( "Horizontal rule for function equality"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence|
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
                                 /\
                             defined(&x) = defined(&y)
-                        |]
-               )
+                       |]
+            )
 
 
 rule_Neq :: Rule
@@ -103,15 +104,16 @@ rule_Neq = "function-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
-        return ( "Horizontal rule for function dis-equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
+        return
+            ( "Horizontal rule for function dis-equality"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence|
                             (exists &iPat in &x . !(&i in &y))
                             \/
                             (exists &iPat in &y . !(&i in &x))
-                        |]
-               )
+                       |]
+            )
     theRule _ = na "rule_Neq"
 
 
@@ -121,15 +123,16 @@ rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
         (x,y)          <- match opSubsetEq p
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
-        return ( "Horizontal rule for function subsetEq"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
+        return
+            ( "Horizontal rule for function subsetEq"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence|
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             defined(&x) subsetEq defined(&y)
-                        |]
-               )
+                       |]
+            )
 
 
 rule_Subset :: Rule
@@ -139,7 +142,7 @@ rule_Subset = "function-subset" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         return
             ( "Horizontal rule for function subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
@@ -151,7 +154,7 @@ rule_Supset = "function-supset" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         return
             ( "Horizontal rule for function supset"
-            , const [essence| &b subset &a |]
+            , return [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
@@ -163,7 +166,7 @@ rule_SupsetEq = "function-subsetEq" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         return
             ( "Horizontal rule for function supsetEq"
-            , const [essence| &b subsetEq &a |]
+            , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -178,8 +181,9 @@ rule_Lt = "function-lt" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for function <" <+> pretty (make opLt ma mb)
-               , const $ make opLt ma mb
+        return
+            ( "Horizontal rule for function <" <+> pretty (make opLt ma mb)
+               , return $ make opLt ma mb
                )
 
 
@@ -193,9 +197,10 @@ rule_Leq = "function-leq" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for function <=" <+> pretty (make opLeq ma mb)
-               , const $ make opLeq ma mb
-               )
+        return
+            ( "Horizontal rule for function <=" <+> pretty (make opLeq ma mb)
+            , return $ make opLeq ma mb
+            )
 
 
 rule_Inverse :: Rule
@@ -205,9 +210,10 @@ rule_Inverse = "function-inverse" `namedRule` theRule where
         TypeFunction{} <- typeOf b
         return
             ( "Horizontal rule for function inverse"
-            , \ fresh ->
-                let (iPat, i) = quantifiedVar (fresh `at` 0)
-                in  [essence|
+            , do
+                (iPat, i) <- quantifiedVar
+                return
+                    [essence|
                         (forAll &iPat in &a . &b(&i[2]) = &i[1])
                             /\
                         (forAll &iPat in &b . &a(&i[2]) = &i[1])
@@ -227,11 +233,10 @@ rule_Comprehension_PreImage = "function-preImage" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the preImage of a function"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &j[1] |]
-                in
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &j[1] |]
+                return $
                     Comprehension
                         (upd val body)
                         $  gocBefore
@@ -249,7 +254,7 @@ rule_Card = "function-cardinality" `namedRule` theRule where
         TypeFunction{} <- typeOf f
         return
             ( "Function cardinality"
-            , const [essence| |toSet(&f)| |]
+            , return [essence| |toSet(&f)| |]
             )
     theRule _ = na "rule_Card"
 
@@ -265,35 +270,33 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k1 = [essence| &k[1] |]
-                        l1 = [essence| &l[1] |]
-                    in
-                        WithLocals
-                            (Comprehension
-                                (upd j body)
-                                $  gocBefore
-                                ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gocAfter)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k1 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l1 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k1 = [essence| &k[1] |]
+                let l1 = [essence| &l[1] |]
+                return $ WithLocals
+                    (Comprehension
+                        (upd j body)
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr jPat aux) ]
+                        ++ transformBi (upd j) gocAfter)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k1 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l1 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Defined"
 
@@ -309,35 +312,33 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over range(f)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k2 = [essence| &k[2] |]
-                        l2 = [essence| &l[2] |]
-                    in
-                        WithLocals
-                            (Comprehension
-                                (upd j body)
-                                $  gocBefore
-                                ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gocAfter)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k2 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l2 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k2 = [essence| &k[2] |]
+                let l2 = [essence| &l[2] |]
+                return $ WithLocals
+                    (Comprehension
+                        (upd j body)
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr jPat aux) ]
+                        ++ transformBi (upd j) gocAfter)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k2 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l2 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Range"
 
@@ -356,35 +357,33 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k1 = [essence| &k[1] |]
-                        l1 = [essence| &l[1] |]
-                    in
-                        WithLocals
-                            (Comprehension
-                                (upd j body)
-                                $  gocBefore
-                                ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gocAfter)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k1 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l1 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k1 = [essence| &k[1] |]
+                let l1 = [essence| &l[1] |]
+                return $ WithLocals
+                    (Comprehension
+                        (upd j body)
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr jPat aux) ]
+                        ++ transformBi (upd j) gocAfter)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k1 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l1 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Defined_Literal"
 
@@ -403,35 +402,33 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over range(f)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k2 = [essence| &k[2] |]
-                        l2 = [essence| &l[2] |]
-                    in
-                        WithLocals
-                            (Comprehension
-                                (upd j body)
-                                $  gocBefore
-                                ++ [ Generator (GenInExpr jPat aux) ]
-                                ++ transformBi (upd j) gocAfter)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k2 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l2 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k2 = [essence| &k[2] |]
+                let l2 = [essence| &l[2] |]
+                return $ WithLocals
+                    (Comprehension
+                        (upd j body)
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr jPat aux) ]
+                        ++ transformBi (upd j) gocAfter)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domTo)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k2 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l2 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Range_Literal"
 
@@ -442,31 +439,29 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
         DomainFunction _ _ domFr _domTo <- domainOf func
         return
             ( "size(defined(func), n)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k1 = [essence| &k[1] |]
-                        l1 = [essence| &l[1] |]
-                    in
-                        WithLocals
-                            (fromBool True)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName
-                                          (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domFr)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k1 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l1 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k1 = [essence| &k[1] |]
+                let l1 = [essence| &l[1] |]
+                return $ WithLocals
+                    (fromBool True)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName
+                                  (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domFr)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k1 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l1 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Defined_Size"
 
@@ -477,31 +472,29 @@ rule_Comprehension_Range_Size = "function-range-size" `namedRule` theRule where
         DomainFunction _ _ _domFr domTo <- domainOf func
         return
             ( "size(range(func), n)"
-            , \ fresh ->
-                    let
-                        (auxName, aux) = auxiliaryVar (fresh `at` 0)
-                        (kPat, k) = quantifiedVar (fresh `at` 2)
-                        (lPat, l) = quantifiedVar (fresh `at` 3)
-                        k2 = [essence| &k[2] |]
-                        l2 = [essence| &l[2] |]
-                    in
-                        WithLocals
-                            (fromBool True)
-                            (Left [ Declaration (FindOrGiven LocalFind auxName
-                                          (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domTo)))
-                                  , SuchThat
-                                      [ make opAnd $ Comprehension
-                                          [essence| &k2 in &aux |]
-                                          [ Generator (GenInExpr kPat func) ]
-                                      , make opAnd $
-                                          Comprehension
-                                              (make opOr $ Comprehension
-                                                  [essence| &l2 = &k |]
-                                                  [ Generator (GenInExpr lPat func) ]
-                                              )
-                                              [ Generator (GenInExpr kPat aux) ]
-                                      ]
-                                  ])
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (kPat, k) <- quantifiedVar
+                (lPat, l) <- quantifiedVar
+                let k2 = [essence| &k[2] |]
+                let l2 = [essence| &l[2] |]
+                return $ WithLocals
+                    (fromBool True)
+                    (Left [ Declaration (FindOrGiven LocalFind auxName
+                                  (DomainSet def (SetAttr (SizeAttr_Size n)) (forgetRepr domTo)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &k2 in &aux |]
+                                  [ Generator (GenInExpr kPat func) ]
+                              , make opAnd $
+                                  Comprehension
+                                      (make opOr $ Comprehension
+                                          [essence| &l2 = &k |]
+                                          [ Generator (GenInExpr lPat func) ]
+                                      )
+                                      [ Generator (GenInExpr kPat aux) ]
+                              ]
+                          ])
             )
     theRule _ = na "rule_Comprehension_Range_Size"
 
@@ -512,7 +505,7 @@ rule_In = "function-in" `namedRule` theRule where
         TypeFunction{} <- typeOf f
         return
             ( "Function membership to function image."
-            , const [essence| &f(&x[1]) = &x[2] |]
+            , return [essence| &f(&x[1]) = &x[2] |]
             )
     theRule _ = na "rule_In"
 
@@ -525,10 +518,10 @@ rule_Restrict_Image = "function-restrict-image" `namedRule` theRule where
         TypeFunction{} <- typeOf func
         return
             ( "Function image on a restricted function."
-            , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        bob = [essence| exists &iPat : &dom . &i = &arg |]
-                    in  WithLocals (make opImage func arg) (Right [bob])
+            , do
+                (iPat, i) <- quantifiedVar
+                let bob = [essence| exists &iPat : &dom . &i = &arg |]
+                return $ WithLocals (make opImage func arg) (Right [bob])
             )
 
 
@@ -542,16 +535,15 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
         TypeFunction{} <- typeOf func
         return
             ( "Mapping over restrict(func, dom)"
-            , \ fresh ->
-                    let (jPat, j) = quantifiedVar (fresh `at` 0)
-                        i = Reference iPatName Nothing
-                    in
-                        Comprehension body
-                            $  gocBefore
-                            ++ [ Generator (GenInExpr iPat func)
-                               , Condition [essence| exists &jPat : &dom . &j = &i[1] |]
-                               ]
-                            ++ gocAfter
+            , do
+                (jPat, j) <- quantifiedVar
+                let i = Reference iPatName Nothing
+                return $ Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr iPat func)
+                       , Condition [essence| exists &jPat : &dom . &j = &i[1] |]
+                       ]
+                    ++ gocAfter
             )
     theRule _ = na "rule_Restrict_Comprehension"
 
@@ -563,7 +555,7 @@ rule_Mk_Image = "mk-function-image" `namedRule` theRule where
         TypeFunction{}  <- typeOf f
         return
             ( "This is a function image."
-            , const $ make opImage f arg
+            , return $ make opImage f arg
             )
 
 
@@ -610,11 +602,9 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
         (func, arg) <- maybe (na "rule_Image_Bool") return mFunc        -- Nothing signifies no relevant children
         return
             ( "Function image, bool."
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    mkP $ make opOr $ Comprehension [essence| &i[2] |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ mkP $ make opOr $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
@@ -657,16 +647,14 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
         (func, arg) <- maybe (na "rule_Image_Int") return mFunc         -- Nothing signifies no relevant children
         return
             ( "Function image, int."
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    val = make opSum $ Comprehension [essence| &i[2] |]
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = make opSum $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
-                    isDefined = [essence| &arg in defined(&func) |]
-                in
-                    mkP $ WithLocals val (Right [isDefined])
+                let isDefined = [essence| &arg in defined(&func) |]
+                return $ mkP $ WithLocals val (Right [isDefined])
             )
 
 
@@ -685,19 +673,17 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the image of a function"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    (jPat, j) = quantifiedVar (fresh `at` 1)
-                in
-                    Comprehension
-                        (upd j body)
-                        $  gocBefore
-                        ++ [ Generator (GenInExpr iPat (mkModifier func))
-                           , Condition [essence| &i[1] = &arg |]
-                           , Generator (GenInExpr jPat [essence| &i[2] |])
-                           ]
-                        ++ transformBi (upd j) gocAfter
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                return $ Comprehension
+                    (upd j body)
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr iPat (mkModifier func))
+                       , Condition [essence| &i[1] = &arg |]
+                       , Generator (GenInExpr jPat [essence| &i[2] |])
+                       ]
+                    ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Comprehension_Image"
 
@@ -717,7 +703,7 @@ rule_Defined_Intersect = "function-Defined-intersect" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for function intersection"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (make opDefined x))
@@ -745,7 +731,7 @@ rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule 
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for function union"
-            , const $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+            , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
                 (DomainInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
@@ -779,7 +765,7 @@ rule_DefinedOrRange_Difference = "function-DefinedOrRange-difference" `namedRule
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for function difference"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat mkx)

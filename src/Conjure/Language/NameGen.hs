@@ -58,6 +58,10 @@ instance NameGen (Either Doc) where
     nextName _ = fail "nextName{Either Doc}"
     updateNameGenState _ = fail "updateNameGenState{Either Doc}"
 
+instance NameGen (ExceptT Identity) where
+    nextName _ = fail "nextName{ExceptT Identity}"
+    updateNameGenState _ = fail "updateNameGenState{ExceptT Identity}"
+
 runNameGen :: Monad m => NameGenM m a -> m a
 runNameGen (NameGenM comp) = evalStateT comp initState
     where initState = M.empty

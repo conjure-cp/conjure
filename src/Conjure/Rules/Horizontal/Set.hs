@@ -19,9 +19,9 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on set literals"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return $ Comprehension (upd i body)
                          $  gocBefore
                          ++ [Generator (GenInExpr iPat outLiteral)]
                          ++ transformBi (upd i) gocAfter
@@ -35,12 +35,13 @@ rule_Eq = "set-eq" `namedRule` theRule where
         (x,y)     <- match opEq p
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
-        return ( "Horizontal rule for set equality"
-               , const $ make opAnd $ fromList
-                   [ make opSubsetEq x y
-                   , make opSubsetEq y x
-                   ]
-               )
+        return
+            ( "Horizontal rule for set equality"
+            , return $ make opAnd $ fromList
+                [ make opSubsetEq x y
+                , make opSubsetEq y x
+                ]
+            )
 
 
 rule_Neq :: Rule
@@ -48,15 +49,16 @@ rule_Neq = "set-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
-        return ( "Horizontal rule for set dis-equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (exists &iPat in &x . !(&i in &y))
-                            \/
-                            (exists &iPat in &y . !(&i in &x))
-                        |]
-               )
+        return
+            ( "Horizontal rule for set dis-equality"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence|
+                         (exists &iPat in &x . !(&i in &y))
+                         \/
+                         (exists &iPat in &y . !(&i in &x))
+                     |]
+            )
     theRule _ = na "rule_Neq"
 
 
@@ -66,11 +68,12 @@ rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
         (x,y)     <- match opSubsetEq p
         TypeSet{} <- typeOf x
         TypeSet{} <- typeOf y
-        return ( "Horizontal rule for set subsetEq"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat in (&x) . &i in &y |]
-               )
+        return
+            ( "Horizontal rule for set subsetEq"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| forAll &iPat in (&x) . &i in &y |]
+            )
 
 
 rule_Subset :: Rule
@@ -80,7 +83,7 @@ rule_Subset = "set-subset" `namedRule` theRule where
         TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
@@ -92,7 +95,7 @@ rule_Supset = "set-supset" `namedRule` theRule where
         TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set supset"
-            , const [essence| &b subset &a |]
+            , return [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
@@ -104,7 +107,7 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
         TypeSet{} <- typeOf b
         return
             ( "Horizontal rule for set supsetEq"
-            , const [essence| &b subsetEq &a |]
+            , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -119,9 +122,10 @@ rule_Lt = "set-lt" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for set <" <+> pretty (make opLt ma mb)
-               , const $ make opLt ma mb
-               )
+        return
+            ( "Horizontal rule for set <" <+> pretty (make opLt ma mb)
+            , return $ make opLt ma mb
+            )
 
 
 rule_Leq :: Rule
@@ -134,9 +138,10 @@ rule_Leq = "set-leq" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for set <=" <+> pretty (make opLeq ma mb)
-               , const $ make opLeq ma mb
-               )
+        return
+            ( "Horizontal rule for set <=" <+> pretty (make opLeq ma mb)
+            , return $ make opLeq ma mb
+            )
 
 
 rule_Intersect :: Rule
@@ -158,7 +163,7 @@ rule_Intersect = "set-intersect" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set intersection"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (mkModifier x))
@@ -187,7 +192,7 @@ rule_Union = "set-union" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set union"
-            , const $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+            , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
                 (DomainInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
@@ -222,7 +227,7 @@ rule_Difference = "set-difference" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Horizontal rule for set difference"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (mkModifier x))
@@ -244,7 +249,7 @@ rule_PowerSet_Difference = "set-powerSet-difference" `namedRule` theRule where
         let patAsExpr = patternToExpr pat
         return
             ( "Horizontal rule for set powerSet difference"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (make opPowerSet x))
@@ -261,17 +266,17 @@ rule_MaxMin = "set-max-min" `namedRule` theRule where
         TypeSet TypeInt <- typeOf s
         return
             ( "Horizontal rule for set max"
-            , \ fresh ->
-                let (iPat, i) = quantifiedVar (fresh `at` 0)
-                in  [essence| max([&i | &iPat <- &s]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| max([&i | &iPat <- &s]) |]
             )
     theRule [essence| min(&s) |] = do
         TypeSet TypeInt <- typeOf s
         return
             ( "Horizontal rule for set min"
-            , \ fresh ->
-                let (iPat, i) = quantifiedVar (fresh `at` 0)
-                in  [essence| min([&i | &iPat <- &s]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| min([&i | &iPat <- &s]) |]
             )
     theRule _ = na "rule_MaxMin"
 
@@ -282,11 +287,12 @@ rule_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)     <- match opIn p
         TypeSet{} <- typeOf s
-        return ( "Horizontal rule for set-in."
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| exists &iPat in &s . &i = &x |]
-               )
+        return
+            ( "Horizontal rule for set-in."
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| exists &iPat in &s . &i = &x |]
+            )
 
 
 rule_Card :: Rule
@@ -297,11 +303,12 @@ rule_Card = "set-card" `namedRule` theRule where
             Domain{} -> na "rule_Card"
             _        -> return ()
         TypeSet{} <- typeOf s
-        return ( "Horizontal rule for set cardinality."
-               , \ fresh ->
-                    let (iPat, _) = quantifiedVar (fresh `at` 0)
-                    in  [essence| sum &iPat in &s . 1 |]
-               )
+        return
+            ( "Horizontal rule for set cardinality."
+            , do
+                 (iPat, _) <- quantifiedVar
+                 return [essence| sum &iPat in &s . 1 |]
+            )
 
 
 rule_Param_MinOfSet :: Rule
@@ -313,10 +320,10 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
         return
             ( "min of a parameter set"
             , case inner of
-                DomainInt [RangeBounded l _] -> const l
-                _ -> \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| min([ &i | &iPat : &inner ]) |]
+                DomainInt [RangeBounded l _] -> return l
+                _ -> do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| min([ &i | &iPat : &inner ]) |]
             )
     theRule _ = na "rule_Param_MinOfSet"
 
@@ -330,10 +337,10 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
         return
             ( "max of a parameter set"
             , case inner of
-                DomainInt [RangeBounded _ u] -> const u
-                _ -> \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| max([ &i | &iPat : &inner ]) |]
+                DomainInt [RangeBounded _ u] -> return u
+                _ -> do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| max([ &i | &iPat : &inner ]) |]
             )
     theRule _ = na "rule_Param_MaxOfSet"
 
@@ -346,6 +353,6 @@ rule_Param_Card = "param-card-of-set" `namedRule` theRule where
         DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
         return
             ( "cardinality of a parameter set"
-            , const n
+            , return n
             )
     theRule _ = na "rule_Param_Card"

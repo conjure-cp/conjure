@@ -11,7 +11,7 @@ rule_Bool = "dontCare-bool" `namedRule` theRule where
         x          <- match opDontCare p
         DomainBool <- domainOf x
         return ( "dontCare value for bools is false."
-               , const $ make opEq x (fromBool False)
+               , return $ make opEq x (fromBool False)
                )
 
 
@@ -30,7 +30,7 @@ rule_Int = "dontCare-int" `namedRule` theRule where
                     RangeUpperBounded v -> v
                     RangeBounded v _ -> v
         return ( "dontCare value for this integer is" <+> pretty val
-               , const $ make opEq x val
+               , return $ make opEq x val
                )
 
 
@@ -41,7 +41,7 @@ rule_Tuple = "dontCare-tuple" `namedRule` theRule where
         TypeTuple{} <- typeOf x
         xs          <- downX1 x
         return ( "dontCare handling for tuple"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               , return $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
 
@@ -52,7 +52,7 @@ rule_Record = "dontCare-record" `namedRule` theRule where
         TypeRecord{} <- typeOf x
         xs           <- downX1 x
         return ( "dontCare handling for record"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               , return $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
 
@@ -63,7 +63,7 @@ rule_Variant = "dontCare-variant" `namedRule` theRule where
         TypeVariant{} <- typeOf x
         xs            <- downX1 x
         return ( "dontCare handling for variant"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               , return $ make opAnd $ fromList $ map (make opDontCare) xs
                )
 
 
@@ -73,9 +73,9 @@ rule_Matrix = "dontCare-matrix" `namedRule` theRule where
         x                    <- match opDontCare p
         DomainMatrix index _ <- domainOf x
         return ( "dontCare handling for matrix"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
+               , do
+                   (iPat, i) <- quantifiedVar
+                   return [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
                )
 
 
@@ -94,5 +94,5 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
         hasRepresentation x
         xs <- downX1 x
         return ( "dontCare handling for an abstract domain"
-               , const $ make opAnd $ fromList $ map (make opDontCare) xs
+               , return $ make opAnd $ fromList $ map (make opDontCare) xs
                )

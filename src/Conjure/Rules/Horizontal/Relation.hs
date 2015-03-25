@@ -21,9 +21,9 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on relation literals"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  Comprehension (upd i body)
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return $ Comprehension (upd i body)
                          $  gocBefore
                          ++ [Generator (GenInExpr iPat outLiteral)]
                          ++ transformBi (upd i) gocAfter
@@ -44,28 +44,26 @@ rule_Comprehension_Projection = "relation-comprehension-projection" `namedRule` 
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on relation literals"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
+            , do
+                (jPat, j) <- quantifiedVar
                     -- those indices to keep
-                    val = AbstractLiteral $ AbsLitTuple
+                let val = AbstractLiteral $ AbsLitTuple
                         [ [essence| &j[&iExpr] |]
                         | (i, Nothing) <- zip allNats args
                         , let iExpr = fromInt i
                         ]
-                    conditions =
+                let conditions =
                         [ Condition [essence| &j[&iExpr] = &arg |]
                         | (i, Just arg) <- zip allNats args
                         , let iExpr = fromInt i
                         ]
-                in
-                    Comprehension
-                       (upd val body)
-                       $  gocBefore
-                       ++ [Generator (GenInExpr jPat rel)]
-                       ++ conditions
-                       ++ transformBi (upd val) gocAfter
-               )
+                return $ Comprehension
+                   (upd val body)
+                   $  gocBefore
+                   ++ [Generator (GenInExpr jPat rel)]
+                   ++ conditions
+                   ++ transformBi (upd val) gocAfter
+            )
     theRule _ = na "rule_Comprehension_Projection"
 
 
@@ -80,12 +78,10 @@ rule_PowerSet_Comprehension = "relation-powerSet-comprehension" `namedRule` theR
         TypeRelation{}       <- typeOf rel
         return
             ( "Horizontal rule for powerSet relation-comprehension"
-            , \ fresh ->
-                let outPats =
-                        [ quantifiedVar (fresh `at` fromInteger i) | i <- take setPatNum allNats ]
-                    val = AbstractLiteral $ AbsLitSet
-                        [ j | (_,j) <- outPats ]
-                in
+            , do
+                outPats <- replicateM setPatNum quantifiedVar
+                let val = AbstractLiteral $ AbsLitSet [ j | (_,j) <- outPats ]
+                return $
                     Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
@@ -110,15 +106,17 @@ rule_Eq = "relation-eq" `namedRule` theRule where
         (x,y)          <- match opEq p
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
-        return ( "Horizontal rule for relation equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (forAll &iPat in &x . &i in &y)
-                            /\
-                            (forAll &iPat in &y . &i in &x)
-                        |]
-               )
+        return
+            ( "Horizontal rule for relation equality"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return
+                     [essence|
+                         (forAll &iPat in &x . &i in &y)
+                         /\
+                         (forAll &iPat in &y . &i in &x)
+                     |]
+            )
 
 
 rule_Neq :: Rule
@@ -126,15 +124,17 @@ rule_Neq = "relation-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
-        return ( "Horizontal rule for relation dis-equality"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence|
-                            (exists &iPat in &x . !(&i in &y))
-                            \/
-                            (exists &iPat in &y . !(&i in &x))
-                        |]
-               )
+        return
+            ( "Horizontal rule for relation dis-equality"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return
+                     [essence|
+                         (exists &iPat in &x . !(&i in &y))
+                         \/
+                         (exists &iPat in &y . !(&i in &x))
+                     |]
+            )
     theRule _ = na "rule_Neq"
 
 
@@ -148,9 +148,10 @@ rule_Lt = "relation-lt" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for relation <" <+> pretty (make opLt ma mb)
-               , const $ make opLt ma mb
-               )
+        return
+            ( "Horizontal rule for relation <" <+> pretty (make opLt ma mb)
+            , return $ make opLt ma mb
+            )
 
 
 rule_Leq :: Rule
@@ -163,9 +164,10 @@ rule_Leq = "relation-leq" `namedRule` theRule where
         hasRepresentation b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
-        return ( "Horizontal rule for relation <=" <+> pretty (make opLeq ma mb)
-               , const $ make opLeq ma mb
-               )
+        return
+            ( "Horizontal rule for relation <=" <+> pretty (make opLeq ma mb)
+            , return $ make opLeq ma mb
+            )
 
 
 rule_SubsetEq :: Rule
@@ -173,11 +175,12 @@ rule_SubsetEq = "relation-subsetEq" `namedRule` theRule where
     theRule [essence| &x subsetEq &y |] = do
         TypeRelation{} <- typeOf x
         TypeRelation{} <- typeOf y
-        return ( "Horizontal rule for relation subsetEq"
-               , \ fresh ->
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| forAll &iPat in (&x) . &i in &y |]
-               )
+        return
+            ( "Horizontal rule for relation subsetEq"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| forAll &iPat in (&x) . &i in &y |]
+            )
     theRule _ = na "rule_SubsetEq"
 
 
@@ -188,7 +191,7 @@ rule_Subset = "relation-subset" `namedRule` theRule where
         TypeRelation{} <- typeOf b
         return
             ( "Horizontal rule for relation subset"
-            , const [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
@@ -200,7 +203,7 @@ rule_Supset = "relation-supset" `namedRule` theRule where
         TypeRelation{} <- typeOf b
         return
             ( "Horizontal rule for relation supset"
-            , const [essence| &b subset &a |]
+            , return [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
@@ -212,7 +215,7 @@ rule_SupsetEq = "relation-subsetEq" `namedRule` theRule where
         TypeRelation{} <- typeOf b
         return
             ( "Horizontal rule for relation supsetEq"
-            , const [essence| &b subsetEq &a |]
+            , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -223,18 +226,20 @@ rule_Image = "relation-image" `namedRule` theRule where
         (rel, args)    <- match opRelationImage p
         TypeRelation{} <- typeOf rel
         let arg = AbstractLiteral (AbsLitTuple args)
-        return ( "relation image to relation membership"
-               , const [essence| &arg in &rel |]
-               )
+        return
+            ( "relation image to relation membership"
+            , return [essence| &arg in &rel |]
+            )
 
 
 rule_In :: Rule
 rule_In = "relation-in" `namedRule` theRule where
     theRule [essence| &x in &rel |] = do
         TypeRelation{} <- typeOf rel
-        return ( "relation membership to existential quantification"
-               , \ fresh ->
-                   let (iPat, i) = quantifiedVar (fresh `at` 0)
-                   in  [essence| exists &iPat in toSet(&rel) . &i = &x |]
-               )
+        return
+            ( "relation membership to existential quantification"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| exists &iPat in toSet(&rel) . &i = &x |]
+            )
     theRule _ = na "rule_In"

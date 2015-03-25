@@ -18,7 +18,7 @@ import Conjure.Representations.Combined
 
 
 -- | Refine (down) an expression (X), one level (1).
-downX1 :: MonadFail m => Expression -> m [Expression]
+downX1 :: (MonadFail m, NameGen m) => Expression -> m [Expression]
 downX1 (Constant x) = onConstant x
 downX1 (AbstractLiteral x) = onAbstractLiteral x
 downX1 (Reference x (Just refTo)) = onReference x refTo
@@ -26,7 +26,7 @@ downX1 (Op x) = onOp x
 downX1 x@WithLocals{} = fail ("downX1:" <++> pretty (show x))
 downX1 x = bug ("downX1:" <++> pretty (show x))
 
-onConstant :: MonadFail m => Constant -> m [Expression]
+onConstant :: (MonadFail m, NameGen m) => Constant -> m [Expression]
 onConstant (ConstantAbstract (AbsLitTuple xs)) = return (map Constant xs)
 onConstant (ConstantAbstract (AbsLitRecord xs)) = return (map (Constant . snd) xs)
 onConstant (ConstantAbstract (AbsLitVariant (Just t) n x))
@@ -42,7 +42,7 @@ onConstant (ConstantAbstract (AbsLitMatrix index xs)) = do
     return [ AbstractLiteral (AbsLitMatrix indexX ys) | ys <- transpose yss ]
 onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 
-onAbstractLiteral :: MonadFail m => AbstractLiteral Expression -> m [Expression]
+onAbstractLiteral :: (MonadFail m, NameGen m) => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
 -- onAbstractLiteral AbsLitVariant{} = fail "onAbstractLiteral, this should be handled differently."
@@ -59,7 +59,7 @@ onAbstractLiteral (AbsLitMatrix index xs) = do
     return [ AbstractLiteral (AbsLitMatrix index ys) | ys <- transpose yss ]
 onAbstractLiteral x = bug ("downX1.onAbstractLiteral:" <++> pretty (show x))
 
-onReference :: MonadFail m => Name -> ReferenceTo -> m [Expression]
+onReference :: (MonadFail m, NameGen m) => Name -> ReferenceTo -> m [Expression]
 onReference nm refTo =
     case refTo of
         Alias x                   -> downX1 x
@@ -69,7 +69,7 @@ onReference nm refTo =
         RecordField{}             -> fail ("downX1.onReference.RecordField:"     <++> pretty (show nm))
         VariantField{}            -> fail ("downX1.onReference.VariantField:"    <++> pretty (show nm))
 
-onOp :: MonadFail m => Op Expression -> m [Expression]
+onOp :: (MonadFail m, NameGen m) => Op Expression -> m [Expression]
 onOp p@(MkOpIndexing (OpIndexing m i)) = do
     ty <- typeOf m
     case ty of
