@@ -195,15 +195,15 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName
-                                , "Expr1:" <+> pretty (hole focus)
-                                , "Expr2:" <+> pretty ruleResultExpr
-                                , "Error:" <+> pretty msg
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Error :" <+> pretty msg
                                 ]
                 (_, Left msg) -> bug $ vcat
                                 [ "Type error after rule application:" <+> pretty ruleName
-                                , "Expr1:" <+> pretty (hole focus)
-                                , "Expr2:" <+> pretty ruleResultExpr
-                                , "Error:" <+> pretty msg
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Error :" <+> pretty msg
                                 ]
             let updNameGenState m0 = do
                     namegenst <- exportNameGenState
