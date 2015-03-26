@@ -15,6 +15,7 @@ import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( refAnswers )
 
+import Conjure.Language.NameGen ( runNameGen )
 import Conjure.Language.Pretty ( pretty )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
@@ -108,19 +109,19 @@ mainWithArgs Modelling{..} = do
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames
             }
-    outputModels config model
+    runNameGen $ outputModels config model
 mainWithArgs RefineParam{..} = do
     when (null eprime      ) $ userErr "Mandatory field --eprime"
     when (null essenceParam) $ userErr "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
-    output <- join $ refineParam
+    output <- runNameGen $ join $ refineParam
                     <$> readModelPreambleFromFile eprime
                     <*> readModelFromFile essenceParam
     writeModel (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr "Mandatory field --eprime-solution"
-    output <- join $ translateSolution
+    output <- runNameGen $ join $ translateSolution
                     <$> readModelPreambleFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
@@ -138,8 +139,7 @@ mainWithArgs Diff{..} =
         <$> readModelFromFile file1
         <*> readModelFromFile file2
 mainWithArgs TypeCheck{..} =
-    join $ typeCheckModel
-        <$> readModelFromFile essence
+    runNameGen $ join $ typeCheckModel <$> readModelFromFile essence
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model

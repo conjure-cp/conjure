@@ -18,12 +18,13 @@ import Data.Text as T ( pack )
 translateSolution
     :: ( MonadFail m
        , MonadLog m
+       , NameGen m
        )
     => Model      -- eprime model
     -> Model      -- essence param
     -> Model      -- eprime solution
     -> m Model    -- essence solution
-translateSolution eprimeModel essenceParam' eprimeSolution = runNameGen $ do
+translateSolution eprimeModel essenceParam' eprimeSolution = do
 
     eprimeParam  <- refineParam eprimeModel essenceParam'
     essenceParam <- removeEnumsFromParam eprimeModel essenceParam'

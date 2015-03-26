@@ -88,11 +88,11 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadLog m)
+    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m)
     => Config
     -> Model
     -> m ()
-outputModels config model = runNameGen $ do
+outputModels config model = do
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
 

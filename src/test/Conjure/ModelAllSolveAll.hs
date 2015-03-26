@@ -155,7 +155,7 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    s <- ignoreLogs $ translateSolution eprimeModel def eprimeSolution
+                    s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
                     let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                     writeFile filename (renderNormal s)
 
@@ -165,7 +165,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ do
         model       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
         param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
-        eprimeParam <- liftIO $ ignoreLogs $ refineParam model param
+        eprimeParam <- liftIO $ ignoreLogs $ runNameGen $ refineParam model param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
         liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
         _stdoutSR <- run "savilerow" $
@@ -186,7 +186,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    case ignoreLogs (translateSolution eprimeModel param eprimeSolution) of
+                    case ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution of
                         Left err -> assertFailure $ renderNormal err
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
@@ -304,7 +304,7 @@ dirShouldExist d = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = ignoreLogs . outputModels Config
+modelAll dir = ignoreLogs . runNameGen . outputModels Config
     { logLevel                   = LogNone
     , verboseTrail               = False
     , logRuleFails               = False

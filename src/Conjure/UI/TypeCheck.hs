@@ -17,11 +17,12 @@ import Conjure.Language.NameResolution ( resolveNames )
 typeCheckModel
     :: ( MonadFail m
        , MonadLog m
+       , NameGen m
        )
     => Model      -- essence param
     -> m ()
 
-typeCheckModel model0 = runNameGen $ do
+typeCheckModel model0 = do
     model1 <- return model0             >>= logDebugId "[input]"
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
