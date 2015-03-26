@@ -3,7 +3,7 @@ language ESSENCE' 1.0
 find var3_Function1DPartial_Flags: matrix indexed by [int(2, 2)] of bool
 find var3_Function1DPartial_Values: matrix indexed by [int(2, 2)] of int(-4..-2)
 such that
-    and([var3_Function1DPartial_Flags[q2] = false ->
-         var3_Function1DPartial_Values[q2] = -4
-             | q2 : int(2, 2)])
+    and([var3_Function1DPartial_Flags[q4] = false ->
+         var3_Function1DPartial_Values[q4] = -4
+             | q4 : int(2, 2)])
 

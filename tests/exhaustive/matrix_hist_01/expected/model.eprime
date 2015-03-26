@@ -5,10 +5,10 @@ find b: int(0..9)
 find c: int(0..9)
 letting m be [1, 2, 3, 3; int(1..4)]
 such that
-    a = sum([1 | q1 : int(1..4), !or([m[q3] = m[q1] | q3 : int(1..4), q3 < q1])]),
+    a = sum([1 | q3 : int(1..4), !or([m[q4] = m[q3] | q4 : int(1..4), q4 < q3])]),
     b =
-    sum([m[q4] | q4 : int(1..4), !or([m[q5] = m[q4] | q5 : int(1..4), q5 < q4])]),
+    sum([m[q6] | q6 : int(1..4), !or([m[q7] = m[q6] | q7 : int(1..4), q7 < q6])]),
     c =
-    sum([sum([1 | q7 : int(1..4), m[q6] = m[q7]])
-             | q6 : int(1..4), !or([m[q7] = m[q6] | q7 : int(1..4), q7 < q6])])
+    sum([sum([1 | q10 : int(1..4), m[q9] = m[q10]])
+             | q9 : int(1..4), !or([m[q10] = m[q9] | q10 : int(1..4), q10 < q9])])
 

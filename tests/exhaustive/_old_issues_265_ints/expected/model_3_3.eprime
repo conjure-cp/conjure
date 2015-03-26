@@ -1,60 +1,64 @@
 language ESSENCE' 1.0
 
-given p1: int
+given fin1: int
 given f_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 given f_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
 find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
-find q5_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find q5_ExplicitVarSizeWithFlags_Values:
+find aux1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find aux1_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..2)] of int(0, 1)
-find q12_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find q12_ExplicitVarSizeWithFlags_Values:
+find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..2)] of int(0, 1)
 such that
-    q5_ExplicitVarSizeWithFlags_Flags[2] ->
-    q5_ExplicitVarSizeWithFlags_Values[1] < q5_ExplicitVarSizeWithFlags_Values[2],
-    and([q5_ExplicitVarSizeWithFlags_Flags[q2] = false ->
-         q5_ExplicitVarSizeWithFlags_Values[q2] = 0
-             | q2 : int(1..2)]),
-    q5_ExplicitVarSizeWithFlags_Flags[2] -> q5_ExplicitVarSizeWithFlags_Flags[1],
-    and([or([q5_ExplicitVarSizeWithFlags_Flags[q11] /\
-             q5_ExplicitVarSizeWithFlags_Values[q11] = q6
-                 | q11 : int(1..2)])
-             | q6 : int(0, 1), f_Function1DPartial_Flags[q6]]),
-    and([q5_ExplicitVarSizeWithFlags_Flags[q10] ->
-         or([q7 = q5_ExplicitVarSizeWithFlags_Values[q10]
-                 | q7 : int(0, 1), f_Function1DPartial_Flags[q7]])
-             | q10 : int(1..2)]),
-    q12_ExplicitVarSizeWithFlags_Flags[2] ->
-    q12_ExplicitVarSizeWithFlags_Values[1] < q12_ExplicitVarSizeWithFlags_Values[2],
-    and([q12_ExplicitVarSizeWithFlags_Flags[q8] = false ->
-         q12_ExplicitVarSizeWithFlags_Values[q8] = 0
-             | q8 : int(1..2)]),
-    q12_ExplicitVarSizeWithFlags_Flags[2] -> q12_ExplicitVarSizeWithFlags_Flags[1],
-    and([fprime_Function1DPartial_Flags[q13] ->
-         or([q12_ExplicitVarSizeWithFlags_Flags[q18] /\
-             q12_ExplicitVarSizeWithFlags_Values[q18] = q13
-                 | q18 : int(1..2)])
-             | q13 : int(0, 1)]),
-    and([q12_ExplicitVarSizeWithFlags_Flags[q17] ->
-         or([fprime_Function1DPartial_Flags[q14] /\
-             q14 = q12_ExplicitVarSizeWithFlags_Values[q17]
-                 | q14 : int(0, 1)])
-             | q17 : int(1..2)]),
-    and([fprime_Function1DPartial_Values[q3] = f_Function1DPartial_Values[q3] /\
-         fprime_Function1DPartial_Flags[q3]
-             | q3 : int(0, 1), f_Function1DPartial_Flags[q3]]),
-    and([fprime_Function1DPartial_Flags[q4] ->
-         f_Function1DPartial_Values[q4] = fprime_Function1DPartial_Values[q4] /\
-         f_Function1DPartial_Flags[q4]
-             | q4 : int(0, 1)]),
-    and([q5_ExplicitVarSizeWithFlags_Flags[q9] ->
-         fprime_Function1DPartial_Flags[q5_ExplicitVarSizeWithFlags_Values[q9]]
-             | q9 : int(1..2)]),
-    and([q12_ExplicitVarSizeWithFlags_Flags[q16] ->
-         f_Function1DPartial_Flags[q12_ExplicitVarSizeWithFlags_Values[q16]]
+    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux1_ExplicitVarSizeWithFlags_Values[1] <
+    aux1_ExplicitVarSizeWithFlags_Values[2],
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q12] = false ->
+         aux1_ExplicitVarSizeWithFlags_Values[q12] = 0
+             | q12 : int(1..2)]),
+    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux1_ExplicitVarSizeWithFlags_Flags[1],
+    and([or([aux1_ExplicitVarSizeWithFlags_Flags[q21] /\
+             aux1_ExplicitVarSizeWithFlags_Values[q21] = q17
+                 | q21 : int(1..2)])
+             | q17 : int(0, 1), f_Function1DPartial_Flags[q17]]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q18] ->
+         or([q19 = aux1_ExplicitVarSizeWithFlags_Values[q18]
+                 | q19 : int(0, 1), f_Function1DPartial_Flags[q19]])
+             | q18 : int(1..2)]),
+    aux2_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux2_ExplicitVarSizeWithFlags_Values[1] <
+    aux2_ExplicitVarSizeWithFlags_Values[2],
+    and([aux2_ExplicitVarSizeWithFlags_Flags[q27] = false ->
+         aux2_ExplicitVarSizeWithFlags_Values[q27] = 0
+             | q27 : int(1..2)]),
+    aux2_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux2_ExplicitVarSizeWithFlags_Flags[1],
+    and([fprime_Function1DPartial_Flags[q32] ->
+         or([aux2_ExplicitVarSizeWithFlags_Flags[q36] /\
+             aux2_ExplicitVarSizeWithFlags_Values[q36] = q32
+                 | q36 : int(1..2)])
+             | q32 : int(0, 1)]),
+    and([aux2_ExplicitVarSizeWithFlags_Flags[q33] ->
+         or([fprime_Function1DPartial_Flags[q34] /\
+             q34 = aux2_ExplicitVarSizeWithFlags_Values[q33]
+                 | q34 : int(0, 1)])
+             | q33 : int(1..2)]),
+    and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
+         fprime_Function1DPartial_Flags[q5]
+             | q5 : int(0, 1), f_Function1DPartial_Flags[q5]]),
+    and([fprime_Function1DPartial_Flags[q6] ->
+         f_Function1DPartial_Values[q6] = fprime_Function1DPartial_Values[q6] /\
+         f_Function1DPartial_Flags[q6]
+             | q6 : int(0, 1)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q16] ->
+         fprime_Function1DPartial_Flags[aux1_ExplicitVarSizeWithFlags_Values[q16]]
              | q16 : int(1..2)]),
+    and([aux2_ExplicitVarSizeWithFlags_Flags[q31] ->
+         f_Function1DPartial_Flags[aux2_ExplicitVarSizeWithFlags_Values[q31]]
+             | q31 : int(1..2)]),
     and([fprime_Function1DPartial_Flags[q1] = false ->
          fprime_Function1DPartial_Values[q1] = 0
              | q1 : int(0, 1)])

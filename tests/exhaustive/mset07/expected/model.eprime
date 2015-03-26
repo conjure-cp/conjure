@@ -8,10 +8,10 @@ find x_ExplicitVarSizeWithFlags_Values:
 such that
     x_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
     x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
-    and([x_ExplicitVarSizeWithFlags_Flags[q1] = 0 ->
-         x_ExplicitVarSizeWithFlags_Values[q1] = 1
-             | q1 : int(1..2)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q2] = 0 ->
+         x_ExplicitVarSizeWithFlags_Values[q2] = 1
+             | q2 : int(1..2)]),
     x_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
     x_ExplicitVarSizeWithFlags_Flags[1] > 0,
-    2 = sum([x_ExplicitVarSizeWithFlags_Flags[q1] | q1 : int(1..2)])
+    2 = sum([x_ExplicitVarSizeWithFlags_Flags[q5] | q5 : int(1..2)])
 

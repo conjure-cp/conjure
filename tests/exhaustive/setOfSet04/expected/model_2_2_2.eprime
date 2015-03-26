@@ -13,14 +13,14 @@ such that
     /\
     x_Explicit_ExplicitVarSizeWithMarker_Values[1, ..] <lex
     x_Explicit_ExplicitVarSizeWithMarker_Values[2, ..],
-    and([and([q2 + 1 <= x_Explicit_ExplicitVarSizeWithMarker_Marker[q1] ->
-              x_Explicit_ExplicitVarSizeWithMarker_Values[q1, q2] <
-              x_Explicit_ExplicitVarSizeWithMarker_Values[q1, q2 + 1]
-                  | q2 : int(1..2)])
-             | q1 : int(1..2)]),
-    and([and([q2 > x_Explicit_ExplicitVarSizeWithMarker_Marker[q1] ->
-              x_Explicit_ExplicitVarSizeWithMarker_Values[q1, q2] = 1
-                  | q2 : int(1..3)])
-             | q1 : int(1..2)]),
-    and([x_Explicit_ExplicitVarSizeWithMarker_Marker[q1] <= 3 | q1 : int(1..2)])
+    and([and([q3 + 1 <= x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q3] <
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]
+                  | q3 : int(1..2)])
+             | q2 : int(1..2)]),
+    and([and([q4 > x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q4] = 1
+                  | q4 : int(1..3)])
+             | q2 : int(1..2)]),
+    and([x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] <= 3 | q2 : int(1..2)])
 

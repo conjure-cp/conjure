@@ -5,6 +5,6 @@ find cut1: bool
 find cut2: bool
 branching on [cut1, cut2, x_Occurrence]
 such that
-    !cut1 <-> and([x_Occurrence[[1, 2; int(1..2)][q1]] | q1 : int(1..2)]),
+    !cut1 <-> and([x_Occurrence[[1, 2; int(1..2)][q4]] | q4 : int(1..2)]),
     !cut2 <-> x_Occurrence[1]
 

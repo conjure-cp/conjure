@@ -4,23 +4,23 @@ find x_Explicit_RelationAsMatrix:
         matrix indexed by [int(1..2), int(1..2), int(3)] of bool
 such that
     and([or([[true,
-              or([x_Explicit_RelationAsMatrix[q3, q7_1, 3] /\ q7_1 = 2
-                      | q7_1 : int(1..2)]); int(1..2)][q2]
+              or([x_Explicit_RelationAsMatrix[q6, q16_1, 3] /\ q16_1 = 2
+                      | q16_1 : int(1..2)]); int(1..2)][q9]
              /\
-             and([x_Explicit_RelationAsMatrix[q3, q6_1, 3] ->
-                  [false, 2 = q6_1; int(1..2)][q2]
-                      | q6_1 : int(1..2)])
-                 | q2 : int(1..2)])
-             | q3 : int(1..2)]),
-    and([or([and([x_Explicit_RelationAsMatrix[q10, q11_1, 3] ->
-                  [false, 2 = q11_1; int(1..2)][q4]
-                      | q11_1 : int(1..2)])
+             and([x_Explicit_RelationAsMatrix[q6, q12_1, 3] ->
+                  [false, 2 = q12_1; int(1..2)][q9]
+                      | q12_1 : int(1..2)])
+                 | q9 : int(1..2)])
+             | q6 : int(1..2)]),
+    and([or([and([x_Explicit_RelationAsMatrix[q25, q27_1, 3] ->
+                  [false, 2 = q27_1; int(1..2)][q23]
+                      | q27_1 : int(1..2)])
              /\
              [true,
-              or([x_Explicit_RelationAsMatrix[q10, q14_1, 3] /\ q14_1 = 2
-                      | q14_1 : int(1..2)]); int(1..2)][q4]
-                 | q10 : int(1..2)])
-             | q4 : int(1..2)]),
+              or([x_Explicit_RelationAsMatrix[q25, q36_1, 3] /\ q36_1 = 2
+                      | q36_1 : int(1..2)]); int(1..2)][q23]
+                 | q25 : int(1..2)])
+             | q23 : int(1..2)]),
     flatten(x_Explicit_RelationAsMatrix[1, .., ..]) <lex
     flatten(x_Explicit_RelationAsMatrix[2, .., ..])
 
