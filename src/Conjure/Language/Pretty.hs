@@ -124,11 +124,12 @@ instance Pretty JSON.Object where
             f (key@"description", Array value) = pretty (show key) <> ":" <+> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <+> pretty value
 
-            keyOrder = [ "decision", "options"
-                       , "finds", "givens", "enumGivens", "enumLettings", "unnameds"
+            keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                        , "trailCompact", "trailVerbose"
+                       , "nameGenState"
                        , "representations", "representationsTree"
                        , "originalDomains"
+                       , "questionAnswered"
                        ]
 
             comp a b =
