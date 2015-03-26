@@ -131,16 +131,20 @@ data RuleResult m = RuleResult
 
 data Rule = Rule
     { rName  :: Doc
-    , rApply :: forall m . (Functor m, Applicative m, Monad m, MonadLog m, NameGen m)
-             => Zipper Model Expression            -- to query context
-             -> Expression
-             -> ExceptT Identity [RuleResult m]
-                -- fail in a rule just means that the rule isn't applicable
+    , rApply
+        :: forall n m . ( MonadFail n, MonadLog n, NameGen n    -- a fail in {n} means that the rule isn't applicable
+                        , MonadFail m, MonadLog m, NameGen m    -- a fail in {m} means a bug
+                        )
+        => Zipper Model Expression            -- to query context
+        -> Expression
+        -> n [RuleResult m]
     }
 
 namedRule
     :: Doc
-    -> (forall m . (Functor m, Applicative m, Monad m, NameGen m) => Expression -> ExceptT Identity (Doc, m Expression))
+    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n
+                     , MonadFail m, MonadLog m, NameGen m
+                     ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm

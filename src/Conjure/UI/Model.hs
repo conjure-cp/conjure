@@ -155,7 +155,7 @@ toCompletion config m = do
 
 
 remaining
-    :: (MonadLog m, NameGen m)
+    :: (MonadFail m, MonadLog m, NameGen m)
     => Config
     -> Model
     -> m [Question]
@@ -168,7 +168,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: (MonadLog m, NameGen m) => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
+        processLevel :: (MonadFail m, MonadLog m, NameGen m) => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
                 ys <- applicableRules config rulesAtLevel x
@@ -630,18 +630,21 @@ epilogue model = return model
 
 
 applicableRules
-    :: forall m . (MonadLog m, NameGen m)
+    :: forall m n . ( MonadLog n, NameGen n
+                    , MonadLog m, NameGen m, MonadFail m
+                    )
     => Config
     -> [Rule]
     -> Zipper Model Expression
-    -> m [(Doc, RuleResult m)]
+    -> n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty (hole x))
-                         return (rName r, runIdentity $ runExceptT $ rApply r x (hole x))
+                         applied <- runExceptT $ rApply r x (hole x)
+                         return (rName r, applied)
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
         case my of
@@ -660,9 +663,7 @@ applicableRules Config{..} rulesAtLevel x = do
            , res <- ress
            , let ruleResult' = do
                     rResult <- ruleResult res
-                    return $ rResult
-                       |> resolveNamesX
-                       |> bugFail "applicableRules"   -- re-resolving names
+                    resolveNamesX rResult
            ]
 
 
@@ -977,6 +978,17 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         return options
     theRule _ = na "rule_ChooseRepr"
 
+    mkHook
+        :: ( MonadLog m
+           , MonadFail m
+           , NameGen m
+           )
+        => Bool
+        -> FindOrGiven
+        -> Name
+        -> Domain HasRepresentation Expression
+        -> Model
+        -> m Model
     mkHook useChannelling   -- whether to use channelling or not
            forg             -- find or given
            name             -- name of the original declaration
@@ -990,17 +1002,17 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mkStructurals :: MonadLog m => m [Expression]
+            mkStructurals :: (MonadLog m, MonadFail m, NameGen m) => m [Expression]
             mkStructurals = do
                 logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
-                let structurals = bugFail "structurals" $ getStructurals downX1 domain >>= \ gen -> gen ref
+                structurals <- getStructurals downX1 domain >>= \ gen -> gen ref
                 logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
-                let resolved    = bugFail "resolving st"$ mapM resolveNamesX structurals     -- re-resolving names
+                resolved    <- mapM resolveNamesX structurals     -- re-resolving names
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
                 return resolved
 
-            addStructurals :: MonadLog m => Model -> m Model
+            addStructurals :: (MonadLog m, MonadFail m, NameGen m) => Model -> m Model
             addStructurals
                 | forg == Given = return
                 | usedBefore = return
