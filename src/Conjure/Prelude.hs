@@ -318,70 +318,48 @@ data Proxy a = Proxy
 
 class (Functor m, Applicative m, Monad m) => MonadFail m where
     fail :: Doc -> m a
-    catchFail :: m a -> m (Either Doc a)
 
 na :: MonadFail m => Doc -> m a
 na message = fail ("N/A:" <+> message)
 
 instance MonadFail Identity where
     fail = Control.Monad.fail . show
-    catchFail = const $ Control.Monad.fail "catchFail{Identity}"
 
 instance MonadFail Maybe where
     fail = const Nothing
-    catchFail = return . maybe (Left "catchFail{Maybe}") Right
 
 instance MonadFail IO where
     fail msg = Control.Monad.fail $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
-    catchFail = const $ Control.Monad.fail "catchFail{IO}"
 
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
-    catchFail = return
 
 instance MonadFail m => MonadFail (IdentityT m) where
     fail = lift . fail
-    catchFail = IdentityT . catchFail . runIdentityT
 
 instance (Functor m, Monad m) => MonadFail (MaybeT m) where
     fail = const $ MaybeT $ return Nothing
-    catchFail ma = MaybeT $ return . maybe (Left "catchFail{MaybeT}") Right <$> runMaybeT ma
 
 instance (Functor m, Monad m) => MonadFail (ExceptT m) where
     fail = ExceptT . return . Left
-    catchFail ma = ExceptT $ return <$> runExceptT ma
 
 instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
     fail = lift . fail
-    catchFail (StateT f) = StateT $ \ st -> do                  -- rolls the state back in case of an error
-        mres <- catchFail (f st)
-        case mres of
-            Left   x       -> return (Left  x, st )
-            Right (x, st') -> return (Right x, st')
 
 instance MonadFail Gen where
     fail = Control.Monad.fail . show
-    catchFail = const $ Control.Monad.fail "catchFail{Gen}"
 
 instance MonadFail (ParsecT g l m) where
     fail = Control.Monad.fail . show
-    catchFail = const $ Control.Monad.fail "catchFail{ParsecT}"
 
 instance MonadFail m => MonadFail (LoggerT m) where
     fail = lift . fail
-    catchFail (LoggerT ma) = LoggerT (catchFail ma)
 
 instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
     fail = lift . fail
-    catchFail (WriterT ma) = WriterT $ do                       -- drops the messages written during the error
-        mres <- catchFail ma
-        case mres of
-            Left  x       -> return (Left  x, mempty)
-            Right (x, ws) -> return (Right x, ws    )
 
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
-    catchFail = const $ Control.Monad.fail "catchFail{Pipes.Proxy}"
 
 newtype ExceptT m a = ExceptT { runExceptT :: m (Either Doc a) }
 
