@@ -46,7 +46,7 @@ shadowing p@(Comprehension _ is) = do
             ]
     ctxt <- gets id
     let shadows = [ g | g <- generators, g `elem` map fst ctxt ]
-    shadowsNew <- forM shadows $ \ s -> do n <- nextName "p" ; return (s,n)
+    shadowsNew <- forM shadows $ \ s -> do n <- nextName "shadow" ; return (s,n)
     let f n = fromMaybe n (lookup n shadowsNew)
     return (transformBi f p)
 shadowing p = return p

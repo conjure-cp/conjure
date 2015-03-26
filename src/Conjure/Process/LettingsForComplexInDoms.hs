@@ -30,7 +30,7 @@ lettingsForComplexInDoms m = do
                     -- not extracting a letting for it.
                     return expr
                 else do
-                    newLetting <- nextName "p"
+                    newLetting <- nextName "let"
                     tell [Declaration (Letting newLetting expr)]        -- new declarations
                     return (Reference newLetting Nothing)               -- the replacement expression
 

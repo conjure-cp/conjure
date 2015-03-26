@@ -100,7 +100,7 @@ mkFiniteOutermost (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainSet () _ inner) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
         ( DomainSet () (SetAttr (SizeAttr_Size (fromName s))) inner'
@@ -128,7 +128,7 @@ mkFiniteOutermost (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) inn
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
     (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
     return
@@ -158,7 +158,7 @@ mkFiniteOutermost (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inner
                 _ -> fail "mkFiniteOutermost: multiple values"
         )
 mkFiniteOutermost (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
     return
         ( DomainRelation ()
@@ -184,8 +184,8 @@ mkFiniteInner
          , [Constant] -> m [(Name, Constant)]
          )
 mkFiniteInner (DomainInt []) = do
-    fr <- nextName "p"
-    to <- nextName "p"
+    fr <- nextName "fin"
+    to <- nextName "fin"
     return
         ( DomainInt [RangeBounded (fromName fr) (fromName to)]
         , [fr, to]
@@ -205,7 +205,7 @@ mkFiniteInner (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
                 innerF (concat sets)
         )
 mkFiniteInner (DomainSet () _ inner) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
         ( DomainSet () (SetAttr (SizeAttr_MaxSize (fromName s))) inner'
@@ -229,7 +229,7 @@ mkFiniteInner (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr
                 return $ innerFrValues ++ innerToValues
         )
 mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) innerFr innerTo) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
     (innerTo', innerToExtras, innerToF) <- mkFiniteInner innerTo
     return
@@ -255,7 +255,7 @@ mkFiniteInner (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) =
                 return $ concat innersValues
         )
 mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
-    s <- nextName "p"
+    s <- nextName "fin"
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
     return
         ( DomainRelation ()
