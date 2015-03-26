@@ -29,23 +29,28 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
 
 class Monad m => NameGen m where
     nextName :: NameKind -> m Name
-    updateNameGenState :: [(NameKind, Int)] -> m ()
+    exportNameGenState :: m [(NameKind, Int)]
+    importNameGenState :: [(NameKind, Int)] -> m ()
 
 instance NameGen m => NameGen (StateT st m) where
     nextName = lift . nextName
-    updateNameGenState = lift . updateNameGenState
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
 
 instance (NameGen m, Monoid w) => NameGen (WriterT w m) where
     nextName = lift . nextName
-    updateNameGenState = lift . updateNameGenState
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
 
 instance NameGen m => NameGen (ExceptT m) where
     nextName = lift . nextName
-    updateNameGenState = lift . updateNameGenState
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
 
 instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     nextName = lift . nextName
-    updateNameGenState = lift . updateNameGenState
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
 
 instance Monad m => NameGen (NameGenM m) where
     nextName k = do
@@ -57,15 +62,18 @@ instance Monad m => NameGen (NameGenM m) where
             Just !i -> do
                 modify $ M.insert k (i+1)
                 return $ MachineName k i []
-    updateNameGenState = modify . const . M.fromList
+    exportNameGenState = gets M.toList
+    importNameGenState = modify . const . M.fromList
 
 instance NameGen (Either Doc) where
     nextName _ = fail "nextName{Either Doc}"
-    updateNameGenState _ = fail "updateNameGenState{Either Doc}"
+    exportNameGenState = fail "exportNameGenState{Either Doc}"
+    importNameGenState _ = fail "importNameGenState{Either Doc}"
 
 instance NameGen Identity where
     nextName _ = fail "nextName{Identity}"
-    updateNameGenState _ = fail "updateNameGenState{Identity}"
+    exportNameGenState = fail "exportNameGenState{Identity}"
+    importNameGenState _ = fail "importNameGenState{Identity}"
 
 runNameGen :: Monad m => NameGenM m a -> m a
 runNameGen (NameGenM comp) = evalStateT comp initState

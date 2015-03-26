@@ -179,7 +179,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
     questions <- loopLevels $ map processLevel (allRules config)
     forM (zip allNats questions) $ \ (nQuestion, (focus, answers0)) -> do
         answers1 <- forM (zip allNats answers0) $ \ (nAnswer, (ruleName, RuleResult{..})) -> do
-            updateNameGenState $ model |> mInfo |> miNameGenState
+            importNameGenState $ model |> mInfo |> miNameGenState
             ruleResultExpr <- ruleResult
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
             let mtyBefore = typeOf (hole focus)
@@ -205,7 +205,13 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                 , "Expr2:" <+> pretty ruleResultExpr
                                 , "Error:" <+> pretty msg
                                 ]
-            fullModelAfterHook <- ruleResultHook fullModelBeforeHook
+            let updNameGenState m0 = do
+                    namegenst <- exportNameGenState
+                    let mi0 = mInfo m0
+                    let mi1 = mi0 { miNameGenState = namegenst }
+                    let m1  = m0  { mInfo = mi1 }
+                    return m1
+            fullModelAfterHook <- ruleResultHook fullModelBeforeHook >>= updNameGenState
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
