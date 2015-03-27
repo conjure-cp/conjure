@@ -5,16 +5,14 @@ import Conjure.Prelude
 
 -- tasty
 import Test.Tasty ( TestTree, TestName, testGroup )
-import Test.Tasty.Golden.Advanced ( goldenTest, vgReadFile )
+import Test.Tasty.Golden.Advanced ( goldenTest )
 
 -- shelly
 import Shelly ( run )
 
 -- text
-import Data.Text as T ( unpack )
-
--- bytestring
-import Data.ByteString.Lazy.Char8 as BS ( pack, unpack, writeFile )
+import Data.Text as T ( Text, unpack, lines )
+import Data.Text.IO as T ( readFile, writeFile )
 
 
 tests :: TestTree
@@ -28,10 +26,10 @@ tests = testGroup "golden"
                 goldenFile generatedFile
                 (\ gold gen -> return $
                     let
-                        goldLines  = lines  gold
-                        goldLength = length goldLines
-                        genLines   = lines  gen
-                        genLength  = length genLines
+                        goldLines  = T.lines  gold
+                        goldLength = length   goldLines
+                        genLines   = T.lines  gen
+                        genLength  = length   genLines
                         diffs      =
                             if goldLength /= genLength
                                 then
@@ -43,8 +41,8 @@ tests = testGroup "golden"
                                 else
                                     [ if goldLine == genLine
                                         then Nothing
-                                        else Just [ "Expected: " ++ goldLine
-                                                  , "But got : " ++ genLine
+                                        else Just [ "Expected: " ++ T.unpack goldLine
+                                                  , "But got : " ++ T.unpack genLine
                                                   ]
                                     -- drop 2 lines, to skip the version bit
                                     -- otherwise this test would never be able to pass!
@@ -54,7 +52,7 @@ tests = testGroup "golden"
                             [] -> Nothing
                             ls -> Just (unlines ("Files differ.":ls)) )
                 (do stdout <- sh $ run "conjure" ["--help=all"]
-                    BS.writeFile generatedFile (BS.pack (T.unpack stdout)))
+                    T.writeFile generatedFile stdout)
     ]
 
 
@@ -62,12 +60,12 @@ tests = testGroup "golden"
 goldenVsFile
     :: TestName
     -> FilePath -> FilePath
-    -> (String -> String -> IO (Maybe String))
+    -> (T.Text -> T.Text -> IO (Maybe String))
     -> IO ()
     -> TestTree
 goldenVsFile name ref new cmp act = goldenTest name
-    (vgReadFile ref)
-    (liftIO act >> vgReadFile new)
-    (cmp `on` BS.unpack)
+    (T.readFile ref)
+    (liftIO act >> T.readFile new)
+    (cmp)
     upd
-    where upd = BS.writeFile ref
+    where upd = T.writeFile ref
