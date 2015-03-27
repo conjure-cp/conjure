@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 
 export CORES=${CORES:-0}
-export GHC_VERSION=${GHC_VERSION:-"7.8.3"}
+export GHC_VERSION=${GHC_VERSION:-"7.8.4"}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
@@ -102,7 +102,7 @@ else
     if [ "$(grep ${GHC_VERSION} ${PLATFORM} etc/build/ghc_urls.txt)" ]; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM}" etc/build/ghc_urls.txt | cut -d ' ' -f 3)
         URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
-        wget -c "${URL}"
+        wget --no-check-certificate -c "${URL}"
         tar xvjf "${GHC_TARBALL}"
         pushd "ghc-${GHC_VERSION}"
         mkdir -p "${HOME}/.tools/ghc"
@@ -121,7 +121,7 @@ if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION_CHECK})" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} found."
 else
     echo "cabal-install version ${CABAL_VERSION_CHECK} not found. Installing version ${CABAL_VERSION}."
-    wget -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
+    wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
     bash bootstrap.sh --user --no-doc
