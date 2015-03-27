@@ -17,6 +17,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 typeCheckModel
     :: ( MonadFail m
        , MonadLog m
+       , NameGen m
        )
     => Model      -- essence param
     -> m ()

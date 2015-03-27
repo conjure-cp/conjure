@@ -15,12 +15,12 @@ import Conjure.Representations.Internal
 import Data.Text ( pack )
 
 
-tuple :: forall m . MonadFail m => Representation m
+tuple :: forall m . (MonadFail m, NameGen m) => Representation m
 tuple = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainTuple ds) = DomainTuple <$> mapM f ds
         chck _ _ = []
 
@@ -35,12 +35,12 @@ tuple = Representation chck downD structuralCons downC up
         downD _ = na "{downD}"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainTuple ds) = return $ \ fresh tup -> do
+        structuralCons f downX1 (DomainTuple ds) = return $ \ tup -> do
             refs <- downX1 tup
             concat <$> sequence
                 [ do
                     innerStructuralConsGen <- f dom
-                    outs                   <- innerStructuralConsGen (tail fresh) ref
+                    outs                   <- innerStructuralConsGen ref
                     return outs
                 | (ref, dom) <- zip refs ds
                 ]

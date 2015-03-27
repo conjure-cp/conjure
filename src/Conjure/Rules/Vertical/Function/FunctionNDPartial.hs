@@ -24,11 +24,12 @@ rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule`
             flagsIndexed  = make opMatrixIndexing flags  toIndex
             valuesIndexed = make opMatrixIndexing values toIndex
 
-        return ( "Function image, FunctionNDPartial representation, not-a-bool"
-               , const [essence| { &valuesIndexed
-                                 @ such that &flagsIndexed
-                                 } |]
-               )
+        return
+            ( "Function image, FunctionNDPartial representation, not-a-bool"
+            , return [essence| { &valuesIndexed
+                               @ such that &flagsIndexed
+                               } |]
+            )
     theRule _ = na "rule_Image_NotABool"
 
 
@@ -60,7 +61,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
                 let flagsCombined = make opAnd $ fromList flags
                 return
                     ( "Function image, FunctionNDPartial representation, bool"
-                    , const [essence| { &p' @ such that &flagsCombined } |]
+                    , return [essence| { &p' @ such that &flagsCombined } |]
                     )
 
 
@@ -76,11 +77,12 @@ rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule wh
                         | k' <- [1 .. genericLength ts]
                         , let k = fromInt k'
                         ]
-            flagsIndexed  = make opMatrixIndexing flags  toIndex
+            flagsIndexed = make opMatrixIndexing flags  toIndex
 
-        return ( "Function in defined, FunctionNDPartial representation"
-               , const flagsIndexed
-               )
+        return
+            ( "Function in defined, FunctionNDPartial representation"
+            , return flagsIndexed
+            )
     theRule _ = na "rule_InDefined"
 
 
@@ -97,18 +99,16 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionNDPartial representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    toIndex   = [ [essence| &j[&k] |]
+            , do
+                (jPat, j) <- quantifiedVar
+                let toIndex   = [ [essence| &j[&k] |]
                                 | k' <- [1 .. genericLength ts]
                                 , let k = fromInt k'
                                 ]
                     flagsIndexed  = make opMatrixIndexing flags  toIndex
                     valuesIndexed = make opMatrixIndexing values toIndex
                     val           = [essence| (&j, &valuesIndexed) |]
-                in
-                    Comprehension (upd val body)
+                return $ Comprehension (upd val body)
                     $  gocBefore
                     ++ [ Generator (GenDomainNoRepr jPat (forgetRepr $ DomainTuple ds))
                        , Condition flagsIndexed

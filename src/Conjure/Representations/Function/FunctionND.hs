@@ -16,12 +16,12 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionND :: forall m . MonadFail m => Representation m
+functionND :: forall m . (MonadFail m, NameGen m) => Representation m
 functionND = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(DomainTuple innerDomainFrs)
@@ -61,64 +61,58 @@ functionND = Representation chck downD structuralCons downC up
                 index x m 1     = make opIndexing m                     (make opIndexing x 1)
                 index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
 
-            let injectiveCons fresh values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        valuesIndexedI = index i values frArity
-                    in
+            let injectiveCons values = do
+                    (iPat, i) <- quantifiedVar
+                    let valuesIndexedI = index i values frArity
+                    return $ return $ -- list
                         [essence|
                             allDiff([ &valuesIndexedI
                                     | &iPat : &innerDomainFr
                                     ])
                         |]
 
-            let surjectiveCons fresh values = return $ -- list
-                    let
-                        (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-
-                        valuesIndexedJ = index j values frArity
-                    in
+            let surjectiveCons values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    let valuesIndexedJ = index j values frArity
+                    return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainTo .
                                 exists &jPat : &innerDomainFr .
                                     &valuesIndexedJ = &i
                         |]
 
-            let jectivityCons fresh values = case jectivityAttr of
-                    JectivityAttr_None       -> []
-                    JectivityAttr_Injective  -> injectiveCons  fresh values
-                    JectivityAttr_Surjective -> surjectiveCons fresh values
-                    JectivityAttr_Bijective  -> injectiveCons  fresh values
-                                       ++ surjectiveCons fresh values
+            let jectivityCons values = case jectivityAttr of
+                    JectivityAttr_None       -> return []
+                    JectivityAttr_Injective  -> injectiveCons  values
+                    JectivityAttr_Surjective -> surjectiveCons values
+                    JectivityAttr_Bijective  -> (++) <$> injectiveCons  values
+                                                     <*> surjectiveCons values
 
-            let cardinality fresh =
-                    let
-                        (iPat, _) = quantifiedVar (fresh `at` 0)
-                    in
-                        [essence| sum &iPat : &innerDomainFr . 1 |]
+            let cardinality = do
+                    (iPat, _) <- quantifiedVar
+                    return [essence| sum &iPat : &innerDomainFr . 1 |]
 
-            let innerStructuralCons fresh values = do
-                    let (iPat, i) = quantifiedVar (headInf fresh)
-                        valuesIndexedI = index i values frArity
+            let innerStructuralCons values = do
+                    (iPat, i) <- quantifiedVar
+                    let valuesIndexedI = index i values frArity
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomainTo
 
                     let inLoop = valuesIndexedI
-                    outs <- innerStructuralConsGen (tail fresh) inLoop
+                    outs <- innerStructuralConsGen inLoop
                     return (map activeZone outs)
 
-            return $ \ fresh func -> do
+            return $ \ func -> do
                 refs <- downX1 func
                 case refs of
-                    [values] -> do
-                        isc <- innerStructuralCons fresh values
-                        return $ concat
-                            [ jectivityCons fresh values
-                            , mkSizeCons sizeAttr (cardinality fresh)
-                            , isc
+                    [values] ->
+                        concat <$> sequence
+                            [ jectivityCons values
+                            , mkSizeCons sizeAttr <$> cardinality
+                            , innerStructuralCons values
                             ]
                     _ -> na "{structuralCons} FunctionND"
 

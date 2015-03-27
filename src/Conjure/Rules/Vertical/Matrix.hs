@@ -16,10 +16,10 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     val = make opIndexing expr i
-                 in  Comprehension (upd val body)
+            , do
+                 (iPat, i) <- quantifiedVar
+                 let val = make opIndexing expr i
+                 return $ Comprehension (upd val body)
                          $  gocBefore
                          ++ [Generator (GenDomainNoRepr iPat index)]
                          ++ transformBi (upd val) gocAfter
@@ -51,10 +51,9 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                    comprehensions =
+            , do
+                (iPat, i) <- quantifiedVar
+                let comprehensions =
                         [ Comprehension (upd i body)
                              $  gocBefore
                              ++ [Generator (GenInExpr iPat (mkM el))]
@@ -62,8 +61,7 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                         | el <- elems
                         ]
                     core = AbstractLiteral $ AbsLitMatrix index comprehensions
-                in
-                    make opMatrixIndexing core indices
+                return $ make opMatrixIndexing core indices
             )
     theRule _ = na "rule_Comprehension_LiteralIndexed"
 
@@ -79,11 +77,11 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-toSet"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     val  = make opIndexing i 1
-                     over = make opHist matrix
-                 in  Comprehension (upd val body)
+            , do
+                 (iPat, i) <- quantifiedVar
+                 let val  = make opIndexing i 1
+                 let over = make opHist matrix
+                 return $ Comprehension (upd val body)
                          $  gocBefore
                          ++ [Generator (GenInExpr iPat over)]
                          ++ transformBi (upd val) gocAfter
@@ -102,7 +100,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
         let upd val old = lambdaToFunction pat old val
         return
             ( "Nested matrix comprehension"
-            , const $ Comprehension (upd innerBody body)
+            , return $ Comprehension (upd innerBody body)
                          $  gocBefore
                          ++ innerGof
                          ++ transformBi (upd innerBody) gocAfter
@@ -131,7 +129,7 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
 --         domBody     <- domainOf body
 --         return
 --             ( "Vertical rule for comprehension over matrix-hist"
---             , \ fresh -> withAuxVar
+--             , do withAuxVar
 --                     (fresh `at` 0)
 --                     (DomainSet () def (forgetRepr domBody)) $ \ aux ->
 --                         make opAnd $ Comprehension [essence| &body in &aux |] goc
@@ -150,10 +148,10 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-hist"
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     (jPat, j) = quantifiedVar (fresh `at` 1)
-                     value = [essence| &matrix[&i] |]
+            , do
+                 (iPat, i) <- quantifiedVar
+                 (jPat, j) <- quantifiedVar
+                 let value = [essence| &matrix[&i] |]
                      -- if this is the left-most occurrence of value
                      -- count all
                      -- otherwise, 0
@@ -170,7 +168,7 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
                             , &j < &i
                             ])
                     |]
-                 in  Comprehension (upd val body)
+                 return $ Comprehension (upd val body)
                          $  gocBefore
                          ++ [ Generator (GenDomainNoRepr iPat index)
                             , Condition [essence| ! &appearsBefore |]
@@ -190,15 +188,15 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         DomainMatrix indexY _ <- domainOf y
         return
             ( "Horizontal rule for matrix ="
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                     (jPat, j) = quantifiedVar (fresh `at` 1)
-                 in  [essence| (forAll &iPat : &indexX . &x[&i] = &y[&i])
+            , do
+                 (iPat, i) <- quantifiedVar
+                 (jPat, j) <- quantifiedVar
+                 return [essence| (forAll &iPat : &indexX . &x[&i] = &y[&i])
                                 /\
                                (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
                                 /\
                                (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
-                             |]
+                               |]
             )
 
 
@@ -212,12 +210,12 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
         DomainMatrix indexY _ <- domainOf y
         return
             ( "Horizontal rule for matrix !="
-            , \ fresh ->
-                 let (iPat, i) = quantifiedVar (fresh `at` 0)
-                 in  [essence| (exists &iPat : &indexX . &x[&i] != &y[&i])
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| (exists &iPat : &indexX . &x[&i] != &y[&i])
                                  \/
                                (exists &iPat : &indexY . &x[&i] != &y[&i])
-                             |]
+                                |]
             )
 
 
@@ -243,7 +241,7 @@ rule_Matrix_Lt_Primitive = "matrix-lt-primitive" `namedRule` theRule where
         y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <"
-            , const [essence| &x' <lex &y' |]
+            , return [essence| &x' <lex &y' |]
             )
 
 
@@ -259,7 +257,7 @@ rule_Matrix_Lt_Decompose = "matrix-lt-tuple" `namedRule` theRule where
         ys <- downX1 y
         return
             ( "Horizontal rule for matrix <, decomposing"
-            , const $ decomposeLexLt p xs ys
+            , return $ decomposeLexLt p xs ys
             )
 
 
@@ -275,7 +273,7 @@ rule_Matrix_Leq_Primitive = "matrix-leq-primitive" `namedRule` theRule where
         y' <- flattenIfNeeded y
         return
             ( "Horizontal rule for matrix <="
-            , const [essence| &x' <=lex &y' |]
+            , return [essence| &x' <=lex &y' |]
             )
 
 
@@ -291,7 +289,7 @@ rule_Matrix_Leq_Decompose = "matrix-leq-tuple" `namedRule` theRule where
         ys <- downX1 y
         return
             ( "Horizontal rule for matrix <=, decomposing"
-            , const $ decomposeLexLeq p xs ys
+            , return $ decomposeLexLeq p xs ys
             )
 
 
@@ -305,7 +303,7 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
         let upd val old = lambdaToFunction pat old val
         return
             ( "Removing matrix-comprehension of a singleton int domain"
-            , const $
+            , return $
                 if null gocBefore && null gocAfter
                     then AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 1) [upd singleVal body]
                     else Comprehension (upd singleVal body)
@@ -321,7 +319,7 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
         (_mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opQuantifier p
         return
             ( "Removing quantifier of a single item"
-            , const $ singleVal
+            , return $ singleVal
             )
 
 
@@ -339,7 +337,7 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
                     Just v  ->
                         return
                             ( "Matrix indexing"
-                            , const v
+                            , return v
                             )
             else na "rule_MatrixIndexing"
 
@@ -353,6 +351,6 @@ rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
         if indexDomain == forgetRepr indexerDomain && all (firstElem==) restElems
             then return
                     ( "rule_IndexingIdentical"
-                    , const firstElem
+                    , return firstElem
                     )
             else na "rule_IndexingIdentical"

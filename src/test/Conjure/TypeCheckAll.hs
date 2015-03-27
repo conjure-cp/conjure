@@ -2,6 +2,7 @@ module Conjure.TypeCheckAll ( tests ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Language.NameGen ( runNameGen )
 import Conjure.UI.IO
 import Conjure.UI.TypeCheck
 
@@ -20,4 +21,4 @@ tests = do
 testSingle :: FilePath -> TestTree
 testSingle fp = testCase fp $ do
     model <- readModelFromFile fp
-    ignoreLogs $ typeCheckModel model
+    ignoreLogs $ runNameGen $ typeCheckModel model

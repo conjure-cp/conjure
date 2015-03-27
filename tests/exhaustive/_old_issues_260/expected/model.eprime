@@ -1,16 +1,16 @@
 language ESSENCE' 1.0
 
-given p1: int
-letting q1 be p1
-find a_Function1DPartial_Flags: matrix indexed by [int(0..q1)] of bool
-find a_Function1DPartial_Values: matrix indexed by [int(0..q1)] of int(1..3)
+given fin1: int
+letting let1 be fin1
+find a_Function1DPartial_Flags: matrix indexed by [int(0..let1)] of bool
+find a_Function1DPartial_Values: matrix indexed by [int(0..let1)] of int(1..3)
 such that
-    and([a_Function1DPartial_Flags[q2] /\ a_Function1DPartial_Flags[q3] ->
-         a_Function1DPartial_Values[q2] != a_Function1DPartial_Values[q3]
-             | q2 : int(0..q1), q3 : int(0..q1), q2 != q3]),
-    and([or([a_Function1DPartial_Flags[q3] /\ a_Function1DPartial_Values[q3] = q2
-                 | q3 : int(0..q1)])
-             | q2 : int(1..3)]),
-    and([a_Function1DPartial_Flags[q2] = false -> a_Function1DPartial_Values[q2] = 1
-             | q2 : int(0..q1)])
+    and([a_Function1DPartial_Flags[q1] /\ a_Function1DPartial_Flags[q2] ->
+         a_Function1DPartial_Values[q1] != a_Function1DPartial_Values[q2]
+             | q1 : int(0..let1), q2 : int(0..let1), q1 != q2]),
+    and([or([a_Function1DPartial_Flags[q4] /\ a_Function1DPartial_Values[q4] = q3
+                 | q4 : int(0..let1)])
+             | q3 : int(1..3)]),
+    and([a_Function1DPartial_Flags[q5] = false -> a_Function1DPartial_Values[q5] = 1
+             | q5 : int(0..let1)])
 

@@ -18,11 +18,10 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for set-comprehension, Explicit representation"
-            , \ fresh ->
-                let (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &m[&j] |]
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &m[&j] |]
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index) ]
                         ++ transformBi (upd val) gocAfter
@@ -44,13 +43,10 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
         let upd val old = lambdaToFunction setPat old val
         return
             ( "Vertical rule for set-comprehension, Explicit representation"
-            , \ fresh ->
-                let outPats =
-                        [ quantifiedVar (fresh `at` fromIntegral i) | i <- take setPatNum allNats ]
-                    val = AbstractLiteral $ AbsLitSet
-                        [ [essence| &m[&j] |] | (_,j) <- outPats ]
-                in
-                    Comprehension (upd val body) $ concat
+            , do
+                outPats <- replicateM setPatNum quantifiedVar
+                let val = AbstractLiteral $ AbsLitSet [ [essence| &m[&j] |] | (_,j) <- outPats ]
+                return $ Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index) ]
@@ -75,6 +71,7 @@ rule_Card = "set-card{Explicit}" `namedRule` theRule where
         TypeSet{}                                 <- typeOf s
         "Explicit"                                <- representationOf s
         DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
-        return ( "Vertical rule for set cardinality, Explicit representation."
-               , const n
-               )
+        return
+            ( "Vertical rule for set cardinality, Explicit representation."
+            , return n
+            )

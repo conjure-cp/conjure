@@ -15,14 +15,14 @@ import Conjure.Representations.Common
 
 
 partitionAsSet
-    :: forall m . MonadFail m
+    :: forall m . (MonadFail m, NameGen m)
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> Representation m
 partitionAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainPartition _ attrs innerDomain) = DomainPartition "PartitionAsSet" attrs <$> f innerDomain
         chck _ _ = []
 
@@ -46,13 +46,13 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
             return $ Just [ ( outName name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ fresh inpRel -> do
+        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
-                atMostOnce rel =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in
+                atMostOnce rel = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- for list
                         if isComplete attrs
                             then
                                 [essence|
@@ -71,37 +71,36 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                                   ])
                                 |]
 
-                regular rel | isRegular attrs =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                        (jPat, j) = quantifiedVar (fresh `at` 1)
-                    in  return -- for list
+                regular rel | isRegular attrs = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return -- for list
                         [essence|
                             and([ |&i| = |&j|
                                 | &iPat <- &rel
                                 , &jPat <- &rel
                                 ])
                         |]
-                regular _ = []
+                regular _ = return []
 
-                participantsCardinality rel =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| sum([ |&i| | &iPat <- &rel ]) |]
+                participantsCardinality rel = do
+                    (iPat, i) <- quantifiedVar
+                    return [essence| sum([ |&i| | &iPat <- &rel ]) |]
 
-                partsAren'tEmpty rel =
-                    let (iPat, i) = quantifiedVar (fresh `at` 0)
-                    in  [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
+                partsAren'tEmpty rel = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
             case refs of
                 [rel] -> do
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
-                    cons                   <- innerStructuralConsGen fresh rel
-                    return $ concat
-                        [ [ atMostOnce rel ]
-                        , mkSizeCons (participantsSize attrs) (participantsCardinality rel)
+                    concat <$> sequence
+                        [ atMostOnce rel
+                        , mkSizeCons (participantsSize attrs) <$> participantsCardinality rel
                         , regular rel
-                        , [ partsAren'tEmpty rel ]
-                        , cons
+                        , partsAren'tEmpty rel
+                        , innerStructuralConsGen rel
                         ]
                 _ -> na $ vcat [ "{structuralCons} PartitionAsSet"
                                , pretty inDom

@@ -1,11 +1,11 @@
 language ESSENCE' 1.0
 
-given p1: int
-given p2: int
-given p3: int
-given s_Occurrence: matrix indexed by [int(p2..p3)] of bool
-letting q1 be p2
-letting q2 be p3
-find x: int(q1..q2)
+given fin1: int
+given fin2: int
+given fin3: int
+given s_Occurrence: matrix indexed by [int(fin2..fin3)] of bool
+letting let1 be fin2
+letting let2 be fin3
+find x: int(let1..let2)
 such that s_Occurrence[x]
 

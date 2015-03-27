@@ -18,11 +18,10 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithFlags}" `namedRule` t
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlags representation"
-            , \ fresh ->
-                let (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &values[&j] |]
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &values[&j] |]
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
                            , Condition [essence| &flags[&j] |]
@@ -46,13 +45,11 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithFla
         let upd val old = lambdaToFunction setPat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlagst representation"
-            , \ fresh ->
-                let outPats =
-                        [ quantifiedVar (fresh `at` fromInteger i) | i <- take setPatNum allNats ]
-                    val = AbstractLiteral $ AbsLitSet
+            , do
+                outPats <- replicateM setPatNum quantifiedVar
+                let val = AbstractLiteral $ AbsLitSet
                         [ [essence| &values[&j] |] | (_,j) <- outPats ]
-                in
-                    Comprehension (upd val body) $ concat
+                return $ Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)

@@ -15,22 +15,18 @@ rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule wher
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
             )
     theRule [essence| &y = image(&func, &x) |] = do
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] = &y | &iPat <- &rel ]) |]
             )
 
     -- <=
@@ -39,22 +35,18 @@ rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule wher
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
             )
     theRule [essence| &y >= image(&func, &x) |] = do
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] <= &y | &iPat <- &rel ]) |]
             )
 
     -- >=
@@ -63,22 +55,18 @@ rule_Image_Eq = "function-image-eq{FunctionAsRelation}" `namedRule` theRule wher
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
             )
     theRule [essence| &y <= image(&func, &x) |] = do
         "FunctionAsRelation" <- representationOf func
         [rel]                <- downX1 func
         return
             ( "Function image-equals, FunctionAsRelation representation"
-            , \ fresh ->
-                let
-                    (iPat, i) = quantifiedVar (fresh `at` 0)
-                in
-                    [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| or([ &i[1] = &x /\ &i[2] >= &y | &iPat <- &rel ]) |]
             )
 
     theRule _ = na "rule_Image"
@@ -94,7 +82,7 @@ rule_Comprehension = "function-comprehension{FunctionAsRelation}" `namedRule` th
         [rel]                <- downX1 func
         return
             ( "Mapping over a function, FunctionAsRelation representation"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat rel) ]

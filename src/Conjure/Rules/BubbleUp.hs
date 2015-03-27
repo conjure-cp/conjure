@@ -10,7 +10,7 @@ rule_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
     theRule (WithLocals (WithLocals body (Right locals1)) (Right locals2)) =
         return
             ( "Merging nested bubbles"
-            , const $ WithLocals body (Right (locals1 ++ locals2))
+            , return $ WithLocals body (Right (locals1 ++ locals2))
             )
     theRule _ = na "rule_MergeNested"
 
@@ -77,14 +77,14 @@ rule_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
 
 rule_ToAnd :: Rule
 rule_ToAnd = "bubble-to-and" `namedRule` theRule where
-    theRule (WithLocals x (Left  [])) = return ("Empty bubble is no bubble", const x)
-    theRule (WithLocals x (Right [])) = return ("Empty bubble is no bubble", const x)
+    theRule (WithLocals x (Left  [])) = return ("Empty bubble is no bubble", return x)
+    theRule (WithLocals x (Right [])) = return ("Empty bubble is no bubble", return x)
     theRule (WithLocals x (Right locals@(_:_))) = do
         TypeBool <- typeOf x
         let out = make opAnd $ fromList (x:locals)
         return
             ( "Converting a bubble into a conjunction."
-            , const out
+            , return out
             )
     theRule _ = na "rule_BubbleToAnd"
 
@@ -114,7 +114,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
 
         return
             ( "Bubbling up (through comprehension), not reached a relational context yet."
-            , const $ WithLocals (Comprehension body gensOrConds) (Right localsLifted)
+            , return $ WithLocals (Comprehension body gensOrConds) (Right localsLifted)
             )
         
     theRule p = do
@@ -130,7 +130,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             na "rule_NotBoolYet doesn't have any bubbly children"
         return
             ( "Bubbling up, not reached a relational context yet."
-            , const $ WithLocals p' (Right collected)
+            , return $ WithLocals p' (Right collected)
             )
 
 
@@ -165,7 +165,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
-            , const $ WithLocals
+            , return $ WithLocals
                          (Comprehension (transform upd body)
                              $  transformBi upd gocBefore
                              ++ [Generator (GenDomainHasRepr patName indexDomain)]
@@ -184,5 +184,5 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             na "rule_LiftVars doesn't have any bubbly children"
         return
             ( "Bubbling up auxiliary variables."
-            , const $ WithLocals p' (Left collected)
+            , return $ WithLocals p' (Left collected)
             )

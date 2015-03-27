@@ -79,10 +79,10 @@ import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState, StateT, gets, modify, evalStateT, runStateT, evalState, runState )
-import Control.Monad.Trans.Identity as X ( IdentityT, runIdentityT )
+import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify, evalStateT, runStateT, evalState, runState )
+import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
-import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT, runWriterT, execWriterT, runWriter )
+import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(..), execWriterT, runWriter )
 import Control.Arrow             as X ( first, second, (***), (&&&) )
 import Control.Category          as X ( (<<<), (>>>) )
 
@@ -279,7 +279,7 @@ padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
 decodeFromFile :: Serialize a => FilePath -> IO a
 decodeFromFile path = do
     con <- ByteString.readFile path
-    either error return (decode con)
+    either (fail . stringToDoc) return (decode con)
 
 class Monad m => RandomM m where
     get_stdgen :: m StdGen
@@ -323,13 +323,13 @@ na :: MonadFail m => Doc -> m a
 na message = fail ("N/A:" <+> message)
 
 instance MonadFail Identity where
-    fail = error . show
+    fail = Control.Monad.fail . show
 
 instance MonadFail Maybe where
     fail = const Nothing
 
 instance MonadFail IO where
-    fail msg = error $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
+    fail msg = Control.Monad.fail $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
 
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
@@ -378,6 +378,9 @@ instance (Monad m) => Monad (ExceptT m) where
             Left e -> return (Left e)
             Right x -> runExceptT (k x)
     fail = ExceptT . return . Left . stringToDoc
+
+instance MonadTrans ExceptT where
+    lift comp = ExceptT (Right `liftM` comp)
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,

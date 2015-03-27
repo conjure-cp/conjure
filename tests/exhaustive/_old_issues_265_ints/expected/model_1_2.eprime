@@ -1,46 +1,47 @@
 language ESSENCE' 1.0
 
-given p1: int
+given fin1: int
 given f_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 given f_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
 find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
-find q5_Occurrence: matrix indexed by [int(0, 1)] of bool
-find q10_ExplicitVarSizeWithMarker_Marker: int(0..2)
-find q10_ExplicitVarSizeWithMarker_Values:
+find aux1_Occurrence: matrix indexed by [int(0, 1)] of bool
+find aux2_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find aux2_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2)] of int(0, 1)
 such that
-    and([q5_Occurrence[q2] | q2 : int(0, 1), f_Function1DPartial_Flags[q2]]),
-    and([q5_Occurrence[q7] ->
-         or([q9 = q7 | q9 : int(0, 1), f_Function1DPartial_Flags[q9]])
-             | q7 : int(0, 1)]),
-    2 <= q10_ExplicitVarSizeWithMarker_Marker ->
-    q10_ExplicitVarSizeWithMarker_Values[1] <
-    q10_ExplicitVarSizeWithMarker_Values[2],
-    and([q8 > q10_ExplicitVarSizeWithMarker_Marker ->
-         q10_ExplicitVarSizeWithMarker_Values[q8] = 0
-             | q8 : int(1..2)]),
-    and([fprime_Function1DPartial_Flags[q11] ->
-         or([q16 <= q10_ExplicitVarSizeWithMarker_Marker /\
-             q10_ExplicitVarSizeWithMarker_Values[q16] = q11
-                 | q16 : int(1..2)])
-             | q11 : int(0, 1)]),
-    and([q15 <= q10_ExplicitVarSizeWithMarker_Marker ->
-         or([fprime_Function1DPartial_Flags[q12] /\
-             q12 = q10_ExplicitVarSizeWithMarker_Values[q15]
-                 | q12 : int(0, 1)])
-             | q15 : int(1..2)]),
-    and([fprime_Function1DPartial_Values[q3] = f_Function1DPartial_Values[q3] /\
-         fprime_Function1DPartial_Flags[q3]
-             | q3 : int(0, 1), f_Function1DPartial_Flags[q3]]),
-    and([fprime_Function1DPartial_Flags[q4] ->
-         f_Function1DPartial_Values[q4] = fprime_Function1DPartial_Values[q4] /\
-         f_Function1DPartial_Flags[q4]
-             | q4 : int(0, 1)]),
-    and([q5_Occurrence[q6] -> fprime_Function1DPartial_Flags[q6] | q6 : int(0, 1)]),
-    and([q14 <= q10_ExplicitVarSizeWithMarker_Marker ->
-         f_Function1DPartial_Flags[q10_ExplicitVarSizeWithMarker_Values[q14]]
-             | q14 : int(1..2)]),
+    and([aux1_Occurrence[q12] | q12 : int(0, 1), f_Function1DPartial_Flags[q12]]),
+    and([aux1_Occurrence[q9] ->
+         or([q13 = q9 | q13 : int(0, 1), f_Function1DPartial_Flags[q13]])
+             | q9 : int(0, 1)]),
+    2 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+    aux2_ExplicitVarSizeWithMarker_Values[1] <
+    aux2_ExplicitVarSizeWithMarker_Values[2],
+    and([q19 > aux2_ExplicitVarSizeWithMarker_Marker ->
+         aux2_ExplicitVarSizeWithMarker_Values[q19] = 0
+             | q19 : int(1..2)]),
+    and([fprime_Function1DPartial_Flags[q22] ->
+         or([q26 <= aux2_ExplicitVarSizeWithMarker_Marker /\
+             aux2_ExplicitVarSizeWithMarker_Values[q26] = q22
+                 | q26 : int(1..2)])
+             | q22 : int(0, 1)]),
+    and([q23 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+         or([fprime_Function1DPartial_Flags[q24] /\
+             q24 = aux2_ExplicitVarSizeWithMarker_Values[q23]
+                 | q24 : int(0, 1)])
+             | q23 : int(1..2)]),
+    and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
+         fprime_Function1DPartial_Flags[q5]
+             | q5 : int(0, 1), f_Function1DPartial_Flags[q5]]),
+    and([fprime_Function1DPartial_Flags[q6] ->
+         f_Function1DPartial_Values[q6] = fprime_Function1DPartial_Values[q6] /\
+         f_Function1DPartial_Flags[q6]
+             | q6 : int(0, 1)]),
+    and([aux1_Occurrence[q8] -> fprime_Function1DPartial_Flags[q8]
+             | q8 : int(0, 1)]),
+    and([q21 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+         f_Function1DPartial_Flags[aux2_ExplicitVarSizeWithMarker_Values[q21]]
+             | q21 : int(1..2)]),
     and([fprime_Function1DPartial_Flags[q1] = false ->
          fprime_Function1DPartial_Values[q1] = 0
              | q1 : int(0, 1)])

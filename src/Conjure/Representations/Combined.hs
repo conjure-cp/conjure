@@ -40,7 +40,7 @@ import Conjure.Representations.Partition.PartitionAsSet
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
 downToX1
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     => FindOrGiven
     -> Name
     -> DomainX Expression
@@ -50,7 +50,7 @@ downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>           (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
@@ -58,7 +58,7 @@ downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 -- | Refine (down) a domain, together with a constant (C), one level (1).
 --   The domain has to be fully instantiated.
 downC1
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
 downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, constant)
@@ -68,7 +68,7 @@ downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, consta
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up1
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>   (Name, DomainC)
     ->  [(Name, Constant)]
     -> m (Name, Constant)
@@ -78,7 +78,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>    (Name, DomainX Expression)
     -> m [(Name, DomainX Expression)]
 downD inp@(_, domain) = do
@@ -90,7 +90,7 @@ downD inp@(_, domain) = do
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
 downC
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
 downC inp = do
@@ -103,7 +103,7 @@ downC inp = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     =>  [(Name, Constant)]
     ->   (Name, DomainC)
     -> m (Name, Constant)
@@ -128,7 +128,7 @@ up ctxt (name, highDomain) = do
 
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
-dispatch :: (MonadFail m, Pretty x) => Domain HasRepresentation x -> Representation m
+dispatch :: (MonadFail m, NameGen m, Pretty x) => Domain HasRepresentation x -> Representation m
 dispatch domain = do
     let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
@@ -205,10 +205,10 @@ reprOptions domain = go allReprs
 --   Makes recursive calls to generate the complete structural constraints.
 --   Takes in a function to refine inner guys.
 getStructurals
-    :: MonadFail m
+    :: (MonadFail m, NameGen m)
     => (Expression -> m [Expression])
     -> DomainX Expression
-    -> m ([Name] -> Expression -> m [Expression])
+    -> m (Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
 
@@ -216,12 +216,12 @@ getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals dow
 --   This rule handles the plumbing for matrices.
 --   It is in this module because it recursively calls the other representations via `allReprs`.
 --   And it is also included in `allReprs`.
-matrix :: forall m . MonadFail m => Representation m
+matrix :: forall m . (MonadFail m, NameGen m) => Representation m
 matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainMatrix indexDomain innerDomain) = DomainMatrix indexDomain <$> f innerDomain
         chck _ _ = []
 
@@ -237,18 +237,18 @@ matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
         structuralCons :: TypeOf_Structural m
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
-                innerStructuralCons fresh inpMatrix = do
-                    let (iPat, i) = quantifiedVar (headInf fresh)
+                innerStructuralCons inpMatrix = do
+                    (iPat, i) <- quantifiedVar
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
 
                     let inLoop r = [essence| &r[&i] |]
-                    outs <- innerStructuralConsGen (tail fresh) (inLoop inpMatrix)
+                    outs <- innerStructuralConsGen (inLoop inpMatrix)
                     return (map activeZone outs)
 
-            return $ \ fresh inpMatrix -> innerStructuralCons fresh inpMatrix
+            return $ \ inpMatrix -> innerStructuralCons inpMatrix
 
         structuralCons _ _ _ = na "{structuralCons} matrix 2"
 

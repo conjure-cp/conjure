@@ -19,7 +19,7 @@ rule_Image = "function-image{FunctionND}" `namedRule` theRule where
             valuesIndexed = make opMatrixIndexing values toIndex
         return
             ( "Function image, FunctionND representation"
-            , const valuesIndexed
+            , return valuesIndexed
             )
     theRule _ = na "rule_Image"
 
@@ -37,17 +37,15 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionND representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    toIndex   = [ [essence| &j[&k] |]
+            , do
+                (jPat, j) <- quantifiedVar
+                let toIndex   = [ [essence| &j[&k] |]
                                 | k' <- [1 .. genericLength ts]
                                 , let k = fromInt k'
                                 ]
                     valuesIndexed = make opMatrixIndexing values toIndex
                     val  = [essence| (&j, &valuesIndexed) |]
-                in
-                    Comprehension (upd val body)
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat (forgetRepr indexDomain)) ]
                         ++ transformBi (upd val) gocAfter
@@ -67,12 +65,10 @@ rule_Comprehension_Defined = "function-comprehension_defined{FunctionND}" `named
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over a function, FunctionND representation"
-            , \ fresh ->
-                let
-                    (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = j
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = j
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat (forgetRepr indexDomain)) ]
                         ++ transformBi (upd val) gocAfter

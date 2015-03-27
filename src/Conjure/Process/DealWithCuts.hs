@@ -9,13 +9,13 @@ import Conjure.Language.Domain
 import Conjure.Language.TH
 
 
-data St = St { varCounter :: Int, seenSearchOrder :: Bool, finds :: [Name] }
+data St = St { seenSearchOrder :: Bool, finds :: [Name] }
 
 dealWithCuts
-    :: (MonadFail m, MonadLog m)
+    :: (MonadFail m, MonadLog m, NameGen m)
     => Model
     -> m Model
-dealWithCuts m = flip evalStateT (St 1 False []) $ do
+dealWithCuts m = flip evalStateT (St False []) $ do
     statements <- forM (mStatements m) $ \ statement ->
         case statement of
             SearchOrder orders0 -> do
@@ -25,7 +25,7 @@ dealWithCuts m = flip evalStateT (St 1 False []) $ do
                 (orders1, (newVars, newCons)) <- runWriterT $ forM orders0 $ \ order ->
                     case order of
                         Cut x -> do
-                            varName <- nextName
+                            varName <- nextName "cut"
                             let varDecl = Declaration (FindOrGiven Find varName DomainBool)
                             let varRef  = Reference varName (Just (DeclNoRepr Find varName DomainBool))
                             tell ( [ varDecl ]
@@ -49,9 +49,3 @@ dealWithCuts m = flip evalStateT (St 1 False []) $ do
                 return [statement]
             _ -> return [statement]
     return m { mStatements = concat statements }
-
-nextName :: MonadState St m => m Name
-nextName = do
-    !i <- gets varCounter
-    modify $ \ st -> st { varCounter = succ (varCounter st) }
-    return (MachineName "cut" i [])

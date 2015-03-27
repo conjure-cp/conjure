@@ -24,25 +24,28 @@ mkSizeCons sizeAttr cardinality =
                                    , [essence| &cardinality <= &y |]
                                    ]
 
-mkBinRelCons :: Pretty r => BinaryRelationAttrs -> [Name] -> Domain r Expression -> Expression -> [Expression]
-mkBinRelCons (BinaryRelationAttrs binRelAttrs) fresh dom rel = concatMap one (S.toList binRelAttrs) where
-    (xP, x) = quantifiedVar (fresh `at` 0)
-    (yP, y) = quantifiedVar (fresh `at` 1)
-    (zP, z) = quantifiedVar (fresh `at` 2)
+mkBinRelCons :: (NameGen m, Pretty r) => BinaryRelationAttrs -> Domain r Expression -> Expression -> m [Expression]
+mkBinRelCons (BinaryRelationAttrs binRelAttrs) dom rel = do
+    (xP, x) <- quantifiedVar
+    (yP, y) <- quantifiedVar
+    (zP, z) <- quantifiedVar
 
-    one BinRelAttr_Reflexive     = return [essence| forAll &xP           : &dom . &rel(&x,&x) |]
-    one BinRelAttr_Irreflexive   = return [essence| forAll &xP           : &dom . !(&rel(&x,&x)) |]
-    one BinRelAttr_Coreflexive   = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &x=&y |]
-    one BinRelAttr_Symmetric     = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &rel(&y,&x) |]
-    one BinRelAttr_AntiSymmetric = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) /\ &rel(&y,&x) -> &x=&y |]
-    one BinRelAttr_ASymmetric    = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> !(&rel(&y,&x)) |]
-    one BinRelAttr_Transitive    = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
-    one BinRelAttr_Total         = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
-    one BinRelAttr_Connex        = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y) |]
-    one BinRelAttr_Euclidean     = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
-    one BinRelAttr_Serial        = return [essence| forAll &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]
-    one BinRelAttr_Equivalence   = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
-    one BinRelAttr_PartialOrder  = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+    let
+        one BinRelAttr_Reflexive     = return [essence| forAll &xP           : &dom . &rel(&x,&x) |]
+        one BinRelAttr_Irreflexive   = return [essence| forAll &xP           : &dom . !(&rel(&x,&x)) |]
+        one BinRelAttr_Coreflexive   = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &x=&y |]
+        one BinRelAttr_Symmetric     = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> &rel(&y,&x) |]
+        one BinRelAttr_AntiSymmetric = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) /\ &rel(&y,&x) -> &x=&y |]
+        one BinRelAttr_ASymmetric    = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) -> !(&rel(&y,&x)) |]
+        one BinRelAttr_Transitive    = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&y,&z) -> &rel(&x,&z) |]
+        one BinRelAttr_Total         = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) |]
+        one BinRelAttr_Connex        = return [essence| forAll &xP, &yP      : &dom . &rel(&x,&y) \/ &rel(&y,&x) \/ (&x = &y) |]
+        one BinRelAttr_Euclidean     = return [essence| forAll &xP, &yP, &zP : &dom . &rel(&x,&y) /\ &rel(&x,&z) -> &rel(&y,&z) |]
+        one BinRelAttr_Serial        = return [essence| forAll &xP : &dom . exists &yP : &dom . &rel(&x,&y) |]
+        one BinRelAttr_Equivalence   = one BinRelAttr_Reflexive ++ one BinRelAttr_Symmetric     ++ one BinRelAttr_Transitive
+        one BinRelAttr_PartialOrder  = one BinRelAttr_Reflexive ++ one BinRelAttr_AntiSymmetric ++ one BinRelAttr_Transitive
+
+    return $ concatMap one (S.toList binRelAttrs)
 
 -- reflexive        forAll x : T . rel(x,x)
 -- irreflexive      forAll x : T . !rel(x,x)

@@ -14,7 +14,7 @@ rule_Comprehension = "relation-map_in_expr{RelationAsSet}" `namedRule` theRule w
         [set]                  <- downX1 rel
         return
             ( "Vertical rule for map_in_expr for relation domains, RelationAsSet representation."
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat set) ]

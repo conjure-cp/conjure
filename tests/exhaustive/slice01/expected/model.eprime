@@ -9,8 +9,8 @@ find y4: matrix indexed by [int(1..2)] of int(0..100)
 such that
     x1 = 6,
     x2 = 15,
-    and([y1[q1] = [6, 15; int(1..2)][q1] | q1 : int(1..2)]),
-    and([y2[q2] = [15, 6; int(1..2)][q2] | q2 : int(1..2)]),
-    and([y3[q3] = [13, 37; int(1..2)][q3] | q3 : int(1..2)]),
-    and([y4[q4] = [x1, x2; int(1..2)][q4] | q4 : int(1..2)])
+    and([y1[q5] = [6, 15; int(1..2)][q5] | q5 : int(1..2)]),
+    and([y2[q7] = [15, 6; int(1..2)][q7] | q7 : int(1..2)]),
+    and([y3[q9] = [13, 37; int(1..2)][q9] | q9 : int(1..2)]),
+    and([y4[q11] = [x1, x2; int(1..2)][q11] | q11 : int(1..2)])
 

@@ -8,15 +8,15 @@ such that
     s_Occurrence[s_ExplicitVarSizeWithMarker_Marker],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
     s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
-    and([q1 > s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q1] = 1
-             | q1 : int(1..2)]),
-    and([s_Occurrence[q2] ->
-         or([q4 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q4] = q2
-                 | q4 : int(1..2)])
+    and([q2 > s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q2] = 1
              | q2 : int(1..2)]),
-    and([q5 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q5]]
-             | q5 : int(1..2)])
+    and([s_Occurrence[q5] ->
+         or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q7] = q5
+                 | q7 : int(1..2)])
+             | q5 : int(1..2)]),
+    and([q9 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q9]]
+             | q9 : int(1..2)])
 

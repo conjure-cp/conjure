@@ -17,6 +17,7 @@ import Conjure.Representations ( downC )
 refineParam
     :: ( MonadFail m
        , MonadLog m
+       , NameGen m
        )
     => Model      -- eprime model
     -> Model      -- essence param

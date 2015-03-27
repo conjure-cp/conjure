@@ -18,6 +18,7 @@ import Data.Text as T ( pack )
 translateSolution
     :: ( MonadFail m
        , MonadLog m
+       , NameGen m
        )
     => Model      -- eprime model
     -> Model      -- essence param

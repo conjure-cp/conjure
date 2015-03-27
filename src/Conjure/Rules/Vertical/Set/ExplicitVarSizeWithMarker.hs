@@ -18,11 +18,10 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
-            , \ fresh ->
-                let (jPat, j) = quantifiedVar (fresh `at` 0)
-                    val = [essence| &values[&j] |]
-                in
-                    Comprehension (upd val body)
+            , do
+                (jPat, j) <- quantifiedVar
+                let val = [essence| &values[&j] |]
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
                            , Condition [essence| &j <= &marker |]
@@ -46,13 +45,10 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
         let upd val old = lambdaToFunction setPat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
-            , \ fresh ->
-                let outPats =
-                        [ quantifiedVar (fresh `at` fromInteger i) | i <- take setPatNum allNats ]
-                    val = AbstractLiteral $ AbsLitSet
-                        [ [essence| &j <= &marker |] | (_,j) <- outPats ]
-                in
-                    Comprehension (upd val body) $ concat
+            , do
+                outPats <- replicateM setPatNum quantifiedVar
+                let val = AbstractLiteral $ AbsLitSet [ [essence| &j <= &marker |] | (_,j) <- outPats ]
+                return $ Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
@@ -80,6 +76,7 @@ rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
         [marker, _values]           <- downX1 s
-        return ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
-               , const marker
-               )
+        return
+            ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
+            , return marker
+            )

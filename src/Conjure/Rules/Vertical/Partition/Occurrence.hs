@@ -19,17 +19,16 @@ rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule w
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, Occurrence representation"
-            , \ fresh ->
-                let (pPat, p) = quantifiedVar (fresh `at` 0)
-                    (iPat, i) = quantifiedVar (fresh `at` 1)
+            , do
+                (pPat, p) <- quantifiedVar
+                (iPat, i) <- quantifiedVar
                     -- the value, a set representing the i'th part
-                    val = make opToSet $ Comprehension i
+                let val = make opToSet $ Comprehension i
                         [ Generator (GenDomainNoRepr iPat indexDom)
                         , Condition [essence| &flags[&i] |]
                         , Condition [essence| &parts[&i] = &p |]
                         ]
-                in
-                    Comprehension (upd val body)
+                return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr pPat indexDom)          -- part number p
                            , Condition [essence| &p <= &nbParts |]

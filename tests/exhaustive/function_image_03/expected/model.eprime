@@ -4,12 +4,12 @@ find b: bool
 find i: int(0..5)
 find x: int(1..2)
 such that
-    or([or([[5, x; int(1..2)][q2] = [2, 5; int(1..2)][q1] /\
-            [false, true; int(1..2)][q2]
-                | q2 : int(1..2)])
-        = [true, false; int(1..2)][q1]
-        /\ [2, 5; int(1..2)][q1] = i
-        /\ [true, false; int(1..2)][q1]
-            | q1 : int(1..2)])
+    or([or([[5, x; int(1..2)][q6] = [2, 5; int(1..2)][q3] /\
+            [false, true; int(1..2)][q6]
+                | q6 : int(1..2)])
+        = [true, false; int(1..2)][q3]
+        /\ [2, 5; int(1..2)][q3] = i
+        /\ [true, false; int(1..2)][q3]
+            | q3 : int(1..2)])
     = b
 

@@ -14,12 +14,12 @@ import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-relationAsMatrix :: forall m . MonadFail m => Representation m
+relationAsMatrix :: forall m . (MonadFail m, NameGen m) => Representation m
 relationAsMatrix = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck m
+        chck :: TypeOf_ReprCheck
         chck f (DomainRelation _ attrs innerDomains) | all domainCanIndexMatrix innerDomains =
             DomainRelation "RelationAsMatrix" attrs <$> mapM f innerDomains
         chck _ _ = []
@@ -42,28 +42,30 @@ relationAsMatrix = Representation chck downD structuralCons downC up
         structuralCons _ downX1
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains)
                 | all domainCanIndexMatrix innerDomains = do
-            let cardinality fresh m =
+            let cardinality m = do
                     let unroll _ [] = bug "RelationAsMatrix.cardinality.unroll []"
-                        unroll n [((iPat, i), dom)] =
-                                [essence| sum &iPat : &dom . toInt(&n[&i]) |]
-                        unroll n (((iPat, i), dom) : rest) =
-                            let r = unroll [essence| &n[&i] |] rest
-                            in  [essence| sum &iPat : &dom . &r |]
-                    in  unroll m (zip [ quantifiedVar f | f <- fresh ] innerDomains)
-            return $ \ fresh rel -> do
+                        unroll n [dom] = do
+                            (iPat, i) <- quantifiedVar
+                            return [essence| sum &iPat : &dom . toInt(&n[&i]) |]
+                        unroll n (dom : rest) = do
+                            (iPat, i) <- quantifiedVar
+                            r <- unroll [essence| &n[&i] |] rest
+                            return [essence| sum &iPat : &dom . &r |]
+                    unroll m innerDomains
+            return $ \ rel -> do
                 refs <- downX1 rel
                 case refs of
                     [m] -> do
                         binRelCons <- if binRelAttr == def then return [] else
                             case innerDomains of
                                 [innerDomain1, innerDomain2] | innerDomain1 == innerDomain2 ->
-                                    return (mkBinRelCons binRelAttr fresh innerDomain1 rel)
+                                    mkBinRelCons binRelAttr innerDomain1 rel
                                 [_, _] -> fail "Binary relation between different domains."
                                 _      -> fail "Non-binary relation."
-                        return $ concat
-                                    [ mkSizeCons sizeAttr (cardinality fresh m)
-                                    , binRelCons
-                                    ]
+                        concat <$> sequence
+                            [ mkSizeCons sizeAttr <$> cardinality m
+                            , return binRelCons
+                            ]
                     _ -> na "{structuralCons} RelationAsMatrix"
         structuralCons _ _ _ = na "{structuralCons} RelationAsMatrix"
 

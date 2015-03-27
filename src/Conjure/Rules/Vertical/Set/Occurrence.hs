@@ -18,7 +18,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
         let i = Reference iPat Nothing
         return
             ( "Vertical rule for set-comprehension, Occurrence representation"
-            , const $
+            , return $
                 Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenDomainNoRepr pat index)
@@ -45,7 +45,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
         DomainMatrix index _ <- domainOf m
         return
             ( "Vertical rule for set-comprehension, Occurrence representation"
-            , const $
+            , return $
                 Comprehension body $ concat
                     [ gocBefore
                     , concat
@@ -77,6 +77,7 @@ rule_In = "set-in{Occurrence}" `namedRule` theRule where
         TypeSet{}    <- typeOf s
         "Occurrence" <- representationOf s
         [m]          <- downX1 s
-        return ( "Vertical rule for set-in, Occurrence representation"
-               , const $ make opIndexing m x
-               )
+        return
+            ( "Vertical rule for set-in, Occurrence representation"
+            , return $ make opIndexing m x
+            )

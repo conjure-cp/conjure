@@ -3,26 +3,28 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
-find q3_ExplicitVarSizeWithMarker_Marker: int(0..2)
-find q3_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of bool
+find aux1_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find aux1_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..2)] of bool
 such that
-    2 <= q3_ExplicitVarSizeWithMarker_Marker ->
-    q3_ExplicitVarSizeWithMarker_Values[1] < q3_ExplicitVarSizeWithMarker_Values[2],
-    and([q2 > q3_ExplicitVarSizeWithMarker_Marker ->
-         q3_ExplicitVarSizeWithMarker_Values[q2] = false
-             | q2 : int(1..2)]),
-    and([or([q9 <= q3_ExplicitVarSizeWithMarker_Marker /\
-             q3_ExplicitVarSizeWithMarker_Values[q9] = [false, true; int(1..2)][q5]
-                 | q9 : int(1..2)])
-             | q5 : int(1..2)]),
-    and([q4 <= q3_ExplicitVarSizeWithMarker_Marker ->
-         or([[false, true; int(1..2)][q6] = q3_ExplicitVarSizeWithMarker_Values[q4]
-                 | q6 : int(1..2)])
-             | q4 : int(1..2)]),
-    sum([([false, true; int(1..2)][q1] = b) * [5, x; int(1..2)][q1]
-             | q1 : int(1..2)])
+    2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+    aux1_ExplicitVarSizeWithMarker_Values[1] <
+    aux1_ExplicitVarSizeWithMarker_Values[2],
+    and([q9 > aux1_ExplicitVarSizeWithMarker_Marker ->
+         aux1_ExplicitVarSizeWithMarker_Values[q9] = false
+             | q9 : int(1..2)]),
+    and([or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+             aux1_ExplicitVarSizeWithMarker_Values[q16] = [false, true; int(1..2)][q14]
+                 | q16 : int(1..2)])
+             | q14 : int(1..2)]),
+    and([q12 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         or([[false, true; int(1..2)][q18] = aux1_ExplicitVarSizeWithMarker_Values[q12]
+                 | q18 : int(1..2)])
+             | q12 : int(1..2)]),
+    sum([([false, true; int(1..2)][q3] = b) * [5, x; int(1..2)][q3]
+             | q3 : int(1..2)])
     = i,
-    or([q7 <= q3_ExplicitVarSizeWithMarker_Marker /\
-        q3_ExplicitVarSizeWithMarker_Values[q7] = b
-            | q7 : int(1..2)])
+    or([q11 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q11] = b
+            | q11 : int(1..2)])
 
