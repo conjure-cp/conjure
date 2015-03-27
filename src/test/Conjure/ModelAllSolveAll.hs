@@ -215,7 +215,9 @@ validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
 
 checkExpectedAndExtraFiles :: TestDirFiles -> TestTree
 checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
-    let relevantFile f = or [ suffix `isSuffixOf` f
+    let
+        relevantFile :: FilePath -> Bool
+        relevantFile f = or [ suffix `isSuffixOf` f
                             | suffix <- [".eprime", ".eprime-param", ".solution"]
                             ]
     expecteds <- do
