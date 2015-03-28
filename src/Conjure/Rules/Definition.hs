@@ -50,31 +50,6 @@ data Answer = Answer
 
 type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
 
-data Strategy
-    = PickFirst
-    | PickAll
-    | Interactive
-    | AtRandom
-    | Compact
-    | FollowLog
-    | Auto Strategy
-    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
-
-instance Default Strategy where def = Auto Interactive
-
-viewAuto :: Strategy -> (Strategy, Bool)
-viewAuto (Auto s) = second (const True) (viewAuto s)
-viewAuto s = (s, False)
-
-parseStrategy :: String -> Maybe Strategy
-parseStrategy "f" = return PickFirst
-parseStrategy "x" = return PickAll
-parseStrategy "i" = return Interactive
-parseStrategy "r" = return AtRandom
-parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
-parseStrategy "c" = return Compact
-parseStrategy "l" = return FollowLog
-parseStrategy _ = Nothing
 
 data Config = Config
     { logLevel                   :: LogLevel

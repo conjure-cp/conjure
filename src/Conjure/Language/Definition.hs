@@ -18,7 +18,8 @@ module Conjure.Language.Definition
     , ModelInfo(..), Decision(..)
     , Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
-    , QuestionAnswered(..)
+    , Strategy(..)
+    , QuestionAnswered(..), viewAuto, parseStrategy
 
     , Name(..)
     , Expression(..), ReferenceTo(..)
@@ -264,7 +265,7 @@ data ModelInfo = ModelInfo
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
-    , miTrailCompact :: [(Int,[Int])]
+    , miTrailCompact :: [(Strategy, Int, Int)]
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
@@ -312,6 +313,38 @@ initInfo model = model { mInfo = info }
             }
 
 
+data Strategy
+    = PickFirst
+    | PickAll
+    | Interactive
+    | AtRandom
+    | Compact
+    | FollowLog
+    | Auto Strategy
+    deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
+
+instance Serialize Strategy
+instance Hashable  Strategy
+instance ToJSON    Strategy where toJSON = genericToJSON jsonOptions
+instance FromJSON  Strategy where parseJSON = genericParseJSON jsonOptions
+
+instance Default Strategy where def = Auto Interactive
+
+viewAuto :: Strategy -> (Strategy, Bool)
+viewAuto (Auto s) = second (const True) (viewAuto s)
+viewAuto s = (s, False)
+
+parseStrategy :: String -> Maybe Strategy
+parseStrategy "f" = return PickFirst
+parseStrategy "x" = return PickAll
+parseStrategy "i" = return Interactive
+parseStrategy "r" = return AtRandom
+parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
+parseStrategy "c" = return Compact
+parseStrategy "l" = return FollowLog
+parseStrategy _ = Nothing
+
+
 data QuestionAnswered =
       AnsweredRepr
       { qHole_       :: Int
@@ -339,7 +372,7 @@ instance Hashable  IntSet where
 
 data Decision = Decision
     { dDescription :: [Text]
-    , dOptions :: [Int]
+    , dNumOptions :: Int
     , dDecision :: Int
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)

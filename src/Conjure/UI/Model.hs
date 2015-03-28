@@ -115,8 +115,9 @@ outputModels config model = do
                     let gen =
                             if smartFilenames config
                                 then [ choice
-                                     | [_question, (choice, options)] <- eprime |> mInfo |> miTrailCompact |> chunksOf 2
-                                     , length options > 1
+                                     | [_question, (_strategy, choice, numOptions)] <-
+                                             eprime |> mInfo |> miTrailCompact |> chunksOf 2
+                                     , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
                                 else paddedNum i
@@ -168,7 +169,9 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: (MonadFail m, MonadLog m, NameGen m) => [Rule] -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
+        processLevel :: (MonadFail m, MonadLog m, NameGen m)
+                     => [Rule]
+                     -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
                 ys <- applicableRules config rulesAtLevel x
@@ -177,8 +180,8 @@ remaining config model | Just modelZipper <- zipperBi model = do
                             else Just (x, ys)
 
     questions <- loopLevels $ map processLevel (allRules config)
-    forM (zip allNats questions) $ \ (nQuestion, (focus, answers0)) -> do
-        answers1 <- forM (zip allNats answers0) $ \ (nAnswer, (ruleName, RuleResult{..})) -> do
+    forM questions $ \ (focus, answers0) -> do
+        answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
             importNameGenState $ model |> mInfo |> miNameGenState
             ruleResultExpr <- ruleResult
             let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
@@ -218,17 +221,6 @@ remaining config model | Just modelZipper <- zipperBi model = do
                     , aRuleName = ruleName
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
-                                    |> addToTrail config
-                                                (fromInteger nQuestion)
-                                                [1 .. length questions]
-                                                (("Focus:" <+> pretty (hole focus))
-                                                 : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                                   | i <- allNats
-                                                   | c <- tail (ascendants focus)
-                                                   ])
-                                                (fromInteger nAnswer)
-                                                [1 .. length answers0]
-                                                [ruleName <> ":" <+> ruleResultDescr]
                     }
                 , ruleResultType
                 )
@@ -258,7 +250,7 @@ strategyToDriver config questions = do
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
-    fmap concat $ forM pickedQs $ \ pickedQ -> do
+    fmap concat $ forM pickedQs $ \ (pickedQNumber, pickedQDescr, pickedQ) -> do
         let optionsA =
                 [ (doc, a)
                 | (n, a) <- zip allNats (qAnswers pickedQ)
@@ -275,21 +267,29 @@ strategyToDriver config questions = do
                 ChooseRepr_Cut        -> representationsCuts
                 ExpressionRefinement  -> strategyA
         pickedAs <- executeAnswerStrategy config pickedQ optionsA (strategyA' config)
-        return (map aFullModel pickedAs)
+        return
+            [ theModel
+                |> addToTrail
+                        config
+                        (strategyQ  config) pickedQNumber (length optionsQ) [pickedQDescr]
+                        (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
+            | (pickedANumber, pickedADescr, pickedA) <- pickedAs
+            , let theModel = aFullModel pickedA
+            ]
 
 
-executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [a]
+executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
-    return [option]
+    return [(1, doc, option)]
 executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
         Auto _      -> bug "executeStrategy: Auto"
         PickFirst   -> do
             logInfo ("Picking the first option:" <+> doc)
-            return [option]
-        PickAll     -> return (map snd options)
+            return [(1, doc, option)]
+        PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
             print (vcat (map fst options))
             let
@@ -306,39 +306,41 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
                             print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
                             pickIndex
             pickedIndex <- pickIndex
-            let picked = snd (at options (pickedIndex - 1))
-            return [picked]
+            let (pickedDescr, picked) = at options (pickedIndex - 1)
+            return [(pickedIndex, pickedDescr, picked)]
         AtRandom -> do
             let nbOptions = length options
             pickedIndex <- liftIO $ randomRIO (1, nbOptions)
-            let picked = snd (at options (pickedIndex - 1))
+            let (pickedDescr, picked) = at options (pickedIndex - 1)
             logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
-            return [picked]
+            return [(pickedIndex, pickedDescr, picked)]
         Compact -> bug "executeStrategy: Compact"
         FollowLog -> bug "executeStrategy: FollowLog"
 
 
 executeAnswerStrategy :: (MonadIO m, MonadLog m)
-                      => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [Answer]
+                      => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [(Int, Doc, Answer)]
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
     logInfo ("Picking the only option:" <+> doc)
     c <- storeChoice config q option
-    return [c]
+    return [(1, doc, c)]
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
     case strategy of
         Compact -> do
-            let mi = minimumBy compactCompareAnswer (map snd options)
-            c <- storeChoice config question mi
-            return [c]
+            let (n,(doc,c)) = minimumBy (compactCompareAnswer `on` (snd . snd)) (zip [1..] options)
+            c' <- storeChoice config question c
+            return [(n, doc, c')]
         FollowLog -> logFollow config question options
         AtRandom -> do
-          picked <-  executeStrategy options st
-          newAns <- storeChoice config question $ headNote "AtRandom no choice" picked
-          return [newAns]
+          [(n, doc, ans0)] <- executeStrategy options st
+          ans1             <- storeChoice config question ans0
+          return [(n, doc, ans1)]
         _  -> do
           cs <- executeStrategy options st
-          mapM (storeChoice config question) cs
+          forM cs $ \ (n, d, c) -> do
+              c' <- storeChoice config question c
+              return (n, d, c')
 
 
 compactCompareAnswer :: Answer -> Answer -> Ordering
@@ -350,33 +352,38 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Int -> [Int] -> [Doc]
-    -> Int -> [Int] -> [Doc]
+    -> Strategy -> Int -> Int -> [Doc]
+    -> Strategy -> Int -> Int -> [Doc]
     -> Model -> Model
 addToTrail Config{..}
-           nQuestion nQuestions tQuestion
-           nAnswer nAnswers tAnswer
+           questionStrategy questionNumber questionNumbers questionDescr
+           answerStrategy   answerNumber   answerNumbers   answerDescr
            model = model { mInfo = newInfo }
     where
         oldInfo = mInfo model
-        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(nQuestion, nQuestions), (nAnswer, nAnswers)]
+        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++
+                                    [ (questionStrategy, questionNumber, questionNumbers)
+                                    , (answerStrategy  , answerNumber,   answerNumbers  )
+                                    ]
                           , miTrailVerbose = if verboseTrail
                                                   then miTrailVerbose oldInfo ++ [theQ, theA]
                                                   else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
-                $ ("Question #" <> pretty nQuestion <+> "out of" <+> pretty (length nQuestions))
-                : tQuestion
-            , dOptions = nQuestions
-            , dDecision = nQuestion
+                $ ("Question #" <> pretty questionNumber <+> "out of" <+> pretty (show questionNumbers))
+                : ("  (Using strategy:" <+> pretty (show questionStrategy) <> ")")
+                : questionDescr
+            , dDecision = questionNumber
+            , dNumOptions = questionNumbers
             }
         theA = Decision
             { dDescription = map (stringToText . renderWide)
-                $ ("Answer #" <> pretty nAnswer <+> "out of" <+> pretty (length nAnswers))
-                : tAnswer
-            , dOptions = nAnswers
-            , dDecision = nAnswer
+                $ ("Answer #" <> pretty answerNumber <+> "out of" <+> pretty (show answerNumbers))
+                : ("  (Using strategy:" <+> pretty (show answerStrategy) <> ")")
+                : answerDescr
+            , dDecision = answerNumber
+            , dNumOptions = answerNumbers
             }
 
 

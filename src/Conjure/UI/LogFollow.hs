@@ -64,7 +64,7 @@ putAnswers store = liftIO $ writeIORef answeredRef store
 
 logFollow  :: (MonadIO m, MonadLog m)
           => Config
-          -> Question -> [(Doc, Answer)] -> m [Answer]
+          -> Question -> [(Doc, Answer)] -> m [(Int, Doc, Answer)]
 logFollow config q@Question{..} options = do
   logWarn ("-----")
   logWarn ( "qhole       " <+>  pretty  qHole <+> (pretty . holeHash) qHole )
@@ -94,7 +94,7 @@ logFollow config q@Question{..} options = do
         mapM (storeChoice config q . snd) options
 
   logWarn ("-----")
-  return res
+  return [ (0, "logfollow", r) | r <- res ]
 
   where
     prettyAns :: Answer -> Doc
