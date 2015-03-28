@@ -295,9 +295,6 @@ snd3 (_,b,_) = b
 thd3 :: (a,b,c) -> c
 thd3 (_,_,c) = c
 
-instance Eq Doc where
-    (==) = (==) `on` show
-
 (|>) :: a -> (a -> b) -> b
 (|>) = flip ($)
 
