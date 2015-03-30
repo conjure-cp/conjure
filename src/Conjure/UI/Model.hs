@@ -415,19 +415,22 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
         onStatements :: [Statement] -> [Statement]
         onStatements xs =
             let
-                (others, suchThats) = xs
-                      |> map collect                                            -- separate such thats from the rest
+                (suchThats0, objectives, others) = xs |> map collect |> mconcat
+                suchThats = suchThats0
+                      |> map breakConjunctions                         -- break top level /\'s
                       |> mconcat
-                      |> second (map breakConjunctions)                         -- break top level /\'s
-                      |> second mconcat
-                      |> second (filter (/= Constant (ConstantBool True)))      -- remove top level true's
-                      |> second nub                                             -- uniq
+                      |> filter (/= Constant (ConstantBool True))      -- remove top level true's
+                      |> nub                                           -- uniq
             in
-                others ++ [SuchThat (combine suchThats)]
+                others ++ objectives ++ [SuchThat (combine suchThats)]
 
-        collect :: Statement -> ([Statement], [Expression])
-        collect (SuchThat s) = ([], s)
-        collect s = ([s], [])
+        collect :: Statement -> ( [Expression]                  -- SuchThats
+                                , [Statement]                   -- Objectives
+                                , [Statement]                   -- other statements
+                                )
+        collect (SuchThat s) = (s, [], [])
+        collect s@(Objective{}) = ([], [s], [])
+        collect s = ([], [], [s])
 
         combine :: [Expression] -> [Expression]
         combine xs = if null xs
