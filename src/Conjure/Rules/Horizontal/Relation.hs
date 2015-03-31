@@ -243,3 +243,14 @@ rule_In = "relation-in" `namedRule` theRule where
                 return [essence| exists &iPat in toSet(&rel) . &i = &x |]
             )
     theRule _ = na "rule_In"
+
+
+rule_Card :: Rule
+rule_Card = "relation-cardinality" `namedRule` theRule where
+    theRule [essence| |&x| |] = do
+        TypeRelation{} <- typeOf x
+        return
+            ( "Relation cardinality"
+            , return [essence| |toSet(&x)| |]
+            )
+    theRule _ = na "rule_Card"
