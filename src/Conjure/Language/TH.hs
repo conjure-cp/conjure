@@ -27,9 +27,8 @@ essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
-        appE
-            [| $(varE (mkName "fixRelationProj")) |]
-            (dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e)
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
@@ -41,11 +40,10 @@ essenceStmts = QuasiQuoter
 essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
-        l  <- locationTH
-        e  <- runIO $ parseIO (setPosition l *> parseExpr) str
-        appE
-            [| $(varE (mkName "fixRelationProj")) |]
-            (dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e)
+        l <- locationTH
+        e <- runIO $ parseIO (setPosition l *> parseExpr) str
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpr) str
