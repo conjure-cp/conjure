@@ -16,8 +16,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 
 
 typeCheckModel
-    :: forall m .
-       ( MonadFail m
+    :: ( MonadFail m
        , MonadLog m
        , NameGen m
        )
@@ -87,16 +86,5 @@ typeCheckModel model0 = do
                      : ""
                      : errs)
 
-    let
-        fixRelationProj :: Expression -> m Expression
-        fixRelationProj p = case match opRelationProj p of
-            Just (f, [Just arg]) -> do
-                tyF <- typeOf f
-                return $ case tyF of
-                    TypeFunction{} -> make opImage f arg
-                    TypeSequence{} -> make opImage f arg
-                    _              -> p
-            _ -> return p
-
-    transformBiM fixRelationProj model1
+    return (transformBi fixRelationProj model1)
 

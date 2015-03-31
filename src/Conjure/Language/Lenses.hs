@@ -1249,3 +1249,14 @@ opFactorial _ =
                 MkOpFactorial (OpFactorial x) -> return x
                 _ -> na ("Lenses.opFactorial:" <++> pretty p)
     )
+
+
+fixRelationProj :: Expression -> Expression
+fixRelationProj p =
+    case match opRelationProj p of
+        Just (f, [Just arg]) ->
+            case typeOf f of
+                Just TypeFunction{} -> make opImage f arg
+                Just TypeSequence{} -> make opImage f arg
+                _                   -> p
+        _ -> p

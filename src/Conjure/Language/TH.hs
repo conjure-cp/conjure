@@ -1,12 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Conjure.Language.TH ( essence, essenceStmts ) where
+module Conjure.Language.TH ( essence, essenceStmts, module X ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Parser
+import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
+
 
 -- parsec
 import Text.Parsec ( SourcePos, setPosition )
@@ -55,12 +57,15 @@ locationTH = aux <$> location
         aux loc = uncurry (newPos (loc_filename loc)) (loc_start loc)
 
 expE :: Expression -> Maybe ExpQ
-expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
+expE (ExpressionMetaVar x) =
+    Just ( appE [| $(varE (mkName "fixRelationProj")) |]
+                [| $(varE (mkName x)) |] )
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
-expD (DomainMetaVar x) = Just $ [| $(varE (mkName "forgetRepr")) |]
-                         `appE` [| $(varE (mkName x)) |]
+expD (DomainMetaVar x) =
+    Just ( appE [| $(varE (mkName "forgetRepr")) |]
+                [| $(varE (mkName x)) |] )
 expD _ = Nothing
 
 expAP :: AbstractPattern -> Maybe ExpQ
