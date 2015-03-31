@@ -28,7 +28,8 @@ typeCheckModel model0 = do
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
-    errs <- execWriterT $ forM (mStatements model1) $ \ st ->
+    let model2 = fixRelationProj model1
+    errs <- execWriterT $ forM (mStatements model2) $ \ st ->
         case st of
             Declaration{} -> return ()
             SearchOrder xs -> forM_ xs $ \case
@@ -86,5 +87,5 @@ typeCheckModel model0 = do
                      : ""
                      : errs)
 
-    return (fixRelationProj model1)
+    return model2
 
