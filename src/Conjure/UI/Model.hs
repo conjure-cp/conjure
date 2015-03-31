@@ -708,6 +708,7 @@ paramRules =
     [ Horizontal.Set.rule_Param_MinOfSet
     , Horizontal.Set.rule_Param_MaxOfSet
     , Horizontal.Set.rule_Param_Card
+    , Horizontal.Relation.rule_Param_Card
     ]
 
 verticalRules :: [Rule]
