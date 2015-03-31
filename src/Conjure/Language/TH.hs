@@ -27,7 +27,9 @@ essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
-        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE
+            [| $(varE (mkName "fixRelationProj")) |]
+            (dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e)
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
@@ -39,9 +41,11 @@ essenceStmts = QuasiQuoter
 essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseExpr) str
-        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        l  <- locationTH
+        e  <- runIO $ parseIO (setPosition l *> parseExpr) str
+        appE
+            [| $(varE (mkName "fixRelationProj")) |]
+            (dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e)
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpr) str
@@ -57,16 +61,12 @@ locationTH = aux <$> location
         aux loc = uncurry (newPos (loc_filename loc)) (loc_start loc)
 
 expE :: Expression -> Maybe ExpQ
-expE (ExpressionMetaVar x) =
-    Just (appE [| $(varE (mkName "fixRelationProj")) |]
-               [| $(varE (mkName x)) |])
+expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
-expD (DomainMetaVar x) =
-    Just (appE [| $(varE (mkName "fixRelationProj")) |]
-               (appE [| $(varE (mkName "forgetRepr")) |]
-                     [| $(varE (mkName x)) |]))
+expD (DomainMetaVar x) = Just (appE [| $(varE (mkName "forgetRepr")) |]
+                                    [| $(varE (mkName x)) |])
 expD _ = Nothing
 
 expAP :: AbstractPattern -> Maybe ExpQ
