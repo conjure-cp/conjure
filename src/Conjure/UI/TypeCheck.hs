@@ -9,18 +9,20 @@ import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
+import Conjure.Language.Lenses
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames )
 
 
 typeCheckModel
-    :: ( MonadFail m
+    :: forall m .
+       ( MonadFail m
        , MonadLog m
        , NameGen m
        )
-    => Model      -- essence param
-    -> m ()
+    => Model
+    -> m Model
 
 typeCheckModel model0 = do
     model1 <- return model0             >>= logDebugId "[input]"
@@ -84,3 +86,17 @@ typeCheckModel model0 = do
         (fail $ vcat $ "There were type errors."
                      : ""
                      : errs)
+
+    let
+        fixRelationProj :: Expression -> m Expression
+        fixRelationProj p = case match opRelationProj p of
+            Just (f, [Just arg]) -> do
+                tyF <- typeOf f
+                return $ case tyF of
+                    TypeFunction{} -> make opImage f arg
+                    TypeSequence{} -> make opImage f arg
+                    _              -> p
+            _ -> return p
+
+    transformBiM fixRelationProj model1
+

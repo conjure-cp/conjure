@@ -625,8 +625,7 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
-    >>= \ m -> typeCheckModel m >> return m
-                                      >>= logDebugId "[typeCheckModel]"
+    >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
@@ -685,11 +684,7 @@ applicableRules Config{..} rulesAtLevel x = do
 
 allRules :: Config -> [[Rule]]
 allRules config =
-    [ [ Horizontal.Function.rule_Mk_Image           -- this is a clean-up rule
-                                                            -- it should run as early as possible.
-      , Horizontal.Sequence.rule_Mk_Image
-      ]
-    , [ rule_FullEvaluate
+    [ [ rule_FullEvaluate
       ]
     , [ rule_PartialEvaluate
       ]

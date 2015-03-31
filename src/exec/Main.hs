@@ -139,7 +139,7 @@ mainWithArgs Diff{..} =
         <$> readModelFromFile file1
         <*> readModelFromFile file2
 mainWithArgs TypeCheck{..} =
-    runNameGen $ join $ typeCheckModel <$> readModelFromFile essence
+    void $ runNameGen $ join $ typeCheckModel <$> readModelFromFile essence
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model

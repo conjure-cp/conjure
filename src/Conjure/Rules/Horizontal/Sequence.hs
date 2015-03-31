@@ -346,17 +346,6 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
-rule_Mk_Image :: Rule
-rule_Mk_Image = "mk-sequence-image" `namedRule` theRule where
-    theRule p = do
-        (f, [Just arg]) <- match opRelationProj p
-        TypeSequence{}  <- typeOf f
-        return
-            ( "This is a sequence image."
-            , return $ make opImage f arg
-            )
-
-
 -- | image(f,x) can be nasty for non-total sequences.
 --   1.   if f is a total sequence, it can readily be replaced by a set expression.
 --   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.

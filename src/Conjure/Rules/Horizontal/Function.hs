@@ -548,17 +548,6 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
-rule_Mk_Image :: Rule
-rule_Mk_Image = "mk-function-image" `namedRule` theRule where
-    theRule p = do
-        (f, [Just arg]) <- match opRelationProj p
-        TypeFunction{}  <- typeOf f
-        return
-            ( "This is a function image."
-            , return $ make opImage f arg
-            )
-
-
 -- | image(f,x) can be nasty for non-total functions.
 --   1.   if f is a total function, it can readily be replaced by a set expression.
 --   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.
