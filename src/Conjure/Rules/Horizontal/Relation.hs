@@ -138,35 +138,33 @@ rule_Neq = "relation-neq" `namedRule` theRule where
     theRule _ = na "rule_Neq"
 
 
-rule_Lt :: Rule
-rule_Lt = "relation-lt" `namedRule` theRule where
+rule_DotLt :: Rule
+rule_DotLt = "relation-DotLt" `namedRule` theRule where
     theRule p = do
-        (a,b)          <- match opLt p
+        (a,b)          <- match opDotLt p
         TypeRelation{} <- typeOf a
         TypeRelation{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for relation <" <+> pretty (make opLt ma mb)
-            , return $ make opLt ma mb
+            ( "Horizontal rule for relation .<" <+> pretty (make opDotLt ma mb)
+            , return $ make opDotLt ma mb
             )
 
 
-rule_Leq :: Rule
-rule_Leq = "relation-leq" `namedRule` theRule where
+rule_DotLeq :: Rule
+rule_DotLeq = "relation-DotLeq" `namedRule` theRule where
     theRule p = do
-        (a,b)          <- match opLeq p
+        (a,b)          <- match opDotLeq p
         TypeRelation{} <- typeOf a
         TypeRelation{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for relation <=" <+> pretty (make opLeq ma mb)
-            , return $ make opLeq ma mb
+            ( "Horizontal rule for relation .<=" <+> pretty (make opDotLeq ma mb)
+            , return $ make opDotLeq ma mb
             )
 
 

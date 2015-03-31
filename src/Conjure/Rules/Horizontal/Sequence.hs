@@ -173,35 +173,33 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_Lt :: Rule
-rule_Lt = "sequence-lt" `namedRule` theRule where
+rule_DotLt :: Rule
+rule_DotLt = "sequence-DotLt" `namedRule` theRule where
     theRule p = do
-        (a,b) <- match opLt p
+        (a,b)          <- match opDotLt p
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for sequence <" <+> pretty (make opLt ma mb)
-            , return $ make opLt ma mb
+            ( "Horizontal rule for sequence .<" <+> pretty (make opDotLt ma mb)
+            , return $ make opDotLt ma mb
             )
 
 
-rule_Leq :: Rule
-rule_Leq = "sequence-leq" `namedRule` theRule where
+rule_DotLeq :: Rule
+rule_DotLeq = "sequence-DotLeq" `namedRule` theRule where
     theRule p = do
-        (a,b) <- match opLeq p
+        (a,b)          <- match opDotLeq p
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for sequence <=" <+> pretty (make opLeq ma mb)
-            , return $ make opLeq ma mb
+            ( "Horizontal rule for sequence .<=" <+> pretty (make opDotLeq ma mb)
+            , return $ make opDotLeq ma mb
             )
 
 

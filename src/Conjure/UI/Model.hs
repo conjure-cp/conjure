@@ -802,8 +802,8 @@ horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
-    , Horizontal.Set.rule_Leq
-    , Horizontal.Set.rule_Lt
+    , Horizontal.Set.rule_DotLeq
+    , Horizontal.Set.rule_DotLt
     , Horizontal.Set.rule_Subset
     , Horizontal.Set.rule_SubsetEq
     , Horizontal.Set.rule_Supset
@@ -820,8 +820,8 @@ horizontalRules =
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
-    , Horizontal.MSet.rule_Leq
-    , Horizontal.MSet.rule_Lt
+    , Horizontal.MSet.rule_DotLeq
+    , Horizontal.MSet.rule_DotLt
     , Horizontal.MSet.rule_Subset
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
@@ -839,8 +839,8 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Literal_Int
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
-    , Horizontal.Function.rule_Leq
-    , Horizontal.Function.rule_Lt
+    , Horizontal.Function.rule_DotLeq
+    , Horizontal.Function.rule_DotLt
     , Horizontal.Function.rule_Subset
     , Horizontal.Function.rule_SubsetEq
     , Horizontal.Function.rule_Supset
@@ -869,8 +869,8 @@ horizontalRules =
     , Horizontal.Sequence.rule_Image_Literal_Int
     , Horizontal.Sequence.rule_Eq
     , Horizontal.Sequence.rule_Neq
-    , Horizontal.Sequence.rule_Leq
-    , Horizontal.Sequence.rule_Lt
+    , Horizontal.Sequence.rule_DotLeq
+    , Horizontal.Sequence.rule_DotLt
     , Horizontal.Sequence.rule_Subset
     , Horizontal.Sequence.rule_SubsetEq
     , Horizontal.Sequence.rule_Supset
@@ -892,8 +892,8 @@ horizontalRules =
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_Neq
-    , Horizontal.Relation.rule_Leq
-    , Horizontal.Relation.rule_Lt
+    , Horizontal.Relation.rule_DotLeq
+    , Horizontal.Relation.rule_DotLt
     , Horizontal.Relation.rule_Subset
     , Horizontal.Relation.rule_SubsetEq
     , Horizontal.Relation.rule_Supset
@@ -902,8 +902,8 @@ horizontalRules =
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
-    , Horizontal.Partition.rule_Leq
-    , Horizontal.Partition.rule_Lt
+    , Horizontal.Partition.rule_DotLeq
+    , Horizontal.Partition.rule_DotLt
     , Horizontal.Partition.rule_Together
     , Horizontal.Partition.rule_Apart
     , Horizontal.Partition.rule_Party

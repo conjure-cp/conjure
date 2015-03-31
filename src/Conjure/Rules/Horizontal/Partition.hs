@@ -61,35 +61,33 @@ rule_Neq = "partition-neq" `namedRule` theRule where
     theRule _ = na "rule_Neq"
 
 
-rule_Lt :: Rule
-rule_Lt = "partition-lt" `namedRule` theRule where
+rule_DotLt :: Rule
+rule_DotLt = "partition-DotLt" `namedRule` theRule where
     theRule p = do
-        (a,b)           <- match opLt p
+        (a,b)           <- match opDotLt p
         TypePartition{} <- typeOf a
         TypePartition{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for partition <" <+> pretty (make opLt ma mb)
-            , return $ make opLt ma mb
+            ( "Horizontal rule for partition .<" <+> pretty (make opDotLt ma mb)
+            , return $ make opDotLt ma mb
             )
 
 
-rule_Leq :: Rule
-rule_Leq = "partition-leq" `namedRule` theRule where
+rule_DotLeq :: Rule
+rule_DotLeq = "partition-DotLeq" `namedRule` theRule where
     theRule p = do
-        (a,b)           <- match opLeq p
+        (a,b)           <- match opDotLeq p
         TypePartition{} <- typeOf a
         TypePartition{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for partition <=" <+> pretty (make opLeq ma mb)
-            , return $ make opLeq ma mb
+            ( "Horizontal rule for partition .<=" <+> pretty (make opDotLeq ma mb)
+            , return $ make opDotLeq ma mb
             )
 
 
