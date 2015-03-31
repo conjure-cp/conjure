@@ -86,5 +86,5 @@ typeCheckModel model0 = do
                      : ""
                      : errs)
 
-    return (transformBi fixRelationProj model1)
+    return (fixRelationProj model1)
 

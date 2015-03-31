@@ -58,14 +58,15 @@ locationTH = aux <$> location
 
 expE :: Expression -> Maybe ExpQ
 expE (ExpressionMetaVar x) =
-    Just ( appE [| $(varE (mkName "fixRelationProj")) |]
-                [| $(varE (mkName x)) |] )
+    Just (appE [| $(varE (mkName "fixRelationProj")) |]
+               [| $(varE (mkName x)) |])
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
 expD (DomainMetaVar x) =
-    Just ( appE [| $(varE (mkName "forgetRepr")) |]
-                [| $(varE (mkName x)) |] )
+    Just (appE [| $(varE (mkName "fixRelationProj")) |]
+               (appE [| $(varE (mkName "forgetRepr")) |]
+                     [| $(varE (mkName x)) |]))
 expD _ = Nothing
 
 expAP :: AbstractPattern -> Maybe ExpQ

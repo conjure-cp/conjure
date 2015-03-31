@@ -1251,12 +1251,15 @@ opFactorial _ =
     )
 
 
-fixRelationProj :: Expression -> Expression
-fixRelationProj p =
-    case match opRelationProj p of
-        Just (f, [Just arg]) ->
-            case typeOf f of
-                Just TypeFunction{} -> make opImage f arg
-                Just TypeSequence{} -> make opImage f arg
-                _                   -> p
-        _ -> p
+fixRelationProj :: Data a => a -> a
+fixRelationProj = transformBi f
+    where
+        f :: Expression -> Expression
+        f p =
+            case match opRelationProj p of
+                Just (func, [Just arg]) ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func arg
+                        Just TypeSequence{} -> make opImage func arg
+                        _                   -> p
+                _ -> p
