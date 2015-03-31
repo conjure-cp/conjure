@@ -4,7 +4,6 @@ module Conjure.Language.Expression.Op.RelationProj where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.Image
 
 
 data OpRelationProj x = OpRelationProj x [Maybe x]      -- Nothing represents an _
@@ -19,11 +18,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
     typeOf p@(OpRelationProj r xs) = do
         tyR <- typeOf r
         case (tyR, xs) of
-            (TypeFunction from to, [Just x]) -> do
-                xTy <- typeOf x
-                if typesUnify [xTy, from]
-                    then return to
-                    else raiseTypeError p
             (TypeRelation ts', _) -> do
                 let xs' = catMaybes xs
                 if length xs == length xs'
@@ -69,8 +63,6 @@ instance EvaluateOp OpRelationProj where
                                         ]
                     , and xsCondition
                     ]
-    evaluateOp (OpRelationProj f@(ConstantAbstract AbsLitFunction{}) [Just arg]) =
-        evaluateOp (OpImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
 instance SimplifyOp OpRelationProj x where
