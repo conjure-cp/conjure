@@ -759,6 +759,44 @@ opGeq _ =
     )
 
 
+opDotLt
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opDotLt _ =
+    ( \ x y -> inject (MkOpDotLt (OpDotLt x y))
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpDotLt (OpDotLt x y) -> return (x,y)
+                _ -> na ("Lenses.opDotLt:" <++> pretty p)
+    )
+
+
+opDotLeq
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opDotLeq _ =
+    ( \ x y -> inject (MkOpDotLeq (OpDotLeq x y))
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpDotLeq (OpDotLeq x y) -> return (x,y)
+                _ -> na ("Lenses.opDotLeq:" <++> pretty p)
+    )
+
+
 opOr
     :: ( Op x :< x
        , Pretty x
