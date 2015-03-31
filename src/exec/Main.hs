@@ -12,7 +12,7 @@ import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
-import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( refAnswers )
 
 import Conjure.Language.NameGen ( runNameGen )
@@ -139,7 +139,7 @@ mainWithArgs Diff{..} =
         <$> readModelFromFile file1
         <*> readModelFromFile file2
 mainWithArgs TypeCheck{..} =
-    void $ runNameGen $ join $ typeCheckModel <$> readModelFromFile essence
+    void $ runNameGen $ join $ typeCheckModel_StandAlone <$> readModelFromFile essence
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model

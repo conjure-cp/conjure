@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Conjure.UI.TypeCheck ( typeCheckModel ) where
+module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 
 -- conjure
 import Conjure.Prelude
@@ -15,6 +15,22 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames )
 
 
+
+typeCheckModel_StandAlone
+    :: ( MonadFail m
+       , MonadLog m
+       , NameGen m
+       )
+    => Model
+    -> m Model
+typeCheckModel_StandAlone model0 = do
+    model1 <- return model0             >>= logDebugId "[input]"
+          >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
+          >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
+          >>= resolveNames              >>= logDebugId "[resolveNames]"
+    return model1
+
+
 typeCheckModel
     :: ( MonadFail m
        , MonadLog m
@@ -22,12 +38,7 @@ typeCheckModel
        )
     => Model
     -> m Model
-
-typeCheckModel model0 = do
-    model1 <- return model0             >>= logDebugId "[input]"
-          >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
-          >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
-          >>= resolveNames              >>= logDebugId "[resolveNames]"
+typeCheckModel model1 = do
     let model2 = fixRelationProj model1
     errs <- execWriterT $ forM (mStatements model2) $ \ st ->
         case st of

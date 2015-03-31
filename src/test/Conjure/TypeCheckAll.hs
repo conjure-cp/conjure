@@ -21,4 +21,4 @@ tests = do
 testSingle :: FilePath -> TestTree
 testSingle fp = testCase fp $ do
     model <- readModelFromFile fp
-    void $ ignoreLogs $ runNameGen $ typeCheckModel model
+    void $ ignoreLogs $ runNameGen $ typeCheckModel_StandAlone model
