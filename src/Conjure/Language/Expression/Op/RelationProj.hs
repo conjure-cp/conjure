@@ -4,6 +4,7 @@ module Conjure.Language.Expression.Op.RelationProj where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.Expression.Op.Image
 
 
 data OpRelationProj x = OpRelationProj x [Maybe x]      -- Nothing represents an _
@@ -63,6 +64,9 @@ instance EvaluateOp OpRelationProj where
                                         ]
                     , and xsCondition
                     ]
+    -- leave the OpImage evaluator in -- it is just easier
+    evaluateOp (OpRelationProj f@(ConstantAbstract AbsLitFunction{}) [Just arg]) =
+        evaluateOp (OpImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
 instance SimplifyOp OpRelationProj x where
