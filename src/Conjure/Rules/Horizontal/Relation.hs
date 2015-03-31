@@ -243,3 +243,27 @@ rule_In = "relation-in" `namedRule` theRule where
                 return [essence| exists &iPat in toSet(&rel) . &i = &x |]
             )
     theRule _ = na "rule_In"
+
+
+rule_Card :: Rule
+rule_Card = "relation-cardinality" `namedRule` theRule where
+    theRule [essence| |&x| |] = do
+        TypeRelation{} <- typeOf x
+        return
+            ( "Relation cardinality"
+            , return [essence| |toSet(&x)| |]
+            )
+    theRule _ = na "rule_Card"
+
+
+rule_Param_Card :: Rule
+rule_Param_Card = "param-card-of-relation" `namedRule` theRule where
+    theRule [essence| |&x| |] = do
+        TypeRelation _ <- typeOf x
+        unless (categoryOf x == CatParameter) $ na "rule_Param_Card"
+        DomainRelation _ (RelationAttr (SizeAttr_Size n) _) _ <- domainOf x
+        return
+            ( "cardinality of a parameter relation"
+            , return n
+            )
+    theRule _ = na "rule_Param_Card"
