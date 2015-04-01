@@ -708,6 +708,7 @@ paramRules =
     [ Horizontal.Set.rule_Param_MinOfSet
     , Horizontal.Set.rule_Param_MaxOfSet
     , Horizontal.Set.rule_Param_Card
+    , Horizontal.Relation.rule_Param_Card
     ]
 
 verticalRules :: [Rule]
@@ -898,6 +899,7 @@ horizontalRules =
     , Horizontal.Relation.rule_SubsetEq
     , Horizontal.Relation.rule_Supset
     , Horizontal.Relation.rule_SupsetEq
+    , Horizontal.Relation.rule_Card
 
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq

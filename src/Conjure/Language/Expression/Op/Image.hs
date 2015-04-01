@@ -20,7 +20,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
         (from, to) <- case tyF of
             TypeFunction from to -> return (from, to)
             TypeSequence      to -> return (TypeInt, to)
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ "(function application)" <+> pretty p
         xTy <- typeOf x
         if typesUnify [xTy, from]
             then return to

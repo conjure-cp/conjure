@@ -1287,3 +1287,17 @@ opFactorial _ =
                 MkOpFactorial (OpFactorial x) -> return x
                 _ -> na ("Lenses.opFactorial:" <++> pretty p)
     )
+
+
+fixRelationProj :: Data a => a -> a
+fixRelationProj = transformBi f
+    where
+        f :: Expression -> Expression
+        f p =
+            case match opRelationProj p of
+                Just (func, [Just arg]) ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func arg
+                        Just TypeSequence{} -> make opImage func arg
+                        _                   -> p
+                _ -> p

@@ -19,11 +19,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
     typeOf p@(OpRelationProj r xs) = do
         tyR <- typeOf r
         case (tyR, xs) of
-            (TypeFunction from to, [Just x]) -> do
-                xTy <- typeOf x
-                if typesUnify [xTy, from]
-                    then return to
-                    else raiseTypeError p
             (TypeRelation ts', _) -> do
                 let xs' = catMaybes xs
                 if length xs == length xs'
@@ -33,8 +28,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                                 tyI <- typeOf i
                                 if typesUnify [tyI,t]
                                     then loop is ts
-                                    else raiseTypeError p
-                            loop _ _ = raiseTypeError p
+                                    else raiseTypeError $ "(relation projection)" <+> pretty p
+                            loop _ _ = raiseTypeError $ "(relation projection)" <+> pretty p
                         loop xs' ts'
                     else do
                         let loop [] [] = return []
@@ -43,10 +38,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
                                 tyI <- typeOf i
                                 if typesUnify [tyI,t]
                                     then loop is ts
-                                    else raiseTypeError p
-                            loop _ _ = raiseTypeError p
+                                    else raiseTypeError $ "(relation projection)" <+> pretty p
+                            loop _ _ = raiseTypeError $ "(relation projection)" <+> pretty p
                         TypeRelation <$> loop xs ts'
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ "(relation projection)" <+> pretty p
 
 instance (Pretty x, TypeOf x) => DomainOf (OpRelationProj x) x where
     domainOf op = mkDomainAny ("OpRelationProj:" <++> pretty op) <$> typeOf op
@@ -69,6 +64,7 @@ instance EvaluateOp OpRelationProj where
                                         ]
                     , and xsCondition
                     ]
+    -- leave the OpImage evaluator in -- it is just easier
     evaluateOp (OpRelationProj f@(ConstantAbstract AbsLitFunction{}) [Just arg]) =
         evaluateOp (OpImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)

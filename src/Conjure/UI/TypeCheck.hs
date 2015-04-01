@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE LambdaCase #-}
 
-module Conjure.UI.TypeCheck ( typeCheckModel ) where
+module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 
 -- conjure
 import Conjure.Prelude
@@ -15,21 +15,32 @@ import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames )
 
 
-typeCheckModel
-    :: forall m .
-       ( MonadFail m
+
+typeCheckModel_StandAlone
+    :: ( MonadFail m
        , MonadLog m
        , NameGen m
        )
     => Model
     -> m Model
-
-typeCheckModel model0 = do
+typeCheckModel_StandAlone model0 = do
     model1 <- return model0             >>= logDebugId "[input]"
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
-    errs <- execWriterT $ forM (mStatements model1) $ \ st ->
+    return model1
+
+
+typeCheckModel
+    :: ( MonadFail m
+       , MonadLog m
+       , NameGen m
+       )
+    => Model
+    -> m Model
+typeCheckModel model1 = do
+    let model2 = fixRelationProj model1
+    errs <- execWriterT $ forM (mStatements model2) $ \ st ->
         case st of
             Declaration{} -> return ()
             SearchOrder xs -> forM_ xs $ \case
@@ -87,16 +98,5 @@ typeCheckModel model0 = do
                      : ""
                      : errs)
 
-    let
-        fixRelationProj :: Expression -> m Expression
-        fixRelationProj p = case match opRelationProj p of
-            Just (f, [Just arg]) -> do
-                tyF <- typeOf f
-                return $ case tyF of
-                    TypeFunction{} -> make opImage f arg
-                    TypeSequence{} -> make opImage f arg
-                    _              -> p
-            _ -> return p
-
-    transformBiM fixRelationProj model1
+    return model2
 

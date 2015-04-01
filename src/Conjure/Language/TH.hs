@@ -1,12 +1,14 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Conjure.Language.TH ( essence, essenceStmts ) where
+module Conjure.Language.TH ( essence, essenceStmts, module X ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Parser
+import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
+
 
 -- parsec
 import Text.Parsec ( SourcePos, setPosition )
@@ -25,7 +27,8 @@ essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
-        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
@@ -39,7 +42,8 @@ essence = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpr) str
-        dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpr) str
@@ -59,8 +63,8 @@ expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
 expE _ = Nothing
 
 expD :: Domain () Expression -> Maybe ExpQ
-expD (DomainMetaVar x) = Just $ [| $(varE (mkName "forgetRepr")) |]
-                         `appE` [| $(varE (mkName x)) |]
+expD (DomainMetaVar x) = Just (appE [| $(varE (mkName "forgetRepr")) |]
+                                    [| $(varE (mkName x)) |])
 expD _ = Nothing
 
 expAP :: AbstractPattern -> Maybe ExpQ
