@@ -68,6 +68,7 @@ enumerateInConstant constant = case constant of
                                                     ]
     ConstantAbstract (AbsLitRelation  xs) -> return $ map (ConstantAbstract . AbsLitTuple) xs
     ConstantAbstract (AbsLitPartition xs) -> return $ map (ConstantAbstract . AbsLitSet) xs
+    TypedConstant c _                     -> enumerateInConstant c
     _ -> fail $ vcat [ "enumerateInConstant"
                      , "constant:" <+> pretty constant
                      ]
