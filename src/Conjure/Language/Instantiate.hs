@@ -30,11 +30,12 @@ instantiateExpression
     -> m Constant
 instantiateExpression ctxt x = do
     constant <- normaliseConstant <$> evalStateT (instantiateE x) ctxt
-    if emptyCollection constant
-        then do
+    case (emptyCollection constant, constant) of
+        (_, TypedConstant{}) -> return constant
+        (True, _) -> do
             ty <- typeOf x
             return (TypedConstant constant ty)
-        else return constant
+        (False, _) -> return constant
 
 
 instantiateDomain
