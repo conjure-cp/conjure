@@ -29,6 +29,14 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     , "Expected type of index:" <+> pretty tyIndex
                     , "Actual type of index  :" <+> pretty tyI
                     ]
+            TypeList inn
+                | typesUnify [TypeInt, tyI] -> return inn
+                | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
+                    [ "The expression:"  <+> pretty p
+                    , "Indexing:"        <+> pretty m
+                    , "Expected type of index:" <+> pretty TypeInt
+                    , "Actual type of index  :" <+> pretty tyI
+                    ]
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
                 iInt <- intOut i
