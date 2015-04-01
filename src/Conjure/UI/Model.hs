@@ -454,6 +454,15 @@ toIntIsNoOp model =
         model { mStatements = mStatements model |> transformBi f }
 
 
+emptyMatrixLiterals :: Model -> Model
+emptyMatrixLiterals model =
+    let
+        f (TypeList ty) = TypeMatrix TypeInt ty
+        f x = x
+    in
+        model { mStatements = mStatements model |> transformBi f }
+
+
 inlineDecVarLettings :: Model -> Model
 inlineDecVarLettings model =
     let
@@ -640,6 +649,7 @@ epilogue model = return model
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
+    >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
