@@ -24,14 +24,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpIntersect x) x where
     domainOf op = mkDomainAny ("OpIntersect:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpIntersect where
-    evaluateOp p@(OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
-        ty <- typeOf p
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitSet [])) ty
-            else ConstantAbstract $ AbsLitSet outs
-    evaluateOp p@(OpIntersect (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
-        ty <- typeOf p
+        return $ ConstantAbstract $ AbsLitSet outs
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -41,22 +37,14 @@ instance EvaluateOp OpIntersect where
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitMSet [])) ty
-            else ConstantAbstract $ AbsLitMSet $ concat outs
+        return $ ConstantAbstract $ AbsLitMSet $ concat outs
     -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
-    evaluateOp p@(OpIntersect (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
-        ty <- typeOf p
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitFunction [])) ty
-            else ConstantAbstract $ AbsLitFunction outs
-    evaluateOp p@(OpIntersect (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) = do
-        ty <- typeOf p
+        return $ ConstantAbstract $ AbsLitFunction outs
+    evaluateOp (OpIntersect (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitRelation [])) ty
-            else ConstantAbstract $ AbsLitRelation outs
+        return $ ConstantAbstract $ AbsLitRelation outs
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 instance SimplifyOp OpIntersect x where

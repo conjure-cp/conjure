@@ -38,18 +38,14 @@ instance (Pretty x, TypeOf x) => DomainOf (OpMinus x) x where
 
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
-    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
-        ty <- typeOf p
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
         let outs =
                 [ a
                 | a <- as
                 , a `notElem` bs
                 ]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitSet [])) ty
-            else ConstantAbstract $ AbsLitSet outs
-    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
-        ty <- typeOf p
+        return $ ConstantAbstract $ AbsLitSet outs
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -59,19 +55,14 @@ instance EvaluateOp OpMinus where
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]                
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitMSet [])) ty
-            else ConstantAbstract $ AbsLitMSet $ concat outs
-    evaluateOp p@(OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
-        ty <- typeOf p
+        return $ ConstantAbstract $ AbsLitMSet $ concat outs
+    evaluateOp (OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
         let outs =
                 [ a
                 | a <- as
                 , a `notElem` bs
                 ]
-        return $ if null outs
-            then TypedConstant (ConstantAbstract (AbsLitFunction [])) ty
-            else ConstantAbstract (AbsLitFunction outs)
+        return $ ConstantAbstract (AbsLitFunction outs)
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance SimplifyOp OpMinus x where
