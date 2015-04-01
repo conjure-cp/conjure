@@ -309,6 +309,8 @@ validateConstantForDomain
     d@(DomainPartition _ _ dInner) = nested c d $
         mapM_ (`validateConstantForDomain` dInner) (concat valss)
 
+validateConstantForDomain c@(TypedConstant c' _) d = nested c d $ validateConstantForDomain c' d
+
 validateConstantForDomain c d = constantNotInDomain c d
 
 
