@@ -249,6 +249,7 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
             _ -> na "rule_Comprehension_Defined"
         func <- match opDefined expr
         DomainFunction _ _ domFr _domTo <- domainOf func
+        unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
@@ -334,8 +335,10 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
         func <- match opDefined expr
         TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
+        when (null elems) $ na "defined(f) of empty function literal"
         elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
         let domFr = mconcat elemDoms
+        unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
