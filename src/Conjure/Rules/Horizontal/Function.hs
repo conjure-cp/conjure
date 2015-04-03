@@ -31,51 +31,33 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Image_Literal_Bool :: Rule
-rule_Image_Literal_Bool = "function-image-literal-bool" `namedRule` theRule where
+rule_Image_Literal :: Rule
+rule_Image_Literal = "function-image-literal" `namedRule` theRule where
     theRule p = do
-        (func, arg)                      <- match opImage p
-        (TypeFunction _ TypeBool, elems) <- match functionLiteral func
-        -- let argIsUndef = make opNot $ make opOr $ fromList
-        --         [ [essence| &a = &arg |]
-        --         | (a,_) <- elems
-        --         ]
-        return $
-            if null elems
-                then
-                    ( "Image of empty function literal"
-                    , return [essence| false |]                          -- undefined is false.
-                    )
-                else
-                    ( "Image of function literal"
-                    , return $ make opOr $ fromList $
-                          [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
-                                                                        -- undefined is still false.
-                          | (a,b) <- elems
-                          ]
-                    )
-
-
-rule_Image_Literal_Int :: Rule
-rule_Image_Literal_Int = "function-image-literal-int" `namedRule` theRule where
-    theRule p = do
-        (func, arg)                     <- match opImage p
-        (TypeFunction _ TypeInt, elems) <- match functionLiteral func
+        (func, arg)                  <- match opImage p
+        (TypeFunction tyFr tyTo, elems) <- match functionLiteral func
+        let outLiteral = make matrixLiteral
+                            (TypeMatrix TypeInt (TypeTuple [tyFr,tyTo]))
+                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
+                            [ AbstractLiteral (AbsLitTuple [a,b])
+                            | (a,b) <- elems
+                            ]
         return
             ( "Image of function literal"
-            , return $
+            , do
+                (iPat, i) <- quantifiedVar
                 let
-                    val = make opSum $ fromList $
-                        -- if this is ever true, the output is the value of b.
-                        [ [essence| toInt(&a = &arg) * &b |]
-                        | (a,b) <- elems
-                        ]
-                    argIsDef = make opOr $ fromList
+                    val = [essence| &vals[1] |]
+                    vals = Comprehension
+                                [essence| &i[2] |]
+                                [ Generator (GenInExpr iPat outLiteral)
+                                , Condition [essence| &i[1] = &arg |]
+                                ]
+                    argIsDefinedOnce = make opEq 1 $ make opSum $ fromList
                         [ [essence| &a = &arg |]
                         | (a,_) <- elems
                         ]
-                in
-                    WithLocals val (Right [argIsDef])
+                return $ WithLocals val (Right [argIsDefinedOnce])
             )
 
 
@@ -265,6 +247,7 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
             _ -> na "rule_Comprehension_Defined"
         func <- match opDefined expr
         DomainFunction _ _ domFr _domTo <- domainOf func
+        unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
@@ -350,8 +333,10 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
         func <- match opDefined expr
         TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
+        when (null elems) $ na "defined(f) of empty function literal"
         elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
         let domFr = mconcat elemDoms
+        unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"

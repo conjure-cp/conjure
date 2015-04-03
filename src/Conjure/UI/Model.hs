@@ -454,6 +454,15 @@ toIntIsNoOp model =
         model { mStatements = mStatements model |> transformBi f }
 
 
+emptyMatrixLiterals :: Model -> Model
+emptyMatrixLiterals model =
+    let
+        f (TypeList ty) = TypeMatrix TypeInt ty
+        f x = x
+    in
+        model { mStatements = mStatements model |> transformBi f }
+
+
 inlineDecVarLettings :: Model -> Model
 inlineDecVarLettings model =
     let
@@ -640,6 +649,7 @@ epilogue model = return model
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
+    >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
@@ -836,8 +846,7 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Bool
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Comprehension_Image
-    , Horizontal.Function.rule_Image_Literal_Bool
-    , Horizontal.Function.rule_Image_Literal_Int
+    , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_DotLeq

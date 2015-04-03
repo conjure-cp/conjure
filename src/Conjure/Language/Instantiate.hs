@@ -12,6 +12,7 @@ import Conjure.Language.Expression.Op
 import Conjure.Language.Domain
 import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Constant
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate
 
@@ -27,7 +28,14 @@ instantiateExpression
     => [(Name, Expression)]
     -> Expression
     -> m Constant
-instantiateExpression ctxt x = normaliseConstant <$> evalStateT (instantiateE x) ctxt
+instantiateExpression ctxt x = do
+    constant <- normaliseConstant <$> evalStateT (instantiateE x) ctxt
+    case (emptyCollection constant, constant) of
+        (_, TypedConstant{}) -> return constant
+        (True, _) -> do
+            ty <- typeOf x
+            return (TypedConstant constant ty)
+        (False, _) -> return constant
 
 
 instantiateDomain

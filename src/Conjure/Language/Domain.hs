@@ -696,7 +696,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
-    pretty (DomainInt []) = "int"
+    pretty (DomainInt []) = "int()"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges

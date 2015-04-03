@@ -93,10 +93,12 @@ downC
     :: (MonadFail m, NameGen m)
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
-downC inp = do
-    mout <- downC1 inp
+downC inp0 = do
+    let inp1 = case inp0 of (nm, dom, TypedConstant con _) -> (nm, dom, con)
+                            _                              -> inp0
+    mout <- downC1 inp1
     case mout of
-        Nothing -> return [inp]
+        Nothing -> return [inp0]
         Just outs -> liftM concat $ mapM downC outs
 
 -- | Translate a bunch of low level constants up, all the way.

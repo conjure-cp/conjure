@@ -6,6 +6,7 @@ module Conjure.Language.Constant
     , normaliseConstant
     , validateConstantForDomain
     , mkUndef, isUndef
+    , emptyCollection
     ) where
 
 -- conjure
@@ -97,6 +98,16 @@ instance DomainSizeOf Constant Integer where
     domainSizeOf (DomainRelation  {}) = bug "not implemented: domainSizeOf DomainRelation"
     domainSizeOf (DomainPartition {}) = bug "not implemented: domainSizeOf DomainPartition"
     domainSizeOf _                    = bug "not implemented: domainSizeOf"
+
+emptyCollection :: Constant -> Bool
+emptyCollection ConstantBool{} = False
+emptyCollection ConstantInt{} = False
+emptyCollection ConstantEnum{} = False
+emptyCollection ConstantField{} = False
+emptyCollection (ConstantAbstract x) = emptyCollectionAbsLit x
+emptyCollection DomainInConstant{} = False
+emptyCollection (TypedConstant x _) = emptyCollection x
+emptyCollection ConstantUndefined{} = False
 
 intPow :: Integer -> Integer -> Integer
 intPow = (^)
@@ -297,6 +308,8 @@ validateConstantForDomain
     c@(ConstantAbstract (AbsLitPartition valss))
     d@(DomainPartition _ _ dInner) = nested c d $
         mapM_ (`validateConstantForDomain` dInner) (concat valss)
+
+validateConstantForDomain c@(TypedConstant c' _) d = nested c d $ validateConstantForDomain c' d
 
 validateConstantForDomain c d = constantNotInDomain c d
 
