@@ -6,6 +6,10 @@ module Conjure.Language.Expression.Op.And where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpAnd x = OpAnd x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -53,3 +57,14 @@ instance (OpAnd x :< x) => SimplifyOp OpAnd x where
 instance (Pretty x, ExpressionLike x) => Pretty (OpAnd x) where
     prettyPrec prec op@(OpAnd x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b
     prettyPrec _ (OpAnd x) = "and" <> prParens (pretty x)
+
+instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpAnd x) where
+    varSymBreakingDescription (OpAnd x) | Just xs <- listOut x = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpAnd")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (OpAnd x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpAnd")
+        , ("children", varSymBreakingDescription x)
+        ]

@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.PreImage where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpPreImage x = OpPreImage x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -35,3 +39,12 @@ instance SimplifyOp OpPreImage x where
 
 instance Pretty x => Pretty (OpPreImage x) where
     prettyPrec _ (OpPreImage a b) = "preImage" <> prettyList prParens "," [a,b]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpPreImage x) where
+    varSymBreakingDescription (OpPreImage a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpPreImage")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

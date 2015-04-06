@@ -6,6 +6,10 @@ module Conjure.Language.Expression.Op.Sum where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpSum x = OpSum x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -48,3 +52,14 @@ instance (OpSum x :< x) => SimplifyOp OpSum x where
 instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
     prettyPrec prec op@(OpSum x) | Just [a,b] <- listOut x = prettyPrecBinOp prec [op] a b
     prettyPrec _ (OpSum x) = "sum" <> prParens (pretty x)
+
+instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpSum x) where
+    varSymBreakingDescription (OpSum x) | Just xs <- listOut x = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpSum")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (OpSum x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpSum")
+        , ("children", varSymBreakingDescription x)
+        ]

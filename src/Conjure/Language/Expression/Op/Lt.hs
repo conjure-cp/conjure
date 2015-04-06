@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Lt where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpLt x = OpLt x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -31,3 +35,12 @@ instance SimplifyOp OpLt x where
 
 instance Pretty x => Pretty (OpLt x) where
     prettyPrec prec op@(OpLt a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpLt x) where
+    varSymBreakingDescription (OpLt a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpLt")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

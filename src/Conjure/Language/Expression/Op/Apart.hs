@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Apart where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpApart x = OpApart x x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -46,3 +50,13 @@ instance SimplifyOp OpApart x where
 
 instance Pretty x => Pretty (OpApart x) where
     prettyPrec _ (OpApart a b c) = "apart" <> prettyList prParens "," [a,b,c]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpApart x) where
+    varSymBreakingDescription (OpApart a b c) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpApart")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            , varSymBreakingDescription c
+            ])
+        ]

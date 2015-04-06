@@ -32,9 +32,9 @@ import Text.PrettyPrint
 
 -- aeson
 import Data.Aeson as JSON
-import Data.Scientific ( Scientific, floatingOrInteger )
-import qualified Data.HashMap.Strict as H
-import qualified Data.Vector as V
+import Data.Scientific ( Scientific, floatingOrInteger )    -- scientific
+import qualified Data.HashMap.Strict as M                   -- unordered-containers
+import qualified Data.Vector as V                           -- vector
 
 
 class Show a => Pretty a where
@@ -119,7 +119,7 @@ instance Pretty JSON.Value where
     pretty Null = "null"
 
 instance Pretty JSON.Object where
-    pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . H.toList
+    pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
         where
             f (key@"description", Array value) = pretty (show key) <> ":" <+> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <+> pretty value

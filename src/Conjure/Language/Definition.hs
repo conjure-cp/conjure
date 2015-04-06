@@ -61,6 +61,8 @@ import Conjure.Language.RepresentationOf
 import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
 import qualified Data.Aeson.Types as JSON
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
@@ -68,6 +70,7 @@ import Data.Generics.Uniplate.Zipper ( Zipper, down, right, hole )
 -- containers
 import Data.IntSet ( IntSet )
 import qualified Data.IntSet as I
+
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Model ---------------------------------------------------------------------------------------------------------------
@@ -98,6 +101,14 @@ instance Pretty Model where
         , [""]
         , [pretty info | info /= def]
         ]
+
+instance VarSymBreakingDescription Model where
+    varSymBreakingDescription m = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Model")
+        , ("symmetricChildren", JSON.Bool True)
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription $ mStatements m)
+        ]
+
 
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
@@ -169,9 +180,30 @@ instance Pretty Statement where
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
 
+instance VarSymBreakingDescription Statement where
+    varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Declaration")
+        , ("children", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription SearchOrder{} = JSON.Null
+    varSymBreakingDescription (Where xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Where")
+        , ("symmetricChildren", JSON.Bool True)
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+    varSymBreakingDescription (Objective obj x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String $ "Objective-" `mappend` stringToText (show obj))
+        , ("children", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (SuchThat xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "SuchThat")
+        , ("symmetricChildren", JSON.Bool True)
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+
 
 ------------------------------------------------------------------------------------------------------------------------
--- Objective -----------------------------------------------------------------------------------------------------------
+-- SearchOrder ---------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
 data SearchOrder = BranchingOn Name | Cut Expression
@@ -232,6 +264,33 @@ instance Pretty Declaration where
              (prettyList prBraces "," values)
     pretty (LettingDomainDefnUnnamed name size) =
         hang ("letting" <+> pretty name <+> "be new type of size") 8 (pretty size)
+
+instance VarSymBreakingDescription Declaration where
+    varSymBreakingDescription (FindOrGiven forg name domain) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "FindOrGiven")
+        , ("forg", toJSON forg)
+        , ("name", toJSON name)
+        , ("domain", toJSON domain)
+        ]
+    varSymBreakingDescription (Letting name x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Letting")
+        , ("name", toJSON name)
+        , ("value", toJSON x)
+        ]
+    varSymBreakingDescription (GivenDomainDefnEnum name) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "GivenDomainDefnEnum")
+        , ("name", toJSON name)
+        ]
+    varSymBreakingDescription (LettingDomainDefnEnum name xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "GivenDomainDefnEnum")
+        , ("name", toJSON name)
+        , ("values", JSON.Array $ V.fromList $ map toJSON xs)
+        ]
+    varSymBreakingDescription (LettingDomainDefnUnnamed name x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "LettingDomainDefnUnnamed")
+        , ("name", toJSON name)
+        , ("value", toJSON x)
+        ]
 
 
 data FindOrGiven = Find | Given | Quantified
@@ -444,6 +503,35 @@ instance Pretty Expression where
     prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
     prettyPrec _ (ExpressionMetaVar x) = "&" <> pretty x
+
+instance VarSymBreakingDescription Expression where
+    varSymBreakingDescription (Constant x) = toJSON x
+    varSymBreakingDescription (AbstractLiteral x) = varSymBreakingDescription x
+    varSymBreakingDescription (Domain domain) = varSymBreakingDescription domain
+    varSymBreakingDescription (Reference name _) = JSON.Object $ M.singleton "Reference" (toJSON name)
+    varSymBreakingDescription (WithLocals h (Left locs)) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "WithLocals")
+        , ("head", varSymBreakingDescription h)
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (WithLocals h (Right locs)) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "WithLocals")
+        , ("head", varSymBreakingDescription h)
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (Comprehension h gocs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Comprehension")
+        , ("head", varSymBreakingDescription h)
+        , ("gocs", JSON.Array $ V.fromList $ map varSymBreakingDescription gocs)
+        ]
+    varSymBreakingDescription (Typed x _) = varSymBreakingDescription x
+    varSymBreakingDescription (Op op) = varSymBreakingDescription op
+    varSymBreakingDescription (ExpressionMetaVar s) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "ExpressionMetaVar")
+        , ("name", JSON.String (stringToText s))
+        ]
 
 instance TypeOf Expression where
     typeOf (Constant x) = typeOf x
@@ -721,6 +809,10 @@ instance Pretty AbstractPattern where
     pretty (AbsPatSet    xs) = prettyList prBraces "," xs
     pretty (AbstractPatternMetaVar s) = "&" <> pretty s
 
+instance VarSymBreakingDescription AbstractPattern where
+    varSymBreakingDescription (Single nm) = toJSON nm
+    varSymBreakingDescription _ = bug "VarSymBreakingDescription"
+
 patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing
 patternToExpr (AbsPatTuple  ts) = AbstractLiteral $ AbsLitTuple  $ map patternToExpr ts
@@ -740,6 +832,16 @@ instance Pretty GeneratorOrCondition where
     pretty (Generator x) = pretty x
     pretty (Condition x) = pretty x
 
+instance VarSymBreakingDescription GeneratorOrCondition where
+    varSymBreakingDescription (Generator x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Generator")
+        , ("child", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (Condition x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "Condition")
+        , ("child", varSymBreakingDescription x)
+        ]
+
 instance Serialize GeneratorOrCondition
 instance Hashable  GeneratorOrCondition
 instance ToJSON    GeneratorOrCondition where toJSON = genericToJSON jsonOptions
@@ -756,6 +858,23 @@ instance Pretty Generator where
     pretty (GenDomainNoRepr  pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenDomainHasRepr pat x) = pretty pat <+> ":"  <+> pretty x
     pretty (GenInExpr        pat x) = pretty pat <+> "<-" <+> pretty x
+
+instance VarSymBreakingDescription Generator where
+    varSymBreakingDescription (GenDomainNoRepr  pat x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "GenDomainNoRepr")
+        , ("pattern", varSymBreakingDescription pat)
+        , ("generator", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (GenDomainHasRepr pat x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "GenDomainHasRepr")
+        , ("pattern", toJSON pat)
+        , ("generator", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (GenInExpr        pat x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "GenInExpr")
+        , ("pattern", varSymBreakingDescription pat)
+        , ("generator", varSymBreakingDescription x)
+        ]
 
 instance Serialize Generator
 instance Hashable  Generator

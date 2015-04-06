@@ -6,6 +6,10 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 import Conjure.Language.DomainSizeOf
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpTwoBars x = OpTwoBars x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -57,3 +61,11 @@ instance SimplifyOp OpTwoBars x where
 
 instance Pretty x => Pretty (OpTwoBars x) where
     prettyPrec _ (OpTwoBars a) = "|" <> pretty a <> "|"
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTwoBars x) where
+    varSymBreakingDescription (OpTwoBars a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpTwoBars")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

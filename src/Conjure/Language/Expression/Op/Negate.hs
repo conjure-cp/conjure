@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Negate where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpNegate x = OpNegate x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -29,3 +33,11 @@ instance SimplifyOp OpNegate x where
 
 instance Pretty x => Pretty (OpNegate x) where
     prettyPrec _ (OpNegate a) = "-" <> prettyPrec 10000 a
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpNegate x) where
+    varSymBreakingDescription (OpNegate a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpNegate")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Minus where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpMinus x = OpMinus x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -70,3 +74,12 @@ instance SimplifyOp OpMinus x where
 
 instance Pretty x => Pretty (OpMinus x) where
     prettyPrec prec op@(OpMinus a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpMinus x) where
+    varSymBreakingDescription (OpMinus a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpMinus")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]
