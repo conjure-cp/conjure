@@ -17,6 +17,9 @@ outputVarSymBreaking jsonPath = liftIO . writeFile jsonPath . renderNormal . var
 
 varSymBreaking :: Model -> JSON.Value
 varSymBreaking model = JSON.Object $ M.fromList
-    [ ("nodes_to_swap", JSON.Array $ V.fromList [ JSON.String n | Reference (Name n) _ <- universeBi model ])
+    [ ("nodes_to_swap", JSON.Array $ V.fromList $ nub
+            $  [ JSON.String n | Reference (Name n) _ <- universeBi model ]
+            ++ [ JSON.String n | Single    (Name n)   <- universeBi model ]
+            )
     , ("model", varSymBreakingDescription model)
     ]

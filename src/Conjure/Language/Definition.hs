@@ -811,7 +811,24 @@ instance Pretty AbstractPattern where
 
 instance VarSymBreakingDescription AbstractPattern where
     varSymBreakingDescription (Single nm) = toJSON nm
-    varSymBreakingDescription _ = bug "VarSymBreakingDescription"
+    varSymBreakingDescription (AbsPatTuple xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsPatTuple")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+    varSymBreakingDescription (AbsPatMatrix xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsPatMatrix")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+    varSymBreakingDescription (AbsPatSet xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsPatSet")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbstractPatternMetaVar s) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbstractPatternMetaVar")
+        , ("name", JSON.String (stringToText s))
+        ]
+    
 
 patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing
