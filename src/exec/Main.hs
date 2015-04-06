@@ -7,13 +7,14 @@ import Conjure.Bug ( userErr )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
-import Conjure.UI.Split ( outputSplittedModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( refAnswers )
+import Conjure.UI.Split ( outputSplittedModels )
+import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 
 import Conjure.Language.NameGen ( runNameGen )
 import Conjure.Language.Pretty ( pretty )
@@ -143,6 +144,10 @@ mainWithArgs TypeCheck{..} =
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model
+mainWithArgs VarSymBreaking{..} = do
+    let jsonFilePath = if null json then essence ++ "-json" else json
+    model <- readModelFromFile essence
+    outputVarSymBreaking jsonFilePath model
 
 
 
