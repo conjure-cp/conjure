@@ -144,7 +144,7 @@ mainWithArgs TypeCheck{..} =
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model
-mainWithArgs VarSymBreaking{..} = do
+mainWithArgs SymmetryDetection{..} = do
     let jsonFilePath = if null json then essence ++ "-json" else json
     model <- readModelFromFile essence
     outputVarSymBreaking jsonFilePath model
