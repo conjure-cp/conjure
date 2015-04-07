@@ -3,6 +3,7 @@
 module Conjure.Rules.Vertical.Record where
 
 import Conjure.Rules.Import
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
 
 
 rule_Record_Eq :: Rule
@@ -34,7 +35,7 @@ rule_Record_Neq = "record-neq" `namedRule` theRule where
 
 
 rule_Record_Lt :: Rule
-rule_Record_Lt = "record-lt" `namedRule` theRule where
+rule_Record_Lt = "record-Lt" `namedRule` theRule where
     theRule p = do
         (x,y)        <- match opLt p
         TypeRecord{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -48,7 +49,7 @@ rule_Record_Lt = "record-lt" `namedRule` theRule where
 
 
 rule_Record_Leq :: Rule
-rule_Record_Leq = "record-leq" `namedRule` theRule where
+rule_Record_Leq = "record-Leq" `namedRule` theRule where
     theRule p = do
         (x,y)        <- match opLeq p
         TypeRecord{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -61,22 +62,32 @@ rule_Record_Leq = "record-leq" `namedRule` theRule where
             )
 
 
-decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexLt p xs ys = unroll xs ys
-    where
-        unroll [a]    [b]    = [essence| &a < &b |]
-        unroll (a:as) (b:bs) = let rest = unroll as bs
-                               in  [essence| (&a < &b) \/ ((&a = &b) /\ &rest) |]
-        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+rule_Record_DotLt :: Rule
+rule_Record_DotLt = "record-DotLt" `namedRule` theRule where
+    theRule p = do
+        (x,y)        <- match opDotLt p
+        TypeRecord{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeRecord{} <- typeOf y
+        xs           <- downX1 x
+        ys           <- downX1 y
+        return
+            ( "Horizontal rule for record <"
+            , return $ decomposeLexDotLt p xs ys
+            )
 
 
-decomposeLexLeq :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexLeq p xs ys = unroll xs ys
-    where
-        unroll [a]    [b]    = [essence| &a <= &b |]
-        unroll (a:as) (b:bs) = let rest = unroll as bs
-                               in  [essence| (&a < &b) \/ ((&a = &b) /\ &rest) |]
-        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+rule_Record_DotLeq :: Rule
+rule_Record_DotLeq = "record-DotLeq" `namedRule` theRule where
+    theRule p = do
+        (x,y)        <- match opDotLeq p
+        TypeRecord{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeRecord{} <- typeOf y
+        xs           <- downX1 x
+        ys           <- downX1 y
+        return
+            ( "Horizontal rule for record <="
+            , return $ decomposeLexDotLeq p xs ys
+            )
 
 
 rule_Record_Index :: Rule

@@ -727,18 +727,24 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
+    , Vertical.Tuple.rule_Tuple_DotLeq
+    , Vertical.Tuple.rule_Tuple_DotLt
     , Vertical.Tuple.rule_Tuple_Index
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
+    , Vertical.Record.rule_Record_DotLeq
+    , Vertical.Record.rule_Record_DotLt
     , Vertical.Record.rule_Record_Index
 
     , Vertical.Variant.rule_Variant_Eq
     , Vertical.Variant.rule_Variant_Neq
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
+    , Vertical.Variant.rule_Variant_DotLeq
+    , Vertical.Variant.rule_Variant_DotLt
     , Vertical.Variant.rule_Variant_Index
     , Vertical.Variant.rule_Variant_Active
 
@@ -754,6 +760,8 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
+    , Vertical.Matrix.rule_Matrix_DotLeq_Decompose
+    , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Card
