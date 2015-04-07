@@ -104,6 +104,13 @@ main = do
               | m <- operators
               ]
 
+            , [ ""
+              , "instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (Op x) where"
+              ]
+            , [ "    varSymBreakingDescription (" ++ patModifier m ++ ") = varSymBreakingDescription x"
+              | m <- operators
+              ]
+
             ]
 
     outText' <- catch (Just <$> readFile outFile)

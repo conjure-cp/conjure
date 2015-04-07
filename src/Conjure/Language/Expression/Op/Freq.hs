@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Freq where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpFreq x = OpFreq x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -34,3 +38,12 @@ instance SimplifyOp OpFreq x where
 
 instance Pretty x => Pretty (OpFreq x) where
     prettyPrec _ (OpFreq a b) = "freq" <> prettyList prParens "," [a,b]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFreq x) where
+    varSymBreakingDescription (OpFreq a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpFreq")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

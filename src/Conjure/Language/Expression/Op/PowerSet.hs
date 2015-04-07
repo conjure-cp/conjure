@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.PowerSet where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpPowerSet x = OpPowerSet x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -35,3 +39,11 @@ instance SimplifyOp OpPowerSet x where
 
 instance Pretty x => Pretty (OpPowerSet x) where
     prettyPrec _ (OpPowerSet a) = "powerSet" <> prParens (pretty a)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpPowerSet x) where
+    varSymBreakingDescription (OpPowerSet a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpPowerSet")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

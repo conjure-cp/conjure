@@ -7,6 +7,10 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 import Conjure.Process.Enumerate ( enumerateDomain )
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpRestrict x = OpRestrict x {- the function -} x {- the domain -}
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -48,3 +52,12 @@ instance SimplifyOp OpRestrict x where
 
 instance Pretty x => Pretty (OpRestrict x) where
     prettyPrec _ (OpRestrict a b) = "restrict" <> prettyList prParens "," [a,b]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRestrict x) where
+    varSymBreakingDescription (OpRestrict a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpRestrict")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

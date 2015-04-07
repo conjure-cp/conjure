@@ -3,6 +3,8 @@ module Conjure.Language.AdHoc where
 import Conjure.Prelude
 import Conjure.Language.Name
 
+import qualified Data.Aeson.Types as JSON ( Value )
+
 
 class ExpressionLike a where
     fromInt :: Integer -> a
@@ -25,6 +27,8 @@ class DomainContainer a dom where
 class CanBeAnAlias a where
     isAlias :: a -> Maybe a
 
+class VarSymBreakingDescription a where
+    varSymBreakingDescription :: a -> JSON.Value
 
 class (:<) a b where
     inject :: a -> b

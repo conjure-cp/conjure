@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Together where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpTogether x = OpTogether x x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -39,3 +43,14 @@ instance SimplifyOp OpTogether x where
 
 instance Pretty x => Pretty (OpTogether x) where
     prettyPrec _ (OpTogether a b c) = "together" <> prettyList prParens "," [a,b,c]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTogether x) where
+    varSymBreakingDescription (OpTogether a b c) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpTogether")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            , varSymBreakingDescription c
+            ])
+        , ("symmetricChildren", JSON.Bool True)
+        ]

@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.True where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpTrue x = OpTrue x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -28,3 +32,11 @@ instance SimplifyOp OpTrue x where
 
 instance Pretty x => Pretty (OpTrue x) where
     prettyPrec _ (OpTrue a) = "true" <> prParens (pretty a)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpTrue x) where
+    varSymBreakingDescription (OpTrue a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpTrue")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

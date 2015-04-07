@@ -1,41 +1,18 @@
 language ESSENCE' 1.0
 
-find x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker:
-        matrix indexed by [int(1..2)] of int(0..6)
-find x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..2), int(1..6)] of int(1..6)
+find x_PartitionAsSet_Explicit_Occurrence:
+        matrix indexed by [int(1..2), int(1..6)] of bool
 such that
-    and([1 >=
-         sum([or([q18 <= x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q12]
-                  /\ x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q12, q18] = q1
-                      | q18 : int(1..6)])
-                  | q12 : int(1..2)])
+    and([1 >= sum([x_PartitionAsSet_Explicit_Occurrence[q10, q1] | q10 : int(1..2)])
              | q1 : int(1..6)]),
     6 =
-    sum([x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q13]
-             | q13 : int(1..2)]),
-    and([x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q14] =
-         x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q15]
-             | q14 : int(1..2), q15 : int(1..2)]),
-    and([x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q16] >= 1
-             | q16 : int(1..2)]),
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] <
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[2]
-    \/
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] =
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[2]
-    /\
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[1, ..] <lex
-    x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[2, ..],
-    and([and([q9 + 1 <=
-              x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q8]
-              ->
-              x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q8, q9] <
-              x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q8, q9 + 1]
-                  | q9 : int(1..5)])
-             | q8 : int(1..2)]),
-    and([and([q10 > x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q8]
-              -> x_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q8, q10] = 1
-                  | q10 : int(1..6)])
-             | q8 : int(1..2)])
+    sum([sum([x_PartitionAsSet_Explicit_Occurrence[q11, q15] | q15 : int(1..6)])
+             | q11 : int(1..2)]),
+    and([sum([x_PartitionAsSet_Explicit_Occurrence[q12, q16] | q16 : int(1..6)]) =
+         sum([x_PartitionAsSet_Explicit_Occurrence[q13, q17] | q17 : int(1..6)])
+             | q12 : int(1..2), q13 : int(1..2)]),
+    and([sum([x_PartitionAsSet_Explicit_Occurrence[q14, q18] | q18 : int(1..6)]) >=
+         1   | q14 : int(1..2)]),
+    x_PartitionAsSet_Explicit_Occurrence[1, ..] <lex
+    x_PartitionAsSet_Explicit_Occurrence[2, ..]
 

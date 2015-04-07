@@ -6,6 +6,10 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpIndexing x = OpIndexing x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -119,3 +123,12 @@ instance SimplifyOp OpIndexing x where
 
 instance Pretty x => Pretty (OpIndexing x) where
     prettyPrec _ (OpIndexing  a b) = pretty a <> prBrackets (pretty b)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpIndexing x) where
+    varSymBreakingDescription (OpIndexing a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpIndexing")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

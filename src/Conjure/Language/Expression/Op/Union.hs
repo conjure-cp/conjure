@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Union where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpUnion x = OpUnion x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -49,3 +53,13 @@ instance SimplifyOp OpUnion x where
 
 instance Pretty x => Pretty (OpUnion x) where
     prettyPrec prec op@(OpUnion a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpUnion x) where
+    varSymBreakingDescription (OpUnion a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpUnion")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        , ("symmetricChildren", JSON.Bool True)
+        ]

@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Not where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpNot x = OpNot x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -28,3 +32,11 @@ instance SimplifyOp OpNot x where
 
 instance Pretty x => Pretty (OpNot x) where
     prettyPrec _ (OpNot a) = "!" <> prettyPrec 10000 a
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpNot x) where
+    varSymBreakingDescription (OpNot a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpNot")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

@@ -8,6 +8,8 @@ module Conjure.Representations.Partition.PartitionAsSet ( partitionAsSet ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -29,12 +31,15 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
         outName name = mconcat [name, "_", "PartitionAsSet"]
 
         outDomain (DomainPartition "PartitionAsSet" (PartitionAttr{..}) innerDomain) = do
+            innerType <- typeOf innerDomain
             let repr1 = case partsNum of
                         SizeAttr_Size{} -> "Explicit"
                         _               -> "ExplicitVarSizeWithMarker"
             let repr2 = case partsSize of
                         SizeAttr_Size{} -> "Explicit"
-                        _               -> "ExplicitVarSizeWithMarker"
+                        _               -> if typesUnify [innerType, TypeInt]
+                                             then "Occurrence"
+                                             else "ExplicitVarSizeWithMarker"
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
                                      , "domain:" <+> pretty domain

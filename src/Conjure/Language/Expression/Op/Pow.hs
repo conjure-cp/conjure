@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Pow where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpPow x = OpPow x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -34,3 +38,12 @@ instance SimplifyOp OpPow x where
 
 instance Pretty x => Pretty (OpPow x) where
     prettyPrec prec op@(OpPow a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpPow x) where
+    varSymBreakingDescription (OpPow a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpPow")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]
