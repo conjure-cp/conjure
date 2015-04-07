@@ -74,7 +74,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] > 0 -> &values[&i] < &values[&i+1]
+                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] > 0 -> &values[&i] .< &values[&i+1]
                         |]
 
                 dontCareWhenNotFlagged flags values = do
