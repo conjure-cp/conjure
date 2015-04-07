@@ -957,6 +957,9 @@ otherRules =
 
         , rule_QuantifierShift
 
+        , rule_DotLt_IntLike
+        , rule_DotLeq_IntLike
+
         ]
 
     ,   [ rule_InlineConditions
@@ -1389,6 +1392,38 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     opSumSkip b x = [essence| toInt(&b) * &x |]
     opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
     opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
+
+
+rule_DotLt_IntLike :: Rule
+rule_DotLt_IntLike = "intLike-DotLt" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opDotLt p
+        tya   <- typeOf a
+        tyb   <- typeOf b
+        case mostDefined [tya, tyb] of
+            TypeBool{} -> return ()
+            TypeInt{}  -> return ()
+            _ -> na "rule_DotLt_IntLike"
+        return
+            ( "Horizontal rule for int-like .<" <+> pretty (make opLt a b)
+            , return $ make opLt a b
+            )
+
+
+rule_DotLeq_IntLike :: Rule
+rule_DotLeq_IntLike = "intLike-DotLeq" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opDotLeq p
+        tya   <- typeOf a
+        tyb   <- typeOf b
+        case mostDefined [tya, tyb] of
+            TypeBool{} -> return ()
+            TypeInt{}  -> return ()
+            _ -> na "rule_DotLeq_IntLike"
+        return
+            ( "Horizontal rule for int-like .<" <+> pretty (make opLeq a b)
+            , return $ make opLeq a b
+            )
 
 
 rule_AttributeToConstraint :: Rule
