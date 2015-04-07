@@ -178,3 +178,15 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --limit-time=INT                        Time limit in seconds. (CPU
                                              time).
+
+conjure symmetry-detection [OPTIONS] ESSENCE_FILE
+  Dump some JSON to be used as input to ferret for symmetry detection.
+
+Logging & Output:
+     --json=JSON_FILE                        Output JSON file. By default,
+                                             its value will be
+                                             'foo.essence-json' if the Essence
+                                             file is named 'foo.essence'
+     --log-level=LOGLEVEL                    Log level.
+     --limit-time=INT                        Time limit in seconds. (CPU
+                                             time).

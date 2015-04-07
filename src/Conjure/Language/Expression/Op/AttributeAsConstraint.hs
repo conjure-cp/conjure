@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.AttributeAsConstraint where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpAttributeAsConstraint x = OpAttributeAsConstraint x
                                                          AttrName   -- attribute name
@@ -33,3 +37,13 @@ instance SimplifyOp OpAttributeAsConstraint x where
 instance Pretty x => Pretty (OpAttributeAsConstraint x) where
     prettyPrec _ (OpAttributeAsConstraint x attr Nothing   ) = pretty attr <> prParens (pretty x)
     prettyPrec _ (OpAttributeAsConstraint x attr (Just val)) = pretty attr <> prettyList prParens "," [x, val]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpAttributeAsConstraint x) where
+    varSymBreakingDescription (OpAttributeAsConstraint a b c) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpAttributeAsConstraint")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , toJSON b
+            , maybe JSON.Null varSymBreakingDescription c
+            ])
+        ]

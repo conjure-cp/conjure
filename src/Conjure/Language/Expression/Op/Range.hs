@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Range where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpRange x = OpRange x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -39,3 +43,11 @@ instance SimplifyOp OpRange x where
 
 instance Pretty x => Pretty (OpRange x) where
     prettyPrec _ (OpRange a) = "range" <> prParens (pretty a)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRange x) where
+    varSymBreakingDescription (OpRange a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpRange")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

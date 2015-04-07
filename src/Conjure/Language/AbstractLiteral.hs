@@ -14,6 +14,11 @@ import Conjure.Language.DomainOf
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
+-- aeson
+import qualified Data.Aeson as JSON
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data AbstractLiteral x
     = AbsLitTuple [x]
@@ -46,6 +51,54 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitSequence  xs ) = "sequence"  <> prettyList prParens "," xs
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
+
+instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (AbstractLiteral x) where
+    varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitTuple")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+    varSymBreakingDescription AbsLitRecord{} = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitRecord")
+        ]
+    varSymBreakingDescription AbsLitVariant{} = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitVariant")
+        ]
+    varSymBreakingDescription (AbsLitMatrix _ xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitMatrix")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        ]
+    varSymBreakingDescription (AbsLitSet xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitSet")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbsLitMSet xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitMSet")
+        , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbsLitFunction xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitFunction")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription (AbsLitTuple [x,y]) | (x,y) <- xs ])
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbsLitSequence xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitSequence")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription (AbsLitTuple [fromInt i, x]) | (i,x) <- zip allNats xs ])
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbsLitRelation xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitRelation")
+        , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitTuple) xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
+    varSymBreakingDescription (AbsLitPartition xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitPartition")
+        , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitSet) xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
 
 instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 

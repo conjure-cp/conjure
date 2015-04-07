@@ -64,6 +64,9 @@ data Domain r x
     | DomainMetaVar String
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
+instance (VarSymBreakingDescription x, ToJSON r) => VarSymBreakingDescription (Domain r x) where
+    varSymBreakingDescription domain = toJSON $ fmap varSymBreakingDescription domain
+
 mkDomainBool :: Domain () x
 mkDomainBool = DomainBool
 

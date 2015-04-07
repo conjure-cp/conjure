@@ -6,6 +6,10 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 import Conjure.Language.Expression.Op.SubsetEq
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpSupsetEq x = OpSupsetEq x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -32,3 +36,12 @@ instance SimplifyOp OpSupsetEq x where
 
 instance Pretty x => Pretty (OpSupsetEq x) where
     prettyPrec prec op@(OpSupsetEq a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpSupsetEq x) where
+    varSymBreakingDescription (OpSupsetEq a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpSupsetEq")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

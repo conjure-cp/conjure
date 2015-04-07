@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Inverse where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpInverse x = OpInverse x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -37,3 +41,12 @@ instance SimplifyOp OpInverse x where
 
 instance Pretty x => Pretty (OpInverse x) where
     prettyPrec _ (OpInverse a b) = "inverse" <> prettyList prParens "," [a,b]
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpInverse x) where
+    varSymBreakingDescription (OpInverse a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpInverse")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]

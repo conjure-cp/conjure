@@ -79,6 +79,12 @@ data UI
         , logLevel         :: LogLevel
         , limitTime        :: Maybe Int
         }
+    | SymmetryDetection
+        { essence          :: FilePath
+        , json             :: FilePath
+        , logLevel         :: LogLevel
+        , limitTime        :: Maybe Int
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -355,8 +361,29 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
-        }                          &= help "Split an Essence files to various smaller files. Useful for testing."
-
+        }                          &= name "split"
+                                   &= explicit
+                                   &= help "Split an Essence files to various smaller files. Useful for testing."
+    , SymmetryDetection
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
+        , json             = def   &= typ "JSON_FILE"
+                                   &= name "json"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output JSON file.\n\
+                                           \By default, its value will be 'foo.essence-json'\n\
+                                           \if the Essence file is named 'foo.essence'"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
+        }                          &= name "symmetry-detection"
+                                   &= explicit
+                                   &= help "Dump some JSON to be used as input to ferret for symmetry detection."
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)

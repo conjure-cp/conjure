@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.Participants where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpParticipants x = OpParticipants x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -34,3 +38,11 @@ instance SimplifyOp OpParticipants x where
 
 instance Pretty x => Pretty (OpParticipants x) where
     prettyPrec _ (OpParticipants a) = "participants" <> prParens (pretty a)
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpParticipants x) where
+    varSymBreakingDescription (OpParticipants a) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpParticipants")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            ])
+        ]

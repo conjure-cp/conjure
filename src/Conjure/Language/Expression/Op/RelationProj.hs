@@ -6,6 +6,10 @@ import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 import Conjure.Language.Expression.Op.Image
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpRelationProj x = OpRelationProj x [Maybe x]      -- Nothing represents an _
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -76,3 +80,12 @@ instance Pretty x => Pretty (OpRelationProj x) where
     prettyPrec _ (OpRelationProj a bs) = pretty a <> prettyList prParens "," (map pr bs)
         where pr Nothing = "_"
               pr (Just b) = pretty b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpRelationProj x) where
+    varSymBreakingDescription (OpRelationProj a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpRelationProj")
+        , ("children", JSON.Array $ V.fromList
+            $ varSymBreakingDescription a
+            : map (maybe JSON.Null varSymBreakingDescription) b
+          )
+        ]

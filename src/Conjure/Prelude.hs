@@ -43,6 +43,7 @@ module Conjure.Prelude
     , allFiles, allFilesWithSuffix
     , setRandomSeed, randomRIO
     , nchoosek
+    , JSONValue
     ) where
 
 import GHC.Err as X ( error )
@@ -515,3 +516,5 @@ setRandomSeed = setStdGen . mkStdGen
 
 nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
 nchoosek f n k = f n `div` (f k * f (n-k))
+
+type JSONValue = JSON.Value
