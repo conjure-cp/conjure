@@ -229,10 +229,14 @@ flattenIfNeeded m = do
         then make opFlatten m
         else m
 
+
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- match opLt p
+        (x,y)           <- case (match opLt p, match opDotLt p) of
+                                (Just a, _) -> return a
+                                (_, Just a) -> return a
+                                _ -> na "rule_Matrix_Lt_Primitive"
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
@@ -248,7 +252,10 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
 rule_Matrix_Leq_Primitive :: Rule
 rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
     theRule p = do
-        (x,y)           <- match opLeq p
+        (x,y)           <- case (match opLeq p, match opDotLeq p) of
+                                (Just a, _) -> return a
+                                (_, Just a) -> return a
+                                _ -> na "rule_Matrix_Leq_Primitive"
         tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
         ty@TypeMatrix{} <- typeOf y
         unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
@@ -264,13 +271,13 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
 rule_Matrix_Lt_Decompose :: Rule
 rule_Matrix_Lt_Decompose = "matrix-Lt-tuple" `namedRule` theRule where
     theRule p = do
-        (x,y) <- match opLt p
+        (x,y)           <- match opLt p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
         when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
         when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs <- downX1 x
-        ys <- downX1 y
+        xs              <- downX1 x
+        ys              <- downX1 y
         return
             ( "Horizontal rule for matrix <, decomposing"
             , return $ decomposeLexLt p xs ys
@@ -280,13 +287,13 @@ rule_Matrix_Lt_Decompose = "matrix-Lt-tuple" `namedRule` theRule where
 rule_Matrix_Leq_Decompose :: Rule
 rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
     theRule p = do
-        (x,y) <- match opLeq p
+        (x,y)           <- match opLeq p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
         when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
         when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs <- downX1 x
-        ys <- downX1 y
+        xs              <- downX1 x
+        ys              <- downX1 y
         return
             ( "Horizontal rule for matrix <=, decomposing"
             , return $ decomposeLexLeq p xs ys
@@ -296,11 +303,13 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
 rule_Matrix_DotLt_Decompose :: Rule
 rule_Matrix_DotLt_Decompose = "matrix-DotLt-tuple" `namedRule` theRule where
     theRule p = do
-        (x,y)        <- match opDotLt p
-        TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        TypeMatrix{} <- typeOf y
-        xs           <- downX1 x
-        ys           <- downX1 y
+        (x,y)           <- match opDotLt p
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        xs              <- downX1 x
+        ys              <- downX1 y
         return
             ( "Horizontal rule for matrix .<, decomposing"
             , return $ decomposeLexDotLt p xs ys
@@ -310,11 +319,13 @@ rule_Matrix_DotLt_Decompose = "matrix-DotLt-tuple" `namedRule` theRule where
 rule_Matrix_DotLeq_Decompose :: Rule
 rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
     theRule p = do
-        (x,y)        <- match opDotLeq p
-        TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        TypeMatrix{} <- typeOf y
-        xs           <- downX1 x
-        ys           <- downX1 y
+        (x,y)           <- match opDotLeq p
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        xs              <- downX1 x
+        ys              <- downX1 y
         return
             ( "Horizontal rule for matrix .<=, decomposing"
             , return $ decomposeLexDotLeq p xs ys
