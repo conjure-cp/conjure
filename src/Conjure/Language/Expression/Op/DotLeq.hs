@@ -5,6 +5,10 @@ module Conjure.Language.Expression.Op.DotLeq where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
 
 data OpDotLeq x = OpDotLeq x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -31,3 +35,12 @@ instance SimplifyOp OpDotLeq x where
 
 instance Pretty x => Pretty (OpDotLeq x) where
     prettyPrec prec op@(OpDotLeq a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpDotLeq x) where
+    varSymBreakingDescription (OpDotLeq a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpDotLeq")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]
