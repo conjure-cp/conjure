@@ -6,4 +6,4 @@ find . -name "*.o" -delete
 find . -name "*.hi-boot" -delete
 find . -name "*.o-boot" -delete
 rm -f src/RepositoryVersion.hs
-rm -rf dist ~/.cabal-sandbox cabal.sandbox.config
+rm -rf dist .cabal-sandbox cabal.sandbox.config
