@@ -76,6 +76,7 @@ import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partiti
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
+import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 
 -- uniplate
@@ -958,6 +959,9 @@ otherRules =
         , DontCare.rule_Variant
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
+
+        , TildeOrdering.rule_BoolInt
+        , TildeOrdering.rule_MSet
 
         , rule_ComplexAbsPat
 
