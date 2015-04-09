@@ -1,0 +1,38 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(1..4)] of bool
+find b_Explicit: matrix indexed by [int(1..3)] of int(1..4)
+such that
+    or(flatten([a_Occurrence[q4] /\
+                (a_Occurrence[q4] < or([b_Explicit[q8] = q4 | q8 : int(1..3)]) /\
+                 (and(flatten([a_Occurrence[q5] ->
+                               a_Occurrence[q5] = or([b_Explicit[q11] = q5 | q11 : int(1..3)])
+                                   | q5 : int(1..4), q5 > q4]))
+                  /\
+                  and(flatten([!or([a_Occurrence[q14] /\ q14 = b_Explicit[q9] | q14 : int(1..4)])
+                               /\ b_Explicit[q9] > q4
+                               ->
+                               a_Occurrence[b_Explicit[q9]] =
+                               or([b_Explicit[q13] = b_Explicit[q9] | q13 : int(1..3)])
+                                   | q9 : int(1..3)]))))
+                    | q4 : int(1..4)]))
+    \/
+    or(flatten([!or([a_Occurrence[q23] /\ q23 = b_Explicit[q6] | q23 : int(1..4)])
+                /\
+                (a_Occurrence[b_Explicit[q6]] <
+                 or([b_Explicit[q16] = b_Explicit[q6] | q16 : int(1..3)])
+                 /\
+                 (and(flatten([a_Occurrence[q5] /\ q5 > b_Explicit[q6] ->
+                               a_Occurrence[q5] = or([b_Explicit[q19] = q5 | q19 : int(1..3)])
+                                   | q5 : int(1..4)]))
+                  /\
+                  and(flatten([!or([a_Occurrence[q22] /\ q22 = b_Explicit[q17] | q22 : int(1..4)])
+                               /\ b_Explicit[q17] > b_Explicit[q6]
+                               ->
+                               a_Occurrence[b_Explicit[q17]] =
+                               or([b_Explicit[q21] = b_Explicit[q17] | q21 : int(1..3)])
+                                   | q17 : int(1..3)]))))
+                    | q6 : int(1..3)])),
+    3 = sum([a_Occurrence[q1] | q1 : int(1..4)]),
+    and([b_Explicit[q2] < b_Explicit[q2 + 1] | q2 : int(1..2)])
+

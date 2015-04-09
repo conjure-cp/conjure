@@ -1,0 +1,43 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(1..4)] of bool
+find a_Explicit: matrix indexed by [int(1..3)] of int(1..4)
+find b_Explicit: matrix indexed by [int(1..3)] of int(1..4)
+such that
+    or(flatten([a_Occurrence[q11] /\
+                (a_Occurrence[q11] < or([b_Explicit[q15] = q11 | q15 : int(1..3)]) /\
+                 (and(flatten([a_Occurrence[q12] ->
+                               a_Occurrence[q12] = or([b_Explicit[q18] = q12 | q18 : int(1..3)])
+                                   | q12 : int(1..4), q12 > q11]))
+                  /\
+                  and(flatten([!or([a_Occurrence[q21] /\ q21 = b_Explicit[q16] | q21 : int(1..4)])
+                               /\ b_Explicit[q16] > q11
+                               ->
+                               a_Occurrence[b_Explicit[q16]] =
+                               or([b_Explicit[q20] = b_Explicit[q16] | q20 : int(1..3)])
+                                   | q16 : int(1..3)]))))
+                    | q11 : int(1..4)]))
+    \/
+    or(flatten([!or([a_Occurrence[q30] /\ q30 = b_Explicit[q13] | q30 : int(1..4)])
+                /\
+                (a_Occurrence[b_Explicit[q13]] <
+                 or([b_Explicit[q23] = b_Explicit[q13] | q23 : int(1..3)])
+                 /\
+                 (and(flatten([a_Occurrence[q12] /\ q12 > b_Explicit[q13] ->
+                               a_Occurrence[q12] = or([b_Explicit[q26] = q12 | q26 : int(1..3)])
+                                   | q12 : int(1..4)]))
+                  /\
+                  and(flatten([!or([a_Occurrence[q29] /\ q29 = b_Explicit[q24] | q29 : int(1..4)])
+                               /\ b_Explicit[q24] > b_Explicit[q13]
+                               ->
+                               a_Occurrence[b_Explicit[q24]] =
+                               or([b_Explicit[q28] = b_Explicit[q24] | q28 : int(1..3)])
+                                   | q24 : int(1..3)]))))
+                    | q13 : int(1..3)])),
+    3 = sum([a_Occurrence[q1] | q1 : int(1..4)]),
+    and([b_Explicit[q2] < b_Explicit[q2 + 1] | q2 : int(1..2)]),
+    and([a_Explicit[q4] < a_Explicit[q4 + 1] | q4 : int(1..2)]),
+    and([a_Occurrence[a_Explicit[q7]] | q7 : int(1..3)]),
+    and([a_Occurrence[q8] -> or([a_Explicit[q10] = q8 | q10 : int(1..3)])
+             | q8 : int(1..4)])
+

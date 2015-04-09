@@ -1,0 +1,31 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(1..4)] of bool
+find b_Occurrence: matrix indexed by [int(1..4)] of bool
+such that
+    or(flatten([a_Occurrence[q3] /\
+                (a_Occurrence[q3] < b_Occurrence[q3] /\
+                 (and(flatten([a_Occurrence[q4] -> a_Occurrence[q4] = b_Occurrence[q4]
+                                   | q4 : int(1..4), q4 > q3]))
+                  /\
+                  and(flatten([b_Occurrence[q4] /\
+                               !or([a_Occurrence[q5] /\ q5 = q4 | q5 : int(1..4)])
+                               -> a_Occurrence[q4] = b_Occurrence[q4]
+                                   | q4 : int(1..4), q4 > q3]))))
+                    | q3 : int(1..4)]))
+    \/
+    or(flatten([b_Occurrence[q3] /\
+                !or([a_Occurrence[q7] /\ q7 = q3 | q7 : int(1..4)])
+                /\
+                (a_Occurrence[q3] < b_Occurrence[q3] /\
+                 (and(flatten([a_Occurrence[q4] -> a_Occurrence[q4] = b_Occurrence[q4]
+                                   | q4 : int(1..4), q4 > q3]))
+                  /\
+                  and(flatten([b_Occurrence[q4] /\
+                               !or([a_Occurrence[q6] /\ q6 = q4 | q6 : int(1..4)])
+                               -> a_Occurrence[q4] = b_Occurrence[q4]
+                                   | q4 : int(1..4), q4 > q3]))))
+                    | q3 : int(1..4)])),
+    3 = sum([a_Occurrence[q1] | q1 : int(1..4)]),
+    3 = sum([b_Occurrence[q2] | q2 : int(1..4)])
+
