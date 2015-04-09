@@ -830,6 +830,7 @@ horizontalRules =
     , Horizontal.Set.rule_SupsetEq
     , Horizontal.Set.rule_In
     , Horizontal.Set.rule_Card
+    , Horizontal.Set.rule_CardViaFreq
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
@@ -962,6 +963,8 @@ otherRules =
 
         , TildeOrdering.rule_BoolInt
         , TildeOrdering.rule_MSet
+        , TildeOrdering.rule_ViaMSet
+        , TildeOrdering.rule_TildeLeq
 
         , rule_ComplexAbsPat
 

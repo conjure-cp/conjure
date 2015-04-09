@@ -209,6 +209,14 @@ rule_Freq = "mset-freq" `namedRule` theRule where
     theRule p = do
         (mset, arg) <- match opFreq p
         TypeMSet{}  <- typeOf mset
+        -- avoid applying this rule when "mset" is of the form "toMSet of set"
+        case mset of
+            [essence| toMSet(&s) |] -> do
+                tyS <- typeOf s
+                case tyS of
+                    TypeSet{} -> na "rule_Freq"
+                    _         -> return ()
+            _ -> return ()
         return
             ( "Horizontal rule for mset-freq."
             , do

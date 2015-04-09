@@ -309,6 +309,20 @@ rule_Card = "set-card" `namedRule` theRule where
             )
 
 
+rule_CardViaFreq :: Rule
+rule_CardViaFreq = "set-card-via-freq" `namedRule` theRule where
+    theRule [essence| freq(toMSet(&s),&x) |] = do
+        case s of
+            Domain{} -> na "rule_CardViaFreq"
+            _        -> return ()
+        TypeSet{} <- typeOf s
+        return
+            ( "Horizontal rule for set cardinality."
+            , return [essence| toInt(&x in &s) |]
+            )
+    theRule _ = na "rule_CardViaFreq"
+
+
 rule_Param_MinOfSet :: Rule
 rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
     theRule [essence| min(&s) |] = do
