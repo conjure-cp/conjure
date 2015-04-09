@@ -42,18 +42,18 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             MSetAttr _ (OccurAttr_MinMaxOccur x _) -> Just x
             _ -> Nothing
 
-        getMaxOccur attrs innerDomain = case attrs of
+        getMaxOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MaxOccur x) -> return x
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            MSetAttr (SizeAttr_Size x) _ -> do y <- domainSizeOf innerDomain ; return (make opMin $ fromList [x,y])
-            MSetAttr (SizeAttr_MaxSize x) _ -> do y <- domainSizeOf innerDomain ; return (make opMin $ fromList [x,y])
-            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> do y <- domainSizeOf innerDomain ; return (make opMin $ fromList [x,y])
-            _ -> fail ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+            MSetAttr (SizeAttr_Size x) _ -> return x
+            MSetAttr (SizeAttr_MaxSize x) _ -> return x
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
+            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
         downD (name, DomainMSet _ attrs innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
-            maxOccur <- getMaxOccur attrs innerDomain
+            maxOccur <- getMaxOccur attrs
             let indexDomain =           mkDomainIntB 1 maxSize
             let flagDomain  = defRepr $ mkDomainIntB 0 maxOccur
             return $ Just
