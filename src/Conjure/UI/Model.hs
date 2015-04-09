@@ -730,6 +730,8 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Lt
     , Vertical.Tuple.rule_Tuple_DotLeq
     , Vertical.Tuple.rule_Tuple_DotLt
+    , Vertical.Tuple.rule_Tuple_TildeLeq
+    , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
 
     , Vertical.Record.rule_Record_Eq

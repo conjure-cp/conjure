@@ -797,6 +797,44 @@ opDotLeq _ =
     )
 
 
+opTildeLt
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opTildeLt _ =
+    ( \ x y -> inject (MkOpTildeLt (OpTildeLt x y))
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpTildeLt (OpTildeLt x y) -> return (x,y)
+                _ -> na ("Lenses.opTildeLt:" <++> pretty p)
+    )
+
+
+opTildeLeq
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opTildeLeq _ =
+    ( \ x y -> inject (MkOpTildeLeq (OpTildeLeq x y))
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpTildeLeq (OpTildeLeq x y) -> return (x,y)
+                _ -> na ("Lenses.opTildeLeq:" <++> pretty p)
+    )
+
+
 opOr
     :: ( Op x :< x
        , Pretty x

@@ -51,7 +51,7 @@ rule_MSet = "tildeLt-mset" `namedRule` theRule where
                 return [essence|
                     exists &iPat in &z .
                         freq(&x, &i) < freq(&y, &i) /\
-                        (forAll &jPat in &z , &j > &i . freq(&x, &j) = freq(&y, &j))
+                        (forAll &jPat in &z , &i ~< &j . freq(&x, &j) = freq(&y, &j))
                                |]
             )
     theRule _ = na "rule_MSet"
