@@ -35,18 +35,24 @@ rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
 rule_MSet :: Rule
 rule_MSet = "tildeOrd-mset" `namedRule` theRule where
     theRule [essence| &x ~< &y |] = do
-        tyx <- typeOf x
-        tyy <- typeOf y
-        case mostDefined [tyx, tyy] of
+        tyX <- typeOf x
+        tyY <- typeOf y
+        case mostDefined [tyX, tyY] of
             TypeMSet{} -> return ()
             _ -> na "rule_MSet"
         return
-            ( "~< to <"
-            , return [essence| or([ |&x| = 0 /\ |&y| > 0
-                                  , max(&x) < max(&y)
-                                  , max(&x) = max(&y) /\ ((&x - mset(max(&x))) ~< (&y - mset(max(&y))))
-                                  ])
-                             |]
+            ( "mset ~<"
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                let z = [essence| &x union &y |]
+                -- there exists an i, where freq_x is smaller than freq_y
+                -- and all j's (s.t >i), freq_x = freq_y
+                return [essence|
+                    exists &iPat in &z .
+                        freq(&x, &i) < freq(&y, &i) /\
+                        (forAll &jPat in &z , &j > &i . freq(&x, &j) = freq(&y, &j))
+                               |]
             )
     theRule [essence| &x ~<= &y |] = do
         tyx <- typeOf x
@@ -55,7 +61,7 @@ rule_MSet = "tildeOrd-mset" `namedRule` theRule where
             TypeMSet{} -> return ()
             _ -> na "rule_MSet"
         return
-            ( "~< to <"
+            ( "mset ~<="
             , return [essence| or([ &x = &y
                                   , &x ~< &y
                                   ])
