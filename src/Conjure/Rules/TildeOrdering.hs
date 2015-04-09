@@ -33,7 +33,7 @@ rule_BoolInt = "tildeOrd-bool-int" `namedRule` theRule where
 
 
 rule_MSet :: Rule
-rule_MSet = "tildeOrd-mset" `namedRule` theRule where
+rule_MSet = "tildeLt-mset" `namedRule` theRule where
     theRule [essence| &x ~< &y |] = do
         tyX <- typeOf x
         tyY <- typeOf y
@@ -54,19 +54,46 @@ rule_MSet = "tildeOrd-mset" `namedRule` theRule where
                         (forAll &jPat in &z , &j > &i . freq(&x, &j) = freq(&y, &j))
                                |]
             )
-    theRule [essence| &x ~<= &y |] = do
-        tyx <- typeOf x
-        tyy <- typeOf y
-        case mostDefined [tyx, tyy] of
-            TypeMSet{} -> return ()
-            _ -> na "rule_MSet"
+    theRule _ = na "rule_MSet"
+
+
+rule_ViaMSet :: Rule
+rule_ViaMSet = "tildeLt-via-mset" `namedRule` theRule where
+    theRule [essence| &x ~< &y |] = do
+        tyX <- typeOf x
+        tyY <- typeOf y
+        f   <- case mostDefined [tyX, tyY] of
+            TypeSet{}       -> return $ \ i -> [essence| toMSet(&i) |]
+            TypeFunction{}  -> return $ \ i -> [essence| toMSet(&i) |]
+            TypeRelation{}  -> return $ \ i -> [essence| toMSet(&i) |]
+            TypePartition{} -> return $ \ i -> [essence| toMSet(parts(&i)) |]
+            _               -> na "rule_ViaMSet"
+        let fx = f x
+        let fy = f y
         return
-            ( "mset ~<="
+            ( "set, function, relation, partition ~<"
+            , return [essence| &fx ~< &fy |]
+            )
+    theRule _ = na "rule_ViaMSet"
+
+
+rule_TildeLeq :: Rule
+rule_TildeLeq = "tildeLeq" `namedRule` theRule where
+    theRule [essence| &x ~<= &y |] = do
+        tyX <- typeOf x
+        tyY <- typeOf y
+        case mostDefined [tyX, tyY] of
+            TypeSet{}       -> return ()
+            TypeMSet{}      -> return ()
+            TypeFunction{}  -> return ()
+            TypeRelation{}  -> return ()
+            TypePartition{} -> return ()
+            _               -> na "rule_TildeLeq"
+        return
+            ( "~<= to ~<"
             , return [essence| or([ &x = &y
                                   , &x ~< &y
                                   ])
                              |]
             )
-    theRule _ = na "rule_MSet"
-
-
+    theRule _ = na "rule_TildeLeq"
