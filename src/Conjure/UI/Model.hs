@@ -971,6 +971,7 @@ otherRules =
         , rule_AttributeToConstraint
 
         , rule_QuantifierShift
+        , rule_QuantifierShift2
 
         , rule_DotLt_IntLike
         , rule_DotLeq_IntLike
@@ -1505,4 +1506,26 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
                             index
                             (map mkQuan elems))
                         indexer
+            )
+
+
+-- | shifting quantifiers inwards, if they operate on a flattened multi-dim matrix.
+rule_QuantifierShift2 :: Rule
+rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, inner)                 <- match opQuantifier p
+        matrix                          <- match opFlatten inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
+        let
+            flattenIfNeeded = case ty of
+                TypeMatrix{} -> make opFlatten
+                TypeList{}   -> make opFlatten
+                _            -> id
+        return
+            ( "Shifting quantifier inwards"
+            , return $ mkQuan
+                        (make matrixLiteral
+                            TypeAny
+                            index
+                            (map (mkQuan . flattenIfNeeded) elems))
             )
