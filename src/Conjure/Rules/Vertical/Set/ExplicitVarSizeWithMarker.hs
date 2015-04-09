@@ -9,7 +9,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} s) -> return (pat, s)
+            Generator (GenInExpr pat@Single{} s) -> return (pat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
         TypeSet{}                   <- typeOf s
         "ExplicitVarSizeWithMarker" <- representationOf s
