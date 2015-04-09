@@ -28,7 +28,65 @@ instance (Pretty x, TypeOf x) => DomainOf (OpTildeLt x) x where
     domainOf op = mkDomainAny ("OpTildeLt:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpTildeLt where
-    evaluateOp (OpTildeLt x y) = return $ ConstantBool $ x < y
+    evaluateOp (OpTildeLt x y) = return $ ConstantBool $ tilLt x y
+        where
+            freq :: Eq a => a -> [a] -> Int
+            freq i xs = sum [ 1 | j <- xs , i == j ]
+
+            tupleE (i,j) = ConstantAbstract (AbsLitTuple [i,j])
+
+            tilLt (ConstantBool a) (ConstantBool b) = a < b
+            tilLt (ConstantInt  a) (ConstantInt  b) = a < b
+            tilLt (ConstantAbstract (AbsLitTuple []))
+                  (ConstantAbstract (AbsLitTuple [])) = False
+            tilLt (ConstantAbstract (AbsLitTuple (a:as)))
+                  (ConstantAbstract (AbsLitTuple (b:bs))) =
+                      if tilLt a b
+                          then True
+                          else if a == b
+                                  then tilLt (ConstantAbstract (AbsLitTuple as))
+                                             (ConstantAbstract (AbsLitTuple bs))
+                                  else False
+            tilLt (ConstantAbstract (AbsLitSet as))
+                  (ConstantAbstract (AbsLitSet bs)) =
+                or [ and [ freq i as < freq i bs
+                         , and [ True
+                               | j <- cs
+                               , if tilLt i j
+                                   then freq j as == freq j bs
+                                   else True
+                               ]
+                         ]
+                   | let cs = nub (as ++ bs)
+                   , i <- cs
+                   ]
+            tilLt (ConstantAbstract (AbsLitMSet as))
+                  (ConstantAbstract (AbsLitMSet bs)) =
+                or [ and [ freq i as < freq i bs
+                         , and [ True
+                               | j <- cs
+                               , if tilLt i j
+                                   then freq j as == freq j bs
+                                   else True
+                               ]
+                         ]
+                   | let cs = as ++ bs
+                   , i <- cs
+                   ]
+            tilLt (ConstantAbstract (AbsLitFunction as))
+                  (ConstantAbstract (AbsLitFunction bs)) =
+                or [ and [ freq i as < freq i bs
+                         , and [ True
+                               | j <- cs
+                               , if tilLt (tupleE i) (tupleE j)
+                                   then freq j as == freq j bs
+                                   else True
+                               ]
+                         ]
+                   | let cs = as ++ bs
+                   , i <- cs
+                   ]
+            tilLt a b = a < b
 
 instance SimplifyOp OpTildeLt x where
     simplifyOp _ = na "simplifyOp{OpTildeLt}"
