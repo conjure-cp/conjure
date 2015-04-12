@@ -21,7 +21,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, rel), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDef opToSet expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
         let upd val old        =  lambdaToFunction pat old val
         TypeRelation{}         <- typeOf rel

@@ -73,17 +73,49 @@ instance EvaluateOp OpTildeLt where
                    | let cs = as ++ bs
                    , i <- cs
                    ]
-            tilLt (ConstantAbstract (AbsLitFunction as))
-                  (ConstantAbstract (AbsLitFunction bs)) =
+            tilLt (ConstantAbstract (AbsLitFunction as'))
+                  (ConstantAbstract (AbsLitFunction bs')) =
                 or [ and [ freq i as < freq i bs
                          , and [ True
                                | j <- cs
-                               , if tilLt (tupleE i) (tupleE j)
+                               , if tilLt i j
                                    then freq j as == freq j bs
                                    else True
                                ]
                          ]
-                   | let cs = as ++ bs
+                   | let as = map tupleE as'
+                   , let bs = map tupleE bs'
+                   , let cs = as ++ bs
+                   , i <- cs
+                   ]
+            tilLt (ConstantAbstract (AbsLitRelation as'))
+                  (ConstantAbstract (AbsLitRelation bs')) =
+                or [ and [ freq i as < freq i bs
+                         , and [ True
+                               | j <- cs
+                               , if tilLt i j
+                                   then freq j as == freq j bs
+                                   else True
+                               ]
+                         ]
+                   | let as = map (ConstantAbstract . AbsLitTuple) as'
+                   , let bs = map (ConstantAbstract . AbsLitTuple) bs'
+                   , let cs = as ++ bs
+                   , i <- cs
+                   ]
+            tilLt (ConstantAbstract (AbsLitPartition as'))
+                  (ConstantAbstract (AbsLitPartition bs')) =
+                or [ and [ freq i as < freq i bs
+                         , and [ True
+                               | j <- cs
+                               , if tilLt i j
+                                   then freq j as == freq j bs
+                                   else True
+                               ]
+                         ]
+                   | let as = map (ConstantAbstract . AbsLitSet) as'
+                   , let bs = map (ConstantAbstract . AbsLitSet) bs'
+                   , let cs = as ++ bs
                    , i <- cs
                    ]
             tilLt a b = a < b
