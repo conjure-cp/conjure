@@ -149,11 +149,11 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
             else do
+                eprimeModel       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> liftIO (getDirectoryContents outputsDir)
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
-                    eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
                     let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
@@ -180,11 +180,11 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
         if not (T.null stderrSR)
             then liftIO $ assertFailure $ T.unpack stderrSR
             else do
+                eprimeModel       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> liftIO (getDirectoryContents outputsDir)
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
-                    eprimeModel    <- readModelFromFile (outputsDir </> modelPath)
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     case ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution of
                         Left err -> assertFailure $ renderNormal err
