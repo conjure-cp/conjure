@@ -47,11 +47,12 @@ rule_MSet = "tildeLt-mset" `namedRule` theRule where
                 (jPat, j) <- quantifiedVar
                 let z = [essence| &x union &y |]
                 -- there exists an i, where freq_x is smaller than freq_y
-                -- and all j's (s.t >i), freq_x = freq_y
+                -- and all j's (s.t. j<i), freq_x = freq_y
+                -- i.e. all those that are smaller than the ith occur equal nb times
                 return [essence|
                     exists &iPat in &z .
                         freq(&x, &i) < freq(&y, &i) /\
-                        (forAll &jPat in &z , &i ~< &j . freq(&x, &j) = freq(&y, &j))
+                        (forAll &jPat in &z , &j ~< &i . freq(&x, &j) = freq(&y, &j))
                                |]
             )
     theRule _ = na "rule_MSet"

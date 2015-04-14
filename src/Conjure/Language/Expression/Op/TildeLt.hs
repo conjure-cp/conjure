@@ -43,18 +43,16 @@ instance EvaluateOp OpTildeLt where
                   (ConstantAbstract (AbsLitTuple (b:bs))) =
                       if tilLt a b
                           then True
-                          else if a == b
-                                  then tilLt (ConstantAbstract (AbsLitTuple as))
-                                             (ConstantAbstract (AbsLitTuple bs))
-                                  else False
+                          else a == b &&
+                               tilLt (ConstantAbstract (AbsLitTuple as))
+                                     (ConstantAbstract (AbsLitTuple bs))
             tilLt (ConstantAbstract (AbsLitSet as))
                   (ConstantAbstract (AbsLitSet bs)) =
                 or [ and [ freq i as < freq i bs
-                         , and [ True
+                         , and [ if tilLt j i
+                                     then freq j as == freq j bs
+                                     else True
                                | j <- cs
-                               , if tilLt i j
-                                   then freq j as == freq j bs
-                                   else True
                                ]
                          ]
                    | let cs = nub (as ++ bs)
@@ -63,11 +61,10 @@ instance EvaluateOp OpTildeLt where
             tilLt (ConstantAbstract (AbsLitMSet as))
                   (ConstantAbstract (AbsLitMSet bs)) =
                 or [ and [ freq i as < freq i bs
-                         , and [ True
+                         , and [ if tilLt j i
+                                     then freq j as == freq j bs
+                                     else True
                                | j <- cs
-                               , if tilLt i j
-                                   then freq j as == freq j bs
-                                   else True
                                ]
                          ]
                    | let cs = as ++ bs
@@ -76,11 +73,10 @@ instance EvaluateOp OpTildeLt where
             tilLt (ConstantAbstract (AbsLitFunction as'))
                   (ConstantAbstract (AbsLitFunction bs')) =
                 or [ and [ freq i as < freq i bs
-                         , and [ True
+                         , and [ if tilLt j i
+                                     then freq j as == freq j bs
+                                     else True
                                | j <- cs
-                               , if tilLt i j
-                                   then freq j as == freq j bs
-                                   else True
                                ]
                          ]
                    | let as = map tupleE as'
@@ -91,11 +87,10 @@ instance EvaluateOp OpTildeLt where
             tilLt (ConstantAbstract (AbsLitRelation as'))
                   (ConstantAbstract (AbsLitRelation bs')) =
                 or [ and [ freq i as < freq i bs
-                         , and [ True
+                         , and [ if tilLt j i
+                                     then freq j as == freq j bs
+                                     else True
                                | j <- cs
-                               , if tilLt i j
-                                   then freq j as == freq j bs
-                                   else True
                                ]
                          ]
                    | let as = map (ConstantAbstract . AbsLitTuple) as'
@@ -106,11 +101,10 @@ instance EvaluateOp OpTildeLt where
             tilLt (ConstantAbstract (AbsLitPartition as'))
                   (ConstantAbstract (AbsLitPartition bs')) =
                 or [ and [ freq i as < freq i bs
-                         , and [ True
+                         , and [ if tilLt j i
+                                     then freq j as == freq j bs
+                                     else True
                                | j <- cs
-                               , if tilLt i j
-                                   then freq j as == freq j bs
-                                   else True
                                ]
                          ]
                    | let as = map (ConstantAbstract . AbsLitSet) as'
