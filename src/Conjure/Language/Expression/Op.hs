@@ -53,8 +53,12 @@ mkBinOp op a b =
                     L_LexGeq      -> \ x y -> inject $ MkOpLexLeq      $ OpLexLeq      y x
                     L_DotLt       -> \ x y -> inject $ MkOpDotLt       $ OpDotLt       x y
                     L_DotLeq      -> \ x y -> inject $ MkOpDotLeq      $ OpDotLeq      x y
+                    L_DotGt       -> \ x y -> inject $ MkOpDotLt       $ OpDotLt       y x
+                    L_DotGeq      -> \ x y -> inject $ MkOpDotLeq      $ OpDotLeq      y x
                     L_TildeLt     -> \ x y -> inject $ MkOpTildeLt     $ OpTildeLt     x y
                     L_TildeLeq    -> \ x y -> inject $ MkOpTildeLeq    $ OpTildeLeq    x y
+                    L_TildeGt     -> \ x y -> inject $ MkOpTildeLt     $ OpTildeLt     y x
+                    L_TildeGeq    -> \ x y -> inject $ MkOpTildeLeq    $ OpTildeLeq    y x
                     _ -> bug ("Unknown lexeme for binary operator:" <+> pretty (show l))
             in
                 f a b

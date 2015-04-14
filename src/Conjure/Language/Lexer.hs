@@ -226,9 +226,13 @@ data Lexeme
 
     | L_DotLt
     | L_DotLeq
+    | L_DotGt
+    | L_DotGeq
 
     | L_TildeLt
     | L_TildeLeq
+    | L_TildeGt
+    | L_TildeGeq
 
     | L_LeftArrow
 
@@ -418,9 +422,13 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_DotLt           , ".<"    )
     , ( L_DotLeq          , ".<="   )
+    , ( L_DotGt           , ".>"    )
+    , ( L_DotGeq          , ".>="   )
 
     , ( L_TildeLt         , "~<"    )
     , ( L_TildeLeq        , "~<="   )
+    , ( L_TildeGt         , "~>"    )
+    , ( L_TildeGeq        , "~>="   )
 
     , ( L_LeftArrow       , "<-"   )
 
