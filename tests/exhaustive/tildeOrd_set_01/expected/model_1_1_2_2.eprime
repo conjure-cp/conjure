@@ -8,12 +8,12 @@ such that
     or(flatten([a_Occurrence[q17] /\
                 (a_Occurrence[q17] < b_Occurrence[q17] /\
                  (and(flatten([a_Occurrence[q18] -> a_Occurrence[q18] = b_Occurrence[q18]
-                                   | q18 : int(1..4), q18 > q17]))
+                                   | q18 : int(1..4), q18 < q17]))
                   /\
                   and(flatten([b_Occurrence[q18] /\
                                !or([a_Occurrence[q19] /\ q19 = q18 | q19 : int(1..4)])
                                -> a_Occurrence[q18] = b_Occurrence[q18]
-                                   | q18 : int(1..4), q18 > q17]))))
+                                   | q18 : int(1..4), q18 < q17]))))
                     | q17 : int(1..4)]))
     \/
     or(flatten([b_Occurrence[q17] /\
@@ -21,12 +21,12 @@ such that
                 /\
                 (a_Occurrence[q17] < b_Occurrence[q17] /\
                  (and(flatten([a_Occurrence[q18] -> a_Occurrence[q18] = b_Occurrence[q18]
-                                   | q18 : int(1..4), q18 > q17]))
+                                   | q18 : int(1..4), q18 < q17]))
                   /\
                   and(flatten([b_Occurrence[q18] /\
                                !or([a_Occurrence[q20] /\ q20 = q18 | q20 : int(1..4)])
                                -> a_Occurrence[q18] = b_Occurrence[q18]
-                                   | q18 : int(1..4), q18 > q17]))))
+                                   | q18 : int(1..4), q18 < q17]))))
                     | q17 : int(1..4)])),
     3 = sum([a_Occurrence[q1] | q1 : int(1..4)]),
     3 = sum([b_Occurrence[q2] | q2 : int(1..4)]),

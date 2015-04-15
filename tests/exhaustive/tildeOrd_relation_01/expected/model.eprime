@@ -17,7 +17,7 @@ such that
                                sum([b_RelationAsMatrix[q18_1, q18_2] * (q18_1 = q13_1 /\ q18_2 = q13_2)
                                         | q18_1 : int(1..2), q18_2 : bool])
                                    | q13_1 : int(1..2), q13_2 : bool,
-                                     q7_1 < q13_1 \/ q7_1 = q13_1 /\ q7_2 < q13_2]))
+                                     q13_1 < q7_1 \/ q13_1 = q7_1 /\ q13_2 < q7_2]))
                   /\
                   and(flatten([b_RelationAsMatrix[q14_1, q14_2] /\
                                !or([a_RelationAsMatrix[q24_1, q24_2] /\ (q24_1 = q14_1 /\ q24_2 = q14_2)
@@ -29,7 +29,7 @@ such that
                                sum([b_RelationAsMatrix[q22_1, q22_2] * (q22_1 = q14_1 /\ q22_2 = q14_2)
                                         | q22_1 : int(1..2), q22_2 : bool])
                                    | q14_1 : int(1..2), q14_2 : bool,
-                                     q7_1 < q14_1 \/ q7_1 = q14_1 /\ q7_2 < q14_2]))))
+                                     q14_1 < q7_1 \/ q14_1 = q7_1 /\ q14_2 < q7_2]))))
                     | q7_1 : int(1..2), q7_2 : bool]))
     \/
     or(flatten([b_RelationAsMatrix[q8_1, q8_2] /\
@@ -49,7 +49,7 @@ such that
                                sum([b_RelationAsMatrix[q34_1, q34_2] * (q34_1 = q29_1 /\ q34_2 = q29_2)
                                         | q34_1 : int(1..2), q34_2 : bool])
                                    | q29_1 : int(1..2), q29_2 : bool,
-                                     q8_1 < q29_1 \/ q8_1 = q29_1 /\ q8_2 < q29_2]))
+                                     q29_1 < q8_1 \/ q29_1 = q8_1 /\ q29_2 < q8_2]))
                   /\
                   and(flatten([b_RelationAsMatrix[q30_1, q30_2] /\
                                !or([a_RelationAsMatrix[q40_1, q40_2] /\ (q40_1 = q30_1 /\ q40_2 = q30_2)
@@ -61,6 +61,6 @@ such that
                                sum([b_RelationAsMatrix[q38_1, q38_2] * (q38_1 = q30_1 /\ q38_2 = q30_2)
                                         | q38_1 : int(1..2), q38_2 : bool])
                                    | q30_1 : int(1..2), q30_2 : bool,
-                                     q8_1 < q30_1 \/ q8_1 = q30_1 /\ q8_2 < q30_2]))))
+                                     q30_1 < q8_1 \/ q30_1 = q8_1 /\ q30_2 < q8_2]))))
                     | q8_1 : int(1..2), q8_2 : bool]))
 
