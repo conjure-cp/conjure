@@ -64,7 +64,12 @@ main = do
                 ]
 
             , [ ""
-              , "instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (Op x) where"
+              , "instance ( Show x, Pretty x"
+              , "         , ExpressionLike x"
+              , "         , ReferenceContainer x"
+              , "         , TypeOf x"
+              , "         , Domain () x :< x"
+              , "         ) => TypeOf (Op x) where"
               ]
             , [ "    typeOf (" ++ patModifier m ++ ") = typeOf x"
               | m <- operators

@@ -946,6 +946,8 @@ otherRules =
         , rule_GeneratorsFirst
 
         , rule_DomainCardinality
+        , rule_DomainMin
+        , rule_DomainMax
 
         , BubbleUp.rule_MergeNested
         -- , BubbleUp.rule_Comprehension
@@ -1313,6 +1315,38 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             , do
                 (iPat, _) <- quantifiedVar
                 return [essence| sum([ 1 | &iPat : &d ]) |]
+            )
+
+
+rule_DomainMin :: Rule
+rule_DomainMin = "domain-min" `namedRule` theRule where
+    theRule p = do
+        maybeDomain <- match opMin p
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
+            _ -> na "rule_DomainMin"
+        return
+            ( "min of a domain"
+            , do
+                (iPat, _) <- quantifiedVar
+                return [essence| min([ 1 | &iPat : &d ]) |]
+            )
+
+
+rule_DomainMax :: Rule
+rule_DomainMax = "domain-max" `namedRule` theRule where
+    theRule p = do
+        maybeDomain <- match opMax p
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
+            _ -> na "rule_DomainMax"
+        return
+            ( "max of a domain"
+            , do
+                (iPat, _) <- quantifiedVar
+                return [essence| max([ 1 | &iPat : &d ]) |]
             )
 
 
