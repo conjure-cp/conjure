@@ -237,9 +237,10 @@ data Lexeme
     | L_LeftArrow
 
     | L_subsequence
-    | L_subsequences
     | L_substring
-    | L_substrings
+
+    | L_pred
+    | L_succ
 
     deriving (Eq, Ord, Show, Generic)
 

@@ -108,4 +108,6 @@ mkOp op xs =
             L_participants -> inject $ MkOpParticipants $ OpParticipants (headNote "participants takes a single argument." xs)
             L_active       -> inject $ MkOpActive       $ OpActive       (atNote "active 1" xs 0)
                                                                            (atNote "active 2" xs 1 |> nameOut |> fromMaybe (bug "active 2"))
+            L_pred         -> inject $ MkOpPred         $ OpPred         (headNote "pred takes a single argument."    xs)
+            L_succ         -> inject $ MkOpSucc         $ OpSucc         (headNote "succ takes a single argument."    xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))

@@ -221,8 +221,8 @@ functionals =
 
     , L_active
 
-    , L_subsequences
-    , L_substrings
+    , L_pred
+    , L_succ
 
     ]
 
