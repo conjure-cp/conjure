@@ -142,6 +142,7 @@ logFollow config q@Question{..} options = do
 
       f (AnsweredRule{},_,_)  = True
       f (AnsweredRepr{aDom_=dom},_,_) = compareDoms dom (getReprFromAnswer a)
+      f t@(AnsweredReprStored{},_,_) = bug ("Got " <+> (pretty . show ) t)
 
       minMaySet :: Set (QuestionAnswered, GenOrd, Pref)
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
@@ -213,10 +214,10 @@ addQuestionAnswered _  model qa = model { mInfo = newInfo }
 makeChoice :: Question -> Answer -> QuestionAnswered
 makeChoice q a =  case (aRuleName a) of
                  "choose-repr" ->
-                     AnsweredRepr
+                     AnsweredReprStored
                      { qHole_       = holeHash . qHole $  q
                      , qAscendants_ = I.fromList . map holeHash . qAscendants $ q
-                     , aDom_        = getReprFromAnswer a
+                     , aDomStored_  = show . pretty $ getReprFromAnswer a
                      , aRuleName_   = show $ aRuleName a
                      }
                  _ ->
