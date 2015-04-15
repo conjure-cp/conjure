@@ -76,6 +76,7 @@ import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partiti
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
+import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 
 -- uniplate
@@ -727,18 +728,26 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
+    , Vertical.Tuple.rule_Tuple_DotLeq
+    , Vertical.Tuple.rule_Tuple_DotLt
+    , Vertical.Tuple.rule_Tuple_TildeLeq
+    , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
 
     , Vertical.Record.rule_Record_Eq
     , Vertical.Record.rule_Record_Neq
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
+    , Vertical.Record.rule_Record_DotLeq
+    , Vertical.Record.rule_Record_DotLt
     , Vertical.Record.rule_Record_Index
 
     , Vertical.Variant.rule_Variant_Eq
     , Vertical.Variant.rule_Variant_Neq
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
+    , Vertical.Variant.rule_Variant_DotLeq
+    , Vertical.Variant.rule_Variant_DotLt
     , Vertical.Variant.rule_Variant_Index
     , Vertical.Variant.rule_Variant_Active
 
@@ -754,6 +763,8 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
+    , Vertical.Matrix.rule_Matrix_DotLeq_Decompose
+    , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Card
@@ -813,14 +824,15 @@ horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
-    , Horizontal.Set.rule_Leq
-    , Horizontal.Set.rule_Lt
+    , Horizontal.Set.rule_DotLeq
+    , Horizontal.Set.rule_DotLt
     , Horizontal.Set.rule_Subset
     , Horizontal.Set.rule_SubsetEq
     , Horizontal.Set.rule_Supset
     , Horizontal.Set.rule_SupsetEq
     , Horizontal.Set.rule_In
     , Horizontal.Set.rule_Card
+    , Horizontal.Set.rule_CardViaFreq
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
@@ -831,8 +843,8 @@ horizontalRules =
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
-    , Horizontal.MSet.rule_Leq
-    , Horizontal.MSet.rule_Lt
+    , Horizontal.MSet.rule_DotLeq
+    , Horizontal.MSet.rule_DotLt
     , Horizontal.MSet.rule_Subset
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
@@ -849,8 +861,8 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
-    , Horizontal.Function.rule_Leq
-    , Horizontal.Function.rule_Lt
+    , Horizontal.Function.rule_DotLeq
+    , Horizontal.Function.rule_DotLt
     , Horizontal.Function.rule_Subset
     , Horizontal.Function.rule_SubsetEq
     , Horizontal.Function.rule_Supset
@@ -879,8 +891,8 @@ horizontalRules =
     , Horizontal.Sequence.rule_Image_Literal_Int
     , Horizontal.Sequence.rule_Eq
     , Horizontal.Sequence.rule_Neq
-    , Horizontal.Sequence.rule_Leq
-    , Horizontal.Sequence.rule_Lt
+    , Horizontal.Sequence.rule_DotLeq
+    , Horizontal.Sequence.rule_DotLt
     , Horizontal.Sequence.rule_Subset
     , Horizontal.Sequence.rule_SubsetEq
     , Horizontal.Sequence.rule_Supset
@@ -902,8 +914,8 @@ horizontalRules =
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_Neq
-    , Horizontal.Relation.rule_Leq
-    , Horizontal.Relation.rule_Lt
+    , Horizontal.Relation.rule_DotLeq
+    , Horizontal.Relation.rule_DotLt
     , Horizontal.Relation.rule_Subset
     , Horizontal.Relation.rule_SubsetEq
     , Horizontal.Relation.rule_Supset
@@ -913,8 +925,8 @@ horizontalRules =
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
-    , Horizontal.Partition.rule_Leq
-    , Horizontal.Partition.rule_Lt
+    , Horizontal.Partition.rule_DotLeq
+    , Horizontal.Partition.rule_DotLt
     , Horizontal.Partition.rule_Together
     , Horizontal.Partition.rule_Apart
     , Horizontal.Partition.rule_Party
@@ -951,11 +963,20 @@ otherRules =
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
 
+        , TildeOrdering.rule_BoolInt
+        , TildeOrdering.rule_MSet
+        , TildeOrdering.rule_ViaMSet
+        , TildeOrdering.rule_TildeLeq
+
         , rule_ComplexAbsPat
 
         , rule_AttributeToConstraint
 
         , rule_QuantifierShift
+        , rule_QuantifierShift2
+
+        , rule_DotLt_IntLike
+        , rule_DotLeq_IntLike
 
         ]
 
@@ -1391,6 +1412,38 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
 
+rule_DotLt_IntLike :: Rule
+rule_DotLt_IntLike = "intLike-DotLt" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opDotLt p
+        tya   <- typeOf a
+        tyb   <- typeOf b
+        case mostDefined [tya, tyb] of
+            TypeBool{} -> return ()
+            TypeInt{}  -> return ()
+            _ -> na "rule_DotLt_IntLike"
+        return
+            ( "Horizontal rule for int-like .<" <+> pretty (make opLt a b)
+            , return $ make opLt a b
+            )
+
+
+rule_DotLeq_IntLike :: Rule
+rule_DotLeq_IntLike = "intLike-DotLeq" `namedRule` theRule where
+    theRule p = do
+        (a,b) <- match opDotLeq p
+        tya   <- typeOf a
+        tyb   <- typeOf b
+        case mostDefined [tya, tyb] of
+            TypeBool{} -> return ()
+            TypeInt{}  -> return ()
+            _ -> na "rule_DotLeq_IntLike"
+        return
+            ( "Horizontal rule for int-like .<" <+> pretty (make opLeq a b)
+            , return $ make opLeq a b
+            )
+
+
 rule_AttributeToConstraint :: Rule
 rule_AttributeToConstraint = "attribute-to-constraint" `namedRule` theRule where
     theRule (Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint thing attr mval))) = do
@@ -1455,4 +1508,26 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
                             index
                             (map mkQuan elems))
                         indexer
+            )
+
+
+-- | shifting quantifiers inwards, if they operate on a flattened multi-dim matrix.
+rule_QuantifierShift2 :: Rule
+rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, inner)                 <- match opQuantifier p
+        matrix                          <- match opFlatten inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
+        let
+            flattenIfNeeded = case ty of
+                TypeMatrix{} -> make opFlatten
+                TypeList{}   -> make opFlatten
+                _            -> id
+        return
+            ( "Shifting quantifier inwards"
+            , return $ mkQuan
+                        (make matrixLiteral
+                            TypeAny
+                            index
+                            (map (mkQuan . flattenIfNeeded) elems))
             )

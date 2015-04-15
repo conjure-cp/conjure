@@ -9,7 +9,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, iPat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, s)
+            Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
         "Occurrence"         <- representationOf s

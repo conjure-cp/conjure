@@ -40,7 +40,7 @@ setExplicit = Representation chck downD structuralCons downC up
                     return $ return -- for list
                         [essence|
                             forAll &iPat : int(1..&size-1) .
-                                &m[&i] < &m[&i+1]
+                                &m[&i] .< &m[&i+1]
                         |]
 
                 innerStructuralCons m = do

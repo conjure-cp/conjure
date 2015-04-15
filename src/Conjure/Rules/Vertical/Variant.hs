@@ -43,7 +43,7 @@ rule_Variant_Neq = "variant-neq" `namedRule` theRule where
 
 
 rule_Variant_Lt :: Rule
-rule_Variant_Lt = "variant-lt" `namedRule` theRule where
+rule_Variant_Lt = "variant-Lt" `namedRule` theRule where
     theRule p = do
         (x,y)         <- match opLt p
         TypeVariant{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -63,9 +63,9 @@ rule_Variant_Lt = "variant-lt" `namedRule` theRule where
 
 
 rule_Variant_Leq :: Rule
-rule_Variant_Leq = "variant-leq" `namedRule` theRule where
+rule_Variant_Leq = "variant-Leq" `namedRule` theRule where
     theRule p = do
-        (x,y)        <- match opLeq p
+        (x,y)         <- match opLeq p
         TypeVariant{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeVariant{} <- typeOf y
         (xWhich:xs)   <- downX1 x
@@ -77,6 +77,46 @@ rule_Variant_Leq = "variant-leq" `namedRule` theRule where
                 , make opAnd $ fromList
                     [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
                     , onTagged (make opLeq) xWhich xs ys                -- and the tagged values are <=
+                    ]
+                ]
+            )
+
+
+rule_Variant_DotLt :: Rule
+rule_Variant_DotLt = "variant-DotLt" `namedRule` theRule where
+    theRule p = do
+        (x,y)         <- match opDotLt p
+        TypeVariant{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeVariant{} <- typeOf y
+        (xWhich:xs)   <- downX1 x
+        (yWhich:ys)   <- downX1 y
+        return
+            ( "Horizontal rule for variant <"
+            , return $ make opOr $ fromList
+                [ [essence| &xWhich < &yWhich |]                        -- either the tags are <
+                , make opAnd $ fromList
+                    [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
+                    , onTagged (make opDotLt) xWhich xs ys              -- and the tagged values are .<
+                    ]
+                ]
+            )
+
+
+rule_Variant_DotLeq :: Rule
+rule_Variant_DotLeq = "variant-DotLeq" `namedRule` theRule where
+    theRule p = do
+        (x,y)         <- match opDotLeq p
+        TypeVariant{} <- typeOf x        -- TODO: check if x and y have the same arity
+        TypeVariant{} <- typeOf y
+        (xWhich:xs)   <- downX1 x
+        (yWhich:ys)   <- downX1 y
+        return
+            ( "Horizontal rule for variant <="
+            , return $ make opOr $ fromList
+                [ [essence| &xWhich < &yWhich |]                        -- either the tags are <
+                , make opAnd $ fromList
+                    [ [essence| &xWhich = &yWhich |]                    -- or the tags are eq
+                    , onTagged (make opDotLeq) xWhich xs ys             -- and the tagged values are .<=
                     ]
                 ]
             )

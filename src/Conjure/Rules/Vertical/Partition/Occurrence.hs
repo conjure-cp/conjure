@@ -9,7 +9,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
         partition_              <- match opParts expr
         TypePartition{}         <- typeOf partition_

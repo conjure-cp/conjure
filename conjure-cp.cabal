@@ -50,6 +50,8 @@ Library
                      , Conjure.Language.Expression.Op.Defined
                      , Conjure.Language.Expression.Op.Div
                      , Conjure.Language.Expression.Op.DontCare
+                     , Conjure.Language.Expression.Op.DotLeq
+                     , Conjure.Language.Expression.Op.DotLt
                      , Conjure.Language.Expression.Op.Eq
                      , Conjure.Language.Expression.Op.Factorial
                      , Conjure.Language.Expression.Op.Flatten
@@ -94,6 +96,8 @@ Library
                      , Conjure.Language.Expression.Op.Sum
                      , Conjure.Language.Expression.Op.Supset
                      , Conjure.Language.Expression.Op.SupsetEq
+                     , Conjure.Language.Expression.Op.TildeLeq
+                     , Conjure.Language.Expression.Op.TildeLt
                      , Conjure.Language.Expression.Op.Together
                      , Conjure.Language.Expression.Op.ToInt
                      , Conjure.Language.Expression.Op.ToMSet
@@ -190,6 +194,7 @@ Library
 
                      , Conjure.Rules.BubbleUp
                      , Conjure.Rules.DontCare
+                     , Conjure.Rules.TildeOrdering
 
                      -- supporting modules for the user interfacing parts
                      , Conjure.UI
