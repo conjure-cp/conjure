@@ -1,0 +1,8 @@
+language Essence 1.3
+
+letting A be new type enum { a, b, c }
+find x,y,z,t : A
+such that x = min(`A`)
+such that y = max(`A`)
+such that z = succ(min(`A`))
+such that t = pred(pred(max(`A`)))

@@ -436,6 +436,10 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_subsequence     , "subsequence"  )
     , ( L_substring       , "substring"    )
 
+    , ( L_pred, "pred" )
+    , ( L_succ, "succ" )
+
+
     ]
 
 runLexer :: MonadFail m => T.Text -> m [LexemePos]

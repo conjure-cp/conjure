@@ -33,6 +33,8 @@ instance (DomainOf x x) => DomainOf (OpPred x) x where
 
 instance EvaluateOp OpPred where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpPred (ConstantBool _)) = return (ConstantBool False)          -- True --> False
+                                                                                -- False --> undef, hence False
     evaluateOp (OpPred (ConstantInt x)) = return (ConstantInt (pred x))
     evaluateOp op = na $ "evaluateOp{OpPred}" <+> pretty (show op)
 

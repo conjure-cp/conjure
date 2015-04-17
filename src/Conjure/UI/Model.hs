@@ -1329,8 +1329,8 @@ rule_DomainMin = "domain-min" `namedRule` theRule where
         return
             ( "min of a domain"
             , do
-                (iPat, _) <- quantifiedVar
-                return [essence| min([ 1 | &iPat : &d ]) |]
+                (iPat, i) <- quantifiedVar
+                return [essence| min([ &i | &iPat : &d ]) |]
             )
 
 
@@ -1345,8 +1345,8 @@ rule_DomainMax = "domain-max" `namedRule` theRule where
         return
             ( "max of a domain"
             , do
-                (iPat, _) <- quantifiedVar
-                return [essence| max([ 1 | &iPat : &d ]) |]
+                (iPat, i) <- quantifiedVar
+                return [essence| max([ &i | &iPat : &d ]) |]
             )
 
 

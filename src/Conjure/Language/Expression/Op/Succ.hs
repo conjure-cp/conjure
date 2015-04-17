@@ -33,7 +33,9 @@ instance (DomainOf x x) => DomainOf (OpSucc x) x where
 
 instance EvaluateOp OpSucc where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpSucc (ConstantInt x)) = return (ConstantInt (pred x))
+    evaluateOp (OpSucc (ConstantBool False)) = return (ConstantBool True)
+    evaluateOp (OpSucc (ConstantBool True )) = return (ConstantBool False)          -- undef
+    evaluateOp (OpSucc (ConstantInt x)) = return (ConstantInt (succ x))
     evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
 
 instance SimplifyOp OpSucc x where

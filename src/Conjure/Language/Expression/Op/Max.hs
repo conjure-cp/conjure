@@ -45,6 +45,12 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
+    evaluateOp (OpMax (DomainInConstant (DomainInt rs))) = do
+        is <- rangesInts rs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in max"
+            else ConstantInt (maximum is)
     evaluateOp (OpMax (ConstantAbstract (AbsLitMatrix _ xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is
