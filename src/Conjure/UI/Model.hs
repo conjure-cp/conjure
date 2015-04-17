@@ -949,6 +949,9 @@ otherRules =
         , rule_DomainMin
         , rule_DomainMax
 
+        , rule_Pred
+        , rule_Succ
+
         , BubbleUp.rule_MergeNested
         -- , BubbleUp.rule_Comprehension
         -- , BubbleUp.rule_LocalInComprehension
@@ -1348,6 +1351,33 @@ rule_DomainMax = "domain-max" `namedRule` theRule where
                 (iPat, i) <- quantifiedVar
                 return [essence| max([ &i | &iPat : &d ]) |]
             )
+
+
+rule_Pred :: Rule
+rule_Pred = "pred" `namedRule` theRule where
+    theRule [essence| pred(&x) |] = do
+        ty  <- typeOf x
+        case ty of
+            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
+                                                                -- since True becomes False
+                                                                --       False becomes out-of-bounds, hence False
+            TypeInt{}  -> return ( "Predecessor of boolean", return [essence| &x - 1 |] )
+            _          -> na "rule_Pred"
+    theRule _ = na "rule_Pred"
+
+
+rule_Succ :: Rule
+rule_Succ = "succ" `namedRule` theRule where
+    theRule [essence| succ(&x) |] = do
+        ty  <- typeOf x
+        case ty of
+            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
+                                                                -- since False becomes True
+                                                                --       True becomes out-of-bounds, hence False
+                                                                -- "succ" is exactly "negate" on bools
+            TypeInt{}  -> return ( "Succecessor of boolean", return [essence| &x + 1 |] )
+            _          -> na "rule_Succ"
+    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule
