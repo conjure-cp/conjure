@@ -198,6 +198,7 @@ functionals =
     , L_range
     , L_restrict
     , L_image
+    , L_imageSet
     , L_preImage
     , L_inverse
     , L_together

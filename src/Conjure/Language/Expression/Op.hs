@@ -92,6 +92,8 @@ mkOp op xs =
             L_toRelation   -> inject $ MkOpToRelation   $ OpToRelation   (headNote "toRelation takes a single argument."   xs)
             L_max          -> inject $ MkOpMax          $ OpMax          (headNote "max takes a single argument."   xs)
             L_min          -> inject $ MkOpMin          $ OpMin          (headNote "min takes a single argument."   xs)
+            L_image        -> inject $ MkOpImage        $ OpImage        (atNote "image 1"    xs 0) (atNote "image 2"    xs 1)
+            L_imageSet     -> inject $ MkOpImageSet     $ OpImageSet     (atNote "imageSet 1" xs 0) (atNote "imageSet 2" xs 1)
             L_preImage     -> inject $ MkOpPreImage     $ OpPreImage     (atNote "preImage 1" xs 0) (atNote "preImage 2" xs 1)
             L_inverse      -> inject $ MkOpInverse      $ OpInverse      (atNote "inverse 1" xs 0)  (atNote "inverse 2"  xs 1)
             L_freq         -> inject $ MkOpFreq         $ OpFreq         (atNote "freq 1"     xs 0) (atNote "freq 2"     xs 1)
