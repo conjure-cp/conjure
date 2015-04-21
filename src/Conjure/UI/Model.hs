@@ -940,6 +940,30 @@ horizontalRules =
 otherRules :: [[Rule]]
 otherRules =
     [
+        [ TildeOrdering.rule_BoolInt
+        , TildeOrdering.rule_MSet
+        , TildeOrdering.rule_ViaMSet
+        , TildeOrdering.rule_TildeLeq
+        ]
+    ,
+        [ DontCare.rule_Bool
+        , DontCare.rule_Int
+        , DontCare.rule_Tuple
+        , DontCare.rule_Record
+        , DontCare.rule_Variant
+        , DontCare.rule_Matrix
+        , DontCare.rule_Abstract
+        ]
+    ,
+        [ BubbleUp.rule_MergeNested
+        -- , BubbleUp.rule_Comprehension
+        -- , BubbleUp.rule_LocalInComprehension
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_NotBoolYet
+        -- , BubbleUp.rule_VarDecl
+        , BubbleUp.rule_LiftVars
+        ]
+    ,
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
@@ -953,27 +977,6 @@ otherRules =
         , rule_Pred
         , rule_Succ
 
-        , BubbleUp.rule_MergeNested
-        -- , BubbleUp.rule_Comprehension
-        -- , BubbleUp.rule_LocalInComprehension
-        , BubbleUp.rule_ToAnd
-        , BubbleUp.rule_NotBoolYet
-        -- , BubbleUp.rule_VarDecl
-        , BubbleUp.rule_LiftVars
-
-        , DontCare.rule_Bool
-        , DontCare.rule_Int
-        , DontCare.rule_Tuple
-        , DontCare.rule_Record
-        , DontCare.rule_Variant
-        , DontCare.rule_Matrix
-        , DontCare.rule_Abstract
-
-        , TildeOrdering.rule_BoolInt
-        , TildeOrdering.rule_MSet
-        , TildeOrdering.rule_ViaMSet
-        , TildeOrdering.rule_TildeLeq
-
         , rule_ComplexAbsPat
 
         , rule_AttributeToConstraint
@@ -983,12 +986,10 @@ otherRules =
 
         , rule_DotLt_IntLike
         , rule_DotLeq_IntLike
-
         ]
 
     ,   [ rule_InlineConditions
         ]
-
     ]
 
 -- | These rules depend on other rules firing first.

@@ -47,16 +47,10 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                 onX p = p;
 
             let
-                nameToX :: Name -> Expression
-                nameToX nm = case lookup nm nameToIntMapping of
-                    Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-                    Just i  -> fromInt i
-
-            let
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt (map (fmap nameToX) ranges)
+                    = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -135,16 +129,10 @@ removeEnumsFromParam model param = do
         onX p = p;
 
     let
-        nameToX :: Name -> Expression
-        nameToX nm = case lookup nm nameToIntMapping of
-            Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-            Just i  -> fromInt i
-
-    let
         onD :: Domain () Expression -> Domain () Expression
         onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
-            = DomainInt (map (fmap nameToX) ranges)
+            = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
         onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
             = DomainReference nm (Just d)
@@ -239,3 +227,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
                                                              ])
+
+nameToX :: [(Name, Integer)] -> Expression -> Expression
+nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
+    Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Just i  -> fromInt i
+nameToX _ x = x

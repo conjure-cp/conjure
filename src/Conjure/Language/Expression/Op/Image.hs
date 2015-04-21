@@ -30,10 +30,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
             then return to
             else raiseTypeError $ vcat
                 [ pretty p
-                , "f     :" <+> pretty f
-                , "f type:" <+> pretty (TypeFunction from to)
-                , "x     :" <+> pretty x
-                , "x type:" <+> pretty xTy
+                , "function     :" <+> pretty f
+                , "function type:" <+> pretty (TypeFunction from to)
+                , "argument     :" <+> pretty x
+                , "argument type:" <+> pretty xTy
                 ]
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImage x) x where

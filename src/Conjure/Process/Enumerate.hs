@@ -11,6 +11,7 @@ import Conjure.Language.Pretty
 enumerateDomain :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
 enumerateDomain (DomainTuple ds) = do
     inners <- mapM enumerateDomain ds
     return $ map (ConstantAbstract . AbsLitTuple) (sequence inners)
