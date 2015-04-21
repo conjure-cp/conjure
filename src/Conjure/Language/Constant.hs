@@ -241,6 +241,7 @@ validateConstantForDomain
                 case lookup nm mp of
                     Nothing -> fail $ "No value for:" <+> pretty nm
                     Just v  -> return (ConstantInt v)
+            lu (ConstantInt v) = return (ConstantInt v)
             lu x = fail $ "validateConstantForDomain.lu" <+> pretty x
 
             -- lu2 :: MonadFail m => Range Name -> m (Range Constant)
