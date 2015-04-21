@@ -22,7 +22,8 @@ such that f(min(`A`)) = min(`B`)
 such that f(max(`A`)) = max(`B`)
 such that forAll i : A(min(`A`)..pred(max(`A`))) . f(i) ~< f(succ(i))
 
-$ find g : function B --> A
-$ such that g(min(`B`)) = max(`A`)
-$ such that g(max(`B`)) = min(`A`)
+$ uncomment the following line, pending SR bug #88
+find g : function (size 3, surjective) B --> A
+such that g(min(`B`)) = max(`A`)
+such that g(max(`B`)) = min(`A`)
 $ such that forAll i : B(succ(min(`B`))..max(`B`)) . g(pred(i)) ~> g(i)
