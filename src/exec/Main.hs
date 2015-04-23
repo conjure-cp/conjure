@@ -126,7 +126,7 @@ mainWithArgs TranslateSolution{..} = do
                     <$> readModelPreambleFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
-    let outputFilename = fromMaybe (dropExtensions eprimeSolution ++ ".solution") essenceSolutionO
+    let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr "Mandatory field --essence"
