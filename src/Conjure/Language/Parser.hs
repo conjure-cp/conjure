@@ -454,7 +454,6 @@ parsePartitionAttr = do
         [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let isComplete = DAName "complete" `elem` attrs
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
 

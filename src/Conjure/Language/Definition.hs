@@ -834,7 +834,7 @@ instance VarSymBreakingDescription AbstractPattern where
         [ ("type", JSON.String "AbstractPatternMetaVar")
         , ("name", JSON.String (stringToText s))
         ]
-    
+
 
 patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing

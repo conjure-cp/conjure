@@ -198,7 +198,7 @@ attributeToConstraint domain@DomainRelation{} = generator where
                     , "For the domain:" <+> pretty domain
                     ]
 
-attributeToConstraint domain@(DomainPartition _ _ inner) = generator where
+attributeToConstraint domain@DomainPartition{} = generator where
     generator    "size"     (Just val) = return $ \ x -> return [essence| |&x| =  &val |]
     generator "minSize"     (Just val) = return $ \ x -> return [essence| |&x| >= &val |]
     generator "maxSize"     (Just val) = return $ \ x -> return [essence| |&x| <= &val |]
@@ -214,9 +214,6 @@ attributeToConstraint domain@(DomainPartition _ _ inner) = generator where
     generator "maxPartSize" (Just val) = return $ \ x -> do
         (iPat, i) <- quantifiedVar
         return [essence| forAll &iPat in parts(&x) . |&i| <= &val |]
-    generator "complete" Nothing = return $ \ x -> do
-        (iPat, i) <- quantifiedVar
-        return [essence| forAll &iPat : &inner . &i in participants(&x) |]
     generator "regular" Nothing = return $ \ x -> do
         (iPat, i) <- quantifiedVar
         (jPat, j) <- quantifiedVar
