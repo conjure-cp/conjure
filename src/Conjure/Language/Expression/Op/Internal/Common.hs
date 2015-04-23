@@ -174,6 +174,12 @@ operators =
     , ( L_LexGeq      , FNone  ,  400 )
     , ( L_DotLt       , FNone  ,  400 )
     , ( L_DotLeq      , FNone  ,  400 )
+    , ( L_DotGt       , FNone  ,  400 )
+    , ( L_DotGeq      , FNone  ,  400 )
+    , ( L_TildeLt     , FNone  ,  400 )
+    , ( L_TildeLeq    , FNone  ,  400 )
+    , ( L_TildeGt     , FNone  ,  400 )
+    , ( L_TildeGeq    , FNone  ,  400 )
     ]
 
 functionals :: [Lexeme]

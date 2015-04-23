@@ -10,10 +10,10 @@ import Conjure.Language.Type as X
 import Conjure.Language.CategoryOf as X ( categoryOf, Category(..) )
 import Conjure.Language.DomainOf as X ( domainOf )
 import Conjure.Language.DomainSizeOf as X ( domainSizeOf )
-import Conjure.Language.RepresentationOf as X ( representationOf )
+import Conjure.Language.RepresentationOf as X ( representationOf, hasRepresentation, sameRepresentation )
 import Conjure.Language.TypeOf as X ( typeOf )
 
-import Conjure.Rules.Definition as X ( Rule(..), namedRule, hasRepresentation, matchFirst )
+import Conjure.Rules.Definition as X ( Rule(..), namedRule, matchFirst )
 
 import Conjure.Language.Lenses as X
 import Conjure.Language.TH as X

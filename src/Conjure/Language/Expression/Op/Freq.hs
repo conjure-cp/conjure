@@ -19,18 +19,23 @@ instance ToJSON    x => ToJSON    (OpFreq x) where toJSON = genericToJSON jsonOp
 instance FromJSON  x => FromJSON  (OpFreq x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
-    typeOf p@(OpFreq b a) = do
-        tyA <- typeOf a
-        TypeMSet tyB <- typeOf b
-        if tyA `typeUnify` tyB
-            then return TypeInt
-            else raiseTypeError p
+    typeOf p@(OpFreq m e) = do
+        tyM <- typeOf m
+        tyE <- typeOf e
+        case tyM of
+            TypeMSet tyE'
+                | tyE `typeUnify` tyE' -> return TypeInt
+                | otherwise            -> raiseTypeError $ vcat
+                    [ "The first argument of freq is expected to be a multi-set."
+                    , pretty p
+                    ]
+            _ -> raiseTypeError p
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) x where
     domainOf op = mkDomainAny ("OpFreq:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpFreq where
-    evaluateOp (OpFreq c (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (ConstantAbstract (AbsLitMSet cs)) c) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
 instance SimplifyOp OpFreq x where

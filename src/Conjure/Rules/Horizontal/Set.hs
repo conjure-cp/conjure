@@ -112,35 +112,33 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_Lt :: Rule
-rule_Lt = "set-lt" `namedRule` theRule where
+rule_DotLt :: Rule
+rule_DotLt = "set-DotLt" `namedRule` theRule where
     theRule p = do
-        (a,b)     <- match opLt p
+        (a,b)     <- match opDotLt p
         TypeSet{} <- typeOf a
         TypeSet{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for set <" <+> pretty (make opLt ma mb)
-            , return $ make opLt ma mb
+            ( "Horizontal rule for set .<" <+> pretty (make opDotLt ma mb)
+            , return $ make opDotLt ma mb
             )
 
 
-rule_Leq :: Rule
-rule_Leq = "set-leq" `namedRule` theRule where
+rule_DotLeq :: Rule
+rule_DotLeq = "set-DotLeq" `namedRule` theRule where
     theRule p = do
-        (a,b)     <- match opLeq p
+        (a,b)     <- match opDotLeq p
         TypeSet{} <- typeOf a
         TypeSet{} <- typeOf b
-        hasRepresentation a
-        hasRepresentation b
+        sameRepresentation a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
-            ( "Horizontal rule for set <=" <+> pretty (make opLeq ma mb)
-            , return $ make opLeq ma mb
+            ( "Horizontal rule for set .<=" <+> pretty (make opDotLeq ma mb)
+            , return $ make opDotLeq ma mb
             )
 
 
@@ -309,6 +307,20 @@ rule_Card = "set-card" `namedRule` theRule where
                  (iPat, _) <- quantifiedVar
                  return [essence| sum &iPat in &s . 1 |]
             )
+
+
+rule_CardViaFreq :: Rule
+rule_CardViaFreq = "set-card-via-freq" `namedRule` theRule where
+    theRule [essence| freq(toMSet(&s),&x) |] = do
+        case s of
+            Domain{} -> na "rule_CardViaFreq"
+            _        -> return ()
+        TypeSet{} <- typeOf s
+        return
+            ( "Horizontal rule for set cardinality."
+            , return [essence| toInt(&x in &s) |]
+            )
+    theRule _ = na "rule_CardViaFreq"
 
 
 rule_Param_MinOfSet :: Rule
