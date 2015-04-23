@@ -858,6 +858,7 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Bool
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Comprehension_Image
+    , Horizontal.Function.rule_Comprehension_ImageSet
     , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
@@ -939,6 +940,30 @@ horizontalRules =
 otherRules :: [[Rule]]
 otherRules =
     [
+        [ TildeOrdering.rule_BoolInt
+        , TildeOrdering.rule_MSet
+        , TildeOrdering.rule_ViaMSet
+        , TildeOrdering.rule_TildeLeq
+        ]
+    ,
+        [ DontCare.rule_Bool
+        , DontCare.rule_Int
+        , DontCare.rule_Tuple
+        , DontCare.rule_Record
+        , DontCare.rule_Variant
+        , DontCare.rule_Matrix
+        , DontCare.rule_Abstract
+        ]
+    ,
+        [ BubbleUp.rule_MergeNested
+        -- , BubbleUp.rule_Comprehension
+        -- , BubbleUp.rule_LocalInComprehension
+        , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_NotBoolYet
+        -- , BubbleUp.rule_VarDecl
+        , BubbleUp.rule_LiftVars
+        ]
+    ,
         [ rule_TrueIsNoOp
         , rule_FlattenOf1D
         , rule_Decompose_AllDiff
@@ -946,27 +971,11 @@ otherRules =
         , rule_GeneratorsFirst
 
         , rule_DomainCardinality
+        , rule_DomainMin
+        , rule_DomainMax
 
-        , BubbleUp.rule_MergeNested
-        -- , BubbleUp.rule_Comprehension
-        -- , BubbleUp.rule_LocalInComprehension
-        , BubbleUp.rule_ToAnd
-        , BubbleUp.rule_NotBoolYet
-        -- , BubbleUp.rule_VarDecl
-        , BubbleUp.rule_LiftVars
-
-        , DontCare.rule_Bool
-        , DontCare.rule_Int
-        , DontCare.rule_Tuple
-        , DontCare.rule_Record
-        , DontCare.rule_Variant
-        , DontCare.rule_Matrix
-        , DontCare.rule_Abstract
-
-        , TildeOrdering.rule_BoolInt
-        , TildeOrdering.rule_MSet
-        , TildeOrdering.rule_ViaMSet
-        , TildeOrdering.rule_TildeLeq
+        , rule_Pred
+        , rule_Succ
 
         , rule_ComplexAbsPat
 
@@ -977,12 +986,10 @@ otherRules =
 
         , rule_DotLt_IntLike
         , rule_DotLeq_IntLike
-
         ]
 
     ,   [ rule_InlineConditions
         ]
-
     ]
 
 -- | These rules depend on other rules firing first.
@@ -1314,6 +1321,65 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
                 (iPat, _) <- quantifiedVar
                 return [essence| sum([ 1 | &iPat : &d ]) |]
             )
+
+
+rule_DomainMin :: Rule
+rule_DomainMin = "domain-min" `namedRule` theRule where
+    theRule p = do
+        maybeDomain <- match opMin p
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
+            _ -> na "rule_DomainMin"
+        return
+            ( "min of a domain"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| min([ &i | &iPat : &d ]) |]
+            )
+
+
+rule_DomainMax :: Rule
+rule_DomainMax = "domain-max" `namedRule` theRule where
+    theRule p = do
+        maybeDomain <- match opMax p
+        d <- case maybeDomain of
+            Domain d -> return d
+            Reference _ (Just (Alias (Domain d))) -> return d
+            _ -> na "rule_DomainMax"
+        return
+            ( "max of a domain"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| max([ &i | &iPat : &d ]) |]
+            )
+
+
+rule_Pred :: Rule
+rule_Pred = "pred" `namedRule` theRule where
+    theRule [essence| pred(&x) |] = do
+        ty  <- typeOf x
+        case ty of
+            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
+                                                                -- since True becomes False
+                                                                --       False becomes out-of-bounds, hence False
+            TypeInt{}  -> return ( "Predecessor of boolean", return [essence| &x - 1 |] )
+            _          -> na "rule_Pred"
+    theRule _ = na "rule_Pred"
+
+
+rule_Succ :: Rule
+rule_Succ = "succ" `namedRule` theRule where
+    theRule [essence| succ(&x) |] = do
+        ty  <- typeOf x
+        case ty of
+            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
+                                                                -- since False becomes True
+                                                                --       True becomes out-of-bounds, hence False
+                                                                -- "succ" is exactly "negate" on bools
+            TypeInt{}  -> return ( "Succecessor of boolean", return [essence| &x + 1 |] )
+            _          -> na "rule_Succ"
+    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule

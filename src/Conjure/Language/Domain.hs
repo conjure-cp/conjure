@@ -45,7 +45,7 @@ data Domain r x
     | DomainInt [Range x]
     | DomainEnum
         Name
-        (Maybe [Range Name])        -- subset of values for this domain
+        (Maybe [Range x])           -- subset of values for this domain
                                     -- Nothing *only* when GivenDomainDefnEnum and not LettingDomainDefnEnum
         (Maybe [(Name, Integer)])   -- the mapping to integers, if available
     | DomainUnnamed Name x

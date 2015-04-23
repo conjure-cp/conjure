@@ -74,6 +74,8 @@ typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
 typeUnify TypeInt TypeInt = True
+typeUnify TypeInt TypeEnum{} = True
+typeUnify TypeEnum{} TypeInt = True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)

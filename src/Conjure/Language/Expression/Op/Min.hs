@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Min where
 
@@ -18,7 +19,16 @@ instance Hashable  x => Hashable  (OpMin x)
 instance ToJSON    x => ToJSON    (OpMin x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMin x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
+instance ( TypeOf x, Pretty x, ExpressionLike x
+         , Domain () x :< x
+         ) => TypeOf (OpMin x) where
+    typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
+        ty <- typeOf dom
+        case ty of
+            TypeBool{} -> return ty
+            TypeInt{}  -> return ty
+            TypeEnum{} -> return ty
+            _ -> raiseTypeError p
     typeOf p@(OpMin x) = do
         ty <- typeOf x
         case ty of
@@ -28,11 +38,19 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMin x) where
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpMin x) x where
+instance ( TypeOf x, Pretty x, ExpressionLike x
+         , Domain () x :< x
+         ) => DomainOf (OpMin x) x where
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
+    evaluateOp (OpMin (DomainInConstant (DomainInt rs))) = do
+        is <- rangesInts rs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in min"
+            else ConstantInt (minimum is)
     evaluateOp (OpMin (ConstantAbstract (AbsLitMatrix _ xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is
@@ -48,7 +66,7 @@ instance EvaluateOp OpMin where
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
-    evaluateOp _ = na "evaluateOp{OpMin}"
+    evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 
 instance SimplifyOp OpMin x where
     simplifyOp _ = na "simplifyOp{OpMin}"

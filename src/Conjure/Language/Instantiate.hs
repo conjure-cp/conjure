@@ -182,13 +182,16 @@ instantiateD (DomainEnum nm Nothing _) = do
         Just (Domain dom) -> instantiateD (defRepr dom)
         Just _  -> fail $ ("DomainEnum not found in state, Just:" <+> pretty nm) <++> vcat (map pretty st)
         Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
-instantiateD (DomainEnum nm rs _) = do
+instantiateD (DomainEnum nm rs0 _) = do
+    let fmap4 = fmap . fmap . fmap . fmap
+    rs <- transformBiM (\ x -> Constant <$> instantiateE x ) (rs0 :: Maybe [Range Expression])
+                |> fmap4 e2c
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
             Just (Constant (ConstantInt i)) -> return (n, i)
             Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
             Just _  -> fail $ "Incompatible value for member of enum domain:" <+> pretty n
-    return (DomainEnum nm rs (Just mp))
+    return (DomainEnum nm (rs :: Maybe [Range Constant]) (Just mp))
 instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
 instantiateD (DomainRecord  inners) = DomainRecord  <$> sequence [ do d' <- instantiateD d ; return (n,d')

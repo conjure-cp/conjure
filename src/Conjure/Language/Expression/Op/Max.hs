@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Max where
 
@@ -18,7 +19,16 @@ instance Hashable  x => Hashable  (OpMax x)
 instance ToJSON    x => ToJSON    (OpMax x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMax x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMax x) where
+instance ( TypeOf x, Pretty x, ExpressionLike x
+         , Domain () x :< x
+         ) => TypeOf (OpMax x) where
+    typeOf p@(OpMax x) | Just (dom :: Domain () x) <- project x = do
+        ty <- typeOf dom
+        case ty of
+            TypeBool{} -> return ty
+            TypeInt{}  -> return ty
+            TypeEnum{} -> return ty
+            _ -> raiseTypeError p
     typeOf p@(OpMax x) = do
         ty <- typeOf x
         case ty of
@@ -28,11 +38,19 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpMax x) where
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpMax x) x where
+instance ( TypeOf x, Pretty x, ExpressionLike x
+         , Domain () x :< x
+         ) => DomainOf (OpMax x) x where
     domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
+    evaluateOp (OpMax (DomainInConstant (DomainInt rs))) = do
+        is <- rangesInts rs
+        return $ if null is
+            then mkUndef TypeInt "Empty collection in max"
+            else ConstantInt (maximum is)
     evaluateOp (OpMax (ConstantAbstract (AbsLitMatrix _ xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is

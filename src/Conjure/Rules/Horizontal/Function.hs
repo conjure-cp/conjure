@@ -660,6 +660,34 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Image"
 
 
+rule_Comprehension_ImageSet :: Rule
+rule_Comprehension_ImageSet = "function-imageSet-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_ImageSet"
+        (mkModifier, expr2) <- match opModifierNoP expr
+        (func, arg) <- match opImageSet expr2
+        TypeFunction{} <- typeOf func
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Comprehension_ImageSet"         -- do not use this rule for restricted functions
+        let upd val old = lambdaToFunction pat old val
+        return
+            ( "Mapping over the imageSet of a function"
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ Comprehension
+                    (upd [essence| &i[2] |] body)
+                    $  gocBefore
+                    ++ [ Generator (GenInExpr iPat (mkModifier func))
+                       , Condition [essence| &i[1] = &arg |]
+                       ]
+                    ++ transformBi (upd [essence| &i[2] |]) gocAfter
+            )
+    theRule _ = na "rule_Comprehension_ImageSet"
+
+
 rule_Defined_Intersect :: Rule
 rule_Defined_Intersect = "function-Defined-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do

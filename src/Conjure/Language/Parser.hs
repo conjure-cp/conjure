@@ -239,7 +239,7 @@ parseDomainWithRepr
 
         pEnum = do
             r  <- identifierText
-            xs <- optionMaybe $ parens $ parseRange parseName `sepBy` comma
+            xs <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma
             st <- getState
             guard (Name r `elem` enumDomains st)
             return $ DomainEnum (Name r) xs Nothing

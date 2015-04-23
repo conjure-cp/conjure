@@ -402,6 +402,25 @@ opImage _ =
     )
 
 
+opImageSet
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x, x)
+       )
+opImageSet _ =
+    ( \ x y -> inject $ MkOpImageSet $ OpImageSet x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpImageSet (OpImageSet x y) -> return (x,y)
+                _ -> na ("Lenses.opImageSet:" <++> pretty p)
+    )
+
+
 opRelationProj
     :: ( Op x :< x
        , Pretty x

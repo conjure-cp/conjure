@@ -19,7 +19,10 @@ import Data.Text as T ( pack )
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
 removeEnumsFromModel :: (MonadFail m, MonadLog m) => Model -> m Model
-removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromModel_GivenEnums
+removeEnumsFromModel =
+    removeEnumsFromModel_LettingEnums >=>
+    removeEnumsFromModel_GivenEnums   >=>
+    checkEnums
 
     where
 
@@ -41,22 +44,17 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                             return (Declaration (Letting ename (Domain outDomain)))
                         _ -> return st
 
-            let onX (Reference nm Nothing)
+            let
+                onX :: Expression -> Expression
+                onX (Reference nm Nothing)
                     | Just i <- lookup nm nameToIntMapping
                     = fromInt i
-                onX p = p;
+                onX p = p
 
-            let
-                nameToX :: Name -> Expression
-                nameToX nm = case lookup nm nameToIntMapping of
-                    Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-                    Just i  -> fromInt i
-
-            let
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt (map (fmap nameToX) ranges)
+                    = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -66,9 +64,9 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                 onD p = p
 
             let model' = model { mStatements = statements' 
-                                    |> transformBi onX
                                     |> transformBi onD
-                                }
+                                    |> transformBi onX
+                               }
 
             return model'
 
@@ -89,6 +87,9 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
 
             let
                 onD :: Domain () Expression -> Domain () Expression
+                onD (DomainEnum nm (Just ranges) _)
+                    | Just _ <- lookup nm enumDomainNames
+                    = DomainInt ranges
                 onD (DomainEnum      nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -97,12 +98,22 @@ removeEnumsFromModel = removeEnumsFromModel_LettingEnums >=> removeEnumsFromMode
                     = DomainReference nm (Just d)
                 onD p = p
 
-            let model' = model { mStatements = concat statements' }
-                       |> transformBi onD
+            let model' = model { mStatements = concat statements' 
+                                    |> transformBi onD
+                               }
 
             logDebug $ "Recording enumGivens:" <+> prettyList id "," (map fst enumDomainNames)
 
             return model'
+
+        checkEnums model = do
+            let
+                leftovers :: [Domain () Expression]
+                leftovers = [ d | d@DomainEnum{} <- universeBi (mStatements model) ]
+            unless (null leftovers) $ bug $ vcat
+                $ "Could not remove some enum domains:"
+                : map (nest 4 . pretty) leftovers
+            return model
 
 
 removeEnumsFromParam
@@ -129,22 +140,17 @@ removeEnumsFromParam model param = do
                     return (Just (Declaration (Letting ename (Domain outDomain))))
                 _ -> return (if keep then Just st else Nothing)
 
-    let onX (Reference nm Nothing)
+    let
+        onX :: Expression -> Expression
+        onX (Reference nm Nothing)
             | Just i <- lookup nm nameToIntMapping
             = fromInt i
-        onX p = p;
+        onX p = p
 
-    let
-        nameToX :: Name -> Expression
-        nameToX nm = case lookup nm nameToIntMapping of
-            Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-            Just i  -> fromInt i
-
-    let
         onD :: Domain () Expression -> Domain () Expression
         onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
-            = DomainInt (map (fmap nameToX) ranges)
+            = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
         onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
             = DomainReference nm (Just d)
@@ -239,3 +245,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
                                                              ])
+
+nameToX :: [(Name, Integer)] -> Expression -> Expression
+nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
+    Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Just i  -> fromInt i
+nameToX _ x = x

@@ -121,6 +121,7 @@ data Lexeme
     | L_range
     | L_restrict
     | L_image
+    | L_imageSet
     | L_preImage
     | L_inverse
     | L_together
@@ -237,9 +238,10 @@ data Lexeme
     | L_LeftArrow
 
     | L_subsequence
-    | L_subsequences
     | L_substring
-    | L_substrings
+
+    | L_pred
+    | L_succ
 
     deriving (Eq, Ord, Show, Generic)
 
@@ -352,6 +354,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_range, "range" )
     , ( L_restrict, "restrict" )
     , ( L_image, "image" )
+    , ( L_imageSet, "imageSet" )
     , ( L_preImage, "preImage" )
     , ( L_inverse, "inverse" )
     , ( L_together, "together" )
@@ -434,6 +437,10 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_subsequence     , "subsequence"  )
     , ( L_substring       , "substring"    )
+
+    , ( L_pred, "pred" )
+    , ( L_succ, "succ" )
+
 
     ]
 

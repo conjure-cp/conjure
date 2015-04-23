@@ -198,6 +198,7 @@ functionals =
     , L_range
     , L_restrict
     , L_image
+    , L_imageSet
     , L_preImage
     , L_inverse
     , L_together
@@ -221,8 +222,8 @@ functionals =
 
     , L_active
 
-    , L_subsequences
-    , L_substrings
+    , L_pred
+    , L_succ
 
     ]
 
