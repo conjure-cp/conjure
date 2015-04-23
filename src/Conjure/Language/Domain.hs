@@ -42,6 +42,7 @@ import Data.Set as S ( Set, empty, toList )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
+    | DomainIntEmpty                -- this is int(), not the same as int or int(..)
     | DomainInt [Range x]
     | DomainEnum
         Name
@@ -106,6 +107,7 @@ instance TypeOf (Domain r x) where
 typeOfDomain :: MonadFail m => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
+typeOfDomain DomainIntEmpty{}          = return TypeInt
 typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
@@ -137,6 +139,7 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
+        go DomainIntEmpty = DomainIntEmpty
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
@@ -172,6 +175,7 @@ instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON js
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
 reprTree DomainBool{}    = Tree Nothing []
+reprTree DomainIntEmpty  = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
@@ -699,6 +703,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
+    pretty DomainIntEmpty = "int()"
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
