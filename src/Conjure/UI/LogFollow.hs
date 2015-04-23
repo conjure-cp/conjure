@@ -142,6 +142,7 @@ logFollow config q@Question{..} options = do
 
       f (AnsweredRule{},_,_)  = True
       f (AnsweredRepr{aDom_=dom},_,_) = compareDoms dom (getReprFromAnswer a)
+      f t@(AnsweredReprStored{},_,_) = bug ("Got " <+> (pretty . show ) t)
 
       minMaySet :: Set (QuestionAnswered, GenOrd, Pref)
                 -> Maybe (Answer, QuestionAnswered, GenOrd, Pref)
@@ -213,10 +214,10 @@ addQuestionAnswered _  model qa = model { mInfo = newInfo }
 makeChoice :: Question -> Answer -> QuestionAnswered
 makeChoice q a =  case (aRuleName a) of
                  "choose-repr" ->
-                     AnsweredRepr
+                     AnsweredReprStored
                      { qHole_       = holeHash . qHole $  q
                      , qAscendants_ = I.fromList . map holeHash . qAscendants $ q
-                     , aDom_        = getReprFromAnswer a
+                     , aDomStored_  = renderNormal . pretty $ getReprFromAnswer a
                      , aRuleName_   = show $ aRuleName a
                      }
                  _ ->
@@ -252,10 +253,23 @@ getAnswersFromFile fp | takeExtension fp  == ".json" = do
     Just (vs ::  [QuestionAnswered])  -> do
         -- putStrLn $ "BeforeToSet: " ++  (show vs)
         return $ M.fromListWith (S.union) [ ((qHole_ v) , S.singleton (v, i))
-                                                | v <- vs
+                                                | v <- map convertBack vs
                                                 | i <- [0..]
                                           ]
     Nothing -> userErr $ "Error parsing" <+> pretty fp
+
+  where
+    convertBack :: QuestionAnswered -> QuestionAnswered
+    convertBack AnsweredReprStored{..} = AnsweredRepr{..}
+      where
+        unErr (Right r) = r
+        unErr (Left r)  = bug ("convertBack unErr" <+> r)
+
+        aDom_ = unErr . (runLexerAndParser parseDomainWithRepr "convertBack")
+                      . stringToText
+                      $ aDomStored_
+
+    convertBack a = a
 
 -- Read from a eprime file
 getAnswersFromFile fp = do
