@@ -411,6 +411,12 @@ data QuestionAnswered =
       , aDom_        :: Domain HasRepresentation Expression
       , aRuleName_   :: String  -- Doc has no Data or Ord instance
       }
+    | AnsweredReprStored
+      { qHole_       :: Int
+      , qAscendants_ :: IntSet
+      , aDomStored_  :: String
+      , aRuleName_   :: String  -- Doc has no Data or Ord instance
+      }
     | AnsweredRule
       { qHole_       :: Int
       , qAscendants_ :: IntSet
