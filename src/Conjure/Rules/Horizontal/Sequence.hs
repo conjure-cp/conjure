@@ -234,9 +234,14 @@ rule_Card = "sequence-cardinality" `namedRule` theRule where
         TypeSequence{} <- typeOf s
         return
             ( "Horizontal rule for sequence cardinality."
-            , do
-                (iPat, _) <- quantifiedVar
-                return [essence| sum &iPat in &s . 1 |]
+            , case domainOf s of
+                Just (DomainSequence _ (SequenceAttr (SizeAttr_Size n) _) _) -> return n
+                Just (DomainSequence _ (SequenceAttr _ jectivity) inner)
+                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                    -> domainSizeOf inner
+                _ -> do
+                    (iPat, _) <- quantifiedVar
+                    return [essence| sum &iPat in &s . 1 |]
             )
     theRule _ = na "rule_Card"
 
@@ -502,7 +507,7 @@ rule_Substring = "substring" `namedRule` theRule where
                 (jPat, j) <- quantifiedVar
                 return $ make opOr $ Comprehension
                         (make opAnd $ Comprehension
-                            [essence| &j[2] = image(&b, &i + &j[1]) |]
+                            [essence| &j[2] = image(&b, (&i + &j[1]) % |&a|) |]
                             [ Generator (GenInExpr jPat a)
                             ]
                         )
