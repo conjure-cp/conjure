@@ -436,13 +436,10 @@ parsePartitionAttr = do
         fail $ vcat [ "Partitions do not support the 'complete' attribute."
                     , "They are complete by default now."
                     ]
-    participantsSize <- case filterSizey attrs of
-        [] -> return SizeAttr_None
-        [DANameValue "size"    a] -> return (SizeAttr_Size a)
-        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
-        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
-        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
-        as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
+    unless (null $ filterSizey attrs) $
+        fail $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
+                    , "They are complete by default now."
+                    ]
     partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
         [] -> return SizeAttr_None
         [DANameValue "numParts"    a] -> return (SizeAttr_Size a)

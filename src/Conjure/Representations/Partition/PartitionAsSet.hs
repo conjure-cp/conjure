@@ -13,7 +13,6 @@ import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
-import Conjure.Representations.Common
 
 
 partitionAsSet
@@ -54,7 +53,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
-                atMostOnce rel = do
+                exactlyOnce rel = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- for list
@@ -78,10 +77,6 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                         |]
                 regular _ = return []
 
-                participantsCardinality rel = do
-                    (iPat, i) <- quantifiedVar
-                    return [essence| sum([ |&i| | &iPat <- &rel ]) |]
-
                 partsAren'tEmpty rel = do
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
@@ -91,8 +86,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                     outDom                 <- outDomain inDom
                     innerStructuralConsGen <- f outDom
                     concat <$> sequence
-                        [ atMostOnce rel
-                        , mkSizeCons (participantsSize attrs) <$> participantsCardinality rel
+                        [ exactlyOnce rel
                         , regular rel
                         , partsAren'tEmpty rel
                         , innerStructuralConsGen rel

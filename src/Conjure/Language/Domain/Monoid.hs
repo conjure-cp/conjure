@@ -167,7 +167,7 @@ instance
     , Op x :< x
     , Pretty x
     ) => Monoid (PartitionAttr x) where
-    mempty = PartitionAttr mempty mempty mempty False
-    mappend (PartitionAttr a1 a2 a3 a4) (PartitionAttr b1 b2 b3 b4) =
-        PartitionAttr (mappend a1 b1) (mappend a2 b2) (mappend a3 b3) (a4 || b4)
+    mempty = PartitionAttr mempty mempty False
+    mappend (PartitionAttr a1 a2 a3) (PartitionAttr b1 b2 b3) =
+        PartitionAttr (mappend a1 b1) (mappend a2 b2) (a3 || b3)
 

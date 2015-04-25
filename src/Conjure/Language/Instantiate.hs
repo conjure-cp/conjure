@@ -300,11 +300,10 @@ instantiatePartitionAttr
        )
     => PartitionAttr Expression
     -> m (PartitionAttr Constant)
-instantiatePartitionAttr (PartitionAttr a b c d) =
+instantiatePartitionAttr (PartitionAttr a b c) =
     PartitionAttr <$> instantiateSizeAttr a
                   <*> instantiateSizeAttr b
-                  <*> instantiateSizeAttr c
-                  <*> pure d
+                  <*> pure c
 
 
 instantiateR

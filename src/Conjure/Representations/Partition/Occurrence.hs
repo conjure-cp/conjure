@@ -58,10 +58,6 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 | domainCanIndexMatrix innerDomain
                 = do
             let
-                nbParticipants flags = do
-                    (iPat, i) <- quantifiedVar
-                    return [essence| sum &iPat : &innerDomain . toInt(&flags[&i]) |]
-
                 numPartsCons flags parts numPartsVar = do
                     (iPat, i) <- quantifiedVar
                     return $ return -- for list
@@ -127,8 +123,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             return $ \ inpPartition -> do
                 [flags, parts, numPartsVar] <- downX1 inpPartition
                 concat <$> sequence
-                    [ mkSizeCons (participantsSize attrs) <$> nbParticipants flags
-                    , return $ mkSizeCons (partsNum         attrs) numPartsVar
+                    [ return $ mkSizeCons (partsNum         attrs) numPartsVar
                     -- , mkSizeCons  (participantsCardinality rel)
                     , numPartsCons flags parts numPartsVar
                     , regular      inpPartition

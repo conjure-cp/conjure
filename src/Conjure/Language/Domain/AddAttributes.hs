@@ -386,37 +386,6 @@ addAttributeToDomain domain@(DomainRelation r
 addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater where
     updater attr (Just val) = case attr of
 
-        AttrName_size ->
-            case participantsSize partitionAttr of
-                SizeAttr_Size{} -> fail $ "Cannot add a size attribute to this domain:" <++> pretty domain
-                _               -> return $ DomainPartition r
-                                            (partitionAttr { participantsSize = SizeAttr_Size val })
-                                            inner
-        AttrName_minSize -> do
-            let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
-            case participantsSize partitionAttr of
-                SizeAttr_Size{}       -> fails
-                SizeAttr_MinSize{}    -> fails
-                SizeAttr_MinMaxSize{} -> fails
-                SizeAttr_None{}       -> return $ DomainPartition r
-                                            (partitionAttr { participantsSize = SizeAttr_MinSize val })
-                                            inner
-                SizeAttr_MaxSize maxS -> return $ DomainPartition r
-                                            (partitionAttr { participantsSize = SizeAttr_MinMaxSize val maxS })
-                                            inner
-        AttrName_maxSize -> do
-            let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
-            case participantsSize partitionAttr of
-                SizeAttr_Size{}       -> fails
-                SizeAttr_MaxSize{}    -> fails
-                SizeAttr_MinMaxSize{} -> fails
-                SizeAttr_None{}       -> return $ DomainPartition r
-                                            (partitionAttr { participantsSize = SizeAttr_MaxSize val })
-                                            inner
-                SizeAttr_MinSize minS -> return $ DomainPartition r
-                                            (partitionAttr { participantsSize = SizeAttr_MinMaxSize minS val })
-                                            inner
-
         AttrName_numParts ->
             case partsNum partitionAttr of
                 SizeAttr_Size{} -> fail $ "Cannot add a numParts attribute to this domain:" <++> pretty domain

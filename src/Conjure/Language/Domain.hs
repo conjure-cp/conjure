@@ -568,8 +568,7 @@ readBinRel a = fail $ "Not a binary relation attribute:" <+> pretty a
 
 
 data PartitionAttr a = PartitionAttr
-    { participantsSize  :: SizeAttr a
-    , partsNum          :: SizeAttr a
+    { partsNum          :: SizeAttr a
     , partsSize         :: SizeAttr a
     , isRegular         :: Bool
     }
@@ -578,31 +577,28 @@ instance Serialize a => Serialize (PartitionAttr a)
 instance Hashable  a => Hashable  (PartitionAttr a)
 instance ToJSON    a => ToJSON    (PartitionAttr a) where toJSON = genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = genericParseJSON jsonOptions
-instance Default (PartitionAttr a) where def = PartitionAttr def def def False
+instance Default (PartitionAttr a) where def = PartitionAttr def def False
 instance Pretty a => Pretty (PartitionAttr a) where
-    pretty (PartitionAttr a b c d) =
-        let inside = filter (/=prEmpty) [ prettyA a
-                                        , prettyB b
-                                        , prettyC c
-                                        , prettyD d
+    pretty (PartitionAttr a b c) =
+        let inside = filter (/=prEmpty) [ prettyNum a
+                                        , prettySize b
+                                        , prettyReg c
                                         ]
 
-            prettyA = pretty
+            prettyNum SizeAttr_None = prEmpty
+            prettyNum (SizeAttr_Size       x  ) = "numParts"    <+> pretty x
+            prettyNum (SizeAttr_MinSize    x  ) = "minNumParts" <+> pretty x
+            prettyNum (SizeAttr_MaxSize    x  ) = "maxNumParts" <+> pretty x
+            prettyNum (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <+> ", maxNumParts" <+> pretty y
 
-            prettyB SizeAttr_None = prEmpty
-            prettyB (SizeAttr_Size       x  ) = "numParts"    <+> pretty x
-            prettyB (SizeAttr_MinSize    x  ) = "minNumParts" <+> pretty x
-            prettyB (SizeAttr_MaxSize    x  ) = "maxNumParts" <+> pretty x
-            prettyB (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <+> ", maxNumParts" <+> pretty y
+            prettySize SizeAttr_None = prEmpty
+            prettySize (SizeAttr_Size       x  ) = "partSize"    <+> pretty x
+            prettySize (SizeAttr_MinSize    x  ) = "minPartSize" <+> pretty x
+            prettySize (SizeAttr_MaxSize    x  ) = "maxPartSize" <+> pretty x
+            prettySize (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <+> ", maxPartSize" <+> pretty y
 
-            prettyC SizeAttr_None = prEmpty
-            prettyC (SizeAttr_Size       x  ) = "partSize"    <+> pretty x
-            prettyC (SizeAttr_MinSize    x  ) = "minPartSize" <+> pretty x
-            prettyC (SizeAttr_MaxSize    x  ) = "maxPartSize" <+> pretty x
-            prettyC (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <+> ", maxPartSize" <+> pretty y
-
-            prettyD False = prEmpty
-            prettyD True  = "regular"
+            prettyReg False = prEmpty
+            prettyReg True  = "regular"
 
         in  if null inside
                 then prEmpty
