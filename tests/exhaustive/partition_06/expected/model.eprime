@@ -8,7 +8,7 @@ such that
          sum([x_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q10, q13]
                   | q13 : int(1..2)])
          = 2 | q10 : int(1..4)]),
-    and([1 >=
+    and([1 =
          sum([q11 <= x_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
               x_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q11, q1]
                   | q11 : int(1..4)])

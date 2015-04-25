@@ -446,7 +446,7 @@ such that
                                        | q99 : int(1..4)])
                                    | q81 : int(1..4)]))))
                     | q28 : int(1..4)])),
-    and([1 >=
+    and([1 =
          sum([q17 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q17, q1]
                   | q17 : int(1..4)])
@@ -465,7 +465,7 @@ such that
               false
                   | q132 : int(1..2)])
              | q6 : int(1..4)]),
-    and([1 >=
+    and([1 =
          sum([q19 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q19, q9]
                   | q19 : int(1..4)])

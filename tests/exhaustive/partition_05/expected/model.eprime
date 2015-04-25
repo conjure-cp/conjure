@@ -42,7 +42,7 @@ such that
              /\ q60 = [1, 2, 3, 5, 6, 7; int(1..6)][q57]
                  | q62 : int(1..128), q60 : int(1..7)])
              | q57 : int(1..6)]),
-    and([1 >=
+    and([1 =
          sum([q11 <= x_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
               x_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q11, q1]
                   | q11 : int(1..128)])
