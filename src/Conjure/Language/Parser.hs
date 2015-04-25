@@ -429,10 +429,13 @@ parseRelationAttr = do
     binRels <- mapM readBinRel' (filterBinRel attrs)
     return (RelationAttr size (BinaryRelationAttrs (S.fromList binRels)))
 
-
 parsePartitionAttr :: Parser (PartitionAttr Expression)
 parsePartitionAttr = do
     DomainAttributes attrs <- parseAttributes
+    unless (null $ filterAttrName ["complete"] attrs) $
+        fail $ vcat [ "Partitions do not support the 'complete' attribute."
+                    , "They are complete by default now."
+                    ]
     participantsSize <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -454,7 +457,6 @@ parsePartitionAttr = do
         [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
         [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
-    let isComplete = DAName "complete" `elem` attrs
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
 

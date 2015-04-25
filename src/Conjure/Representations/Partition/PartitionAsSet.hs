@@ -58,22 +58,12 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- for list
-                        if isComplete attrs
-                            then
-                                [essence|
-                                    forAll &iPat : &innerDomain .
-                                        1  = sum ([ 1
-                                                  | &jPat <- &rel
-                                                  , &i in &j
-                                                  ])
-                                |]
-                            else
-                                [essence|
-                                    forAll &iPat : &innerDomain .
-                                        1 >= sum ([ 1
-                                                  | &jPat <- &rel
-                                                  , &i in &j
-                                                  ])
+                        [essence|
+                            forAll &iPat : &innerDomain .
+                                1  = sum ([ 1
+                                          | &jPat <- &rel
+                                          , &i in &j
+                                          ])
                                 |]
 
                 regular rel | isRegular attrs = do

@@ -111,7 +111,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                         |]
                 regular _ = return []
 
-                complete flags | isComplete attrs = do
+                complete flags = do
                     (iPat, i) <- quantifiedVar
                     return $ return -- for list
                         [essence|
@@ -119,7 +119,6 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 | &iPat : &innerDomain
                                 ])
                         |]
-                complete _ = return []
 
                 -- participantsCardinality rel =
                 --     let (iPat, i) <- quantifiedVar

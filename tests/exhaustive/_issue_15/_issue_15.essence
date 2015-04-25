@@ -1,5 +1,5 @@
 language Essence 1.3
 
 given b : int
-find p: partition (complete) from int(1..b)
+find p: partition from int(1..b)
 such that maxSize(parts(p), |`set of int(1..b)`| / 8)

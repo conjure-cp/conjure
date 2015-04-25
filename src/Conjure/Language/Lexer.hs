@@ -96,7 +96,6 @@ data Lexeme
     -- type: partition
     | L_partition
     | L_regular
-    | L_complete
     | L_partSize
     | L_minPartSize
     | L_maxPartSize
@@ -331,7 +330,6 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
     -- , ( L_regular, "regular" )
-    -- , ( L_complete, "complete" )
     -- , ( L_partSize, "partSize" )
     -- , ( L_minPartSize, "minPartSize" )
     -- , ( L_maxPartSize, "maxPartSize" )

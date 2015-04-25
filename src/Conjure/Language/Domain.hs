@@ -255,7 +255,6 @@ data AttrName
     | AttrName_injective
     | AttrName_surjective
     | AttrName_bijective
-    | AttrName_complete
     | AttrName_regular
     -- bin rel ones
     | AttrName_reflexive
@@ -293,7 +292,6 @@ instance Pretty AttrName where
     pretty AttrName_injective = "injective"
     pretty AttrName_surjective = "surjective"
     pretty AttrName_bijective = "bijective"
-    pretty AttrName_complete = "complete"
     pretty AttrName_regular = "regular"
     pretty AttrName_reflexive = "reflexive"
     pretty AttrName_irreflexive = "irreflexive"
@@ -324,7 +322,6 @@ instance IsString AttrName where
     fromString "injective" = AttrName_injective
     fromString "surjective" = AttrName_surjective
     fromString "bijective" = AttrName_bijective
-    fromString "complete" = AttrName_complete
     fromString "regular" = AttrName_regular
     fromString "reflexive" = AttrName_reflexive
     fromString "irreflexive" = AttrName_irreflexive
@@ -574,7 +571,6 @@ data PartitionAttr a = PartitionAttr
     { participantsSize  :: SizeAttr a
     , partsNum          :: SizeAttr a
     , partsSize         :: SizeAttr a
-    , isComplete        :: Bool
     , isRegular         :: Bool
     }
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -582,14 +578,13 @@ instance Serialize a => Serialize (PartitionAttr a)
 instance Hashable  a => Hashable  (PartitionAttr a)
 instance ToJSON    a => ToJSON    (PartitionAttr a) where toJSON = genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (PartitionAttr a) where parseJSON = genericParseJSON jsonOptions
-instance Default (PartitionAttr a) where def = PartitionAttr def def def False False
+instance Default (PartitionAttr a) where def = PartitionAttr def def def False
 instance Pretty a => Pretty (PartitionAttr a) where
-    pretty (PartitionAttr a b c d e) =
+    pretty (PartitionAttr a b c d) =
         let inside = filter (/=prEmpty) [ prettyA a
                                         , prettyB b
                                         , prettyC c
                                         , prettyD d
-                                        , prettyE e
                                         ]
 
             prettyA = pretty
@@ -607,10 +602,7 @@ instance Pretty a => Pretty (PartitionAttr a) where
             prettyC (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <+> ", maxPartSize" <+> pretty y
 
             prettyD False = prEmpty
-            prettyD True  = "complete"
-
-            prettyE False = prEmpty
-            prettyE True  = "regular"
+            prettyD True  = "regular"
 
         in  if null inside
                 then prEmpty

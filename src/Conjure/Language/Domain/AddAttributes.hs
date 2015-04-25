@@ -26,7 +26,7 @@ allSupportedAttributes =
              ] ++
     map (,0) [ "total"
              , "injective", "surjective", "bijective"
-             , "complete", "regular"
+             , "regular"
              ] ++
     map (,0) [ "reflexive"
              , "irreflexive"
@@ -479,8 +479,6 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater AttrName_complete Nothing =
-            return $ DomainPartition r (partitionAttr { isComplete = True }) inner
     updater AttrName_regular Nothing =
             return $ DomainPartition r (partitionAttr { isRegular  = True }) inner
     updater attr _ =
