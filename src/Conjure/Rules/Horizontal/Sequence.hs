@@ -507,7 +507,7 @@ rule_Substring = "substring" `namedRule` theRule where
                 (jPat, j) <- quantifiedVar
                 return $ make opOr $ Comprehension
                         (make opAnd $ Comprehension
-                            [essence| &j[2] = image(&b, (&i + &j[1]) % |&a|) |]
+                            [essence| &j[2] = image(&b, &i + &j[1]) |]
                             [ Generator (GenInExpr jPat a)
                             ]
                         )
