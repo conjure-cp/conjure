@@ -9,6 +9,9 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 
+-- containers
+import qualified Data.Set as S
+
 
 modelDiffIO :: MonadIO m => Model -> Model -> m ()
 modelDiffIO m1 m2 =
@@ -25,16 +28,16 @@ modelDiff m1 m2 =
         explode = concatMap $ \ st -> case st of SuchThat xs -> map (SuchThat . return) xs
                                                  Where    xs -> map (Where    . return) xs
                                                  _           -> [st]
-        m1Statements = m1 |> mStatements |> explode
-        m2Statements = m2 |> mStatements |> explode
-        m1Extra = m1Statements \\ m2Statements
-        m2Extra = m2Statements \\ m1Statements
+        m1Statements = m1 |> mStatements |> explode |> S.fromList
+        m2Statements = m2 |> mStatements |> explode |> S.fromList
+        m1Extra = S.difference m1Statements m2Statements
+        m2Extra = S.difference m2Statements m1Statements
     in
-        if null m1Extra && null m2Extra
+        if S.null m1Extra && S.null m2Extra
             then Nothing
             else Just $ vcat $ concat
                 [ [ "These models seem to be different." ]
-                , [ hang "Only in the 1st:" 8 (vcat (map pretty m1Extra)) | not (null m1Extra) ]
-                , [ hang "Only in the 2nd:" 8 (vcat (map pretty m2Extra)) | not (null m2Extra) ]
+                , [ hang "Only in the 1st:" 8 (vcat (map pretty (S.toList m1Extra))) | not (S.null m1Extra) ]
+                , [ hang "Only in the 2nd:" 8 (vcat (map pretty (S.toList m2Extra))) | not (S.null m2Extra) ]
                 ]
 
