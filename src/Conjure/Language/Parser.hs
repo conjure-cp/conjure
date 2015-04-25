@@ -434,11 +434,11 @@ parsePartitionAttr = do
     DomainAttributes attrs <- parseAttributes
     unless (null $ filterAttrName ["complete"] attrs) $
         fail $ vcat [ "Partitions do not support the 'complete' attribute."
-                    , "They are complete by default now."
+                    , "They are complete by default."
                     ]
     unless (null $ filterSizey attrs) $
         fail $ vcat [ "Partitions do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
-                    , "They are complete by default now."
+                    , "This is because partitions are complete by default."
                     ]
     partsNum         <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
         [] -> return SizeAttr_None
