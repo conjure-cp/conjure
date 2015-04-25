@@ -1,0 +1,8 @@
+language Essence 1.3
+
+$ https://en.wikipedia.org/wiki/Subset_sum_problem
+
+given s : int
+given nums : set of int
+find x : set (minSize 1, maxSize |nums|) of int(min(nums)..max(nums))
+such that x subsetEq nums, s = sum i in x . i
