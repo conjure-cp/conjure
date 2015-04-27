@@ -264,6 +264,8 @@ Library
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
+    ghc-prof-options:
+        -fprof-auto
 
 
 Executable conjure
@@ -290,6 +292,8 @@ Executable conjure
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
+    ghc-prof-options:
+        -fprof-auto
 
 
 test-suite conjure-testing
@@ -324,3 +328,5 @@ test-suite conjure-testing
         -rtsopts
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
+    ghc-prof-options:
+        -fprof-auto
