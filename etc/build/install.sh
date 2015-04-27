@@ -31,6 +31,7 @@ export BUILD_DOCS=${BUILD_DOCS:-no}
 export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
+export PROFILING=${PROFILING:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
@@ -87,6 +88,7 @@ echo "BUILD_DOCS      : ${BUILD_DOCS}"
 echo "BUILD_TESTS     : ${BUILD_TESTS}"
 echo "RUN_TESTS       : ${RUN_TESTS}"
 echo "COVERAGE        : ${COVERAGE}"
+echo "PROFILING       : ${PROFILING}"
 echo "DEVELOPMENT_MODE: ${DEVELOPMENT_MODE}"
 
 
@@ -216,17 +218,21 @@ else
     HPC=""
 fi
 
+if [ ${PROFILING} = "yes" ]; then
+    PROFILING="--enable-library-profiling --enable-executable-profiling"
+else
+    PROFILING="--disable-library-profiling --disable-executable-profiling"
+fi
+
 # install conjure, finally
 
 cabal install                                                       \
     --only-dependencies                                             \
-    --disable-library-profiling --disable-executable-profiling      \
     --force-reinstalls                                              \
-    ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
+    ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                     \
-    --disable-library-profiling --disable-executable-profiling      \
-    ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+    ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
 
