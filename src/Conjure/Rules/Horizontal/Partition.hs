@@ -110,7 +110,7 @@ rule_Apart = "partition-apart" `namedRule` theRule where
         TypePartition{} <- typeOf p
         return
             ( "Horizontal rule for partition-apart"
-            , return [essence| !together(&x,&y,&p) /\ &x in participants(&p) /\ &y in participants(&p) |]
+            , return [essence| !together(&x,&y,&p) |]
             )
     theRule _ = na "rule_Apart"
 
@@ -125,7 +125,7 @@ rule_Party = "partition-party" `namedRule` theRule where
         (wanted, p)         <- match opParty expr2
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Comprehension on participants of a partition"
+            ( "Comprehension on a particular part of a partition"
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
