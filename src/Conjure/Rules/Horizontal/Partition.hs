@@ -93,24 +93,24 @@ rule_DotLeq = "partition-DotLeq" `namedRule` theRule where
 
 rule_Together :: Rule
 rule_Together = "partition-together" `namedRule` theRule where
-    theRule [essence| together(&x,&y,&p) |] = do
+    theRule [essence| together(&x,&p) |] = do
         TypePartition{} <- typeOf p
         return
             ( "Horizontal rule for partition-together"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| exists &iPat in parts(&p) . &x in &i /\ &y in &i |]
+                 return [essence| exists &iPat in parts(&p) . &x subsetEq &i |]
             )
     theRule _ = na "rule_Together"
 
 
 rule_Apart :: Rule
 rule_Apart = "partition-apart" `namedRule` theRule where
-    theRule [essence| apart(&x,&y,&p) |] = do
+    theRule [essence| apart(&x,&p) |] = do
         TypePartition{} <- typeOf p
         return
             ( "Horizontal rule for partition-apart"
-            , return [essence| !together(&x,&y,&p) |]
+            , return [essence| !together(&x,&p) |]
             )
     theRule _ = na "rule_Apart"
 
