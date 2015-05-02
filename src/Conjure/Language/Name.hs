@@ -18,10 +18,12 @@ data Name = Name Text | MachineName Text Int [Text]
     deriving (Show, Data, Typeable, Generic)
 
 instance Eq Name where
-    (==) = (==) `on` (show . pretty)
+    Name x == Name y = x == y
+    x == y = show (pretty x) == show (pretty y)
 
 instance Ord Name where
-    compare = compare `on` (show . pretty)
+    compare (Name x) (Name y) = compare x y
+    compare x y = compare (show (pretty x)) (show (pretty y))
 
 instance Serialize Name
 instance Hashable  Name
