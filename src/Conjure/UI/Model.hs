@@ -562,10 +562,34 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
                                  | c <- tail (ascendants x)
                                  ]
                     Constant (ConstantAbstract AbsLitMatrix{}) -> return []
-                    AbstractLiteral AbsLitMatrix{} -> return []
                     Constant ConstantAbstract{} -> returnMsg x
+                    AbstractLiteral AbsLitMatrix{} -> return []
                     AbstractLiteral{} -> returnMsg x
                     WithLocals{} -> returnMsg x
+                    Comprehension _ stmts -> do
+                        decisionConditions <-
+                            fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
+                                Condition c ->
+                                    if categoryOf c >= CatDecision
+                                        then return (Just c)
+                                        else return Nothing
+                                _ -> return Nothing
+                        comprehensionLettings <-
+                            fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
+                                ComprehensionLetting{} -> return (Just stmt)
+                                _ -> return Nothing
+                        case (decisionConditions, comprehensionLettings) of
+                            ([], []) -> return []
+                            (_ , []) -> return [ "Comprehension contains decision expressions as conditions."
+                                               , nest 4 $ pretty (hole x)
+                                               ]
+                            ([], _ ) -> return [ "Comprehension contains local lettings."
+                                               , nest 4 $ pretty (hole x)
+                                               ]
+                            (_ , _ ) -> return [ "Comprehension contains decision expressions as conditions,"
+                                               , "                   and local lettings."
+                                               , nest 4 $ pretty (hole x)
+                                               ]
                     _ -> return []
     unless (null fails) (fail (vcat fails))
     return m
@@ -1242,14 +1266,32 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
 rule_GeneratorsFirst :: Rule
 rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
-        let gens       = [ x | x@Generator{} <- gensOrConds ]
-        let conditions = [ x | x@Condition{} <- gensOrConds ]
-        let gensOrConds' = gens ++ conditions
-        when (gensOrConds == gensOrConds') $ na "rule_GeneratorsFirst"
-        return
+    theRule (Comprehension body gensOrConds)
+        | let (gens, rest) = mconcat
+                [ case x of
+                    Generator{} -> ([x],[])
+                    _           -> ([],[x])
+                | x <- gensOrConds
+                ]
+        , let gensOrConds' = gens ++ rest
+        , gensOrConds /= gensOrConds'
+        = return
             ( "Generators come first."
             , return $ Comprehension body gensOrConds'
+            )
+    theRule (Comprehension body gensOrConds)
+        | let (lettings, rest) = mconcat
+                [ case x of
+                    ComprehensionLetting nm _ -> ([nm],[] )
+                    _                         -> ([]  ,[x])
+                | x <- gensOrConds
+                ]
+        , let f (Reference nm (Just (Alias x))) | nm `elem` lettings = f x
+              f x = x
+        , not (null lettings)
+        = return
+            ( "Inlining comprehension lettings."
+            , return $ transformBi f $ Comprehension body rest
             )
     theRule _ = na "rule_GeneratorsFirst"
 
@@ -1428,7 +1470,7 @@ rule_ComplexAbsPat = "complex-pattern" `namedRule` theRule where
     genMappings pat = bug ("rule_ComplexLambda.genMappings:" <+> pretty (show pat))
 
 
--- this rule doesn't `namedRule` because it need access to ascendants through the zipper
+-- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
 rule_InlineConditions :: Rule
 rule_InlineConditions = Rule "inline-conditions" theRule where
     theRule z (Comprehension body gensOrConds) = do
@@ -1459,14 +1501,10 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
         let h = hole z
         case ( match opAnd h
              , match opOr h
-             , match opSum h
-             , match opMax h
-             , match opMin h ) of
-            (Just _, _, _, _, _) -> return ("and", opAndSkip )
-            (_, Just _, _, _, _) -> return ("or" , opOrSkip  )
-            (_, _, Just _, _, _) -> return ("sum", opSumSkip )
-            (_, _, _, Just _, _) -> return ("max", opMaxSkip )
-            (_, _, _, _, Just _) -> return ("min", opMinSkip )
+             , match opSum h ) of
+            (Just _, _, _) -> return ("and", opAndSkip )
+            (_, Just _, _) -> return ("or" , opOrSkip  )
+            (_, _, Just _) -> return ("sum", opSumSkip )
             _ -> case Zipper.up z of
                 Nothing -> fail "queryQ"
                 Just u  -> queryQ u
@@ -1474,8 +1512,6 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
     opSumSkip b x = [essence| toInt(&b) * &x |]
-    opMaxSkip b x = [essence| toInt(&b) * &x |]                          -- MININT is 0
-    opMinSkip b x = [essence| toInt(&b) * &x + toInt(!&b) * 9999 |]      -- MAXINT is 9999
 
 
 rule_DotLt_IntLike :: Rule
