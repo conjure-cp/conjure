@@ -579,6 +579,7 @@ instance TypeOf Expression where
                                             , "Condition:" <+> pretty c
                                             , "In:" <+> pretty p
                                             ]
+            ComprehensionLetting{} -> return ()
         TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
     typeOf (Op op) = typeOf op
@@ -848,12 +849,16 @@ patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"
 -- Generator -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
-data GeneratorOrCondition = Generator Generator | Condition Expression
+data GeneratorOrCondition
+    = Generator Generator
+    | Condition Expression
+    | ComprehensionLetting Name Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Pretty GeneratorOrCondition where
     pretty (Generator x) = pretty x
     pretty (Condition x) = pretty x
+    pretty (ComprehensionLetting n x) = "letting" <+> pretty n <+> "be" <+> pretty x
 
 instance VarSymBreakingDescription GeneratorOrCondition where
     varSymBreakingDescription (Generator x) = JSON.Object $ M.fromList
@@ -863,6 +868,10 @@ instance VarSymBreakingDescription GeneratorOrCondition where
     varSymBreakingDescription (Condition x) = JSON.Object $ M.fromList
         [ ("type", JSON.String "Condition")
         , ("child", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (ComprehensionLetting n x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "ComprehensionLetting")
+        , ("children", JSON.Array $ V.fromList [toJSON n, varSymBreakingDescription x])
         ]
 
 instance Serialize GeneratorOrCondition

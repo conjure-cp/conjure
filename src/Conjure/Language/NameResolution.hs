@@ -169,6 +169,10 @@ resolveX p@Comprehension{} = scope $ do
                         modify ((nm, refto) :)
                     return (Generator gen')
                 Condition y -> Condition <$> resolveX y
+                ComprehensionLetting nm expr -> do
+                    expr' <- resolveX expr
+                    modify ((nm, Alias expr') :)
+                    return (ComprehensionLetting nm expr')
             x' <- resolveX x
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"

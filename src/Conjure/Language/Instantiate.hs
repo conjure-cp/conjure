@@ -84,6 +84,10 @@ instantiateE (Comprehension body gensOrConds) = do
             if constant == ConstantBool True
                 then loop rest
                 else return []
+        loop (ComprehensionLetting n expr : rest) = do
+            constant <- instantiateE expr
+            bind (Single n) constant
+            loop rest
 
     constants <- loop gensOrConds
     return $ ConstantAbstract $ AbsLitMatrix

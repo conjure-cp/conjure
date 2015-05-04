@@ -538,9 +538,10 @@ parseComprehension :: Parser Expression
 parseComprehension = brackets $ do
     x   <- parseExpr
     lexeme L_Bar
-    gens <- sepBy1 (try generator <|> condition) comma
+    gens <- sepBy1 (letting <|> try generator <|> condition) comma
     return (Comprehension x (concat gens))
     where
+        generator :: Parser [GeneratorOrCondition]
         generator = do
             pats <- parseAbstractPattern `sepBy1` comma
             msum
@@ -553,7 +554,15 @@ parseComprehension = brackets $ do
                     expr <- parseExpr
                     return [Generator (GenInExpr       pat expr)   | pat <- pats]
                 ]
+        condition :: Parser [GeneratorOrCondition]
         condition = return . Condition <$> parseExpr
+        letting :: Parser [GeneratorOrCondition]
+        letting = do
+            lexeme L_letting
+            nm <- parseName
+            lexeme L_be
+            x  <- parseExpr
+            return [ComprehensionLetting nm x]
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain

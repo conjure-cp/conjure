@@ -106,6 +106,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             Generator GenDomainHasRepr{} -> return ()
             Generator {}                 -> na "rule_NotBoolYet"        -- no other generators
             Condition {}                 -> return ()
+            ComprehensionLetting {}      -> return ()
 
         let localsLifted =
                 [ make opAnd $ Comprehension c gensOrConds
