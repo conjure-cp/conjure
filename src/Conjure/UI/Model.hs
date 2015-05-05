@@ -194,8 +194,10 @@ remaining config model | Just modelZipper <- zipperBi model = do
                         then return ()
                         else bug $ vcat
                                 [ "Rule application changes type."
-                                , "Before:" <+> pretty tyBefore
-                                , "After :" <+> pretty tyAfter
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Type before:" <+> pretty tyBefore
+                                , "Type after :" <+> pretty tyAfter
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName
@@ -1516,58 +1518,39 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     opSumSkip b x = [essence| toInt(&b) * &x |]
 
 
--- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
 rule_InlineConditions_MaxMin :: Rule
-rule_InlineConditions_MaxMin = Rule "inline-conditions-MaxMin" theRule where
-    theRule z (Comprehension body gensOrConds) = do
-        let (toInline, _toKeep) = mconcat
+rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
+    theRule p = do
+        (nameQ, binOp, Comprehension body gensOrConds) <-
+            case (match opMax p, match opMin p) of
+                (Just res, _) -> return ("max", \ a b -> [essence| &a <= &b |], res )
+                (_, Just res) -> return ("min", \ a b -> [essence| &a >= &b |], res )
+                _ -> na "rule_InlineConditions_MaxMin"
+        let
+            (toInline, _toKeep) = mconcat
                 [ case goc of
                     Condition x | categoryOf x == CatDecision -> ([x],[])
                     _ -> ([],[goc])
                 | goc <- gensOrConds
                 ]
-        -- fail the rule if there are no decision-conditions to inline
-        when (null toInline) $ na "No condition to inline."
-        nameQ     <- queryQ z
+        when (null toInline) $ na "rule_InlineConditions_MaxMin"
         auxDomain <- domainOf body
-        let anys = [ d | d@DomainAny{} <- universe auxDomain ]
-        if null anys
-            then return ()
-            else na "anys"
-        let
-            result = do
+        return
+            ( "Creating auxiliary variable for a" <+> nameQ
+            , do
                 (auxName, aux) <- auxiliaryVar
-                (iPat   , i  ) <- quantifiedVar
-                return $ WithLocals
-                    (Comprehension i [Generator (GenInExpr iPat aux)])
-                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr auxDomain)))
+                return $ WithLocals aux
+                    (Left [ Declaration (FindOrGiven LocalFind auxName auxDomain)
                           , SuchThat
                               [ make opAnd $ Comprehension
-                                  [essence| &i in &aux |]
+                                  (binOp body aux)
+                                  gensOrConds
+                              , make opOr  $ Comprehension
+                                  [essence| &body = &aux |]
                                   gensOrConds
                               ]
                           ])
-        return
-            [ RuleResult
-                { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
-                , ruleResultType  = ExpressionRefinement
-                , ruleResult      = result
-                , ruleResultHook  = return
-                } ]
-    theRule _ _ = na "rule_InlineConditions"
-
-    -- keep going up, until finding a quantifier
-    -- when found, return the skipping operator for the quantifier
-    -- if none exists, do not apply the rule.
-    -- (or maybe we should call bug right ahead, it can't be anything else.)
-    queryQ z = do
-        let h = hole z
-        case (match opMax h, match opMin h) of
-            (Just _, _) -> return "max"
-            (_, Just _) -> return "min"
-            _           -> case Zipper.up z of
-                            Nothing -> fail "queryQ"
-                            Just u  -> queryQ u
+            )
 
 
 rule_DotLt_IntLike :: Rule
