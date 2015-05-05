@@ -26,9 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
             then return (TypeSet from)
             else raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpPreImage x) x where
-    domainOf op = mkDomainAny ("OpPreImage:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpPreImage where
     evaluateOp (OpPreImage (ConstantAbstract (AbsLitFunction xs)) a) =
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]

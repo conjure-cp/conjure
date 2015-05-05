@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = genericParseJSO
 instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt <- typeOf a ; return TypeInt
 
-instance (Pretty x, TypeOf x) => DomainOf (OpNegate x) x where
-    domainOf op = mkDomainAny ("OpNegate:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpNegate where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpNegate x) = ConstantInt . negate <$> intOut x

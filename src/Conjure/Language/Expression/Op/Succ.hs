@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Succ where
 
@@ -27,9 +26,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSucc x) where
             TypeInt{}  -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
-
-instance (DomainOf x x) => DomainOf (OpSucc x) x where
-    domainOf (OpSucc x) = domainOf x
 
 instance EvaluateOp OpSucc where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

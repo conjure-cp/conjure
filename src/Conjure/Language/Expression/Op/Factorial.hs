@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParse
 instance TypeOf x => TypeOf (OpFactorial x) where
     typeOf (OpFactorial a) = do TypeInt <- typeOf a ; return TypeInt
 
-instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) x where
-    domainOf op = mkDomainAny ("OpFactorial:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpFactorial where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut x

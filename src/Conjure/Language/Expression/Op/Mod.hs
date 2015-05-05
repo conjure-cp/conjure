@@ -24,9 +24,6 @@ instance BinaryOperator (OpMod x) where
 instance TypeOf x => TypeOf (OpMod x) where
     typeOf (OpMod a b) = intToIntToInt a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpMod x) x where
-    domainOf op = mkDomainAny ("OpMod:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpMod x y)

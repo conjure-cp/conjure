@@ -3,7 +3,7 @@
 import Control.Applicative ( (<$>) )
 import Data.Maybe ( Maybe(..) )
 import Data.List ( sort, isSuffixOf, intercalate )
-import System.Directory ( getDirectoryContents )
+import System.Directory ( getDirectoryContents, createDirectoryIfMissing )
 import Control.Exception ( catch, IOException )
 
 
@@ -11,6 +11,7 @@ main :: IO ()
 main = do
     let opDir   = "src/Conjure/Language/Expression/Op"
     let outFile = "src/Conjure/Language/Expression/Internal/Generated.hs"
+    createDirectoryIfMissing True "src/Conjure/Language/Expression/Internal"
     operators <- sort . map (head . splitOn '.')
                       . filter (".hs" `isSuffixOf`)
                   <$> getDirectoryContents opDir

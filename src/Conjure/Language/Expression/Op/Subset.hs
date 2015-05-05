@@ -24,9 +24,6 @@ instance BinaryOperator (OpSubset x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf (OpSubset a b) = sameToSameToBool a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpSubset x) x where
-    domainOf op = mkDomainAny ("OpSubset:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpSubset where
     evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantBool $ all (`elem` bs) as && length as <= length bs

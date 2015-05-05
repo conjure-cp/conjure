@@ -26,9 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
             TypePartition pTyInner | typesUnify [xTy, pTyInner] -> return $ TypeSet $ mostDefined [xTy, pTyInner]
             _ -> raiseTypeError inp
 
-instance (Pretty x, TypeOf x) => DomainOf (OpParty x) x where
-    domainOf op = mkDomainAny ("OpParty:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpParty where
     evaluateOp op@(OpParty x p@(ConstantAbstract (AbsLitPartition xss))) = do
         TypePartition tyInner <- typeOf p

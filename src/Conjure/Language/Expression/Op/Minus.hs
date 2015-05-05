@@ -37,9 +37,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
             then return $ mostDefined [tya,tyb]
             else raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpMinus x) x where
-    domainOf op = mkDomainAny ("OpMinus:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
     evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do

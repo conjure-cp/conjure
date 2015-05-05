@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = genericParseJ
 instance TypeOf x => TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDontCare x) x where
-    domainOf op = mkDomainAny ("OpDontCare:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpDontCare where
     evaluateOp op = na $ "evaluateOp{OpDontcare}:" <++> pretty (show op)
 

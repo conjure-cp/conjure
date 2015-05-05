@@ -21,9 +21,6 @@ instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = genericParseJSON 
 instance TypeOf x => TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTrue x) x where
-    domainOf op = mkDomainAny ("OpTrue:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpTrue where
     evaluateOp _ = return (fromBool True)
 

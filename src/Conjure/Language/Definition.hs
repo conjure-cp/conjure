@@ -53,7 +53,6 @@ import Conjure.Language.Domain
 import Conjure.Language.Expression.Op
 
 import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
 import Conjure.Language.RepresentationOf
 
 
@@ -585,15 +584,6 @@ instance TypeOf Expression where
     typeOf (Op op) = typeOf op
     typeOf x@ExpressionMetaVar{} = bug ("typeOf:" <+> pretty x)
 
-instance
-    ( Monoid (Domain () Constant)
-    ) => DomainOf Expression Expression where
-    domainOf (Reference _ (Just refTo)) = domainOf refTo
-    domainOf (Constant x) = fmap Constant <$> domainOf x
-    domainOf (AbstractLiteral x) = domainOf x
-    domainOf (Op x) = domainOf x
-    domainOf x = fail ("domainOf{Expression} 1:" <+> pretty (show x))
-
 instance RepresentationOf Expression where
     representationTreeOf (Reference _ (Just (DeclHasRepr _ _ dom))) = return (reprTree dom)
     representationTreeOf (Op (MkOpIndexing (OpIndexing m i))) = do
@@ -772,16 +762,6 @@ instance Pretty ReferenceTo where
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
-
-instance
-    ( Monoid (Domain () Constant)
-    ) => DomainOf ReferenceTo Expression where
-    domainOf (Alias x) = domainOf x
-    domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
-    domainOf (DeclNoRepr  _ _ dom) = return dom
-    domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
-    domainOf RecordField{}  = fail "domainOf-ReferenceTo-ReferenceTo"
-    domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
 
 
 ------------------------------------------------------------------------------------------------------------------------

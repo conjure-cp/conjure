@@ -7,7 +7,6 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.AdHoc
 import Conjure.Language.Domain
-import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Expression.Op
 import Conjure.Language.Lenses
 

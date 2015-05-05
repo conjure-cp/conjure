@@ -31,9 +31,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpProduct x) x where
-    domainOf op = mkDomainAny ("OpProduct:" <++> pretty op) <$> typeOf op
-
 instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 

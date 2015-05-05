@@ -27,9 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
             TypeList     aInner -> return $ TypeMatrix TypeInt $ TypeTuple [aInner, TypeInt]
             _ -> raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpHist x) x where
-    domainOf op = mkDomainAny ("OpHist:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpHist where
     evaluateOp (OpHist (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantAbstract $ AbsLitMatrix
         (DomainInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])

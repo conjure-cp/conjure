@@ -25,9 +25,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParticipants x) where
             TypePartition pTyInner -> return (TypeSet pTyInner)
             _ -> raiseTypeError inp
 
-instance (Pretty x, TypeOf x) => DomainOf (OpParticipants x) x where
-    domainOf op = mkDomainAny ("OpParticipants:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpParticipants where
     evaluateOp (OpParticipants (ConstantAbstract (AbsLitPartition xss))) =
         return $ ConstantAbstract $ AbsLitSet $ sort $ concat xss

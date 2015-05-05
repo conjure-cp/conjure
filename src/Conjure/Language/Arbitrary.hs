@@ -14,7 +14,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 

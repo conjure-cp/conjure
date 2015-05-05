@@ -24,9 +24,6 @@ instance BinaryOperator (OpIntersect x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf (OpIntersect a b) = sameToSameToSame a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpIntersect x) x where
-    domainOf op = mkDomainAny ("OpIntersect:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpIntersect where
     evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]

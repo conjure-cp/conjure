@@ -5,8 +5,6 @@ install:
 
 preinstall:
 	@bash etc/build/version.sh
-	@mkdir -p src/Conjure/Language/Expression/Internal
-	@mkdir -p src/Conjure/Language/Expression/Op/Internal
 	@runhaskell etc/build/gen_Operator.hs
 	@runhaskell etc/build/gen_Expression.hs
 

@@ -24,9 +24,6 @@ instance BinaryOperator (OpImply x) where
 instance TypeOf x => TypeOf (OpImply x) where
     typeOf (OpImply a b) = boolToBoolToBool a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImply x) x where
-    domainOf op = mkDomainAny ("OpImply:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpImply where
     evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
 

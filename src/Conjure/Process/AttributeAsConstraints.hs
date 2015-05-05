@@ -8,7 +8,6 @@ module Conjure.Process.AttributeAsConstraints
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Domain.AddAttributes ( addAttributesToDomain )
 import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty

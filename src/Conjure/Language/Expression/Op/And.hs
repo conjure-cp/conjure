@@ -35,9 +35,6 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpAnd x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpAnd x) x where
-    domainOf op = mkDomainAny ("OpAnd:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpAnd where
     evaluateOp (OpAnd x) = ConstantBool . and <$> boolsOut x
 

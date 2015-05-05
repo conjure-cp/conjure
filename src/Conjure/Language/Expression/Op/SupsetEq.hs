@@ -25,9 +25,6 @@ instance BinaryOperator (OpSupsetEq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpSupsetEq x) where
     typeOf (OpSupsetEq a b) = sameToSameToBool a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpSupsetEq x) x where
-    domainOf op = mkDomainAny ("OpSupsetEq:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpSupsetEq where
     evaluateOp (OpSupsetEq a b) = evaluateOp (OpSubsetEq b a)
 

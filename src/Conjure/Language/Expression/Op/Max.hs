@@ -38,11 +38,6 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
             TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError p
 
-instance ( TypeOf x, Pretty x, ExpressionLike x
-         , Domain () x :< x
-         ) => DomainOf (OpMax x) x where
-    domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)

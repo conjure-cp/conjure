@@ -26,13 +26,6 @@ instance (Pretty x, TypeOf x) => TypeOf (OpRange x) where
             TypeSequence a   -> return (TypeSet a)
             _                -> raiseTypeError p
 
-instance (Pretty x, DomainOf x x) => DomainOf (OpRange x) x where
-    domainOf (OpRange f) = do
-        fDom <- domainOf f
-        case fDom of
-            DomainFunction _ _ _ to -> return $ DomainSet def def to
-            _ -> fail "domainOf, OpRange, not a function"
-
 instance EvaluateOp OpRange where
     evaluateOp (OpRange (ConstantAbstract (AbsLitFunction xs))) =
         return (ConstantAbstract (AbsLitSet (sortNub (map snd xs))))

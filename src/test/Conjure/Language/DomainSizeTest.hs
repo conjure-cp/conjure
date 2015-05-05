@@ -4,7 +4,6 @@ module Conjure.Language.DomainSizeTest ( tests ) where
 import Conjure.Prelude
 import Conjure.Language.Constant
 import Conjure.Language.Domain
-import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 
 -- tasty

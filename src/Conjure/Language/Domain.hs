@@ -36,7 +36,7 @@ import Conjure.Language.Pretty
 import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 
 -- containers
-import Data.Set as S ( Set, empty, toList )
+import Data.Set as S ( Set, empty, toList, union )
 
 
 data Domain r x
@@ -497,6 +497,9 @@ instance FromJSON  BinaryRelationAttrs where parseJSON = genericParseJSON jsonOp
 instance Default   BinaryRelationAttrs where def = BinaryRelationAttrs S.empty
 instance Pretty BinaryRelationAttrs where
     pretty (BinaryRelationAttrs attrs) = prettyList id "," (S.toList attrs)
+instance Monoid BinaryRelationAttrs where
+    mempty = BinaryRelationAttrs def
+    mappend (BinaryRelationAttrs a) (BinaryRelationAttrs b) = BinaryRelationAttrs (S.union a b)
 
 
 data BinaryRelationAttr

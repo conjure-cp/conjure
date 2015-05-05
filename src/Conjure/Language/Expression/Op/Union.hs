@@ -24,9 +24,6 @@ instance BinaryOperator (OpUnion x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf (OpUnion a b) = sameToSameToSame a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpUnion x) x where
-    domainOf op = mkDomainAny ("OpUnion:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpUnion where
     evaluateOp (OpUnion (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)

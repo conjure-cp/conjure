@@ -27,9 +27,6 @@ instance BinaryOperator (OpTildeLeq x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpTildeLeq x) where
     typeOf (OpTildeLeq a b) = sameToSameToBool a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTildeLeq x) x where
-    domainOf op = mkDomainAny ("OpTildeLeq:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpTildeLeq where
     evaluateOp (OpTildeLeq x y) = do
         flag1 <- evaluateOp (OpEq x y)

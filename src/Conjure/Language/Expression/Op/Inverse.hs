@@ -26,9 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
             then return TypeBool
             else raiseTypeError p
 
-instance DomainOf (OpInverse x) x where
-    domainOf _ = return DomainBool
-
 instance EvaluateOp OpInverse where
     evaluateOp (OpInverse (ConstantAbstract (AbsLitFunction xs)) (ConstantAbstract (AbsLitFunction ys))) =
         return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]

@@ -28,7 +28,6 @@ import Conjure.Language.Constant as X
 import Conjure.Language.Type as X
 import Conjure.Language.Domain as X
 import Conjure.Language.TypeOf as X
-import Conjure.Language.DomainOf as X
 import Conjure.Language.Pretty as X
 import Conjure.Language.AdHoc as X
 import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
@@ -37,9 +36,7 @@ import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 -- | Assume: the input is already normalised.
 --   Make sure the output is normalised.
 class EvaluateOp op where
-    evaluateOp :: ( MonadFail m
-                  , Monoid (Domain () Constant)                 -- ability to "combine" domains
-                  ) => op Constant -> m Constant
+    evaluateOp :: MonadFail m => op Constant -> m Constant
 
 class SimplifyOp op x where
     simplifyOp :: ( MonadFail m

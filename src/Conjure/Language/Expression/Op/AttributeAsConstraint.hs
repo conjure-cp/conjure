@@ -24,9 +24,6 @@ instance TypeOf x => TypeOf (OpAttributeAsConstraint x) where
     -- TODO
     typeOf OpAttributeAsConstraint{} = return TypeBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpAttributeAsConstraint x) x where
-    domainOf op = mkDomainAny ("OpAttributeAsConstraint:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpAttributeAsConstraint where
     -- TODO
     evaluateOp _ = return (ConstantBool True)

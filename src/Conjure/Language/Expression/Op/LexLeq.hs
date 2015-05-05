@@ -29,9 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLeq x) where
             then return TypeBool
             else raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpLexLeq x) x where
-    domainOf op = mkDomainAny ("OpLexLeq:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpLexLeq where
     evaluateOp (OpLexLeq (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =
         return $ ConstantBool $ xs <= ys

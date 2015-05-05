@@ -29,9 +29,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubstring x) where
             (TypeSequence{}, TypeSequence{}) -> return TypeBool
             _ -> raiseTypeError p
 
-instance DomainOf (OpSubstring x) x where
-    domainOf _ = fail "domainOf{OpSubstring}"
-
 instance EvaluateOp OpSubstring where
     evaluateOp (OpSubstring
         (ConstantAbstract (AbsLitSequence xs))

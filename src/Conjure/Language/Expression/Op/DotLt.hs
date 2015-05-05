@@ -24,9 +24,6 @@ instance BinaryOperator (OpDotLt x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpDotLt x) where
     typeOf (OpDotLt a b) = sameToSameToBool a b
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDotLt x) x where
-    domainOf op = mkDomainAny ("OpDotLt:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpDotLt where
     evaluateOp (OpDotLt x y) = return $ ConstantBool $ x < y
 

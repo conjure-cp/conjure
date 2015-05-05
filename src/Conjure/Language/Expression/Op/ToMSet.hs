@@ -27,9 +27,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
             _ -> raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) x where
-    domainOf op = mkDomainAny ("OpToMSet:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpToMSet where
     evaluateOp (OpToMSet (ConstantAbstract (AbsLitSet xs))) =
         return $ ConstantAbstract $ AbsLitMSet xs

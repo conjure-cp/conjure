@@ -36,9 +36,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImageSet x) where
                 , "x type:" <+> pretty xTy
                 ]
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) x where
-    domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpImageSet where
     evaluateOp (OpImageSet f@(ConstantAbstract (AbsLitFunction xs)) a) = do
         TypeFunction _ tyTo <- typeOf f

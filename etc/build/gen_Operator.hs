@@ -3,14 +3,15 @@
 import Control.Applicative ( (<$>) )
 import Data.Maybe ( Maybe(..) )
 import Data.List ( sort, isSuffixOf, intercalate )
-import System.Directory ( getDirectoryContents )
+import System.Directory ( getDirectoryContents, createDirectoryIfMissing )
 import Control.Exception ( catch, IOException )
 
 
 main :: IO ()
 main = do
     let opDir   = "src/Conjure/Language/Expression/Op"
-    let outFile = opDir ++ "/Internal/Generated.hs"
+    let outFile = "src/Conjure/Language/Expression/Op/Internal/Generated.hs"
+    createDirectoryIfMissing True "src/Conjure/Language/Expression/Op/Internal"
     operators <- sort . map (head . splitOn '.')
                       . filter (".hs" `isSuffixOf`)
                   <$> getDirectoryContents opDir
@@ -72,18 +73,6 @@ main = do
               , "         ) => TypeOf (Op x) where"
               ]
             , [ "    typeOf (" ++ patModifier m ++ ") = typeOf x"
-              | m <- operators
-              ]
-
-            , [ ""
-              , "instance ( Pretty x"
-              , "         , ExpressionLike x"
-              , "         , DomainOf x x"
-              , "         , TypeOf x"
-              , "         , Domain () x :< x"
-              , "         ) => DomainOf (Op x) x where"
-              ]
-            , [ "    domainOf (" ++ patModifier m ++ ") = domainOf x"
               | m <- operators
               ]
 

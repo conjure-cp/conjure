@@ -21,7 +21,7 @@ import Conjure.Language.Type
 import Conjure.Language.Pretty
 import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
-import Conjure.Language.DomainOf
+import Conjure.Compute.DomainOf
 import Conjure.Language.Lenses
 import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
@@ -578,18 +578,21 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
                             fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
                                 ComprehensionLetting{} -> return (Just stmt)
                                 _ -> return Nothing
-                        case (decisionConditions, comprehensionLettings) of
-                            ([], []) -> return []
-                            (_ , []) -> return [ "Comprehension contains decision expressions as conditions."
-                                               , nest 4 $ pretty (hole x)
-                                               ]
-                            ([], _ ) -> return [ "Comprehension contains local lettings."
-                                               , nest 4 $ pretty (hole x)
-                                               ]
-                            (_ , _ ) -> return [ "Comprehension contains decision expressions as conditions,"
-                                               , "                   and local lettings."
-                                               , nest 4 $ pretty (hole x)
-                                               ]
+                        msg <- case (decisionConditions, comprehensionLettings) of
+                            ([], []) -> return Nothing
+                            (_ , []) -> return $ Just ["Comprehension contains decision expressions as conditions."]
+                            ([], _ ) -> return $ Just ["Comprehension contains local lettings."]
+                            (_ , _ ) -> return $ Just [ "Comprehension contains decision expressions as conditions,"
+                                                      , "                   and local lettings."
+                                                      ]
+                        case msg of
+                            Nothing   -> return []
+                            Just msg' -> return $ msg'
+                                                ++ [ nest 4 (pretty (hole x)) ]
+                                                ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                                   | i <- allNats
+                                                   | c <- tail (ascendants x)
+                                                   ]
                     _ -> return []
     unless (null fails) (fail (vcat fails))
     return m
@@ -1013,6 +1016,7 @@ otherRules =
         ]
 
     ,   [ rule_InlineConditions
+        , rule_InlineConditions_MaxMin
         ]
     ]
 
@@ -1499,19 +1503,71 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     -- (or maybe we should call bug right ahead, it can't be anything else.)
     queryQ z = do
         let h = hole z
-        case ( match opAnd h
-             , match opOr h
-             , match opSum h ) of
-            (Just _, _, _) -> return ("and", opAndSkip )
-            (_, Just _, _) -> return ("or" , opOrSkip  )
-            (_, _, Just _) -> return ("sum", opSumSkip )
-            _ -> case Zipper.up z of
-                Nothing -> fail "queryQ"
-                Just u  -> queryQ u
+        case (match opAnd h, match opOr h, match opSum h) of
+            (Just _, _, _) -> return ("and", opAndSkip)
+            (_, Just _, _) -> return ("or" , opOrSkip )
+            (_, _, Just _) -> return ("sum", opSumSkip)
+            _              -> case Zipper.up z of
+                                Nothing -> fail "queryQ"
+                                Just u  -> queryQ u
 
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
     opSumSkip b x = [essence| toInt(&b) * &x |]
+
+
+-- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
+rule_InlineConditions_MaxMin :: Rule
+rule_InlineConditions_MaxMin = Rule "inline-conditions-MaxMin" theRule where
+    theRule z (Comprehension body gensOrConds) = do
+        let (toInline, _toKeep) = mconcat
+                [ case goc of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[goc])
+                | goc <- gensOrConds
+                ]
+        -- fail the rule if there are no decision-conditions to inline
+        when (null toInline) $ na "No condition to inline."
+        nameQ     <- queryQ z
+        auxDomain <- domainOf body
+        let anys = [ d | d@DomainAny{} <- universe auxDomain ]
+        if null anys
+            then return ()
+            else na "anys"
+        let
+            result = do
+                (auxName, aux) <- auxiliaryVar
+                (iPat   , i  ) <- quantifiedVar
+                return $ WithLocals
+                    (Comprehension i [Generator (GenInExpr iPat aux)])
+                    (Left [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr auxDomain)))
+                          , SuchThat
+                              [ make opAnd $ Comprehension
+                                  [essence| &i in &aux |]
+                                  gensOrConds
+                              ]
+                          ])
+        return
+            [ RuleResult
+                { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
+                , ruleResultType  = ExpressionRefinement
+                , ruleResult      = result
+                , ruleResultHook  = return
+                } ]
+    theRule _ _ = na "rule_InlineConditions"
+
+    -- keep going up, until finding a quantifier
+    -- when found, return the skipping operator for the quantifier
+    -- if none exists, do not apply the rule.
+    -- (or maybe we should call bug right ahead, it can't be anything else.)
+    queryQ z = do
+        let h = hole z
+        case (match opMax h, match opMin h) of
+            (Just _, _) -> return "max"
+            (_, Just _) -> return "min"
+            _           -> case Zipper.up z of
+                            Nothing -> fail "queryQ"
+                            Just u  -> queryQ u
 
 
 rule_DotLt_IntLike :: Rule

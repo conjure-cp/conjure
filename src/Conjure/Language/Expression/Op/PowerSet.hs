@@ -24,9 +24,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPowerSet x) where
             TypeSet i -> return (TypeSet (TypeSet i))
             _ -> raiseTypeError p
 
-instance (Pretty x, TypeOf x) => DomainOf (OpPowerSet x) x where
-    domainOf op = mkDomainAny ("OpPowerSet:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpPowerSet where
     evaluateOp (OpPowerSet (ConstantAbstract (AbsLitSet xs))) =
         return $ ConstantAbstract $ AbsLitSet

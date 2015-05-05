@@ -14,8 +14,6 @@ import Conjure.Language.Pretty
 class DomainSizeOf x res where
     domainSizeOf ::
         ( MonadFail m
-        , Monoid (Domain r x)
-        , Monoid (Domain () x)
         , Pretty r
         , Default r
         ) => Domain r x -> m res

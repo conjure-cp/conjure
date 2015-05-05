@@ -342,7 +342,7 @@ rule_Comprehension_Defined_Literal = "function-defined-literal" `namedRule` theR
         (_ty, elems) <- match functionLiteral func
         when (null elems) $ na "defined(f) of empty function literal"
         elemDoms <- mapM (fmap forgetRepr . domainOf . fst) elems
-        let domFr = mconcat elemDoms
+        domFr    <- domainUnions elemDoms
         unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
         let upd val old = lambdaToFunction pat old val
         return
@@ -388,7 +388,7 @@ rule_Comprehension_Range_Literal = "function-range-literal" `namedRule` theRule 
         TypeFunction{} <- typeOf func
         (_ty, elems) <- match functionLiteral func
         elemDoms <- mapM (fmap forgetRepr . domainOf . snd) elems
-        let domTo = mconcat elemDoms
+        domTo    <- domainUnions elemDoms
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over range(f)"

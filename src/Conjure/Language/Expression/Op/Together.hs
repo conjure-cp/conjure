@@ -26,9 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
             (TypeSet xTyInner, TypePartition pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTogether x) x where
-    domainOf op = mkDomainAny ("OpTogether:" <++> pretty op) <$> typeOf op
-
 instance EvaluateOp OpTogether where
     evaluateOp (OpTogether (ConstantAbstract (AbsLitSet ys)) (ConstantAbstract (AbsLitPartition xss))) =
         return $ ConstantBool $ or

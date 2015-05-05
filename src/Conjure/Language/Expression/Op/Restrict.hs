@@ -1,5 +1,4 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Restrict where
 
@@ -27,14 +26,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
         if typesUnify [from, from']
             then return (TypeFunction (mostDefined [from', from]) to)
             else raiseTypeError p
-
-instance (Pretty x, DomainOf x x, Domain () x :< x) => DomainOf (OpRestrict x) x where
-    domainOf (OpRestrict f x) = do
-        d    <- project x
-        fDom <- domainOf f
-        case fDom of
-            DomainFunction fRepr a _ to -> return (DomainFunction fRepr a d to)
-            _ -> fail "domainOf, OpRestrict, not a function"
 
 instance EvaluateOp OpRestrict where
     evaluateOp (OpRestrict (ConstantAbstract (AbsLitFunction xs)) domX) = do

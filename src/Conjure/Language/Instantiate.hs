@@ -10,7 +10,6 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Expression.Op
 import Conjure.Language.Domain
-import Conjure.Language.Domain.Monoid ()
 import Conjure.Language.Constant
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
