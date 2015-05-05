@@ -274,9 +274,9 @@ instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpMinus x) where
     domainOf (OpMinus x y) = do
         xDom :: Dom <- domainOf x
         yDom :: Dom <- domainOf y
-        let l = [essence| min(`&xDom`) - max(`&yDom`) |]
-        let u = [essence| max(`&xDom`) - min(`&yDom`) |]
-        return (DomainInt [RangeBounded l u] :: Dom)
+        let low = [essence| min(`&xDom`) - max(`&yDom`) |]
+        let upp = [essence| max(`&xDom`) - min(`&yDom`) |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
 
 instance (Pretty x, TypeOf x) => DomainOf (OpMod x) where
     domainOf op = mkDomainAny ("OpMod:" <++> pretty op) <$> typeOf op
@@ -357,7 +357,16 @@ instance DomainOf (OpSubstring x) where
 instance (DomainOf x) => DomainOf (OpSucc x) where
     domainOf (OpSucc x) = domainOf x
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpSum x) where
+instance (Pretty x, ExpressionLike x, TypeOf x, DomainOf x) => DomainOf (OpSum x) where
+    domainOf (OpSum x)
+        | Just xs <- listOut x
+        , not (null xs) = do
+        doms <- mapM domainOf xs
+        let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
+        let low  = [essence| sum(&lows) |]
+        let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let upp  = [essence| sum(&upps) |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpSum:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSupset x) where
