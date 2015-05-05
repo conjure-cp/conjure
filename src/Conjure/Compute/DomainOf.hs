@@ -17,7 +17,7 @@ type Dom = Domain () Expression
 
 class DomainOf a where
     domainOf
-        :: MonadFail m
+        :: (MonadFail m, NameGen m)
         => a -> m Dom
 
 
@@ -163,7 +163,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpActive x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpAllDiff x) where
     domainOf op = mkDomainAny ("OpAllDiff:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpAnd x) where
+instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpAnd x) where
     domainOf op = mkDomainAny ("OpAnd:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpApart x) where
@@ -227,7 +227,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpImply x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpIn x) where
     domainOf op = mkDomainAny ("OpIn:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, ExpressionLike x, DomainOf x, TypeOf x) => DomainOf (OpIndexing x) where
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndexing x) where
     domainOf (OpIndexing m i) = do
         iType <- typeOf i
         case iType of
@@ -260,14 +260,28 @@ instance (Pretty x, TypeOf x) => DomainOf (OpLexLt x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpLt x) where
     domainOf op = mkDomainAny ("OpLt:" <++> pretty op) <$> typeOf op
 
-instance ( TypeOf x, Pretty x, ExpressionLike x
-         , Domain () x :< x
-         ) => DomainOf (OpMax x) where
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where
+    domainOf (OpMax x)
+        | Just xs <- listOut x
+        , not (null xs) = do
+        doms <- mapM domainOf xs
+        let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
+        let low  = [essence| max(&lows) |]
+        let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let upp  = [essence| min(&upps) |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
-instance ( TypeOf x, Pretty x, ExpressionLike x
-         , Domain () x :< x
-         ) => DomainOf (OpMin x) where
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMin x) where
+    domainOf (OpMin x)
+        | Just xs <- listOut x
+        , not (null xs) = do
+        doms <- mapM domainOf xs
+        let lows = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let low  = [essence| min(&lows) |]
+        let upps = fromList [ [essence| min(`&d`) |] | d <- doms ]
+        let upp  = [essence| max(&upps) |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpMinus x) where
@@ -290,7 +304,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpNeq x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpNot x) where
     domainOf op = mkDomainAny ("OpNot:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpOr x) where
+instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpOr x) where
     domainOf op = mkDomainAny ("OpOr:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpParticipants x) where
@@ -315,10 +329,23 @@ instance (Pretty x, TypeOf x) => DomainOf (OpPowerSet x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpPreImage x) where
     domainOf op = mkDomainAny ("OpPreImage:" <++> pretty op) <$> typeOf op
 
-instance (DomainOf x) => DomainOf (OpPred x) where
+instance DomainOf x => DomainOf (OpPred x) where
     domainOf (OpPred x) = domainOf x
 
-instance (Pretty x, ExpressionLike x, TypeOf x) => DomainOf (OpProduct x) where
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpProduct x) where
+    domainOf (OpProduct x)
+        | Just xs <- listOut x
+        , not (null xs) = do
+        (iPat, i) <- quantifiedVar
+        doms <- mapM domainOf xs
+        -- maximum absolute value in each domain
+        let upps = fromList [ [essence| max([ |&i| | &iPat : &d ]) |]
+                            | d <- doms ]
+        -- a (too lax) upper bound is multiplying all those together
+        let upp  = [essence| product(&upps) |]
+        -- a (too lax) lower bound is -upp
+        let low  = [essence| -1 * &upp |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpProduct:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, DomainOf x) => DomainOf (OpRange x) where
@@ -354,10 +381,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpSubsetEq x) where
 instance DomainOf (OpSubstring x) where
     domainOf _ = fail "domainOf{OpSubstring}"
 
-instance (DomainOf x) => DomainOf (OpSucc x) where
+instance DomainOf x => DomainOf (OpSucc x) where
     domainOf (OpSucc x) = domainOf x
 
-instance (Pretty x, ExpressionLike x, TypeOf x, DomainOf x) => DomainOf (OpSum x) where
+instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
     domainOf (OpSum x)
         | Just xs <- listOut x
         , not (null xs) = do

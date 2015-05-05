@@ -303,11 +303,13 @@ rule_Card = "set-card" `namedRule` theRule where
         TypeSet{} <- typeOf s
         return
             ( "Horizontal rule for set cardinality."
-            , case domainOf s of
-                Just (DomainSet _ (SetAttr (SizeAttr_Size n)) _) -> return n
-                _ -> do
-                    (iPat, _) <- quantifiedVar
-                    return [essence| sum &iPat in &s . 1 |]
+            , do
+                dom <- domainOf s
+                case dom of
+                    DomainSet _ (SetAttr (SizeAttr_Size n)) _ -> return n
+                    _ -> do
+                        (iPat, _) <- quantifiedVar
+                        return [essence| sum &iPat in &s . 1 |]
             )
 
 
