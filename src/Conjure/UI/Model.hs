@@ -901,9 +901,7 @@ horizontalRules =
     , Horizontal.Function.rule_Card
     , Horizontal.Function.rule_Comprehension_PreImage
     , Horizontal.Function.rule_Comprehension_Defined
-    , Horizontal.Function.rule_Comprehension_Defined_Literal
     , Horizontal.Function.rule_Comprehension_Range
-    , Horizontal.Function.rule_Comprehension_Range_Literal
     , Horizontal.Function.rule_In
     , Horizontal.Function.rule_Restrict_Image
     , Horizontal.Function.rule_Restrict_Comprehension
