@@ -54,7 +54,7 @@ rule_Image_Literal = "function-image-literal" `namedRule` theRule where
                                 , Condition [essence| &i[1] = &arg |]
                                 ]
                     argIsDefinedOnce = make opEq 1 $ make opSum $ fromList
-                        [ [essence| &a = &arg |]
+                        [ [essence| toInt(&a = &arg) |]
                         | (a,_) <- elems
                         ]
                 return $ WithLocals val (Right [argIsDefinedOnce])
