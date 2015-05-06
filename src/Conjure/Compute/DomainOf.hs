@@ -179,8 +179,19 @@ instance (Pretty x, DomainOf x) => DomainOf (OpDefined x) where
             DomainFunction _ _ fr _ -> return $ DomainSet def def fr
             _ -> fail "domainOf, OpDefined, not a function"
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDiv x) where
-    domainOf op = mkDomainAny ("OpDiv:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpDiv x) where
+    domainOf (OpDiv x y) = do
+        xDom :: Dom <- domainOf x
+        yDom :: Dom <- domainOf y
+        (iPat, i) <- quantifiedVar
+        (jPat, j) <- quantifiedVar
+        let vals = [essence| [ &i / &j
+                             | &iPat : &xDom
+                             , &jPat : &yDom
+                             ] |]
+        let low  = [essence| min(&vals) |]
+        let upp  = [essence| max(&vals) |]
+        return (DomainInt [RangeBounded low upp] :: Dom)
 
 instance (Pretty x, TypeOf x) => DomainOf (OpDontCare x) where
     domainOf op = mkDomainAny ("OpDontCare:" <++> pretty op) <$> typeOf op
@@ -268,7 +279,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
         let low  = [essence| max(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
-        let upp  = [essence| min(&upps) |]
+        let upp  = [essence| max(&upps) |]
         return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMax:" <++> pretty op) <$> typeOf op
 
@@ -277,10 +288,10 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         | Just xs <- listOut x
         , not (null xs) = do
         doms <- mapM domainOf xs
-        let lows = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
         let low  = [essence| min(&lows) |]
-        let upps = fromList [ [essence| min(`&d`) |] | d <- doms ]
-        let upp  = [essence| max(&upps) |]
+        let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let upp  = [essence| min(&upps) |]
         return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 
