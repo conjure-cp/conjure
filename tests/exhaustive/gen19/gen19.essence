@@ -1,0 +1,11 @@
+language Essence 1.3
+
+find var1_1: int(2, -5..-5)
+such that
+    [ [ tuple (-6)
+      , tuple (var1_1)
+      ; int(1..2)
+      ][q5]
+    | q5 : int(1..2)
+    , [false, true; int(1..2)][q5]
+    ][1] = tuple (-10)

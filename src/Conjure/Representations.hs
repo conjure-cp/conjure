@@ -23,6 +23,9 @@ downX1 (Constant x) = onConstant x
 downX1 (AbstractLiteral x) = onAbstractLiteral x
 downX1 (Reference x (Just refTo)) = onReference x refTo
 downX1 (Op x) = onOp x
+downX1 (Comprehension body stmts) = do
+    xs <- downX1 body
+    return [Comprehension x stmts | x <- xs]
 downX1 x@WithLocals{} = fail ("downX1:" <++> pretty (show x))
 downX1 x = bug ("downX1:" <++> pretty (show x))
 
@@ -74,7 +77,8 @@ onOp p@(MkOpIndexing (OpIndexing m i)) = do
     ty <- typeOf m
     case ty of
         TypeMatrix{} -> return ()
-        _ -> fail $ "[onOp, not a TypeMatrix]" <+> vcat [pretty ty, pretty p]
+        TypeList{}   -> return ()
+        _ -> fail $ "[onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty p]
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
