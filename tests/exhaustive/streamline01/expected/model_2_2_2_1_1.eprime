@@ -6,11 +6,14 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 letting let1 be 1
 find s_Explicit: matrix indexed by [int(1..let1)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+find aux1: matrix indexed by [int(1..let1)] of int(1..2)
 such that
     and([f_Function1DPartial_Flags[s_Explicit[q9]] | q9 : int(1..let1)]),
-    and([s_Explicit[q7] !=
-         min([s_Occurrence[q14] * q14 + !s_Occurrence[q14] * 9999 | q14 : int(1..2)])
-         ->
+    and([and([s_Occurrence[q14] -> q14 >= aux1[q7] | q14 : int(1..2)])
+             | q7 : int(1..let1)]),
+    and([or([s_Occurrence[q14] /\ q14 = aux1[q7] | q14 : int(1..2)])
+             | q7 : int(1..let1)]),
+    and([s_Explicit[q7] != aux1[q7] ->
          and([f_Function1DPartial_Values[s_Explicit[q7]] >
               f_Function1DPartial_Values[min([s_Explicit[q11] | q11 : int(1..let1)])],
               f_Function1DPartial_Flags[s_Explicit[q7]],
