@@ -158,19 +158,19 @@ instance DomainOf (AbstractLiteral Expression) where
 -- all the `Op`s
 
 instance (Pretty x, TypeOf x) => DomainOf (OpActive x) where
-    domainOf op = mkDomainAny ("OpActive:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpAllDiff x) where
-    domainOf op = mkDomainAny ("OpAllDiff:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpAnd x) where
-    domainOf op = mkDomainAny ("OpAnd:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpApart x) where
-    domainOf op = mkDomainAny ("OpApart:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpAttributeAsConstraint x) where
-    domainOf op = mkDomainAny ("OpAttributeAsConstraint:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, DomainOf x) => DomainOf (OpDefined x) where
     domainOf (OpDefined f) = do
@@ -194,16 +194,16 @@ instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpDiv x) where
         return (DomainInt [RangeBounded low upp] :: Dom)
 
 instance (Pretty x, TypeOf x) => DomainOf (OpDontCare x) where
-    domainOf op = mkDomainAny ("OpDontCare:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpDotLeq x) where
-    domainOf op = mkDomainAny ("OpDotLeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpDotLt x) where
-    domainOf op = mkDomainAny ("OpDotLt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpEq x) where
-    domainOf op = mkDomainAny ("OpEq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) where
     domainOf op = mkDomainAny ("OpFactorial:" <++> pretty op) <$> typeOf op
@@ -215,16 +215,16 @@ instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
     domainOf op = mkDomainAny ("OpFreq:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpGeq x) where
-    domainOf op = mkDomainAny ("OpGeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpGt x) where
-    domainOf op = mkDomainAny ("OpGt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
     domainOf op = mkDomainAny ("OpHist:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpIff x) where
-    domainOf op = mkDomainAny ("OpIff:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
     domainOf op = mkDomainAny ("OpImage:" <++> pretty op) <$> typeOf op
@@ -233,10 +233,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImply x) where
-    domainOf op = mkDomainAny ("OpImply:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpIn x) where
-    domainOf op = mkDomainAny ("OpIn:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndexing x) where
     domainOf (OpIndexing m i) = do
@@ -260,16 +260,16 @@ instance DomainOf (OpInverse x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpLeq x) where
-    domainOf op = mkDomainAny ("OpLeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpLexLeq x) where
-    domainOf op = mkDomainAny ("OpLexLeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpLexLt x) where
-    domainOf op = mkDomainAny ("OpLexLt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpLt x) where
-    domainOf op = mkDomainAny ("OpLt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where
     domainOf (OpMax x)
@@ -310,13 +310,13 @@ instance (Pretty x, TypeOf x) => DomainOf (OpNegate x) where
     domainOf op = mkDomainAny ("OpNegate:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpNeq x) where
-    domainOf op = mkDomainAny ("OpNeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpNot x) where
-    domainOf op = mkDomainAny ("OpNot:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpOr x) where
-    domainOf op = mkDomainAny ("OpOr:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpParticipants x) where
     domainOf op = mkDomainAny ("OpParticipants:" <++> pretty op) <$> typeOf op
@@ -341,7 +341,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpPreImage x) where
     domainOf op = mkDomainAny ("OpPreImage:" <++> pretty op) <$> typeOf op
 
 instance DomainOf x => DomainOf (OpPred x) where
-    domainOf (OpPred x) = domainOf x
+    domainOf (OpPred x) = domainOf x        -- TODO: improve
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpProduct x) where
     domainOf (OpProduct x)
@@ -356,8 +356,8 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpProdu
         let upp  = [essence| product(&upps) |]
         -- a (too lax) lower bound is -upp
         let low  = [essence| -1 * &upp |]
-        return (DomainInt [RangeBounded low upp] :: Dom)
-    domainOf op = mkDomainAny ("OpProduct:" <++> pretty op) <$> typeOf op
+        return $ DomainInt [RangeBounded low upp]
+    domainOf _ = return $ DomainInt [RangeBounded 1 1]
 
 instance (Pretty x, DomainOf x) => DomainOf (OpRange x) where
     domainOf (OpRange f) = do
@@ -393,7 +393,7 @@ instance DomainOf (OpSubstring x) where
     domainOf _ = fail "domainOf{OpSubstring}"
 
 instance DomainOf x => DomainOf (OpSucc x) where
-    domainOf (OpSucc x) = domainOf x
+    domainOf (OpSucc x) = domainOf x        -- TODO: improve
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
     domainOf (OpSum x)
@@ -405,22 +405,22 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpSum x
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| sum(&upps) |]
         return (DomainInt [RangeBounded low upp] :: Dom)
-    domainOf op = mkDomainAny ("OpSum:" <++> pretty op) <$> typeOf op
+    domainOf _ = return $ DomainInt [RangeBounded 0 0]
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSupset x) where
-    domainOf op = mkDomainAny ("OpSupset:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSupsetEq x) where
-    domainOf op = mkDomainAny ("OpSupsetEq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTildeLeq x) where
-    domainOf op = mkDomainAny ("OpTildeLeq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTildeLt x) where
-    domainOf op = mkDomainAny ("OpTildeLt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpToInt x) where
-    domainOf op = mkDomainAny ("OpToInt:" <++> pretty op) <$> typeOf op
+    domainOf _ = return $ DomainInt [RangeBounded 0 1]
 
 instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where
     domainOf op = mkDomainAny ("OpToMSet:" <++> pretty op) <$> typeOf op
@@ -432,10 +432,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
     domainOf op = mkDomainAny ("OpToSet:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTogether x) where
-    domainOf op = mkDomainAny ("OpTogether:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTrue x) where
-    domainOf op = mkDomainAny ("OpTrue:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) where
     domainOf op = mkDomainAny ("OpTwoBars:" <++> pretty op) <$> typeOf op
