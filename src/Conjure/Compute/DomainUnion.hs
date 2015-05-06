@@ -43,19 +43,19 @@ instance
         = DomainTuple <$> zipWithM domainUnion xs ys
     domainUnion (DomainMatrix x1 x2) (DomainMatrix y1 y2)
         = DomainMatrix <$> domainUnion x1 y1 <*> domainUnion x2 y2
-    domainUnion (DomainSet _ _ x) (DomainSet _ _ y)
-        = DomainSet def def <$> domainUnion x y
-    domainUnion (DomainMSet _ _ x) (DomainMSet _ _ y)
-        = DomainMSet def def <$> domainUnion x y
-    domainUnion (DomainFunction _ _ x1 x2) (DomainFunction _ _ y1 y2)
-        = DomainFunction def def <$> domainUnion x1 y1 <*> domainUnion x2 y2
-    domainUnion (DomainSequence _ attrX x) (DomainSequence _ attrY y)
-        = DomainSequence def <$> domainUnion attrX attrY <*> domainUnion x y
-    domainUnion (DomainRelation _ _ xs) (DomainRelation _ _ ys)
+    domainUnion (DomainSet _ xA x) (DomainSet _ yA y)
+        = DomainSet def <$> domainUnion xA yA <*> domainUnion x y
+    domainUnion (DomainMSet _ xA x) (DomainMSet _ yA y)
+        = DomainMSet def <$> domainUnion xA yA <*> domainUnion x y
+    domainUnion (DomainFunction _ xA x1 x2) (DomainFunction _ yA y1 y2)
+        = DomainFunction def <$> domainUnion xA yA <*> domainUnion x1 y1 <*> domainUnion x2 y2
+    domainUnion (DomainSequence _ xA x) (DomainSequence _ yA y)
+        = DomainSequence def <$> domainUnion xA yA <*> domainUnion x y
+    domainUnion (DomainRelation _ xA xs) (DomainRelation _ yA ys)
         | length xs == length ys
-        = DomainRelation def def <$> zipWithM domainUnion xs ys
-    domainUnion (DomainPartition _ _ x) (DomainPartition _ _ y)
-        = DomainPartition def def <$> domainUnion x y
+        = DomainRelation def <$> domainUnion xA yA <*> zipWithM domainUnion xs ys
+    domainUnion (DomainPartition _ xA x) (DomainPartition _ yA y)
+        = DomainPartition def <$> domainUnion xA yA <*> domainUnion x y
     domainUnion d1 d2 = bug $ vcat ["Domain.domainUnion", pretty d1, pretty d2]
 
 
