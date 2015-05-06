@@ -566,18 +566,26 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom -> typeOf dom
             RecordField _ ty    -> return ty
             VariantField _ ty   -> return ty
+    typeOf p@(WithLocals x (Right cs)) = do
+        forM_ cs $ \ c -> do
+            ty <- typeOf c
+            unless (typeUnify TypeBool ty) $ fail $ vcat
+                    [ "Local constraint is not boolean."
+                    , "Condition:" <+> pretty c
+                    , "In:" <+> pretty p
+                    ]
+        typeOf x
     typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
     typeOf p@(Comprehension x gensOrConds) = do
         forM_ gensOrConds $ \ goc -> case goc of
             Generator{} -> return ()                    -- TODO: do this properly
             Condition c -> do
                 ty <- typeOf c
-                case ty of
-                    TypeBool -> return ()
-                    _        -> fail $ vcat [ "Condition is not boolean."
-                                            , "Condition:" <+> pretty c
-                                            , "In:" <+> pretty p
-                                            ]
+                unless (typeUnify TypeBool ty) $ fail $ vcat
+                    [ "Condition is not boolean."
+                    , "Condition:" <+> pretty c
+                    , "In:" <+> pretty p
+                    ]
             ComprehensionLetting{} -> return ()
         TypeList <$> typeOf x
     typeOf (Typed _ ty) = return ty
