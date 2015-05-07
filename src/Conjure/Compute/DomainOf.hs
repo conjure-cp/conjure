@@ -130,21 +130,34 @@ instance DomainOf (AbstractLiteral Expression) where
 
     domainOf (AbsLitMatrix ind inn ) = DomainMatrix ind <$> (domainUnions =<< mapM domainOf inn)
 
+    domainOf (AbsLitSet         [] ) = return $ DomainSet def attr (DomainAny "domainOf-AbsLitSet-[]" TypeAny)
+        where attr = SetAttr (SizeAttr_Size 0)
     domainOf (AbsLitSet         xs ) = DomainSet def attr <$> (domainUnions =<< mapM domainOf xs)
         where attr = SetAttr (SizeAttr_MaxSize $ fromInt $ genericLength xs)
 
+    domainOf (AbsLitMSet        [] ) = return $ DomainMSet def attr (DomainAny "domainOf-AbsLitMSet-[]" TypeAny)
+        where attr = MSetAttr (SizeAttr_Size 0) OccurAttr_None
     domainOf (AbsLitMSet        xs ) = DomainMSet def attr <$> (domainUnions =<< mapM domainOf xs)
         where attr = MSetAttr (SizeAttr_MaxSize $ fromInt $ genericLength xs) OccurAttr_None
 
+    domainOf (AbsLitFunction    [] ) = return $ DomainFunction def attr
+                                        (DomainAny "domainOf-AbsLitFunction-[]-1" TypeAny)
+                                        (DomainAny "domainOf-AbsLitFunction-[]-2" TypeAny)
+        where attr = FunctionAttr (SizeAttr_Size 0) def def
     domainOf (AbsLitFunction    xs ) = DomainFunction def attr
                                                 <$> (domainUnions =<< mapM (domainOf . fst) xs)
                                                 <*> (domainUnions =<< mapM (domainOf . snd) xs)
         where attr = FunctionAttr (SizeAttr_MaxSize $ fromInt $ genericLength xs) def def
 
+    domainOf (AbsLitSequence    [] ) = return $ DomainSequence def attr
+                                        (DomainAny "domainOf-AbsLitSequence-[]" TypeAny)
+        where attr = SequenceAttr (SizeAttr_Size 0) def
     domainOf (AbsLitSequence    xs ) = DomainSequence def attr
                                                 <$> (domainUnions =<< mapM domainOf xs)
         where attr = SequenceAttr (SizeAttr_MaxSize (fromInt $ genericLength xs)) def
 
+    domainOf (AbsLitRelation    [] ) = return $ DomainRelation def attr []
+        where attr = RelationAttr (SizeAttr_Size 0) def
     domainOf (AbsLitRelation    xss) = do
         ty <- domainUnions =<< mapM (domainOf . AbsLitTuple) xss
         case ty of
@@ -152,6 +165,9 @@ instance DomainOf (AbstractLiteral Expression) where
             _ -> bug "expecting DomainTuple in domainOf"
         where attr = RelationAttr (SizeAttr_MaxSize (fromInt $ genericLength xss)) def
 
+    domainOf (AbsLitPartition   [] ) = return $ DomainPartition def attr
+                                        (DomainAny "domainOf-AbsLitPartition-[]" TypeAny)
+        where attr = PartitionAttr (SizeAttr_Size 0) (SizeAttr_Size 0) False
     domainOf (AbsLitPartition   xss) = DomainPartition def attr <$> (domainUnions =<< mapM domainOf (concat xss))
         where attr = PartitionAttr (SizeAttr_MaxSize (fromInt $ genericLength xss))
                                    (SizeAttr_MaxSize (fromInt $ maximum [genericLength xs | xs <- xss]))
