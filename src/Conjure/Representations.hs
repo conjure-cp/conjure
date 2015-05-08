@@ -43,6 +43,7 @@ onConstant (ConstantAbstract (AbsLitMatrix index xs)) = do
     yss <- mapM (downX1 . Constant) xs
     let indexX = fmap Constant index
     return [ AbstractLiteral (AbsLitMatrix indexX ys) | ys <- transpose yss ]
+onConstant (TypedConstant c _) = onConstant c
 onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 
 onAbstractLiteral :: (MonadFail m, NameGen m) => AbstractLiteral Expression -> m [Expression]
