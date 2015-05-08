@@ -22,7 +22,7 @@ instance BinaryOperator (OpUnion x) where
     opLexeme _ = L_union
 
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
-    typeOf (OpUnion a b) = sameToSameToSame a b
+    typeOf p@(OpUnion a b) = sameToSameToSame p a b
 
 instance EvaluateOp OpUnion where
     evaluateOp (OpUnion (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =

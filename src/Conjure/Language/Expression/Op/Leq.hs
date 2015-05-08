@@ -22,7 +22,7 @@ instance BinaryOperator (OpLeq x) where
     opLexeme _ = L_Leq
 
 instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
-    typeOf (OpLeq a b) = sameToSameToBool a b
+    typeOf p@(OpLeq a b) = sameToSameToBool p a b
 
 instance EvaluateOp OpLeq where
     evaluateOp (OpLeq x y) = return $ ConstantBool $ x <= y

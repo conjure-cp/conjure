@@ -22,7 +22,7 @@ instance BinaryOperator (OpIff x) where
     opLexeme _ = L_Iff
 
 instance (TypeOf x, Pretty x) => TypeOf (OpIff x) where
-    typeOf (OpIff a b) = boolToBoolToBool a b
+    typeOf p@(OpIff a b) = boolToBoolToBool p a b
 
 instance EvaluateOp OpIff where
     evaluateOp (OpIff (ConstantBool x) (ConstantBool y)) = return $ ConstantBool $ x == y

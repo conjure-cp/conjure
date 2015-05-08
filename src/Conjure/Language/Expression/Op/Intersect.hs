@@ -22,7 +22,7 @@ instance BinaryOperator (OpIntersect x) where
     opLexeme _ = L_intersect
 
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
-    typeOf (OpIntersect a b) = sameToSameToSame a b
+    typeOf p@(OpIntersect a b) = sameToSameToSame p a b
 
 instance EvaluateOp OpIntersect where
     evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do

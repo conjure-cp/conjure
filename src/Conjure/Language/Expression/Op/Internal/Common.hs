@@ -78,53 +78,69 @@ prettyPrecBinOp envPrec op a b =
                                                        , prettyPrec (prec+1) b
                                                        ]
 
-intToInt :: (MonadFail m, TypeOf a) => a -> m Type
-intToInt a = do
+intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
+intToInt p a = do
     tya <- typeOf a
     case tya of
         TypeInt -> return TypeInt
-        _       -> fail $ "Argument expected to be an int, but it is:" <++> pretty tya
+        _       -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Argument expected to be an int, but it is:" <++> pretty tya
+            ]
 
 
-intToIntToInt :: (MonadFail m, TypeOf a) => a -> a -> m Type
-intToIntToInt a b = do
+intToIntToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> a -> m Type
+intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
         (TypeInt, TypeInt) -> return TypeInt
-        (_, TypeInt)       -> fail $  "First argument expected to be an int, but it is:" <++> pretty tya
-        _                  -> fail $ "Second argument expected to be an int, but it is:" <++> pretty tyb
+        (_, TypeInt)       -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            ,  "First argument expected to be an int, but it is:" <++> pretty tya
+            ]
+        _                  -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Second argument expected to be an int, but it is:" <++> pretty tyb
+            ]
 
-boolToBoolToBool :: (MonadFail m, TypeOf a) => a -> a -> m Type
-boolToBoolToBool a b = do
+boolToBoolToBool :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> a -> m Type
+boolToBoolToBool p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
         (TypeBool, TypeBool) -> return TypeBool
-        (_, TypeBool)        -> fail $  "First argument expected to be a bool, but it is:" <++> pretty tya
-        _                    -> fail $ "Second argument expected to be a bool, but it is:" <++> pretty tyb
-        
+        (_, TypeBool)        -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            ,  "First argument expected to be a bool, but it is:" <++> pretty tya
+            ]
+        _                    -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Second argument expected to be a bool, but it is:" <++> pretty tyb
+            ]
 
-sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
-sameToSameToBool a b = do
+sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> m Type
+sameToSameToBool p a b = do
     tyA <- typeOf a
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return TypeBool
-        else fail $ vcat [ "Cannot unify the types of the following."
+        else fail $ vcat [ "When type checking:" <+> pretty p
+                         , "Cannot unify the types of the following."
                          , "lhs        :" <+> pretty a
                          , "type of lhs:" <+> pretty tyA
                          , "rhs        :" <+> pretty b
                          , "type of rhs:" <+> pretty tyB
                          ]
 
-sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a) => a -> a -> m Type
-sameToSameToSame a b = do
+sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> m Type
+sameToSameToSame p a b = do
     tyA <- typeOf a
     tyB <- typeOf b
     if tyA `typeUnify` tyB
         then return (mostDefined [tyA,tyB])
-        else fail $ vcat [ "Cannot unify the types of the following."
+        else fail $ vcat [ "When type checking:" <+> pretty p
+                         , "Cannot unify the types of the following."
                          , "lhs        :" <+> pretty a
                          , "type of lhs:" <+> pretty tyA
                          , "rhs        :" <+> pretty b

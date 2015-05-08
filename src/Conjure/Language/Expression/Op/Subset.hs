@@ -22,7 +22,7 @@ instance BinaryOperator (OpSubset x) where
     opLexeme _ = L_subset
 
 instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
-    typeOf (OpSubset a b) = sameToSameToBool a b
+    typeOf p@(OpSubset a b) = sameToSameToBool p a b
 
 instance EvaluateOp OpSubset where
     evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =

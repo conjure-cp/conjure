@@ -22,7 +22,7 @@ instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
-    typeOf (OpGt a b) = sameToSameToBool a b
+    typeOf p@(OpGt a b) = sameToSameToBool p a b
 
 instance EvaluateOp OpGt where
     evaluateOp (OpGt x y) = return $ ConstantBool $ x > y

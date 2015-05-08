@@ -21,8 +21,8 @@ instance FromJSON  x => FromJSON  (OpMod x) where parseJSON = genericParseJSON j
 instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 
-instance TypeOf x => TypeOf (OpMod x) where
-    typeOf (OpMod a b) = intToIntToInt a b
+instance (TypeOf x, Pretty x) => TypeOf (OpMod x) where
+    typeOf p@(OpMod a b) = intToIntToInt p a b
 
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p

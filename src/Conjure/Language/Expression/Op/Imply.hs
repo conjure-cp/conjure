@@ -21,8 +21,8 @@ instance FromJSON  x => FromJSON  (OpImply x) where parseJSON = genericParseJSON
 instance BinaryOperator (OpImply x) where
     opLexeme _ = L_Imply
 
-instance TypeOf x => TypeOf (OpImply x) where
-    typeOf (OpImply a b) = boolToBoolToBool a b
+instance (TypeOf x, Pretty x) => TypeOf (OpImply x) where
+    typeOf p@(OpImply a b) = boolToBoolToBool p a b
 
 instance EvaluateOp OpImply where
     evaluateOp (OpImply x y) = ConstantBool <$> ((<=) <$> boolOut x <*> boolOut y)
