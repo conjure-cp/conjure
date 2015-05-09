@@ -45,9 +45,9 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
-        (mkM, expr2)      <- match opModifier expr
-        (matrix, indices) <- match opMatrixIndexing expr2
-        (_, index, elems) <- match matrixLiteral matrix
+        (mkM, expr2)       <- match opModifier expr
+        (matrix, index)    <- match opIndexing expr2
+        (_, indexD, elems) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
@@ -60,8 +60,8 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                              ++ transformBi (upd i) gocAfter
                         | el <- elems
                         ]
-                    core = AbstractLiteral $ AbsLitMatrix index comprehensions
-                return $ make opMatrixIndexing core indices
+                    core = AbstractLiteral $ AbsLitMatrix indexD comprehensions
+                return $ make opIndexing core index
             )
     theRule _ = na "rule_Comprehension_LiteralIndexed"
 
