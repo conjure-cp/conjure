@@ -1504,14 +1504,14 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     queryQ z = do
         let h = hole z
         case (match opAnd h, match opOr h, match opSum h, match opMin h, match opMax h) of
-            (Just _, _, _, _, _) -> return ("and", opAndSkip)
-            (_, Just _, _, _, _) -> return ("or" , opOrSkip )
-            (_, _, Just _, _, _) -> return ("sum", opSumSkip)
-            (_, _, _, Just _, _) -> na "rule_InlineConditions (min)"
-            (_, _, _, _, Just _) -> na "rule_InlineConditions (min)"
-            _              -> case Zipper.up z of
-                                Nothing -> fail "queryQ"
-                                Just u  -> queryQ u
+            (Just{}, _, _, _, _) -> return ("and", opAndSkip)
+            (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
+            (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
+            (_, _, _, Just{}, _) -> na "rule_InlineConditions (min)"
+            (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
+            _                    -> case Zipper.up z of
+                                        Nothing -> fail "queryQ"
+                                        Just u  -> queryQ u
 
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
