@@ -81,7 +81,7 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
-import qualified Data.Generics.Uniplate.Zipper as Zipper ( up )
+import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -1501,17 +1501,21 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     -- when found, return the skipping operator for the quantifier
     -- if none exists, do not apply the rule.
     -- (or maybe we should call bug right ahead, it can't be anything else.)
-    queryQ z = do
-        let h = hole z
-        case (match opAnd h, match opOr h, match opSum h, match opMin h, match opMax h) of
-            (Just{}, _, _, _, _) -> return ("and", opAndSkip)
-            (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
-            (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
-            (_, _, _, Just{}, _) -> na "rule_InlineConditions (min)"
-            (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
-            _                    -> case Zipper.up z of
-                                        Nothing -> fail "queryQ"
-                                        Just u  -> queryQ u
+    queryQ z0 =
+        case Zipper.up z0 of
+            Nothing -> na "rule_InlineConditions (meh-1)"
+            Just z -> do
+                let h = hole z
+                case (match opAnd h, match opOr h, match opSum h, match opMin h, match opMax h) of
+                    (Just{}, _, _, _, _) -> return ("and", opAndSkip)
+                    (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
+                    (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
+                    (_, _, _, Just{}, _) -> na "rule_InlineConditions (min)"
+                    (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
+                    _                    -> na "rule_InlineConditions (meh-2)"
+                                            -- case Zipper.up z of
+                                            --     Nothing -> fail "queryQ"
+                                            --     Just u  -> queryQ u
 
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
