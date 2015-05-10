@@ -1315,11 +1315,13 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
     theRule p = do
-        x                   <- match opFlatten p
-        TypeMatrix _ xInner <- typeOf x
-        case xInner of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
+        x   <- match opFlatten p
+        tyx <- typeOf x
+        case tyx of
+            TypeList     TypeBool{} -> return ()
+            TypeList     TypeInt{}  -> return ()
+            TypeMatrix _ TypeBool{} -> return ()
+            TypeMatrix _ TypeInt{}  -> return ()
             _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
                , return x
