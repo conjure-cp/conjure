@@ -1126,6 +1126,21 @@ matrixLiteral _ =
         extract p = na ("Lenses.matrixLiteral:" <+> pretty p)
 
 
+onMatrixLiteral
+    :: (Functor m, Applicative m, Monad m)
+    => (Expression -> m Expression)
+    ->  Expression -> m Expression
+onMatrixLiteral f = followAliases go
+    where
+        go (Constant (ConstantAbstract (AbsLitMatrix index xs))) =
+            AbstractLiteral . AbsLitMatrix (fmap Constant index) <$> mapM (go . Constant) xs
+        go (AbstractLiteral (AbsLitMatrix index xs)) =
+            AbstractLiteral . AbsLitMatrix index <$> mapM go xs
+        go (Typed x _) = go x
+        go (Constant (TypedConstant x _)) = go (Constant x)
+        go p = f p
+
+
 setLiteral
     :: MonadFail m
     => Proxy (m :: * -> *)

@@ -39,14 +39,36 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
 --           , [ i | i <- c ]
 --           ][j]
 
+rule_ModifierAroundIndexedMatrixLiteral :: Rule
+rule_ModifierAroundIndexedMatrixLiteral = "modifier-around-indexed-matrix-literal" `namedRule` theRule where
+    theRule p = do
+        (mkM, p2)         <- match opModifier p
+        (matrix, indices) <- match opMatrixIndexing p2
+        case match opMatrixIndexing p of
+            Nothing -> return ()
+            Just{}  -> na "rule_ModifierAroundIndexedMatrixLiteral, no modifier"
+        let
+            fullyMatrixLiteral 0 _ = return True
+            fullyMatrixLiteral n m =
+                case match matrixLiteral m of
+                    Nothing            -> return False
+                    Just (_, _, elems) -> and <$> mapM (fullyMatrixLiteral (n-1)) elems
+        True <- fullyMatrixLiteral (length indices) matrix
+        return
+            ( "Pushing a modifier inwards, through a matrix literal"
+            , do
+                matrix' <- onMatrixLiteral (return . mkM) matrix
+                return $ make opMatrixIndexing matrix' indices
+            )
+
+
 rule_Comprehension_LiteralIndexed :: Rule
 rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
-        (mkM, expr2)       <- match opModifier expr
-        (matrix, index)    <- match opIndexing expr2
+        (matrix, index)    <- match opIndexing expr
         (_, indexD, elems) <- match matrixLiteral matrix
         let upd val old = lambdaToFunction pat old val
         return
@@ -56,7 +78,7 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                 let comprehensions =
                         [ Comprehension (upd i body)
                              $  gocBefore
-                             ++ [Generator (GenInExpr iPat (mkM el))]
+                             ++ [Generator (GenInExpr iPat el)]
                              ++ transformBi (upd i) gocAfter
                         | el <- elems
                         ]
