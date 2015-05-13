@@ -7,23 +7,26 @@ such that y = max(`A`)
 such that z = succ(min(`A`))
 such that t = pred(pred(max(`A`)))
 
-$ uncomment the following few lines, pending SR bug #87
 given B new type enum
 find x2,y2
-    $ ,z2,t2
+    ,z2,t2
     : B
 such that x2 = min(`B`)
 such that y2 = max(`B`)
-$ such that z2 = succ(min(`B`))
-$ such that t2 = pred(pred(max(`B`)))
+such that z2 = succ(min(`B`))
+such that t2 = pred(pred(max(`B`)))
 
 find f : function A --> B
 such that f(min(`A`)) = min(`B`)
 such that f(max(`A`)) = max(`B`)
+$ it might be puzzling at first, but the following two constraints are not conflicting
+$ this is because (a ~< b <-> {a} ~> {b})
 such that forAll i : A(min(`A`)..pred(max(`A`))) . f(i) ~< f(succ(i))
+such that forAll i : A(min(`A`)..pred(max(`A`))) . imageSet(f,i) ~> imageSet(f,succ(i))
 
-$ uncomment the following line, pending SR bug #88
+$ TODO: something is wrong with the following
 find g : function (size 3, surjective) B --> A
 such that g(min(`B`)) = max(`A`)
 such that g(max(`B`)) = min(`A`)
 $ such that forAll i : B(succ(min(`B`))..max(`B`)) . g(pred(i)) ~> g(i)
+$ such that forAll i : B(min(`B`)..pred(max(`B`))) . g(i) ~> g(succ(i))
