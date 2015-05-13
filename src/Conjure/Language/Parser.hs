@@ -225,6 +225,7 @@ parseDomainWithRepr
 
         pBool = do
             lexeme L_bool
+            _ <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma  -- parse and discard, compatibility with SR
             return DomainBool
 
         pInt = do
