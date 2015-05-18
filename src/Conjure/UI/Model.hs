@@ -1642,7 +1642,7 @@ rule_QuantifierShift :: Rule
 rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
     theRule p = do
         (mkQuan, inner  )               <- match opQuantifier p
-        (matrix, indexer)               <- match opMatrixIndexing inner
+        (matrix, indexer)               <- match opIndexing inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
             TypeMatrix{} -> return ()
@@ -1650,7 +1650,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             _ -> na "rule_QuantifierShift"
         return
             ( "Shifting quantifier inwards"
-            , return $ make opMatrixIndexing
+            , return $ make opIndexing
                         (make matrixLiteral
                             TypeAny
                             index
