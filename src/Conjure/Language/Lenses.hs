@@ -1127,10 +1127,13 @@ matrixLiteral _ =
 
 
 onMatrixLiteral
-    :: (Functor m, Applicative m, Monad m)
-    => (Expression -> m Expression)
+    :: (Functor m, Applicative m, Monad m, NameGen m)
+    => Maybe Int                                    -- how many levels to go down. all the way if Nothing.
+    -> (Expression -> m Expression)
     ->  Expression -> m Expression
-onMatrixLiteral f = followAliases go
+onMatrixLiteral mlvl f = case mlvl of
+                            Nothing  -> followAliases go
+                            Just lvl -> followAliases (goL lvl)
     where
         go (Constant (ConstantAbstract (AbsLitMatrix index xs))) =
             AbstractLiteral . AbsLitMatrix (fmap Constant index) <$> mapM (go . Constant) xs
@@ -1139,6 +1142,18 @@ onMatrixLiteral f = followAliases go
         go (Typed x _) = go x
         go (Constant (TypedConstant x _)) = go (Constant x)
         go p = f p
+
+        goL 0 p = f p
+        goL lvl (Constant (ConstantAbstract (AbsLitMatrix index xs))) =
+            AbstractLiteral . AbsLitMatrix (fmap Constant index) <$> mapM (goL (lvl-1) . Constant) xs
+        goL lvl (AbstractLiteral (AbsLitMatrix index xs)) =
+            AbstractLiteral . AbsLitMatrix index <$> mapM (goL (lvl-1)) xs
+        goL lvl (Typed x _) = goL lvl x
+        goL lvl (Constant (TypedConstant x _)) = goL lvl (Constant x)
+        goL lvl p = do
+            (iPat, i) <- quantifiedVar
+            body <- goL (lvl-1) i
+            return $ Comprehension body [Generator (GenInExpr iPat p)]
 
 
 setLiteral

@@ -10,19 +10,20 @@ rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
-        (_, index, _elems) <- match matrixLiteral expr
-        let upd val old = lambdaToFunction pat old val
+        (_, _index, elems) <- match matrixLiteral expr
+        -- let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
-            , do
-                 (iPat, i) <- quantifiedVar
-                 let val = make opIndexing expr i
-                 return $ Comprehension (upd val body)
-                         $  gocBefore
-                         ++ [Generator (GenDomainNoRepr iPat index)]
-                         ++ transformBi (upd val) gocAfter
+            , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                 (mkDomainIntB 1 (fromInt $ genericLength elems))
+                 [ Comprehension body
+                     $  gocBefore
+                     ++ [ComprehensionLetting pat el]
+                     ++ gocAfter
+                 | el <- elems
+                 ]
             )
     theRule _ = na "rule_Comprehension_Literal"
 
@@ -57,7 +58,30 @@ rule_ModifierAroundIndexedMatrixLiteral = "modifier-around-indexed-matrix-litera
         return
             ( "Pushing a modifier inwards, through a matrix literal"
             , do
-                matrix' <- onMatrixLiteral (return . mkM) matrix
+                matrix' <- onMatrixLiteral Nothing (return . mkM) matrix
+                return $ make opMatrixIndexing matrix' indices
+            )
+
+
+rule_QuantifierAroundIndexedMatrixLiteral :: Rule
+rule_QuantifierAroundIndexedMatrixLiteral = "quantifier-around-indexed-matrix-literal" `namedRule` theRule where
+    theRule p = do
+        (mkM, p2)         <- match opQuantifier p
+        (matrix, indices) <- match opMatrixIndexing p2
+        case match opMatrixIndexing p of
+            Nothing -> return ()
+            Just{}  -> na "rule_ModifierAroundIndexedMatrixLiteral, no quantifier"
+        -- let
+        --     fullyMatrixLiteral 0 _ = return True
+        --     fullyMatrixLiteral n m =
+        --         case match matrixLiteral m of
+        --             Nothing            -> return False
+        --             Just (_, _, elems) -> and <$> mapM (fullyMatrixLiteral (n-1)) elems
+        -- True <- fullyMatrixLiteral (length indices) matrix
+        return
+            ( "Pushing a modifier inwards, through a matrix literal"
+            , do
+                matrix' <- onMatrixLiteral (Just (length indices)) (return . mkM) matrix
                 return $ make opMatrixIndexing matrix' indices
             )
 
@@ -68,22 +92,36 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
-        (matrix, index)    <- match opIndexing expr
-        (_, indexD, elems) <- match matrixLiteral matrix
-        let upd val old = lambdaToFunction pat old val
+        (matrix, indices) <- match opMatrixIndexing expr
+        (_, _index, elems) <- match matrixLiteral matrix
         return
-            ( "Vertical rule for matrix-comprehension on matrix literal (indexed)"
-            , do
-                (iPat, i) <- quantifiedVar
-                let comprehensions =
-                        [ Comprehension (upd i body)
-                             $  gocBefore
-                             ++ [Generator (GenInExpr iPat el)]
-                             ++ transformBi (upd i) gocAfter
-                        | el <- elems
+            ( "Vertical rule for matrix-comprehension on matrix literal"
+            , case indices of
+                [] -> bug "rule_Comprehension_LiteralIndexed indices=[]"
+                [index] ->
+                    return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                        (mkDomainIntB 1 (fromInt $ genericLength elems))
+                        [ Comprehension body
+                            $  gocBefore
+                            ++ [ Generator (GenInExpr pat el)
+                               , Condition [essence| &num = &index |]
+                               ]
+                            ++ gocAfter
+                        | (num', el) <- zip [1..] elems
+                        , let num = fromInt num'
                         ]
-                    core = AbstractLiteral $ AbsLitMatrix indexD comprehensions
-                return $ make opIndexing core index
+                (index:rest) ->
+                    return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+                        (mkDomainIntB 1 (fromInt $ genericLength elems))
+                        [ Comprehension body
+                            $  gocBefore
+                            ++ [ Generator (GenInExpr pat (make opMatrixIndexing el rest))
+                               , Condition [essence| &num = &index |]
+                               ]
+                            ++ gocAfter
+                        | (num', el) <- zip [1..] elems
+                        , let num = fromInt num'
+                        ]
             )
     theRule _ = na "rule_Comprehension_LiteralIndexed"
 

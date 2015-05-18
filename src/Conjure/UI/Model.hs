@@ -782,6 +782,7 @@ verticalRules =
 
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_ModifierAroundIndexedMatrixLiteral
+    , Vertical.Matrix.rule_QuantifierAroundIndexedMatrixLiteral
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
@@ -1151,6 +1152,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             >>= addChannels          -- for each in previously recorded representation
             >>= recordThis           -- unless usedBefore: record (name, domain) as being used in the model
             >>= fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
+            >>= resolveNames         -- we need to re-resolve names to avoid repeatedly selecting representations
+                                     -- for abstract stuff inside aliases.
 
 
 rule_ChooseReprForComprehension :: Rule
