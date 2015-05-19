@@ -139,6 +139,7 @@ data Lexeme
 
     -- matrix only operators
     | L_flatten
+    | L_concatenate
     | L_normIndices
 
     -- in the rule language
@@ -366,6 +367,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_allDiff, "allDiff" )
     , ( L_dontCare, "dontCare" )
     , ( L_flatten, "flatten" )
+    , ( L_concatenate, "concatenate" )
     , ( L_normIndices, "normIndices" )
     , ( L_lambda, "lambda" )
     , ( L_quantifier, "quantifier" )

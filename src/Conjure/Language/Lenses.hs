@@ -550,6 +550,25 @@ opFlatten _ =
     )
 
 
+opConcatenate
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opConcatenate _ =
+    ( inject . MkOpConcatenate . OpConcatenate
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpConcatenate (OpConcatenate x) -> return x
+                _ -> na ("Lenses.opConcatenate:" <++> pretty p)
+    )
+
+
 opIn
     :: ( Op x :< x
        , Pretty x

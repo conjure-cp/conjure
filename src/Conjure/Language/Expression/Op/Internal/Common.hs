@@ -222,6 +222,7 @@ functionals =
     , L_freq
     , L_toInt
     , L_flatten
+    , L_concatenate
     , L_normIndices
     , L_indices
     , L_inverse

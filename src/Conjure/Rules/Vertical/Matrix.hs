@@ -16,7 +16,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
         -- let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
-            , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
+            , return $ make opConcatenate $ AbstractLiteral $ AbsLitMatrix
                  (mkDomainIntB 1 (fromInt $ genericLength elems))
                  [ Comprehension body
                      $  gocBefore

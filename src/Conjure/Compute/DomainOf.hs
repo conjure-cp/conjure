@@ -44,6 +44,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpAnd x) = domainOf x
     domainOf (MkOpApart x) = domainOf x
     domainOf (MkOpAttributeAsConstraint x) = domainOf x
+    domainOf (MkOpConcatenate x) = domainOf x
     domainOf (MkOpDefined x) = domainOf x
     domainOf (MkOpDiv x) = domainOf x
     domainOf (MkOpDontCare x) = domainOf x
@@ -192,6 +193,9 @@ instance (Pretty x, TypeOf x) => DomainOf (OpApart x) where
 
 instance (Pretty x, TypeOf x) => DomainOf (OpAttributeAsConstraint x) where
     domainOf _ = return DomainBool
+
+instance (Pretty x, TypeOf x) => DomainOf (OpConcatenate x) where
+    domainOf op = mkDomainAny ("OpConcatenate:" <++> pretty op) <$> typeOf op
 
 instance (Pretty x, DomainOf x) => DomainOf (OpDefined x) where
     domainOf (OpDefined f) = do
