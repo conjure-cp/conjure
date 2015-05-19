@@ -84,6 +84,7 @@ import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify,
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(..), execWriterT, runWriter )
+import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT )
 import Control.Arrow             as X ( first, second, (***), (&&&) )
 import Control.Category          as X ( (<<<), (>>>) )
 
@@ -354,6 +355,9 @@ instance MonadFail m => MonadFail (LoggerT m) where
     fail = lift . fail
 
 instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
+    fail = lift . fail
+
+instance MonadFail m => MonadFail (ReaderT r m) where
     fail = lift . fail
 
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
