@@ -1,0 +1,15 @@
+language Essence 1.3
+
+find a,b : set (size 1) of int(1..3)
+
+letting x be
+    [ [{2}, a, {2}; int(1..3)]
+    , [{2}, {2}, b; int(1..3)]
+    ; int(1..2)
+    ]
+
+such that and([ i % 2 = 0
+              | row <- x
+              , col <- row
+              , i   <- col
+              ])
