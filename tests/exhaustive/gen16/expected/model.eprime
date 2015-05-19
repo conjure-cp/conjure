@@ -3,24 +3,23 @@ language ESSENCE' 1.0
 find x_Explicit_RelationAsMatrix:
         matrix indexed by [int(1..2), int(1..2), int(3)] of bool
 such that
-    and([or([[true,
-              or([x_Explicit_RelationAsMatrix[q6, q16_1, 3] /\ q16_1 = 2
-                      | q16_1 : int(1..2)]); int(1..2)][q9]
-             /\
-             and([x_Explicit_RelationAsMatrix[q6, q12_1, 3] ->
-                  [false, 2 = q12_1; int(1..2)][q9]
-                      | q12_1 : int(1..2)])
-                 | q9 : int(1..2)])
+    and([and([x_Explicit_RelationAsMatrix[q6, q10_1, 3] -> false
+                  | q10_1 : int(1..2)])
+         \/
+         or([x_Explicit_RelationAsMatrix[q6, q18_1, 3] /\ q18_1 = 2 | q18_1 : int(1..2)])
+         /\
+         and([x_Explicit_RelationAsMatrix[q6, q15_1, 3] -> 2 = q15_1
+                  | q15_1 : int(1..2)])
              | q6 : int(1..2)]),
-    and([or([and([x_Explicit_RelationAsMatrix[q25, q27_1, 3] ->
-                  [false, 2 = q27_1; int(1..2)][q23]
-                      | q27_1 : int(1..2)])
-             /\
-             [true,
-              or([x_Explicit_RelationAsMatrix[q25, q36_1, 3] /\ q36_1 = 2
-                      | q36_1 : int(1..2)]); int(1..2)][q23]
-                 | q25 : int(1..2)])
-             | q23 : int(1..2)]),
+    or([and([x_Explicit_RelationAsMatrix[q24, q26_1, 3] -> false
+                 | q26_1 : int(1..2)])
+            | q24 : int(1..2)]),
+    or([and([x_Explicit_RelationAsMatrix[q31, q33_1, 3] -> 2 = q33_1
+                 | q33_1 : int(1..2)])
+        /\
+        or([x_Explicit_RelationAsMatrix[q31, q38_1, 3] /\ q38_1 = 2
+                | q38_1 : int(1..2)])
+            | q31 : int(1..2)]),
     flatten(x_Explicit_RelationAsMatrix[1, .., ..]) <lex
     flatten(x_Explicit_RelationAsMatrix[2, .., ..])
 

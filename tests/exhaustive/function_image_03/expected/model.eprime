@@ -3,13 +3,5 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
-such that
-    or([or([[5, x; int(1..2)][q6] = [2, 5; int(1..2)][q3] /\
-            [false, true; int(1..2)][q6]
-                | q6 : int(1..2)])
-        = [true, false; int(1..2)][q3]
-        /\ [2, 5; int(1..2)][q3] = i
-        /\ [true, false; int(1..2)][q3]
-            | q3 : int(1..2)])
-    = b
+such that (x = 2 /\ 2 = i) = b
 

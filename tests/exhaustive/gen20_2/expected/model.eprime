@@ -2,8 +2,7 @@ language ESSENCE' 1.0
 
 find var1: int(1..5, 3..4)
 such that
-    and([var1 = [-2, 3; int(1..2)][q3] \/
-         !(var1 = -2) /\ -2 = [-2, 3; int(1..2)][q3]
-             | q3 : int(1..2)]),
-    or([[-2, 3; int(1..2)][q17] = var1 | q17 : int(1..2)])
+    var1 = -2 \/ !(var1 = -2),
+    var1 = 3,
+    -2 = var1 \/ 3 = var1
 

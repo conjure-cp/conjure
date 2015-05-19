@@ -10,21 +10,21 @@ such that
     2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
     aux1_ExplicitVarSizeWithMarker_Values[1] <
     aux1_ExplicitVarSizeWithMarker_Values[2],
-    and([q9 > aux1_ExplicitVarSizeWithMarker_Marker ->
-         aux1_ExplicitVarSizeWithMarker_Values[q9] = false
-             | q9 : int(1..2)]),
-    and([or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-             aux1_ExplicitVarSizeWithMarker_Values[q16] = [false, true; int(1..2)][q14]
-                 | q16 : int(1..2)])
-             | q14 : int(1..2)]),
-    and([q12 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-         or([[false, true; int(1..2)][q18] = aux1_ExplicitVarSizeWithMarker_Values[q12]
-                 | q18 : int(1..2)])
-             | q12 : int(1..2)]),
-    sum([([false, true; int(1..2)][q3] = b) * [5, x; int(1..2)][q3]
-             | q3 : int(1..2)])
-    = i,
-    or([q11 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-        aux1_ExplicitVarSizeWithMarker_Values[q11] = b
-            | q11 : int(1..2)])
+    and([q8 > aux1_ExplicitVarSizeWithMarker_Marker ->
+         aux1_ExplicitVarSizeWithMarker_Values[q8] = false
+             | q8 : int(1..2)]),
+    or([q14 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q14] = false
+            | q14 : int(1..2)]),
+    or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q16]
+            | q16 : int(1..2)]),
+    and([q11 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         false = aux1_ExplicitVarSizeWithMarker_Values[q11] \/
+         aux1_ExplicitVarSizeWithMarker_Values[q11]
+             | q11 : int(1..2)]),
+    (false = b) * 5 + b * x = i,
+    or([q10 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q10] = b
+            | q10 : int(1..2)])
 
