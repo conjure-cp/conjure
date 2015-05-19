@@ -1274,6 +1274,11 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
 
 rule_GeneratorsFirst :: Rule
 rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
+    theRule (Comprehension body [])
+        = return
+            ( "Empty generators."
+            , return $ AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 1) [body]
+            )
     theRule (Comprehension body gensOrConds)
         | let (gens, rest) = mconcat
                 [ case x of
