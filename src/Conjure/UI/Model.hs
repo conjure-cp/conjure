@@ -193,7 +193,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
                     if typesUnify [tyBefore, tyAfter]
                         then return ()
                         else bug $ vcat
-                                [ "Rule application changes type."
+                                [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
                                 , "Type before:" <+> pretty tyBefore
