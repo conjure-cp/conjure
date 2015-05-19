@@ -422,6 +422,16 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
             )
 
 
+rule_Concatenate_Singleton :: Rule
+rule_Concatenate_Singleton = "matrix-concatenate-singleton" `namedRule` theRule where
+    theRule p = do
+        AbstractLiteral (AbsLitMatrix _ [singleVal]) <- match opConcatenate p
+        return
+            ( "Removing concatenate of a single item"
+            , return singleVal
+            )
+
+
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do

@@ -1012,6 +1012,7 @@ otherRules =
 
         , rule_QuantifierShift
         , rule_QuantifierShift2
+        , rule_QuantifierShift3
 
         , rule_DotLt_IntLike
         , rule_DotLeq_IntLike
@@ -1028,6 +1029,7 @@ delayedRules =
     [
         [ Vertical.Matrix.rule_Comprehension_Singleton
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
+        , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
         ]
     ]
@@ -1686,4 +1688,21 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
                             TypeAny
                             index
                             (map (mkQuan . flattenIfNeeded) elems))
+            )
+
+
+-- | shifting quantifiers inwards, if they operate on a concatenated multi-dim matrix.
+rule_QuantifierShift3 :: Rule
+rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
+    theRule p = do
+        (mkQuan, inner)   <- match opQuantifier p
+        matrix            <- match opConcatenate inner
+        (_, index, elems) <- match matrixLiteral matrix
+        return
+            ( "Shifting quantifier inwards"
+            , return $ mkQuan
+                        (make matrixLiteral
+                            TypeAny
+                            index
+                            (map mkQuan elems))
             )
