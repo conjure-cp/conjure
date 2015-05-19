@@ -782,7 +782,7 @@ verticalRules =
 
     , Vertical.Matrix.rule_Comprehension_Literal
     , Vertical.Matrix.rule_ModifierAroundIndexedMatrixLiteral
-    , Vertical.Matrix.rule_QuantifierAroundIndexedMatrixLiteral
+    -- , Vertical.Matrix.rule_QuantifierAroundIndexedMatrixLiteral
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
