@@ -66,7 +66,7 @@ instance EvaluateOp OpRelationProj where
                     , and xsCondition
                     ]
     -- leave the OpImage evaluator in -- it is just easier
-    evaluateOp (OpRelationProj f@(ConstantAbstract AbsLitFunction{}) [Just arg]) =
+    evaluateOp (OpRelationProj f@(viewConstantFunction -> Just _) [Just arg]) =
         evaluateOp (OpImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
