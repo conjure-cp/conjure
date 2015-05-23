@@ -126,7 +126,7 @@ sameToSameToBool p a b tys= do
     tyA <- typeOf a
     tyB <- typeOf b
     let tyAB = mostDefined [tyA,tyB]
-    case (tyA `typeUnify` tyB, any (typeUnify tyAB) tys) of
+    case (tyA `typeUnify` tyB, null tys || any (typeUnify tyAB) tys) of
         (True, True) -> return TypeBool
         (False, _) -> fail $ vcat
             [ "When type checking:" <+> pretty p
@@ -150,7 +150,7 @@ sameToSameToSame p a b tys = do
     tyA <- typeOf a
     tyB <- typeOf b
     let tyAB = mostDefined [tyA,tyB]
-    case (tyA `typeUnify` tyB, any (typeUnify tyAB) tys) of
+    case (tyA `typeUnify` tyB, null tys || any (typeUnify tyAB) tys) of
         (True, True) -> return tyAB
         (False, _) -> fail $ vcat
             [ "When type checking:" <+> pretty p
