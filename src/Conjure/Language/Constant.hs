@@ -7,6 +7,16 @@ module Conjure.Language.Constant
     , validateConstantForDomain
     , mkUndef, isUndef
     , emptyCollection
+    , viewConstantTuple
+    , viewConstantRecord
+    , viewConstantVariant
+    , viewConstantMatrix
+    , viewConstantSet
+    , viewConstantMSet
+    , viewConstantFunction
+    , viewConstantSequence
+    , viewConstantRelation
+    , viewConstantPartition
     ) where
 
 -- conjure
@@ -322,3 +332,55 @@ constantNotInDomain c d = fail $ vcat
     , "Value :" <+> pretty c
     , "Domain:" <+> pretty (show d)
     ]
+
+
+viewConstantTuple     :: MonadFail m => Constant -> m [Constant]
+viewConstantTuple     (ConstantAbstract (AbsLitTuple xs)) = return xs
+viewConstantTuple     (TypedConstant c _) = viewConstantTuple c
+viewConstantTuple     _ = fail "viewConstantTuple"
+
+viewConstantRecord    :: MonadFail m => Constant -> m [(Name, Constant)]
+viewConstantRecord    (ConstantAbstract (AbsLitRecord xs)) = return xs
+viewConstantRecord    (TypedConstant c _) = viewConstantRecord c
+viewConstantRecord    _ = fail "viewConstantRecord"
+
+viewConstantVariant   :: MonadFail m => Constant -> m (Maybe [(Name, Domain () Constant)], Name, Constant)
+viewConstantVariant   (ConstantAbstract (AbsLitVariant lu nm x)) = return (lu, nm, x)
+viewConstantVariant   (TypedConstant c _) = viewConstantVariant c
+viewConstantVariant   _ = fail "viewConstantVariant"
+
+viewConstantMatrix    :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
+viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (ind, xs)
+viewConstantMatrix    (TypedConstant c _) = viewConstantMatrix c
+viewConstantMatrix    _ = fail "viewConstantMatrix"
+
+viewConstantSet       :: MonadFail m => Constant -> m [Constant]
+viewConstantSet       (ConstantAbstract (AbsLitSet xs)) = return xs
+viewConstantSet       (TypedConstant c _) = viewConstantSet c
+viewConstantSet       _ = fail "viewConstantSet"
+
+viewConstantMSet      :: MonadFail m => Constant -> m [Constant]
+viewConstantMSet      (ConstantAbstract (AbsLitMSet xs)) = return xs
+viewConstantMSet      (TypedConstant c _) = viewConstantMSet c
+viewConstantMSet      _ = fail "viewConstantMSet"
+
+viewConstantFunction  :: MonadFail m => Constant -> m [(Constant, Constant)]
+viewConstantFunction  (ConstantAbstract (AbsLitFunction xs)) = return xs
+viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
+viewConstantFunction  _ = fail "viewConstantFunction"
+
+viewConstantSequence  :: MonadFail m => Constant -> m [Constant]
+viewConstantSequence  (ConstantAbstract (AbsLitSequence xs)) = return xs
+viewConstantSequence  (TypedConstant c _) = viewConstantSequence c
+viewConstantSequence  _ = fail "viewConstantSequence"
+
+viewConstantRelation  :: MonadFail m => Constant -> m [[Constant]]
+viewConstantRelation  (ConstantAbstract (AbsLitRelation xs)) = return xs
+viewConstantRelation  (TypedConstant c _) = viewConstantRelation c
+viewConstantRelation  _ = fail "viewConstantRelation"
+
+viewConstantPartition :: MonadFail m => Constant -> m [[Constant]]
+viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
+viewConstantPartition (TypedConstant c _) = viewConstantPartition c
+viewConstantPartition _ = fail "viewConstantPartition"
+
