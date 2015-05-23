@@ -121,33 +121,53 @@ boolToBoolToBool p a b = do
             , "Second argument expected to be a bool, but it is:" <++> pretty tyb
             ]
 
-sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> m Type
-sameToSameToBool p a b = do
+sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> m Type
+sameToSameToBool p a b tys= do
     tyA <- typeOf a
     tyB <- typeOf b
-    if tyA `typeUnify` tyB
-        then return TypeBool
-        else fail $ vcat [ "When type checking:" <+> pretty p
-                         , "Cannot unify the types of the following."
-                         , "lhs        :" <+> pretty a
-                         , "type of lhs:" <+> pretty tyA
-                         , "rhs        :" <+> pretty b
-                         , "type of rhs:" <+> pretty tyB
-                         ]
+    let tyAB = mostDefined [tyA,tyB]
+    case (tyA `typeUnify` tyB, any (typeUnify tyAB) tys) of
+        (True, True) -> return TypeBool
+        (False, _) -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Cannot unify the types of the following."
+            , "lhs        :" <+> pretty a
+            , "type of lhs:" <+> pretty tyA
+            , "rhs        :" <+> pretty b
+            , "type of rhs:" <+> pretty tyB
+            ]
+        (_, False) -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Arguments expected to be one of these types:" <+> prettyList id "," tys
+            , "lhs        :" <+> pretty a
+            , "type of lhs:" <+> pretty tyA
+            , "rhs        :" <+> pretty b
+            , "type of rhs:" <+> pretty tyB
+            ]
 
-sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> m Type
-sameToSameToSame p a b = do
+sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> m Type
+sameToSameToSame p a b tys = do
     tyA <- typeOf a
     tyB <- typeOf b
-    if tyA `typeUnify` tyB
-        then return (mostDefined [tyA,tyB])
-        else fail $ vcat [ "When type checking:" <+> pretty p
-                         , "Cannot unify the types of the following."
-                         , "lhs        :" <+> pretty a
-                         , "type of lhs:" <+> pretty tyA
-                         , "rhs        :" <+> pretty b
-                         , "type of rhs:" <+> pretty tyB
-                         ]
+    let tyAB = mostDefined [tyA,tyB]
+    case (tyA `typeUnify` tyB, any (typeUnify tyAB) tys) of
+        (True, True) -> return tyAB
+        (False, _) -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Cannot unify the types of the following."
+            , "lhs        :" <+> pretty a
+            , "type of lhs:" <+> pretty tyA
+            , "rhs        :" <+> pretty b
+            , "type of rhs:" <+> pretty tyB
+            ]
+        (_, False) -> fail $ vcat
+            [ "When type checking:" <+> pretty p
+            , "Arguments expected to be one of these types:" <+> prettyList id "," tys
+            , "lhs        :" <+> pretty a
+            , "type of lhs:" <+> pretty tyA
+            , "rhs        :" <+> pretty b
+            , "type of rhs:" <+> pretty tyB
+            ]
 
 data Fixity = FNone | FLeft | FRight
     deriving Show

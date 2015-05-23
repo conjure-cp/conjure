@@ -23,6 +23,11 @@ instance BinaryOperator (OpUnion x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf p@(OpUnion a b) = sameToSameToSame p a b
+                                [ TypeSet TypeAny
+                                , TypeMSet TypeAny
+                                , TypeFunction TypeAny TypeAny
+                                , TypeRelation [TypeAny]
+                                ]
 
 instance EvaluateOp OpUnion where
     evaluateOp (OpUnion (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =

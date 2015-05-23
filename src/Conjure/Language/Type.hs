@@ -76,7 +76,7 @@ typeUnify TypeBool TypeBool = True
 typeUnify TypeInt TypeInt = True
 typeUnify TypeInt TypeEnum{} = True
 typeUnify TypeEnum{} TypeInt = True
-typeUnify (TypeEnum a) (TypeEnum b) = a == b
+typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple as) (TypeTuple bs) = and (zipWith typeUnify as bs)
 typeUnify (TypeRecord as) (TypeRecord bs)
@@ -101,6 +101,8 @@ typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
+typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- also hacks to make sameToSameToBool work
+typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
 typeUnify _ _ = False

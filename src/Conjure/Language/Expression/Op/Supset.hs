@@ -24,6 +24,11 @@ instance BinaryOperator (OpSupset x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpSupset x) where
     typeOf p@(OpSupset a b) = sameToSameToBool p a b
+                                [ TypeSet TypeAny
+                                , TypeMSet TypeAny
+                                , TypeFunction TypeAny TypeAny
+                                , TypeRelation [TypeAny]
+                                ]
 
 instance EvaluateOp OpSupset where
     evaluateOp (OpSupset a b) = evaluateOp (OpSubset b a)

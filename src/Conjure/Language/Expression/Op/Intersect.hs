@@ -23,6 +23,11 @@ instance BinaryOperator (OpIntersect x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf p@(OpIntersect a b) = sameToSameToSame p a b
+                                [ TypeSet TypeAny
+                                , TypeMSet TypeAny
+                                , TypeFunction TypeAny TypeAny
+                                , TypeRelation [TypeAny]
+                                ]
 
 instance EvaluateOp OpIntersect where
     evaluateOp (OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
