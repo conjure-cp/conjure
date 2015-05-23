@@ -149,13 +149,7 @@ instantiateOp
        )
     => Op Expression
     -> m Constant
-instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap (stripTyped . normaliseConstant)
-    where
-        -- evaluators usually do not care about types of empty collections
-        -- TODO: do this with view patterns instead
-        stripTyped :: Constant -> Constant
-        stripTyped (TypedConstant c _) = c
-        stripTyped c = c
+instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
 
 
 instantiateAbsLit
