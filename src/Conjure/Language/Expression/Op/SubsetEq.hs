@@ -37,6 +37,12 @@ instance EvaluateOp OpSubsetEq where
             , let countA = fromMaybe 0 (e `lookup` asHist)
             , let countB = fromMaybe 0 (e `lookup` bsHist)
             ]
+    evaluateOp (OpSubsetEq (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) =
+        return $ ConstantBool $ all (`elem` bs) as
+    evaluateOp (OpSubsetEq (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) =
+        return $ ConstantBool $ all (`elem` bs) as
+    evaluateOp (OpSubsetEq (viewConstantPartition -> Just as) (viewConstantPartition -> Just bs)) =
+        return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
 instance SimplifyOp OpSubsetEq x where

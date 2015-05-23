@@ -4,6 +4,9 @@ module Conjure.Language.Expression.Op.Subset where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.Expression.Op.SubsetEq
+import Conjure.Language.Expression.Op.Neq
+import Conjure.Language.Expression.Op.And
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -25,27 +28,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf p@(OpSubset a b) = sameToSameToBool p a b
 
 instance EvaluateOp OpSubset where
-    evaluateOp (OpSubset (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =
-        return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
-    evaluateOp (OpSubset (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) =
-        let asHist = histogram as
-            bsHist = histogram bs
-            allElems = sortNub (as++bs)
-        in return $ ConstantBool $ and
-            [ and
-                [ countA <= countB
-                | e <- allElems
-                , let countA = fromMaybe 0 (e `lookup` asHist)
-                , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]
-            , or
-                [ countA < countB
-                | e <- allElems
-                , let countA = fromMaybe 0 (e `lookup` asHist)
-                , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]
-            ]
-    evaluateOp op = na $ "evaluateOp{OpSubset}:" <++> pretty (show op)
+    evaluateOp (OpSubset a b) = do
+        x <- evaluateOp (OpSubsetEq b a)
+        y <- evaluateOp (OpNeq b a)
+        evaluateOp (OpAnd (fromList [x,y]))
 
 instance SimplifyOp OpSubset x where
     simplifyOp _ = na "simplifyOp{OpSubset}"
