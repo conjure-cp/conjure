@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.LexLt where
 
@@ -30,7 +30,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLexLt x) where
             else raiseTypeError p
 
 instance EvaluateOp OpLexLt where
-    evaluateOp (OpLexLt (ConstantAbstract (AbsLitMatrix _ xs)) (ConstantAbstract (AbsLitMatrix _ ys))) =
+    evaluateOp (OpLexLt (viewConstantMatrix -> Just (_, xs)) (viewConstantMatrix -> Just (_, ys))) =
         return $ ConstantBool $ xs < ys
     evaluateOp op = na $ "evaluateOp{OpLexLt}:" <++> pretty (show op)
 

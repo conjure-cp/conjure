@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.TwoBars where
 
@@ -37,19 +37,19 @@ instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
         case x of
             -- absolute value
-            ConstantInt y                        -> return $ ConstantInt $ abs y
+            ConstantInt y                      -> return $ ConstantInt $ abs y
 
             -- cardinality of a constant
-            ConstantAbstract (AbsLitSet       xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            ConstantAbstract (AbsLitMSet      xs) -> return $ ConstantInt $ genericLength                xs
-            ConstantAbstract (AbsLitFunction  xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            ConstantAbstract (AbsLitSequence  xs) -> return $ ConstantInt $ genericLength                xs
-            ConstantAbstract (AbsLitRelation  xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            ConstantAbstract (AbsLitPartition xs) -> return $ ConstantInt $ genericLength $ nub $ concat xs
+            (viewConstantSet       -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantMSet      -> Just xs) -> return $ ConstantInt $ genericLength                xs
+            (viewConstantFunction  -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantSequence  -> Just xs) -> return $ ConstantInt $ genericLength                xs
+            (viewConstantRelation  -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantPartition -> Just xs) -> return $ ConstantInt $ genericLength $ nub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt rs)      -> ConstantInt . genericLength <$> rangesInts rs
-            DomainInConstant dom                 -> domainSizeOf dom
+            DomainInConstant (DomainInt rs)    -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant dom               -> domainSizeOf dom
 
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 

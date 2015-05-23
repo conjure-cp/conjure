@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Hist where
 
@@ -28,10 +28,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpHist where
-    evaluateOp (OpHist (ConstantAbstract (AbsLitMSet cs))) = return $ ConstantAbstract $ AbsLitMatrix
+    evaluateOp (OpHist (viewConstantMSet -> Just cs)) = return $ ConstantAbstract $ AbsLitMatrix
         (DomainInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
         [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
-    evaluateOp (OpHist (ConstantAbstract (AbsLitMatrix _ cs))) = return $ ConstantAbstract $ AbsLitMatrix
+    evaluateOp (OpHist (viewConstantMatrix -> Just (_, cs))) = return $ ConstantAbstract $ AbsLitMatrix
         (DomainInt [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
         [ ConstantAbstract $ AbsLitTuple [e, ConstantInt n] | (e, n) <- histogram cs ]
     evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)

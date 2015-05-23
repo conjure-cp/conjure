@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Subset where
 
@@ -25,9 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
     typeOf p@(OpSubset a b) = sameToSameToBool p a b
 
 instance EvaluateOp OpSubset where
-    evaluateOp (OpSubset (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
+    evaluateOp (OpSubset (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =
         return $ ConstantBool $ all (`elem` bs) as && length as <= length bs
-    evaluateOp (OpSubset (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+    evaluateOp (OpSubset (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) =
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)

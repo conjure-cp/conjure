@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Max where
@@ -46,17 +46,17 @@ instance EvaluateOp OpMax where
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
-    evaluateOp (OpMax (ConstantAbstract (AbsLitMatrix _ xs))) = do
+    evaluateOp (OpMax (viewConstantMatrix -> Just (_, xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
-    evaluateOp (OpMax (ConstantAbstract (AbsLitSet      xs))) = do
+    evaluateOp (OpMax (viewConstantSet -> Just xs)) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
-    evaluateOp (OpMax (ConstantAbstract (AbsLitMSet     xs))) = do
+    evaluateOp (OpMax (viewConstantMSet -> Just xs)) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"

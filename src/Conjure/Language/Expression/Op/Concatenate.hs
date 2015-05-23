@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Concatenate where
 
@@ -31,13 +31,13 @@ instance (TypeOf x, Pretty x) => TypeOf (OpConcatenate x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpConcatenate where
-    evaluateOp (OpConcatenate (ConstantAbstract (AbsLitMatrix _ xs))) = do
-        let flat (ConstantAbstract (AbsLitMatrix _ ys)) = ys
+    evaluateOp (OpConcatenate (viewConstantMatrix -> Just (_, xs))) = do
+        let flat (viewConstantMatrix -> Just (_, ys)) = ys
             flat _ = bug "OpConcatenate, not a matrix literal"
         let flattened = concatMap flat xs
-        return (ConstantAbstract (AbsLitMatrix
+        return (ConstantAbstract $ AbsLitMatrix
                     (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
-                    flattened))
+                    flattened)
     evaluateOp _ = na "evaluateOp{OpConcatenate}"
 
 instance SimplifyOp OpConcatenate x where

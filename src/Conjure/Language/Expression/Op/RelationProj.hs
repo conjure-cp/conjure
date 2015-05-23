@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.RelationProj where
 
@@ -48,7 +48,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRelationProj x) where
             _ -> raiseTypeError $ "(relation projection)" <+> pretty p
 
 instance EvaluateOp OpRelationProj where
-    evaluateOp (OpRelationProj (ConstantAbstract (AbsLitRelation xss)) mas) = do
+    evaluateOp (OpRelationProj (viewConstantRelation -> Just xss) mas) = do
         let mas' = catMaybes mas
         if length mas == length mas'
             then -- all Just's

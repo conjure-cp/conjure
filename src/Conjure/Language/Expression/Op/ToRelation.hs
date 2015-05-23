@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.ToRelation where
 
@@ -26,7 +26,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToRelation x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpToRelation where
-    evaluateOp (OpToRelation (ConstantAbstract (AbsLitFunction xs))) =
+    evaluateOp (OpToRelation (viewConstantFunction -> Just xs)) =
         return $ ConstantAbstract $ AbsLitRelation $ sortNub [ [a,b] | (a,b) <- xs ]
     evaluateOp op = na $ "evaluateOp{OpToRelation}:" <++> pretty (show op)
 

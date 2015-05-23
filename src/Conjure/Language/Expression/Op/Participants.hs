@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Participants where
 
@@ -26,7 +26,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParticipants x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpParticipants where
-    evaluateOp (OpParticipants (ConstantAbstract (AbsLitPartition xss))) =
+    evaluateOp (OpParticipants (viewConstantPartition -> Just xss)) =
         return $ ConstantAbstract $ AbsLitSet $ sort $ concat xss
     evaluateOp op = na $ "evaluateOp{OpParticipants}:" <++> pretty (show op)
 

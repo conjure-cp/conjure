@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Image where
 
@@ -37,29 +37,29 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
                 ]
 
 instance EvaluateOp OpImage where
-    evaluateOp (OpImage f@(ConstantAbstract (AbsLitFunction xs)) a) = do
+    evaluateOp (OpImage f@(viewConstantFunction -> Just xs) a) = do
         TypeFunction _ tyTo <- typeOf f
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return y
             []  -> return $ mkUndef tyTo $ vcat
                     [ "Function is not defined at this point:" <+> pretty a
-                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    , "Function value:" <+> pretty f
                     ]
             _   -> return $ mkUndef tyTo $ vcat
                     [ "Function is multiply defined at this point:" <+> pretty a
-                    , "Function value:" <+> pretty (ConstantAbstract (AbsLitFunction xs))
+                    , "Function value:" <+> pretty f
                     ]
-    evaluateOp (OpImage f@(ConstantAbstract (AbsLitSequence xs)) a) = do
+    evaluateOp (OpImage f@(viewConstantSequence -> Just xs) a) = do
         TypeSequence tyTo <- typeOf f
         case [ y | (x,y) <- zip allNats xs, a == fromInt x ] of
             [y] -> return y
             []  -> return $ mkUndef tyTo $ vcat
                     [ "Sequence is not defined at this point:" <+> pretty a
-                    , "Sequence value:" <+> pretty (ConstantAbstract (AbsLitSequence xs))
+                    , "Sequence value:" <+> pretty f
                     ]
             _   -> return $ mkUndef tyTo $ vcat
                     [ "Sequence is multiply defined at this point:" <+> pretty a
-                    , "Sequence value:" <+> pretty (ConstantAbstract (AbsLitSequence xs))
+                    , "Sequence value:" <+> pretty f
                     ]
     evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
 

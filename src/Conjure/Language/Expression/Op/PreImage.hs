@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.PreImage where
 
@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
             else raiseTypeError p
 
 instance EvaluateOp OpPreImage where
-    evaluateOp (OpPreImage (ConstantAbstract (AbsLitFunction xs)) a) =
+    evaluateOp (OpPreImage (viewConstantFunction -> Just xs) a) =
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
     evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
 

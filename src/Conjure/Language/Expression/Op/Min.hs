@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 {-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression.Op.Min where
@@ -46,17 +46,17 @@ instance EvaluateOp OpMin where
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
-    evaluateOp (OpMin (ConstantAbstract (AbsLitMatrix _ xs))) = do
+    evaluateOp (OpMin (viewConstantMatrix -> Just (_, xs))) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
-    evaluateOp (OpMin (ConstantAbstract (AbsLitSet      xs))) = do
+    evaluateOp (OpMin (viewConstantSet -> Just xs)) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
-    evaluateOp (OpMin (ConstantAbstract (AbsLitMSet     xs))) = do
+    evaluateOp (OpMin (viewConstantMSet -> Just xs)) = do
         is <- concatMapM intsOut xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"

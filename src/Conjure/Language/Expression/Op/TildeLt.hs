@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.TildeLt where
 
@@ -43,8 +43,8 @@ instance EvaluateOp OpTildeLt where
                           else a == b &&
                                tilLt (ConstantAbstract (AbsLitTuple as))
                                      (ConstantAbstract (AbsLitTuple bs))
-            tilLt (ConstantAbstract (AbsLitSet as))
-                  (ConstantAbstract (AbsLitSet bs)) =
+            tilLt (viewConstantSet -> Just as)
+                  (viewConstantSet -> Just bs) =
                 or [ and [ freq i as < freq i bs
                          , and [ if tilLt j i
                                      then freq j as == freq j bs
@@ -55,8 +55,8 @@ instance EvaluateOp OpTildeLt where
                    | let cs = nub (as ++ bs)
                    , i <- cs
                    ]
-            tilLt (ConstantAbstract (AbsLitMSet as))
-                  (ConstantAbstract (AbsLitMSet bs)) =
+            tilLt (viewConstantMSet -> Just as)
+                  (viewConstantMSet -> Just bs) =
                 or [ and [ freq i as < freq i bs
                          , and [ if tilLt j i
                                      then freq j as == freq j bs
@@ -67,8 +67,8 @@ instance EvaluateOp OpTildeLt where
                    | let cs = as ++ bs
                    , i <- cs
                    ]
-            tilLt (ConstantAbstract (AbsLitFunction as'))
-                  (ConstantAbstract (AbsLitFunction bs')) =
+            tilLt (viewConstantFunction -> Just as')
+                  (viewConstantFunction -> Just bs') =
                 or [ and [ freq i as < freq i bs
                          , and [ if tilLt j i
                                      then freq j as == freq j bs
@@ -81,8 +81,8 @@ instance EvaluateOp OpTildeLt where
                    , let cs = as ++ bs
                    , i <- cs
                    ]
-            tilLt (ConstantAbstract (AbsLitRelation as'))
-                  (ConstantAbstract (AbsLitRelation bs')) =
+            tilLt (viewConstantRelation -> Just as')
+                  (viewConstantRelation -> Just bs') =
                 or [ and [ freq i as < freq i bs
                          , and [ if tilLt j i
                                      then freq j as == freq j bs
@@ -95,8 +95,8 @@ instance EvaluateOp OpTildeLt where
                    , let cs = as ++ bs
                    , i <- cs
                    ]
-            tilLt (ConstantAbstract (AbsLitPartition as'))
-                  (ConstantAbstract (AbsLitPartition bs')) =
+            tilLt (viewConstantPartition -> Just as')
+                  (viewConstantPartition -> Just bs') =
                 or [ and [ freq i as < freq i bs
                          , and [ if tilLt j i
                                      then freq j as == freq j bs

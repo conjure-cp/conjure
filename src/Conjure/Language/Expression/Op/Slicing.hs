@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Slicing where
 
@@ -28,18 +28,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSlicing x) where
         return ty
 
 instance EvaluateOp OpSlicing where
-    evaluateOp op@(OpSlicing m lb ub) = case m of
-        ConstantAbstract (AbsLitMatrix (DomainInt index) vals) -> do
-            indexVals <- valuesInIntDomain index
-            outVals   <- liftM catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
-                case lb of
-                    Just (ConstantInt lower) | lower > thisIndex -> return Nothing
-                    _ -> case ub of
-                        Just (ConstantInt upper) | upper < thisIndex -> return Nothing
-                        _ -> return $ Just (thisIndex, thisVal)
-            let outDomain = DomainInt $ map (RangeSingle . ConstantInt . fst) outVals
-            return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
-        _ -> na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
+    evaluateOp (OpSlicing (viewConstantMatrix -> Just (DomainInt index, vals)) lb ub) = do
+        indexVals <- valuesInIntDomain index
+        outVals   <- liftM catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
+            case lb of
+                Just (ConstantInt lower) | lower > thisIndex -> return Nothing
+                _ -> case ub of
+                    Just (ConstantInt upper) | upper < thisIndex -> return Nothing
+                    _ -> return $ Just (thisIndex, thisVal)
+        let outDomain = DomainInt $ map (RangeSingle . ConstantInt . fst) outVals
+        return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
+    evaluateOp op = na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 
 instance SimplifyOp OpSlicing x where
     simplifyOp _ = na "simplifyOp{OpSlicing}"

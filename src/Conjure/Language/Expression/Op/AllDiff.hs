@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.AllDiff where
 
@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiff x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpAllDiff where
-    evaluateOp (OpAllDiff (ConstantAbstract (AbsLitMatrix _ vals))) =
+    evaluateOp (OpAllDiff (viewConstantMatrix -> Just (_, vals))) =
         return $ ConstantBool $ length vals == length (nub vals)
     evaluateOp op = na $ "evaluateOp{OpAllDiff}:" <++> pretty (show op)
 

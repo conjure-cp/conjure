@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Inverse where
 
@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpInverse x) where
             else raiseTypeError p
 
 instance EvaluateOp OpInverse where
-    evaluateOp (OpInverse (ConstantAbstract (AbsLitFunction xs)) (ConstantAbstract (AbsLitFunction ys))) =
+    evaluateOp (OpInverse (viewConstantFunction -> Just xs) (viewConstantFunction -> Just ys)) =
         return $ ConstantBool $ and $ concat [ [ (j,i) `elem` ys | (i,j) <- xs ]
                                              , [ (j,i) `elem` xs | (i,j) <- ys ]
                                              ]

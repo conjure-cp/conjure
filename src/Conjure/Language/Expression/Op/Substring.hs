@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Substring where
 
@@ -31,8 +31,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubstring x) where
 
 instance EvaluateOp OpSubstring where
     evaluateOp (OpSubstring
-        (ConstantAbstract (AbsLitSequence xs))
-        (ConstantAbstract (AbsLitSequence ys))) =
+        (viewConstantSequence -> Just xs)
+        (viewConstantSequence -> Just ys)) =
             return $ fromBool $
                 or [ and (zipWith (==) xs zs) 
                    | zs <- tails ys

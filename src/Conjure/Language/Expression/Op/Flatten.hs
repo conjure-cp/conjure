@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Flatten where
 
@@ -31,7 +31,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFlatten x) where
 
 instance EvaluateOp OpFlatten where
     evaluateOp (OpFlatten m) = do
-        let flat (ConstantAbstract (AbsLitMatrix _ xs)) = concatMap flat xs
+        let flat (viewConstantMatrix -> Just (_, xs)) = concatMap flat xs
             flat c = [c]
         let flattened = flat m
         return (ConstantAbstract (AbsLitMatrix

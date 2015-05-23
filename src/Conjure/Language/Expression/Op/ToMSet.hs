@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.ToMSet where
 
@@ -28,13 +28,13 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpToMSet where
-    evaluateOp (OpToMSet (ConstantAbstract (AbsLitSet xs))) =
+    evaluateOp (OpToMSet (viewConstantSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitMSet xs
-    evaluateOp (OpToMSet (ConstantAbstract (AbsLitMSet xs))) =
+    evaluateOp (OpToMSet (viewConstantMSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitMSet xs
-    evaluateOp (OpToMSet (ConstantAbstract (AbsLitFunction xs))) =
+    evaluateOp (OpToMSet (viewConstantFunction -> Just xs)) =
         return $ ConstantAbstract $ AbsLitMSet [ConstantAbstract (AbsLitTuple [a,b]) | (a,b) <- xs]
-    evaluateOp (OpToMSet (ConstantAbstract (AbsLitRelation xs))) =
+    evaluateOp (OpToMSet (viewConstantRelation -> Just xs)) =
         return $ ConstantAbstract $ AbsLitMSet $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToMSet}:" <++> pretty (show op)
 

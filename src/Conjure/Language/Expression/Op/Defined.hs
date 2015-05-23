@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Defined where
 
@@ -27,7 +27,7 @@ instance (Pretty x, TypeOf x) => TypeOf (OpDefined x) where
             _                -> raiseTypeError p
 
 instance EvaluateOp OpDefined where
-    evaluateOp (OpDefined (ConstantAbstract (AbsLitFunction xs))) =
+    evaluateOp (OpDefined (viewConstantFunction -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map fst xs
     evaluateOp op = na $ "evaluateOp{OpDefined}:" <++> pretty (show op)
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.PowerSet where
 
@@ -25,9 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPowerSet x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpPowerSet where
-    evaluateOp (OpPowerSet (ConstantAbstract (AbsLitSet xs))) =
+    evaluateOp (OpPowerSet (viewConstantSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet
-            [ ConstantAbstract (AbsLitSet ys)
+            [ ConstantAbstract $ AbsLitSet ys
             | ys <- subsequences (sortNub xs) ]
     evaluateOp op = na $ "evaluateOp{OpPowerSet}:" <++> pretty (show op)
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.ImageSet where
 
@@ -37,16 +37,16 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImageSet x) where
                 ]
 
 instance EvaluateOp OpImageSet where
-    evaluateOp (OpImageSet f@(ConstantAbstract (AbsLitFunction xs)) a) = do
+    evaluateOp (OpImageSet f@(viewConstantFunction -> Just xs) a) = do
         TypeFunction _ tyTo <- typeOf f
         case [ y | (x,y) <- xs, a == x ] of
             [y] -> return $ ConstantAbstract $ AbsLitSet [y]
-            _   -> return $ TypedConstant (ConstantAbstract (AbsLitSet [])) (TypeSet tyTo)
-    evaluateOp (OpImageSet f@(ConstantAbstract (AbsLitSequence xs)) a) = do
+            _   -> return $ TypedConstant (ConstantAbstract $ AbsLitSet []) (TypeSet tyTo)
+    evaluateOp (OpImageSet f@(viewConstantSequence -> Just xs) a) = do
         TypeSequence tyTo <- typeOf f
         case [ y | (x,y) <- zip allNats xs, a == fromInt x ] of
             [y] -> return $ ConstantAbstract $ AbsLitSet [y]
-            _   -> return $ TypedConstant (ConstantAbstract (AbsLitSet [])) (TypeSet tyTo)
+            _   -> return $ TypedConstant (ConstantAbstract $ AbsLitSet []) (TypeSet tyTo)
     evaluateOp op = na $ "evaluateOp{OpImageSet}:" <++> pretty (show op)
 
 instance SimplifyOp OpImageSet x where

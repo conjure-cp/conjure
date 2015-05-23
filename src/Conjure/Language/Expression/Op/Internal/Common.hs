@@ -1,3 +1,5 @@
+{-# LANGUAGE ViewPatterns #-}
+
 module Conjure.Language.Expression.Op.Internal.Common
     ( module X
 
@@ -243,13 +245,11 @@ functionals =
 
 
 boolsOut :: MonadFail m => Constant -> m [Bool]
-boolsOut (TypedConstant c _) = boolsOut c
-boolsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM boolsOut cs
+boolsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Constant -> m [Integer]
-intsOut (TypedConstant c _) = intsOut c
-intsOut (ConstantAbstract (AbsLitMatrix _ cs)) = concat <$> mapM intsOut cs
+intsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM intsOut cs
 intsOut b = return <$> intOut b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b

@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Party where
 
@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParty x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpParty where
-    evaluateOp op@(OpParty x p@(ConstantAbstract (AbsLitPartition xss))) = do
+    evaluateOp op@(OpParty x p@(viewConstantPartition -> Just xss)) = do
         TypePartition tyInner <- typeOf p
         let
             outSet = [ xs

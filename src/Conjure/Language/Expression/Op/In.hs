@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.In where
 
@@ -30,11 +30,11 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
             else raiseTypeError p
 
 instance EvaluateOp OpIn where
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitSet      cs))) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitMSet     cs))) = return $ ConstantBool $ elem c cs
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitFunction cs))) =
+    evaluateOp (OpIn c (viewConstantSet      -> Just cs)) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (viewConstantMSet     -> Just cs)) = return $ ConstantBool $ elem c cs
+    evaluateOp (OpIn c (viewConstantFunction -> Just cs)) =
         return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract (AbsLitTuple [i,j]) ) cs
-    evaluateOp (OpIn c (ConstantAbstract (AbsLitRelation cs))) =
+    evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)
 

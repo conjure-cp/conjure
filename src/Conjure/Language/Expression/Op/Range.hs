@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Range where
 
@@ -27,8 +27,8 @@ instance (Pretty x, TypeOf x) => TypeOf (OpRange x) where
             _                -> raiseTypeError p
 
 instance EvaluateOp OpRange where
-    evaluateOp (OpRange (ConstantAbstract (AbsLitFunction xs))) =
-        return (ConstantAbstract (AbsLitSet (sortNub (map snd xs))))
+    evaluateOp (OpRange (viewConstantFunction -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ sortNub $ map snd xs
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
 
 instance SimplifyOp OpRange x where

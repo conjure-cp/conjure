@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Parts where
 
@@ -28,8 +28,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
                                        ]
 
 instance EvaluateOp OpParts where
-    evaluateOp (OpParts (ConstantAbstract (AbsLitPartition xs))) =
-        return (ConstantAbstract (AbsLitSet (map (ConstantAbstract . AbsLitSet) xs)))
+    evaluateOp (OpParts (viewConstantPartition -> Just xs)) =
+        return $ ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) xs
     evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
 
 instance SimplifyOp OpParts x where

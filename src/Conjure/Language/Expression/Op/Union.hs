@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Union where
 
@@ -25,9 +25,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf p@(OpUnion a b) = sameToSameToSame p a b
 
 instance EvaluateOp OpUnion where
-    evaluateOp (OpUnion (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) =
+    evaluateOp (OpUnion (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)
-    evaluateOp (OpUnion (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) =
+    evaluateOp (OpUnion (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) =
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -39,9 +39,9 @@ instance EvaluateOp OpUnion where
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
     -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
-    evaluateOp (OpUnion (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) =
+    evaluateOp (OpUnion (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) =
         return $ ConstantAbstract $ AbsLitFunction $ sortNub (as ++ bs)
-    evaluateOp (OpUnion (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) =
+    evaluateOp (OpUnion (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) =
         return $ ConstantAbstract $ AbsLitRelation $ sortNub (as ++ bs)
     evaluateOp op = na $ "evaluateOp{OpUnion}:" <++> pretty (show op)
 

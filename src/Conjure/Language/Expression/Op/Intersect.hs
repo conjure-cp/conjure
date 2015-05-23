@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Intersect where
 
@@ -25,10 +25,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
     typeOf p@(OpIntersect a b) = sameToSameToSame p a b
 
 instance EvaluateOp OpIntersect where
-    evaluateOp (OpIntersect (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
+    evaluateOp (OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
         return $ ConstantAbstract $ AbsLitSet outs
-    evaluateOp (OpIntersect (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
+    evaluateOp (OpIntersect (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -40,10 +40,10 @@ instance EvaluateOp OpIntersect where
                 ]
         return $ ConstantAbstract $ AbsLitMSet $ concat outs
     -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
-    evaluateOp (OpIntersect (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
+    evaluateOp (OpIntersect (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
         return $ ConstantAbstract $ AbsLitFunction outs
-    evaluateOp (OpIntersect (ConstantAbstract (AbsLitRelation as)) (ConstantAbstract (AbsLitRelation bs))) = do
+    evaluateOp (OpIntersect (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
         let outs = sortNub [ i | i <- as, i `elem` bs]
         return $ ConstantAbstract $ AbsLitRelation outs
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)

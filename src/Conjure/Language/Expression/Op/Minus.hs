@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Minus where
 
@@ -39,14 +39,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
 
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitSet as)) (ConstantAbstract (AbsLitSet bs))) = do
+    evaluateOp (OpMinus (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         let outs =
                 [ a
                 | a <- as
                 , a `notElem` bs
                 ]
         return $ ConstantAbstract $ AbsLitSet outs
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitMSet as)) (ConstantAbstract (AbsLitMSet bs))) = do
+    evaluateOp (OpMinus (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -57,13 +57,13 @@ instance EvaluateOp OpMinus where
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]                
         return $ ConstantAbstract $ AbsLitMSet $ concat outs
-    evaluateOp (OpMinus (ConstantAbstract (AbsLitFunction as)) (ConstantAbstract (AbsLitFunction bs))) = do
+    evaluateOp (OpMinus (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
         let outs =
                 [ a
                 | a <- as
                 , a `notElem` bs
                 ]
-        return $ ConstantAbstract (AbsLitFunction outs)
+        return $ ConstantAbstract $ AbsLitFunction outs
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance SimplifyOp OpMinus x where

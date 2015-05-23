@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Restrict where
 
@@ -28,7 +28,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
             else raiseTypeError p
 
 instance EvaluateOp OpRestrict where
-    evaluateOp (OpRestrict (ConstantAbstract (AbsLitFunction xs)) domX) = do
+    evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
         dom       <- domainOut domX
         valsInDom <- enumerateDomain (dom :: Domain () Constant)
         return $ ConstantAbstract $ AbsLitFunction $ sortNub

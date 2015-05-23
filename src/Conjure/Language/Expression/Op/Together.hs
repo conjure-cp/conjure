@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Together where
 
@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpTogether where
-    evaluateOp (OpTogether (ConstantAbstract (AbsLitSet ys)) (ConstantAbstract (AbsLitPartition xss))) =
+    evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
         return $ ConstantBool $ or
             [ and [ y `elem` xs | y <- ys ]
             | xs <- xss
