@@ -32,6 +32,9 @@ import Conjure.Language.TypeOf
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 
+-- base
+import Data.Data ( toConstr, constrIndex )
+
 -- QuickCheck
 import Test.QuickCheck ( Arbitrary(..), oneof )
 
@@ -48,7 +51,22 @@ data Constant
     | TypedConstant Constant Type
     | ConstantUndefined Text Type                           -- never use this for a bool
                                                             -- use false instead for them
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+    deriving (Show, Data, Typeable, Generic)
+
+instance Eq Constant where
+    a == b = compare a b == EQ
+
+-- implementing the Eq&Ord instances by hand, because we want to special case the TypedConstant constructor
+instance Ord Constant where
+    compare (ConstantBool a) (ConstantBool b) = compare a b
+    compare (ConstantInt a) (ConstantInt b) = compare a b
+    compare (ConstantEnum a1 a2 a3) (ConstantEnum b1 b2 b3) = compare (a1,a2,a3) (b1,b2,b3)
+    compare (ConstantField a1 a2) (ConstantField b1 b2) = compare (a1,a2) (b1,b2)
+    compare (ConstantAbstract a) (ConstantAbstract b) = compare a b
+    compare (DomainInConstant a) (DomainInConstant b) = compare a b
+    compare (TypedConstant a _) (TypedConstant b _) = compare a b
+    compare (ConstantUndefined a1 a2) (ConstantUndefined b1 b2) = compare (a1,a2) (b1,b2)
+    compare a b = compare (constrIndex (toConstr a)) (constrIndex (toConstr b))
 
 instance Serialize Constant
 instance Hashable  Constant
