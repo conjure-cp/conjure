@@ -41,8 +41,6 @@ instance EvaluateOp OpSubsetEq where
         return $ ConstantBool $ all (`elem` bs) as
     evaluateOp (OpSubsetEq (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) =
         return $ ConstantBool $ all (`elem` bs) as
-    evaluateOp (OpSubsetEq (viewConstantPartition -> Just as) (viewConstantPartition -> Just bs)) =
-        return $ ConstantBool $ all (`elem` bs) as
     evaluateOp op = na $ "evaluateOp{OpSubsetEq}:" <++> pretty (show op)
 
 instance SimplifyOp OpSubsetEq x where
