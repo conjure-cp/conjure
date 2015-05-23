@@ -88,15 +88,15 @@ instance EvaluateOp OpIndexing where
                     [ "Matrix is multiply defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]
-    evaluateOp (OpIndexing (ConstantAbstract (AbsLitTuple vals)) (ConstantInt x)) = return (at vals (fromInteger (x-1)))
-    evaluateOp rec@(OpIndexing (ConstantAbstract (AbsLitRecord vals)) (ConstantField name _)) =
+    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt x)) = return (at vals (fromInteger (x-1)))
+    evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat
                     [ "Record doesn't have a member with this name:" <+> pretty name
                     , "Record:" <+> pretty rec
                     ]
             Just val -> return val
-    evaluateOp var@(OpIndexing (ConstantAbstract (AbsLitVariant _ name' x)) (ConstantField name ty)) =
+    evaluateOp var@(OpIndexing (viewConstantVariant -> Just (_, name', x)) (ConstantField name ty)) =
         if name == name'
             then return x
             else return $ mkUndef ty $ vcat

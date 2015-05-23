@@ -33,7 +33,7 @@ instance EvaluateOp OpIn where
     evaluateOp (OpIn c (viewConstantSet      -> Just cs)) = return $ ConstantBool $ elem c cs
     evaluateOp (OpIn c (viewConstantMSet     -> Just cs)) = return $ ConstantBool $ elem c cs
     evaluateOp (OpIn c (viewConstantFunction -> Just cs)) =
-        return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract (AbsLitTuple [i,j]) ) cs
+        return $ ConstantBool $ elem c $ map (\ (i,j) -> ConstantAbstract $ AbsLitTuple [i,j] ) cs
     evaluateOp (OpIn c (viewConstantRelation -> Just cs)) =
         return $ ConstantBool $ elem c $ map (ConstantAbstract . AbsLitTuple) cs
     evaluateOp op = na $ "evaluateOp{OpIn}:" <++> pretty (show op)

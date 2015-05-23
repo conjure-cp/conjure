@@ -34,9 +34,9 @@ instance EvaluateOp OpFlatten where
         let flat (viewConstantMatrix -> Just (_, xs)) = concatMap flat xs
             flat c = [c]
         let flattened = flat m
-        return (ConstantAbstract (AbsLitMatrix
+        return (ConstantAbstract $ AbsLitMatrix
                     (DomainInt [RangeBounded 1 (fromInt (genericLength flattened))])
-                    flattened))
+                    flattened)
 
 instance SimplifyOp OpFlatten x where
     simplifyOp _ = na "simplifyOp{OpFlatten}"

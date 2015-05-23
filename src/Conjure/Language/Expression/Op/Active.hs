@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
 module Conjure.Language.Expression.Op.Active where
 
@@ -35,7 +35,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpActive x) where
                                        ]
 
 instance EvaluateOp OpActive where
-    evaluateOp (OpActive (ConstantAbstract (AbsLitVariant _ n1 _)) n2) = return $ fromBool $ n1 == n2
+    evaluateOp (OpActive (viewConstantVariant -> Just (_, n1, _)) n2) = return $ fromBool $ n1 == n2
     evaluateOp op = na $ "evaluateOp{OpActive}:" <++> pretty (show op)
 
 instance SimplifyOp OpActive x where

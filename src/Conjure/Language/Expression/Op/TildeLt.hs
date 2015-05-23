@@ -30,19 +30,19 @@ instance EvaluateOp OpTildeLt where
             freq :: Eq a => a -> [a] -> Int
             freq i xs = sum [ 1 | j <- xs , i == j ]
 
-            tupleE (i,j) = ConstantAbstract (AbsLitTuple [i,j])
+            tupleE (i,j) = ConstantAbstract $ AbsLitTuple [i,j]
 
             tilLt (ConstantBool a) (ConstantBool b) = a < b
             tilLt (ConstantInt  a) (ConstantInt  b) = a < b
-            tilLt (ConstantAbstract (AbsLitTuple []))
-                  (ConstantAbstract (AbsLitTuple [])) = False
-            tilLt (ConstantAbstract (AbsLitTuple (a:as)))
-                  (ConstantAbstract (AbsLitTuple (b:bs))) =
+            tilLt (viewConstantTuple -> Just [])
+                  (viewConstantTuple -> Just []) = False
+            tilLt (viewConstantTuple -> Just (a:as))
+                  (viewConstantTuple -> Just (b:bs)) =
                       if tilLt a b
                           then True
                           else a == b &&
-                               tilLt (ConstantAbstract (AbsLitTuple as))
-                                     (ConstantAbstract (AbsLitTuple bs))
+                               tilLt (ConstantAbstract $ AbsLitTuple as)
+                                     (ConstantAbstract $ AbsLitTuple bs)
             tilLt (viewConstantSet -> Just as)
                   (viewConstantSet -> Just bs) =
                 or [ and [ freq i as < freq i bs

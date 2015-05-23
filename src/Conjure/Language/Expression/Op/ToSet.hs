@@ -37,7 +37,7 @@ instance EvaluateOp OpToSet where
     evaluateOp (OpToSet (viewConstantMSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
     evaluateOp (OpToSet (viewConstantFunction -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract (AbsLitTuple [a,b]) | (a,b) <- xs]
+        return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
     evaluateOp (OpToSet (viewConstantRelation -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
