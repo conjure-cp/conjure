@@ -58,14 +58,22 @@ instance Eq Constant where
 
 -- implementing the Eq&Ord instances by hand, because we want to special case the TypedConstant constructor
 instance Ord Constant where
+
+    -- do not use type info when comparing
+    compare (TypedConstant a _) (TypedConstant b _) = compare a b
+    compare (TypedConstant a _) b = compare a b
+    compare a (TypedConstant b _) = compare a b
+
+    -- the "usual" comparisons
     compare (ConstantBool a) (ConstantBool b) = compare a b
     compare (ConstantInt a) (ConstantInt b) = compare a b
     compare (ConstantEnum a1 a2 a3) (ConstantEnum b1 b2 b3) = compare (a1,a2,a3) (b1,b2,b3)
     compare (ConstantField a1 a2) (ConstantField b1 b2) = compare (a1,a2) (b1,b2)
     compare (ConstantAbstract a) (ConstantAbstract b) = compare a b
     compare (DomainInConstant a) (DomainInConstant b) = compare a b
-    compare (TypedConstant a _) (TypedConstant b _) = compare a b
     compare (ConstantUndefined a1 a2) (ConstantUndefined b1 b2) = compare (a1,a2) (b1,b2)
+
+    -- if the constructors do not match
     compare a b = compare (constrIndex (toConstr a)) (constrIndex (toConstr b))
 
 instance Serialize Constant
