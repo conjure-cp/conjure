@@ -64,7 +64,7 @@ mkBinOp op a b =
                 f a b
 
 
-mkOp :: (Op x :< x, ReferenceContainer x) => Text -> [x] -> x
+mkOp :: (Op x :< x, ReferenceContainer x, ExpressionLike x) => Text -> [x] -> x
 mkOp op xs =
     case textToLexeme op of
         Nothing -> case op of
@@ -86,7 +86,13 @@ mkOp op xs =
             L_restrict     -> inject $ MkOpRestrict     $ OpRestrict     (atNote "restrict 1" xs 0) (atNote "restrict 2" xs 1)
             L_allDiff      -> inject $ MkOpAllDiff      $ OpAllDiff      (headNote "allDiff takes a single argument."  xs)
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (headNote "dontCare takes a single argument." xs)
-            L_flatten      -> inject $ MkOpFlatten      $ OpFlatten      (headNote "flatten takes a single argument."  xs)
+            L_flatten      ->
+                 case xs of
+                     [m]   -> inject $ MkOpFlatten      $ OpFlatten      Nothing  m
+                     [n,m] ->
+                          let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut n)
+                          in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
+                     _     -> bug "flatten takes 1 or 2 arguments."
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (headNote "toMSet takes a single argument."   xs)
             L_toRelation   -> inject $ MkOpToRelation   $ OpToRelation   (headNote "toRelation takes a single argument."   xs)

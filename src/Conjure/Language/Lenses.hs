@@ -541,11 +541,11 @@ opFlatten
        , x -> m x
        )
 opFlatten _ =
-    ( inject . MkOpFlatten . OpFlatten
+    ( inject . MkOpFlatten . OpFlatten Nothing
     , \ p -> do
             op <- project p
             case op of
-                MkOpFlatten (OpFlatten x) -> return x
+                MkOpFlatten (OpFlatten Nothing x) -> return x
                 _ -> na ("Lenses.opFlatten:" <++> pretty p)
     )
 
@@ -560,11 +560,11 @@ opConcatenate
        , x -> m x
        )
 opConcatenate _ =
-    ( inject . MkOpConcatenate . OpConcatenate
+    ( inject . MkOpFlatten . OpFlatten (Just 1)
     , \ p -> do
             op <- project p
             case op of
-                MkOpConcatenate (OpConcatenate x) -> return x
+                MkOpFlatten (OpFlatten (Just 1) x) -> return x
                 _ -> na ("Lenses.opConcatenate:" <++> pretty p)
     )
 
