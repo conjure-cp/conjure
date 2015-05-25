@@ -38,7 +38,7 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 
-import Conjure.Representations ( downX1, downD, reprOptions, getStructurals )
+import Conjure.Representations ( downX1, downD, reprOptions, getStructurals, reprsStandardOrder, reprsSparseOrder )
 
 import Conjure.Rules.Definition
 
@@ -290,6 +290,9 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
         Auto _      -> bug "executeStrategy: Auto"
         PickFirst   -> do
+            logInfo ("Picking the first option:" <+> doc)
+            return [(1, doc, option)]
+        Sparse     -> do
             logInfo ("Picking the first option:" <+> doc)
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
@@ -730,8 +733,8 @@ allRules config =
       ]
     , paramRules
     , [ rule_ChooseRepr config
-      , rule_ChooseReprForComprehension
-      , rule_ChooseReprForLocals
+      , rule_ChooseReprForComprehension (representationsQuantifieds config)
+      , rule_ChooseReprForLocals        (representationsAuxiliaries config)
       ]
     , verticalRules
     , horizontalRules
@@ -1039,7 +1042,10 @@ rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given, CutFind] = do
-        let domOpts = reprOptions inpDom
+        let reprsWhichOrder = if (forg, representationsGivens config) == (Given, Sparse)
+                                then reprsSparseOrder
+                                else reprsStandardOrder
+        let domOpts = reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
         let options =
@@ -1158,8 +1164,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                      -- for abstract stuff inside aliases.
 
 
-rule_ChooseReprForComprehension :: Rule
-rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const theRule) where
+rule_ChooseReprForComprehension :: Strategy -> Rule
+rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
@@ -1168,7 +1174,10 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
 
         ty <- typeOf domain
 
-        let domOpts = reprOptions domain
+        let reprsWhichOrder = if strategy == Sparse
+                                then reprsSparseOrder
+                                else reprsStandardOrder
+        let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 
@@ -1212,8 +1221,8 @@ rule_ChooseReprForComprehension = Rule "choose-repr-for-comprehension" (const th
         gen ref
 
 
-rule_ChooseReprForLocals :: Rule
-rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
+rule_ChooseReprForLocals :: Strategy -> Rule
+rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body (Left locals)) = do
         (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
@@ -1227,7 +1236,10 @@ rule_ChooseReprForLocals = Rule "choose-repr-for-locals" (const theRule) where
         unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
             fail $ "This local variable seems to be handled before:" <+> pretty nm
 
-        let domOpts = reprOptions domain
+        let reprsWhichOrder = if strategy == Sparse
+                                then reprsSparseOrder
+                                else reprsStandardOrder
+        let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 

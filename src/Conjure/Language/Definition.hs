@@ -372,12 +372,13 @@ initInfo model = model { mInfo = info }
 
 
 data Strategy
-    = PickFirst
-    | PickAll
-    | Interactive
-    | AtRandom
-    | Compact
-    | FollowLog
+    = PickFirst         -- ^ pick the first option
+    | PickAll           -- ^ keep all options
+    | Interactive       -- ^ prompt the user
+    | AtRandom          -- ^ pick one option at random
+    | Compact           -- ^ pick the compact option
+    | Sparse            -- ^ pick the most sparse option, useful for parameters (otherwise identical to PickFirst)
+    | FollowLog         -- ^ Bilal's log follower
     | Auto Strategy
     deriving (Eq, Ord, Read, Show, Data, Typeable, Generic)
 
@@ -393,12 +394,13 @@ viewAuto (Auto s) = second (const True) (viewAuto s)
 viewAuto s = (s, False)
 
 parseStrategy :: String -> Maybe Strategy
+parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy "f" = return PickFirst
 parseStrategy "x" = return PickAll
 parseStrategy "i" = return Interactive
 parseStrategy "r" = return AtRandom
-parseStrategy ['a',s] = Auto <$> parseStrategy (return s)
 parseStrategy "c" = return Compact
+parseStrategy "s" = return Sparse
 parseStrategy "l" = return FollowLog
 parseStrategy _ = Nothing
 

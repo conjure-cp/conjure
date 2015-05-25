@@ -156,8 +156,10 @@ ui = modes
                                    &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
                                            \Moreover, c (for compact) can be used to pick the most 'compact' option \
                                            \at every decision point.\n\
-                                           \ l (for follow log) tries to pick the given choices\n\
-                                           \ as far as possible\n\
+                                           \And, s (for sparse) can be used to pick the most 'sparse' option \
+                                           \at every decision point. \
+                                           \This can be particularly useful for --representations-givens\n\
+                                           \ l (for follow log) tries to pick the given choices as far as possible\n\
                                            \Default value: ai"
         , representations = Nothing
                                    &= typ "STRATEGY"

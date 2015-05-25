@@ -5,6 +5,7 @@ module Conjure.Representations.Combined
     , downD1, downC1, up1
     , downToX1
     , reprOptions, getStructurals
+    , reprsStandardOrder, reprsSparseOrder
     ) where
 
 -- conjure
@@ -13,11 +14,11 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
-import Conjure.Language.TH
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
 import Conjure.Representations.Tuple
+import Conjure.Representations.Matrix
 import Conjure.Representations.Record
 import Conjure.Representations.Variant
 import Conjure.Representations.Set.Occurrence
@@ -139,7 +140,7 @@ dispatch domain = do
         DomainTuple{}   -> tuple
         DomainRecord{}  -> record
         DomainVariant{} -> variant
-        DomainMatrix{}  -> matrix
+        DomainMatrix{}  -> matrix downD1 downC1 up1
         DomainSet r _ _ -> case r of
             "Occurrence"                    -> setOccurrence
             "Explicit"                      -> setExplicit
@@ -169,13 +170,14 @@ dispatch domain = do
             _ -> nope
         _ -> nope
 
+type AllRepresentations = [[Representation (Either Doc)]]
 
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
-allReprs :: [[Representation (Either Doc)]]
-allReprs =
-    [ [ primitive, tuple, record, variant, matrix
+reprsStandardOrder :: AllRepresentations
+reprsStandardOrder =
+    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
@@ -189,15 +191,36 @@ allReprs =
       ]
     ]
 
+reprsSparseOrder :: AllRepresentations
+reprsSparseOrder = map return
+    [ primitive, tuple, record, variant, matrix downD1 downC1 up1
+
+    , setExplicit, setExplicitVarSizeWithMarker
+    , setOccurrence, setExplicitVarSizeWithFlags              -- redundant
+
+    , msetExplicitVarSizeWithFlags
+
+    , function1D, functionND
+    , functionAsRelation dispatch
+    , function1DPartial, functionNDPartial                    -- redundant
+
+    , sequenceExplicitBounded
+
+    , relationAsSet dispatch
+    , relationAsMatrix
+
+    , partitionAsSet dispatch
+    ]
+
 
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
-reprOptions :: (Pretty r, Pretty x, ExpressionLike x) => Domain r x -> [Domain HasRepresentation x]
-reprOptions domain = go allReprs
+reprOptions :: (Pretty r, Pretty x, ExpressionLike x) => AllRepresentations -> Domain r x -> [Domain HasRepresentation x]
+reprOptions reprs domain = go reprs
     where
         go [] = []
         go (reprsThisLevel:reprsNextLevels) =
-            let matchesOnThisLevel = concat [ rCheck r reprOptions domain | r <- reprsThisLevel ]
+            let matchesOnThisLevel = concat [ rCheck r (reprOptions reprs) domain | r <- reprsThisLevel ]
             in  if null matchesOnThisLevel
                     then go reprsNextLevels
                     else matchesOnThisLevel
@@ -213,138 +236,3 @@ getStructurals
     -> m (Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
-
--- | The matrix "representation rule".
---   This rule handles the plumbing for matrices.
---   It is in this module because it recursively calls the other representations via `allReprs`.
---   And it is also included in `allReprs`.
-matrix :: forall m . (MonadFail m, NameGen m) => Representation m
-matrix = Representation chck matrixDownD structuralCons matrixDownC matrixUp
-
-    where
-
-        chck :: TypeOf_ReprCheck
-        chck f (DomainMatrix indexDomain innerDomain) = DomainMatrix indexDomain <$> f innerDomain
-        chck _ _ = []
-
-        matrixDownD :: TypeOf_DownD m
-        matrixDownD (name, DomainMatrix indexDomain innerDomain) = do
-            mres <- downD1 (name, innerDomain)
-            case mres of
-                Nothing -> return Nothing
-                Just mids -> return $ Just
-                    [ (n, DomainMatrix indexDomain d) | (n, d) <- mids ]
-        matrixDownD _ = na "{matrixDownD}"
-
-        structuralCons :: TypeOf_Structural m
-        structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
-            let
-                innerStructuralCons inpMatrix = do
-                    (iPat, i) <- quantifiedVar
-                    let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
-
-                    -- preparing structural constraints for the inner guys
-                    innerStructuralConsGen <- f innerDomain
-
-                    let inLoop r = [essence| &r[&i] |]
-                    outs <- innerStructuralConsGen (inLoop inpMatrix)
-                    return (map activeZone outs)
-
-            return $ \ inpMatrix -> innerStructuralCons inpMatrix
-
-        structuralCons _ _ _ = na "{structuralCons} matrix 2"
-
-        -- TODO: check if indices are the same
-        matrixDownC :: TypeOf_DownC m
-        matrixDownC ( name
-                   , DomainMatrix indexDomain innerDomain
-                   , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
-                   ) = do
-            mids1
-                :: [Maybe [(Name, DomainC, Constant)]]
-                <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]
-            let mids2 = catMaybes mids1
-            if null mids2                                       -- if all were `Nothing`s
-                then return Nothing
-                else
-                    if length mids2 == length mids1             -- if all were `Just`s
-                        then do
-                            let
-                                mids3 :: [(Name, DomainC, [Constant])]
-                                mids3 = [ ( head [ n | (n,_,_) <- line ]
-                                          , head [ d | (_,d,_) <- line ]
-                                          ,      [ c | (_,_,c) <- line ]
-                                          )
-                                        | line <- transpose mids2
-                                        ]
-                            return $ Just
-                                [ ( n
-                                  , DomainMatrix indexDomain d
-                                  , ConstantAbstract $ AbsLitMatrix indexDomain cs
-                                  )
-                                | (n, d, cs) <- mids3
-                                ]
-                        else
-                            fail $ vcat
-                                [ "This is weird. Heterogeneous matrix literal?"
-                                , "When working on:" <+> pretty name
-                                , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
-                                ]
-        matrixDownC _ = na "{matrixDownC}"
-
-        matrixUp :: TypeOf_Up m
-        matrixUp ctxt (name, DomainMatrix indexDomain innerDomain)= do
-
-            mid1
-                :: Maybe [(Name, DomainX Expression)]
-                <- downD1 (name, fmap Constant innerDomain)
-
-            case mid1 of
-                Nothing ->
-                    -- the inner domain doesn't require refinement
-                    -- there needs to be a binding with "name"
-                    -- and we just pass it through
-                    case lookup name ctxt of
-                        Nothing -> fail $ vcat $
-                            [ "No value for:" <+> pretty name
-                            , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
-                            ] ++
-                            ("Bindings in context:" : prettyContext ctxt)
-                        Just constant -> return (name, constant)
-                Just mid2 -> do
-                    -- the inner domain needs refinement
-                    -- there needs to be bindings for each name in (map fst mid2)
-                    -- we find those bindings, call (up1 name inner) on them, then lift
-                    mid3
-                        :: [(Name, [Constant])]
-                        <- forM mid2 $ \ (n, _) ->
-                            case lookup n ctxt of
-                                Nothing -> fail $ vcat $
-                                    [ "No value for:" <+> pretty n
-                                    , "When working on:" <+> pretty name
-                                    , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
-                                    ] ++
-                                    ("Bindings in context:" : prettyContext ctxt)
-                                Just constant ->
-                                    -- this constant is a ConstantMatrix, containing one component of the things to go into up1
-                                    case constant of
-                                        ConstantAbstract (AbsLitMatrix _ c) -> return (n, c)
-                                        _ -> fail $ vcat
-                                            [ "Expecting a matrix literal for:" <+> pretty n
-                                            , "But got:" <+> pretty constant
-                                            , "When working on:" <+> pretty name
-                                            , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
-                                            ]
-
-                    let midNames     = map fst mid3
-                    let midConstants = map snd mid3
-
-                    mid4
-                        :: [(Name, Constant)]
-                        <- sequence
-                            [ up1 (name, innerDomain) (zip midNames cs)
-                            | cs <- transpose midConstants
-                            ]
-                    let values = map snd mid4
-                    return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
-        matrixUp _ _ = na "{matrixUp}"
