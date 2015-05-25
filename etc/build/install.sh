@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 
 export CORES=${CORES:-0}
-export GHC_VERSION=${GHC_VERSION:-"7.8.4"}
+export GHC_VERSION=${GHC_VERSION:-"7.10.1"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
@@ -36,11 +36,11 @@ export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
 # cabal-install-1.22.0.0 doesn't support the option --disable-executable-profiling
-CABAL_VERSION="1.22.2.0"
+CABAL_VERSION="1.22.4.0"
 HAPPY_VERSION="1.19.5"
 HSCOLOUR_VERSION="1.20.3"
 
-CABAL_VERSION_CHECK="1.22.2"
+CABAL_VERSION_CHECK="1.22.4"
 HAPPY_VERSION_CHECK="1.19"
 HSCOLOUR_VERSION_CHECK="1.20"
 
