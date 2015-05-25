@@ -293,7 +293,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             logInfo ("Picking the first option:" <+> doc)
             return [(1, doc, option)]
         Sparse     -> do
-            logInfo ("Picking the first option:" <+> doc)
+            logInfo ("Picking the first option (in sparse order):" <+> doc)
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
