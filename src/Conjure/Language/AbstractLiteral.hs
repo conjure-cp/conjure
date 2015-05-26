@@ -101,7 +101,7 @@ instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescri
 
 instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
-    typeOf   (AbsLitTuple        []) = return (TypeTuple (replicate 100 TypeAny))
+    typeOf   (AbsLitTuple        []) = return (TypeTuple [TypeAny])
     typeOf   (AbsLitTuple        xs) = TypeTuple    <$> mapM typeOf xs
 
     typeOf   (AbsLitRecord       xs) = TypeRecord   <$> sequence [ do t <- typeOf x ; return (n,t)
@@ -128,7 +128,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitSequence    [] ) = return (TypeSequence TypeAny)
     typeOf p@(AbsLitSequence    xs ) = TypeSequence <$> (homoType (pretty p) =<< mapM typeOf xs)
 
-    typeOf   (AbsLitRelation    [] ) = return (TypeRelation (replicate 100 TypeAny))
+    typeOf   (AbsLitRelation    [] ) = return (TypeRelation [TypeAny])
     typeOf p@(AbsLitRelation    xss) = do
         ty <- homoType (pretty p) =<< mapM (typeOf . AbsLitTuple) xss
         case ty of

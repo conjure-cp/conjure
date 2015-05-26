@@ -78,6 +78,8 @@ typeUnify TypeInt TypeEnum{} = True
 typeUnify TypeEnum{} TypeInt = True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
+typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
+typeUnify TypeTuple{} (TypeTuple [TypeAny]) = True
 typeUnify (TypeTuple as) (TypeTuple bs) = (length as == length bs) && and (zipWith typeUnify as bs)
 typeUnify (TypeRecord as) (TypeRecord bs)
     | length as /= length bs = False
@@ -124,7 +126,9 @@ mostDefined = foldr f TypeAny
         f _ x@TypeInt{} = x
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x
-        f (TypeTuple as) (TypeTuple bs) = TypeTuple (zipWith f as bs)
+        f (TypeTuple [TypeAny]) x = x
+        f x (TypeTuple [TypeAny]) = x
+        f (TypeTuple as) (TypeTuple bs) | length as == length bs = TypeTuple (zipWith f as bs)
         f (TypeRecord as) (TypeRecord bs)
             | sort (map fst as) == sort (map fst bs) =
                 TypeRecord [ case lookup n bs of
@@ -151,7 +155,9 @@ mostDefined = foldr f TypeAny
         f (TypeMSet a) (TypeMSet b) = TypeMSet (f a b)
         f (TypeFunction a1 a2) (TypeFunction b1 b2) = TypeFunction (f a1 b1) (f a2 b2)
         f (TypeSequence a) (TypeSequence b) = TypeSequence (f a b)
-        f (TypeRelation as) (TypeRelation bs) = TypeRelation (zipWith f as bs)
+        f (TypeRelation [TypeAny]) x = x
+        f x (TypeRelation [TypeAny]) = x
+        f (TypeRelation as) (TypeRelation bs) | length as == length bs = TypeRelation (zipWith f as bs)
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
 
