@@ -138,6 +138,10 @@ mainWithArgs ValidateSolution{..} = do
         <$> readModelFromFile essence
         <*> maybe (return def) readModelFromFile essenceParamO
         <*> readModelFromFile essenceSolution
+mainWithArgs Pretty{..} = do
+    model <- readModelFromFile essence
+    writeModel (if outputBinary then BinaryEssence else PlainEssence)
+               Nothing model
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1

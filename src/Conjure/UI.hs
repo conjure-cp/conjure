@@ -66,6 +66,12 @@ data UI
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
+    | Pretty
+        { essence          :: FilePath
+        , logLevel         :: LogLevel
+        , outputBinary     :: Bool
+        , limitTime        :: Maybe Int
+        }
     | Diff
         { file1            :: FilePath
         , file2            :: FilePath
@@ -340,6 +346,24 @@ ui = modes
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
+    , Pretty
+        { essence = def            &= typFile
+                                   &= argPos 0
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
+        }                          &= name "pretty"
+                                   &= explicit
+                                   &= help "Pretty print as Essence file to stdout.\n\
+                                           \This mode can be used to view a binary Essence file in textual form."
     , Diff
         { file1 = def              &= typFile
                                    &= argPos 0
