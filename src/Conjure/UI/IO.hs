@@ -1,7 +1,9 @@
 module Conjure.UI.IO
     ( readModelFromFile
+    , readModelFromFileWithMode
     , readModelPreambleFromFile
     , writeModel, writeModels
+    , EssenceFileMode(..)
     ) where
 
 -- conjure
@@ -11,27 +13,62 @@ import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
 
+-- base
+import System.IO ( withFile, IOMode(..), hGetContents )
+
 -- aeson
-import qualified Data.Aeson ( decode )
+import qualified Data.Aeson ( decodeStrict )
+
+-- cereal
+import qualified Data.Serialize ( decode, encode )
 
 -- text
 import qualified Data.Text as T
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 
 -- bytestring
-import qualified Data.ByteString.Lazy as BS
+import qualified Data.ByteString as BS ( readFile, writeFile )
+import qualified Data.ByteString.Char8 as BS ( putStrLn )
+
+
+data EssenceFileMode = BinaryEssence | PlainEssence
+
+
+guessMode :: MonadIO m => FilePath -> m EssenceFileMode
+guessMode fp = liftIO $ withFile fp ReadMode $ \ h -> do
+    line <- hGetContents h
+    if "language" `isPrefixOf` dropWhile (`elem` (" \t\n" :: String)) line
+        then return PlainEssence
+        else return BinaryEssence
 
 
 readModelFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelFromFile fp = do
+    mode <- guessMode fp
+    readModelFromFileWithMode mode fp
+
+
+readModelFromFileWithMode :: (MonadIO m, MonadFail m) => EssenceFileMode -> FilePath -> m Model
+readModelFromFileWithMode PlainEssence fp = do
     pair <- liftIO $ pairWithContents fp
     readModel id pair
+readModelFromFileWithMode BinaryEssence fp = do
+    con <- liftIO $ BS.readFile fp
+    case Data.Serialize.decode con of
+        Left err -> fail $ vcat [ "Decoding binary file failed: " <+> pretty fp
+                                , pretty err
+                                ]
+        Right res -> return res
 
 
 readModelPreambleFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
 readModelPreambleFromFile fp = do
-    pair <- liftIO $ pairWithContents fp
-    readModel onlyPreamble pair
+    mode <- guessMode fp
+    case mode of
+        PlainEssence -> do
+            pair <- liftIO $ pairWithContents fp
+            readModel onlyPreamble pair
+        BinaryEssence -> readModelFromFileWithMode BinaryEssence fp
 
 
 readModel :: MonadFail m => (Text -> Text) -> (FilePath, Text) -> m Model
@@ -48,8 +85,7 @@ readModel preprocess (fp, con) =
                     |> T.unlines
                 json = infoBlock
                     |> T.encodeUtf8                     -- convert Text to ByteString
-                    |> (BS.fromChunks . return)         -- convert to Lazy ByteString
-                    |> Data.Aeson.decode
+                    |> Data.Aeson.decodeStrict
             in
                 if T.null (T.filter isSpace infoBlock)
                     then return x
@@ -72,19 +108,21 @@ onlyPreamble
         discardAfter t = fst . T.breakOn t
 
 
-writeModel :: MonadIO m => Maybe FilePath -> Model -> m ()
-writeModel Nothing   spec = liftIO $ putStrLn     (renderNormal spec)
-writeModel (Just fp) spec = liftIO $ writeFile fp (renderNormal spec)
+writeModel :: MonadIO m => EssenceFileMode -> Maybe FilePath -> Model -> m ()
+writeModel PlainEssence   Nothing   spec = liftIO $    putStrLn     (renderNormal spec)
+writeModel PlainEssence   (Just fp) spec = liftIO $    writeFile fp (renderNormal spec)
+writeModel BinaryEssence Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
+writeModel BinaryEssence (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
 
 
-writeModels :: MonadIO m => FilePath -> String -> [Model] -> m ()
-writeModels base tag specs = do
+writeModels :: MonadIO m => EssenceFileMode -> FilePath -> String -> [Model] -> m ()
+writeModels mode base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
     forM_ (zip numbers specs) $ \ (i, spec) -> do
         let outDirname  = base ++ "-" ++ tag
         let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"
         liftIO $ do
             createDirectoryIfMissing True outDirname
-            writeModel (Just outFilename) spec
+            writeModel mode (Just outFilename) spec
             putStrLn $ "[created file] " ++ outFilename
 

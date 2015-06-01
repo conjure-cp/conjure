@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# OPTIONS_GHC -fno-cse #-} -- stupid cmdargs
 
-module Conjure.UI where
+module Conjure.UI ( UI(..), ui ) where
 
 -- conjure
 import Conjure.Prelude
@@ -39,12 +39,14 @@ data UI
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , savedChoices               :: Maybe FilePath
+        , outputBinary               :: Bool
         }
     | RefineParam
         { eprime           :: FilePath       -- eprime, mandatory
         , essenceParam     :: FilePath       -- essence-param, mandatory
         , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | TranslateSolution
@@ -53,6 +55,7 @@ data UI
         , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
         , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | ValidateSolution
@@ -60,29 +63,34 @@ data UI
         , essenceParamO    :: Maybe FilePath -- essence-param, optional
         , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | Diff
         { file1            :: FilePath
         , file2            :: FilePath
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | TypeCheck
         { essence          :: FilePath
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | Split
         { essence          :: FilePath
         , outputDirectory  :: FilePath
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     | SymmetryDetection
         { essence          :: FilePath
         , json             :: FilePath
         , logLevel         :: LogLevel
+        , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
     deriving (Eq, Ord, Show, Data, Typeable)
@@ -228,7 +236,10 @@ ui = modes
                                    &= explicit
                                    &= help "Choices to use if possible for -al \
                                             \can either be a eprime file (created by --logChoices), or a json file "
-
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \
@@ -257,6 +268,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "refine-param"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
@@ -290,6 +305,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "translate-solution"
                                    &= explicit
                                    &= help "Translation of solutions back to Essence."
@@ -314,6 +333,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
@@ -329,6 +352,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "diff"
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
@@ -342,6 +369,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "type-check"
                                    &= explicit
                                    &= help "Type-checking a single Essence file."
@@ -363,6 +394,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "split"
                                    &= explicit
                                    &= help "Split an Essence files to various smaller files. Useful for testing."
@@ -383,6 +418,10 @@ ui = modes
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
         }                          &= name "symmetry-detection"
                                    &= explicit
                                    &= help "Dump some JSON to be used as input to ferret for symmetry detection."
