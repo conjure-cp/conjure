@@ -244,6 +244,7 @@ ui = modes
                                             \can either be a eprime file (created by --logChoices), or a json file "
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "modelling"
@@ -276,6 +277,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "refine-param"
@@ -313,6 +315,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "translate-solution"
@@ -341,6 +344,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "validate-solution"
@@ -358,6 +362,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "pretty"
@@ -378,6 +383,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "diff"
@@ -395,6 +401,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "type-check"
@@ -420,6 +427,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "split"
@@ -444,6 +452,7 @@ ui = modes
                                    &= help "Time limit in seconds. (CPU time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
+                                   &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "symmetry-detection"
