@@ -13,17 +13,20 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
             Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
-        -- let upd val old = lambdaToFunction pat old val
+        tyInner <- typeOf body
+        let ty = TypeMatrix TypeInt tyInner
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
-            , return $ make opConcatenate $ AbstractLiteral $ AbsLitMatrix
-                 (mkDomainIntB 1 (fromInt $ genericLength elems))
-                 [ Comprehension body
-                     $  gocBefore
-                     ++ [ComprehensionLetting pat el]
-                     ++ gocAfter
-                 | el <- elems
-                 ]
+            , return $ if null elems
+                then make matrixLiteral ty (mkDomainIntB 1 0) []
+                else make opConcatenate $ AbstractLiteral $ AbsLitMatrix
+                    (mkDomainIntB 1 (fromInt $ genericLength elems))
+                    [ Comprehension body
+                        $  gocBefore
+                        ++ [ComprehensionLetting pat el]
+                        ++ gocAfter
+                    | el <- elems
+                    ]
             )
     theRule _ = na "rule_Comprehension_Literal"
 
