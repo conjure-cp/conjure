@@ -58,7 +58,7 @@ instance DomainSizeOf Expression Expression where
         return (make opPow maxOccur maxSize)
     domainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) =
         domainSizeOf $ DomainRelation def (RelationAttr sizeAttr def) [innerFr, innerTo]
-    domainSizeOf (DomainRelation _ (RelationAttr sizeAttr binRelAttr) inners) | binRelAttr == def =
+    domainSizeOf (DomainRelation _ (RelationAttr sizeAttr _binRelAttr) inners) =
         domainSizeOf (DomainSet def (SetAttr sizeAttr) (DomainTuple inners))
     domainSizeOf (DomainPartition _ a inner) =
         domainSizeOf $ DomainSet def (SetAttr (partsNum  a))
