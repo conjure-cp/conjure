@@ -38,6 +38,8 @@ instance
     domainUnion d DomainAny{} = return d
     domainUnion DomainBool DomainBool = return DomainBool
     domainUnion (DomainInt r1) (DomainInt r2) = return $ DomainInt (r1 ++ r2)
+    domainUnion (DomainTuple []) d@DomainTuple{} = return d
+    domainUnion d@DomainTuple{} (DomainTuple []) = return d
     domainUnion (DomainTuple xs) (DomainTuple ys)
         | length xs == length ys
         = DomainTuple <$> zipWithM domainUnion xs ys
@@ -51,6 +53,8 @@ instance
         = DomainFunction def <$> domainUnion xA yA <*> domainUnion x1 y1 <*> domainUnion x2 y2
     domainUnion (DomainSequence _ xA x) (DomainSequence _ yA y)
         = DomainSequence def <$> domainUnion xA yA <*> domainUnion x y
+    domainUnion (DomainRelation _ _ []) d@DomainRelation{} = return d
+    domainUnion d@DomainRelation{} (DomainRelation _ _ []) = return d
     domainUnion (DomainRelation _ xA xs) (DomainRelation _ yA ys)
         | length xs == length ys
         = DomainRelation def <$> domainUnion xA yA <*> zipWithM domainUnion xs ys
