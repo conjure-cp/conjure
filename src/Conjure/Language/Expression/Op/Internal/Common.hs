@@ -225,6 +225,7 @@ functionals =
     , L_allDiff
     , L_dontCare
     , L_hist
+    , L_factorial
 
     , L_toSet
     , L_toMSet

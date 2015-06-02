@@ -155,7 +155,7 @@ data Lexeme
     | L_Div                 --    /           -- integer division, infix
     | L_Mod                 --    %           -- module, infix
     | L_Pow                 --    **          -- exponentiation, infix : (int,int) -> int
-    -- | L_Factorial           --    !           -- factorial, postfix : int -> int
+    | L_factorial
 
     -- equality
 
@@ -378,6 +378,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_Div             , "/"     )
     , ( L_Mod             , "%"     )
     , ( L_Pow             , "**"    )
+    , ( L_factorial       , "factorial" )
     , ( L_Eq              , "="     )
     , ( L_Neq             , "!="    )
     , ( L_Lt              , "<"     )
