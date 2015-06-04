@@ -6,8 +6,7 @@ such that
     !=
     defined(function(false --> 5, true --> 9)
             intersect
-            (function(false --> 6, 1 = 9 --> toInt(true), 0 != -5 --> 9 / 0,
-                      false --> toInt(false))
+            (function(1 = 9 --> toInt(true), 0 != -5 --> 9 / 0)
              -
              function(6 = 9 --> 9 ** 5))
             -
