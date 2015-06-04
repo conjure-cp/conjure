@@ -30,6 +30,7 @@ typeCheckModel_StandAlone model0 = do
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
+          >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
     return model1
 
 
@@ -52,11 +53,11 @@ typeCheckModel model1 = do
                     mty <- runExceptT $ typeOf x
                     case mty of
                         Right TypeBool{} -> return ()
-                        Left err -> tell
+                        Left err -> tell $ return $ vcat
                             [ "In a 'branching on' statement:" <++> pretty x
                             , "Error:" <++> pretty err
                             ]
-                        Right ty -> tell
+                        Right ty -> tell $ return $ vcat
                             [ "In a 'branching on' statement:" <++> pretty x
                             , "Expected type `bool`, but got:" <++> pretty ty
                             ]
@@ -64,11 +65,11 @@ typeCheckModel model1 = do
                 mty <- runExceptT $ typeOf x
                 case mty of
                     Right TypeBool{} -> return ()
-                    Left err -> tell
+                    Left err -> tell $ return $ vcat
                         [ "In a 'where' statement:" <++> pretty x
                         , "Error:" <++> pretty err
                         ]
-                    Right ty -> tell
+                    Right ty -> tell $ return $ vcat
                         [ "In a 'where' statement:" <++> pretty x
                         , "Expected type `bool`, but got:" <++> pretty ty
                         ]
@@ -76,11 +77,11 @@ typeCheckModel model1 = do
                 mty <- runExceptT $ typeOf x
                 case mty of
                     Right TypeInt{} -> return ()
-                    Left err -> tell
+                    Left err -> tell $ return $ vcat
                         [ "In the objective:" <++> pretty st
                         , "Error:" <++> pretty err
                         ]
-                    Right ty -> tell
+                    Right ty -> tell $ return $ vcat
                         [ "In the objective:" <++> pretty st
                         , "Expected type `int`, but got:" <++> pretty ty
                         ]
@@ -88,11 +89,11 @@ typeCheckModel model1 = do
                 mty <- runExceptT $ typeOf x
                 case mty of
                     Right TypeBool{} -> return ()
-                    Left err -> tell
+                    Left err -> tell $ return $ vcat
                         [ "In a 'such that' statement:" <++> pretty x
                         , "Error:" <++> pretty err
                         ]
-                    Right ty -> tell
+                    Right ty -> tell $ return $ vcat
                         [ "In a 'such that' statement:" <++> pretty x
                         , "Expected type `bool`, but got:" <++> pretty ty
                         ]
