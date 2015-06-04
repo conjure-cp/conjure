@@ -7,13 +7,14 @@ module Conjure.Language.NameResolution
 
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
 
-resolveNames :: (MonadLog m, MonadFail m, NameGen m) => Model -> m Model
+resolveNames :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
 resolveNames model = flip evalStateT [] $ do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
@@ -27,7 +28,7 @@ resolveNames model = flip evalStateT [] $ do
                             >>> filter (\ (_,n) -> n > 1 )       -- keep those that are defined multiple times
                             >>> map fst)
     unless (null duplicateNames) $
-        userErr ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
+        userErr1 ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
     return model { mStatements = statements }
 
 shadowing
@@ -52,7 +53,7 @@ shadowing p@(Comprehension _ is) = do
 shadowing p = return p
 
 
-resolveNamesX :: (MonadFail m, NameGen m) => Expression -> m Expression
+resolveNamesX :: (MonadFail m, MonadUserError m, NameGen m) => Expression -> m Expression
 resolveNamesX x = do
     x' <- evalStateT (resolveX x) []
     mapM_ check (universe x')
@@ -66,6 +67,7 @@ check _ = return ()
 
 resolveStatement
     :: ( MonadFail m
+       , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        )
@@ -93,6 +95,7 @@ resolveStatement st =
 
 resolveSearchOrder
     :: ( MonadFail m
+       , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        )
@@ -113,6 +116,7 @@ resolveSearchOrder (Cut x) =
 
 resolveX
     :: ( MonadFail m
+       , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        )
@@ -192,6 +196,7 @@ resolveX x = descendM resolveX x
 
 resolveD
     :: ( MonadFail m
+       , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        )
@@ -201,9 +206,9 @@ resolveD (DomainReference _ (Just d)) = resolveD d
 resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> userErr ("Undefined reference to a domain:" <+> pretty nm)
+        Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
         Just (Alias (Domain r)) -> resolveD r
-        Just x -> userErr ("Expected a domain, but got an expression:" <+> pretty x)
+        Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
     t  <- typeOf d'
@@ -221,6 +226,7 @@ resolveD d = do
 
 resolveAbsLit
     :: ( MonadFail m
+       , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        )
@@ -234,5 +240,5 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
         isTheVariant _ = Nothing
     case mapMaybe isTheVariant (map snd mval) of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
-        _ -> userErr ("Not a member of a variant type:" <+> pretty p)
+        _ -> userErr1 ("Not a member of a variant type:" <+> pretty p)
 resolveAbsLit lit = descendBiM resolveX lit

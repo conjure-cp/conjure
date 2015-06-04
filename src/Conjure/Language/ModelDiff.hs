@@ -5,7 +5,7 @@ module Conjure.Language.ModelDiff
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 
@@ -13,11 +13,11 @@ import Conjure.Language.Pretty
 import qualified Data.Set as S
 
 
-modelDiffIO :: MonadIO m => Model -> Model -> m ()
+modelDiffIO :: MonadUserError m => Model -> Model -> m ()
 modelDiffIO m1 m2 =
     case modelDiff m1 m2 of
         Nothing -> return ()
-        Just msg -> userErr $ sep ["Files differ, specifically:", msg]
+        Just msg -> userErr $ return $ sep ["Files differ, specifically:", msg]
 
 
 -- | returns `Just msg` if the models are different, msg being an explanation of what's diff.

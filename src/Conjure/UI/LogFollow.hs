@@ -16,7 +16,8 @@ import Conjure.Rules.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Parser
 
-import Conjure.Bug(userErr,bug)
+import Conjure.Bug ( bug )
+import Conjure.UserError
 import Conjure.UI.IO ( readModelFromFile )
 
 import qualified Data.Aeson as A
@@ -244,7 +245,7 @@ getReprFromAnswer = unErr . (runLexerAndParser parseDomainWithRepr "getReprFromA
                  . renderNormal . aText                         -- aText into String
 
 
-getAnswersFromFile :: (MonadIO m, MonadFail m )
+getAnswersFromFile :: (MonadIO m, MonadFail m, MonadUserError m)
               => FilePath -> m AnswerStore
 
  -- Read from a json file
@@ -256,7 +257,7 @@ getAnswersFromFile fp | takeExtension fp  == ".json" = do
                                                 | v <- map convertBack vs
                                                 | i <- [0..]
                                           ]
-    Nothing -> userErr $ "Error parsing" <+> pretty fp
+    Nothing -> userErr1 $ "Error parsing" <+> pretty fp
 
 -- Read from a eprime file
 getAnswersFromFile fp = do

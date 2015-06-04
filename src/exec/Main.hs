@@ -3,7 +3,7 @@
 module Main where
 
 import Conjure.Prelude
-import Conjure.Bug ( userErr )
+import Conjure.UserError ( MonadUserError(..) )
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.Model ( parseStrategy, outputModels )
@@ -55,16 +55,35 @@ main = do
         _ -> workload
 
 
-mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m) => UI -> m ()
+mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m, MonadUserError m) => UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
     case savedChoices of
-      Just f  -> refAnswers f
-      Nothing -> return ()
+        Just f  -> refAnswers f
+        Nothing -> return ()
 
-    let config = Config.Config
+    let
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty strategyQ))
+                                 return
+                                 (parseStrategy s)
+
+    config <- do
+        strategyQ'                  <- parseStrategy_ strategyQ
+        strategyA'                  <- parseStrategy_ strategyA
+        representations'            <- maybe (return strategyA')       parseStrategy_ representations
+        representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
+        representationsGivens'      <- maybe (return representations') parseStrategy_ representationsGivens
+        representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
+        representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
+        representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
+
+        case fst (viewAuto strategyQ') of
+            Compact -> userErr1 "The Compact heuristic isn't supported for questions."
+            _       -> return ()
+
+        return Config.Config
             { Config.outputDirectory            = outputDirectory
             , Config.logLevel                   = logLevel
             , Config.verboseTrail               = verboseTrail
@@ -72,39 +91,14 @@ mainWithArgs Modelling{..} = do
             , Config.logRuleSuccesses           = logRuleSuccesses
             , Config.logRuleAttempts            = logRuleAttempts
             , Config.logChoices                 = logChoices
-            , Config.strategyQ                  = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyQ))
-                                                         (parseStrategy strategyQ)
-                |> (\ s ->
-                    if fst (viewAuto s) == Compact
-                        then userErr "The Compact heuristic isn't supported for questions."
-                        else s
-                   )
-            , Config.strategyA                  = fromMaybe (userErr ("Not a valid strategy:" <+> pretty strategyA))
-                                                            (parseStrategy strategyA)
-            , Config.representations            =
-                    case representations of
-                        Nothing -> Config.strategyA config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
-            , Config.representationsFinds       =
-                    case representationsFinds of
-                        Nothing -> Config.representations config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
-            , Config.representationsGivens      =
-                    case representationsGivens of
-                        Nothing -> Config.representations config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
-            , Config.representationsAuxiliaries =
-                    case representationsAuxiliaries of
-                        Nothing -> Config.representations config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
-            , Config.representationsQuantifieds =
-                    case representationsQuantifieds of
-                        Nothing -> Config.representations config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
-            , Config.representationsCuts        =
-                    case representationsCuts of
-                        Nothing -> Config.representations config
-                        Just s  -> fromMaybe (userErr ("Not a valid strategy:" <+> pretty s)) (parseStrategy s)
+            , Config.strategyQ                  = strategyQ'
+            , Config.strategyA                  = strategyA'
+            , Config.representations            = representations'
+            , Config.representationsFinds       = representationsFinds'
+            , Config.representationsGivens      = representationsGivens'
+            , Config.representationsAuxiliaries = representationsAuxiliaries'
+            , Config.representationsQuantifieds = representationsQuantifieds'
+            , Config.representationsCuts        = representationsCuts'
             , Config.channelling                = channelling
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
@@ -112,8 +106,8 @@ mainWithArgs Modelling{..} = do
             }
     runNameGen $ outputModels config model
 mainWithArgs RefineParam{..} = do
-    when (null eprime      ) $ userErr "Mandatory field --eprime"
-    when (null essenceParam) $ userErr "Mandatory field --essence-param"
+    when (null eprime      ) $ userErr1 "Mandatory field --eprime"
+    when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     output <- runNameGen $ join $ refineParam
                     <$> readModelPreambleFromFile eprime
@@ -122,8 +116,8 @@ mainWithArgs RefineParam{..} = do
                (Just outputFilename)
                output
 mainWithArgs TranslateSolution{..} = do
-    when (null eprime        ) $ userErr "Mandatory field --eprime"
-    when (null eprimeSolution) $ userErr "Mandatory field --eprime-solution"
+    when (null eprime        ) $ userErr1 "Mandatory field --eprime"
+    when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     output <- runNameGen $ join $ translateSolution
                     <$> readModelPreambleFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
@@ -132,8 +126,8 @@ mainWithArgs TranslateSolution{..} = do
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
                (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
-    when (null essence        ) $ userErr "Mandatory field --essence"
-    when (null essenceSolution) $ userErr "Mandatory field --solution"
+    when (null essence        ) $ userErr1 "Mandatory field --essence"
+    when (null essenceSolution) $ userErr1 "Mandatory field --solution"
     join $ validateSolution
         <$> readModelFromFile essence
         <*> maybe (return def) readModelFromFile essenceParamO

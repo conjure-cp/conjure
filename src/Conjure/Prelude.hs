@@ -33,7 +33,7 @@ module Conjure.Prelude
     , headInf
     , paddedNum
     , dropExtension
-    , MonadLog(..), LogLevel(..)
+    , MonadLog(..), LogLevel(..), LoggerT
     , runLoggerPipeIO, runLoggerIO, runLogger, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
     , histogram
@@ -345,6 +345,12 @@ instance (Functor m, Monad m) => MonadFail (ExceptT m) where
 instance (Functor m, Monad m, MonadFail m) => MonadFail (StateT st m) where
     fail = lift . fail
 
+instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
+    fail = lift . fail
+
+instance MonadFail m => MonadFail (ReaderT r m) where
+    fail = lift . fail
+
 instance MonadFail Gen where
     fail = Control.Monad.fail . show
 
@@ -354,14 +360,9 @@ instance MonadFail (ParsecT g l m) where
 instance MonadFail m => MonadFail (LoggerT m) where
     fail = lift . fail
 
-instance (MonadFail m, Monoid w) => MonadFail (WriterT w m) where
-    fail = lift . fail
-
-instance MonadFail m => MonadFail (ReaderT r m) where
-    fail = lift . fail
-
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
+
 
 newtype ExceptT m a = ExceptT { runExceptT :: m (Either Doc a) }
 

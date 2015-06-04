@@ -8,7 +8,7 @@ module Conjure.UI.IO
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
@@ -42,13 +42,13 @@ guessMode fp = liftIO $ withFile fp ReadMode $ \ h -> do
         else return BinaryEssence
 
 
-readModelFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
+readModelFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
 readModelFromFile fp = do
     mode <- guessMode fp
     readModelFromFileWithMode mode fp
 
 
-readModelFromFileWithMode :: (MonadIO m, MonadFail m) => EssenceFileMode -> FilePath -> m Model
+readModelFromFileWithMode :: (MonadIO m, MonadFail m, MonadUserError m) => EssenceFileMode -> FilePath -> m Model
 readModelFromFileWithMode PlainEssence fp = do
     pair <- liftIO $ pairWithContents fp
     readModel id pair
@@ -61,7 +61,7 @@ readModelFromFileWithMode BinaryEssence fp = do
         Right res -> return res
 
 
-readModelPreambleFromFile :: (MonadIO m, MonadFail m) => FilePath -> m Model
+readModelPreambleFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
 readModelPreambleFromFile fp = do
     mode <- guessMode fp
     case mode of
@@ -71,10 +71,10 @@ readModelPreambleFromFile fp = do
         BinaryEssence -> readModelFromFileWithMode BinaryEssence fp
 
 
-readModel :: MonadFail m => (Text -> Text) -> (FilePath, Text) -> m Model
+readModel :: (MonadUserError m, MonadFail m) => (Text -> Text) -> (FilePath, Text) -> m Model
 readModel preprocess (fp, con) =
     case runLexerAndParser parseModel fp (preprocess con) of
-        Left  e -> userErr e
+        Left  e -> userErr1 e
         Right x ->
             let
                 infoBlock = con

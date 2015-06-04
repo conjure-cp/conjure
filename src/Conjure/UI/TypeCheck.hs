@@ -5,6 +5,7 @@ module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
@@ -18,6 +19,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 
 typeCheckModel_StandAlone
     :: ( MonadFail m
+       , MonadUserError m
        , MonadLog m
        , NameGen m
        )
@@ -33,6 +35,7 @@ typeCheckModel_StandAlone model0 = do
 
 typeCheckModel
     :: ( MonadFail m
+       , MonadUserError m
        , MonadLog m
        , NameGen m
        )
@@ -93,10 +96,7 @@ typeCheckModel model1 = do
                         [ "In a 'such that' statement:" <++> pretty x
                         , "Expected type `bool`, but got:" <++> pretty ty
                         ]
-    unless (null errs)
-        (fail $ vcat $ "There were type errors."
-                     : ""
-                     : errs)
+    unless (null errs) (userErr errs)
 
     return model2
 

@@ -11,6 +11,7 @@ module Conjure.Rules.Definition
     ) where
 
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Expression.Op
 
@@ -107,8 +108,10 @@ data RuleResult m = RuleResult
 data Rule = Rule
     { rName  :: Doc
     , rApply
-        :: forall n m . ( MonadFail n, MonadLog n, NameGen n    -- a fail in {n} means that the rule isn't applicable
-                        , MonadFail m, MonadLog m, NameGen m    -- a fail in {m} means a bug
+        :: forall n m . ( MonadFail n, MonadLog n, NameGen n
+                                -- a fail in {n} means that the rule isn't applicable
+                        , MonadFail m, MonadLog m, NameGen m, MonadUserError m
+                                -- a fail in {m} means a bug
                         )
         => Zipper Model Expression            -- to query context
         -> Expression

@@ -1,13 +1,12 @@
 module Conjure.Bug
     ( bug
     , bugFail, bugFailT
-    , userErr
     ) where
 
 import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
+import Conjure.Language.Pretty
 
-import Conjure.Language.Pretty ( renderNormal )
 
 -- call this function instead of "error"
 bug :: Doc -> a
@@ -33,10 +32,3 @@ bugFailT loc comp = do
     case res of
         Left err -> bug (vcat ["BUGFAIL at" <+> loc, err])
         Right x  -> return x
-
--- call this function instead of "error"
--- in case of a user error.
--- TODO: use fail
-userErr :: Doc -> a
-userErr = error . renderNormal
-

@@ -5,6 +5,7 @@ module Conjure.UI.RefineParam ( refineParam ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -16,6 +17,7 @@ import Conjure.Representations ( downC )
 
 refineParam
     :: ( MonadFail m
+       , MonadUserError m
        , MonadLog m
        , NameGen m
        )
@@ -63,16 +65,16 @@ refineParam eprimeModel essenceParam0 = do
     unless (null extraLettings) $
         logWarn ("Extra lettings:" <+> prettyList id "," extraLettings)
 
-    let essenceGivensAndLettings = catMaybes
+    essenceGivensAndLettings <- sequence
             [ case lookup n essenceLettings' of
                 Nothing ->
                     if n `elem` map fst eprimeLettingsForEnums
-                        then Nothing
-                        else userErr $ vcat
+                        then return Nothing
+                        else userErr1 $ vcat
                                 [ "No value for parameter:" <+> pretty n
                                 , "With domain:" <+> pretty d
                                 ]
-                Just v  -> Just (n, d, v)
+                Just v  -> return $ Just (n, d, v)
             | (n, d) <- essenceGivens' ++ map (,DomainInt []) generatedLettingNames
             ]
 
@@ -83,7 +85,7 @@ refineParam eprimeModel essenceParam0 = do
                 _     -> bug ("refineParam: Multiple values for" <+> pretty nm)
         f p = p
 
-    let essenceGivensAndLettings' = transformBi f essenceGivensAndLettings
+    let essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
     eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings'
 
     return $ languageEprime def

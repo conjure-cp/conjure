@@ -5,6 +5,7 @@ module Conjure.Language.NameGen where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Name
 
 -- containers
@@ -20,7 +21,7 @@ type NameKind = Text
 
 newtype NameGenM m a = NameGenM (StateT NameGenState m a)
     deriving ( Functor, Applicative, Monad
-             , MonadFail
+             , MonadFail, MonadUserError
              , MonadLog
              , MonadTrans
              , MonadState NameGenState
