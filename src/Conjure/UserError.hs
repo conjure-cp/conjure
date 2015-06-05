@@ -6,6 +6,7 @@ import Conjure.Language.Pretty
 
 -- base
 import System.Exit ( exitFailure )
+import System.IO as X ( stderr, hPutStrLn )
 
 -- pipes
 import qualified Pipes
@@ -31,7 +32,7 @@ instance MonadUserError (Either Doc) where
 instance MonadUserError IO where
     userErr msgs =
         case userErr msgs of
-            Left doc -> putStrLn (renderNormal (doc :: Doc)) >> exitFailure
+            Left doc -> hPutStrLn stderr (renderNormal (doc :: Doc)) >> exitFailure
             Right x  -> return x
     userErr1 = userErr . return
 
