@@ -4,6 +4,7 @@ module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -59,10 +60,10 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                 | innerDomain1 == innerDomain2
                                     -> mkBinRelCons binRelAttrs innerDomain1 rel
                                 | otherwise
-                                    -> fail "Binary relation between different domains."
+                                    -> bug "Binary relation between different domains."
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
-                                    -> fail "Non-binary relation has binary relation attributes."
+                                    -> bug "Non-binary relation has binary relation attributes."
                             _ -> return []
                         concat <$> sequence
                             [ innerStructuralCons set

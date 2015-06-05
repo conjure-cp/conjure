@@ -43,7 +43,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains)
                 | all domainCanIndexMatrix innerDomains = do
             let cardinality m = do
-                    let unroll _ [] = bug "RelationAsMatrix.cardinality.unroll []"
+                    let unroll _ [] = fail "RelationAsMatrix.cardinality.unroll []"
                         unroll n [dom] = do
                             (iPat, i) <- quantifiedVar
                             return [essence| sum &iPat : &dom . toInt(&n[&i]) |]
@@ -60,8 +60,8 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                             case innerDomains of
                                 [innerDomain1, innerDomain2] | innerDomain1 == innerDomain2 ->
                                     mkBinRelCons binRelAttr innerDomain1 rel
-                                [_, _] -> fail "Binary relation between different domains."
-                                _      -> fail "Non-binary relation."
+                                [_, _] -> bug "Binary relation between different domains."
+                                _      -> bug "Non-binary relation."
                         concat <$> sequence
                             [ mkSizeCons sizeAttr <$> cardinality m
                             , return binRelCons
@@ -138,7 +138,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                             case lookup i (zip froms vals) of
                                 Nothing -> fail "Value not found. RelationAsMatrix.up.index"
                                 Just v  -> index v is
-                        index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
+                        index m is = fail ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
 
                     indices  <- allIndices innerDomains
                     vals     <- forM indices $ \ these -> do

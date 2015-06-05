@@ -8,8 +8,8 @@ module Conjure.Representations
     ) where
 
 -- conjure
-import Conjure.Bug
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.Expression.Op
