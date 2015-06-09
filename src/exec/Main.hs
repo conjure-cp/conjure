@@ -15,6 +15,7 @@ import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
+import Conjure.UI.ParameterGenerator ( parameterGenerator )
 
 import Conjure.Language.NameGen ( runNameGen )
 import Conjure.Language.Pretty ( pretty )
@@ -149,6 +150,13 @@ mainWithArgs SymmetryDetection{..} = do
     let jsonFilePath = if null json then essence ++ "-json" else json
     model <- readModelFromFile essence
     outputVarSymBreaking jsonFilePath model
+mainWithArgs ParameterGenerator{..} = do
+    when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
+    model  <- readModelFromFile essence
+    output <- parameterGenerator model
+    writeModel (if outputBinary then BinaryEssence else PlainEssence)
+               (Just essenceOut)
+               output
 
 
 

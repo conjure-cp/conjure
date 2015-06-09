@@ -14,6 +14,7 @@ import Conjure.Language.Lenses
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Process.Sanity ( sanityChecks )
 
 
 
@@ -30,6 +31,7 @@ typeCheckModel_StandAlone model0 = do
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
+          >>= sanityChecks              >>= logDebugId "[sanityChecks]"
           >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
     return model1
 

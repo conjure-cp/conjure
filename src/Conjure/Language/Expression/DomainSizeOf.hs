@@ -4,6 +4,7 @@ module Conjure.Language.Expression.DomainSizeOf where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.AdHoc
 import Conjure.Language.Domain
@@ -23,7 +24,7 @@ instance DomainSizeOf Expression Expression where
         let n' = n `mappend` "_EnumSize"
         in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
     domainSizeOf (DomainUnnamed _ x) = return x
-    domainSizeOf (DomainTuple []) = fail "domainSizeOf: nullary tuple"
+    domainSizeOf (DomainTuple []) = return 1
     domainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM domainSizeOf xs
     domainSizeOf (DomainRecord xs) = make opProduct . fromList <$> mapM (domainSizeOf . snd) xs
     domainSizeOf (DomainVariant xs) = make opSum . fromList <$> mapM (domainSizeOf . snd) xs
@@ -63,7 +64,7 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainPartition _ a inner) =
         domainSizeOf $ DomainSet def (SetAttr (partsNum  a))
                       $ DomainSet def (SetAttr (partsSize a)) inner
-    domainSizeOf d = fail ("not implemented: domainSizeOf:" <+> pretty d)
+    domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> pretty d)
 
 
 domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a) => Range a -> m a

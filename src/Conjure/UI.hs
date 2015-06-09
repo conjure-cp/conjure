@@ -99,6 +99,13 @@ data UI
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
         }
+    | ParameterGenerator
+        { essence          :: FilePath
+        , essenceOut       :: FilePath
+        , logLevel         :: LogLevel
+        , outputBinary     :: Bool
+        , limitTime        :: Maybe Int
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -458,6 +465,32 @@ ui = modes
         }                          &= name "symmetry-detection"
                                    &= explicit
                                    &= help "Dump some JSON to be used as input to ferret for symmetry detection."
+    , ParameterGenerator
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
+        , essenceOut       = def   &= typ "ESSENCE_FILE"
+                                   &= typFile
+                                   &= name "essence-out"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output file path."
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
+        }                          &= name "parameter-generator"
+                                   &= explicit
+                                   &= help "Generate an Essence model describing the instances of the problem class \
+                                           \defined in the input Essence model.\n\
+                                           \An error will be printed if the model has infinitely many instances."
     ]                              &= program "conjure"
                                    &= summary ("Conjure, the automated constraint modelling tool.\n\
                                                \Version: " ++ repositoryVersion)

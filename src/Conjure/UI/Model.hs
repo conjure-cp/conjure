@@ -659,7 +659,6 @@ sliceThemMatrices model = do
 prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
-    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
@@ -668,6 +667,7 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"

@@ -9,4 +9,6 @@ import Conjure.Language.Lenses as X
 import Conjure.Language.TH as X
 
 import Conjure.Language.AdHoc as X
+import Conjure.Language.NameGen as X
 
+import Conjure.UserError as X
