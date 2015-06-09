@@ -3,6 +3,8 @@ module Conjure.UI.ParameterGenerator where
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
+
 
 -- | This doesn't do anything to do with correcting categories at the moment, it should.
 --   An example:
@@ -17,13 +19,21 @@ parameterGenerator :: (MonadLog m, MonadFail m, MonadUserError m) => Model -> m 
 parameterGenerator = runNameGen . resolveNames >=> core
     where
         core m = do
-            outStatements <- forM (mStatements m) $ \ st -> case st of
-                Declaration (FindOrGiven Given nm dom) -> do
-                    return [Declaration (FindOrGiven Find nm dom)]
+            (outStatements, errs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of
+                Declaration (FindOrGiven Given nm dom) ->
+                    case domainSizeOf dom of
+                        Nothing -> tell [(nm, dom)] >> return []
+                        Just (_ :: Expression)
+                                -> return [Declaration (FindOrGiven Find nm dom)]
                 Declaration (FindOrGiven Find  _  _  ) -> return []
                 Declaration {}                         -> return [st]
                 SearchOrder {}                         -> return []
-                Where xs                               -> return [SuchThat xs]
+                Where       xs                         -> return [SuchThat xs]
                 Objective   {}                         -> return []
                 SuchThat    {}                         -> return []
-            return m { mStatements = concat outStatements }
+            if null errs
+                then return m { mStatements = concat outStatements }
+                else userErr1 $ vcat $ "Some parameters have infinite domains."
+                                     : [ pretty nm <> ":" <++> pretty dom
+                                     | (nm, dom) <- errs
+                                     ]

@@ -9,7 +9,6 @@ import Conjure.Bug
 
 import Conjure.Language
 
-import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainUnion
 

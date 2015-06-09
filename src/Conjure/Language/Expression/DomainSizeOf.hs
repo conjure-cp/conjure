@@ -1,6 +1,6 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 
-module Conjure.Language.Expression.DomainSizeOf where
+module Conjure.Language.Expression.DomainSizeOf ( DomainSizeOf(..) ) where
 
 -- conjure
 import Conjure.Prelude

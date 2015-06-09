@@ -5,7 +5,6 @@ import Conjure.Bug as X
 
 import Conjure.Language as X
 
-import Conjure.Language.Pretty as X
 import Conjure.Language.CategoryOf as X ( categoryOf, Category(..) )
 import Conjure.Language.RepresentationOf as X ( representationOf, hasRepresentation, sameRepresentation )
 import Conjure.Language.TypeOf as X ( typeOf )
