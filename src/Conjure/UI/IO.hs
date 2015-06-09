@@ -36,8 +36,11 @@ data EssenceFileMode = BinaryEssence | PlainEssence
 
 guessMode :: MonadIO m => FilePath -> m EssenceFileMode
 guessMode fp = liftIO $ withFile fp ReadMode $ \ h -> do
-    line <- hGetContents h
-    if "language" `isPrefixOf` dropWhile (`elem` (" \t\n" :: String)) line
+    contents <- hGetContents h
+    let strip (ch:xs) | ch `elem` (" \t\n" :: String) = strip xs
+        strip ('$':xs) = strip $ dropWhile (/='\n') xs
+        strip xs = xs
+    if "language" `isPrefixOf` strip contents
         then return PlainEssence
         else return BinaryEssence
 
