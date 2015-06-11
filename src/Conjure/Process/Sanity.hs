@@ -1,25 +1,25 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Process.Sanity ( sanityChecks ) where
 
 import Conjure.Prelude
 import Conjure.UserError
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.CategoryOf
+import Conjure.Language
 
 
-sanityChecks :: MonadUserError m => Model -> m Model
+sanityChecks :: (MonadFail m, MonadUserError m) => Model -> m Model
 sanityChecks model = do
     let
         recordErr :: MonadWriter [Doc] m => [Doc] -> m ()
         recordErr = tell . return . vcat
 
-        check :: MonadWriter [Doc] m => Model -> m ()
+        check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
             forM_ (mStatements m) $ \ st -> case st of
                 Declaration FindOrGiven{} -> mapM_ (checkDomain (Just st)) (universeBi st)
                 _                         -> mapM_ (checkDomain Nothing  ) (universeBi st)
-            forM_ (universeBi m) checkLit
+            statements2 <- transformBiM checkLit (mStatements m)
+            return m { mStatements = statements2 }
 
         -- check for mset attributes
         -- check for binary relation attrobutes
@@ -61,33 +61,23 @@ sanityChecks model = do
         --     they cannot contain anything > CatParameter
         --     the parts have to be disjoint
         -- TODO: Generate where clauses for when they contain parameters.
-        checkLit :: MonadWriter [Doc] m => Expression -> m ()
+        checkLit :: MonadFail m => Expression -> m Expression
         checkLit lit = case lit of
             AbstractLiteral (AbsLitFunction mappings) -> do
-                when (categoryOf lit > CatParameter) $ recordErr
-                    [ "A function literal may only contain constants or parameters."
-                    , "When working on:" <++> pretty lit
-                    ]
-                let definedSet = map fst (nub mappings)
-                let definedSetNoDups = nub definedSet
-                when (length definedSet /= length definedSetNoDups) $ recordErr
-                    [ "A function literal can not map one element to multiple range elements."
-                    , "When working on:" <++> pretty lit
-                    ]
+                let defineds = fromList $ map fst mappings
+                return $ WithLocals lit (Right [ [essence| allDiff(&defineds) |] ])
             AbstractLiteral (AbsLitPartition parts) -> do
-                when (categoryOf lit > CatParameter) $ recordErr
-                    [ "A partition literal may only contain constants or parameters."
-                    , "When working on:" <++> pretty lit
-                    ]
-                let disjoint = and [ null (intersect part1 part2)
-                                   | (part1, after) <- withAfter parts
-                                   , part2 <- after
-                                   ]
-                unless disjoint $ recordErr
-                    [ "A partition literal has to contain disjoint parts."
-                    , "When working on:" <++> pretty lit
-                    ]
-            _ -> return ()
+                let disjoint = concat
+                        [ checks
+                        | (part1, after) <- withAfter parts
+                        , part2 <- after
+                        , let checks = [ [essence| &el1 != &el2 |]
+                                       | el1 <- part1
+                                       , el2 <- part2
+                                       ]
+                        ]
+                return $ WithLocals lit (Right disjoint)
+            _ -> return lit
 
     errs <- execWriterT $ check model
     if null errs
