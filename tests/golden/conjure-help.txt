@@ -240,3 +240,18 @@ Logging & Output:
                                              processing.
      --limit-time=INT                        Time limit in seconds. (CPU
                                              time).
+
+conjure parameter-generator [OPTIONS] ESSENCE_FILE
+  Generate an Essence model describing the instances of the problem class
+  defined in the input Essence model. An error will be printed if the model has
+  infinitely many instances.
+
+Logging & Output:
+     --essence-out=FILE                      Output file path.
+     --log-level=LOGLEVEL                    Log level.
+     --output-binary                         Output binary files instead of
+                                             text files. Conjure can read in
+                                             these binary files for further
+                                             processing.
+     --limit-time=INT                        Time limit in seconds. (CPU
+                                             time).
