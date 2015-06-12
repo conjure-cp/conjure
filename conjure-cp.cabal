@@ -269,7 +269,8 @@ Library
         -fwarn-unused-matches
         -Wall
     ghc-prof-options:
-        -fprof-auto
+        -fprof-auto-top
+        -fprof-auto-exported
 
 
 Executable conjure
@@ -297,7 +298,8 @@ Executable conjure
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
-        -fprof-auto
+        -fprof-auto-top
+        -fprof-auto-exported
 
 
 test-suite conjure-testing
@@ -333,4 +335,5 @@ test-suite conjure-testing
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
-        -fprof-auto
+        -fprof-auto-top
+        -fprof-auto-exported
