@@ -54,7 +54,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
                         return valuesIndexed
                     _ -> return ch
             imageChild ch = return ch
-        (p', flags) <- runWriterT (descendM imageChild p)
+        (p', flags) <- runWriterT (transformM imageChild p)
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do

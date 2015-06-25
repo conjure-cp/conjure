@@ -83,7 +83,7 @@ rule_Image_Bool = "sequence-image{ExplicitBounded}-bool" `namedRule` theRule whe
                         return [essence| &sValues[&x] |]
                     _ -> return ch
             imageChild ch = return ch
-        (p', flags) <- runWriterT (descendM imageChild p)
+        (p', flags) <- runWriterT (transformM imageChild p)
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do
