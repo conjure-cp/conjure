@@ -3,6 +3,7 @@
 module Conjure.Rules.Vertical.Function.Function1DPartial where
 
 import Conjure.Rules.Import
+import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 
 rule_Comprehension :: Rule
@@ -65,7 +66,13 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                         return [essence| &values[&x] |]
                     _ -> return ch
             imageChild ch = return ch
-        (p', flags) <- runWriterT (transformM imageChild p)
+        zipper <- ask
+        (p', flags) <-
+            case Zipper.up zipper of
+                Nothing -> -- this term sits at the topmost level, requires special treatment
+                    runWriterT (imageChild p)
+                Just{}  ->
+                    runWriterT (descendM imageChild p)
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do

@@ -702,7 +702,7 @@ applicableRules Config{..} rulesAtLevel x = do
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty (hole x))
-                         applied <- runExceptT $ rApply r x (hole x)
+                         applied <- runExceptT $ runReaderT (rApply r x (hole x)) x
                          return (rName r, applied)
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->

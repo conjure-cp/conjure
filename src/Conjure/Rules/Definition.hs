@@ -108,7 +108,7 @@ data RuleResult m = RuleResult
 data Rule = Rule
     { rName  :: Doc
     , rApply
-        :: forall n m . ( MonadFail n, MonadLog n, NameGen n
+        :: forall n m . ( MonadFail n, MonadLog n, NameGen n, MonadReader (Zipper Model Expression) n
                                 -- a fail in {n} means that the rule isn't applicable
                         , MonadFail m, MonadLog m, NameGen m, MonadUserError m
                                 -- a fail in {m} means a bug
@@ -120,14 +120,14 @@ data Rule = Rule
 
 namedRule
     :: Doc
-    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n
+    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n, MonadReader (Zipper Model Expression) n
                      , MonadFail m, MonadLog m, NameGen m
                      ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm
-    , rApply = \ _z x -> do
-        (rResultDescr, rResult) <- f x
+    , rApply = \ z x -> do
+        (rResultDescr, rResult) <- runReaderT (f x) z
         return [RuleResult rResultDescr ExpressionRefinement rResult return]
     }
 

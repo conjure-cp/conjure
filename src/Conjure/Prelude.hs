@@ -449,6 +449,12 @@ logDebug = log LogDebug
 logDebugVerbose :: MonadLog m => Doc -> m ()
 logDebugVerbose = log LogDebugVerbose
 
+instance MonadLog m => MonadLog (ReaderT r m) where
+    log l m = lift (log l m)
+
+instance (MonadLog m, Monoid w) => MonadLog (WriterT w m) where
+    log l m = lift (log l m)
+
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
 
