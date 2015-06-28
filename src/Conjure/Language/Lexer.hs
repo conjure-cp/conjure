@@ -214,6 +214,7 @@ data Lexeme
     | L_CloseCurly
 
     | L_Newline
+    | L_Carriage
     | L_Space
     | L_Tab
 
@@ -255,6 +256,7 @@ textToLexeme t = M.lookup t mapTextToLexeme
 
 lexemeFace :: Lexeme -> Pr.Doc
 lexemeFace L_Newline = "new line"
+lexemeFace L_Carriage = "\\r"
 lexemeFace L_Space   = "space character"
 lexemeFace L_Tab     = "tab character"
 lexemeFace (LIntLiteral i) = Pr.integer i
@@ -265,6 +267,7 @@ lexemeFace l = case M.lookup l mapLexemeToText of
     Just t  -> Pr.text (T.unpack t)
 
 lexemeWidth :: Lexeme -> Int
+lexemeWidth L_Carriage = 0
 lexemeWidth L_Tab = 4
 lexemeWidth (LIntLiteral i) = length (show i)
 lexemeWidth (LIdentifier i) = T.length i
@@ -411,8 +414,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_CloseCurly      , "}"     )
 
     , ( L_Newline         , "\n"    )
-    -- , ( L_Newline         , "\r"    )
-    -- , ( L_Newline         , "\n\r"  )
+    , ( L_Carriage        , "\r"    )
     , ( L_Space           , " "     )
     , ( L_Tab             , "\t"    )
 
@@ -467,13 +469,14 @@ runLexer text = do
         calcPos _   []     = []
         calcPos pos (x:xs) = (x, pos) : calcPos (nextPos pos x) xs
 
-        nextPos pos L_Newline = incSourceLine (setSourceColumn pos 1) 1
-        nextPos pos l         = incSourceColumn pos (lexemeWidth l)
+        nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
+        nextPos pos l          = incSourceColumn pos (lexemeWidth l)
 
 removeSpaces :: [LexemePos] -> [LexemePos]
 removeSpaces = filter (not . space . fst)
     where
         space L_Newline {} = True
+        space L_Carriage{} = True
         space L_Tab     {} = True
         space L_Space   {} = True
         space LComment  {} = True
