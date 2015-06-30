@@ -18,6 +18,7 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 parameterGenerator :: (MonadLog m, MonadFail m, MonadUserError m) => Model -> m Model
 parameterGenerator = runNameGen . resolveNames >=> core
     where
+        core :: MonadUserError m => Model -> m Model
         core m = do
             (outStatements, errs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given nm dom) ->
