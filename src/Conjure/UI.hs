@@ -507,7 +507,8 @@ ui = modes
         --                            &= groupname "Logging & Output"
         --                            &= explicit
         --                            &= help "Output file path."
-        , logLevel         = def   &= name "log-level"
+        , logLevel         = LogInfo
+                                   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."

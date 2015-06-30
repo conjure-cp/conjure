@@ -7,18 +7,17 @@ import Conjure.Compute.DomainOf ( domainOf )
 
 
 -- | At the moment: Just enumerate all subexpressions in the model together with their computed domains.
-domainPruning :: (MonadLog m, MonadUserError m, MonadFail m, MonadIO m) => Model -> m ()
+domainPruning :: (MonadUserError m, MonadLog m, MonadFail m) => Model -> m ()
 domainPruning = runNameGen . (resolveNames >=> core)
     where
-        core :: (NameGen m, MonadFail m, MonadIO m) => Model -> m ()
+        core :: (NameGen m, MonadLog m, MonadFail m) => Model -> m ()
         core m =
             forM_ (universeBi (mStatements m)) $ \ x -> do
-                -- mdom <- domainOf x
-                -- let domTxt = case mdom of
-                --                 Left err  -> err
-                --                 Right dom -> pretty dom
-                dom <- domainOf x
-                liftIO $ print $ vcat
+                mdom <- runExceptT $ domainOf x
+                logInfo $ vcat
                     [ "Term  :" <+> pretty (x :: Expression)
-                    , "Domain:" <+> pretty dom
+                    , case mdom of
+                        Left  err -> "Error :" <+> err
+                        Right dom -> "Domain:" <+> pretty dom
+                    , ""
                     ]
