@@ -690,7 +690,8 @@ instance Default HasRepresentation where
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
-    pretty DomainAny{} = "?"
+    pretty (DomainAny t ty) = "DomainAny(" <> pretty ty <> ")" <+> pretty t
+    -- pretty DomainAny{} = "?"
 
     pretty DomainBool = "bool"
 
