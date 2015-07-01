@@ -11,6 +11,8 @@ import Conjure.Language
 
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainUnion
+import Conjure.Language.Expression.DomainSizeOf
+
 
 type Dom = Domain () Expression
 
@@ -33,12 +35,7 @@ instance DomainOf ReferenceTo where
                     DomainMSet _ _ inner -> return inner
                     DomainFunction _ _ innerFr innerTo -> return (DomainTuple [innerFr, innerTo])
                     DomainSequence _ (SequenceAttr attr _) inner ->
-                        let maxsize = case attr of
-                                SizeAttr_None -> bug "DomainOf-DomainSequence-SizeAttr_None"
-                                SizeAttr_Size s -> s
-                                SizeAttr_MinSize _ -> bug "DomainOf-DomainSequence-SizeAttr_MinSize"
-                                SizeAttr_MaxSize s -> s
-                                SizeAttr_MinMaxSize _ s -> s
+                        let maxsize = getMax_SizeAttr attr
                         in  return (DomainTuple [mkDomainIntB 1 maxsize, inner])
                     DomainRelation _ _ inners -> return (DomainTuple inners)
                     DomainPartition _ attr inner -> return (DomainSet def (SetAttr $ partsSize attr) inner)
@@ -380,8 +377,17 @@ instance (Pretty x, TypeOf x) => DomainOf (OpPow x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpPowerSet x) where
     domainOf op = mkDomainAny ("OpPowerSet:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpPreImage x) where
-    domainOf op = mkDomainAny ("OpPreImage:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpPreImage x) where
+    domainOf op@(OpPreImage f _) = do
+        fDom <- domainOf f
+        case fDom of
+            DomainFunction _ _fAttr innerFr _ -> do
+                let attr = def -- TODO: can be better
+                return $ DomainSet def attr innerFr
+            DomainSequence _ (SequenceAttr sizeAttr _) _ -> do
+                let attr = def -- TODO: can be better
+                return $ DomainSet def attr (mkDomainIntB 1 (getMax_SizeAttr sizeAttr))
+            _ -> mkDomainAny ("OpPreImage:" <++> pretty op) <$> typeOf op
 
 instance DomainOf x => DomainOf (OpPred x) where
     domainOf (OpPred x) = domainOf x        -- TODO: improve
@@ -406,7 +412,13 @@ instance (Pretty x, DomainOf x) => DomainOf (OpRange x) where
     domainOf (OpRange f) = do
         fDom <- domainOf f
         case fDom of
-            DomainFunction _ _ _ to -> return $ DomainSet def def to
+            DomainFunction _ fAttr innerFr innerTo -> do
+                attr <- case fAttr of
+                    FunctionAttr _ PartialityAttr_Total _ -> do
+                        s <- domainSizeOf innerFr
+                        return $ SetAttr $ SizeAttr_Size s
+                    _ -> return def                                 -- TODO: can be improved
+                return $ DomainSet def attr innerTo
             _ -> fail "domainOf, OpRange, not a function"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpRelationProj x) where

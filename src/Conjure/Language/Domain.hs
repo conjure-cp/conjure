@@ -6,7 +6,7 @@ module Conjure.Language.Domain
     ( Domain(..)
     , HasRepresentation(..)
     , Range(..), rangesInts
-    , SetAttr(..), SizeAttr(..)
+    , SetAttr(..), SizeAttr(..), getMax_SizeAttr
     , MSetAttr(..), OccurAttr(..)
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
@@ -372,6 +372,15 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_MinSize    x  ) = "minSize" <+> pretty x
     pretty (SizeAttr_MaxSize    x  ) = "maxSize" <+> pretty x
     pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <+> ", maxSize" <+> pretty y
+
+getMax_SizeAttr :: SizeAttr a -> a
+getMax_SizeAttr attr =
+    case attr of
+        SizeAttr_None -> bug "DomainOf-DomainSequence-SizeAttr_None"
+        SizeAttr_Size s -> s
+        SizeAttr_MinSize _ -> bug "DomainOf-DomainSequence-SizeAttr_MinSize"
+        SizeAttr_MaxSize s -> s
+        SizeAttr_MinMaxSize _ s -> s
 
 
 data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
