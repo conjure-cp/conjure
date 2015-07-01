@@ -22,7 +22,28 @@ class DomainOf a where
 
 instance DomainOf ReferenceTo where
     domainOf (Alias x) = domainOf x
-    domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
+    domainOf (InComprehension generator) =
+        case generator of
+            GenDomainNoRepr  Single{} dom -> return dom
+            GenDomainHasRepr _        dom -> return (forgetRepr dom)
+            GenInExpr        Single{} x   -> do
+                dom <- domainOf x
+                case dom of
+                    DomainSet _ _ inner -> return inner
+                    DomainMSet _ _ inner -> return inner
+                    DomainFunction _ _ innerFr innerTo -> return (DomainTuple [innerFr, innerTo])
+                    DomainSequence _ (SequenceAttr attr _) inner ->
+                        let maxsize = case attr of
+                                SizeAttr_None -> bug "DomainOf-DomainSequence-SizeAttr_None"
+                                SizeAttr_Size s -> s
+                                SizeAttr_MinSize _ -> bug "DomainOf-DomainSequence-SizeAttr_MinSize"
+                                SizeAttr_MaxSize s -> s
+                                SizeAttr_MinMaxSize _ s -> s
+                        in  return (DomainTuple [mkDomainIntB 1 maxsize, inner])
+                    DomainRelation _ _ inners -> return (DomainTuple inners)
+                    DomainPartition _ attr inner -> return (DomainSet def (SetAttr $ partsSize attr) inner)
+                    _ -> fail $ "domainOf-ReferenceTo-InComprehension(2):" <+> pretty dom
+            _ -> fail $ "domainOf-ReferenceTo-InComprehension(1):" <+> pretty (InComprehension generator)
     domainOf (DeclNoRepr  _ _ dom) = return dom
     domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
     domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"
@@ -35,6 +56,7 @@ instance DomainOf Expression where
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Domain d) = return d
     domainOf (Op x) = domainOf x
+    domainOf x@Comprehension{} = fail ("domainOf{Comprehension}:" <+> pretty x)
     domainOf x = fail ("domainOf{Expression}:" <+> pretty (show x))
 
 -- this should be better implemented by some ghc-generics magic
@@ -405,13 +427,13 @@ instance DomainOf (OpSubsequence x) where
     domainOf _ = fail "domainOf{OpSubsequence}"
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSubset x) where
-    domainOf op = mkDomainAny ("OpSubset:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpSubsetEq x) where
-    domainOf op = mkDomainAny ("OpSubsetEq:" <++> pretty op) <$> typeOf op
+    domainOf _ = return DomainBool
 
 instance DomainOf (OpSubstring x) where
-    domainOf _ = fail "domainOf{OpSubstring}"
+    domainOf _ = return DomainBool
 
 instance DomainOf x => DomainOf (OpSucc x) where
     domainOf (OpSucc x) = domainOf x        -- TODO: improve
