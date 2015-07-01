@@ -109,6 +109,7 @@ data UI
     | DomainPruning
         { essence          :: FilePath
         -- , essenceOut       :: FilePath
+        , showErrors       :: Bool
         , logLevel         :: LogLevel
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
@@ -507,6 +508,11 @@ ui = modes
         --                            &= groupname "Logging & Output"
         --                            &= explicit
         --                            &= help "Output file path."
+        , showErrors = False       &= name "show-errors"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Display error cases, i.e. when the domain cannot be calculated for a term. \
+                                           \Off by default."
         , logLevel         = LogInfo
                                    &= name "log-level"
                                    &= groupname "Logging & Output"

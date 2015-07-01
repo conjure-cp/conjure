@@ -262,6 +262,9 @@ conjure domain-pruning [OPTIONS] ESSENCE_FILE
   infinitely many instances.
 
 Logging & Output:
+     --show-errors                           Display error cases, i.e. when
+                                             the domain cannot be calculated
+                                             for a term. Off by default.
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of
                                              text files. Conjure can read in
