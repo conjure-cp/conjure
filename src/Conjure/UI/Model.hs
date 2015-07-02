@@ -1690,11 +1690,13 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
         (mkQuan, inner)                 <- match opQuantifier p
         matrix                          <- match opFlatten inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
-        let
-            flattenIfNeeded = case ty of
-                TypeMatrix{} -> make opFlatten
-                TypeList{}   -> make opFlatten
-                _            -> id
+        case ty of
+            TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
+            TypeList{}   -> return ()
+            _            -> na "rule_QuantifierShift2"
+        let flattenIfNeeded = if matrixNumDims ty > 1
+                                then make opFlatten
+                                else id
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
