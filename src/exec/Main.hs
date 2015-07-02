@@ -160,8 +160,8 @@ mainWithArgs ParameterGenerator{..} = do
                output
 mainWithArgs DomainPruning{..} = do
     -- when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
-    model  <- readModelFromFile essence
-    domainPruning showErrors model
+    model <- readModelFromFile essence
+    domainPruning showErrors only includes model
     -- output <- domainPruning model
     -- writeModel (if outputBinary then BinaryEssence else PlainEssence)
     --            (Just essenceOut)

@@ -157,6 +157,11 @@ toCompletion config m = do
                     mapM_ loopy nextModels
 
 
+-- | given a model, produce a list of questions still left to answer.
+--   for each question, a list of possible answers will be provided.
+--   each answer will take us to a new full model, from where this function can be called again.
+--   we are done when this funcion returns [].
+--   each question is a context, each answer is an applicable rule to that context.
 remaining
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
     => Config
@@ -164,6 +169,10 @@ remaining
     -> m [Question]
 remaining config model | Just modelZipper <- zipperBi model = do
     let
+        -- | this is called on the results of calls to `processLevel` at each level.
+        --   if at a level [] is returned by processLevel, it proceeds to the next level.
+        --   otherwise, the next level(s) are not even tried, the results of this level are
+        --   the results of the application of all the rules.
         loopLevels :: Monad m => [m [a]] -> m [a]
         loopLevels [] = return []
         loopLevels (a:as) = do bs <- a
@@ -171,6 +180,10 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                    then loopLevels as
                                    else return bs
 
+        -- | traverse all contexts (a context is where a rule is applicable)
+        --   find out all the applicable rules for the given level for that context
+        --   return a list of models, where for each such context an applicable rule was applied
+        --   empty list means no rule (at this level) is applicable to any context in the model.
         processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
                      => [Rule]
                      -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]

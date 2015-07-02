@@ -492,8 +492,20 @@ instance (Pretty x, TypeOf x) => DomainOf (OpTogether x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpTrue x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) where
-    domainOf op = mkDomainAny ("OpTwoBars:" <++> pretty op) <$> typeOf op
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpTwoBars x) where
+    domainOf op@(OpTwoBars x) = do
+        dom <- domainOf x
+        case dom of
+            -- DomainInt ranges -> -- for each thingy in the ranges, replace them with max(0,thingy)
+            DomainSet _ (SetAttr sizeAttr) inner -> do
+                maxsize <- domainSizeOf inner
+                case sizeAttr of
+                    SizeAttr_None           -> return $ mkDomainIntB 0 maxsize
+                    SizeAttr_Size       a   -> return $ mkDomainIntB a [essence| min(&maxsize, &a) |]
+                    SizeAttr_MinSize    a   -> return $ mkDomainIntB a maxsize
+                    SizeAttr_MaxSize      _b -> return $ mkDomainIntB 0 [essence| min(&maxsize, &b) |]
+                    SizeAttr_MinMaxSize a _b -> return $ mkDomainIntB a [essence| min(&maxsize, &b) |]
+            _ -> fail $ "OpTwoBars:" <++> pretty op
 
 instance (Pretty x, TypeOf x) => DomainOf (OpUnion x) where
     domainOf op = mkDomainAny ("OpUnion:" <++> pretty op) <$> typeOf op

@@ -110,6 +110,8 @@ data UI
         { essence          :: FilePath
         -- , essenceOut       :: FilePath
         , showErrors       :: Bool
+        , only             :: [String]
+        , includes         :: [String]
         , logLevel         :: LogLevel
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
@@ -513,6 +515,14 @@ ui = modes
                                    &= explicit
                                    &= help "Display error cases, i.e. when the domain cannot be calculated for a term. \
                                            \Off by default."
+        , only       = def         &= name "only"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Print only this term. Can be repeated."
+        , includes   = def         &= name "includes"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Print only terms including this term. Can be repeated."
         , logLevel         = LogInfo
                                    &= name "log-level"
                                    &= groupname "Logging & Output"
