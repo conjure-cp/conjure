@@ -1360,8 +1360,8 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         case ty of
             TypeMatrix _ TypeBool -> fail "allDiff can stay"
             TypeMatrix _ TypeInt  -> fail "allDiff can stay"
-            TypeMatrix _ _ -> return ()
-            _ -> fail "allDiff on something other than a matrix."
+            TypeMatrix _ _        -> return ()
+            _                     -> fail "allDiff on something other than a matrix."
         DomainMatrix index _ <- domainOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty

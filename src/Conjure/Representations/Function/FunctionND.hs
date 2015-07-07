@@ -7,6 +7,8 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.TH
 import Conjure.Language.Lenses
@@ -62,14 +64,32 @@ functionND = Representation chck downD structuralCons downC up
                 index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
 
             let injectiveCons values = do
-                    (iPat, i) <- quantifiedVar
-                    let valuesIndexedI = index i values frArity
-                    return $ return $ -- list
-                        [essence|
-                            allDiff([ &valuesIndexedI
-                                    | &iPat : &innerDomainFr
-                                    ])
-                        |]
+                    tyTo <- typeOf innerDomainTo
+                    let canAllDiff = case tyTo of
+                            TypeBool{} -> True
+                            TypeInt{}  -> True
+                            TypeEnum{} -> True
+                            _          -> False
+                    if canAllDiff
+                        then do
+                            (iPat, i) <- quantifiedVar
+                            let valuesIndexedI = index i values frArity
+                            return $ return $ -- list
+                                [essence|
+                                    allDiff([ &valuesIndexedI
+                                            | &iPat : &innerDomainFr
+                                            ])
+                                |]
+                        else do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            let valuesIndexedI = index i values frArity
+                            let valuesIndexedJ = index j values frArity
+                            return $ return $ -- list
+                                [essence|
+                                    forAll &iPat, &jPat : &innerDomainFr .
+                                        &i != &j -> &valuesIndexedI != &valuesIndexedJ
+                                |]
 
             let surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
