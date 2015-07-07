@@ -278,7 +278,7 @@ maybeRead = fmap fst . listToMaybe . reads
 padShowInt :: Show a => Int -> a -> String
 padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
 
-decodeFromFile :: Serialize a => FilePath -> IO a
+decodeFromFile :: (Serialize a, MonadFail IO) => FilePath -> IO a
 decodeFromFile path = do
     con <- ByteString.readFile path
     either (fail . stringToDoc) return (decode con)
@@ -326,9 +326,6 @@ instance MonadFail Identity where
 
 instance MonadFail Maybe where
     fail = const Nothing
-
-instance MonadFail IO where
-    fail msg = Control.Monad.fail $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
 
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left

@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -fno-warn-orphans #-}
+
 module Conjure.Bug
     ( bug
     , bugFail, bugFailT
@@ -32,3 +34,6 @@ bugFailT loc comp = do
     case res of
         Left err -> bug (vcat ["BUGFAIL at" <+> loc, err])
         Right x  -> return x
+
+instance MonadFail IO where
+    fail msg = bug (vcat ["IO Error", msg])
