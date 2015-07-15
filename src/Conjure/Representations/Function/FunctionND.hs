@@ -88,7 +88,7 @@ functionND = Representation chck downD structuralCons downC up
                             return $ return $ -- list
                                 [essence|
                                     forAll &iPat, &jPat : &innerDomainFr .
-                                        &i != &j -> &valuesIndexedI != &valuesIndexedJ
+                                        &i .< &j -> &valuesIndexedI != &valuesIndexedJ
                                 |]
 
             let surjectiveCons values = do

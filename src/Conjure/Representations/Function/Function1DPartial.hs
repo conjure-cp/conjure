@@ -65,7 +65,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                             and([ &values[&i] != &values[&j]
                                 | &iPat : &innerDomainFr
                                 , &jPat : &innerDomainFr
-                                , &i != &j
+                                , &i .< &j
                                 , &flags[&i]
                                 , &flags[&j]
                                 ])

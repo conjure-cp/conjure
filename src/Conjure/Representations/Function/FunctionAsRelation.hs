@@ -86,7 +86,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            and([ &i[1] != &j[1] -> &i[2] != &j[2]
+                            and([ &i[1] .< &j[1] -> &i[2] != &j[2]
                                 | &iPat <- &rel
                                 , &jPat <- &rel
                                 ])

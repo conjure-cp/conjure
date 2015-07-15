@@ -76,7 +76,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                             and([ &valuesIndexedI != &valuesIndexedJ
                                 | &iPat : &innerDomainFr
                                 , &jPat : &innerDomainFr
-                                , &i != &j
+                                , &i .< &j
                                 , &flagsIndexedI
                                 , &flagsIndexedJ
                                 ])
