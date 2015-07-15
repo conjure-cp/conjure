@@ -25,7 +25,7 @@ such that
              | q14 : int(3..4)]),
     and([x_Function1DPartial_Flags[q1] /\ x_Function1DPartial_Flags[q2] ->
          x_Function1DPartial_Values[q1] != x_Function1DPartial_Values[q2]
-             | q1 : int(1..4), q2 : int(1..4), q1 != q2]),
+             | q1 : int(1..4), q2 : int(1..4), q1 < q2]),
     and([x_Function1DPartial_Flags[q3] = false -> x_Function1DPartial_Values[q3] = 1
              | q3 : int(1..4)])
 
