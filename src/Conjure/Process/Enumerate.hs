@@ -22,13 +22,6 @@ enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
         [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
-enumerateDomain (DomainSet _ (SetAttr (SizeAttr_Size (ConstantInt s))) innerDom) = do
-    inners <- enumerateDomain innerDom
-    return
-        [ ConstantAbstract (AbsLitSet vals)
-        | vals <- replicateM (fromInteger s) inners
-        , sorted vals
-        ]
 enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) = do
     inners <- enumerateDomain innerDom
     sizes  <- case sizeAttr of
