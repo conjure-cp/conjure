@@ -428,13 +428,14 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
 
 rule_Image_Bool :: Rule
 rule_Image_Bool = "function-image-bool" `namedRule` theRule where
-    theRule p = do
+    theRule p@[essence| image(&_,&_) |] = do
         topMost <- asks isTopMostZ
         if topMost
             then -- this term sits at the topmost level, requires special treatment
                 theRule_ [essence| &p = true |]
             else
                 theRule_ p
+    theRule p = theRule_ p
 
     -- see the top-most level special-casing above
     theRule_ p = do

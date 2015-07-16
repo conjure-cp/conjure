@@ -15,7 +15,7 @@ import Text.Parsec ( SourcePos, setPosition )
 import Text.Parsec.Pos ( newPos )
 
 -- template-haskell
-import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP )
+import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
 -- syb
@@ -73,7 +73,7 @@ expAP _ = Nothing
 
 
 patE :: Expression -> Maybe PatQ
-patE (ExpressionMetaVar x) = Just (varP (mkName x))
+patE (ExpressionMetaVar x) = toPat x
 patE _ = Nothing
 
 patD :: Domain () Expression -> Maybe PatQ
@@ -84,3 +84,7 @@ patAP :: AbstractPattern -> Maybe PatQ
 patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
 patAP _ = Nothing
 
+
+toPat :: String -> Maybe PatQ
+toPat "_" = Just wildP
+toPat x = Just (varP (mkName x))
