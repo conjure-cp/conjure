@@ -894,7 +894,6 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Comprehension_ImageSet
-    , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_DotLeq

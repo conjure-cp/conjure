@@ -44,6 +44,7 @@ module Conjure.Prelude
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
+    , isTopMostZ
     ) where
 
 import GHC.Err as X ( error )
@@ -84,7 +85,7 @@ import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify,
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(..), execWriterT, runWriter )
-import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT )
+import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
 import Control.Arrow             as X ( first, second, (***), (&&&) )
 import Control.Category          as X ( (<<<), (>>>) )
 
@@ -523,3 +524,8 @@ nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
 nchoosek f n k = f n `div` (f k * f (n-k))
 
 type JSONValue = JSON.Value
+
+-- | return true if this is a top-most zipper.
+--   i.e. we cannot go any more up.
+isTopMostZ :: Zipper a b -> Bool
+isTopMostZ = maybe True (const False) . up

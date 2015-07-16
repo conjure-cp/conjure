@@ -31,36 +31,6 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
     theRule _ = na "rule_Comprehension_Literal"
 
 
-rule_Image_Literal :: Rule
-rule_Image_Literal = "function-image-literal" `namedRule` theRule where
-    theRule p = do
-        (func, arg)                  <- match opImage p
-        (TypeFunction tyFr tyTo, elems) <- match functionLiteral func
-        let outLiteral = make matrixLiteral
-                            (TypeMatrix TypeInt (TypeTuple [tyFr,tyTo]))
-                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
-                            [ AbstractLiteral (AbsLitTuple [a,b])
-                            | (a,b) <- elems
-                            ]
-        return
-            ( "Image of function literal"
-            , do
-                (iPat, i) <- quantifiedVar
-                let
-                    val = [essence| &vals[1] |]
-                    vals = Comprehension
-                                [essence| &i[2] |]
-                                [ Generator (GenInExpr iPat outLiteral)
-                                , Condition [essence| &i[1] = &arg |]
-                                ]
-                    argIsDefinedOnce = make opEq 1 $ make opSum $ fromList
-                        [ [essence| toInt(&a = &arg) |]
-                        | (a,_) <- elems
-                        ]
-                return $ WithLocals val (Right [argIsDefinedOnce])
-            )
-
-
 rule_Eq :: Rule
 rule_Eq = "function-eq" `namedRule` theRule where
     theRule p = do
@@ -459,6 +429,15 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
 rule_Image_Bool :: Rule
 rule_Image_Bool = "function-image-bool" `namedRule` theRule where
     theRule p = do
+        topMost <- asks isTopMostZ
+        if topMost
+            then -- this term sits at the topmost level, requires special treatment
+                theRule_ [essence| &p = true |]
+            else
+                theRule_ p
+
+    -- see the top-most level special-casing above
+    theRule_ p = do
         let
             onChildren
                 :: MonadState (Maybe (Expression, Expression)) m
