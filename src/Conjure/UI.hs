@@ -14,7 +14,6 @@ import System.Console.CmdArgs hiding ( Default(..) )
 data UI
     = Solve
         { essence                    :: FilePath       -- essence, mandatory
-        , outputDirectory            :: FilePath
         -- flags related to output
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
@@ -29,17 +28,20 @@ data UI
         -- flags related to modelling decisions
         , strategyQ                  :: String
         , strategyA                  :: String
-        , representations            :: Maybe String        -- (def: strategyA)
-        , representationsFinds       :: Maybe String        -- (def: representations)
-        , representationsGivens      :: Maybe String        -- (def: c)
-        , representationsAuxiliaries :: Maybe String        -- (def: representations)
-        , representationsQuantifieds :: Maybe String        -- (def: representations)
-        , representationsCuts        :: Maybe String        -- (def: representations)
+        , representations            :: Maybe String
+        , representationsFinds       :: Maybe String
+        , representationsGivens      :: Maybe String
+        , representationsAuxiliaries :: Maybe String
+        , representationsQuantifieds :: Maybe String
+        , representationsCuts        :: Maybe String
         , channelling                :: Bool
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , outputBinary               :: Bool
+        -- flags for parameters and solutions
+        , essenceParamO              :: Maybe FilePath   -- essence-param, optional         
+        , essenceSolutionO           :: Maybe FilePath   -- essence-solution, optional, by default (essence <> essenceParam <-.> "solution")
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
@@ -280,6 +282,11 @@ ui = modes
                                    &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
+        , essenceParamO    = def   &= typFile
+                                   &= name "essence-param"
+                                   &= explicit
+                                   &= help "An Essence parameter for the original problem specification.\n\
+                                           \This field is optional."
         , essenceSolutionO = def   &= typFile
                                    &= name "essence-solution"
                                    &= explicit

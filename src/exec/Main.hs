@@ -57,6 +57,11 @@ main = do
 
 
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m, MonadUserError m) => UI -> m ()
+mainWithArgs Solve{..} = do
+    let modelling = let savedChoices = def
+                    in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
+                                                        -- from the given Solve UI
+    mainWithArgs modelling
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout NoBuffering
