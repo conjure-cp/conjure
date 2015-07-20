@@ -15,11 +15,11 @@ find x_ExplicitVarSizeWithMarker_Values:
 such that
     and([x_Occurrence[q6] -> nums_Occurrence[q6] | q6 : int(let2..let3)]),
     s =
-    sum([(q5 <= x_ExplicitVarSizeWithMarker_Marker) *
+    sum([toInt(q5 <= x_ExplicitVarSizeWithMarker_Marker) *
          x_ExplicitVarSizeWithMarker_Values[q5]
              | q5 : int(1..let1)]),
-    1 <= sum([x_Occurrence[q1] | q1 : int(let2..let3)]),
-    sum([x_Occurrence[q1] | q1 : int(let2..let3)]) <= let1,
+    1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1,
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q2] <
          x_ExplicitVarSizeWithMarker_Values[q2 + 1]

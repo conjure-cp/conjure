@@ -7,7 +7,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 such that
     or([s_ExplicitVarSizeWithFlags_Flags[q8] /\
         s_ExplicitVarSizeWithFlags_Values[q8] =
-        sum([s_ExplicitVarSizeWithFlags_Flags[q10] | q10 : int(1..2)])
+        sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q10]) | q10 : int(1..2)])
             | q8 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] ->
     s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],

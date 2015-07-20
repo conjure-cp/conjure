@@ -32,7 +32,8 @@ such that
               x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q5]
                   | q5 : int(1..2)])
              | q2 : int(1..2)]),
-    and([sum([x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q6] | q6 : int(1..3)])
+    and([sum([toInt(x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q6])
+                  | q6 : int(1..3)])
          <= 3
              | q2 : int(1..2)]),
     x_Explicit_ExplicitVarSizeWithMarker_Marker[1] <
@@ -84,7 +85,7 @@ such that
                  | q33 : int(1..2)])
              | q31 : int(1..2)]),
     x_Explicit_Occurrence[1, ..] <lex x_Explicit_Occurrence[2, ..],
-    and([sum([x_Explicit_Occurrence[q14, q15] | q15 : int(1..2)]) <= 3
+    and([sum([toInt(x_Explicit_Occurrence[q14, q15]) | q15 : int(1..2)]) <= 3
              | q14 : int(1..2)]),
     and([or([and([x_Explicit_ExplicitVarSizeWithFlags_Flags[q45, q47] ->
                   x_Explicit_Occurrence[q43, x_Explicit_ExplicitVarSizeWithFlags_Values[q45, q47]]

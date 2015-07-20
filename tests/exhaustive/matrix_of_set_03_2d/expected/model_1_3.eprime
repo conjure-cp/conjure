@@ -8,7 +8,7 @@ find x_ExplicitVarSizeWithFlags_Values:
 such that
     and([x_Occurrence[j1, j2, i] -> i % 2 = 0
              | j1 : int(1..2), j2 : int(1..3), i : int(1..3)]),
-    and([and([1 <= sum([x_Occurrence[q1, q2, q3] | q3 : int(1..3)])
+    and([and([1 <= sum([toInt(x_Occurrence[q1, q2, q3]) | q3 : int(1..3)])
                   | q2 : int(1..3)])
              | q1 : int(1..2)]),
     and([and([and([x_ExplicitVarSizeWithFlags_Flags[q4, q5, q6 + 1] ->
@@ -28,7 +28,7 @@ such that
                   | q5 : int(1..3)])
              | q4 : int(1..2)]),
     and([and([1 <=
-              sum([x_ExplicitVarSizeWithFlags_Flags[q4, q5, q9] | q9 : int(1..3)])
+              sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4, q5, q9]) | q9 : int(1..3)])
                   | q5 : int(1..3)])
              | q4 : int(1..2)]),
     and([and([and([x_ExplicitVarSizeWithFlags_Flags[q11, q13, q16] ->

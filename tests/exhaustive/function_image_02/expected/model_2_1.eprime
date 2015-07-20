@@ -43,13 +43,13 @@ such that
          false = aux2_ExplicitVarSizeWithMarker_Values[q28] \/
          aux2_ExplicitVarSizeWithMarker_Values[q28]
              | q28 : int(1..2)]),
-    sum([(false = b) * 5 | true]) + (2 = x /\ b) * x = i,
+    sum([toInt(false = b) * 5 | true]) + toInt(2 = x /\ b) * x = i,
     or([aux1_ExplicitVarSizeWithFlags_Flags[q12] /\
-        and([(false = aux1_ExplicitVarSizeWithFlags_Values[q12]) * 5 +
-             aux1_ExplicitVarSizeWithFlags_Values[q12] * 2
+        and([toInt(false = aux1_ExplicitVarSizeWithFlags_Values[q12]) * 5 +
+             toInt(aux1_ExplicitVarSizeWithFlags_Values[q12]) * 2
              =
-             (false = aux1_ExplicitVarSizeWithFlags_Values[q12]) * 5 +
-             aux1_ExplicitVarSizeWithFlags_Values[q12] * x,
+             toInt(false = aux1_ExplicitVarSizeWithFlags_Values[q12]) * 5 +
+             toInt(aux1_ExplicitVarSizeWithFlags_Values[q12]) * x,
              false = aux1_ExplicitVarSizeWithFlags_Values[q12] \/
              aux1_ExplicitVarSizeWithFlags_Values[q12],
              or([q27 <= aux2_ExplicitVarSizeWithMarker_Marker /\

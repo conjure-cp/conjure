@@ -13,19 +13,19 @@ such that
                   | q9 : int(1..4),
                     g_ExplicitVarSizeWithFlags_Values[q9] = g_ExplicitVarSizeWithFlags_Values[q8]])
          =
-         sum([(x_ExplicitVarSizeWithFlags_Values[q10] =
-               g_ExplicitVarSizeWithFlags_Values[q8])
+         sum([toInt(x_ExplicitVarSizeWithFlags_Values[q10] =
+                    g_ExplicitVarSizeWithFlags_Values[q8])
               * x_ExplicitVarSizeWithFlags_Flags[q10]
                   | q10 : int(1..4)])
              | q8 : int(1..4), g_ExplicitVarSizeWithFlags_Flags[q8] > 0]),
     and([x_ExplicitVarSizeWithFlags_Flags[q11] > 0 ->
-         sum([(g_ExplicitVarSizeWithFlags_Values[q12] =
-               x_ExplicitVarSizeWithFlags_Values[q11])
+         sum([toInt(g_ExplicitVarSizeWithFlags_Values[q12] =
+                    x_ExplicitVarSizeWithFlags_Values[q11])
               * g_ExplicitVarSizeWithFlags_Flags[q12]
                   | q12 : int(1..4)])
          =
-         sum([(x_ExplicitVarSizeWithFlags_Values[q13] =
-               x_ExplicitVarSizeWithFlags_Values[q11])
+         sum([toInt(x_ExplicitVarSizeWithFlags_Values[q13] =
+                    x_ExplicitVarSizeWithFlags_Values[q11])
               * x_ExplicitVarSizeWithFlags_Flags[q13]
                   | q13 : int(1..4)])
              | q11 : int(1..4)]),

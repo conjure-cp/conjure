@@ -20,8 +20,8 @@ such that
          x_ExplicitVarSizeWithMarker_Values[q2] = 2
              | q2 : int(1..4)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
-    1 <= sum([y_Occurrence[q4] | q4 : int(2..5)]),
-    1 <= sum([x_Occurrence[q5] | q5 : int(2..5)]),
+    1 <= sum([toInt(y_Occurrence[q4]) | q4 : int(2..5)]),
+    1 <= sum([toInt(x_Occurrence[q5]) | q5 : int(2..5)]),
     and([x_Occurrence[q10] ->
          or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q12] = q10

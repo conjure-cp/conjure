@@ -6,16 +6,17 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker:
 find p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence:
         matrix indexed by [int(1..2 ** (1 + (b - 1))), int(1..b)] of bool
 such that
-    sum([q14 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker
+    sum([toInt(q14 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker)
              | q14 : int(1..2 ** (1 + (b - 1)))])
     <= sum([1 | q15_Occurrence : matrix indexed by [int(1..b)] of bool]) / 8,
     and([1 =
-         sum([q8 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
-              p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q8, q1]
+         sum([toInt(q8 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                    p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q8, q1])
                   | q8 : int(1..2 ** (1 + (b - 1)))])
              | q1 : int(1..b)]),
     and([q9 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         sum([p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9, q10]
+         sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9,
+                                                                                 q10])
                   | q10 : int(1..b)])
          >= 1
              | q9 : int(1..2 ** (1 + (b - 1)))]),

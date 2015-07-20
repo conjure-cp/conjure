@@ -20,7 +20,7 @@ such that
               f_Function1DPartial_Flags[min([s_Explicit[q11]
                                                  | q11 : int(1..let1)])]; int(1..3)])
              | i : int(1..2)]),
-    let1 = sum([s_Occurrence[q1] | q1 : int(1..2)]),
+    let1 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)]),
     and([f_Function1DPartial_Flags[q2] = false -> f_Function1DPartial_Values[q2] = 1
              | q2 : int(1..2)]),
     and([s_Explicit[q5] < s_Explicit[q5 + 1] | q5 : int(1..let1 - 1)]),

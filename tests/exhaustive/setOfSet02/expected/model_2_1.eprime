@@ -16,7 +16,7 @@ such that
                   | q3 : int(1..2)])
              | q2 : int(1..2)]),
     x_Explicit_Occurrence[1, ..] <lex x_Explicit_Occurrence[2, ..],
-    and([3 = sum([x_Explicit_Occurrence[q6, q7] | q7 : int(1..4)])
+    and([3 = sum([toInt(x_Explicit_Occurrence[q6, q7]) | q7 : int(1..4)])
              | q6 : int(1..2)]),
     and([or([and([x_Explicit_Occurrence[q23, x_Explicit_Explicit[q25, q27]]
                       | q27 : int(1..3)])

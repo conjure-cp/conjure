@@ -49,7 +49,8 @@ such that
               x_Explicit_ExplicitVarSizeWithFlags_Flags[q7, q10]
                   | q10 : int(1..2)])
              | q7 : int(1..2)]),
-    and([sum([x_Explicit_ExplicitVarSizeWithFlags_Flags[q7, q11] | q11 : int(1..3)])
+    and([sum([toInt(x_Explicit_ExplicitVarSizeWithFlags_Flags[q7, q11])
+                  | q11 : int(1..3)])
          <= 3
              | q7 : int(1..2)]),
     and([or([and([q20 <= x_Explicit_ExplicitVarSizeWithMarker_Marker[q18] ->

@@ -4,8 +4,8 @@ find x: int(0..1000)
 find y: int(7, 8)
 such that
     x =
-    sum([or([i_ExplicitVarSizeWithFlags_Values[q7] = y
-                 | q7 : int(1..2), i_ExplicitVarSizeWithFlags_Flags[q7]])
+    sum([toInt(or([i_ExplicitVarSizeWithFlags_Values[q7] = y
+                       | q7 : int(1..2), i_ExplicitVarSizeWithFlags_Flags[q7]]))
              | i_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of bool,
                i_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(7..9),
                i_ExplicitVarSizeWithFlags_Flags[2] ->
@@ -14,6 +14,6 @@ such that
                     i_ExplicitVarSizeWithFlags_Values[q2] = 7
                         | q2 : int(1..2)]),
                i_ExplicitVarSizeWithFlags_Flags[2] -> i_ExplicitVarSizeWithFlags_Flags[1],
-               1 <= sum([i_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..2)]),
-               sum([i_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..2)]) <= 2])
+               1 <= sum([toInt(i_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..2)]),
+               sum([toInt(i_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..2)]) <= 2])
 

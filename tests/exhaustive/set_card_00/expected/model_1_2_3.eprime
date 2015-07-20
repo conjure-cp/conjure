@@ -10,7 +10,7 @@ find s_ExplicitVarSizeWithFlags_Values:
 such that
     or([q11 <= s_ExplicitVarSizeWithMarker_Marker /\
         s_ExplicitVarSizeWithMarker_Values[q11] =
-        sum([s_Occurrence[q12] | q12 : int(1..2)])
+        sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)])
             | q11 : int(1..2)]),
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
     s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],

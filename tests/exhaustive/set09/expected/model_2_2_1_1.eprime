@@ -31,7 +31,7 @@ such that
          y_ExplicitVarSizeWithMarker_Values[q5] = 2
              | q5 : int(1..4)]),
     1 <= y_ExplicitVarSizeWithMarker_Marker,
-    1 <= sum([x_Occurrence[q7] | q7 : int(2..5)]),
+    1 <= sum([toInt(x_Occurrence[q7]) | q7 : int(2..5)]),
     and([x_Occurrence[q11] ->
          or([q13 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q13] = q11
@@ -40,7 +40,7 @@ such that
     and([q15 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q15]]
              | q15 : int(1..4)]),
-    1 <= sum([y_Occurrence[q8] | q8 : int(2..5)]),
+    1 <= sum([toInt(y_Occurrence[q8]) | q8 : int(2..5)]),
     and([y_Occurrence[q16] ->
          or([q18 <= y_ExplicitVarSizeWithMarker_Marker /\
              y_ExplicitVarSizeWithMarker_Values[q18] = q16

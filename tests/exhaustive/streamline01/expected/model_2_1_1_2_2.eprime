@@ -24,7 +24,7 @@ such that
     and([s_Explicit[q1] < s_Explicit[q1 + 1] | q1 : int(1..let1 - 1)]),
     and([f_Function1DPartial_Flags[q3] = false -> f_Function1DPartial_Values[q3] = 1
              | q3 : int(1..2)]),
-    let1 = sum([s_Occurrence[q6] | q6 : int(1..2)]),
+    let1 = sum([toInt(s_Occurrence[q6]) | q6 : int(1..2)]),
     and([s_Occurrence[q13] -> or([s_Explicit[q15] = q13 | q15 : int(1..let1)])
              | q13 : int(1..2)]),
     and([s_Occurrence[s_Explicit[q17]] | q17 : int(1..let1)])

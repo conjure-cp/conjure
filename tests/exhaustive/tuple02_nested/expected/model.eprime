@@ -4,6 +4,6 @@ find x_1: bool
 find x_2_1: bool
 find x_2_2: int(1..4)
 such that
-    x_1 = x_2_2 % 2,
+    toInt(x_1) = x_2_2 % 2,
     x_2_1
 

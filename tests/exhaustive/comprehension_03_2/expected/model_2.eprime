@@ -4,8 +4,8 @@ find x: int(0..1000)
 find y: int(7, 8)
 such that
     x =
-    sum([or([i_ExplicitVarSizeWithMarker_Values[q5] = y
-                 | q5 : int(1..2), q5 <= i_ExplicitVarSizeWithMarker_Marker])
+    sum([toInt(or([i_ExplicitVarSizeWithMarker_Values[q5] = y
+                       | q5 : int(1..2), q5 <= i_ExplicitVarSizeWithMarker_Marker]))
              | i_ExplicitVarSizeWithMarker_Marker : int(0..2),
                i_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(7..9),
                2 <= i_ExplicitVarSizeWithMarker_Marker ->
