@@ -109,7 +109,7 @@ instance SimplifyOp OpIndexing x where
     simplifyOp _ = na "simplifyOp{OpIndexing}"
 
 instance Pretty x => Pretty (OpIndexing x) where
-    prettyPrec _ (OpIndexing  a b) = pretty a <> prBrackets (pretty b)
+    prettyPrec _ (OpIndexing  a b) = hang (pretty a) 4 (prBrackets (pretty b))
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpIndexing x) where
     varSymBreakingDescription (OpIndexing a b) = JSON.Object $ M.fromList
