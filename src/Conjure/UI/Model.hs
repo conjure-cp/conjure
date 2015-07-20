@@ -452,15 +452,6 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
         breakConjunctions x = [x]
 
 
-toIntIsNoOp :: Model -> Model
-toIntIsNoOp model =
-    let
-        f [essence| toInt(&x) |] = x
-        f x = x
-    in
-        model { mStatements = mStatements model |> transformBi f }
-
-
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
@@ -682,7 +673,6 @@ epilogue model = return model
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
-    >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
