@@ -1665,7 +1665,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , return $ make opIndexing
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
                         indexer
@@ -1690,7 +1690,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map (mkQuan . flattenIfNeeded) elems))
             )
@@ -1700,14 +1700,14 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)   <- match opQuantifier p
-        matrix            <- match opConcatenate inner
-        (_, index, elems) <- match matrixLiteral matrix
+        (mkQuan, inner)                 <- match opQuantifier p
+        matrix                          <- match opConcatenate inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
             )
