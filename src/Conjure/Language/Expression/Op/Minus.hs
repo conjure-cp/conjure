@@ -22,20 +22,13 @@ instance BinaryOperator (OpMinus x) where
     opLexeme _ = L_Minus
 
 instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
-    typeOf p@(OpMinus a b) = do
-        tya <- typeOf a
-        case tya of
-            TypeInt{}       -> return ()
-            TypeSet{}       -> return ()
-            TypeMSet{}      -> return ()
-            TypeFunction{}  -> return ()
-            TypeRelation{}  -> return ()
-            TypePartition{} -> return ()
-            _               -> raiseTypeError p
-        tyb <- typeOf b
-        if typesUnify [tya, tyb]
-            then return $ mostDefined [tya,tyb]
-            else raiseTypeError p
+    typeOf p@(OpMinus a b) = sameToSameToSame p a b
+                                [ TypeInt
+                                , TypeSet TypeAny
+                                , TypeMSet TypeAny
+                                , TypeFunction TypeAny TypeAny
+                                , TypeRelation [TypeAny]
+                                ]
 
 instance EvaluateOp OpMinus where
     evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
