@@ -4,12 +4,9 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSize
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -151,11 +148,11 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
-                    case flagMatrix of
+                    case viewConstantMatrix flagMatrix of
                         -- TODO: check if indices match
-                        ConstantAbstract (AbsLitMatrix _ flags) ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                        Just (_, flags) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitSet
                                                     [ v
                                                     | (i,v) <- zip flags vals

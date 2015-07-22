@@ -4,10 +4,7 @@ module Conjure.Representations.Sequence.ExplicitBounded ( sequenceExplicitBounde
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -166,8 +163,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
