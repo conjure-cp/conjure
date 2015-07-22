@@ -5,6 +5,7 @@ module Conjure.Process.Sanity ( sanityChecks ) where
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language
+import Conjure.Language.CategoryOf
 
 
 sanityChecks :: (MonadFail m, MonadUserError m) => Model -> m Model
@@ -18,6 +19,7 @@ sanityChecks model = do
             forM_ (mStatements m) $ \ st -> case st of
                 Declaration FindOrGiven{} -> mapM_ (checkDomain (Just st)) (universeBi st)
                 _                         -> mapM_ (checkDomain Nothing  ) (universeBi st)
+            mapM_ checkFactorial (universeBi $ mStatements m)
             statements2 <- transformBiM checkLit (mStatements m)
             return m { mStatements = statements2 }
 
@@ -78,6 +80,15 @@ sanityChecks model = do
                         ]
                 return $ WithLocals lit (Right disjoint)
             _ -> return lit
+
+        checkFactorial :: MonadWriter [Doc] m => Expression -> m ()
+        checkFactorial p@[essence| factorial(&x) |]
+            | categoryOf x >= CatDecision
+            = recordErr
+                [ "The factorial function does not work on decision expressions."
+                , "When working on:" <++> pretty p
+                ]
+        checkFactorial _ = return ()
 
     errs <- execWriterT $ check model
     if null errs
