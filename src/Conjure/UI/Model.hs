@@ -596,6 +596,26 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
 checkIfAllRefined m = return m
 
 
+-- | checking whether any undefined values creeped into the final model
+checkIfHasUndefined :: MonadFail m => Model -> m Model
+checkIfHasUndefined m  | Just modelZipper <- zipperBi m = do
+    let returnMsg x = return
+            $ ""
+            : ("Undefined value in the final model:" <+> pretty (hole x))
+            : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+              | i <- allNats
+              | c <- tail (ascendants x)
+              ]
+
+    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+                case hole x of
+                    Constant ConstantUndefined{} -> returnMsg x
+                    _ -> return []
+    unless (null fails) (fail (vcat fails))
+    return m
+checkIfHasUndefined m = return m
+
+
 topLevelBubbles :: MonadFail m => Model -> m Model
 topLevelBubbles m = do
     let
@@ -672,6 +692,7 @@ epilogue model = return model
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= checkIfHasUndefined           >>= logDebugId "[checkIfHasUndefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
