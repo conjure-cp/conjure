@@ -323,7 +323,7 @@ data ModelInfo = ModelInfo
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
-    , miTrailCompact :: [(Strategy, Int, Int)]
+    , miTrailCompact :: [(Strategy, Int, Int)]                              -- TODO: Do we need the Strategy in here?
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]

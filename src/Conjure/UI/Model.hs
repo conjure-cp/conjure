@@ -538,7 +538,7 @@ updateDeclarations model =
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m | Just modelZipper <- zipperBi m = do
+checkIfAllRefined m | Just modelZipper <- zipperBi m {mInfo = def} = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -625,10 +625,23 @@ topLevelBubbles m = do
             case locals of
                 Left  locs -> (           locs  ++ [Objective obj h]            ) |> onStmts
                 Right locs -> ( [SuchThat locs] ++ [Objective obj h]            ) |> onStmts
-        onStmt (Declaration (Letting nm (WithLocals h locals))) =
-            case locals of
-                Left  locs -> (           locs  ++ [Declaration (Letting nm h)] ) |> onStmts
-                Right locs -> ( [SuchThat locs] ++ [Declaration (Letting nm h)] ) |> onStmts
+        onStmt (Declaration decl) =
+            let
+                f (WithLocals h locs) = tell [locs] >> return h
+                f x = return x
+
+                (decl', locals) = runWriter (transformBiM f decl)
+
+                conv :: Either [Statement] [Expression] -> [Statement]
+                conv (Left locs) = locs
+                conv (Right locs) = [SuchThat locs]
+
+                newStmts :: [Statement]
+                newStmts = concatMap conv locals
+            in
+                if null newStmts
+                    then [Declaration decl]
+                    else onStmts (newStmts ++ [Declaration decl'])
         onStmt s = [s]
 
         onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts
