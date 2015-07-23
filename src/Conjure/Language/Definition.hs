@@ -323,7 +323,9 @@ data ModelInfo = ModelInfo
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
-    , miTrailCompact :: [(Strategy, Int, Int)]                              -- TODO: Do we need the Strategy in here?
+    , miStrategyQ :: Strategy
+    , miStrategyA :: Strategy
+    , miTrailCompact :: [(Int, Int)]
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
@@ -341,7 +343,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON

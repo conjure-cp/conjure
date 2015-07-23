@@ -117,7 +117,7 @@ outputModels config model = do
                     let gen =
                             if smartFilenames config
                                 then [ choice
-                                     | [_question, (_strategy, choice, numOptions)] <-
+                                     | [_question, (choice, numOptions)] <-
                                              eprime |> mInfo |> miTrailCompact |> chunksOf 2
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
@@ -141,8 +141,12 @@ toCompletion
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue m
-    logInfo $ modelInfo m2
-    loopy m2
+    let m2Info = mInfo m2
+    let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
+                                 , miStrategyA = strategyA config
+                                 } }
+    logInfo $ modelInfo m3
+    loopy m3
     where
         driver = strategyToDriver config
         loopy model = do
@@ -369,8 +373,8 @@ addToTrail Config{..}
     where
         oldInfo = mInfo model
         newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++
-                                    [ (questionStrategy, questionNumber, questionNumbers)
-                                    , (answerStrategy  , answerNumber,   answerNumbers  )
+                                    [ (questionNumber, questionNumbers)
+                                    , (answerNumber,   answerNumbers  )
                                     ]
                           , miTrailVerbose = if verboseTrail
                                                   then miTrailVerbose oldInfo ++ [theQ, theA]
