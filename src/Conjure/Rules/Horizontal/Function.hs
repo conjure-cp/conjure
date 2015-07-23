@@ -445,9 +445,26 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
             )
 
 
+rule_Image_BoolMatrixIndexed :: Rule
+rule_Image_BoolMatrixIndexed = "function-image-BoolMatrixIndexed" `namedRule` theRule where
+    theRule p = do
+        (matrix, indices)                      <- match opMatrixIndexing p
+        (func, arg)                            <- match opImage matrix
+        TypeFunction _ (TypeMatrix _ TypeBool) <- typeOf func
+        return
+            ( "Function image, matrix of int."
+            , do
+                (iPat, i) <- quantifiedVar
+                let i2 = make opMatrixIndexing [essence| &i[2] |] indices
+                return $ make opOr $ Comprehension i2
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+            )
+
+
 rule_Image_Int :: Rule
 rule_Image_Int = "function-image-int" `namedRule` theRule where
-    -- theRule (Reference _ Just Alias )
     theRule p = do
         (func, arg) <- match opImage p
         case match opRestrict func of
@@ -459,6 +476,26 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 let val = make opSum $ Comprehension [essence| &i[2] |]
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                let isDefined = [essence| &arg in defined(&func) |]
+                return $ WithLocals val (Right [isDefined])
+            )
+
+
+rule_Image_IntMatrixIndexed :: Rule
+rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theRule where
+    theRule p = do
+        (matrix, indices)                      <- match opMatrixIndexing p
+        (func, arg)                            <- match opImage matrix
+        TypeFunction _ (TypeMatrix _ TypeInt)  <- typeOf func
+        return
+            ( "Function image, matrix of int."
+            , do
+                (iPat, i) <- quantifiedVar
+                let i2 = make opMatrixIndexing [essence| &i[2] |] indices
+                let val = make opSum $ Comprehension i2
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
