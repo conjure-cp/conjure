@@ -621,8 +621,14 @@ topLevelBubbles m = do
     let
         onStmt (SuchThat xs) = onExprs SuchThat xs
         onStmt (Where    xs) = onExprs Where    xs
-        onStmt (Objective obj (WithLocals h (Left  locals))) = (          locals  ++ [Objective obj h]) |> onStmts
-        onStmt (Objective obj (WithLocals h (Right locals))) = ([SuchThat locals] ++ [Objective obj h]) |> onStmts
+        onStmt (Objective obj (WithLocals h locals)) =
+            case locals of
+                Left  locs -> (           locs  ++ [Objective obj h]            ) |> onStmts
+                Right locs -> ( [SuchThat locs] ++ [Objective obj h]            ) |> onStmts
+        onStmt (Declaration (Letting nm (WithLocals h locals))) =
+            case locals of
+                Left  locs -> (           locs  ++ [Declaration (Letting nm h)] ) |> onStmts
+                Right locs -> ( [SuchThat locs] ++ [Declaration (Letting nm h)] ) |> onStmts
         onStmt s = [s]
 
         onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts

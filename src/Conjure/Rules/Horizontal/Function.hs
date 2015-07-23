@@ -428,53 +428,17 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
 
 rule_Image_Bool :: Rule
 rule_Image_Bool = "function-image-bool" `namedRule` theRule where
-    theRule p@[essence| image(&_,&_) |] = do
-        topMost <- asks isTopMostZ
-        if topMost
-            then -- this term sits at the topmost level, requires special treatment
-                theRule_ [essence| &p = true |]
-            else
-                theRule_ p
-    theRule p = theRule_ p
-
-    -- see the top-most level special-casing above
-    theRule_ p = do
-        let
-            onChildren
-                :: MonadState (Maybe (Expression, Expression)) m
-                => Expression
-                -> m (Expression -> Expression)
-            onChildren ch = do
-                let
-                    try = do
-                        (func, arg) <- match opImage ch
-                        case match opRestrict func of
-                            Nothing -> return ()
-                            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
-                        TypeFunction _ TypeBool <- typeOf func
-                        return (func, arg)
-                case try of
-                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
-                    Just (func, arg) -> do              -- just return it back unchanged
-                        seenBefore <- gets id
-                        case seenBefore of
-                            Nothing -> do
-                                modify $ const $ Just (func, arg)
-                                return id
-                            Just{}  ->
-                                return (const ch)
-
-        let (children_, gen) = uniplate p
-        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
-        let
-            mkP :: Expression -> Expression
-            mkP new = gen $ fmap ($ new) genChildren
-        (func, arg) <- maybe (na "rule_Image_Bool") return mFunc        -- Nothing signifies no relevant children
+    theRule p = do
+        (func, arg) <- match opImage p
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
+        TypeFunction _ TypeBool <- typeOf func
         return
             ( "Function image, bool."
             , do
                 (iPat, i) <- quantifiedVar
-                return $ mkP $ make opOr $ Comprehension [essence| &i[2] |]
+                return $ make opOr $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
@@ -483,38 +447,13 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
 
 rule_Image_Int :: Rule
 rule_Image_Int = "function-image-int" `namedRule` theRule where
+    -- theRule (Reference _ Just Alias )
     theRule p = do
-        let
-            onChildren
-                :: MonadState (Maybe (Expression, Expression)) m
-                => Expression
-                -> m (Expression -> Expression)
-            onChildren ch = do
-                let
-                    try = do
-                        (func, arg) <- match opImage ch
-                        case match opRestrict func of
-                            Nothing -> return ()
-                            Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
-                        TypeFunction _ TypeInt <- typeOf func
-                        return (func, arg)
-                case try of
-                    Nothing -> return (const ch)        -- do not fail if a child is not of proper form
-                    Just (func, arg) -> do              -- just return it back unchanged
-                        seenBefore <- gets id
-                        case seenBefore of
-                            Nothing -> do
-                                modify $ const $ Just (func, arg)
-                                return id
-                            Just{}  ->
-                                return (const ch)
-
-        let (children_, gen) = uniplate p
-        (genChildren, mFunc) <- runStateT (mapM onChildren children_) Nothing
-        let
-            mkP :: Expression -> Expression
-            mkP new = gen $ fmap ($ new) genChildren
-        (func, arg) <- maybe (na "rule_Image_Int") return mFunc         -- Nothing signifies no relevant children
+        (func, arg) <- match opImage p
+        case match opRestrict func of
+            Nothing -> return ()
+            Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
+        TypeFunction _ TypeInt <- typeOf func
         return
             ( "Function image, int."
             , do
@@ -524,7 +463,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
                         , Condition [essence| &i[1] = &arg |]
                         ]
                 let isDefined = [essence| &arg in defined(&func) |]
-                return $ mkP $ WithLocals val (Right [isDefined])
+                return $ WithLocals val (Right [isDefined])
             )
 
 
