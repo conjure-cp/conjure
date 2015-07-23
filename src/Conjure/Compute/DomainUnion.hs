@@ -11,6 +11,7 @@ module Conjure.Compute.DomainUnion
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.Expression.Op
 import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
@@ -22,8 +23,12 @@ import Data.Set as S ( union )
 class DomainUnion a where
     domainUnion :: (Applicative m, Monad m) => a -> a -> m a
 
-domainUnions :: (Applicative m, Monad m) => DomainUnion a => [a] -> m a
-domainUnions [] = bug "domainUnions []"
+domainUnions
+    :: ( Monad m
+       , Pretty r, Default r
+       , Pretty x, ExpressionLike x, Op x :< x
+       ) => [Domain r x] -> m (Domain r x)
+domainUnions [] = return $ DomainAny "domainUnions []" TypeAny
 domainUnions [a] = return a
 domainUnions (a:as) = do b <- domainUnions as ; domainUnion a b
 
