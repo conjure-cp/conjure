@@ -57,10 +57,13 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
                                 | binRelAttrs == def
                                     -> return []
-                                | innerDomain1 == innerDomain2
+                                | forgetRepr innerDomain1 == forgetRepr innerDomain2
                                     -> mkBinRelCons binRelAttrs innerDomain1 rel
                                 | otherwise
-                                    -> bug "Binary relation between different domains."
+                                    -> bug $ vcat [ "Binary relation between different domains. (RelationAsSet)"
+                                                  , "innerDomain1:" <+> pretty innerDomain1
+                                                  , "innerDomain2:" <+> pretty innerDomain2
+                                                  ]
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
                                     -> bug "Non-binary relation has binary relation attributes."
