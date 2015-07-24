@@ -452,10 +452,32 @@ rule_Image_BoolMatrixIndexed = "function-image-BoolMatrixIndexed" `namedRule` th
         (func, arg)                            <- match opImage matrix
         TypeFunction _ (TypeMatrix _ TypeBool) <- typeOf func
         return
-            ( "Function image, matrix of int."
+            ( "Function image, matrix of bool."
             , do
                 (iPat, i) <- quantifiedVar
                 let i2 = make opMatrixIndexing [essence| &i[2] |] indices
+                return $ make opOr $ Comprehension i2
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+            )
+
+
+rule_Image_BoolTupleIndexed :: Rule
+rule_Image_BoolTupleIndexed = "function-image-BoolTupleIndexed" `namedRule` theRule where
+    theRule p = do
+        (matrix, index)               <- match opIndexing p
+        (func, arg)                   <- match opImage matrix
+        TypeFunction _ (TypeTuple ts) <- typeOf func
+        iInt                          <- match constantInt index
+        case atMay ts (fromInteger (iInt-1)) of
+            Just TypeBool -> return ()
+            _             -> na "rule_Image_BoolTupleIndexed"
+        return
+            ( "Function image, tuple of bool."
+            , do
+                (iPat, i) <- quantifiedVar
+                let i2 = make opIndexing [essence| &i[2] |] index
                 return $ make opOr $ Comprehension i2
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
@@ -501,6 +523,28 @@ rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theR
                         ]
                 let isDefined = [essence| &arg in defined(&func) |]
                 return $ WithLocals val (Right [isDefined])
+            )
+
+
+rule_Image_IntTupleIndexed :: Rule
+rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRule where
+    theRule p = do
+        (matrix, index)               <- match opIndexing p
+        (func, arg)                   <- match opImage matrix
+        TypeFunction _ (TypeTuple ts) <- typeOf func
+        iInt                          <- match constantInt index
+        case atMay ts (fromInteger (iInt-1)) of
+            Just TypeInt -> return ()
+            _            -> na "rule_Image_IntTupleIndexed"
+        return
+            ( "Function image, tuple of int."
+            , do
+                (iPat, i) <- quantifiedVar
+                let i2 = make opIndexing [essence| &i[2] |] index
+                return $ make opOr $ Comprehension i2
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
             )
 
 

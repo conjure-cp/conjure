@@ -926,8 +926,10 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Image_Bool
     , Horizontal.Function.rule_Image_BoolMatrixIndexed
+    , Horizontal.Function.rule_Image_BoolTupleIndexed
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Image_IntMatrixIndexed
+    , Horizontal.Function.rule_Image_IntTupleIndexed
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Comprehension_ImageSet
     , Horizontal.Function.rule_Eq
