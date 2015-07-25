@@ -402,7 +402,7 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty OccurAttr_None = prEmpty
     pretty (OccurAttr_MinOccur    x  ) = "minOccur" <+> pretty x
     pretty (OccurAttr_MaxOccur    x  ) = "maxOccur" <+> pretty x
-    pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <+> ", maxOccur" <+> pretty y
+    pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
 
 
 data FunctionAttr x
