@@ -24,7 +24,7 @@ class DomainUnion a where
     domainUnion :: (Applicative m, Monad m) => a -> a -> m a
 
 domainUnions
-    :: ( Monad m
+    :: ( Applicative m, Monad m
        , Pretty r, Default r
        , Pretty x, ExpressionLike x, Op x :< x
        ) => [Domain r x] -> m (Domain r x)
