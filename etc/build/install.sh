@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 
 export CORES=${CORES:-0}
-export GHC_VERSION=${GHC_VERSION:-"7.10.1"}
+export GHC_VERSION=${GHC_VERSION:-"7.10.2"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
