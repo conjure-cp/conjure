@@ -25,7 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPow x) where
     typeOf p@(OpPow a b) = intToIntToInt p a b
 
 instance EvaluateOp OpPow where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpPow x y)
         | y >= 0    = ConstantInt <$> ((^) <$> intOut x <*> intOut y)
         | otherwise = return $ mkUndef TypeInt $ "negative exponent:" <+> pretty p

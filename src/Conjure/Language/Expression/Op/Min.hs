@@ -39,7 +39,7 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
     evaluateOp (OpMin (DomainInConstant (DomainInt rs))) = do
         is <- rangesInts rs

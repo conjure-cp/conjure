@@ -25,7 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpDiv x) where
     typeOf p@(OpDiv a b) = intToIntToInt p a b
 
 instance EvaluateOp OpDiv where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpDiv x y)
         | y /= 0    = ConstantInt <$> (div <$> intOut x <*> intOut y)
         | otherwise = return $ mkUndef TypeInt $ "division by zero:" <+> pretty p
