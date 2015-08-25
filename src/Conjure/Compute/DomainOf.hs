@@ -269,7 +269,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndex
         case mDom of
             DomainMatrix _ inner -> return inner
             DomainTuple inners -> do
-                iInt <- intOut i
+                iInt <- intOut "domainOf OpIndexing" i
                 return $ atNote "domainOf" inners (fromInteger (iInt-1))
             _ -> fail "domainOf, OpIndexing, not a matrix or tuple"
 

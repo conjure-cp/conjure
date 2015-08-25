@@ -47,17 +47,17 @@ instance EvaluateOp OpMax where
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantMatrix -> Just (_, xs))) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 1") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 2") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantMSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 3") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)

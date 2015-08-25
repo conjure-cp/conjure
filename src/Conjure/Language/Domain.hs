@@ -653,9 +653,9 @@ instance Arbitrary a => Arbitrary (Range a) where
 rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Integer]
 rangesInts = liftM (sortNub . concat) . mapM rangeInts
     where
-        rangeInts (RangeSingle x) = return <$> intOut x
-        rangeInts (RangeBounded x y) = do x' <- intOut x
-                                          y' <- intOut y
+        rangeInts (RangeSingle x) = return <$> intOut "rangeInts 1" x
+        rangeInts (RangeBounded x y) = do x' <- intOut "rangeInts 2" x
+                                          y' <- intOut "rangeInts 3" y
                                           return [x' .. y']
         rangeInts _ = fail "Infinite range (or not an integer range)"
 

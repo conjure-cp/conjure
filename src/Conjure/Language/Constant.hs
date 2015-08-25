@@ -175,8 +175,10 @@ instance Pretty Constant where
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
-    intOut (ConstantInt x) = return x
-    intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
+    intOut _ (ConstantInt x) = return x
+    intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
+                               , "Called from:" <+> doc
+                               ]
 
     fromBool = ConstantBool
     boolOut (ConstantBool x) = return x

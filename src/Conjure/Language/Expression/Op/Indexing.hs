@@ -43,7 +43,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     ]
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
-                case intOut i of
+                case intOut "OpIndexing" i of
                     Nothing -> fail $ "Tuples can only be indexed by constants:" <++> pretty p
                     Just iInt | iInt <= 0 || iInt > genericLength inns -> fail $ "Out of bounds tuple indexing:" <++> pretty p
                               | otherwise -> return (at inns (fromInteger (iInt-1)))

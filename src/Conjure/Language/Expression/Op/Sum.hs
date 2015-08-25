@@ -36,7 +36,10 @@ instance BinaryOperator (OpSum x) where
 
 instance EvaluateOp OpSum where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut x
+    evaluateOp p@(OpSum x)
+        | Just xs <- listOut x
+        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut "OpSum" x
 
 instance (OpSum x :< x) => SimplifyOp OpSum x where
     simplifyOp (OpSum x)
