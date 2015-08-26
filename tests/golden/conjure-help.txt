@@ -42,10 +42,10 @@ Logging & Output:
                                              text files. Conjure can read in
                                              these binary files for further
                                              processing.
-     --essence-param=FILE                    An Essence parameter for the
+     --param=FILE                            An Essence parameter for the
                                              original problem specification.
                                              This field is optional.
-     --essence-solution=FILE                 An Essence solution for the
+     --solution=FILE                         An Essence solution for the
                                              original problem specification.
                                              This field is optional. By
                                              default, its value will be the
@@ -75,7 +75,7 @@ Model generation:
                                              --representations-givens  l (for
                                              follow log) tries to pick the
                                              given choices as far as possible
-                                             Default value: ai
+                                             Default value: c
      --representations=STRATEGY              Strategy to use when choosing a
                                              representation. Default value:
                                              same as --strategy-a
@@ -112,7 +112,8 @@ Model generation:
                                              time).
 Options for other tools:
      --savilerow-options=ITEM                Options to be passed to Savile
-                                             Row.
+                                             Row.By default: '-O0 -preprocess
+                                             None -all-solutions'
      --minion-options=ITEM                   Options to be passed to Minion.
 
 conjure modelling [OPTIONS] ESSENCE_FILE

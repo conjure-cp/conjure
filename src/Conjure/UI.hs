@@ -203,7 +203,7 @@ ui = modes
                                            \The letter a (for auto) can be prepended to automatically skip \
                                            \when there is only one option at any point.\n\
                                            \Default value: f"
-        , strategyA        = "ai"  &= typ "STRATEGY"
+        , strategyA        = "c"   &= typ "STRATEGY"
                                    &= name "strategy-a"
                                    &= name "a"
                                    &= groupname "Model generation"
@@ -215,7 +215,7 @@ ui = modes
                                            \at every decision point. \
                                            \This can be particularly useful for --representations-givens\n\
                                            \ l (for follow log) tries to pick the given choices as far as possible\n\
-                                           \Default value: ai"
+                                           \Default value: c"
         , representations = Nothing
                                    &= typ "STRATEGY"
                                    &= name "representations"
@@ -283,21 +283,23 @@ ui = modes
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
         , essenceParamO    = def   &= typFile
-                                   &= name "essence-param"
+                                   &= name "param"
                                    &= explicit
                                    &= help "An Essence parameter for the original problem specification.\n\
                                            \This field is optional."
         , essenceSolutionO = def   &= typFile
-                                   &= name "essence-solution"
+                                   &= name "solution"
                                    &= explicit
                                    &= help "An Essence solution for the original problem specification.\n\
                                            \This field is optional.\n\
                                            \By default, its value will be the value of --eprime-solution, \
                                            \with all extensions dropped the extension '.solution' is added instead."
-        , savilerowOptions = def   &= name "savilerow-options"
+        , savilerowOptions = "-O0 -preprocess None -all-solutions"
+                                   &= name "savilerow-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
-                                   &= help "Options to be passed to Savile Row."
+                                   &= help "Options to be passed to Savile Row.\
+                                           \By default: '-O0 -preprocess None -all-solutions'"
         , minionOptions = def      &= name "minion-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
