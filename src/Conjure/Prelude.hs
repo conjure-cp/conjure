@@ -32,7 +32,7 @@ module Conjure.Prelude
     , allContexts, ascendants
     , headInf
     , paddedNum
-    , dropExtension
+    , dropExtension, dropDirs
     , MonadLog(..), LogLevel(..), LoggerT
     , runLoggerPipeIO, runLoggerIO, runLogger, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
@@ -417,8 +417,13 @@ paddedNum x = replicate (6 - length s) '0' ++ s
     where s = show x
 
 
+-- | splits from the "."s, drops the last component, glues back together what's left
 dropExtension :: FilePath -> FilePath
 dropExtension = intercalate "." . init . splitOn "."
+
+-- | splits from the "/"s, drops all but last component, returns what's left
+dropDirs :: FilePath -> FilePath
+dropDirs = last . splitOn "/"
 
 
 class (Functor m, Applicative m, Monad m) => MonadLog m where

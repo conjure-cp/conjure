@@ -4,6 +4,7 @@ module Main where
 
 import Conjure.Prelude
 import Conjure.UserError ( MonadUserError(..) )
+import Conjure.Bug
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.IO ( readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.Model ( parseStrategy, outputModels )
@@ -18,7 +19,7 @@ import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.Language.Pretty ( pretty )
+import Conjure.Language.Pretty ( pretty, renderNormal, renderWide )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 
@@ -30,6 +31,12 @@ import Text.Printf ( printf )
 
 -- cmdargs
 import System.Console.CmdArgs ( cmdArgs )
+
+-- shelly
+import Shelly ( run, lastStderr )
+
+-- text
+import qualified Data.Text as T ( null )
 
 
 main :: IO ()
@@ -157,82 +164,128 @@ mainWithArgs ParameterGenerator{..} = do
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
                (Just essenceOut)
                output
+mainWithArgs config@Solve{..} = do eprimes   <- conjuring
+                                   solutions <- liftIO $ savileRows eprimes
+                                   liftIO $ validating solutions
+
+    where
+        conjuring = do
+            pp $ "Generating models for" <+> pretty essence
+            -- tl;dr: rm -rf outputDirectory
+            -- removeDirectoryRecursive gets upset if the dir doesn't exist.
+            -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
+            liftIO $ createDirectoryIfMissing True outputDirectory >> removeDirectoryRecursive outputDirectory
+            let modelling = let savedChoices = def
+                            in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
+                                                                -- from the given Solve UI
+            mainWithArgs modelling
+            eprimes <- filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
+            when (null eprimes) $ bug "Failed to generate models."
+            pp $ "Generated models:" <+> vcat (map pretty eprimes)
+            pp $ "Saved under:" <+> pretty outputDirectory
+            return eprimes
+
+        savileRows eprimes = fmap concat $ sequence $
+            case essenceParamO of
+                Nothing           -> [ savileRowNoParam    config m              | m <- eprimes ]
+                Just essenceParam -> [ savileRowWithParams config m essenceParam | m <- eprimes ]
+
+        validating solutions = sequence_ $
+            case essenceParamO of
+                Nothing           -> [ validateSolutionNoParam    config sol              | (_, _, sol) <- solutions ]
+                Just essenceParam -> [ validateSolutionWithParams config sol essenceParam | (_, _, sol) <- solutions ]
 
 
-
--- INTERACTIVE
-
--- (Unless a .essence is given as argument)
--- Conjure works on problem specifications written in Essence.
--- You can load one by giving it as an argument to Conjure
--- Or by using the command `:load <filename>`
-
--- File parsed and type checked. Options
--- Notice: Intermediate files will be saved in <dir>
--- Conjure by default saves all intermediate files it generates.
--- Better safe than sorry.
+pp :: MonadIO m => Doc -> m ()
+pp = liftIO . putStrLn . renderWide
 
 
--- (Once the model is complete)
--- Do you want to solve this model?
--- (Check if the model needs params)
--- (Unless a .param file is given as argument)
--- This problem seems to require parameters.
--- `:load <filename>`
--- Use default settings for Savile Row and Minion?
--- YES
--- NO, for SR:... for Minion:...
--- (If optimisation, wanna see intermediate solutions?)
--- (If sat, wanna see 1 solution, n solutions, all solutions, just number of solutions?)
--- Solved.
--- SR Time, CSEs, blah...
--- Minion Time, Nodes, blah...
+savileRowNoParam :: UI -> FilePath -> IO [(FilePath, FilePath, FilePath)]
+savileRowNoParam Solve{..} modelPath = sh $ do
+    pp $ hsep ["Savile Row:", pretty essence, pretty modelPath]
+    let outBase = dropExtension modelPath
+    _stdoutSR <- run "savilerow" $
+        [ "-in-eprime"      , stringToText $ outputDirectory </> outBase ++ ".eprime"
+        , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
+        , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
+        , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
+        , "-out-solution"   , stringToText $ outputDirectory </> outBase ++ ".eprime-solution"
+        , "-run-solver"
+        , "-minion"
+        ] ++ map stringToText (words savilerowOptions)
+    stderrSR <- lastStderr
+    if not (T.null stderrSR)
+        then bug (pretty stderrSR)
+        else do
+            eprimeModel       <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
+            nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                      <$> liftIO (getDirectoryContents outputDirectory)
+            forM (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
+                eprimeSolution <- readModelFromFile (outputDirectory </> eprimeSolutionPath)
+                s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
+                let filename = outputDirectory </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                writeFile filename (renderNormal s)
+                return (modelPath, "<no param file>", filename)
+savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
--- conjure compact .essence > .eprime
--- conjure refineParam .eprime .param > .eprime-param
--- conjure translateSolution .eprime .eprime-solution > .solution
--- conjure compact-solve .essence .param > .solution --savilerow-options "" --minion-options ""
-
--- SOLVING
--- savilerow -in-eprime .eprime -in-param .eprime-param -out-minion .minion (rm everything else)
--- minion .minion > SOLUTION
--- savilerow -mode translateSolution
-
-
--- (invokes the INTERACTIVE)
--- conjure
--- conjure .essence
--- conjure .essence .param
-
-
-
-
-
-
--- INTERACTIVE MODELLING
--- Conjure works by first selecting refinements for abstract parameters and decision variables (declarations)
--- and then refining expressions depending on the domain refinements. (TODO: Expand.)
-
--- There are # parameters and # decision variables in this problem specification.
--- # of the parameters are abstract and # of the decision variavles are abstract,
--- hence they will require domain refinement.
--- Moreover, Conjure can explore multiple domain refinements for each parameter and decision variable.
--- Channelling constraints will be generated automatically when multiple domain refinements are used in a single model.
--- Options (Channelled or not)
--- 1. Explore all combinations
--- 2. Explore all combinations, except channelled models
--- 3. Explore all combinations, except channelled models for parameters
--- 4. I want to choose per declaration
---          For x:set of tau (occurs # times)
---              no channelling
---              full channelling
---              full channelling + one redundant refinement
---              up to n different refinements
---          ...
+savileRowWithParams :: UI -> FilePath -> FilePath -> IO [(FilePath, FilePath, FilePath)]
+savileRowWithParams Solve{..} modelPath paramPath = sh $ do
+        pp $ hsep ["Savile Row:", pretty essence, pretty modelPath, pretty paramPath]
+        model       <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
+        param       <- liftIO $ readModelFromFile paramPath
+        eprimeParam <- liftIO $ ignoreLogs $ runNameGen $ refineParam model param
+        let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
+        liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
+        _stdoutSR <- run "savilerow" $
+            [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
+            , "-in-param"       , stringToText $ outputDirectory </> outBase ++ ".eprime-param"
+            , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
+            , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
+            , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
+            , "-out-solution"   , stringToText $ outputDirectory </> outBase ++ ".eprime-solution"
+            , "-run-solver"
+            , "-minion"
+            ] ++ map stringToText (words savilerowOptions)
+        stderrSR <- lastStderr
+        if not (T.null stderrSR)
+            then bug (pretty stderrSR)
+            else do
+                eprimeModel       <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
+                nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                          <$> liftIO (getDirectoryContents outputDirectory)
+                forM (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
+                    eprimeSolution <- readModelFromFile (outputDirectory </> eprimeSolutionPath)
+                    case ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution of
+                        Left err -> bug (pretty err)
+                        Right s  -> do
+                            let filename = outputDirectory </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                            writeFile filename (renderNormal s)
+                            return (modelPath, paramPath, filename)
+savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
+validateSolutionNoParam :: UI -> FilePath -> IO ()
+validateSolutionNoParam Solve{..} solutionPath = sh $ do
+    pp $ hsep ["Validating solution:", pretty essence, pretty solutionPath]
+    essenceM <- liftIO $ readModelFromFile essence
+    solution <- liftIO $ readModelFromFile solutionPath
+    case ignoreLogs (validateSolution essenceM def solution) of
+        Left err -> bug err
+        Right () -> return ()
+validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
-
+validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
+validateSolutionWithParams Solve{..} solutionPath paramPath = sh $ do
+    pp $ hsep ["Validating solution:", pretty essence, pretty solutionPath, pretty paramPath]
+    essenceM <- liftIO $ readModelFromFile essence
+    param    <- liftIO $ readModelFromFile paramPath
+    solution <- liftIO $ readModelFromFile solutionPath
+    case ignoreLogs (validateSolution essenceM param solution) of
+        Left err -> bug err
+        Right () -> return ()
+validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
