@@ -311,7 +311,6 @@ ui = modes
                                            \parameter refinement if required, \
                                            \then Savile Row + Minion to solve, and \
                                            \then solution translation."
-                                   &= auto
     , Modelling
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
@@ -459,6 +458,7 @@ ui = modes
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \
                                            \produce constraint programming models in Essence'."
+                                   &= auto
     , RefineParam
         { eprime           = def   &= typFile
                                    &= name "eprime"
