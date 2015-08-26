@@ -441,7 +441,7 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
         (matrix, indexer)            <- match opIndexing p
         (_, DomainInt ranges, elems) <- match matrixLiteral matrix
         indexInts                    <- rangesInts ranges
-        indexerInt                   <- intOut indexer
+        indexerInt                   <- intOut "rule_MatrixIndexing" indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of

@@ -323,7 +323,9 @@ data ModelInfo = ModelInfo
     , miOriginalDomains :: [(Name, Domain () Expression)]
     , miRepresentations :: [(Name, Domain HasRepresentation Expression)]
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
-    , miTrailCompact :: [(Strategy, Int, Int)]
+    , miStrategyQ :: Strategy
+    , miStrategyA :: Strategy
+    , miTrailCompact :: [(Int, Int)]
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
@@ -341,7 +343,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -634,8 +636,10 @@ instance ReferenceContainer Expression where
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
-    intOut (Constant c) = intOut c
-    intOut x = fail ("Expecting a constant, but got:" <+> pretty x)
+    intOut doc (Constant c) = intOut ("intOut{Expression}" <+> doc) c
+    intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <+> pretty x
+                               , "Called from:" <+> doc
+                               ]
 
     fromBool = Constant . fromBool
     boolOut (Constant c) = boolOut c

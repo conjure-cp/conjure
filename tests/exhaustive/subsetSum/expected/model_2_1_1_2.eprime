@@ -16,7 +16,7 @@ such that
     and([q6 <= x_ExplicitVarSizeWithMarker_Marker ->
          nums_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]]
              | q6 : int(1..let1)]),
-    s = sum([x_Occurrence[i] * i | i : int(let2..let3)]),
+    s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] <
          x_ExplicitVarSizeWithMarker_Values[q1 + 1]
@@ -26,8 +26,8 @@ such that
              | q2 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
-    1 <= sum([x_Occurrence[q4] | q4 : int(let2..let3)]),
-    sum([x_Occurrence[q4] | q4 : int(let2..let3)]) <= let1,
+    1 <= sum([toInt(x_Occurrence[q4]) | q4 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q4]) | q4 : int(let2..let3)]) <= let1,
     and([x_Occurrence[q7] ->
          or([q9 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q9] = q7

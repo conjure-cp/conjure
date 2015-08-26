@@ -42,7 +42,7 @@ such that
                   | q7 : int(1..3)])
              | q6 : int(1..2)]),
     and([and([1 <=
-              sum([x_ExplicitVarSizeWithFlags_Flags[q6, q7, q11] | q11 : int(1..3)])
+              sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q6, q7, q11]) | q11 : int(1..3)])
                   | q7 : int(1..3)])
              | q6 : int(1..2)]),
     and([and([and([x_ExplicitVarSizeWithFlags_Flags[q14, q16, q19] ->

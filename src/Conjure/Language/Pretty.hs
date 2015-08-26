@@ -125,6 +125,7 @@ instance Pretty JSON.Object where
             f (key, value) = pretty (show key) <> ":" <+> pretty value
 
             keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
+                       , "strategyQ", "strategyA"
                        , "trailCompact", "trailVerbose"
                        , "nameGenState"
                        , "representations", "representationsTree"

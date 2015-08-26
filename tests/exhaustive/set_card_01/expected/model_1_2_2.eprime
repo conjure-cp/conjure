@@ -4,7 +4,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1..1)] of int(1..2)
 such that
     s_Explicit[1] = 1,
-    1 = sum([s_Occurrence[q1] | q1 : int(1..2)]),
+    1 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)]),
     s_Occurrence[s_Explicit[1]],
     and([s_Occurrence[q8] -> s_Explicit[1] = q8 | q8 : int(1..2)])
 

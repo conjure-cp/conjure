@@ -24,7 +24,7 @@ such that
          false = aux1_ExplicitVarSizeWithFlags_Values[q13] \/
          aux1_ExplicitVarSizeWithFlags_Values[q13]
              | q13 : int(1..2)]),
-    (false = b) * 5 + b * x = i,
+    toInt(false = b) * 5 + toInt(b) * x = i,
     or([aux1_ExplicitVarSizeWithFlags_Flags[q12] /\
         aux1_ExplicitVarSizeWithFlags_Values[q12] = b
             | q12 : int(1..2)])

@@ -20,7 +20,7 @@ such that
                  | q13 : int(1..fin1)])
              | q11 : int(1..let1)]),
     s =
-    sum([(q9 <= x_ExplicitVarSizeWithMarker_Marker) *
+    sum([toInt(q9 <= x_ExplicitVarSizeWithMarker_Marker) *
          x_ExplicitVarSizeWithMarker_Values[q9]
              | q9 : int(1..let1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
@@ -33,8 +33,8 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
          x_ExplicitVarSizeWithFlags_Flags[q3]
              | q3 : int(1..let1 - 1)]),
-    1 <= sum([x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..let1)]),
-    sum([x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..let1)]) <= let1,
+    1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..let1)]) <= let1,
     and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q6] <
          x_ExplicitVarSizeWithMarker_Values[q6 + 1]

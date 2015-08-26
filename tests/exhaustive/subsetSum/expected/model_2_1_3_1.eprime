@@ -20,7 +20,7 @@ such that
          nums_Occurrence[x_ExplicitVarSizeWithMarker_Values[q12]]
              | q12 : int(1..let1)]),
     s =
-    sum([x_ExplicitVarSizeWithFlags_Flags[q10] *
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q10]) *
          x_ExplicitVarSizeWithFlags_Values[q10]
              | q10 : int(1..let1)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
@@ -42,8 +42,8 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] ->
          x_ExplicitVarSizeWithFlags_Flags[q6]
              | q6 : int(1..let1 - 1)]),
-    1 <= sum([x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..let1)]),
-    sum([x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..let1)]) <= let1,
+    1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]) <= let1,
     and([x_ExplicitVarSizeWithFlags_Flags[q14] ->
          or([q16 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q16] = x_ExplicitVarSizeWithFlags_Values[q14]
@@ -54,8 +54,8 @@ such that
              x_ExplicitVarSizeWithFlags_Values[q20] = x_ExplicitVarSizeWithMarker_Values[q18]
                  | q20 : int(1..let1)])
              | q18 : int(1..let1)]),
-    1 <= sum([x_Occurrence[q9] | q9 : int(let2..let3)]),
-    sum([x_Occurrence[q9] | q9 : int(let2..let3)]) <= let1,
+    1 <= sum([toInt(x_Occurrence[q9]) | q9 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q9]) | q9 : int(let2..let3)]) <= let1,
     and([x_Occurrence[q21] ->
          or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q23] = q21

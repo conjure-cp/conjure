@@ -22,7 +22,7 @@ such that
          x_ExplicitVarSizeWithFlags_Values[q5] = 1
              | q5 : int(1..2)]),
     x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
-    sum([x_ExplicitVarSizeWithFlags_Flags[q7] | q7 : int(1..2)]) <= 2,
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..2)]) <= 2,
     and([x_ExplicitVarSizeWithFlags_Flags[q12] ->
          or([q14 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q14] = x_ExplicitVarSizeWithFlags_Values[q12]

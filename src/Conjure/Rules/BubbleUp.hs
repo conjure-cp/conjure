@@ -15,66 +15,6 @@ rule_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
     theRule _ = na "rule_MergeNested"
 
 
--- rule_Comprehension :: Rule
--- rule_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
---     -- theRule (Comprehension body gensOrConds) = do
---     --     (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---     --         Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---     --         _ -> na "rule_Comprehension"
---     --     locals' <- forM locals $ \ l -> case l of
---     --         SuchThat xs -> return xs
---     --         _ -> fail ("rule_Comprehension, not a SuchThat:" <+> pretty l)
---     --     return
---     --         ( "Bubble in the generator of a comprehension."
---     --         , const $ Comprehension body
---     --             $  gocBefore
---     --             ++ [Generator (GenInExpr pat expr)]
---     --             ++ map Condition (concat locals')
---     --             ++ gocAfter
---     --         )
---     theRule _ = na "rule_Comprehension"
---
---
--- rule_VarDecl :: Rule
--- rule_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
---     theRule Comprehension{} = na "rule_VarDecl Comprehension"
---     theRule WithLocals{}    = na "rule_VarDecl WithLocals"
---     theRule p = do
---         let
---             -- f x@(WithLocals y locals) = do
---             --     let decls = [ decl | decl@Declaration{} <- locals ]
---             --     if length decls == length locals
---             --         then tell decls >> return y         -- no cons, all decls
---             --         else               return x
---             f x = return x
---         (p', collected) <- runWriterT (descendM f p)
---         when (null collected) $
---             na "rule_VarDecl doesn't have any bubbly children"
---         return
---             ( "Bubbling up only declarations, no constraints in the bubble."
---             , const $ WithLocals p' collected []
---             )
---
---
--- rule_LocalInComprehension :: Rule
--- rule_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
---     theRule p = do
---         -- (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
---         -- (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---         --     Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---         --     _ -> na "rule_Comprehension"
---         -- return
---         --     ( "Bubble in the generator of a comprehension."
---         --     , const $ WithLocals
---         --         ( mkQuan $ Comprehension body
---         --             $  gocBefore
---         --             ++ [Generator (GenInExpr pat expr)]
---         --             ++ gocAfter
---         --         )
---         --         locals
---         --     )
-
-
 rule_ToAnd :: Rule
 rule_ToAnd = "bubble-to-and" `namedRule` theRule where
     theRule (WithLocals x (Left  [])) = return ("Empty bubble is no bubble", return x)

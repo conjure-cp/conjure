@@ -1,0 +1,32 @@
+language ESSENCE' 1.0
+
+find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
+find var2_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..11)] of int(-4..5, 2)
+such that
+    or([var2_Occurrence[q5] /\
+        !or([q8 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q8] = q5
+                 | q8 : int(1..11)])
+            | q5 : int(-4..5, 2)])
+    \/
+    or([q6 <= var2_ExplicitVarSizeWithMarker_Marker /\
+        !var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q6]]
+            | q6 : int(1..11)]),
+    and([q2 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_ExplicitVarSizeWithMarker_Values[q2] <
+         var2_ExplicitVarSizeWithMarker_Values[q2 + 1]
+             | q2 : int(1..10)]),
+    and([q3 > var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_ExplicitVarSizeWithMarker_Values[q3] = -4
+             | q3 : int(1..11)]),
+    and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q10]]
+             | q10 : int(1..11)]),
+    and([var2_Occurrence[q11] ->
+         or([q13 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q13] = q11
+                 | q13 : int(1..11)])
+             | q11 : int(-4..5, 2)])
+

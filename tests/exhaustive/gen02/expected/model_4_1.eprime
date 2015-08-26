@@ -12,8 +12,8 @@ find var2_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..2)] of bool
 such that
     or([var2_ExplicitVarSizeWithFlags_Flags[q17] /\
-        sum([var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q17,
-                                                                                 q19]
+        sum([toInt(var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q17,
+                                                                                       q19])
                  | q19 : int(1..2)])
         >= -7
             | q17 : int(1..4)]),

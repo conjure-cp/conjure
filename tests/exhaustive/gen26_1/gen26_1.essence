@@ -1,0 +1,7 @@
+language Essence 1.3
+
+letting let1 be sum([5 | l_1 : int(4, 3)])
+letting let2 be image(function([true, false, false, true; int(1, 9, 2..3)] --> 4 / 1), [l_2 | l_2 : bool])
+
+find x : int(let1,let2)
+

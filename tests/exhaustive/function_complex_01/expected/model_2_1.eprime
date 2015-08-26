@@ -108,18 +108,18 @@ such that
              | q1 : int(1..2)]),
     and([q2 > x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
          and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q2,
-                                                                                                                   q46]
+                                                                                                                   q43]
               = false
-                  | q46 : int(1..2)])
+                  | q43 : int(1..2)])
          /\
          and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q2,
-                                                                                                                      q47]
+                                                                                                                      q44]
               = 7
               /\
               x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q2,
-                                                                                                                      q47]
+                                                                                                                      q44]
               = false
-                  | q47 : int(1..2)])
+                  | q44 : int(1..2)])
          /\
          x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q2] = 13
              | q2 : int(1..3)]),
@@ -174,45 +174,46 @@ such that
     and([q3 <= x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
          ->
          1 <=
-         sum([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q3,
-                                                                                                                   q7]
+         sum([toInt(x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q3,
+                                                                                                                         q7])
                   | q7 : int(1..2)])
              | q3 : int(1..3)]),
     and([q3 <= x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
          ->
-         sum([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q3,
-                                                                                                                   q7]
+         sum([toInt(x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q3,
+                                                                                                                         q7])
                   | q7 : int(1..2)])
          <= 2
              | q3 : int(1..3)]),
     and([1 >=
-         sum([q16 <= x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
-              /\
-              (and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q16,
-                                                                                                                         q32]
-                    ->
-                    or([q9_ExplicitVarSizeWithMarker_Values_1[q34] =
-                        x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q16,
-                                                                                                                                q32]
-                        /\
-                        q9_ExplicitVarSizeWithMarker_Values_2[q34] =
-                        x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q16,
-                                                                                                                                q32]
-                            | q34 : int(1..2), q34 <= q9_ExplicitVarSizeWithMarker_Marker])
-                        | q32 : int(1..2)])
-               /\
-               and([or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q16,
-                                                                                                                             q38]
-                        /\
-                        (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q16,
-                                                                                                                                 q38]
-                         = q9_ExplicitVarSizeWithMarker_Values_1[q36]
-                         /\
-                         x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q16,
-                                                                                                                                 q38]
-                         = q9_ExplicitVarSizeWithMarker_Values_2[q36])
-                            | q38 : int(1..2)])
-                        | q36 : int(1..2), q36 <= q9_ExplicitVarSizeWithMarker_Marker]))
+         sum([toInt(q16 <=
+                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
+                    /\
+                    (and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q16,
+                                                                                                                               q32]
+                          ->
+                          or([q9_ExplicitVarSizeWithMarker_Values_1[q34] =
+                              x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q16,
+                                                                                                                                      q32]
+                              /\
+                              q9_ExplicitVarSizeWithMarker_Values_2[q34] =
+                              x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q16,
+                                                                                                                                      q32]
+                                  | q34 : int(1..2), q34 <= q9_ExplicitVarSizeWithMarker_Marker])
+                              | q32 : int(1..2)])
+                     /\
+                     and([or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q16,
+                                                                                                                                   q38]
+                              /\
+                              (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q16,
+                                                                                                                                       q38]
+                               = q9_ExplicitVarSizeWithMarker_Values_1[q36]
+                               /\
+                               x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q16,
+                                                                                                                                       q38]
+                               = q9_ExplicitVarSizeWithMarker_Values_2[q36])
+                                  | q38 : int(1..2)])
+                              | q36 : int(1..2), q36 <= q9_ExplicitVarSizeWithMarker_Marker])))
                   | q16 : int(1..3)])
              | q9_ExplicitVarSizeWithMarker_Marker : int(0..2),
                q9_ExplicitVarSizeWithMarker_Values_1 : matrix indexed by [int(1..2)] of int(7),
@@ -235,45 +236,37 @@ such that
     and([q17 <= x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
          /\ q18 <= x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker
          ->
-         (or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q17,
-                                                                                                                   q40]
-              /\
-              !or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q18,
-                                                                                                                        q43]
-                   /\
-                   (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q18,
-                                                                                                                            q43]
-                    =
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q17,
-                                                                                                                            q40]
-                    /\
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q18,
-                                                                                                                            q43]
-                    =
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q17,
-                                                                                                                            q40])
-                       | q43 : int(1..2)])
-                  | q40 : int(1..2)])
+         (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q17,
+                                                                                                               ..]
+          <lex
+          x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q18,
+                                                                                                               ..]
           \/
-          or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q18,
-                                                                                                                   q41]
-              /\
-              !or([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q17,
-                                                                                                                        q45]
-                   /\
-                   (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q17,
-                                                                                                                            q45]
-                    =
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q18,
-                                                                                                                            q41]
-                    /\
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q17,
-                                                                                                                            q45]
-                    =
-                    x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q18,
-                                                                                                                            q41])
-                       | q45 : int(1..2)])
-                  | q41 : int(1..2)])
+          and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q17,
+                                                                                                                    q39]
+               =
+               x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags[q18,
+                                                                                                                    q39]
+                   | q39 : int(1..2)])
+          /\
+          (x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q17,
+                                                                                                                   ..]
+           <lex
+           x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q18,
+                                                                                                                   ..]
+           \/
+           and([x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q17,
+                                                                                                                        q41]
+                =
+                x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_1[q18,
+                                                                                                                        q41]
+                    | q41 : int(1..2)])
+           /\
+           x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q17,
+                                                                                                                   ..]
+           <lex
+           x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values_2[q18,
+                                                                                                                   ..])
           ->
           x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q17] !=
           x_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q18])

@@ -138,7 +138,11 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
             | DeclHasRepr{} <- refto                    -- but the old one did, do not update
             -> return p
-        Just r  -> return (Reference nm (Just r))
+        Just (Alias r) -> do
+            r' <- resolveX r
+            return (Reference nm (Just (Alias r')))
+        Just r ->
+            return (Reference nm (Just r))
 
 resolveX (AbstractLiteral lit) = AbstractLiteral <$> resolveAbsLit lit
 

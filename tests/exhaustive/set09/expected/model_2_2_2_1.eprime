@@ -30,7 +30,7 @@ such that
          y_ExplicitVarSizeWithMarker_Values[q5] = 2
              | q5 : int(1..4)]),
     1 <= y_ExplicitVarSizeWithMarker_Marker,
-    1 <= sum([y_Occurrence[q7] | q7 : int(2..5)]),
+    1 <= sum([toInt(y_Occurrence[q7]) | q7 : int(2..5)]),
     and([y_Occurrence[q10] ->
          or([q12 <= y_ExplicitVarSizeWithMarker_Marker /\
              y_ExplicitVarSizeWithMarker_Values[q12] = q10

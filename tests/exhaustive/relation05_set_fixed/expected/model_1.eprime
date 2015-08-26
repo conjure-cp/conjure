@@ -9,6 +9,7 @@ such that
          x_RelationAsSet_Explicit_2_Occurrence[q1, ..] <lex
          x_RelationAsSet_Explicit_2_Occurrence[q1 + 1, ..]
              | q1 : int(1..3)]),
-    and([2 = sum([x_RelationAsSet_Explicit_2_Occurrence[q2, q3] | q3 : int(1..3)])
+    and([2 =
+         sum([toInt(x_RelationAsSet_Explicit_2_Occurrence[q2, q3]) | q3 : int(1..3)])
              | q2 : int(1..4)])
 

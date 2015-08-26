@@ -138,12 +138,13 @@ such that
                  | q92 : int(1..4)])
              | q89 : int(1..4)]),
     and([1 =
-         sum([q8 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q8, q1]
+         sum([toInt(q8 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                    var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q8, q1])
                   | q8 : int(1..4)])
              | q1 : int(1..2)]),
     and([q9 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         sum([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9, q95]
+         sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9,
+                                                                                    q95])
                   | q95 : int(1..2)])
          >= 1
              | q9 : int(1..4)]),

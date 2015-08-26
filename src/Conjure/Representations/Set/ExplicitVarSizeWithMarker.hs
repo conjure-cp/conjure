@@ -4,12 +4,9 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.Pretty
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
@@ -128,8 +125,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)

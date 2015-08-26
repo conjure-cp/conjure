@@ -11,7 +11,7 @@ letting let3 be fin3
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
 such that
     and([x_Occurrence[q2] -> nums_Occurrence[q2] | q2 : int(let2..let3)]),
-    s = sum([x_Occurrence[i] * i | i : int(let2..let3)]),
-    1 <= sum([x_Occurrence[q1] | q1 : int(let2..let3)]),
-    sum([x_Occurrence[q1] | q1 : int(let2..let3)]) <= let1
+    s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
+    1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1
 

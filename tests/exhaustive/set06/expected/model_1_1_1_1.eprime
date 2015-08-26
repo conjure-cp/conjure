@@ -5,5 +5,5 @@ such that
     x_Occurrence[1],
     x_Occurrence[2],
     x_Occurrence[3],
-    sum([x_Occurrence[q1] | q1 : int(1..4)]) <= 4
+    sum([toInt(x_Occurrence[q1]) | q1 : int(1..4)]) <= 4
 

@@ -25,7 +25,7 @@ such that
              | q2 : int(1..2)]),
     and([x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] <= 3 | q2 : int(1..2)]),
     x_Explicit_Occurrence[1, ..] <lex x_Explicit_Occurrence[2, ..],
-    and([sum([x_Explicit_Occurrence[q7, q8] | q8 : int(1..2)]) <= 3
+    and([sum([toInt(x_Explicit_Occurrence[q7, q8]) | q8 : int(1..2)]) <= 3
              | q7 : int(1..2)]),
     and([or([and([q14 <= x_Explicit_ExplicitVarSizeWithMarker_Marker[q12] ->
                   x_Explicit_Occurrence[q10,

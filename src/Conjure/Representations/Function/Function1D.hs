@@ -154,8 +154,8 @@ function1D = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
-                    case constant of
-                        ConstantAbstract (AbsLitMatrix _ vals) -> do
+                    case viewConstantMatrix constant of
+                        Just (_, vals) -> do
                             froms <- domainValues innerDomainFr
                             return ( name
                                    , ConstantAbstract $ AbsLitFunction $ zip froms vals

@@ -89,7 +89,7 @@ mkOp op xs =
                  case xs of
                      [m]   -> inject $ MkOpFlatten      $ OpFlatten      Nothing  m
                      [n,m] ->
-                          let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut n)
+                          let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut "flatten" n)
                           in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
                      _     -> bug "flatten takes 1 or 2 arguments."
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        (headNote "toSet takes a single argument."    xs)

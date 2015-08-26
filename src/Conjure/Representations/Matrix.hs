@@ -6,10 +6,7 @@ module Conjure.Representations.Matrix
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Representations.Internal
 
 
@@ -129,8 +126,8 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                     ("Bindings in context:" : prettyContext ctxt)
                                 Just constant ->
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
-                                    case constant of
-                                        ConstantAbstract (AbsLitMatrix _ c) -> return (n, c)
+                                    case viewConstantMatrix constant of
+                                        Just (_, vals) -> return (n, vals)
                                         _ -> fail $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant

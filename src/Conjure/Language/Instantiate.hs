@@ -16,11 +16,14 @@ import Conjure.Language.Pretty
 import Conjure.Process.Enumerate
 
 
+-- | Try to simplify an expression recursively.
 trySimplify :: Expression -> Expression
--- if the expression can be evaluated into a Constant, do it.
-trySimplify x | Just c <- instantiateExpression [] x = Constant c
--- otherwise, try the same on its children
-trySimplify x = descend trySimplify x
+trySimplify x
+    | Just c <- instantiateExpression [] x              -- if the expression can be evaluated into a Constant
+    , null [() | ConstantUndefined{} <- universe c]     -- and if it doesn't contain undefined's in it
+    = Constant c                                        -- evaluate to the constant
+trySimplify x = descend trySimplify x                   -- otherwise, try the same on its children
+
 
 instantiateExpression
     :: MonadFail m
@@ -172,7 +175,6 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
-instantiateD DomainIntEmpty = return DomainIntEmpty
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id

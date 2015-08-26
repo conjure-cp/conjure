@@ -4,10 +4,7 @@ module Conjure.Representations.Set.Explicit ( setExplicit ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 
 
@@ -88,8 +85,8 @@ setExplicit = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
-                    case constant of
-                        ConstantAbstract (AbsLitMatrix _ vals) ->
+                    case viewConstantMatrix constant of
+                        Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet vals))
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)

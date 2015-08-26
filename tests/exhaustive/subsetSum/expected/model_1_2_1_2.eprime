@@ -15,9 +15,9 @@ find x_ExplicitVarSizeWithMarker_Values:
 such that
     and([x_Occurrence[q5] -> or([nums_Explicit[q7] = q5 | q7 : int(1..fin1)])
              | q5 : int(let2..let3)]),
-    s = sum([x_Occurrence[i] * i | i : int(let2..let3)]),
-    1 <= sum([x_Occurrence[q1] | q1 : int(let2..let3)]),
-    sum([x_Occurrence[q1] | q1 : int(let2..let3)]) <= let1,
+    s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
+    1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1,
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q2] <
          x_ExplicitVarSizeWithMarker_Values[q2 + 1]

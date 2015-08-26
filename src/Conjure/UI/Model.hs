@@ -117,7 +117,7 @@ outputModels config model = do
                     let gen =
                             if smartFilenames config
                                 then [ choice
-                                     | [_question, (_strategy, choice, numOptions)] <-
+                                     | [_question, (choice, numOptions)] <-
                                              eprime |> mInfo |> miTrailCompact |> chunksOf 2
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
@@ -141,8 +141,12 @@ toCompletion
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue m
-    logInfo $ modelInfo m2
-    loopy m2
+    let m2Info = mInfo m2
+    let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
+                                 , miStrategyA = strategyA config
+                                 } }
+    logInfo $ modelInfo m3
+    loopy m3
     where
         driver = strategyToDriver config
         loopy model = do
@@ -369,8 +373,8 @@ addToTrail Config{..}
     where
         oldInfo = mInfo model
         newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++
-                                    [ (questionStrategy, questionNumber, questionNumbers)
-                                    , (answerStrategy  , answerNumber,   answerNumbers  )
+                                    [ (questionNumber, questionNumbers)
+                                    , (answerNumber,   answerNumbers  )
                                     ]
                           , miTrailVerbose = if verboseTrail
                                                   then miTrailVerbose oldInfo ++ [theQ, theA]
@@ -450,15 +454,6 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
                 Nothing -> [p] -- doesn't contain a list
                 Just xs -> concatMap breakConjunctions xs
         breakConjunctions x = [x]
-
-
-toIntIsNoOp :: Model -> Model
-toIntIsNoOp model =
-    let
-        f [essence| toInt(&x) |] = x
-        f x = x
-    in
-        model { mStatements = mStatements model |> transformBi f }
 
 
 emptyMatrixLiterals :: Model -> Model
@@ -547,7 +542,7 @@ updateDeclarations model =
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m | Just modelZipper <- zipperBi m = do
+checkIfAllRefined m | Just modelZipper <- zipperBi m {mInfo = def} = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -605,13 +600,52 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
 checkIfAllRefined m = return m
 
 
+-- | checking whether any undefined values creeped into the final model
+checkIfHasUndefined :: MonadFail m => Model -> m Model
+checkIfHasUndefined m  | Just modelZipper <- zipperBi m = do
+    let returnMsg x = return
+            $ ""
+            : ("Undefined value in the final model:" <+> pretty (hole x))
+            : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+              | i <- allNats
+              | c <- tail (ascendants x)
+              ]
+
+    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+                case hole x of
+                    Constant ConstantUndefined{} -> returnMsg x
+                    _ -> return []
+    unless (null fails) (fail (vcat fails))
+    return m
+checkIfHasUndefined m = return m
+
+
 topLevelBubbles :: MonadFail m => Model -> m Model
 topLevelBubbles m = do
     let
         onStmt (SuchThat xs) = onExprs SuchThat xs
         onStmt (Where    xs) = onExprs Where    xs
-        onStmt (Objective obj (WithLocals h (Left  locals))) = (          locals  ++ [Objective obj h]) |> onStmts
-        onStmt (Objective obj (WithLocals h (Right locals))) = ([SuchThat locals] ++ [Objective obj h]) |> onStmts
+        onStmt (Objective obj (WithLocals h locals)) =
+            case locals of
+                Left  locs -> (           locs  ++ [Objective obj h]            ) |> onStmts
+                Right locs -> ( [SuchThat locs] ++ [Objective obj h]            ) |> onStmts
+        onStmt (Declaration decl) =
+            let
+                f (WithLocals h locs) = tell [locs] >> return h
+                f x = return x
+
+                (decl', locals) = runWriter (transformBiM f decl)
+
+                conv :: Either [Statement] [Expression] -> [Statement]
+                conv (Left locs) = locs
+                conv (Right locs) = [SuchThat locs]
+
+                newStmts :: [Statement]
+                newStmts = concatMap conv locals
+            in
+                if null newStmts
+                    then [Declaration decl]
+                    else onStmts (newStmts ++ [Declaration decl'])
         onStmt s = [s]
 
         onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts
@@ -681,8 +715,8 @@ epilogue model = return model
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= checkIfHasUndefined           >>= logDebugId "[checkIfHasUndefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
-    >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
@@ -891,10 +925,13 @@ horizontalRules =
 
     , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Image_Bool
+    , Horizontal.Function.rule_Image_BoolMatrixIndexed
+    , Horizontal.Function.rule_Image_BoolTupleIndexed
     , Horizontal.Function.rule_Image_Int
+    , Horizontal.Function.rule_Image_IntMatrixIndexed
+    , Horizontal.Function.rule_Image_IntTupleIndexed
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Comprehension_ImageSet
-    , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_DotLeq
@@ -1676,7 +1713,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , return $ make opIndexing
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
                         indexer
@@ -1701,7 +1738,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map (mkQuan . flattenIfNeeded) elems))
             )
@@ -1711,14 +1748,14 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)   <- match opQuantifier p
-        matrix            <- match opConcatenate inner
-        (_, index, elems) <- match matrixLiteral matrix
+        (mkQuan, inner)                 <- match opQuantifier p
+        matrix                          <- match opConcatenate inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
             )

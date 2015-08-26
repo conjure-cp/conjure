@@ -22,8 +22,8 @@ instance TypeOf x => TypeOf (OpFactorial x) where
     typeOf (OpFactorial a) = do TypeInt <- typeOf a ; return TypeInt
 
 instance EvaluateOp OpFactorial where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut x
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut "factorial" x
 
 instance SimplifyOp OpFactorial x where
     simplifyOp _ = na "simplifyOp{OpFactorial}"

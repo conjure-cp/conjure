@@ -32,7 +32,7 @@ such that
     and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
          x_ExplicitVarSizeWithFlags_Flags[q3]
              | q3 : int(1..15)]),
-    2 <= sum([x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..16)]),
+    2 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..16)]),
     and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values_1[q6] <
          x_ExplicitVarSizeWithMarker_Values_1[q6 + 1]
