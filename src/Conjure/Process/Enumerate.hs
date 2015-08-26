@@ -37,6 +37,23 @@ enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) = do
         , vals <- replicateM (fromInteger s) inners
         , sorted vals
         ]
+enumerateDomain (DomainFunction _ attr DomainBool innerTo) | attr == def = do
+    inners <- enumerateDomain innerTo
+    let outEmpty     = [ ConstantAbstract (AbsLitFunction []) ]
+    let outOnlyFalse = [ ConstantAbstract (AbsLitFunction [ (ConstantBool False, x) ])
+                       | x <- inners ]
+    let outOnlyTrue  = [ ConstantAbstract (AbsLitFunction [ (ConstantBool True , x) ])
+                       | x <- inners ]
+    inners2 <- enumerateDomain innerTo
+    let outBoth      = [ ConstantAbstract (AbsLitFunction [ (ConstantBool False, x)
+                                                          , (ConstantBool True , y) ])
+                       | x <- inners
+                       , y <- inners2
+                       ]
+    return $ outEmpty
+          ++ outOnlyFalse
+          ++ outOnlyTrue
+          ++ outBoth
 enumerateDomain d = fail $ "enumerateDomain:" <+> pretty d
 
 sorted :: Ord a => [a] -> Bool
