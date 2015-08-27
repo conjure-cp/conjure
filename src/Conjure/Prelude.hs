@@ -380,6 +380,11 @@ instance (Monad m) => Monad (ExceptT m) where
             Right x -> runExceptT (k x)
     fail = ExceptT . return . Left . stringToDoc
 
+instance MonadIO m => MonadIO (ExceptT m) where
+    liftIO comp = ExceptT $ do
+        res <- liftIO comp
+        return (Right res)
+
 instance MonadTrans ExceptT where
     lift comp = ExceptT (Right `liftM` comp)
 

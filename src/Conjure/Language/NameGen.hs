@@ -48,6 +48,11 @@ instance NameGen m => NameGen (ReaderT r m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
+instance NameGen m => NameGen (IdentityT m) where
+    nextName = lift . nextName
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
+
 instance NameGen m => NameGen (ExceptT m) where
     nextName = lift . nextName
     exportNameGenState = lift exportNameGenState
