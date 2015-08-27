@@ -105,6 +105,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
         Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
         return [ c | Declaration (Letting "x" (Constant c)) <- decls ]
+    removeDirectoryRecursive outDir
     removeDirectoryRecursive tmpDir
     return enumeration
 

@@ -1144,8 +1144,9 @@ upTest
     -> [(Name, Constant)]
     -> (Name, Constant)
     -> Assertion
-upTest info lows high' =
-    case up lows info of
+upTest info lows high' = do
+    result <- runExceptT $ runNameGen $ up lows info
+    case result of
         Left err -> assertFailure (show err)
         Right high -> Pr high @?= Pr high'
 
@@ -1178,8 +1179,9 @@ downUpTest
 downUpTest high =
     case downC high of
         Left err -> assertFailure (show err)
-        Right lows ->
-            case up (map dropDomain lows) (dropConstant high) of
+        Right lows -> do
+            result <- runExceptT $ runNameGen $ up (map dropDomain lows) (dropConstant high)
+            case result of
                 Left err -> assertFailure (show err)
                 Right high' -> Pr high' @?= Pr (dropDomain high)
 

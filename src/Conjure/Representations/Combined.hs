@@ -14,6 +14,8 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+import Conjure.Language.Instantiate
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
@@ -106,7 +108,7 @@ downC inp0 = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>  [(Name, Constant)]
     ->   (Name, DomainC)
     -> m (Name, Constant)
@@ -125,7 +127,10 @@ up ctxt (name, highDomain) = do
         Just toDescend -> do
             midConstants
                  :: [(Name, Constant)]
-                 <- sequence [ up ctxt (n, fmap e2c d) | (n, d) <- toDescend ]
+                 <- sequence [ do d' <- instantiateDomain [] d
+                                  up ctxt (n, d')
+                             | (n, d) <- toDescend
+                             ]
             up1 (name, highDomain) midConstants
 
 
