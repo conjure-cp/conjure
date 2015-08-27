@@ -175,13 +175,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 ]
                            )
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlags name)
+                    [ "(in Partition Occurrence up 1)"
+                    , "No value for:" <+> pretty (nameFlags name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameParts name)
+                    [ "(in Partition Occurrence up 2)"
+                    , "No value for:" <+> pretty (nameParts name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

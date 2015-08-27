@@ -62,7 +62,8 @@ tuple = Representation chck downD structuralCons downC up
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
                     Nothing -> fail $ vcat $
-                        [ "No value for:" <+> pretty n
+                        [ "(in Tuple up)"
+                        , "No value for:" <+> pretty n
                         , "When working on:" <+> pretty name
                         , "With domain:" <+> pretty (DomainTuple ds)
                         ] ++

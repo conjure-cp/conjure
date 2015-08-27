@@ -189,13 +189,15 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlag name)
+                    [ "(in MSet ExplicitVarSizeWithFlags up 1)"
+                    , "No value for:" <+> pretty (nameFlag name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in MSet ExplicitVarSizeWithFlags up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

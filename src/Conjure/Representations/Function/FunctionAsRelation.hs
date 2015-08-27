@@ -146,7 +146,8 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                     vals <- mapM pairOut pairs
                     return (name, ConstantAbstract (AbsLitFunction vals))
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in FunctionAsRelation up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

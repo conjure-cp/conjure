@@ -79,7 +79,8 @@ setExplicit = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttr_Size _)) _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Set Explicit up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

@@ -216,7 +216,8 @@ functionND = Representation chck downD structuralCons downC up
                            , ConstantAbstract $ AbsLitFunction vals
                            )
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in FunctionND up)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

@@ -125,7 +125,8 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                     vals <- mapM setOut sets
                     return (name, ConstantAbstract (AbsLitPartition vals))
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in PartitionAsSet up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

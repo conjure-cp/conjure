@@ -179,13 +179,15 @@ function1DPartial = Representation chck downD structuralCons downC up
                                              ]
                     return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlags name)
+                    [ "(in Function1DPartial up 1)"
+                    , "No value for:" <+> pretty (nameFlags name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in Function1DPartial up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

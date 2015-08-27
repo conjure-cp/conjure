@@ -105,7 +105,8 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     -- and we just pass it through
                     case lookup name ctxt of
                         Nothing -> fail $ vcat $
-                            [ "No value for:" <+> pretty name
+                            [ "(in Matrix up 1)"
+                            , "No value for:" <+> pretty name
                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                             ] ++
                             ("Bindings in context:" : prettyContext ctxt)
@@ -119,7 +120,8 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                         <- forM mid2 $ \ (n, _) ->
                             case lookup n ctxt of
                                 Nothing -> fail $ vcat $
-                                    [ "No value for:" <+> pretty n
+                                    [ "(in Matrix up 2)"
+                                    , "No value for:" <+> pretty n
                                     , "When working on:" <+> pretty name
                                     , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                     ] ++

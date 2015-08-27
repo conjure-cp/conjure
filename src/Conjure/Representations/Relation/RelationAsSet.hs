@@ -103,7 +103,8 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                     vals <- mapM tupleOut tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in RelationAsSet up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

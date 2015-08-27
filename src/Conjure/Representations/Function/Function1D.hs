@@ -148,7 +148,8 @@ function1D = Representation chck downD structuralCons downC up
                                 innerDomainFr _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Function1D up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

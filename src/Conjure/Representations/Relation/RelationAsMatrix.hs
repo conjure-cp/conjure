@@ -126,7 +126,8 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in RelationAsMatrix up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

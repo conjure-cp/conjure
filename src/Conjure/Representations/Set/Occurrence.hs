@@ -77,7 +77,8 @@ setOccurrence = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Set Occurrence up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
