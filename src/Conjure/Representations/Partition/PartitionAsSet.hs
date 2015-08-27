@@ -1,12 +1,14 @@
 {-# LANGUAGE Rank2Types #-}
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Partition.PartitionAsSet ( partitionAsSet ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Definition
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
@@ -119,11 +121,6 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) =
             case lookup (outName name) ctxt of
-                Just (ConstantAbstract (AbsLitSet sets)) -> do
-                    let setOut (ConstantAbstract (AbsLitSet xs)) = return xs
-                        setOut c = fail $ "Expecting a set, but got:" <+> pretty c
-                    vals <- mapM setOut sets
-                    return (name, ConstantAbstract (AbsLitPartition vals))
                 Nothing -> fail $ vcat $
                     [ "(in PartitionAsSet up)"
                     , "No value for:" <+> pretty (outName name)
@@ -131,6 +128,13 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+                Just (viewConstantSet -> Just sets) -> do
+                    let setOut (viewConstantSet -> Just xs) = return xs
+                        setOut c = fail $ "Expecting a set, but got:" <+> pretty c
+                    vals <- mapM setOut sets
+                    return (name, ConstantAbstract (AbsLitPartition vals))
+                Just constant@ConstantUndefined{} ->        -- undefined propagates
+                    return (name, constant)
                 Just constant -> fail $ vcat $
                     [ "Incompatible value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name

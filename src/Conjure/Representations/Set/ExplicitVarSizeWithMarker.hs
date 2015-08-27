@@ -125,9 +125,11 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
-                            case viewConstantMatrix constantMatrix of
-                                Just (_, vals) ->
+                            case (viewConstantMatrix constantMatrix, constantMatrix) of
+                                (Just (_, vals), _) ->
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))
+                                (_, ConstantUndefined{}) ->         -- undefined propagates
+                                    return (name, constantMatrix)
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
                                         , "But got:" <+> pretty constantMatrix
