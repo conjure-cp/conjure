@@ -13,6 +13,7 @@ module Conjure.Language.Definition
     , lambdaToFunction
 
     , e2c
+    , nbUses
 
     , Model(..), LanguageVersion(..)
     , ModelInfo(..), Decision(..)
@@ -930,3 +931,6 @@ tupleLitIfNeeded :: [Expression] -> Expression
 tupleLitIfNeeded [] = bug "tupleLitIfNeeded []"
 tupleLitIfNeeded [x] = x
 tupleLitIfNeeded xs = AbstractLiteral (AbsLitTuple xs)
+
+nbUses :: Data x => Name -> x -> Int
+nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]

@@ -3,7 +3,6 @@ module Conjure.UI.Split ( outputSplittedModels ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.UI.Model ( nbUses )
 
 -- pipes
 import Pipes ( Producer, yield )
