@@ -137,14 +137,36 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                             ]
 
-                    let midNames     = map fst mid3
-                    let midConstants = map snd mid3
+                    let
+                        midNames :: [Name]
+                        midNames     = map fst mid3
+
+                        midConstants :: [[Constant]]
+                        midConstants = map snd mid3
+
+                        midConstantsMaxLength = maximum (0 : map length midConstants)
+
+                        midConstantsPadded :: [[Constant]]
+                        midConstantsPadded =
+                            [ cs ++ replicate (midConstantsMaxLength - length cs) z
+                            | let z = ConstantUndefined "midConstantsPadded" TypeAny
+                            , cs <- midConstants
+                            ]
+
+                    -- -- assertion, midConstants should not be rugged
+                    -- case midConstants of
+                    --     (x:xs) | any (length x /=) (map length xs) -> fail $ vcat
+                    --         [ "midConstants is rugged"
+                    --         , "midConstants      :" <+> vcat (map (prettyList prBrackets ",") midConstants)
+                    --         , "midConstantsPadded:" <+> vcat (map (prettyList prBrackets ",") midConstantsPadded)
+                    --         ]
+                    --     _ -> return ()
 
                     mid4
                         :: [(Name, Constant)]
                         <- sequence
                             [ up1 (name, innerDomain) (zip midNames cs)
-                            | cs <- transpose midConstants
+                            | cs <- transpose midConstantsPadded
                             ]
                     let values = map snd mid4
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
