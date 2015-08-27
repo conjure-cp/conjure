@@ -11,10 +11,10 @@ import Conjure.Language
 import Conjure.UI.IO
 
 -- shelly
-import Shelly ( run )
+import Shelly ( run, lastStderr )
 
 -- text
-import qualified Data.Text as T ( pack )
+import qualified Data.Text as T ( null )
 
 -- pipes
 import qualified Pipes
@@ -37,6 +37,9 @@ instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift 
 
 runEnumerateDomain :: IO a -> IO a
 runEnumerateDomain = id
+
+enumerateDomainMax :: Int
+enumerateDomainMax = 10000
 
 enumerateDomain :: (MonadFail m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
@@ -94,14 +97,20 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     let essenceFile = tmpDir </> "out.essence"
     let outDir = tmpDir </> "outDir"
     writeModel PlainEssence (Just essenceFile) model
-    void $ sh $ run "conjure"
-        [ "solve"
-        , T.pack essenceFile
-        , "-o", T.pack outDir
-        , "--savilerow-options", "-O0 -preprocess None -all-solutions -timelimit 60000"
-        , "--minion-options"   , "-cpulimit 60"
-        ]
+    (_, stderrSR) <- sh $ do
+        stdoutSR <- run "conjure"
+            [ "solve"
+            , stringToText essenceFile
+            , "-o", stringToText outDir
+            , "--savilerow-options"
+            , stringToText $ "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
+            , "--minion-options"   , "-cpulimit 60"
+            ]
+        stderrSR <- lastStderr
+        return (stdoutSR, stderrSR)
+    unless (T.null stderrSR) $ fail (pretty stderrSR)
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
+    when (length solutions >= enumerateDomainMax) $ fail "Enumerate domain: too many."
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
         Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
         return [ c | Declaration (Letting "x" (Constant c)) <- decls ]
