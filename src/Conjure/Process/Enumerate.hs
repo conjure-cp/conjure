@@ -25,7 +25,7 @@ import System.IO.Temp ( withSystemTempDirectory )
 
 -- | This class is only to track where `enumerateDomain` might get called.
 --   It is essentially MonadIO, but doesn't allow arbitrary IO.
-class Monad m => EnumerateDomain m where liftIO' :: IO a -> m a
+class (Functor m, Applicative m, Monad m) => EnumerateDomain m where liftIO' :: IO a -> m a
 instance EnumerateDomain IO where liftIO' = id
 instance EnumerateDomain m => EnumerateDomain (IdentityT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (MaybeT m) where liftIO' = lift . liftIO'
