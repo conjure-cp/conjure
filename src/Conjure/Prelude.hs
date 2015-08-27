@@ -181,6 +181,7 @@ import qualified Data.Set as S
 import System.Directory as X
     ( getDirectoryContents, doesDirectoryExist, doesFileExist
     , createDirectoryIfMissing, removeDirectoryRecursive
+    , removeFile
     )
 import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )

@@ -19,6 +19,9 @@ import qualified Data.Text as T ( pack )
 -- pipes
 import qualified Pipes
 
+-- temporary
+import System.IO.Temp ( withSystemTempDirectory )
+
 
 -- | This class is only to track where `enumerateDomain` might get called.
 --   It is essentially MonadIO, but doesn't allow arbitrary IO.
@@ -83,13 +86,13 @@ enumerateDomain (DomainFunction _ attr DomainBool innerTo) | attr == def = do
           ++ outBoth
 
 -- the sledgehammer approach
-enumerateDomain d = liftIO' $ do
+enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-" ++ show (hash d)) $ \ tmpDir -> do
     let model = Model { mLanguage = LanguageVersion "Essence" [1,0]
                       , mStatements = [Declaration (FindOrGiven Find "x" (fmap Constant d))]
                       , mInfo = def
                       }
-    let essenceFile = "tmp.essence"
-    let outDir = "tmpDir"
+    let essenceFile = tmpDir </> "out.essence"
+    let outDir = tmpDir </> "outDir"
     writeModel PlainEssence (Just essenceFile) model
     void $ sh $ run "conjure"
         [ "solve"
@@ -97,10 +100,12 @@ enumerateDomain d = liftIO' $ do
         , "-o", T.pack outDir
         , "--savilerow-options", "-O0 -preprocess None -all-solutions"
         ]
-    solutions <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
-    fmap concat $ forM solutions $ \ solutionFile -> do
-        Model _ decls _ <- readModelFromFile solutionFile
+    solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
+    enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
+        Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
         return [ c | Declaration (Letting "x" (Constant c)) <- decls ]
+    removeDirectoryRecursive tmpDir
+    return enumeration
 
 
 sorted :: Ord a => [a] -> Bool
