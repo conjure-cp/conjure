@@ -7,7 +7,7 @@ Common flags:
   -? --help                                  Display help message
   -V --version                               Print version information
 
-conjure [solve] [OPTIONS] ESSENCE_FILE
+conjure solve [OPTIONS] ESSENCE_FILE
   This is a combined mode, and it is available for convenience. It runs conjure
   in the modelling mode followed by parameter refinement if required, then
   Savile Row + Minion to solve, and then solution translation.
@@ -116,7 +116,7 @@ Options for other tools:
                                              None -all-solutions'
      --minion-options=ITEM                   Options to be passed to Minion.
 
-conjure modelling [OPTIONS] ESSENCE_FILE
+conjure [modelling] [OPTIONS] ESSENCE_FILE
   The main act. Given a problem specification in Essence, produce constraint
   programming models in Essence'.
 
