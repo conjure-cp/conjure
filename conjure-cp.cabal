@@ -205,6 +205,7 @@ Library
                      -- supporting modules for the user interfacing parts
                      , Conjure.UI
                      , Conjure.UI.IO
+                     , Conjure.UI.MainHelper
                      , Conjure.UI.Model
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
@@ -280,8 +281,6 @@ Executable conjure
     build-depends    : conjure-cp
                      , base
                      , cmdargs
-                     , shelly
-                     , text
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings

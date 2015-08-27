@@ -12,6 +12,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
 import Conjure.Process.FiniteGivens ( finiteGivensParam )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Representations ( downC )
 
 
@@ -20,6 +21,7 @@ refineParam
        , MonadUserError m
        , MonadLog m
        , NameGen m
+       , EnumerateDomain m
        )
     => Model      -- eprime model
     -> Model      -- essence param

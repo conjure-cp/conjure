@@ -35,6 +35,7 @@ import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Process.DealWithCuts ( dealWithCuts )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
@@ -90,7 +91,7 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m)
+    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> m ()
@@ -135,7 +136,7 @@ outputModels config model = do
 
 
 toCompletion
-    :: (MonadIO m, MonadFail m, MonadUserError m, NameGen m)
+    :: (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
@@ -162,7 +163,7 @@ toCompletion config m = do
 
 
 remaining
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> m [Question]
@@ -175,7 +176,7 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
+        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
                      -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
@@ -414,9 +415,6 @@ addTrueConstraints m =
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
 
-nbUses :: Data x => Name -> x -> Int
-nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
-
 
 oneSuchThat :: Model -> Model
 oneSuchThat m = m { mStatements = onStatements (mStatements m) }
@@ -489,29 +487,26 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: Model -> Model
-updateDeclarations model =
+updateDeclarations :: (EnumerateDomain m) => Model -> m Model
+updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
 
-        statements = concatMap onEachStatement (withAfter (mStatements model))
-
         onEachStatement (inStatement, afters) =
             case inStatement of
-                Declaration (FindOrGiven forg nm _) ->
+                Declaration (FindOrGiven forg nm _) -> do
                     let
                         -- the refined domains for the high level declaration
                         domains = [ d | (n, d) <- representations, n == nm ]
-                    in
-                        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
-                        -- and 2 disticnt representations in the inner level. removing them with nub.
-                        nub $ concatMap (onEachDomain forg nm) domains
-                Declaration (GivenDomainDefnEnum name) ->
+                    -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
+                    -- and 2 disticnt representations in the inner level. removing them with nub.
+                    fmap nub $ concatMapM (onEachDomain forg nm) domains
+                Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
-                Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
-                Declaration LettingDomainDefnEnum{}    -> []
-                Declaration LettingDomainDefnUnnamed{} -> []
-                SearchOrder orders -> return $ SearchOrder $ concat
+                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
+                Declaration LettingDomainDefnEnum{}    -> return []
+                Declaration LettingDomainDefnUnnamed{} -> return []
+                SearchOrder orders -> return $ return $ SearchOrder $ concat
                     [ case order of
                         BranchingOn nm ->
                             let domains = [ d | (n, d) <- representations, n == nm ]
@@ -519,15 +514,22 @@ updateDeclarations model =
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     | order <- orders
                     ]
-                _ -> [inStatement]
+                -- SearchOrder orders -> do
+                --     out <- forM orders $ \ order ->
+                --         case order of
+                --             BranchingOn nm -> do
+                --                 let domains = [ d | (n, d) <- representations, n == nm ]
+                --                 fmap nub $ concatMapM (onEachDomainSearch nm) domains
+                --             Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
+                --     return [SearchOrder out]
+                _ -> return [inStatement]
 
         onEachDomain forg nm domain =
             case downD (nm, domain) of
                 Left err -> bug err
-                Right outs -> [ Declaration (FindOrGiven forg n d')
-                              | (n, d) <- outs
-                              , let d' = fmap trySimplify $ forgetRepr d
-                              ]
+                Right outs -> forM outs $ \ (n, d) -> do
+                    d' <- transformBiM trySimplify $ forgetRepr d
+                    return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
             case downD (nm, domain) of
@@ -536,8 +538,8 @@ updateDeclarations model =
                               | (n, _) <- outs
                               ]
 
-    in
-        model { mStatements = statements }
+    statements <- concatMapM onEachStatement (withAfter (mStatements model))
+    return model { mStatements = statements }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
@@ -708,10 +710,10 @@ prologue model = return model
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadLog m) => Model -> m Model
+epilogue :: (MonadFail m, MonadLog m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
-    >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
+    >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
@@ -723,8 +725,8 @@ epilogue model = return model
 
 
 applicableRules
-    :: forall m n . ( MonadLog n, NameGen n
-                    , MonadLog m, NameGen m, MonadFail m, MonadUserError m
+    :: forall m n . ( MonadLog n, NameGen n, EnumerateDomain n
+                    , MonadLog m, NameGen m, EnumerateDomain m, MonadFail m, MonadUserError m
                     )
     => Config
     -> [Rule]

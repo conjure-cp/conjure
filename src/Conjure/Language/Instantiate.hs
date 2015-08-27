@@ -13,20 +13,22 @@ import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
-import Conjure.Process.Enumerate
+import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain, enumerateInConstant )
 
 
 -- | Try to simplify an expression recursively.
-trySimplify :: Expression -> Expression
-trySimplify x
-    | Just c <- instantiateExpression [] x              -- if the expression can be evaluated into a Constant
-    , null [() | ConstantUndefined{} <- universe c]     -- and if it doesn't contain undefined's in it
-    = Constant c                                        -- evaluate to the constant
-trySimplify x = descend trySimplify x                   -- otherwise, try the same on its children
+trySimplify :: EnumerateDomain m => Expression -> m Expression
+trySimplify x = do
+    res <- runMaybeT $ instantiateExpression [] x
+    case res of
+        Just c                                                  -- if the expression can be evaluated into a Constant
+            | null [() | ConstantUndefined{} <- universe c]     -- and if it doesn't contain undefined's in it
+            -> return (Constant c)                              -- evaluate to the constant
+        _   -> descendM trySimplify x                           -- otherwise, try the same on its children
 
 
 instantiateExpression
-    :: MonadFail m
+    :: (MonadFail m, EnumerateDomain m)
     => [(Name, Expression)]
     -> Expression
     -> m Constant
@@ -42,6 +44,7 @@ instantiateExpression ctxt x = do
 
 instantiateDomain
     :: ( MonadFail m
+       , EnumerateDomain m
        , Show r
        , Pretty r
        , Default r
@@ -55,13 +58,17 @@ instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (ins
 instantiateE
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => Expression
     -> m Constant
 
 instantiateE (Comprehension body gensOrConds) = do
     let
-        loop :: (MonadFail m, MonadState [(Name, Expression)] m) => [GeneratorOrCondition] -> m [Constant]
+        loop :: ( MonadFail m
+                , MonadState [(Name, Expression)] m
+                , EnumerateDomain m
+                ) => [GeneratorOrCondition] -> m [Constant]
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
@@ -149,6 +156,7 @@ instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 instantiateOp
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => Op Expression
     -> m Constant
@@ -158,6 +166,7 @@ instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstan
 instantiateAbsLit
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => AbstractLiteral Expression
     -> m (AbstractLiteral Constant)
@@ -167,6 +176,7 @@ instantiateAbsLit = mapM instantiateE
 instantiateD
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        , Show r
        , Pretty r
        , Default r
@@ -221,6 +231,7 @@ instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 instantiateSetAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => SetAttr Expression
     -> m (SetAttr Constant)
@@ -230,6 +241,7 @@ instantiateSetAttr (SetAttr s) = SetAttr <$> instantiateSizeAttr s
 instantiateSizeAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => SizeAttr Expression
     -> m (SizeAttr Constant)
@@ -243,6 +255,7 @@ instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instanti
 instantiateMSetAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => MSetAttr Expression
     -> m (MSetAttr Constant)
@@ -252,6 +265,7 @@ instantiateMSetAttr (MSetAttr s o) = MSetAttr <$> instantiateSizeAttr s <*> inst
 instantiateOccurAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => OccurAttr Expression
     -> m (OccurAttr Constant)
@@ -264,6 +278,7 @@ instantiateOccurAttr (OccurAttr_MinMaxOccur x y) = OccurAttr_MinMaxOccur <$> ins
 instantiateFunctionAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => FunctionAttr Expression
     -> m (FunctionAttr Constant)
@@ -276,6 +291,7 @@ instantiateFunctionAttr (FunctionAttr s p j) =
 instantiateSequenceAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => SequenceAttr Expression
     -> m (SequenceAttr Constant)
@@ -287,6 +303,7 @@ instantiateSequenceAttr (SequenceAttr s j) =
 instantiateRelationAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => RelationAttr Expression
     -> m (RelationAttr Constant)
@@ -296,6 +313,7 @@ instantiateRelationAttr (RelationAttr s b) = RelationAttr <$> instantiateSizeAtt
 instantiatePartitionAttr
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => PartitionAttr Expression
     -> m (PartitionAttr Constant)
@@ -308,6 +326,7 @@ instantiatePartitionAttr (PartitionAttr a b c) =
 instantiateR
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , EnumerateDomain m
        )
     => Range Expression
     -> m (Range Constant)

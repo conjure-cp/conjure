@@ -8,11 +8,13 @@ import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
 validateSolution
     :: ( MonadFail m
        , MonadLog m
+       , EnumerateDomain m
        )
     => Model      -- essence model
     -> Model      -- essence param

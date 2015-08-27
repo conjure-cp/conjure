@@ -186,7 +186,8 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    case ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution of
+                    res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
+                    case res of
                         Left err -> assertFailure $ renderNormal err
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
@@ -198,7 +199,8 @@ validateSolutionNoParam TestDirFiles{..} solutionPath =
     testCase (unwords ["Validating solution:", solutionPath]) $ sh $ do
         essence  <- liftIO $ readModelFromFile essenceFile
         solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-        case ignoreLogs (validateSolution essence def solution) of
+        result   <- liftIO $ runExceptT $ ignoreLogs $ validateSolution essence def solution
+        case result of
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right () -> return ()
 
@@ -209,7 +211,8 @@ validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
         essence  <- liftIO $ readModelFromFile essenceFile
         param    <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
         solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-        case ignoreLogs (validateSolution essence param solution) of
+        result   <- liftIO $ runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
+        case result of
             Left err -> liftIO $ assertFailure $ renderNormal err
             Right () -> return ()
 

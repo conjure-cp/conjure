@@ -1,14 +1,41 @@
-module Conjure.Process.Enumerate ( enumerateDomain, enumerateInConstant ) where
+module Conjure.Process.Enumerate
+    ( EnumerateDomain
+    , enumerateDomain
+    , enumerateInConstant
+    , runEnumerateDomain
+    ) where
 
 import Conjure.Prelude
 import Conjure.Language.AdHoc
-import Conjure.Language.Domain
-import Conjure.Language.Constant
-import Conjure.Language.AbstractLiteral
-import Conjure.Language.Pretty
+import Conjure.Language
+import Conjure.UI.IO
+
+-- shelly
+import Shelly ( run )
+
+-- text
+import qualified Data.Text as T ( pack )
+
+-- pipes
+import qualified Pipes
 
 
-enumerateDomain :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
+-- | This class is only to track where `enumerateDomain` might get called.
+--   It is essentially MonadIO, but doesn't allow arbitrary IO.
+class Monad m => EnumerateDomain m where liftIO' :: IO a -> m a
+instance EnumerateDomain IO where liftIO' = id
+instance EnumerateDomain m => EnumerateDomain (IdentityT m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (MaybeT m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (ExceptT m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (ReaderT r m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
+
+runEnumerateDomain :: IO a -> IO a
+runEnumerateDomain = id
+
+enumerateDomain :: (MonadFail m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -54,7 +81,27 @@ enumerateDomain (DomainFunction _ attr DomainBool innerTo) | attr == def = do
           ++ outOnlyFalse
           ++ outOnlyTrue
           ++ outBoth
-enumerateDomain d = fail $ "enumerateDomain:" <+> pretty d
+
+-- the sledgehammer approach
+enumerateDomain d = liftIO' $ do
+    let model = Model { mLanguage = LanguageVersion "Essence" [1,0]
+                      , mStatements = [Declaration (FindOrGiven Find "x" (fmap Constant d))]
+                      , mInfo = def
+                      }
+    let essenceFile = "tmp.essence"
+    let outDir = "tmpDir"
+    writeModel PlainEssence (Just essenceFile) model
+    void $ sh $ run "conjure"
+        [ "solve"
+        , T.pack essenceFile
+        , "-o", T.pack outDir
+        , "--savilerow-options", "-O0 -preprocess None -all-solutions"
+        ]
+    solutions <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
+    fmap concat $ forM solutions $ \ solutionFile -> do
+        Model _ decls _ <- readModelFromFile solutionFile
+        return [ c | Declaration (Letting "x" (Constant c)) <- decls ]
+
 
 sorted :: Ord a => [a] -> Bool
 sorted xs = and $ zipWith (<) xs (tail xs)

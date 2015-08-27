@@ -11,6 +11,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
 -- | givens should have finite domains. except ints.
@@ -32,7 +33,7 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam
-    :: (MonadFail m, MonadLog m, NameGen m)
+    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
     => Model                                -- eprime
     -> Model                                -- essence-param
     -> m (Model, [Name])                    -- essence-param

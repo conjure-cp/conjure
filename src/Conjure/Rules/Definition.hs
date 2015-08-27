@@ -16,6 +16,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( Zipper )
@@ -108,9 +109,9 @@ data RuleResult m = RuleResult
 data Rule = Rule
     { rName  :: Doc
     , rApply
-        :: forall n m . ( MonadFail n, MonadLog n, NameGen n, MonadReader (Zipper Model Expression) n
+        :: forall n m . ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper Model Expression) n
                                 -- a fail in {n} means that the rule isn't applicable
-                        , MonadFail m, MonadLog m, NameGen m, MonadUserError m
+                        , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m
                                 -- a fail in {m} means a bug
                         )
         => Zipper Model Expression            -- to query context
@@ -120,8 +121,8 @@ data Rule = Rule
 
 namedRule
     :: Doc
-    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n, MonadReader (Zipper Model Expression) n
-                     , MonadFail m, MonadLog m, NameGen m
+    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper Model Expression) n
+                     , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m
                      ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
