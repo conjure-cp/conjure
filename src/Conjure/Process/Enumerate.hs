@@ -98,7 +98,8 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         [ "solve"
         , T.pack essenceFile
         , "-o", T.pack outDir
-        , "--savilerow-options", "-O0 -preprocess None -all-solutions"
+        , "--savilerow-options", "-O0 -preprocess None -all-solutions -timelimit 60000"
+        , "--minion-options"   , "-cpulimit 60"
         ]
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do

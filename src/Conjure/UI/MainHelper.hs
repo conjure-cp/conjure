@@ -183,6 +183,7 @@ savileRowNoParam Solve{..} modelPath = sh $ do
         , "-run-solver"
         , "-minion"
         ] ++ map stringToText (words savilerowOptions)
+          ++ [ "-solver-options", stringToText minionOptions ]
     stderrSR <- lastStderr
     if not (T.null stderrSR)
         then bug (pretty stderrSR)
