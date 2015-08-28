@@ -367,7 +367,7 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_Size       x  ) = "size"    <+> pretty x
     pretty (SizeAttr_MinSize    x  ) = "minSize" <+> pretty x
     pretty (SizeAttr_MaxSize    x  ) = "maxSize" <+> pretty x
-    pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <+> ", maxSize" <+> pretty y
+    pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <> ", maxSize" <+> pretty y
 
 
 data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
