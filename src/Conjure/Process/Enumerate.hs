@@ -3,6 +3,7 @@ module Conjure.Process.Enumerate
     , enumerateDomain
     , enumerateInConstant
     , runEnumerateDomain
+    , EnumerateDomainNoIO(..)
     ) where
 
 import Conjure.Prelude
@@ -34,6 +35,25 @@ instance EnumerateDomain m => EnumerateDomain (ReaderT r m) where liftIO' = lift
 instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
+
+-- | Use this if you don't want to allow a (EnumerateDomain m => m a) computation actually do IO.
+data EnumerateDomainNoIO a = Done a | TriedIO
+    deriving (Eq, Ord, Show)
+
+instance Functor EnumerateDomainNoIO where
+    fmap _ TriedIO  = TriedIO
+    fmap f (Done x) = Done (f x)
+
+instance Applicative EnumerateDomainNoIO where
+    pure = return
+    (<*>) = ap
+
+instance Monad EnumerateDomainNoIO where
+    return = Done
+    TriedIO >>= _ = TriedIO
+    Done x  >>= f = f x
+
+instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 
 runEnumerateDomain :: IO a -> IO a
 runEnumerateDomain = id
