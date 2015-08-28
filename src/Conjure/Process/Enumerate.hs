@@ -2,7 +2,6 @@ module Conjure.Process.Enumerate
     ( EnumerateDomain
     , enumerateDomain
     , enumerateInConstant
-    , runEnumerateDomain
     , EnumerateDomainNoIO(..)
     ) where
 
@@ -54,9 +53,6 @@ instance Monad EnumerateDomainNoIO where
     Done x  >>= f = f x
 
 instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
-
-runEnumerateDomain :: IO a -> IO a
-runEnumerateDomain = id
 
 enumerateDomainMax :: Int
 enumerateDomainMax = 10000
