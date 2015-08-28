@@ -240,6 +240,7 @@ data Lexeme
 
     | L_subsequence
     | L_substring
+    | L_powerSet
 
     | L_pred
     | L_succ
@@ -440,6 +441,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_subsequence     , "subsequence"  )
     , ( L_substring       , "substring"    )
+    , ( L_powerSet        , "powerSet"     )
 
     , ( L_pred, "pred" )
     , ( L_succ, "succ" )

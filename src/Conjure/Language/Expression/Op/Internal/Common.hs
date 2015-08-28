@@ -262,6 +262,8 @@ functionals =
     , L_pred
     , L_succ
 
+    , L_powerSet
+
     ]
 
 

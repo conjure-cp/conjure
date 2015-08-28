@@ -113,4 +113,5 @@ mkOp op xs =
             L_pred         -> inject $ MkOpPred         $ OpPred         (headNote "pred takes a single argument."    xs)
             L_succ         -> inject $ MkOpSucc         $ OpSucc         (headNote "succ takes a single argument."    xs)
             L_factorial    -> inject $ MkOpFactorial    $ OpFactorial    (headNote "factorial takes a single argument" xs)
+            L_powerSet     -> inject $ MkOpPowerSet     $ OpPowerSet     (headNote "powerSet takes a single argument" xs)
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
