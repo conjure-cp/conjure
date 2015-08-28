@@ -36,12 +36,13 @@ instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where lift
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
 
 -- | Use this if you don't want to allow a (EnumerateDomain m => m a) computation actually do IO.
-data EnumerateDomainNoIO a = Done a | TriedIO
-    deriving (Eq, Ord, Show)
+data EnumerateDomainNoIO a = Done a | TriedIO | Failed Doc
+    deriving (Eq, Show)
 
 instance Functor EnumerateDomainNoIO where
-    fmap _ TriedIO  = TriedIO
-    fmap f (Done x) = Done (f x)
+    fmap _ (Failed msg) = Failed msg
+    fmap _ TriedIO      = TriedIO
+    fmap f (Done x)     = Done (f x)
 
 instance Applicative EnumerateDomainNoIO where
     pure = return
@@ -49,8 +50,12 @@ instance Applicative EnumerateDomainNoIO where
 
 instance Monad EnumerateDomainNoIO where
     return = Done
-    TriedIO >>= _ = TriedIO
-    Done x  >>= f = f x
+    Failed msg >>= _ = Failed msg
+    TriedIO    >>= _ = TriedIO
+    Done x     >>= f = f x
+
+instance MonadFail EnumerateDomainNoIO where
+    fail = Failed
 
 instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 
