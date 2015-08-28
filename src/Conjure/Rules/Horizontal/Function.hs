@@ -541,10 +541,12 @@ rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRul
             , do
                 (iPat, i) <- quantifiedVar
                 let i2 = make opIndexing [essence| &i[2] |] index
-                return $ make opOr $ Comprehension i2
+                let val = make opSum $ Comprehension i2
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
+                let isDefined = [essence| &arg in defined(&func) |]
+                return $ WithLocals val (Right [isDefined])
             )
 
 
