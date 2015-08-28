@@ -34,7 +34,8 @@ instance DomainOf Expression where
     domainOf (Constant x) = domainOf x
     domainOf (AbstractLiteral x) = domainOf x
     domainOf (Op x) = domainOf x
-    domainOf x = fail ("domainOf{Expression} 1:" <+> pretty (show x))
+    domainOf (WithLocals h _) = domainOf h
+    domainOf x = fail ("domainOf{Expression}:" <+> pretty (show x))
 
 -- this should be better implemented by some ghc-generics magic
 instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Dom :< x) => DomainOf (Op x) where
