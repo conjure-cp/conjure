@@ -14,6 +14,7 @@ import System.Console.CmdArgs hiding ( Default(..) )
 data UI
     = Solve
         { essence                    :: FilePath       -- essence, mandatory
+        , essenceParams              :: [FilePath]
         -- flags related to output
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
@@ -39,9 +40,6 @@ data UI
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , outputBinary               :: Bool
-        -- flags for parameters and solutions
-        , essenceParamO              :: Maybe FilePath   -- essence-param, optional         
-        , essenceSolutionO           :: Maybe FilePath   -- essence-solution, optional, by default (essence <> essenceParam <-.> "solution")
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
@@ -148,6 +146,8 @@ ui = modes
     [ Solve
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
+        , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
+                                   &= args
         , outputDirectory  = "conjure-output"
                                    &= typDir
                                    &= name "output-directory"
@@ -282,18 +282,6 @@ ui = modes
                                    &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
-        , essenceParamO    = def   &= typFile
-                                   &= name "param"
-                                   &= explicit
-                                   &= help "An Essence parameter for the original problem specification.\n\
-                                           \This field is optional."
-        , essenceSolutionO = def   &= typFile
-                                   &= name "solution"
-                                   &= explicit
-                                   &= help "An Essence solution for the original problem specification.\n\
-                                           \This field is optional.\n\
-                                           \By default, its value will be the value of --eprime-solution, \
-                                           \with all extensions dropped the extension '.solution' is added instead."
         , savilerowOptions = "-O2 -num-solutions 1"
                                    &= name "savilerow-options"
                                    &= groupname "Options for other tools"

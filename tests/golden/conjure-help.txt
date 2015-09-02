@@ -7,7 +7,7 @@ Common flags:
   -? --help                                  Display help message
   -V --version                               Print version information
 
-conjure solve [OPTIONS] ESSENCE_FILE
+conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
   This is a combined mode, and it is available for convenience. It runs conjure
   in the modelling mode followed by parameter refinement if required, then
   Savile Row + Minion to solve, and then solution translation.
@@ -42,17 +42,6 @@ Logging & Output:
                                              text files. Conjure can read in
                                              these binary files for further
                                              processing.
-     --param=FILE                            An Essence parameter for the
-                                             original problem specification.
-                                             This field is optional.
-     --solution=FILE                         An Essence solution for the
-                                             original problem specification.
-                                             This field is optional. By
-                                             default, its value will be the
-                                             value of --eprime-solution, with
-                                             all extensions dropped the
-                                             extension '.solution' is added
-                                             instead.
 Model generation:
   -q --strategy-q=STRATEGY                   Strategy to use when selecting
                                              the next question to answer.

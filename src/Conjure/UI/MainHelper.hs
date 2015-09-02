@@ -156,23 +156,26 @@ mainWithArgs config@Solve{..} = do eprimes   <- conjuring
             return eprimes
 
         savileRows eprimes = fmap concat $ sequence $
-            case essenceParamO of
-                Nothing           -> [ savileRowNoParam    config m              | m <- eprimes ]
-                Just essenceParam -> [ savileRowWithParams config m essenceParam | m <- eprimes ]
+            if null essenceParams
+                then [ savileRowNoParam    config m   | m <- eprimes ]
+                else [ savileRowWithParams config m p | m <- eprimes, p <- essenceParams ]
 
         validating solutions = sequence_ $
-            case essenceParamO of
-                Nothing           -> [ validateSolutionNoParam    config sol              | (_, _, sol) <- solutions ]
-                Just essenceParam -> [ validateSolutionWithParams config sol essenceParam | (_, _, sol) <- solutions ]
+            if null essenceParams
+                then [ validateSolutionNoParam    config sol   | (_, _, sol) <- solutions ]
+                else [ validateSolutionWithParams config sol p | (_, p, sol) <- solutions ]
 
 
 pp :: MonadIO m => Doc -> m ()
 pp = liftIO . putStrLn . renderWide
 
 
-savileRowNoParam :: UI -> FilePath -> IO [(FilePath, FilePath, FilePath)]
+savileRowNoParam :: UI -> FilePath -> IO [ ( FilePath       -- model
+                                           , FilePath       -- param
+                                           , FilePath       -- solution
+                                           ) ]
 savileRowNoParam Solve{..} modelPath = sh $ do
-    pp $ hsep ["Savile Row:", pretty essence, pretty modelPath]
+    pp $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     _stdoutSR <- run "savilerow" $
         [ "-in-eprime"      , stringToText $ outputDirectory </> outBase ++ ".eprime"
@@ -201,9 +204,12 @@ savileRowNoParam Solve{..} modelPath = sh $ do
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
-savileRowWithParams :: UI -> FilePath -> FilePath -> IO [(FilePath, FilePath, FilePath)]
+savileRowWithParams :: UI -> FilePath -> FilePath -> IO [ ( FilePath       -- model
+                                                          , FilePath       -- param
+                                                          , FilePath       -- solution
+                                                          ) ]
 savileRowWithParams Solve{..} modelPath paramPath = sh $ do
-        pp $ hsep ["Savile Row:", pretty essence, pretty modelPath, pretty paramPath]
+        pp $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
         model       <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
         param       <- liftIO $ readModelFromFile paramPath
         eprimeParam <- liftIO $ ignoreLogs $ runNameGen $ refineParam model param
@@ -241,7 +247,7 @@ savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 validateSolutionNoParam :: UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
-    pp $ hsep ["Validating solution:", pretty essence, pretty solutionPath]
+    pp $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
     result   <- runExceptT $ ignoreLogs $ validateSolution essenceM def solution
@@ -253,7 +259,7 @@ validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
-    pp $ hsep ["Validating solution:", pretty essence, pretty solutionPath, pretty paramPath]
+    pp $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath
