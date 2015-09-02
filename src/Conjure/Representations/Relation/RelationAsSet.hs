@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 
@@ -6,6 +7,7 @@ module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -98,7 +100,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainRelation "RelationAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
-                    let tupleOut (ConstantAbstract (AbsLitTuple xs)) = return xs
+                    let tupleOut (viewConstantTuple -> Just xs) = return xs
                         tupleOut c = fail $ "Expecting a tuple, but got:" <+> pretty c
                     vals <- mapM tupleOut tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))

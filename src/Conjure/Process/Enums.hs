@@ -185,6 +185,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
         helper domain constant = case (domain, constant) of
 
+            (_, c@ConstantUndefined{}) -> c
+
             (DomainBool , c) -> c
             (DomainInt{}, c) -> c
 

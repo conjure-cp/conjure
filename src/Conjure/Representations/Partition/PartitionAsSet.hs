@@ -133,8 +133,8 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                         setOut c = fail $ "Expecting a set, but got:" <+> pretty c
                     vals <- mapM setOut sets
                     return (name, ConstantAbstract (AbsLitPartition vals))
-                Just constant@ConstantUndefined{} ->        -- undefined propagates
-                    return (name, constant)
+                Just (ConstantUndefined msg ty) ->        -- undefined propagates
+                    return (name, ConstantUndefined ("PartitionAsSet " `mappend` msg) ty)
                 Just constant -> fail $ vcat $
                     [ "Incompatible value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
