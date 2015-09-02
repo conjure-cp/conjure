@@ -109,7 +109,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     if null undefs
         then return def { mStatements = outStmts }
         else bug $ vcat
-            [ hang "Undefined values in the output:" 4 (vcat (map pretty undefs))
+            [ "Undefined values in the output:" <++> vcat (map pretty undefs)
             , ""
             , "Complete output would have been the following."
             , ""
