@@ -76,38 +76,6 @@ enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
         [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
-enumerateDomain (DomainSet _ (SetAttr sizeAttr) innerDom) = do
-    inners <- enumerateDomain innerDom
-    sizes  <- case sizeAttr of
-        SizeAttr_None -> return [0 .. genericLength inners]
-        SizeAttr_Size (ConstantInt a) -> return [a]
-        SizeAttr_MinSize (ConstantInt a) -> return [a .. genericLength inners]
-        SizeAttr_MaxSize (ConstantInt a) -> return [0 .. a]
-        SizeAttr_MinMaxSize (ConstantInt a) (ConstantInt b) -> return [a .. b]
-        _ -> fail $ "sizeAttr, not an int:" <+> pretty sizeAttr
-    return
-        [ ConstantAbstract (AbsLitSet vals)
-        | s <- sizes
-        , vals <- replicateM (fromInteger s) inners
-        , sorted vals
-        ]
-enumerateDomain (DomainFunction _ attr DomainBool innerTo) | attr == def = do
-    inners <- enumerateDomain innerTo
-    let outEmpty     = [ ConstantAbstract (AbsLitFunction []) ]
-    let outOnlyFalse = [ ConstantAbstract (AbsLitFunction [ (ConstantBool False, x) ])
-                       | x <- inners ]
-    let outOnlyTrue  = [ ConstantAbstract (AbsLitFunction [ (ConstantBool True , x) ])
-                       | x <- inners ]
-    inners2 <- enumerateDomain innerTo
-    let outBoth      = [ ConstantAbstract (AbsLitFunction [ (ConstantBool False, x)
-                                                          , (ConstantBool True , y) ])
-                       | x <- inners
-                       , y <- inners2
-                       ]
-    return $ outEmpty
-          ++ outOnlyFalse
-          ++ outOnlyTrue
-          ++ outBoth
 
 -- the sledgehammer approach
 enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-" ++ show (hash d)) $ \ tmpDir -> do
@@ -121,6 +89,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     (_, stderrSR) <- sh $ do
         stdoutSR <- run "conjure"
             [ "solve"
+            , "--output-binary"
             , stringToText essenceFile
             , "-o", stringToText outDir
             , "--savilerow-options"
@@ -134,14 +103,20 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     when (length solutions >= enumerateDomainMax) $ fail "Enumerate domain: too many."
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
         Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
-        return [ c | Declaration (Letting "x" (Constant c)) <- decls ]
+        let (enumeration, errs) = mconcat
+                [ case decl of
+                    Declaration (Letting "x" x) | Just c <- e2c x -> ([c], [])
+                    _ -> ([], [decl])
+                | decl <- decls ]
+        if null errs
+            then return enumeration
+            else fail $ vcat $ "enumerateDomain, not Constants!"
+                             :  map pretty errs
+                             ++ map (pretty . show) errs
     removeDirectoryRecursive outDir
     removeDirectoryRecursive tmpDir
     return enumeration
 
-
-sorted :: Ord a => [a] -> Bool
-sorted xs = and $ zipWith (<) xs (tail xs)
 
 enumerateRange :: MonadFail m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]

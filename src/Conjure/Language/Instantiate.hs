@@ -194,8 +194,9 @@ instantiateD (DomainEnum nm Nothing _) = do
         Nothing -> fail $ ("DomainEnum not found in state, Nothing:" <+> pretty nm) <++> vcat (map pretty st)
 instantiateD (DomainEnum nm rs0 _) = do
     let fmap4 = fmap . fmap . fmap . fmap
+    let e2c' x = either bug id (e2c x)
     rs <- transformBiM (\ x -> Constant <$> instantiateE x ) (rs0 :: Maybe [Range Expression])
-                |> fmap4 e2c
+                |> fmap4 e2c'
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
             Just (Constant (ConstantInt i)) -> return (n, i)

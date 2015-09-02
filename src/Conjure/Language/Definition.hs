@@ -678,9 +678,15 @@ instance Enum Expression where
     enumFromTo _x _y = bug "enumFromTo {Expression}"
     enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
 
-e2c :: Expression -> Constant
-e2c (Constant c) = c
-e2c x = bug ("e2c, not a constant:" <+> pretty x)
+-- | This is only for when you know the Expression you have is actually a Constant, but
+--   is refusing to believe that it is one.
+--   Remind it where it comes from!
+--   (Srsly: Can be useful after parsing a solutuon file, for example.)
+e2c :: MonadFail m => Expression -> m Constant
+e2c (Constant c) = return c
+e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
+e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt x))))) = return $ ConstantInt $ negate x
+e2c x = fail ("e2c, not a constant:" <+> pretty x)
 
 quantifiedVar :: NameGen m => m (AbstractPattern, Expression)
 quantifiedVar = do
