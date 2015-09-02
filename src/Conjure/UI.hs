@@ -294,12 +294,12 @@ ui = modes
                                            \This field is optional.\n\
                                            \By default, its value will be the value of --eprime-solution, \
                                            \with all extensions dropped the extension '.solution' is added instead."
-        , savilerowOptions = "-O0 -preprocess None -all-solutions"
+        , savilerowOptions = "-O2 -num-solutions 1"
                                    &= name "savilerow-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
-                                   &= help "Options to be passed to Savile Row.\
-                                           \By default: '-O0 -preprocess None -all-solutions'"
+                                   &= help "Options to be passed to Savile Row.\n\
+                                           \By default: '-O2 -num-solutions 1'"
         , minionOptions = def      &= name "minion-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
