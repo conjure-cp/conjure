@@ -93,8 +93,8 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                              , "But got:" <+> pretty s
                              ]
 
-    return def
-        { mStatements = unnamedsAsEnumDomains ++
+    let outStmts =
+            unnamedsAsEnumDomains ++
             sortNub
                 [ Declaration (Letting n (Constant (normaliseConstant y)))
                 | (n, d, x) <- essenceLettings
@@ -103,4 +103,15 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                                 intToEnumConstant
                                 d x
                 ]
-        }
+
+    let undefs = [ u | u@ConstantUndefined{} <- universeBi outStmts ]
+
+    if null undefs
+        then return def { mStatements = outStmts }
+        else bug $ vcat
+            [ hang "Undefined values in the output:" 4 (vcat (map pretty undefs))
+            , ""
+            , "Complete output would have been the following."
+            , ""
+            , pretty $ def { mStatements = outStmts }
+            ]
