@@ -42,8 +42,21 @@ refineParam eprimeModel essenceParam0 = do
                                         |> filter (\ (n,_) -> n `elem` essenceGivenNames )
 
 
+    -- some sanity checks here
     -- TODO: check if for every given there is a letting (there can be more)
     -- TODO: check if the same letting has multiple values for it
+    let missingLettings =
+            (essenceGivenNames ++ generatedLettingNames) \\
+            map fst essenceLettings
+    unless (null missingLettings) $
+        userErr1 $ "Missing values for parameters:" <++> prettyList id "," missingLettings
+
+    let extraLettings =
+            map fst essenceLettings \\
+            (essenceGivenNames ++ generatedLettingNames)
+    unless (null extraLettings) $
+        userErr1 $ "Too many lettings statement in the parameter file:" <++> prettyList id "," extraLettings
+
 
     let eprimeLettingsForEnums =
             [ (nm, fromInt (genericLength vals))
@@ -60,12 +73,6 @@ refineParam eprimeModel essenceParam0 = do
     essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
         constant <- instantiateDomain (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) dom
         return (name, constant)
-
-    let extraLettings = map fst essenceLettings' \\
-                        (map fst essenceGivens' ++ generatedLettingNames)
-
-    unless (null extraLettings) $
-        logWarn ("Extra lettings:" <+> prettyList id "," extraLettings)
 
     essenceGivensAndLettings <- sequence
             [ case lookup n essenceLettings' of
