@@ -692,6 +692,20 @@ sliceThemMatrices model = do
     return model { mStatements = statements }
 
 
+removeExtraSlices :: Monad m => Model -> m Model
+removeExtraSlices model = do
+    let
+        -- a slice at the end of a chain of slices & indexings
+        -- does no good in Essence and should be removed
+        onExpr :: Monad m => Expression -> m Expression
+        onExpr (match opSlicing -> Just (m,_,_)) = onExpr m
+        onExpr p@(match opIndexing -> Just _) = return p
+        onExpr p = descendM onExpr p
+
+    statements <- descendBiM onExpr (mStatements model)
+    return model { mStatements = statements }
+
+
 prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
@@ -707,6 +721,7 @@ prologue model = return model
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
+    >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
