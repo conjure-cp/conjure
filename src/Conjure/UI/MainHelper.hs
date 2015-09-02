@@ -18,8 +18,9 @@ import Conjure.UI.Split ( outputSplittedModels )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 
+import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.Language.Pretty ( pretty, renderNormal, renderWide )
+import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, renderWide )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -135,9 +136,23 @@ mainWithArgs ParameterGenerator{..} = do
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
                (Just essenceOut)
                output
-mainWithArgs config@Solve{..} = do eprimes   <- conjuring
-                                   solutions <- liftIO $ savileRows eprimes
-                                   liftIO $ validating solutions
+mainWithArgs config@Solve{..} = do
+    -- some sanity checks
+    essenceM <- readModelFromFile essence
+    let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
+    when (not (null givens) && null essenceParams) $
+        userErr1 $ vcat
+            [ "The problem specification is parameterised, but no *.param files are given."
+            , "Parameters:" <+> prettyList id "," givens
+            ]
+    when (null givens && not (null essenceParams)) $
+        userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
+
+    -- start the show!
+    eprimes   <- conjuring
+    solutions <- liftIO $ savileRows eprimes
+    liftIO $ validating solutions                   -- validating solutions by default, may want to turn off.
+
     where
         conjuring = do
             pp $ "Generating models for" <+> pretty essence
