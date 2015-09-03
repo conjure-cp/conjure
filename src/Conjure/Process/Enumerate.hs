@@ -100,7 +100,10 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         return (stdoutSR, stderrSR)
     unless (T.null stderrSR) $ fail (pretty stderrSR)
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
-    when (length solutions >= enumerateDomainMax) $ fail "Enumerate domain: too many."
+    when (length solutions >= enumerateDomainMax) $ fail $ vcat [ "Enumerate domain: too many."
+                                                                , "Nb solutions found:" <+> pretty (length solutions)
+                                                                , "When working on domain:" <++> pretty d
+                                                                ]
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
         Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
         let (enumeration, errs) = mconcat
@@ -111,6 +114,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         if null errs
             then return enumeration
             else fail $ vcat $ "enumerateDomain, not Constants!"
+                             : ("When working on domain:" <++> pretty d)
                              :  map pretty errs
                              ++ map (pretty . show) errs
     removeDirectoryRecursive outDir
