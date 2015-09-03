@@ -254,12 +254,13 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
-                 return [essence| (forAll &iPat : &indexX . &x[&i] = &y[&i])
-                                /\
-                               (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
-                                /\
-                               (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
-                               |]
+                 return [essence|
+                     (forAll &iPat : &indexX . &x[&i] = &y[&i])
+                     /\
+                     (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
+                     /\
+                     (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
+                                |]
             )
 
 
@@ -275,9 +276,10 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             ( "Horizontal rule for matrix !="
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| (exists &iPat : &indexX . &x[&i] != &y[&i])
-                                 \/
-                               (exists &iPat : &indexY . &x[&i] != &y[&i])
+                 return [essence|
+                     (exists &iPat : &indexX . &x[&i] != &y[&i])
+                     \/
+                     (exists &iPat : &indexY . &x[&i] != &y[&i])
                                 |]
             )
 
