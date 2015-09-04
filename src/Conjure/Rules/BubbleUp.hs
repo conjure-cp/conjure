@@ -77,6 +77,19 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
 
 rule_LiftVars :: Rule
 rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
+
+    theRule (Comprehension (WithLocals body locals) gensOrConds)
+        | and [ case goc of
+                    Condition{} -> True
+                    ComprehensionLetting{} -> True
+                    _ -> False
+              | goc <- gensOrConds
+              ]                                                 -- if gensOrConds do not contain generators
+        = return
+            ( "Bubbling up when a comprehension doesn't contain any generators."
+            , return $ WithLocals (Comprehension body gensOrConds) locals
+            )
+
     theRule (Comprehension (WithLocals body (Left locals@(_:_))) gensOrConds) = do
 
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
