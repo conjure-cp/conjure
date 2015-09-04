@@ -151,7 +151,7 @@ mainWithArgs config@Solve{..} = do
     -- start the show!
     eprimes   <- conjuring
     solutions <- liftIO $ savileRows eprimes
-    liftIO $ validating solutions                   -- validating solutions by default, may want to turn off.
+    when validateSolutionsOpt $ liftIO $ validating solutions
 
     where
         conjuring = do

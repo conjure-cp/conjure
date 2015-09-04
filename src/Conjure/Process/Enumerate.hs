@@ -89,7 +89,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     (_, stderrSR) <- sh $ do
         stdoutSR <- run "conjure"
             [ "solve"
-            , "--output-binary"
+            , "--validate-solutions=no"
             , stringToText essenceFile
             , "-o", stringToText outDir
             , "--savilerow-options"

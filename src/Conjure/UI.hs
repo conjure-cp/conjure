@@ -15,6 +15,7 @@ data UI
     = Solve
         { essence                    :: FilePath       -- essence, mandatory
         , essenceParams              :: [FilePath]
+        , validateSolutionsOpt       :: Bool
         -- flags related to output
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
@@ -148,6 +149,11 @@ ui = modes
                                    &= argPos 0
         , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
                                    &= args
+        , validateSolutionsOpt = True
+                                   &= name "validate-solutions"
+                                   &= groupname "Flags"
+                                   &= explicit
+                                   &= help "Enable/disable solution validation. On by default."
         , outputDirectory  = "conjure-output"
                                    &= typDir
                                    &= name "output-directory"

@@ -12,6 +12,9 @@ conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
   in the modelling mode followed by parameter refinement if required, then
   Savile Row + Minion to solve, and then solution translation.
 
+Flags:
+     --validate-solutions                    Enable/disable solution
+                                             validation. On by default.
 Logging & Output:
   -o --output-directory=DIR                  Output directory. Generated
                                              models will be saved here. Default
