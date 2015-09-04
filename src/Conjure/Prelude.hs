@@ -98,6 +98,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , group, groupBy, sort, sortBy
                               , genericLength, genericIndex, genericTake
                               , isSuffixOf, isPrefixOf, isInfixOf
+                              , stripPrefix
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, reverse, lookup, elem, unlines, words

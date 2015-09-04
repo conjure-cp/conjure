@@ -4,6 +4,7 @@ module Conjure.UI.IO
     , readModelPreambleFromFile
     , writeModel, writeModels
     , EssenceFileMode(..)
+    , readModel
     ) where
 
 -- conjure
