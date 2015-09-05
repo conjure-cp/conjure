@@ -42,7 +42,7 @@ import Control.Concurrent.Async ( mapConcurrently )
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
-    liftIO $ hSetBuffering stdout NoBuffering
+    liftIO $ hSetBuffering stdout LineBuffering
     liftIO $ maybe (return ()) setRandomSeed seed
     case savedChoices of
         Just f  -> refAnswers f
