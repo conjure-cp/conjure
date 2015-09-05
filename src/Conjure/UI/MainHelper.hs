@@ -211,7 +211,7 @@ savileRowNoParam Solve{..} modelPath = sh $ do
             , "-num-solutions"  , "1"
             , "-solutions-to-stdout-one-line"
             ] ++ map stringToText (words savilerowOptions)
-              ++ [ "-solver-options", stringToText minionOptions ]
+              ++ if null minionOptions then [] else [ "-solver-options", stringToText minionOptions ]
     let stdoutHandler i h = do
             eof <- liftIO $ hIsEOF h
             if eof
@@ -259,7 +259,7 @@ savileRowWithParams Solve{..} modelPath paramPath = sh $ do
             , "-num-solutions"  , "1"
             , "-solutions-to-stdout-one-line"
             ] ++ map stringToText (words savilerowOptions)
-            ++ [ "-solver-options", stringToText minionOptions ]
+            ++ if null minionOptions then [] else [ "-solver-options", stringToText minionOptions ]
     let stdoutHandler i h = do
             eof <- liftIO $ hIsEOF h
             if eof
