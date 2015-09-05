@@ -8,6 +8,7 @@ module Conjure.Process.FiniteGivens
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate ( instantiateExpression )
@@ -86,8 +87,21 @@ mkFiniteOutermost
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
-         , [Constant] -> m [(Name, Constant)]
+         , [Constant] -> m [(Name, Constant)]   -- expect one constant and operate on that
          )
+mkFiniteOutermost (DomainTuple inners) = do
+    mids <- mapM mkFiniteInner inners
+    return
+        ( DomainTuple (map fst3 mids)
+        , concatMap snd3 mids
+        , \ constants -> case constants of
+                [constant] -> do
+                    xs <- viewConstantTuple constant
+                    let innerFs = map thd3 mids
+                    innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
+                    return (concat innerValues)
+                _ -> fail "mkFiniteOutermost: multiple values"
+        )
 mkFiniteOutermost (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
@@ -196,6 +210,35 @@ mkFiniteInner (DomainInt []) = do
                        , (to, ConstantInt (maximum ints))
                        ]
         )
+mkFiniteInner (DomainInt [RangeLowerBounded low]) = do
+    new <- nextName "fin"
+    return
+        ( DomainInt [RangeBounded low (fromName new)]
+        , [new]
+        , \ constants -> do
+                ints <- mapM viewConstantInt constants
+                return [ (new, ConstantInt (maximum ints)) ]
+        )
+mkFiniteInner (DomainInt [RangeUpperBounded upp]) = do
+    new <- nextName "fin"
+    return
+        ( DomainInt [RangeBounded (fromName new) upp]
+        , [new]
+        , \ constants -> do
+                ints <- mapM viewConstantInt constants
+                return [ (new, ConstantInt (minimum ints)) ]
+        )
+mkFiniteInner (DomainTuple inners) = do
+    mids <- mapM mkFiniteInner inners
+    return
+        ( DomainTuple (map fst3 mids)
+        , concatMap snd3 mids
+        , \ constants -> do
+                xss <- mapM viewConstantTuple constants
+                let innerFs = map thd3 mids
+                innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs xss ]
+                return (concat innerValues)
+        )
 mkFiniteInner (DomainSet () attr@(SetAttr SizeAttr_Size{}) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
     return
@@ -270,20 +313,3 @@ mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
                 return $ concat innersValues ++ [(s, ConstantInt relationMaxSize)]
         )
 mkFiniteInner d = return (d, [], const (return []))
-
-
-viewConstantInt :: MonadFail m => Constant -> m Integer
-viewConstantInt (ConstantInt i) = return i
-viewConstantInt constant = fail ("Expecting an integer, but got:" <+> pretty constant)
-
-viewConstantSet :: MonadFail m => Constant -> m [Constant]
-viewConstantSet (ConstantAbstract (AbsLitSet xs)) = return xs
-viewConstantSet constant = fail ("Expecting a set, but got:" <+> pretty constant)
-
-viewConstantFunction :: MonadFail m => Constant -> m [(Constant,Constant)]
-viewConstantFunction (ConstantAbstract (AbsLitFunction xs)) = return xs
-viewConstantFunction constant = fail ("Expecting a function, but got:" <+> pretty constant)
-
-viewConstantRelation :: MonadFail m => Constant -> m [[Constant]]
-viewConstantRelation (ConstantAbstract (AbsLitRelation xs)) = return xs
-viewConstantRelation constant = fail ("Expecting a relation, but got:" <+> pretty constant)
