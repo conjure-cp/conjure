@@ -143,9 +143,9 @@ data Lexeme
     | L_normIndices
 
     -- in the rule language
-    | L_lambda
-    | L_quantifier
-    | L_representation
+    -- | L_lambda
+    -- | L_quantifier
+    -- | L_representation
 
     -- arithmetic operators
 
@@ -373,9 +373,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )
     , ( L_normIndices, "normIndices" )
-    , ( L_lambda, "lambda" )
-    , ( L_quantifier, "quantifier" )
-    , ( L_representation, "representation" )
+    -- , ( L_lambda, "lambda" )
+    -- , ( L_quantifier, "quantifier" )
+    -- , ( L_representation, "representation" )
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )
     , ( L_Times           , "*"     )
