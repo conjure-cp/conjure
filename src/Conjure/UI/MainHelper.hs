@@ -34,6 +34,9 @@ import Shelly ( runHandle, lastStderr )
 
 -- text
 import qualified Data.Text as T ( null )
+
+-- async
+import Control.Concurrent.Async ( mapConcurrently )
     
 
 mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
@@ -171,15 +174,19 @@ mainWithArgs config@Solve{..} = do
             pp $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
-        savileRows eprimes = fmap concat $ sequence $
+        savileRows eprimes = fmap concat $
             if null essenceParams
-                then [ savileRowNoParam    config m   | m <- eprimes ]
-                else [ savileRowWithParams config m p | m <- eprimes, p <- essenceParams ]
+                then mapConcurrently (savileRowNoParam config)
+                        eprimes
+                else mapConcurrently (uncurry (savileRowWithParams config))
+                        [ (m, p) | m <- eprimes, p <- essenceParams ]
 
-        validating solutions = sequence_ $
+        validating solutions = void $
             if null essenceParams
-                then [ validateSolutionNoParam    config sol   | (_, _, sol) <- solutions ]
-                else [ validateSolutionWithParams config sol p | (_, p, sol) <- solutions ]
+                then mapConcurrently (validateSolutionNoParam config)
+                        [ sol | (_, _, sol) <- solutions ]
+                else mapConcurrently (uncurry (validateSolutionWithParams config))
+                        [ (sol, p) | (_, p, sol) <- solutions ]
 
 
 pp :: MonadIO m => Doc -> m ()
