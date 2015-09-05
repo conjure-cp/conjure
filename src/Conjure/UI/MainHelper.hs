@@ -252,6 +252,7 @@ savileRowWithParams Solve{..} modelPath paramPath = sh $ do
             , "-num-solutions"  , "1"
             , "-solutions-to-stdout-one-line"
             ] ++ map stringToText (words savilerowOptions)
+            ++ [ "-solver-options", stringToText minionOptions ]
     let stdoutHandler i h = do
             eof <- liftIO $ hIsEOF h
             if eof
