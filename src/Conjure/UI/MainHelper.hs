@@ -201,6 +201,7 @@ savileRowNoParam Solve{..} modelPath = sh $ do
             , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
             , "-run-solver"
             , "-minion"
+            , "-num-solutions"  , "1"
             , "-solutions-to-stdout-one-line"
             ] ++ map stringToText (words savilerowOptions)
               ++ [ "-solver-options", stringToText minionOptions ]
@@ -248,6 +249,7 @@ savileRowWithParams Solve{..} modelPath paramPath = sh $ do
             , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
             , "-run-solver"
             , "-minion"
+            , "-num-solutions"  , "1"
             , "-solutions-to-stdout-one-line"
             ] ++ map stringToText (words savilerowOptions)
     let stdoutHandler i h = do

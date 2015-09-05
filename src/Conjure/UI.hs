@@ -288,12 +288,12 @@ ui = modes
                                    &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
-        , savilerowOptions = "-O2 -num-solutions 1"
+        , savilerowOptions = "-O2"
                                    &= name "savilerow-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
                                    &= help "Options to be passed to Savile Row.\n\
-                                           \By default: '-O2 -num-solutions 1'"
+                                           \By default: '-O2'"
         , minionOptions = def      &= name "minion-options"
                                    &= groupname "Options for other tools"
                                    &= explicit
