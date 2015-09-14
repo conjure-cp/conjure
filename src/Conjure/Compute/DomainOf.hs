@@ -22,7 +22,13 @@ class DomainOf a where
 
 instance DomainOf ReferenceTo where
     domainOf (Alias x) = domainOf x
-    domainOf InComprehension{} = fail "domainOf-ReferenceTo-InComprehension"
+    domainOf (InComprehension (GenDomainNoRepr Single{} dom)) = return dom
+    domainOf (InComprehension (GenDomainHasRepr _ dom)) = return (forgetRepr dom)
+    domainOf (InComprehension (GenInExpr Single{} x)) = do
+        domX <- domainOf x
+        innX <- innerDomainOf domX
+        return innX
+    domainOf x@InComprehension{} = fail $ vcat [ "domainOf-ReferenceTo-InComprehension", pretty x, pretty (show x) ]
     domainOf (DeclNoRepr  _ _ dom) = return dom
     domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
     domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"

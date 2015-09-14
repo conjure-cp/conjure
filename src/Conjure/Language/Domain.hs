@@ -21,6 +21,7 @@ module Conjure.Language.Domain
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
+    , innerDomainOf
     ) where
 
 -- conjure
@@ -800,3 +801,12 @@ normaliseRange  norm (RangeSingle x)       = RangeBounded (norm x) (norm x)
 normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)
 normaliseRange  norm (RangeUpperBounded x) = RangeUpperBounded (norm x)
 normaliseRange  norm (RangeBounded x y)    = RangeBounded (norm x) (norm y)
+
+innerDomainOf :: (MonadFail m, Show x) => Domain () x -> m (Domain () x)
+innerDomainOf (DomainMatrix _ t) = return t
+innerDomainOf (DomainSet _ _ t) = return t
+innerDomainOf (DomainMSet _ _ t) = return t
+innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
+innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
+innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
+innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
