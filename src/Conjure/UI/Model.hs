@@ -167,6 +167,7 @@ remaining
     => Config
     -> Model
     -> m [Question]
+remaining config model | strategyQ config == PickFirst = remaining1 config model
 remaining config model | Just modelZipper <- zipperBi model = do
     let
         loopLevels :: Monad m => [m [a]] -> m [a]
@@ -244,6 +245,94 @@ remaining config model | Just modelZipper <- zipperBi model = do
             , qAnswers = map fst answers1
             }
 remaining _ _ = return []
+
+
+remaining1
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    => Config
+    -> Model
+    -> m [Question]
+remaining1 config model | Just modelZipper <- zipperBi model = do
+    let
+        loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
+        loopLevels [] = return Nothing
+        loopLevels (a:as) = do bs <- a
+                               case bs of
+                                   Nothing -> loopLevels as
+                                   Just {} -> return bs
+
+        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+                     => [Rule]
+                     -> m (Maybe (Zipper Model Expression, [(Doc, RuleResult m)]))
+        processLevel rulesAtLevel =
+            let
+                go [] = return Nothing
+                go (x:xs) = do
+                     ys <- applicableRules config rulesAtLevel x
+                     if null ys
+                         then go xs
+                         else return (Just (x, ys))
+            in
+                go (allContextsExceptReferences modelZipper)
+
+    questions <- loopLevels $ map processLevel (allRules config)
+    forM (maybeToList questions) $ \ (focus, answers0) -> do
+        answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
+            importNameGenState $ model |> mInfo |> miNameGenState
+            ruleResultExpr <- ruleResult
+            let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            let mtyBefore = typeOf (hole focus)
+            let mtyAfter  = typeOf ruleResultExpr
+            case (mtyBefore, mtyAfter) of
+                (Right tyBefore, Right tyAfter) ->
+                    if typesUnify [tyBefore, tyAfter]
+                        then return ()
+                        else bug $ vcat
+                                [ "Rule application changes type:" <+> pretty ruleName
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Type before:" <+> pretty tyBefore
+                                , "Type after :" <+> pretty tyAfter
+                                ]
+                (Left msg, _) -> bug $ vcat
+                                [ "Type error before rule application:" <+> pretty ruleName
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Error :" <+> pretty msg
+                                ]
+                (_, Left msg) -> bug $ vcat
+                                [ "Type error after rule application:" <+> pretty ruleName
+                                , "Before:" <+> pretty (hole focus)
+                                , "After :" <+> pretty ruleResultExpr
+                                , "Error :" <+> pretty msg
+                                ]
+            let updNameGenState m0 = do
+                    namegenst <- exportNameGenState
+                    let mi0 = mInfo m0
+                    let mi1 = mi0 { miNameGenState = namegenst }
+                    let m1  = m0  { mInfo = mi1 }
+                    return m1
+            fullModelAfterHook <- ruleResultHook fullModelBeforeHook >>= updNameGenState
+            return
+                ( Answer
+                    { aText = ruleName <> ":" <+> ruleResultDescr
+                    , aRuleName = ruleName
+                    , aAnswer = ruleResultExpr
+                    , aFullModel = fullModelAfterHook
+                    }
+                , ruleResultType
+                )
+        let qTypes = map snd answers1
+        qType' <- if all (head qTypes ==) (tail qTypes)
+                    then return (head qTypes)
+                    else bug "Rules of different rule kinds applicable, this is a bug."
+        return Question
+            { qType = qType'
+            , qHole = hole focus
+            , qAscendants = tail (ascendants focus)
+            , qAnswers = map fst answers1
+            }
+remaining1 _ _ = return []
 
 
 strategyToDriver :: Config -> Driver
