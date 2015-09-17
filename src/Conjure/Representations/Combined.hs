@@ -5,7 +5,7 @@ module Conjure.Representations.Combined
     , downD1, downC1, up1
     , downToX1
     , reprOptions, getStructurals
-    , reprsStandardOrder, reprsSparseOrder
+    , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     ) where
 
 -- conjure
@@ -176,6 +176,10 @@ dispatch domain = do
         _ -> nope
 
 type AllRepresentations = [[Representation (Either Doc)]]
+
+-- | No levels!
+reprsStandardOrderNoLevels :: AllRepresentations
+reprsStandardOrderNoLevels = [concat reprsStandardOrder]
 
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.

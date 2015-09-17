@@ -40,7 +40,10 @@ import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 
-import Conjure.Representations ( downX1, downD, reprOptions, getStructurals, reprsStandardOrder, reprsSparseOrder )
+import Conjure.Representations
+    ( downX1, downD, reprOptions, getStructurals
+    , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
+    )
 
 import Conjure.Rules.Definition
 
@@ -873,9 +876,9 @@ allRules config =
     , [ rule_PartialEvaluate
       ]
     , paramRules
-    , [ rule_ChooseRepr config
-      , rule_ChooseReprForComprehension (representationsQuantifieds config)
-      , rule_ChooseReprForLocals        (representationsAuxiliaries config)
+    , [ rule_ChooseRepr                 config
+      , rule_ChooseReprForComprehension config
+      , rule_ChooseReprForLocals        config
       ]
     , verticalRules
     , horizontalRules
@@ -1186,9 +1189,10 @@ rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given, CutFind] = do
-        let reprsWhichOrder = if (forg, representationsGivens config) == (Given, Sparse)
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
+                | representationLevels config == False                    = reprsStandardOrderNoLevels
+                | otherwise                                               = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
@@ -1309,8 +1313,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                      -- for abstract stuff inside aliases.
 
 
-rule_ChooseReprForComprehension :: Strategy -> Rule
-rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" (const theRule) where
+rule_ChooseReprForComprehension :: Config -> Rule
+rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
@@ -1319,9 +1323,10 @@ rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" 
 
         ty <- typeOf domain
 
-        let reprsWhichOrder = if strategy == Sparse
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | representationsGivens config == Sparse = reprsSparseOrder
+                | representationLevels config == False   = reprsStandardOrderNoLevels
+                | otherwise                              = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
@@ -1366,8 +1371,8 @@ rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" 
         gen ref
 
 
-rule_ChooseReprForLocals :: Strategy -> Rule
-rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule) where
+rule_ChooseReprForLocals :: Config -> Rule
+rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) where
 
     theRule (WithLocals body (Left locals)) = do
         (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
@@ -1381,9 +1386,10 @@ rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule
         unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
             fail $ "This local variable seems to be handled before:" <+> pretty nm
 
-        let reprsWhichOrder = if strategy == Sparse
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | representationsAuxiliaries config == Sparse   = reprsSparseOrder
+                | representationLevels config == False          = reprsStandardOrderNoLevels
+                | otherwise                                     = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain

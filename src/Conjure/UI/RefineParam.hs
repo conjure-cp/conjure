@@ -41,6 +41,8 @@ refineParam eprimeModel essenceParam0 = do
     let essenceGivens     = eprimeModel |> mInfo |> miRepresentations
                                         |> filter (\ (n,_) -> n `elem` essenceGivenNames )
 
+    logDebug $ "[missingLettings]"
+
 
     -- some sanity checks here
     -- TODO: check if for every given there is a letting (there can be more)
@@ -66,14 +68,22 @@ refineParam eprimeModel essenceParam0 = do
             , let nm = nm1 `mappend` "_EnumSize"
             ]
 
+    logDebug $ "[essenceLettings']"
+
     essenceLettings' <- forM essenceLettings $ \ (name, val) -> do
-        constant <- instantiateExpression (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) val
+        constant <- instantiateExpression (essenceLettings
+                                                ++ map (second Constant) eprimeLettingsForEnums
+                                                ++ extractLettings eprimeModel) val
         return (name, constant)
 
+    logDebug $ "[essenceGivens']"
     essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
-        constant <- instantiateDomain (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) dom
+        constant <- instantiateDomain (essenceLettings
+                                                ++ map (second Constant) eprimeLettingsForEnums
+                                                ++ extractLettings eprimeModel) dom
         return (name, constant)
 
+    logDebug $ "[essenceGivensAndLettings]"
     essenceGivensAndLettings <- sequence
             [ case lookup n essenceLettings' of
                 Nothing ->
@@ -94,8 +104,11 @@ refineParam eprimeModel essenceParam0 = do
                 _     -> bug ("refineParam: Multiple values for" <+> pretty nm)
         f p = p
 
+    logDebug $ "[essenceGivensAndLettings']"
     let essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
+    logDebug $ "[eprimeLettings]"
     eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings'
+    logDebug $ "[before return]"
 
     return $ languageEprime def
         { mStatements =
