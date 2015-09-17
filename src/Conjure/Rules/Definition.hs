@@ -70,6 +70,7 @@ data Config = Config
     , representationsCuts        :: Strategy
     , outputDirectory            :: FilePath
     , channelling                :: Bool
+    , representationLevels       :: Bool
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -94,6 +95,7 @@ instance Default Config where
         , representationsCuts        = Interactive
         , outputDirectory            = "conjure-output"
         , channelling                = True
+        , representationLevels       = True
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False

@@ -326,6 +326,7 @@ modelAll dir = ignoreLogs . runNameGen . outputModels Config
     , representationsCuts        = PickAll
     , outputDirectory            = dir
     , channelling                = True
+    , representationLevels       = False
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True
