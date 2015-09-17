@@ -3,7 +3,7 @@ module Conjure.Representations
     , downD1, downC1, up1
     , downToX1
     , reprOptions, getStructurals
-    , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
+    , reprsStandardOrder, reprsSparseOrder
     , downX1
     ) where
 

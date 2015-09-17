@@ -37,7 +37,6 @@ data UI
         , representationsQuantifieds :: Maybe String
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
-        , representationLevels       :: Bool                -- (def: True)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -69,7 +68,6 @@ data UI
         , representationsQuantifieds :: Maybe String        -- (def: representations)
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
-        , representationLevels       :: Bool                -- (def: True)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -273,13 +271,6 @@ ui = modes
                                            \Can be true or false. (true by default)\n\
                                            \    false: Do not produce channelled models.\n\
                                            \    true : Produce channelled models."
-        , representationLevels = True
-                                   &= name "representation-levels"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
-                                           \These levels are used to cut down the number of generated models.\n\
-                                           \Can be true or false. (true by default)"
         , seed = Nothing           &= name "seed"
                                    &= groupname "Model generation"
                                    &= explicit
@@ -434,13 +425,6 @@ ui = modes
                                            \Can be true or false. (true by default)\n\
                                            \    false: Do not produce channelled models.\n\
                                            \    true : Produce channelled models."
-        , representationLevels = True
-                                   &= name "representation-levels"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
-                                           \These levels are used to cut down the number of generated models.\n\
-                                           \Can be true or false. (true by default)"
         , seed = Nothing           &= name "seed"
                                    &= groupname "Model generation"
                                    &= explicit
