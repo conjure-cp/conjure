@@ -326,7 +326,10 @@ data ModelInfo = ModelInfo
     , miRepresentationsTree :: [(Name, [Tree (Maybe HasRepresentation)])]
     , miStrategyQ :: Strategy
     , miStrategyA :: Strategy
-    , miTrailCompact :: [(Int, Int)]
+    , miTrailCompact :: [ ( Int     -- picked question #
+                          , Int     -- picked answer #
+                          , Int     -- number of answers
+                          ) ]
     , miTrailVerbose :: [Decision]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
@@ -441,7 +444,7 @@ instance Hashable  IntSet where
 
 data Decision = Decision
     { dDescription :: [Text]
-    , dNumOptions :: Int
+    , dNumOptions :: Maybe Int
     , dDecision :: Int
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)

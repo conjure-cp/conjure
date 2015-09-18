@@ -121,8 +121,8 @@ outputModels config model = do
                     let gen =
                             if smartFilenames config
                                 then [ choice
-                                     | [_question, (choice, numOptions)] <-
-                                             eprime |> mInfo |> miTrailCompact |> chunksOf 2
+                                     | (_question, choice, numOptions) <-
+                                             eprime |> mInfo |> miTrailCompact
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
@@ -372,7 +372,7 @@ strategyToDriver config questions = do
             [ theModel
                 |> addToTrail
                         config
-                        (strategyQ  config) pickedQNumber (length optionsQ) [pickedQDescr]
+                        (strategyQ  config) pickedQNumber                   [pickedQDescr]
                         (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
             , let theModel = aFullModel pickedA
@@ -456,30 +456,27 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int -> Int -> [Doc]
+    -> Strategy -> Int ->        [Doc]
     -> Strategy -> Int -> Int -> [Doc]
     -> Model -> Model
 addToTrail Config{..}
-           questionStrategy questionNumber questionNumbers questionDescr
+           questionStrategy questionNumber                 questionDescr
            answerStrategy   answerNumber   answerNumbers   answerDescr
            model = model { mInfo = newInfo }
     where
         oldInfo = mInfo model
-        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++
-                                    [ (questionNumber, questionNumbers)
-                                    , (answerNumber,   answerNumbers  )
-                                    ]
+        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(questionNumber, answerNumber, answerNumbers)]
                           , miTrailVerbose = if verboseTrail
                                                   then miTrailVerbose oldInfo ++ [theQ, theA]
                                                   else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
-                $ ("Question #" <> pretty questionNumber <+> "out of" <+> pretty (show questionNumbers))
+                $ ("Question #" <> pretty questionNumber)
                 : ("  (Using strategy:" <+> pretty (show questionStrategy) <> ")")
                 : questionDescr
             , dDecision = questionNumber
-            , dNumOptions = questionNumbers
+            , dNumOptions = Nothing
             }
         theA = Decision
             { dDescription = map (stringToText . renderWide)
@@ -487,7 +484,7 @@ addToTrail Config{..}
                 : ("  (Using strategy:" <+> pretty (show answerStrategy) <> ")")
                 : answerDescr
             , dDecision = answerNumber
-            , dNumOptions = answerNumbers
+            , dNumOptions = Just answerNumbers
             }
 
 
