@@ -85,7 +85,7 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
+import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
 import Data.Generics.Uniplate.Zipper as Zipper ( up )
 
 -- pipes
@@ -155,11 +155,11 @@ toCompletion config m = do
         driver = strategyToDriver config
         loopy modelWIP = do
             logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
-            (qs, upd) <- remainingWIP config modelWIP
+            qs<- remainingWIP config modelWIP
             if null qs
                 then do
                     let model = modelWIPOut modelWIP
-                    model' <- epilogue (model { mInfo = upd (mInfo model) })
+                    model' <- epilogue model
                     yield (Right model')
                 else do
                     nextModels <- driver qs
@@ -170,26 +170,27 @@ remainingWIP
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> ModelWIP
-    -> m ([Question], ModelInfo -> ModelInfo)
+    -> m [Question]
 remainingWIP config (StartOver model)
-    | Just modelZipper <- zipperBi model = do
-        qs <- remaining config modelZipper
-        return (qs, id)
+    | Just modelZipper <- mkModelZipper model = do
+        qs <- remaining config modelZipper (mInfo model)
+        return qs
     | otherwise = bug "remainingWIP: Cannot create zipper."
-remainingWIP config wip@(TryThisFirst modelZipper upd) = do
-    qs <- remaining config modelZipper
+remainingWIP config wip@(TryThisFirst modelZipper info) = do
+    qs <- remaining config modelZipper info
     if null qs
         then remainingWIP config (StartOver (modelWIPOut wip))
-        else return (qs, upd)
+        else return qs
 
 
 remaining
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
-    -> Zipper Model Expression
+    -> ModelZipper
+    -> ModelInfo
     -> m [Question]
-remaining config model | strategyQ config == PickFirst = remaining1 config model
-remaining config modelZipper = do
+remaining config model minfo | strategyQ config == PickFirst = remaining1 config model minfo
+remaining config modelZipper minfo = do
     let
         loopLevels :: Monad m => [m [a]] -> m [a]
         loopLevels [] = return []
@@ -200,7 +201,7 @@ remaining config modelZipper = do
 
         processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
-                     -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
+                     -> m [(ModelZipper, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
             fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
                 ys <- applicableRules config rulesAtLevel x
@@ -211,7 +212,7 @@ remaining config modelZipper = do
     questions <- loopLevels $ map processLevel (allRules config)
     forM questions $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            -- importNameGenState $ modelZipper |> fromZipper |> mInfo |> miNameGenState
+            importNameGenState $ minfo |> miNameGenState
             ruleResultExpr <- ruleResult
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
@@ -243,8 +244,8 @@ remaining config modelZipper = do
             namegenst <- exportNameGenState
             let updNameGenState mi0 = mi0 { miNameGenState = namegenst }
             fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return (TryThisFirst fullModelBeforeHook id)
-                Just hook -> StartOver <$> hook (fromZipper fullModelBeforeHook)
+                Nothing   -> return (TryThisFirst fullModelBeforeHook (updNameGenState minfo))
+                Just hook -> StartOver <$> hook (fromModelZipper fullModelBeforeHook (updNameGenState minfo))
 
             return
                 ( Answer
@@ -271,9 +272,10 @@ remaining config modelZipper = do
 remaining1
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
-    -> Zipper Model Expression
+    -> ModelZipper
+    -> ModelInfo
     -> m [Question]
-remaining1 config modelZipper = do
+remaining1 config modelZipper minfo = do
     let
         loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
         loopLevels [] = return Nothing
@@ -284,7 +286,7 @@ remaining1 config modelZipper = do
 
         processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
-                     -> m (Maybe (Zipper Model Expression, [(Doc, RuleResult m)]))
+                     -> m (Maybe (ModelZipper, [(Doc, RuleResult m)]))
         processLevel rulesAtLevel =
             let
                 go [] = return Nothing
@@ -299,7 +301,7 @@ remaining1 config modelZipper = do
     questions <- loopLevels $ map processLevel (allRules config)
     forM (maybeToList questions) $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            -- importNameGenState $ modelZipper |> fromZipper |> mInfo |> miNameGenState
+            importNameGenState $ minfo |> miNameGenState
             ruleResultExpr <- ruleResult
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
@@ -331,8 +333,8 @@ remaining1 config modelZipper = do
             namegenst <- exportNameGenState
             let updNameGenState mi0 = mi0 { miNameGenState = namegenst }
             fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return (TryThisFirst fullModelBeforeHook id)
-                Just hook -> StartOver <$> hook (fromZipper fullModelBeforeHook)
+                Nothing   -> return (TryThisFirst fullModelBeforeHook (updNameGenState minfo))
+                Just hook -> StartOver <$> hook (fromModelZipper fullModelBeforeHook (updNameGenState minfo))
 
             return
                 ( Answer
@@ -396,7 +398,7 @@ strategyToDriver config questions = do
                       . aModelInfo pickedA
             , let theModel = case aFullModel pickedA of
                                 StartOver m -> StartOver m { mInfo = upd (mInfo m) }
-                                TryThisFirst m upd' -> TryThisFirst m (upd . upd')
+                                TryThisFirst m info -> TryThisFirst m (upd info)
             ]
 
 
@@ -653,7 +655,7 @@ updateDeclarations model = do
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m | Just modelZipper <- zipperBi m {mInfo = def} = do             -- we exclude the mInfo here
+checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -713,7 +715,7 @@ checkIfAllRefined m = return m
 
 -- | checking whether any undefined values creeped into the final model
 checkIfHasUndefined :: MonadFail m => Model -> m Model
-checkIfHasUndefined m  | Just modelZipper <- zipperBi m = do
+checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
     let returnMsg x = return
             $ ""
             : ("Undefined value in the final model:" <+> pretty (hole x))
@@ -854,7 +856,7 @@ applicableRules
                     )
     => Config
     -> [Rule]
-    -> Zipper Model Expression
+    -> ModelZipper
     -> n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
