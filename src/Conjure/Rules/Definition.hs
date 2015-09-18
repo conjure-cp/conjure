@@ -102,10 +102,10 @@ instance Default Config where
         }
 
 data RuleResult m = RuleResult
-    { ruleResultDescr :: Doc                    -- describe this transformation
+    { ruleResultDescr :: Doc                        -- describe this transformation
     , ruleResultType  :: QuestionType
-    , ruleResult      :: m Expression           -- the result
-    , ruleResultHook  :: Model -> m Model       -- post-application hook
+    , ruleResult      :: m Expression               -- the result
+    , ruleResultHook  :: Maybe (Model -> m Model)   -- post-application hook
     }
 
 data Rule = Rule
@@ -131,7 +131,7 @@ namedRule nm f = Rule
     { rName = nm
     , rApply = \ z x -> do
         (rResultDescr, rResult) <- runReaderT (f x) z
-        return [RuleResult rResultDescr ExpressionRefinement rResult return]
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
     }
 
 

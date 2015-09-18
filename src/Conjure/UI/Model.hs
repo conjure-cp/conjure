@@ -227,7 +227,9 @@ remaining config model | Just modelZipper <- zipperBi model = do
                     let mi1 = mi0 { miNameGenState = namegenst }
                     let m1  = m0  { mInfo = mi1 }
                     return m1
-            fullModelAfterHook <- ruleResultHook fullModelBeforeHook >>= updNameGenState
+            fullModelAfterHook <- case ruleResultHook of
+                Nothing   -> return fullModelBeforeHook >>= updNameGenState
+                Just hook -> hook   fullModelBeforeHook >>= updNameGenState
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
@@ -315,7 +317,9 @@ remaining1 config model | Just modelZipper <- zipperBi model = do
                     let mi1 = mi0 { miNameGenState = namegenst }
                     let m1  = m0  { mInfo = mi1 }
                     return m1
-            fullModelAfterHook <- ruleResultHook fullModelBeforeHook >>= updNameGenState
+            fullModelAfterHook <- case ruleResultHook of
+                Nothing   -> return fullModelBeforeHook >>= updNameGenState
+                Just hook -> hook   fullModelBeforeHook >>= updNameGenState
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
@@ -1201,7 +1205,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                     CutFind -> ChooseRepr_Cut
                                     _       -> bug "rule_ChooseRepr ruleResultType"
                              , ruleResult = return out
-                             , ruleResultHook = hook
+                             , ruleResultHook = Just hook
                              }
                 | dom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
@@ -1356,7 +1360,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
                                 ++ transformBi updateRepr gocAfter
                     out <- resolveNamesX out'
                     return out
-                , ruleResultHook = return
+                , ruleResultHook = Nothing
                 }
             | genOption <- genOptions
             ]
@@ -1422,7 +1426,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                                 )
                     out <- resolveNamesX out'
                     return out
-                , ruleResultHook = return
+                , ruleResultHook = Nothing
                 }
             | genOption <- genOptions
             ]
@@ -1666,7 +1670,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
                 , ruleResultType  = ExpressionRefinement
                 , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
-                , ruleResultHook  = return
+                , ruleResultHook  = Nothing
                 } ]
     theRule _ _ = na "rule_InlineConditions"
 
