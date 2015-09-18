@@ -199,7 +199,7 @@ storeChoice config q a = do
                  ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
                  ,  pretty . show $ c]
   saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
-  let a' = a { aModelInfo = addQuestionAnswered (logChoices config) c }
+  let a' = a { aFullModel = updateModelWIPInfo (addQuestionAnswered (logChoices config) c) (aFullModel a) }
   return $ a'
 
 addQuestionAnswered :: Bool -> QuestionAnswered -> ModelInfo -> ModelInfo

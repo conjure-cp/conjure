@@ -8,7 +8,7 @@ module Conjure.Rules.Definition
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
     , ModelZipper, mkModelZipper, fromModelZipper
-    , ModelWIP(..), modelWIPOut
+    , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic, representationOf, hasRepresentation, matchFirst
     ) where
 
@@ -48,7 +48,6 @@ data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
     , aFullModel :: ModelWIP
-    , aModelInfo :: ModelInfo -> ModelInfo          -- model info updater GET RID OF THIS
     , aRuleName  :: Doc
     }
 
@@ -71,6 +70,10 @@ modelWIPOut (StartOver m) = m
 modelWIPOut (TryThisFirst z minfo) =
     let (lang, stmts) = fromZipper z
     in Model lang stmts minfo
+
+updateModelWIPInfo :: (ModelInfo -> ModelInfo) -> ModelWIP -> ModelWIP
+updateModelWIPInfo upd (StartOver model) = StartOver model { mInfo = upd (mInfo model) }
+updateModelWIPInfo upd (TryThisFirst z info) = TryThisFirst z (upd info)
 
 
 data Config = Config

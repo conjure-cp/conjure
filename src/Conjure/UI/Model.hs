@@ -83,6 +83,8 @@ import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
 import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
+-- base
+import System.IO ( hFlush, stdout )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
@@ -253,7 +255,6 @@ remaining config modelZipper minfo = do
                     , aRuleName = ruleName
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
-                    , aModelInfo = updNameGenState
                     }
                 , ruleResultType
                 )
@@ -342,7 +343,6 @@ remaining1 config modelZipper minfo = do
                     , aRuleName = ruleName
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
-                    , aModelInfo = updNameGenState
                     }
                 , ruleResultType
                 )
@@ -395,10 +395,7 @@ strategyToDriver config questions = do
                             config
                             (strategyQ  config) pickedQNumber                   [pickedQDescr]
                             (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
-                      . aModelInfo pickedA
-            , let theModel = case aFullModel pickedA of
-                                StartOver m -> StartOver m { mInfo = upd (mInfo m) }
-                                TryThisFirst m info -> TryThisFirst m (upd info)
+            , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
 
@@ -422,6 +419,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let
                 pickIndex = do
                     putStr "Pick option: "
+                    hFlush stdout
                     line <- getLine
                     case (line, readMay line) of
                         ("", _) -> return 1
