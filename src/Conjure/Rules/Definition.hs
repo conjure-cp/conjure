@@ -7,6 +7,7 @@ module Conjure.Rules.Definition
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
+    , ModelWIP(..), modelWIPOut
     , isAtomic, representationOf, hasRepresentation, matchFirst
     ) where
 
@@ -19,7 +20,7 @@ import Conjure.Language.RepresentationOf
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( Zipper )
+import Data.Generics.Uniplate.Zipper ( Zipper, fromZipper )
 
 
 type LogOr a = Either (LogLevel, Doc) a
@@ -45,12 +46,18 @@ data QuestionType
 data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
-    , aFullModel :: Model
+    , aFullModel :: ModelWIP
+    , aModelInfo :: ModelInfo -> ModelInfo          -- model info updater
     , aRuleName  :: Doc
-    } deriving (Show)
+    }
 
+type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [ModelWIP])
 
-type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
+data ModelWIP = StartOver Model | TryThisFirst (Zipper Model Expression) (ModelInfo -> ModelInfo)
+
+modelWIPOut :: ModelWIP -> Model
+modelWIPOut (StartOver m) = m
+modelWIPOut (TryThisFirst z u) = let m = fromZipper z in m { mInfo = u (mInfo m) }
 
 
 data Config = Config
