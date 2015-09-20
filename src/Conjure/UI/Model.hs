@@ -405,8 +405,8 @@ strategyToDriver config questions = do
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
             , let upd = addToTrail
                             config
-                            (strategyQ  config) pickedQNumber                   [pickedQDescr]
-                            (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
+                            (strategyQ  config) pickedQNumber                   pickedQDescr
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
             , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
@@ -489,8 +489,8 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int ->        [Doc]
-    -> Strategy -> Int -> Int -> [Doc]
+    -> Strategy -> Int ->        Doc
+    -> Strategy -> Int -> Int -> Doc
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
            questionStrategy questionNumber                 questionDescr
@@ -506,7 +506,7 @@ addToTrail Config{..}
             { dDescription = map (stringToText . renderWide)
                 $ ("Question #" <> pretty questionNumber)
                 : ("  (Using strategy:" <+> pretty (show questionStrategy) <> ")")
-                : questionDescr
+                : map pretty (lines (renderWide questionDescr))
             , dDecision = questionNumber
             , dNumOptions = Nothing
             }
@@ -514,7 +514,7 @@ addToTrail Config{..}
             { dDescription = map (stringToText . renderWide)
                 $ ("Answer #" <> pretty answerNumber <+> "out of" <+> pretty (show answerNumbers))
                 : ("  (Using strategy:" <+> pretty (show answerStrategy) <> ")")
-                : answerDescr
+                : map pretty (lines (renderWide answerDescr))
             , dDecision = answerNumber
             , dNumOptions = Just answerNumbers
             }
