@@ -243,11 +243,17 @@ remaining config modelZipper minfo = do
                                 , "Error :" <+> pretty msg
                                 ]
 
-            namegenst <- exportNameGenState
-            let updNameGenState mi0 = mi0 { miNameGenState = namegenst }
             fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return (TryThisFirst fullModelBeforeHook (updNameGenState minfo))
-                Just hook -> StartOver <$> hook (fromModelZipper fullModelBeforeHook (updNameGenState minfo))
+                Nothing   -> do
+                    namegenst <- exportNameGenState
+                    return (TryThisFirst fullModelBeforeHook minfo { miNameGenState = namegenst })
+                Just hook -> do
+                    namegenst1 <- exportNameGenState
+                    let m1 = fromModelZipper fullModelBeforeHook minfo { miNameGenState = namegenst1 }
+                    m2 <- hook m1
+                    namegenst2 <- exportNameGenState
+                    let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
+                    return (StartOver m3)
 
             return
                 ( Answer
@@ -331,11 +337,17 @@ remaining1 config modelZipper minfo = do
                                 , "Error :" <+> pretty msg
                                 ]
 
-            namegenst <- exportNameGenState
-            let updNameGenState mi0 = mi0 { miNameGenState = namegenst }
             fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return (TryThisFirst fullModelBeforeHook (updNameGenState minfo))
-                Just hook -> StartOver <$> hook (fromModelZipper fullModelBeforeHook (updNameGenState minfo))
+                Nothing   -> do
+                    namegenst <- exportNameGenState
+                    return (TryThisFirst fullModelBeforeHook minfo { miNameGenState = namegenst })
+                Just hook -> do
+                    namegenst1 <- exportNameGenState
+                    let m1 = fromModelZipper fullModelBeforeHook minfo { miNameGenState = namegenst1 }
+                    m2 <- hook m1
+                    namegenst2 <- exportNameGenState
+                    let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
+                    return (StartOver m3)
 
             return
                 ( Answer
