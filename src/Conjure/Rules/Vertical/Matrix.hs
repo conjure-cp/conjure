@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Rules.Vertical.Matrix where
 
@@ -401,8 +402,7 @@ rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, singleVal), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName (DomainInt [RangeSingle a])) -> return (Single patName, a)
-            Generator (GenDomainHasRepr patName (DomainInt [RangeBounded a b])) | a == b -> return (Single patName, a)
+            Generator (GenDomainHasRepr patName (singletonDomainInt -> Just a)) -> return (Single patName, a)
             _ -> na "rule_Comprehension_SingletonDomain"
         let upd val old = lambdaToFunction pat old val
         return

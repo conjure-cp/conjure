@@ -22,6 +22,7 @@ module Conjure.Language.Domain
     , readBinRel
     , normaliseDomain, normaliseRange
     , innerDomainOf
+    , singletonDomainInt
     ) where
 
 -- conjure
@@ -810,3 +811,8 @@ innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
 innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
 innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
 innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
+
+singletonDomainInt :: Eq x => Domain r x -> Maybe x
+singletonDomainInt (DomainInt [RangeSingle a]) = Just a
+singletonDomainInt (DomainInt [RangeBounded a b]) | a == b = Just a
+singletonDomainInt _ = Nothing
