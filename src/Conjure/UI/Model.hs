@@ -88,7 +88,7 @@ import System.IO ( hFlush, stdout )
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
-import Data.Generics.Uniplate.Zipper as Zipper ( up )
+import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -156,8 +156,8 @@ toCompletion config m = do
     where
         driver = strategyToDriver config
         loopy modelWIP = do
-            logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
-            qs<- remainingWIP config modelWIP
+            logDebugVerbose $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
+            qs <- remainingWIP config modelWIP
             if null qs
                 then do
                     let model = modelWIPOut modelWIP
@@ -183,9 +183,13 @@ remainingWIP config (StartOver model)
     | otherwise = bug "remainingWIP: Cannot create zipper."
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
-    if null qs
-        then remainingWIP config (StartOver (modelWIPOut wip))
-        else return qs
+    case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
+        (False, _, _)  -> return qs                                         -- not null, return
+        (_, Just r, _) -> remainingWIP config (TryThisFirst r info)         -- there is a sibling to the right
+        (_, _, Just u) -> remainingWIP config (TryThisFirst u info)         -- there is a parent
+        _              -> remainingWIP config (StartOver (modelWIPOut wip)) -- we are done here,
+                                                                            -- start-over the whole model in case
+                                                                            -- something on the left need attention.
 
 
 remaining
