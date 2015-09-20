@@ -168,6 +168,9 @@ toCompletion config m = do
                     mapM_ loopy nextModels
 
 
+-- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location
+--   and new rules will be tried using P as the top of the zipper-tree.
+--   The whole model (containing P too) will be tried later for completeness.
 remainingWIP
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
