@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Domain
     ( Domain(..)
@@ -812,7 +813,14 @@ innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
 innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
 innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
 
-singletonDomainInt :: Eq x => Domain r x -> Maybe x
+singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x
 singletonDomainInt (DomainInt [RangeSingle a]) = Just a
-singletonDomainInt (DomainInt [RangeBounded a b]) | a == b = Just a
+singletonDomainInt (DomainInt [RangeBounded a b]) =
+    let
+        followAlias (isAlias -> Just x) = followAlias x
+        followAlias x = x
+    in
+        if followAlias a == followAlias b
+            then Just a
+            else Nothing
 singletonDomainInt _ = Nothing
