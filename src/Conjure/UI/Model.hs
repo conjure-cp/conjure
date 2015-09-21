@@ -156,7 +156,7 @@ toCompletion config m = do
     where
         driver = strategyToDriver config
         loopy modelWIP = do
-            logDebugVerbose $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
+            logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
             qs <- remainingWIP config modelWIP
             if null qs
                 then do
@@ -189,7 +189,7 @@ remainingWIP config wip@(TryThisFirst modelZipper info) = do
         (_, _, Just u) -> remainingWIP config (TryThisFirst u info)         -- there is a parent
         _              -> remainingWIP config (StartOver (modelWIPOut wip)) -- we are done here,
                                                                             -- start-over the whole model in case
-                                                                            -- something on the left need attention.
+                                                                            -- something on the left needs attention.
 
 
 remaining
@@ -582,14 +582,6 @@ updateDeclarations model = do
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     | order <- orders
                     ]
-                -- SearchOrder orders -> do
-                --     out <- forM orders $ \ order ->
-                --         case order of
-                --             BranchingOn nm -> do
-                --                 let domains = [ d | (n, d) <- representations, n == nm ]
-                --                 fmap nub $ concatMapM (onEachDomainSearch nm) domains
-                --             Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
-                --     return [SearchOrder out]
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =
