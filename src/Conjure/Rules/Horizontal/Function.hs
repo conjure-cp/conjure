@@ -202,19 +202,18 @@ rule_Card :: Rule
 rule_Card = "function-cardinality" `namedRule` theRule where
     theRule [essence| |&f| |] = do
         TypeFunction{} <- typeOf f
+        dom <- domainOf f
         return
             ( "Function cardinality"
-            , do
-                dom <- domainOf f
-                case dom of
-                    DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _
-                        -> return n
-                    DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo
-                        | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
-                        -> domainSizeOf innerTo
-                    DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _
-                        -> domainSizeOf innerFr
-                    _ -> return [essence| |toSet(&f)| |]
+            , case dom of
+                DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _
+                    -> return n
+                DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo
+                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                    -> domainSizeOf innerTo
+                DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _
+                    -> domainSizeOf innerFr
+                _ -> return [essence| |toSet(&f)| |]
             )
     theRule _ = na "rule_Card"
 
