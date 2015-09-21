@@ -10,12 +10,12 @@ find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..4)] of int(2..5)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q14] /\
-         q15 <= y_ExplicitVarSizeWithMarker_Marker
+    and([x_ExplicitVarSizeWithFlags_Flags[q22] /\
+         q23 <= y_ExplicitVarSizeWithMarker_Marker
          ->
-         x_ExplicitVarSizeWithFlags_Values[q14] + 2 =
-         y_ExplicitVarSizeWithMarker_Values[q15]
-             | q14 : int(1..4), q15 : int(1..4)]),
+         x_ExplicitVarSizeWithFlags_Values[q22] + 2 =
+         y_ExplicitVarSizeWithMarker_Values[q23]
+             | q22 : int(1..4), q23 : int(1..4)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] <
          x_ExplicitVarSizeWithFlags_Values[q1 + 1]
@@ -46,14 +46,14 @@ such that
          y_ExplicitVarSizeWithFlags_Flags[q11]
              | q11 : int(1..3)]),
     1 <= sum([toInt(y_ExplicitVarSizeWithFlags_Flags[q12]) | q12 : int(1..4)]),
-    and([y_ExplicitVarSizeWithFlags_Flags[q17] ->
-         or([q19 <= y_ExplicitVarSizeWithMarker_Marker /\
-             y_ExplicitVarSizeWithMarker_Values[q19] = y_ExplicitVarSizeWithFlags_Values[q17]
-                 | q19 : int(1..4)])
-             | q17 : int(1..4)]),
-    and([q21 <= y_ExplicitVarSizeWithMarker_Marker ->
-         or([y_ExplicitVarSizeWithFlags_Flags[q23] /\
-             y_ExplicitVarSizeWithFlags_Values[q23] = y_ExplicitVarSizeWithMarker_Values[q21]
-                 | q23 : int(1..4)])
-             | q21 : int(1..4)])
+    and([y_ExplicitVarSizeWithFlags_Flags[q15] ->
+         or([q17 <= y_ExplicitVarSizeWithMarker_Marker /\
+             y_ExplicitVarSizeWithMarker_Values[q17] = y_ExplicitVarSizeWithFlags_Values[q15]
+                 | q17 : int(1..4)])
+             | q15 : int(1..4)]),
+    and([q19 <= y_ExplicitVarSizeWithMarker_Marker ->
+         or([y_ExplicitVarSizeWithFlags_Flags[q21] /\
+             y_ExplicitVarSizeWithFlags_Values[q21] = y_ExplicitVarSizeWithMarker_Values[q19]
+                 | q21 : int(1..4)])
+             | q19 : int(1..4)])
 

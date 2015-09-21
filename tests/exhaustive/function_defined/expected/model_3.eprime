@@ -16,22 +16,22 @@ such that
     and([aux1_ExplicitVarSizeWithFlags_Flags[q12 + 1] ->
          aux1_ExplicitVarSizeWithFlags_Flags[q12]
              | q12 : int(1..2)]),
-    and([x_Function1DPartial_Flags[q16] ->
-         or([aux1_ExplicitVarSizeWithFlags_Flags[q22] /\
-             aux1_ExplicitVarSizeWithFlags_Values[q22] = q16
-                 | q22 : int(1..3)])
-             | q16 : int(1..3)]),
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q17] ->
-         or([x_Function1DPartial_Flags[q18] /\
-             q18 = aux1_ExplicitVarSizeWithFlags_Values[q17]
-                 | q18 : int(1..3)])
-             | q17 : int(1..3)]),
+    and([x_Function1DPartial_Flags[q15] ->
+         or([aux1_ExplicitVarSizeWithFlags_Flags[q17] /\
+             aux1_ExplicitVarSizeWithFlags_Values[q17] = q15
+                 | q17 : int(1..3)])
+             | q15 : int(1..3)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q18] ->
+         or([x_Function1DPartial_Flags[q19] /\
+             q19 = aux1_ExplicitVarSizeWithFlags_Values[q18]
+                 | q19 : int(1..3)])
+             | q18 : int(1..3)]),
     x_Function1DPartial_Flags[1],
     x_Function1DPartial_Flags[2],
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q15] ->
-         1 = aux1_ExplicitVarSizeWithFlags_Values[q15] \/
-         2 = aux1_ExplicitVarSizeWithFlags_Values[q15]
-             | q15 : int(1..3)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q20] ->
+         1 = aux1_ExplicitVarSizeWithFlags_Values[q20] \/
+         2 = aux1_ExplicitVarSizeWithFlags_Values[q20]
+             | q20 : int(1..3)]),
     and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1
              | q1 : int(1..3)])
 

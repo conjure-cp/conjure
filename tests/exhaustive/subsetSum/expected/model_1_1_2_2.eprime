@@ -13,11 +13,11 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
 find x_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..let1)] of int(let2..let3)
 such that
-    and([x_Occurrence[q6] -> nums_Occurrence[q6] | q6 : int(let2..let3)]),
+    and([x_Occurrence[q11] -> nums_Occurrence[q11] | q11 : int(let2..let3)]),
     s =
-    sum([toInt(q5 <= x_ExplicitVarSizeWithMarker_Marker) *
-         x_ExplicitVarSizeWithMarker_Values[q5]
-             | q5 : int(1..let1)]),
+    sum([toInt(q10 <= x_ExplicitVarSizeWithMarker_Marker) *
+         x_ExplicitVarSizeWithMarker_Values[q10]
+             | q10 : int(1..let1)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1,
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
@@ -29,12 +29,12 @@ such that
              | q3 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
-    and([q8 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q8]]
-             | q8 : int(1..let1)]),
-    and([x_Occurrence[q9] ->
-         or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q11] = q9
-                 | q11 : int(1..let1)])
-             | q9 : int(let2..let3)])
+    and([q6 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q6]]
+             | q6 : int(1..let1)]),
+    and([x_Occurrence[q7] ->
+         or([q9 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q9] = q7
+                 | q9 : int(1..let1)])
+             | q7 : int(let2..let3)])
 

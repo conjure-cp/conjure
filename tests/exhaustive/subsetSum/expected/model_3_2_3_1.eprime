@@ -13,14 +13,14 @@ find x_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..let1)] of int(let2..let3)
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q9] ->
-         or([nums_Explicit[q11] = x_ExplicitVarSizeWithFlags_Values[q9]
-                 | q11 : int(1..fin1)])
-             | q9 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q14] ->
+         or([nums_Explicit[q16] = x_ExplicitVarSizeWithFlags_Values[q14]
+                 | q16 : int(1..fin1)])
+             | q14 : int(1..let1)]),
     s =
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) *
-         x_ExplicitVarSizeWithFlags_Values[q7]
-             | q7 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q12]) *
+         x_ExplicitVarSizeWithFlags_Values[q12]
+             | q12 : int(1..let1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] <
          x_ExplicitVarSizeWithFlags_Values[q1 + 1]
@@ -35,12 +35,12 @@ such that
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..let1)]) <= let1,
     1 <= sum([toInt(x_Occurrence[q6]) | q6 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q6]) | q6 : int(let2..let3)]) <= let1,
-    and([x_Occurrence[q12] ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q14] /\
-             x_ExplicitVarSizeWithFlags_Values[q14] = q12
-                 | q14 : int(1..let1)])
-             | q12 : int(let2..let3)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q16] ->
-         x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q16]]
-             | q16 : int(1..let1)])
+    and([x_Occurrence[q7] ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q9] /\
+             x_ExplicitVarSizeWithFlags_Values[q9] = q7
+                 | q9 : int(1..let1)])
+             | q7 : int(let2..let3)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q11] ->
+         x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q11]]
+             | q11 : int(1..let1)])
 

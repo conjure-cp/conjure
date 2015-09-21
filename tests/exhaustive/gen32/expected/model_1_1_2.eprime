@@ -1,25 +1,26 @@
 language ESSENCE' 1.0
 
-find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
-find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
+letting let1 be -4
+find var2_Occurrence: matrix indexed by [int(let1..5, 2)] of bool
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..1 + (5 - let1) + 1)
 find var2_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
+        matrix indexed by [int(1..1 + (5 - let1) + 1)] of int(let1..5, 2)
 such that
-    or([var2_Occurrence[q5] /\ !var2_Occurrence[q5] | q5 : int(-4..5, 2)]) \/
-    or([var2_Occurrence[q5] /\ !var2_Occurrence[q5] | q5 : int(-4..5, 2)]),
+    or([var2_Occurrence[q10] /\ !var2_Occurrence[q10] | q10 : int(let1..5, 2)]) \/
+    or([var2_Occurrence[q10] /\ !var2_Occurrence[q10] | q10 : int(let1..5, 2)]),
     and([q2 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
          var2_ExplicitVarSizeWithMarker_Values[q2] <
          var2_ExplicitVarSizeWithMarker_Values[q2 + 1]
-             | q2 : int(1..10)]),
+             | q2 : int(1..1 + (5 - let1) + 1 - 1)]),
     and([q3 > var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q3] = -4
-             | q3 : int(1..11)]),
-    and([q7 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q7]]
-             | q7 : int(1..11)]),
-    and([var2_Occurrence[q8] ->
-         or([q10 <= var2_ExplicitVarSizeWithMarker_Marker /\
-             var2_ExplicitVarSizeWithMarker_Values[q10] = q8
-                 | q10 : int(1..11)])
-             | q8 : int(-4..5, 2)])
+         var2_ExplicitVarSizeWithMarker_Values[q3] = let1
+             | q3 : int(1..1 + (5 - let1) + 1)]),
+    and([q6 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q6]]
+             | q6 : int(1..1 + (5 - let1) + 1)]),
+    and([var2_Occurrence[q7] ->
+         or([q9 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q9] = q7
+                 | q9 : int(1..1 + (5 - let1) + 1)])
+             | q7 : int(let1..5, 2)])
 
