@@ -199,17 +199,12 @@ storeChoice config q a = do
                  ,  (pretty . qHole)  q <+> (pretty . holeHash . qHole) q
                  ,  pretty . show $ c]
   saveToLog $ "LF: " <+> jsonToDoc c  <+> "END:"
-  let a' = a{aFullModel = addQuestionAnswered (logChoices config) (aFullModel a) c }
+  let a' = a { aFullModel = updateModelWIPInfo (addQuestionAnswered (logChoices config) c) (aFullModel a) }
   return $ a'
 
-addQuestionAnswered :: Bool -> Model -> QuestionAnswered -> Model
-addQuestionAnswered False m _ =  m
-addQuestionAnswered _  model qa = model { mInfo = newInfo }
-
-  where
-    oldInfo = mInfo model
-    newInfo = oldInfo { miQuestionAnswered = miQuestionAnswered oldInfo ++ [qa]
-                      }
+addQuestionAnswered :: Bool -> QuestionAnswered -> ModelInfo -> ModelInfo
+addQuestionAnswered False _ m =  m
+addQuestionAnswered _ qa oldInfo = oldInfo { miQuestionAnswered = miQuestionAnswered oldInfo ++ [qa] }
 
 
 makeChoice :: Question -> Answer -> QuestionAnswered

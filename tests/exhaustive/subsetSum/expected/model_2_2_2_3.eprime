@@ -15,14 +15,14 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
 find x_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..let1)] of int(let2..let3)
 such that
-    and([q11 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([nums_Explicit[q13] = x_ExplicitVarSizeWithMarker_Values[q11]
-                 | q13 : int(1..fin1)])
-             | q11 : int(1..let1)]),
+    and([q19 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([nums_Explicit[q21] = x_ExplicitVarSizeWithMarker_Values[q19]
+                 | q21 : int(1..fin1)])
+             | q19 : int(1..let1)]),
     s =
-    sum([toInt(q9 <= x_ExplicitVarSizeWithMarker_Marker) *
-         x_ExplicitVarSizeWithMarker_Values[q9]
-             | q9 : int(1..let1)]),
+    sum([toInt(q17 <= x_ExplicitVarSizeWithMarker_Marker) *
+         x_ExplicitVarSizeWithMarker_Values[q17]
+             | q17 : int(1..let1)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q1] <
          x_ExplicitVarSizeWithMarker_Values[q1 + 1]
@@ -44,14 +44,14 @@ such that
              | q6 : int(1..let1 - 1)]),
     1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]),
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]) <= let1,
-    and([x_ExplicitVarSizeWithFlags_Flags[q15] ->
-         or([q17 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q17] = x_ExplicitVarSizeWithFlags_Values[q15]
-                 | q17 : int(1..let1)])
-             | q15 : int(1..let1)]),
-    and([q19 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q21] /\
-             x_ExplicitVarSizeWithFlags_Values[q21] = x_ExplicitVarSizeWithMarker_Values[q19]
-                 | q21 : int(1..let1)])
-             | q19 : int(1..let1)])
+    and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
+         or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q12] = x_ExplicitVarSizeWithFlags_Values[q10]
+                 | q12 : int(1..let1)])
+             | q10 : int(1..let1)]),
+    and([q14 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q16] /\
+             x_ExplicitVarSizeWithFlags_Values[q16] = x_ExplicitVarSizeWithMarker_Values[q14]
+                 | q16 : int(1..let1)])
+             | q14 : int(1..let1)])
 

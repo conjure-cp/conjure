@@ -29,19 +29,19 @@ such that
                     p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q8, q1])
                   | q8 : int(1..2 ** (1 + (b - 1)))])
              | q1 : int(1..b)]),
-    and([q9 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9,
-                                                                                 q10])
-                  | q10 : int(1..b)])
+    and([q10 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q10,
+                                                                                 q11])
+                  | q11 : int(1..b)])
          >= 1
-             | q9 : int(1..2 ** (1 + (b - 1)))]),
+             | q10 : int(1..2 ** (1 + (b - 1)))]),
     and([q4 + 1 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
          p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q4, ..] <lex
          p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q4 + 1, ..]
              | q4 : int(1..2 ** (1 + (b - 1)) - 1)]),
     and([q5 > p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         and([p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q5, q11] =
+         and([p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q5, q9] =
               false
-                  | q11 : int(1..b)])
+                  | q9 : int(1..b)])
              | q5 : int(1..2 ** (1 + (b - 1)))])
 

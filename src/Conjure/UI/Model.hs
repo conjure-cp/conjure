@@ -83,10 +83,12 @@ import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
 import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
+-- base
+import System.IO ( hFlush, stdout )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
-import Data.Generics.Uniplate.Zipper as Zipper ( up )
+import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
+import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -150,14 +152,15 @@ toCompletion config m = do
                                  , miStrategyA = strategyA config
                                  } }
     logInfo $ modelInfo m3
-    loopy m3
+    loopy (StartOver m3)
     where
         driver = strategyToDriver config
-        loopy model = do
-            logDebug $ "[loopy]" <+> pretty model
-            qs <- remaining config model
+        loopy modelWIP = do
+            logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
+            qs <- remainingWIP config modelWIP
             if null qs
                 then do
+                    let model = modelWIPOut modelWIP
                     model' <- epilogue model
                     yield (Right model')
                 else do
@@ -165,37 +168,43 @@ toCompletion config m = do
                     mapM_ loopy nextModels
 
 
+-- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location
+--   and new rules will be tried using P as the top of the zipper-tree.
+--   The whole model (containing P too) will be tried later for completeness.
+remainingWIP
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    => Config
+    -> ModelWIP
+    -> m [Question]
+remainingWIP config (StartOver model)
+    | Just modelZipper <- mkModelZipper model = do
+        qs <- remaining config modelZipper (mInfo model)
+        return qs
+    | otherwise = bug "remainingWIP: Cannot create zipper."
+remainingWIP config wip@(TryThisFirst modelZipper info) = do
+    qs <- remaining config modelZipper info
+    case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
+        (False, _, _)  -> return qs                                         -- not null, return
+        (_, Just r, _) -> remainingWIP config (TryThisFirst r info)         -- there is a sibling to the right
+        (_, _, Just u) -> remainingWIP config (TryThisFirst u info)         -- there is a parent
+        _              -> remainingWIP config (StartOver (modelWIPOut wip)) -- we are done here,
+                                                                            -- start-over the whole model in case
+                                                                            -- something on the left needs attention.
+
+
 remaining
     :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
-    -> Model
+    -> ModelZipper
+    -> ModelInfo
     -> m [Question]
-remaining config model | strategyQ config == PickFirst = remaining1 config model
-remaining config model | Just modelZipper <- zipperBi model = do
-    let
-        loopLevels :: Monad m => [m [a]] -> m [a]
-        loopLevels [] = return []
-        loopLevels (a:as) = do bs <- a
-                               if null bs
-                                   then loopLevels as
-                                   else return bs
-
-        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
-                     => [Rule]
-                     -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
-        processLevel rulesAtLevel =
-            fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
-                ys <- applicableRules config rulesAtLevel x
-                return $ if null ys
-                            then Nothing
-                            else Just (x, ys)
-
-    questions <- loopLevels $ map processLevel (allRules config)
+remaining config modelZipper minfo = do
+    questions <- getQuestions config modelZipper
     forM questions $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            importNameGenState $ model |> mInfo |> miNameGenState
+            importNameGenState $ minfo |> miNameGenState
             ruleResultExpr <- ruleResult
-            let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
             case (mtyBefore, mtyAfter) of
@@ -221,15 +230,19 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                 , "After :" <+> pretty ruleResultExpr
                                 , "Error :" <+> pretty msg
                                 ]
-            let updNameGenState m0 = do
-                    namegenst <- exportNameGenState
-                    let mi0 = mInfo m0
-                    let mi1 = mi0 { miNameGenState = namegenst }
-                    let m1  = m0  { mInfo = mi1 }
-                    return m1
+
             fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return fullModelBeforeHook >>= updNameGenState
-                Just hook -> hook   fullModelBeforeHook >>= updNameGenState
+                Nothing   -> do
+                    namegenst <- exportNameGenState
+                    return (TryThisFirst fullModelBeforeHook minfo { miNameGenState = namegenst })
+                Just hook -> do
+                    namegenst1 <- exportNameGenState
+                    let m1 = fromModelZipper fullModelBeforeHook minfo { miNameGenState = namegenst1 }
+                    m2 <- hook m1
+                    namegenst2 <- exportNameGenState
+                    let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
+                    return (StartOver m3)
+
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
@@ -249,15 +262,16 @@ remaining config model | Just modelZipper <- zipperBi model = do
             , qAscendants = tail (ascendants focus)
             , qAnswers = map fst answers1
             }
-remaining _ _ = return []
 
 
-remaining1
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+-- | Computes all applicable questions.
+--   strategyQ == PickFirst is special-cased for performance.
+getQuestions
+    :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
     => Config
-    -> Model
-    -> m [Question]
-remaining1 config model | Just modelZipper <- zipperBi model = do
+    -> ModelZipper
+    -> m [(ModelZipper, [(Doc, RuleResult m)])]
+getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$>
     let
         loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
         loopLevels [] = return Nothing
@@ -268,7 +282,7 @@ remaining1 config model | Just modelZipper <- zipperBi model = do
 
         processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
-                     -> m (Maybe (Zipper Model Expression, [(Doc, RuleResult m)]))
+                     -> m (Maybe (ModelZipper, [(Doc, RuleResult m)]))
         processLevel rulesAtLevel =
             let
                 go [] = return Nothing
@@ -279,67 +293,28 @@ remaining1 config model | Just modelZipper <- zipperBi model = do
                          else return (Just (x, ys))
             in
                 go (allContextsExceptReferences modelZipper)
+    in
+        loopLevels (map processLevel (allRules config))
+getQuestions config modelZipper =
+    let
+        loopLevels :: Monad m => [m [a]] -> m [a]
+        loopLevels [] = return []
+        loopLevels (a:as) = do bs <- a
+                               if null bs
+                                   then loopLevels as
+                                   else return bs
 
-    questions <- loopLevels $ map processLevel (allRules config)
-    forM (maybeToList questions) $ \ (focus, answers0) -> do
-        answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            importNameGenState $ model |> mInfo |> miNameGenState
-            ruleResultExpr <- ruleResult
-            let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
-            let mtyBefore = typeOf (hole focus)
-            let mtyAfter  = typeOf ruleResultExpr
-            case (mtyBefore, mtyAfter) of
-                (Right tyBefore, Right tyAfter) ->
-                    if typesUnify [tyBefore, tyAfter]
-                        then return ()
-                        else bug $ vcat
-                                [ "Rule application changes type:" <+> pretty ruleName
-                                , "Before:" <+> pretty (hole focus)
-                                , "After :" <+> pretty ruleResultExpr
-                                , "Type before:" <+> pretty tyBefore
-                                , "Type after :" <+> pretty tyAfter
-                                ]
-                (Left msg, _) -> bug $ vcat
-                                [ "Type error before rule application:" <+> pretty ruleName
-                                , "Before:" <+> pretty (hole focus)
-                                , "After :" <+> pretty ruleResultExpr
-                                , "Error :" <+> pretty msg
-                                ]
-                (_, Left msg) -> bug $ vcat
-                                [ "Type error after rule application:" <+> pretty ruleName
-                                , "Before:" <+> pretty (hole focus)
-                                , "After :" <+> pretty ruleResultExpr
-                                , "Error :" <+> pretty msg
-                                ]
-            let updNameGenState m0 = do
-                    namegenst <- exportNameGenState
-                    let mi0 = mInfo m0
-                    let mi1 = mi0 { miNameGenState = namegenst }
-                    let m1  = m0  { mInfo = mi1 }
-                    return m1
-            fullModelAfterHook <- case ruleResultHook of
-                Nothing   -> return fullModelBeforeHook >>= updNameGenState
-                Just hook -> hook   fullModelBeforeHook >>= updNameGenState
-            return
-                ( Answer
-                    { aText = ruleName <> ":" <+> ruleResultDescr
-                    , aRuleName = ruleName
-                    , aAnswer = ruleResultExpr
-                    , aFullModel = fullModelAfterHook
-                    }
-                , ruleResultType
-                )
-        let qTypes = map snd answers1
-        qType' <- if all (head qTypes ==) (tail qTypes)
-                    then return (head qTypes)
-                    else bug "Rules of different rule kinds applicable, this is a bug."
-        return Question
-            { qType = qType'
-            , qHole = hole focus
-            , qAscendants = tail (ascendants focus)
-            , qAnswers = map fst answers1
-            }
-remaining1 _ _ = return []
+        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+                     => [Rule]
+                     -> m [(ModelZipper, [(Doc, RuleResult m)])]
+        processLevel rulesAtLevel =
+            fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
+                ys <- applicableRules config rulesAtLevel x
+                return $ if null ys
+                            then Nothing
+                            else Just (x, ys)
+    in
+        loopLevels (map processLevel (allRules config))
 
 
 strategyToDriver :: Config -> Driver
@@ -374,12 +349,12 @@ strategyToDriver config questions = do
         pickedAs <- executeAnswerStrategy config pickedQ optionsA (strategyA' config)
         return
             [ theModel
-                |> addToTrail
-                        config
-                        (strategyQ  config) pickedQNumber                   [pickedQDescr]
-                        (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
-            , let theModel = aFullModel pickedA
+            , let upd = addToTrail
+                            config
+                            (strategyQ  config) pickedQNumber                   pickedQDescr
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
+            , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
 
@@ -403,6 +378,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let
                 pickIndex = do
                     putStr "Pick option: "
+                    hFlush stdout
                     line <- getLine
                     case (line, readMay line) of
                         ("", _) -> return 1
@@ -460,15 +436,14 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int ->        [Doc]
-    -> Strategy -> Int -> Int -> [Doc]
-    -> Model -> Model
+    -> Strategy -> Int ->        Doc
+    -> Strategy -> Int -> Int -> Doc
+    -> ModelInfo -> ModelInfo
 addToTrail Config{..}
            questionStrategy questionNumber                 questionDescr
            answerStrategy   answerNumber   answerNumbers   answerDescr
-           model = model { mInfo = newInfo }
+           oldInfo = newInfo
     where
-        oldInfo = mInfo model
         newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(questionNumber, answerNumber, answerNumbers)]
                           , miTrailVerbose = if verboseTrail
                                                   then miTrailVerbose oldInfo ++ [theQ, theA]
@@ -478,7 +453,7 @@ addToTrail Config{..}
             { dDescription = map (stringToText . renderWide)
                 $ ("Question #" <> pretty questionNumber)
                 : ("  (Using strategy:" <+> pretty (show questionStrategy) <> ")")
-                : questionDescr
+                : map pretty (lines (renderWide questionDescr))
             , dDecision = questionNumber
             , dNumOptions = Nothing
             }
@@ -486,7 +461,7 @@ addToTrail Config{..}
             { dDescription = map (stringToText . renderWide)
                 $ ("Answer #" <> pretty answerNumber <+> "out of" <+> pretty (show answerNumbers))
                 : ("  (Using strategy:" <+> pretty (show answerStrategy) <> ")")
-                : answerDescr
+                : map pretty (lines (renderWide answerDescr))
             , dDecision = answerNumber
             , dNumOptions = Just answerNumbers
             }
@@ -607,14 +582,6 @@ updateDeclarations model = do
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     | order <- orders
                     ]
-                -- SearchOrder orders -> do
-                --     out <- forM orders $ \ order ->
-                --         case order of
-                --             BranchingOn nm -> do
-                --                 let domains = [ d | (n, d) <- representations, n == nm ]
-                --                 fmap nub $ concatMapM (onEachDomainSearch nm) domains
-                --             Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
-                --     return [SearchOrder out]
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =
@@ -637,7 +604,7 @@ updateDeclarations model = do
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m | Just modelZipper <- zipperBi m {mInfo = def} = do             -- we exclude the mInfo here
+checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -697,7 +664,7 @@ checkIfAllRefined m = return m
 
 -- | checking whether any undefined values creeped into the final model
 checkIfHasUndefined :: MonadFail m => Model -> m Model
-checkIfHasUndefined m  | Just modelZipper <- zipperBi m = do
+checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
     let returnMsg x = return
             $ ""
             : ("Undefined value in the final model:" <+> pretty (hole x))
@@ -838,7 +805,7 @@ applicableRules
                     )
     => Config
     -> [Rule]
-    -> Zipper Model Expression
+    -> ModelZipper
     -> n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())

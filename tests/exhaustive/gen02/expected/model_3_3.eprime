@@ -6,9 +6,9 @@ find var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker:
 find var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..2)] of bool
 such that
-    or([var2_ExplicitVarSizeWithFlags_Flags[q9] /\
-        var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q9] >= -7
-            | q9 : int(1..4)]),
+    or([var2_ExplicitVarSizeWithFlags_Flags[q10] /\
+        var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q10] >= -7
+            | q10 : int(1..4)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1] <
          var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q1 + 1]
@@ -24,9 +24,9 @@ such that
     and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false ->
          var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Marker[q2] = 0 /\
          and([var2_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithMarker_Values[q2,
-                                                                                    q10]
+                                                                                    q9]
               = false
-                  | q10 : int(1..2)])
+                  | q9 : int(1..2)])
              | q2 : int(1..4)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
          var2_ExplicitVarSizeWithFlags_Flags[q3]

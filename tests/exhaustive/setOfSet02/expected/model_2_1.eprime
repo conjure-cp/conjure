@@ -3,14 +3,15 @@ language ESSENCE' 1.0
 find x_Explicit_Explicit: matrix indexed by [int(1..2), int(1..3)] of int(1..4)
 find x_Explicit_Occurrence: matrix indexed by [int(1..2), int(1..4)] of bool
 such that
-    or([and([or([1 = x_Explicit_Explicit[q9, q11], 2 = x_Explicit_Explicit[q9, q11],
-                 3 = x_Explicit_Explicit[q9, q11]; int(1..3)])
-                 | q11 : int(1..3)])
+    or([and([or([1 = x_Explicit_Explicit[q27, q29],
+                 2 = x_Explicit_Explicit[q27, q29],
+                 3 = x_Explicit_Explicit[q27, q29]; int(1..3)])
+                 | q29 : int(1..3)])
         /\
-        and([or([x_Explicit_Explicit[q9, q17] = 1 | q17 : int(1..3)]),
-             or([x_Explicit_Explicit[q9, q19] = 2 | q19 : int(1..3)]),
-             or([x_Explicit_Explicit[q9, q21] = 3 | q21 : int(1..3)]); int(1..3)])
-            | q9 : int(1..2)]),
+        and([or([x_Explicit_Explicit[q27, q35] = 1 | q35 : int(1..3)]),
+             or([x_Explicit_Explicit[q27, q37] = 2 | q37 : int(1..3)]),
+             or([x_Explicit_Explicit[q27, q39] = 3 | q39 : int(1..3)]); int(1..3)])
+            | q27 : int(1..2)]),
     x_Explicit_Explicit[1, ..] <lex x_Explicit_Explicit[2, ..],
     and([and([x_Explicit_Explicit[q2, q3] < x_Explicit_Explicit[q2, q3 + 1]
                   | q3 : int(1..2)])
@@ -18,20 +19,20 @@ such that
     x_Explicit_Occurrence[1, ..] <lex x_Explicit_Occurrence[2, ..],
     and([3 = sum([toInt(x_Explicit_Occurrence[q6, q7]) | q7 : int(1..4)])
              | q6 : int(1..2)]),
-    and([or([and([x_Explicit_Occurrence[q23, x_Explicit_Explicit[q25, q27]]
-                      | q27 : int(1..3)])
+    and([or([and([x_Explicit_Occurrence[q9, x_Explicit_Explicit[q11, q13]]
+                      | q13 : int(1..3)])
              /\
-             and([x_Explicit_Occurrence[q23, q28] ->
-                  or([x_Explicit_Explicit[q25, q30] = q28 | q30 : int(1..3)])
-                      | q28 : int(1..4)])
-                 | q25 : int(1..2)])
-             | q23 : int(1..2)]),
-    and([or([and([x_Explicit_Occurrence[q34, q35] ->
-                  or([x_Explicit_Explicit[q32, q37] = q35 | q37 : int(1..3)])
-                      | q35 : int(1..4)])
+             and([x_Explicit_Occurrence[q9, q14] ->
+                  or([x_Explicit_Explicit[q11, q16] = q14 | q16 : int(1..3)])
+                      | q14 : int(1..4)])
+                 | q11 : int(1..2)])
+             | q9 : int(1..2)]),
+    and([or([and([x_Explicit_Occurrence[q20, q21] ->
+                  or([x_Explicit_Explicit[q18, q23] = q21 | q23 : int(1..3)])
+                      | q21 : int(1..4)])
              /\
-             and([x_Explicit_Occurrence[q34, x_Explicit_Explicit[q32, q39]]
-                      | q39 : int(1..3)])
-                 | q34 : int(1..2)])
-             | q32 : int(1..2)])
+             and([x_Explicit_Occurrence[q20, x_Explicit_Explicit[q18, q25]]
+                      | q25 : int(1..3)])
+                 | q20 : int(1..2)])
+             | q18 : int(1..2)])
 

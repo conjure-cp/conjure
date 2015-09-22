@@ -202,19 +202,18 @@ rule_Card :: Rule
 rule_Card = "function-cardinality" `namedRule` theRule where
     theRule [essence| |&f| |] = do
         TypeFunction{} <- typeOf f
+        dom <- domainOf f
         return
             ( "Function cardinality"
-            , do
-                dom <- domainOf f
-                case dom of
-                    DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _
-                        -> return n
-                    DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo
-                        | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
-                        -> domainSizeOf innerTo
-                    DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _
-                        -> domainSizeOf innerFr
-                    _ -> return [essence| |toSet(&f)| |]
+            , case dom of
+                DomainFunction _ (FunctionAttr (SizeAttr_Size n) _ _) _ _
+                    -> return n
+                DomainFunction _ (FunctionAttr _ _ jectivity) _ innerTo
+                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                    -> domainSizeOf innerTo
+                DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) innerFr _
+                    -> domainSizeOf innerFr
+                _ -> return [essence| |toSet(&f)| |]
             )
     theRule _ = na "rule_Card"
 
@@ -556,7 +555,7 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Image"
-        (mkModifier, expr2) <- match opModifierNoP expr
+        (mkModifier, expr2) <- match opModifier expr
         (func, arg) <- match opImage expr2
         TypeFunction{} <- typeOf func
         case match opRestrict func of
@@ -571,9 +570,9 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
                 return $ Comprehension
                     (upd j body)
                     $  gocBefore
-                    ++ [ Generator (GenInExpr iPat (mkModifier func))
+                    ++ [ Generator (GenInExpr iPat func)
                        , Condition [essence| &i[1] = &arg |]
-                       , Generator (GenInExpr jPat [essence| &i[2] |])
+                       , Generator (GenInExpr jPat (mkModifier [essence| &i[2] |]))
                        ]
                     ++ transformBi (upd j) gocAfter
             )

@@ -35,14 +35,14 @@ such that
     2 = t2__tag -> t2_b = t1_b /\ t1__tag = 2,
     x__tag != 1 -> x_a = false,
     x__tag != 2 -> x_b = 0,
+    t1__tag != 1 -> t1_a = false,
+    t1__tag != 2 -> t1_b = 0,
     y1__tag != 1 -> y1_a = false,
     y1__tag != 2 -> y1_b = 0,
     y2__tag != 1 -> y2_a = false,
     y2__tag != 2 -> y2_b = 0,
     z__tag != 1 -> z_a = false,
     z__tag != 2 -> z_b = 0,
-    t1__tag != 1 -> t1_a = false,
-    t1__tag != 2 -> t1_b = 0,
     t2__tag != 1 -> t2_a = false,
     t2__tag != 2 -> t2_b = 0
 

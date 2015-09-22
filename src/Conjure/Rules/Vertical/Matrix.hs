@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Rules.Vertical.Matrix where
 
@@ -169,34 +170,6 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
                          ++ transformBi (upd innerBody) gocAfter
             )
     theRule _ = na "rule_Comprehension_Nested"
-
-
--- withAuxVar :: Name -> Domain () Expression -> (Expression -> Expression) -> Expression
--- withAuxVar nm dom f =
---     WithLocals
---         (Reference nm Nothing)
---         [ Declaration (FindOrGiven LocalFind nm dom)
---         , SuchThat [f (Reference nm Nothing)]
---         ]
---         []
---
---
--- rule_Comprehension_ToSet2 :: Rule
--- rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
---     theRule p = do
---         let lu (Comprehension body goc) = return (body, goc)
---             lu (Reference _ (Just (Alias ref))) = lu ref
---             lu _ = fail "not a comprehension"
---         inToSet     <- match opToSet p
---         (body, goc) <- lu inToSet
---         domBody     <- domainOf body
---         return
---             ( "Vertical rule for comprehension over matrix-hist"
---             , do withAuxVar
---                     (fresh `at` 0)
---                     (DomainSet () def (forgetRepr domBody)) $ \ aux ->
---                         make opAnd $ Comprehension [essence| &body in &aux |] goc
---             )
 
 
 rule_Comprehension_Hist :: Rule
@@ -401,8 +374,7 @@ rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, singleVal), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName (DomainInt [RangeSingle a])) -> return (Single patName, a)
-            Generator (GenDomainHasRepr patName (DomainInt [RangeBounded a b])) | a == b -> return (Single patName, a)
+            Generator (GenDomainHasRepr patName (singletonDomainInt -> Just a)) -> return (Single patName, a)
             _ -> na "rule_Comprehension_SingletonDomain"
         let upd val old = lambdaToFunction pat old val
         return

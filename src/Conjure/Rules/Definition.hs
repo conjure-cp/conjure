@@ -7,6 +7,8 @@ module Conjure.Rules.Definition
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
     , Config(..)
+    , ModelZipper, mkModelZipper, fromModelZipper
+    , ModelWIP(..), modelWIPOut, updateModelWIPInfo
     , isAtomic, representationOf, hasRepresentation, matchFirst
     ) where
 
@@ -19,7 +21,7 @@ import Conjure.Language.RepresentationOf
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( Zipper )
+import Data.Generics.Uniplate.Zipper ( Zipper, fromZipper, zipperBi )
 
 
 type LogOr a = Either (LogLevel, Doc) a
@@ -45,12 +47,33 @@ data QuestionType
 data Answer = Answer
     { aText      :: Doc
     , aAnswer    :: Expression
-    , aFullModel :: Model
+    , aFullModel :: ModelWIP
     , aRuleName  :: Doc
-    } deriving (Show)
+    }
 
+type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [ModelWIP])
 
-type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [Model])
+type ModelZipper = Zipper (LanguageVersion, [Statement]) Expression
+
+mkModelZipper :: Model -> Maybe ModelZipper
+mkModelZipper (Model lang stmts _) = zipperBi (lang, stmts)
+
+fromModelZipper :: ModelZipper -> ModelInfo -> Model
+fromModelZipper z info =
+    let (lang, stmts) = fromZipper z
+    in  Model lang stmts info
+
+data ModelWIP = StartOver Model | TryThisFirst ModelZipper ModelInfo
+
+modelWIPOut :: ModelWIP -> Model
+modelWIPOut (StartOver m) = m
+modelWIPOut (TryThisFirst z minfo) =
+    let (lang, stmts) = fromZipper z
+    in Model lang stmts minfo
+
+updateModelWIPInfo :: (ModelInfo -> ModelInfo) -> ModelWIP -> ModelWIP
+updateModelWIPInfo upd (StartOver model) = StartOver model { mInfo = upd (mInfo model) }
+updateModelWIPInfo upd (TryThisFirst z info) = TryThisFirst z (upd info)
 
 
 data Config = Config
@@ -111,21 +134,23 @@ data RuleResult m = RuleResult
 data Rule = Rule
     { rName  :: Doc
     , rApply
-        :: forall n m . ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper Model Expression) n
-                                -- a fail in {n} means that the rule isn't applicable
-                        , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m
-                                -- a fail in {m} means a bug
-                        )
-        => Zipper Model Expression            -- to query context
+        :: forall n m a .
+            ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
+                -- a fail in {n} means that the rule isn't applicable
+            , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m
+                -- a fail in {m} means a bug
+            )
+        => Zipper a Expression            -- to query context
         -> Expression
         -> n [RuleResult m]
     }
 
 namedRule
     :: Doc
-    -> (forall n m . ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper Model Expression) n
-                     , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m
-                     ) => Expression -> n (Doc, m Expression))
+    -> (forall n m a .
+            ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
+            , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m
+            ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
     { rName = nm

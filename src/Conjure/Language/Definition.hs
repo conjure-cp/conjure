@@ -83,8 +83,6 @@ data Model = Model
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
-type ModelZipper = Zipper Model Expression
-
 instance Serialize Model
 instance Hashable  Model
 instance ToJSON    Model where toJSON = genericToJSON jsonOptions
@@ -113,14 +111,14 @@ instance VarSymBreakingDescription Model where
 languageEprime :: Model -> Model
 languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
 
-allContextsExceptReferences :: ModelZipper -> [ModelZipper]
+allContextsExceptReferences :: Zipper a Expression -> [Zipper a Expression]
 allContextsExceptReferences z0 = concatMap subtreeOf (allSiblings z0)
     where
         -- the input has to be the left most
-        allSiblings :: ModelZipper -> [ModelZipper]
+        allSiblings :: Zipper a Expression -> [Zipper a Expression]
         allSiblings z = z : maybe [] allSiblings (right z)
 
-        subtreeOf :: ModelZipper -> [ModelZipper]
+        subtreeOf :: Zipper a Expression -> [Zipper a Expression]
         subtreeOf z = z : case hole z of
             Reference{} -> []                                       -- don't go through a Reference
             _           -> maybe [] allContextsExceptReferences (down z)

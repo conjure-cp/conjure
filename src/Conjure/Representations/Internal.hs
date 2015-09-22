@@ -76,6 +76,8 @@ rDownToX repr forg name domain = do
     mpairs <- rDownD repr (name, domain)
     return $ case mpairs of
         Nothing    -> []
-        Just pairs -> [ Reference n (Just (DeclHasRepr forg n d))
+        Just pairs -> [ case singletonDomainInt d of
+                            Just x  -> x            -- special case: if the domain is a singleton int, use the value
+                            Nothing -> Reference n (Just (DeclHasRepr forg n d))
                       | (n,d) <- pairs
                       ]

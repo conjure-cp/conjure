@@ -10,19 +10,19 @@ such that
                    | q11 : int(1..4), q11 < q10])
           /\
           and([b_Occurrence[q11] /\
-               !or([a_Occurrence[q12] /\ q12 = q11 | q12 : int(1..4)])
+               !or([a_Occurrence[q14] /\ q14 = q11 | q14 : int(1..4)])
                -> toInt(a_Occurrence[q11]) = toInt(b_Occurrence[q11])
                    | q11 : int(1..4), q11 < q10])))
             | q10 : int(1..4)])
     \/
-    or([b_Occurrence[q10] /\ !or([a_Occurrence[q14] /\ q14 = q10 | q14 : int(1..4)])
+    or([b_Occurrence[q10] /\ !or([a_Occurrence[q13] /\ q13 = q10 | q13 : int(1..4)])
         /\
         (toInt(a_Occurrence[q10]) < toInt(b_Occurrence[q10]) /\
          (and([a_Occurrence[q11] -> toInt(a_Occurrence[q11]) = toInt(b_Occurrence[q11])
                    | q11 : int(1..4), q11 < q10])
           /\
           and([b_Occurrence[q11] /\
-               !or([a_Occurrence[q13] /\ q13 = q11 | q13 : int(1..4)])
+               !or([a_Occurrence[q12] /\ q12 = q11 | q12 : int(1..4)])
                -> toInt(a_Occurrence[q11]) = toInt(b_Occurrence[q11])
                    | q11 : int(1..4), q11 < q10])))
             | q10 : int(1..4)]),

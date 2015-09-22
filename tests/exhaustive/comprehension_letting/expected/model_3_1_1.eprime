@@ -4,7 +4,8 @@ find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find s_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..4)] of int(1..4)
 find s_Occurrence: matrix indexed by [int(1..4)] of bool
-find x: int(-100..100)
+letting let1 be -100
+find x: int(let1..100)
 find aux1: int(-16..3)
 such that
     and([and([s_ExplicitVarSizeWithFlags_Flags[q7], s_Occurrence[j],

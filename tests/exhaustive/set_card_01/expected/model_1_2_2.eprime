@@ -6,5 +6,5 @@ such that
     s_Explicit[1] = 1,
     1 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)]),
     s_Occurrence[s_Explicit[1]],
-    and([s_Occurrence[q8] -> s_Explicit[1] = q8 | q8 : int(1..2)])
+    and([s_Occurrence[q6] -> s_Explicit[1] = q6 | q6 : int(1..2)])
 

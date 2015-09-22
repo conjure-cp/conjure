@@ -232,19 +232,18 @@ rule_Card :: Rule
 rule_Card = "sequence-cardinality" `namedRule` theRule where
     theRule [essence| |&s| |] = do
         TypeSequence{} <- typeOf s
+        dom <- domainOf s
         return
             ( "Horizontal rule for sequence cardinality."
-            , do
-                dom <- domainOf s
-                case dom of
-                    DomainSequence _ (SequenceAttr (SizeAttr_Size n) _) _
-                        -> return n
-                    DomainSequence _ (SequenceAttr _ jectivity) inner
-                        | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
-                        -> domainSizeOf inner
-                    _ -> do
-                        (iPat, _) <- quantifiedVar
-                        return [essence| sum &iPat in &s . 1 |]
+            , case dom of
+                DomainSequence _ (SequenceAttr (SizeAttr_Size n) _) _
+                    -> return n
+                DomainSequence _ (SequenceAttr _ jectivity) inner
+                    | jectivity `elem` [JectivityAttr_Surjective, JectivityAttr_Bijective]
+                    -> domainSizeOf inner
+                _ -> do
+                    (iPat, _) <- quantifiedVar
+                    return [essence| sum &iPat in &s . 1 |]
             )
     theRule _ = na "rule_Card"
 

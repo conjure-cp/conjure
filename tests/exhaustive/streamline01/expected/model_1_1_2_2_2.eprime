@@ -6,29 +6,29 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 letting let1 be 1
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1..let1)] of int(1..2)
-find aux1: matrix indexed by [int(1..let1)] of int(1..2)
 find aux2: matrix indexed by [int(1..let1)] of int(1..2)
+find aux1: matrix indexed by [int(1..let1)] of int(1..2)
 such that
-    and([s_Occurrence[q8] -> f_Function1DPartial_Flags[q8] | q8 : int(1..2)]),
-    and([and([s_Occurrence[q9] -> q9 >= aux1[q7] | q9 : int(1..2)])
-             | q7 : int(1..let1)]),
-    and([or([s_Occurrence[q9] /\ q9 = aux1[q7] | q9 : int(1..2)])
-             | q7 : int(1..let1)]),
-    and([and([s_Occurrence[q10] -> q10 >= aux2[q7] | q10 : int(1..2)])
-             | q7 : int(1..let1)]),
-    and([or([s_Occurrence[q10] /\ q10 = aux2[q7] | q10 : int(1..2)])
-             | q7 : int(1..let1)]),
-    and([s_Explicit[q7] != min([s_Explicit[q12] | q12 : int(1..let1)]) ->
-         and([f_Function1DPartial_Values[s_Explicit[q7]] >
-              f_Function1DPartial_Values[aux1[q7]],
-              f_Function1DPartial_Flags[s_Explicit[q7]],
-              f_Function1DPartial_Flags[aux2[q7]]; int(1..3)])
-             | q7 : int(1..let1)]),
+    and([s_Occurrence[q19] -> f_Function1DPartial_Flags[q19] | q19 : int(1..2)]),
+    and([and([s_Occurrence[q14] -> q14 >= aux2[q12] | q14 : int(1..2)])
+             | q12 : int(1..let1)]),
+    and([or([s_Occurrence[q14] /\ q14 = aux2[q12] | q14 : int(1..2)])
+             | q12 : int(1..let1)]),
+    and([and([s_Occurrence[q13] -> q13 >= aux1[q12] | q13 : int(1..2)])
+             | q12 : int(1..let1)]),
+    and([or([s_Occurrence[q13] /\ q13 = aux1[q12] | q13 : int(1..2)])
+             | q12 : int(1..let1)]),
+    and([s_Explicit[q12] != min([s_Explicit[q16] | q16 : int(1..let1)]) ->
+         and([f_Function1DPartial_Values[s_Explicit[q12]] >
+              f_Function1DPartial_Values[aux1[q12]],
+              f_Function1DPartial_Flags[s_Explicit[q12]],
+              f_Function1DPartial_Flags[aux2[q12]]; int(1..3)])
+             | q12 : int(1..let1)]),
     let1 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)]),
     and([f_Function1DPartial_Flags[q2] = false -> f_Function1DPartial_Values[q2] = 1
              | q2 : int(1..2)]),
     and([s_Explicit[q5] < s_Explicit[q5 + 1] | q5 : int(1..let1 - 1)]),
-    and([s_Occurrence[s_Explicit[q14]] | q14 : int(1..let1)]),
-    and([s_Occurrence[q15] -> or([s_Explicit[q17] = q15 | q17 : int(1..let1)])
-             | q15 : int(1..2)])
+    and([s_Occurrence[s_Explicit[q8]] | q8 : int(1..let1)]),
+    and([s_Occurrence[q9] -> or([s_Explicit[q11] = q9 | q11 : int(1..let1)])
+             | q9 : int(1..2)])
 

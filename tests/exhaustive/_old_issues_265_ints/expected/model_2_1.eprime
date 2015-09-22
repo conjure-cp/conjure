@@ -5,30 +5,30 @@ given f_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 given f_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
 find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
+find aux2_Occurrence: matrix indexed by [int(0, 1)] of bool
 find aux1_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find aux1_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2)] of int(0, 1)
-find aux2_Occurrence: matrix indexed by [int(0, 1)] of bool
 such that
+    and([fprime_Function1DPartial_Flags[q25] -> aux2_Occurrence[q25]
+             | q25 : int(0, 1)]),
+    and([aux2_Occurrence[q22] ->
+         or([fprime_Function1DPartial_Flags[q26] /\ q26 = q22 | q26 : int(0, 1)])
+             | q22 : int(0, 1)]),
     2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
     aux1_ExplicitVarSizeWithMarker_Values[1] <
     aux1_ExplicitVarSizeWithMarker_Values[2],
     and([q12 > aux1_ExplicitVarSizeWithMarker_Marker ->
          aux1_ExplicitVarSizeWithMarker_Values[q12] = 0
              | q12 : int(1..2)]),
-    and([or([q19 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-             aux1_ExplicitVarSizeWithMarker_Values[q19] = q15
-                 | q19 : int(1..2)])
-             | q15 : int(0, 1), f_Function1DPartial_Flags[q15]]),
-    and([q16 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-         or([q17 = aux1_ExplicitVarSizeWithMarker_Values[q16]
-                 | q17 : int(0, 1), f_Function1DPartial_Flags[q17]])
-             | q16 : int(1..2)]),
-    and([fprime_Function1DPartial_Flags[q25] -> aux2_Occurrence[q25]
-             | q25 : int(0, 1)]),
-    and([aux2_Occurrence[q22] ->
-         or([fprime_Function1DPartial_Flags[q26] /\ q26 = q22 | q26 : int(0, 1)])
-             | q22 : int(0, 1)]),
+    and([or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+             aux1_ExplicitVarSizeWithMarker_Values[q16] = q14
+                 | q16 : int(1..2)])
+             | q14 : int(0, 1), f_Function1DPartial_Flags[q14]]),
+    and([q17 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         or([q18 = aux1_ExplicitVarSizeWithMarker_Values[q17]
+                 | q18 : int(0, 1), f_Function1DPartial_Flags[q18]])
+             | q17 : int(1..2)]),
     and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
          fprime_Function1DPartial_Flags[q5]
              | q5 : int(0, 1), f_Function1DPartial_Flags[q5]]),
@@ -36,9 +36,9 @@ such that
          f_Function1DPartial_Values[q6] = fprime_Function1DPartial_Values[q6] /\
          f_Function1DPartial_Flags[q6]
              | q6 : int(0, 1)]),
-    and([q14 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-         fprime_Function1DPartial_Flags[aux1_ExplicitVarSizeWithMarker_Values[q14]]
-             | q14 : int(1..2)]),
+    and([q19 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         fprime_Function1DPartial_Flags[aux1_ExplicitVarSizeWithMarker_Values[q19]]
+             | q19 : int(1..2)]),
     and([aux2_Occurrence[q21] -> f_Function1DPartial_Flags[q21] | q21 : int(0, 1)]),
     and([fprime_Function1DPartial_Flags[q1] = false ->
          fprime_Function1DPartial_Values[q1] = 0
