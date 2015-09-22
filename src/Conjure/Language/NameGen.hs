@@ -9,7 +9,7 @@ import Conjure.UserError
 import Conjure.Language.Name
 
 -- containers
-import Data.Map as M
+import Data.Map.Strict as M
 
 -- pipes
 import qualified Pipes
