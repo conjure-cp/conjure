@@ -139,7 +139,7 @@ intPow :: Integer -> Integer -> Integer
 intPow = (^)
 
 domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
-domainSizeOfRanges = liftM genericLength . valuesInIntDomain
+domainSizeOfRanges = fmap genericLength . valuesInIntDomain
 
 instance DomainSizeOf Constant Constant where
     domainSizeOf = fmap ConstantInt . domainSizeOf

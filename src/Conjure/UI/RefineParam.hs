@@ -95,7 +95,7 @@ refineParam eprimeModel essenceParam0 = do
         f p = p
 
     let essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
-    eprimeLettings <- liftM concat $ mapM downC essenceGivensAndLettings'
+    eprimeLettings <- fmap concat $ mapM downC essenceGivensAndLettings'
 
     return $ languageEprime def
         { mStatements =

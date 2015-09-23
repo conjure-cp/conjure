@@ -183,7 +183,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                            )
                 unrollC (i:is) prevIndices = do
                     domVals <- domainValues i
-                    (matrixFlags, matrixVals) <- liftM unzip $ forM domVals $ \ val ->
+                    (matrixFlags, matrixVals) <- fmap unzip $ forM domVals $ \ val ->
                         unrollC is (prevIndices ++ [val])
                     return ( ConstantAbstract $ AbsLitMatrix i matrixFlags
                            , ConstantAbstract $ AbsLitMatrix i matrixVals

@@ -59,12 +59,12 @@ instance CategoryOf FindOrGiven where
 --   Run only after name resolution.
 categoryChecking :: (MonadFail m, MonadUserError m) => Model -> m Model
 categoryChecking m = do
-    errors1 <- liftM concat $ forM (mStatements m) $ \ st -> case st of
+    errors1 <- fmap concat $ forM (mStatements m) $ \ st -> case st of
         Declaration (FindOrGiven _forg name domain) -> do
             let cat = categoryOf domain
             return [(domain, (name, cat)) | cat > CatParameter]
         _ -> return []
-    errors2 <- liftM concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
+    errors2 <- fmap concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
         let cat = categoryOf domain
         return [ (domain, cat)
                | cat > CatQuantified

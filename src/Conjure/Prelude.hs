@@ -33,8 +33,7 @@ module Conjure.Prelude
     , headInf
     , paddedNum
     , dropExtension, dropDirs
-    , MonadLog(..), LogLevel(..), LoggerT
-    , runLoggerPipeIO, runLoggerIO, runLogger, ignoreLogs
+    , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
     , histogram
     , ExceptT(..)
@@ -71,23 +70,23 @@ import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
 import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
 import qualified Control.Monad ( fail )
-import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless
-                          , zipWithM, zipWithM_
-                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM
-                          , filterM, join
-                          )
-import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
+import Control.Monad                as X ( Monad(return, (>>), (>>=))
+                                         , (<=<), (>=>), (=<<), ap, join
+                                         , guard, void, when, unless
+                                         , zipWithM, zipWithM_, foldM, filterM, replicateM
+                                         , MonadPlus(..), mzero, msum )
+import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify, evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
-import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(..), execWriterT, runWriter )
+import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
 import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
-import Control.Arrow             as X ( first, second, (***), (&&&) )
-import Control.Category          as X ( (<<<), (>>>) )
+import Control.Arrow                as X ( first, second, (***), (&&&) )
+import Control.Category             as X ( (<<<), (>>>) )
 
 
 import Data.Data         as X ( Data, Typeable )
@@ -357,9 +356,6 @@ instance MonadFail Gen where
 instance MonadFail (ParsecT g l m) where
     fail = Control.Monad.fail . show
 
-instance MonadFail m => MonadFail (LoggerT m) where
-    fail = lift . fail
-
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
 
@@ -388,7 +384,9 @@ instance MonadIO m => MonadIO (ExceptT m) where
         return (Right res)
 
 instance MonadTrans ExceptT where
-    lift comp = ExceptT (Right `liftM` comp)
+    lift comp = ExceptT $ do
+        res <- comp
+        return (Right res)
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
@@ -479,23 +477,6 @@ instance Monad m => MonadLog (Pipes.Proxy a b () (Either (LogLevel, Doc) d) m) w
 
 ignoreLogs :: Monad m => IdentityT m a -> m a
 ignoreLogs = runIdentityT
-
-newtype LoggerT m a = LoggerT (WriterT [(LogLevel, Doc)] m a)
-    deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
-
-instance (Applicative m, Monad m) => MonadLog (LoggerT m) where
-    log lvl msg = LoggerT $ tell [(lvl, msg)]
-
-runLogger :: Monad m => LogLevel -> LoggerT m a -> m (a, [Doc])
-runLogger l (LoggerT ma) = do
-    (a, logs) <- runWriterT ma
-    return (a, [ msg | (lvl, msg) <- logs , lvl <= l ])
-
-runLoggerIO :: MonadIO m => LogLevel -> LoggerT m a -> m a
-runLoggerIO l logger = do
-    (a, logs) <- runLogger l logger
-    liftIO $ print (vcat logs)
-    return a
 
 runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each

@@ -88,7 +88,7 @@ downD inp@(_, domain) = do
     mout <- rDownD (dispatch domain) inp
     case mout of
         Nothing -> return [inp]
-        Just outs -> liftM concat $ mapM downD outs
+        Just outs -> fmap concat $ mapM downD outs
 
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
@@ -102,7 +102,7 @@ downC inp0 = do
     mout <- downC1 inp1
     case mout of
         Nothing -> return [inp0]
-        Just outs -> liftM concat $ mapM downC outs
+        Just outs -> fmap concat $ mapM downC outs
 
 -- | Translate a bunch of low level constants up, all the way.
 --   The high level domain (i.e. the target domain) has to be given.

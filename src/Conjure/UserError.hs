@@ -60,10 +60,6 @@ instance MonadUserError m => MonadUserError (ReaderT r m) where
     userErr = lift . userErr
     userErr1 = lift . userErr1
 
-instance MonadUserError m => MonadUserError (LoggerT m) where
-    userErr = lift . userErr
-    userErr1 = lift . userErr1
-
 instance MonadUserError m => MonadUserError (Pipes.Proxy a b c d m) where
     userErr = lift . userErr
     userErr1 = lift . userErr1
