@@ -90,7 +90,7 @@ sanityChecks model = do
                 ]
         checkFactorial _ = return ()
 
-    errs <- execWriterT $ check model
+    (model', errs) <- runWriterT (check model)
     if null errs
-        then return model
+        then return model'
         else userErr errs

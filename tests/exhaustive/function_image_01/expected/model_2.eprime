@@ -9,23 +9,23 @@ such that
     aux1_ExplicitVarSizeWithFlags_Flags[2] ->
     aux1_ExplicitVarSizeWithFlags_Values[1] <
     aux1_ExplicitVarSizeWithFlags_Values[2],
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q8] = false ->
-         aux1_ExplicitVarSizeWithFlags_Values[q8] = false
-             | q8 : int(1..2)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q7] = false ->
+         aux1_ExplicitVarSizeWithFlags_Values[q7] = false
+             | q7 : int(1..2)]),
     aux1_ExplicitVarSizeWithFlags_Flags[2] ->
     aux1_ExplicitVarSizeWithFlags_Flags[1],
-    or([aux1_ExplicitVarSizeWithFlags_Flags[q16] /\
-        aux1_ExplicitVarSizeWithFlags_Values[q16] = false
-            | q16 : int(1..2)]),
-    or([aux1_ExplicitVarSizeWithFlags_Flags[q18] /\
-        aux1_ExplicitVarSizeWithFlags_Values[q18]
-            | q18 : int(1..2)]),
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q12] ->
-         false = aux1_ExplicitVarSizeWithFlags_Values[q12] \/
-         aux1_ExplicitVarSizeWithFlags_Values[q12]
-             | q12 : int(1..2)]),
+    or([aux1_ExplicitVarSizeWithFlags_Flags[q14] /\
+        aux1_ExplicitVarSizeWithFlags_Values[q14] = false
+            | q14 : int(1..2)]),
+    or([aux1_ExplicitVarSizeWithFlags_Flags[q14] /\
+        aux1_ExplicitVarSizeWithFlags_Values[q14]
+            | q14 : int(1..2)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q11] ->
+         false = aux1_ExplicitVarSizeWithFlags_Values[q11] \/
+         aux1_ExplicitVarSizeWithFlags_Values[q11]
+             | q11 : int(1..2)]),
     toInt(false = b) * 5 + toInt(b) * x = i,
-    or([aux1_ExplicitVarSizeWithFlags_Flags[q19] /\
-        aux1_ExplicitVarSizeWithFlags_Values[q19] = b
-            | q19 : int(1..2)])
+    or([aux1_ExplicitVarSizeWithFlags_Flags[q16] /\
+        aux1_ExplicitVarSizeWithFlags_Values[q16] = b
+            | q16 : int(1..2)])
 
