@@ -10,7 +10,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
-import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.ShowToken ( ShowToken(..) )
 
 
 type LexemePos = (Lexeme, SourcePos)
@@ -532,3 +533,13 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
                                 else let (commentLine,rest2) = T.span (/='\n') rest1
                                      in  Just (rest2, LComment commentLine)
 
+
+instance ShowToken [(Lexeme, Text.Megaparsec.Pos.SourcePos)] where
+    showToken = show
+        -- showTok              = show . lexemeFace . fst
+
+instance ShowToken (Lexeme, Text.Megaparsec.Pos.SourcePos) where
+    showToken = show
+
+instance ShowToken Lexeme where
+    showToken = show . lexemeFace

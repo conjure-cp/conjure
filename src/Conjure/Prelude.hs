@@ -68,7 +68,7 @@ import GHC.Num as X ( Num(..) )
 -- some more type classes
 import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
-import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
+import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some, optional )
 import qualified Control.Monad ( fail )
 
 import Control.Monad                as X ( Monad(return, (>>), (>>=))
@@ -80,7 +80,8 @@ import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify, evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
+                                         , evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
 import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
@@ -139,8 +140,8 @@ import qualified Data.Aeson.Types as JSON
 -- QuickCheck
 import Test.QuickCheck ( Gen )
 
--- parsec
-import Text.Parsec ( ParsecT )
+-- megaparsec
+import Text.Megaparsec.Prim ( ParsecT )
 
 -- pretty
 import Text.PrettyPrint as X
@@ -353,7 +354,7 @@ instance MonadFail m => MonadFail (ReaderT r m) where
 instance MonadFail Gen where
     fail = Control.Monad.fail . show
 
-instance MonadFail (ParsecT g l m) where
+instance MonadFail (ParsecT l m) where
     fail = Control.Monad.fail . show
 
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
