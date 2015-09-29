@@ -535,11 +535,10 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
 
 
 instance ShowToken [(Lexeme, Text.Megaparsec.Pos.SourcePos)] where
-    showToken = show
-        -- showTok              = show . lexemeFace . fst
+    showToken = intercalate ", " . map showToken
 
 instance ShowToken (Lexeme, Text.Megaparsec.Pos.SourcePos) where
-    showToken = show
+    showToken = showToken . fst
 
 instance ShowToken Lexeme where
     showToken = show . lexemeFace
