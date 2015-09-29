@@ -67,7 +67,7 @@ sanityChecks model = do
         checkLit lit = case lit of
             AbstractLiteral (AbsLitFunction mappings) -> do
                 let defineds = fromList $ map fst mappings
-                return $ WithLocals lit (Right [ [essence| allDiff(&defineds) |] ])
+                return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&defineds) |] ])
             AbstractLiteral (AbsLitPartition parts) -> do
                 let disjoint = concat
                         [ checks
@@ -78,7 +78,7 @@ sanityChecks model = do
                                        , el2 <- part2
                                        ]
                         ]
-                return $ WithLocals lit (Right disjoint)
+                return $ WithLocals lit (DefinednessConstraints disjoint)
             _ -> return lit
 
         checkFactorial :: MonadWriter [Doc] m => Expression -> m ()

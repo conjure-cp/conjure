@@ -23,7 +23,7 @@ module Conjure.Language.Definition
     , QuestionAnswered(..), viewAuto, parseStrategy
 
     , Name(..)
-    , Expression(..), ReferenceTo(..)
+    , Expression(..), ReferenceTo(..), InBubble(..)
     , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
@@ -465,7 +465,7 @@ data Expression
     | AbstractLiteral (AbstractLiteral Expression)
     | Domain (Domain () Expression)
     | Reference Name (Maybe ReferenceTo)
-    | WithLocals Expression (Either AuxiliaryVars DefinednessConstraints)
+    | WithLocals Expression InBubble
     | Comprehension Expression [GeneratorOrCondition]
     | Typed Expression Type
     | Op (Op Expression)
@@ -476,9 +476,6 @@ instance Serialize Expression
 instance Hashable  Expression
 instance ToJSON    Expression where toJSON = genericToJSON jsonOptions
 instance FromJSON  Expression where parseJSON = genericParseJSON jsonOptions
-
-type AuxiliaryVars = [Statement]
-type DefinednessConstraints = [Expression]
 
 viewIndexed :: Expression -> (Expression, [Doc])
 viewIndexed (Op (MkOpIndexing (OpIndexing m i  ))) =
@@ -502,14 +499,18 @@ instance Pretty Expression where
     prettyPrec _ (AbstractLiteral x) = pretty x
     prettyPrec _ (Domain x) = "`" <> pretty x <> "`"
     prettyPrec _ (Reference x _) = pretty x
-    prettyPrec _ (WithLocals x (Left  locals)) = vcat [ "{" <+> pretty x
-                                                      , "@" <+> vcat (map pretty locals)
-                                                      , "}"
-                                                      ]
-    prettyPrec _ (WithLocals x (Right locals)) = vcat [ "{" <+> pretty x
-                                                      , "@" <+> pretty (SuchThat locals)
-                                                      , "}"
-                                                      ]
+    prettyPrec _ (WithLocals x (AuxiliaryVars locals)) =
+        vcat
+            [ "{" <+> pretty x
+            , "@" <+> vcat (map pretty locals)
+            , "}"
+            ]
+    prettyPrec _ (WithLocals x (DefinednessConstraints locals)) =
+        vcat
+            [ "{" <+> pretty x
+            , "@" <+> pretty (SuchThat locals)
+            , "}"
+            ]
     prettyPrec _ (Comprehension x is) = prBrackets $ pretty x <++> "|" <+> prettyList id "," is
     prettyPrec _ (Typed x ty) = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
     prettyPrec prec (Op op) = prettyPrec prec op
@@ -520,13 +521,13 @@ instance VarSymBreakingDescription Expression where
     varSymBreakingDescription (AbstractLiteral x) = varSymBreakingDescription x
     varSymBreakingDescription (Domain domain) = varSymBreakingDescription domain
     varSymBreakingDescription (Reference name _) = JSON.Object $ M.singleton "Reference" (toJSON name)
-    varSymBreakingDescription (WithLocals h (Left locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (WithLocals h (AuxiliaryVars locs)) = JSON.Object $ M.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
         , ("symmetricChildren", JSON.Bool True)
         ]
-    varSymBreakingDescription (WithLocals h (Right locs)) = JSON.Object $ M.fromList
+    varSymBreakingDescription (WithLocals h (DefinednessConstraints locs)) = JSON.Object $ M.fromList
         [ ("type", JSON.String "WithLocals")
         , ("head", varSymBreakingDescription h)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription locs)
@@ -572,7 +573,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom -> typeOf dom
             RecordField _ ty    -> return ty
             VariantField _ ty   -> return ty
-    typeOf p@(WithLocals x (Right cs)) = do
+    typeOf p@(WithLocals x (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
             unless (typeUnify TypeBool ty) $ fail $ vcat
@@ -678,6 +679,26 @@ instance Enum Expression where
     enumFromThen x n = x : enumFromThen (x+n) n
     enumFromTo _x _y = bug "enumFromTo {Expression}"
     enumFromThenTo _x _n _y = bug "enumFromThenTo {Expression}"
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- InBubble ------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+data InBubble
+    = AuxiliaryVars [Statement]                     -- can only be a LocalFind or a SuchThat
+    | DefinednessConstraints [Expression]
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize InBubble
+instance Hashable  InBubble
+instance ToJSON    InBubble where toJSON = genericToJSON jsonOptions
+instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- some helper functions to do with Expressions ------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
 
 -- | This is only for when you know the Expression you have is actually a Constant, but
 --   is refusing to believe that it is one.

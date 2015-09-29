@@ -137,7 +137,7 @@ rule_Party = "partition-party" `namedRule` theRule where
                             , Generator (GenInExpr jPat (mkModifier i))
                             ]
                          ++ transformBi (upd j) gocAfter)
-                    (Right [ [essence| &wanted in participants(&p) |] ])
+                    (DefinednessConstraints [ [essence| &wanted in participants(&p) |] ])
             )
     theRule _ = na "rule_Party"
 

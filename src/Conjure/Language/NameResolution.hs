@@ -185,15 +185,15 @@ resolveX p@Comprehension{} = scope $ do
             return (Comprehension x' is')
         _ -> bug "NameResolution.resolveX.shadowing"
 
-resolveX (WithLocals body (Left  locals)) = scope $ do
+resolveX (WithLocals body (AuxiliaryVars locals)) = scope $ do
     locals' <- mapM resolveStatement locals
     body'   <- resolveX body
-    return (WithLocals body' (Left  locals'))
+    return (WithLocals body' (AuxiliaryVars locals'))
 
-resolveX (WithLocals body (Right locals)) = scope $ do
+resolveX (WithLocals body (DefinednessConstraints locals)) = scope $ do
     locals' <- mapM resolveX locals
     body'   <- resolveX body
-    return (WithLocals body' (Right locals'))
+    return (WithLocals body' (DefinednessConstraints locals'))
 
 resolveX x = descendM resolveX x
 

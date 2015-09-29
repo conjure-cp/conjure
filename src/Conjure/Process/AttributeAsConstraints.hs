@@ -25,8 +25,8 @@ attributeAsConstraints m = do
 
 
 attributeAsConstraints_OnLocals :: MonadFail m => Expression -> m Expression
-attributeAsConstraints_OnLocals (WithLocals h (Left locals)) =
-    WithLocals h . Left <$> attributeAsConstraints_OnStmts locals
+attributeAsConstraints_OnLocals (WithLocals h (AuxiliaryVars locals)) =
+    WithLocals h . AuxiliaryVars <$> attributeAsConstraints_OnStmts locals
 attributeAsConstraints_OnLocals x = return x
 
 

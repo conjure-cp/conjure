@@ -682,15 +682,15 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
 checkIfHasUndefined m = return m
 
 
-topLevelBubbles :: MonadFail m => Model -> m Model
+topLevelBubbles :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
 topLevelBubbles m = do
     let
-        onStmt (SuchThat xs) = onExprs SuchThat xs
-        onStmt (Where    xs) = onExprs Where    xs
+        onStmt (SuchThat xs) = onExprs xs
+        onStmt (Where    xs) = concatMapM onWheres xs
         onStmt (Objective obj (WithLocals h locals)) =
             case locals of
-                Left  locs -> (           locs  ++ [Objective obj h]            ) |> onStmts
-                Right locs -> ( [SuchThat locs] ++ [Objective obj h]            ) |> onStmts
+                AuxiliaryVars          locs -> (           locs  ++ [Objective obj h] ) |> onStmts
+                DefinednessConstraints locs -> ( [SuchThat locs] ++ [Objective obj h] ) |> onStmts
         onStmt (Declaration decl) =
             let
                 f (WithLocals h locs) = tell [locs] >> return h
@@ -698,26 +698,48 @@ topLevelBubbles m = do
 
                 (decl', locals) = runWriter (transformBiM f decl)
 
-                conv :: Either [Statement] [Expression] -> [Statement]
-                conv (Left locs) = locs
-                conv (Right locs) = [SuchThat locs]
+                conv :: InBubble -> [Statement]
+                conv (AuxiliaryVars locs) = locs
+                conv (DefinednessConstraints locs) = [SuchThat locs]
 
                 newStmts :: [Statement]
                 newStmts = concatMap conv locals
             in
                 if null newStmts
-                    then [Declaration decl]
+                    then return [Declaration decl]
                     else onStmts (newStmts ++ [Declaration decl'])
-        onStmt s = [s]
+        onStmt s = return [s]
 
-        onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts
-        onExpr wrap (WithLocals h (Right locals)) = ([wrap locals] ++ [wrap [h]]) |> onStmts
-        onExpr wrap x = [wrap [x]]
+        -- a where that has a bubble at the top-most level will be replaced
+        -- with a Comprehension. this is to avoid creating a where with decision variables inside.
+        onWheres (WithLocals h (DefinednessConstraints locals)) =
+            return $ map (Where . return) (locals ++ [h])
+        onWheres (WithLocals h (AuxiliaryVars locals)) = do
+            let (localfinds, gens) = mconcat
+                    [ case local of
+                        Declaration (FindOrGiven LocalFind nm dom) ->
+                            ([nm], [Generator (GenDomainNoRepr (Single nm) dom)])
+                        SuchThat xs ->
+                            ([], map Condition xs)
+                        _ -> bug ("topLevelBubbles.onWheres:" <+> pretty local)
+                    | local <- locals
+                    ]
+            let forgetReprsOfLocalFinds (Reference nm _) | nm `elem` localfinds = Reference nm Nothing
+                forgetReprsOfLocalFinds x = descend forgetReprsOfLocalFinds x
+            let out = Comprehension h gens
+            out' <- resolveNamesX (forgetReprsOfLocalFinds out)
+            return [Where [out']]
+        onWheres x = return [Where [x]]
 
-        onStmts = concatMap onStmt
-        onExprs wrap = concatMap (onExpr wrap)
+        onExpr (WithLocals h (AuxiliaryVars          locals)) = (          locals  ++ [SuchThat [h]]) |> onStmts
+        onExpr (WithLocals h (DefinednessConstraints locals)) = ([SuchThat locals] ++ [SuchThat [h]]) |> onStmts
+        onExpr x = return [SuchThat [x]]
 
-    return m { mStatements = onStmts (mStatements m) }
+        onStmts = concatMapM onStmt
+        onExprs = concatMapM onExpr
+
+    statements' <- onStmts (mStatements m)
+    return m { mStatements = statements' }
 
 
 sliceThemMatrices :: Monad m => Model -> m Model
@@ -785,7 +807,7 @@ prologue model = return model
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadLog m, EnumerateDomain m) => Model -> m Model
+epilogue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
@@ -1342,7 +1364,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
 rule_ChooseReprForLocals :: Config -> Rule
 rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) where
 
-    theRule (WithLocals body (Left locals)) = do
+    theRule (WithLocals body (AuxiliaryVars locals)) = do
         (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
@@ -1381,7 +1403,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                             | nm == nm'
                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                         updateRepr p = p
-                    let out' = WithLocals (transform updateRepr body) $ Left
+                    let out' = WithLocals (transform updateRepr body) $ AuxiliaryVars
                                 (  stmtBefore
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
@@ -1688,16 +1710,17 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
             , do
                 (auxName, aux) <- auxiliaryVar
                 return $ WithLocals aux
-                    (Left [ Declaration (FindOrGiven LocalFind auxName auxDomain)
-                          , SuchThat
-                              [ make opAnd $ Comprehension
-                                  (binOp body aux)
-                                  gensOrConds
-                              , make opOr  $ Comprehension
-                                  [essence| &body = &aux |]
-                                  gensOrConds
-                              ]
-                          ])
+                    (AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName auxDomain)
+                        , SuchThat
+                            [ make opAnd $ Comprehension
+                                (binOp body aux)
+                                gensOrConds
+                            , make opOr  $ Comprehension
+                                [essence| &body = &aux |]
+                                gensOrConds
+                            ]
+                        ])
             )
 
 

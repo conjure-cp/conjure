@@ -658,8 +658,8 @@ parseWithLocals = braces $ do
             | SuchThat xs <- js
             ]
     let locals = if null decls
-                    then Right cons
-                    else Left (decls ++ [SuchThat cons])
+                    then DefinednessConstraints cons
+                    else AuxiliaryVars (decls ++ [SuchThat cons])
     return (WithLocals i locals)
 
 parseName :: Parser Name

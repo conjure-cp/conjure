@@ -74,7 +74,7 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
                     len = fromInt $ genericLength elems
                     argIsDef = [essence| &arg <= &len |]
                 in
-                    WithLocals val (Right [argIsDef])
+                    WithLocals val (DefinednessConstraints [argIsDef])
             )
 
 
@@ -324,7 +324,7 @@ rule_Restrict_Image = "sequence-restrict-image" `namedRule` theRule where
             , do
                 (iPat, i) <- quantifiedVar
                 let bob = [essence| exists &iPat : &dom . &i = &arg |]
-                return $ WithLocals (make opImage func arg) (Right [bob])
+                return $ WithLocals (make opImage func arg) (DefinednessConstraints [bob])
             )
 
 
@@ -446,7 +446,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         , Condition [essence| &i[1] = &arg |]
                         ]
                     isDefined = [essence| &arg in defined(&func) |]
-                return $ mkP $ WithLocals val (Right [isDefined])
+                return $ mkP $ WithLocals val (DefinednessConstraints [isDefined])
             )
 
 
@@ -549,14 +549,15 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                                 | &iPat <- &a
                                 ])
                         |]
-                        (Left [ Declaration (FindOrGiven LocalFind auxName
-                                      (DomainSequence def (SequenceAttr aSizeAttr def) (mkDomainIntB 1 bMaxSize)))
-                              , SuchThat
-                                  [ [essence| and([ image(&aux, &i-1) < image(&aux, &i)
-                                                  | &iPat : int(2..&aMaxSize)
-                                                  ])
-                                    |]
-                                  ]
-                              ])
+                        (AuxiliaryVars
+                            [ Declaration (FindOrGiven LocalFind auxName
+                                    (DomainSequence def (SequenceAttr aSizeAttr def) (mkDomainIntB 1 bMaxSize)))
+                            , SuchThat
+                                [ [essence| and([ image(&aux, &i-1) < image(&aux, &i)
+                                                | &iPat : int(2..&aMaxSize)
+                                                ])
+                                  |]
+                                ]
+                            ])
             )
     theRule _ = na "rule_Subsequence"
