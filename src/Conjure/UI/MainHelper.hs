@@ -4,7 +4,7 @@ module Conjure.UI.MainHelper ( mainWithArgs ) where
 
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.UserError ( MonadUserError(..) )
+import Conjure.UserError ( MonadUserError(..), userErr1 )
 import Conjure.UI ( UI(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.Model ( parseStrategy, outputModels )
