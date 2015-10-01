@@ -71,6 +71,7 @@ isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
     essenceFiles <- filter (".essence" `isSuffixOf`) <$> getDirectoryContents dir
     case essenceFiles of
+        ["disabled.essence"] -> return Nothing          -- ignore
         [f] -> Just <$> do
             params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents dir
             expecteds <- do
