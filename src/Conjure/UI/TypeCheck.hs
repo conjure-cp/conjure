@@ -27,10 +27,15 @@ typeCheckModel_StandAlone
     => Model
     -> m Model
 typeCheckModel_StandAlone model0 = do
+    -- for better error messages, type-check before sanity-checking.
+    -- sanity checking will modify the model.
+    -- then, type-check once more just in case the newly generated
+    -- stuff is broken.
     model1 <- return model0             >>= logDebugId "[input]"
           >>= removeUnnamedsFromModel   >>= logDebugId "[removeUnnamedsFromModel]"
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
+          >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
           >>= sanityChecks              >>= logDebugId "[sanityChecks]"
           >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
     return model1

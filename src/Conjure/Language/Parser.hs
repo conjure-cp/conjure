@@ -20,10 +20,13 @@ import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 
--- parsec
-import Text.Parsec ( ParsecT, tokenPrim, try, (<?>), errorPos, sourceLine, sourceColumn, getState, modifyState )
-import Text.Parsec.Combinator ( between, optionMaybe, sepBy, sepBy1, sepEndBy1, eof )
-import qualified Text.Parsec as P ( runParser )
+-- megaparsec
+import Text.Megaparsec.Prim ( (<?>), token, try, eof, ParsecT )
+import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
+import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
+import Text.Megaparsec.Combinator ( between, sepBy, sepBy1 )
+import Text.Megaparsec.ShowToken ( showToken )
+import qualified Text.Megaparsec.Prim as P ( runParser )
 
 -- text
 import qualified Data.Text as T
@@ -72,7 +75,7 @@ translateQnName qnName = case qnName of
 
 parseTopLevels :: Parser [Statement]
 parseTopLevels = do
-    let one = msum $ map try
+    let one = msum
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
@@ -98,7 +101,7 @@ parseTopLevels = do
                                     [ do
                                         lexeme L_type
                                         lexeme L_enum
-                                        modifyState (\ st -> st { enumDomains = is ++ enumDomains st } )
+                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
                                         return [ Declaration (GivenDomainDefnEnum i)
                                                | i <- is ]
                                     ]
@@ -125,7 +128,7 @@ parseTopLevels = do
                                     , do
                                         lexeme L_enum
                                         ys <- braces (parseName `sepBy` comma) <|> return []
-                                        modifyState (\ st -> st { enumDomains = is ++ enumDomains st } )
+                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
                                         return [ Declaration (LettingDomainDefnEnum i ys)
                                                | i <- is
                                                ]
@@ -184,9 +187,9 @@ parseRange :: Parser a -> Parser (Range a)
 parseRange p = msum [try pRange, pSingle]
     where
         pRange = do
-            fr <- optionMaybe p
-            dot; dot
-            to <- optionMaybe p
+            fr <- optional p
+            dotdot
+            to <- optional p
             return $ case (fr,to) of
                 (Nothing, Nothing) -> RangeOpen
                 (Just x , Nothing) -> RangeLowerBounded x
@@ -208,11 +211,13 @@ parseDomainWithRepr
            ]
     where
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
-        pDomainAtom = msum $ map try
-            [ pBool, pInt, pEnum, pReference
-            , pMatrix, pTupleWithout, pTupleWith
+        pDomainAtom = msum
+            [ pBool, pInt, try pEnum, try pReference
+            , pMatrix, try pTupleWithout, pTupleWith
             , pRecord, pVariant
-            , pSet, pMSet, pFunction, pFunction'
+            , pSet
+            , pMSet
+            , try pFunction', pFunction
             , pSequence
             , pRelation
             , pPartition
@@ -225,12 +230,12 @@ parseDomainWithRepr
 
         pBool = do
             lexeme L_bool
-            _ <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma  -- parse and discard, compatibility with SR
+            _ <- optional $ parens $ parseRange parseExpr `sepBy` comma  -- parse and discard, compatibility with SR
             return DomainBool
 
         pInt = do
             lexeme L_int
-            mxs <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma
+            mxs <- optional $ parens $ parseRange parseExpr `sepBy` comma
             let xs = fromMaybe [] mxs
             return $ DomainInt xs
 
@@ -240,8 +245,8 @@ parseDomainWithRepr
 
         pEnum = do
             r  <- identifierText
-            xs <- optionMaybe $ parens $ parseRange parseExpr `sepBy` comma
-            st <- getState
+            xs <- optional $ parens $ parseRange parseExpr `sepBy` comma
+            st <- get
             guard (Name r `elem` enumDomains st)
             return $ DomainEnum (Name r) xs Nothing
 
@@ -340,10 +345,10 @@ parseAttributes = do
     xs <- parens (parseAttribute `sepBy` comma) <|> return []
     return $ DomainAttributes xs
     where
-        parseAttribute = msum [try parseNameValue, try parseDAName, parseDontCare]
+        parseAttribute = msum [parseDontCare, try parseNameValue, parseDAName]
         parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
         parseDAName = DAName <$> (Name <$> identifierText)
-        parseDontCare = do dot; dot ; return DADotDot
+        parseDontCare = do dotdot ; return DADotDot
 
 parseSetAttr :: Parser (SetAttr Expression)
 parseSetAttr = do
@@ -517,8 +522,8 @@ parseAtomicExpr = do
             fs <- some $ msum parsePostfixes
             return $ foldr1 (.) (reverse fs)
         withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
-        withPostfix x = do i <- x; mf <- optionMaybe postfixes; return $ case mf of Nothing -> i
-                                                                                    Just f  -> f i
+        withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
+                                                                                 Just f  -> f i
     withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
@@ -586,9 +591,9 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
             let
                 pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
                 pRList   = do
-                    i <- optionMaybe parseExpr
-                    dot; dot
-                    j <- optionMaybe parseExpr
+                    i <- optional parseExpr
+                    dotdot
+                    j <- optional parseExpr
                     return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
             is <- brackets $ pIndexer `sepBy1` comma
             return $ \ x -> foldl (\ m f -> f m ) x is
@@ -686,7 +691,7 @@ parseQuantifiedExpr = do
                             over <- parseExpr
                             return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
                         ]
-    qnGuard     <- optionMaybe (comma *> parseExpr)
+    qnGuard     <- optional (comma *> parseExpr)
     qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"
 
     let qnMap pat = case qnOver of
@@ -705,7 +710,7 @@ parseAbstractPattern = msum $ map try
     [ AbstractPatternMetaVar <$> parseMetaVariable
     , Single <$> parseName
     , do
-        void $ optionMaybe $ lexeme L_tuple
+        void $ optional $ lexeme L_tuple
         xs <- parens $ parseAbstractPattern `sepBy1` comma
         return (AbsPatTuple xs)
     , do
@@ -897,7 +902,7 @@ findPivotOp xs = do
 
 
 data ParserState = ParserState { enumDomains :: [Name] }
-type Parser a = ParsecT [LexemePos] ParserState Identity a
+type Parser a = StateT ParserState (ParsecT [LexemePos] Identity) a
 
 runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
 runLexerAndParser p s inp = do
@@ -913,8 +918,9 @@ runLexerAndParser p s inp = do
         Right x -> return x
 
 runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
-runParser p s ls = either modifyErr Right (P.runParser p (ParserState []) s ls)
+runParser p s ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) s ls)
     where
+        modifyErr :: ParseError -> Either (Doc, Int, Int) a
         modifyErr e = Left $
             let pos  = errorPos e
                 eDoc = pretty $ show e
@@ -933,11 +939,12 @@ identifierText = do
           isIdentifier _ = False
 
 satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
-satisfyT predicate = tokenPrim showTok nextPos testTok
+satisfyT predicate = token nextPos testTok
     where
-        showTok              = show . lexemeFace . fst
-        testTok (tok, _)     = if predicate tok then Just tok else Nothing
-        nextPos _ (_, pos) _ = pos
+        testTok :: LexemePos -> Either [Message] Lexeme
+        testTok (tok, _)     = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
+        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+        nextPos _ _ (_, pos) = pos
 
 integer :: Parser Integer
 integer = do
@@ -951,6 +958,9 @@ comma = lexeme L_Comma <?> "comma"
 
 dot :: Parser ()
 dot = lexeme L_Dot <?> "dot"
+
+dotdot :: Parser ()
+dotdot = (dot >> dot) <?> ".."
 
 colon :: Parser ()
 colon = lexeme L_Colon <?> "colon"
@@ -994,3 +1004,6 @@ inCompleteFile parser = do
     eof
     return result
 
+
+sepEndBy1 :: Parser a -> Parser () -> Parser [a]
+sepEndBy1 p separator = sepBy1 p separator <* optional separator

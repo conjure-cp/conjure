@@ -22,7 +22,7 @@ import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
 tests :: IO TestTree
 tests = do
     let baseDir = "tests/parse_print"
-    dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
+    dirs <- mapM (isTestDir baseDir) =<< allDirs baseDir
     let testCases = map testSingleDir (catMaybes dirs)
     return (testGroup "parse_print" testCases)
 
@@ -37,16 +37,16 @@ data TestDirFiles = TestDirFiles
 
 -- returns True if the argument points to a directory that is not hidden
 isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
-isTestDir baseDir possiblyDir = do
-    b <- (&&) <$> doesDirectoryExist (baseDir </> possiblyDir)
-              <*> doesFileExist (baseDir </> possiblyDir </> possiblyDir ++ ".essence")
-    if not b
-        then return Nothing
-        else return $ Just TestDirFiles
-                { name           = possiblyDir
-                , tBaseDir       = baseDir </> possiblyDir
-                , essenceFile    = baseDir </> possiblyDir </> possiblyDir ++ ".essence"
-                }
+isTestDir baseDir dir = do
+    essenceFiles <- filter (".essence" `isSuffixOf`) <$> getDirectoryContents dir
+    case essenceFiles of
+        ["disabled.essence"] -> return Nothing          -- ignore
+        [f] -> return $ Just TestDirFiles
+            { name           = drop (length baseDir + 1) dir
+            , tBaseDir       = dir
+            , essenceFile    = dir </> f
+            }
+        _ -> return Nothing
 
 
 -- the first FilePath is the base directory for the parse_print tests

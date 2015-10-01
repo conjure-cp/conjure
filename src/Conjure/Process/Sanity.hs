@@ -78,7 +78,10 @@ sanityChecks model = do
                                        , el2 <- part2
                                        ]
                         ]
-                return $ WithLocals lit (DefinednessConstraints disjoint)
+                return $
+                    if null disjoint
+                        then lit
+                        else WithLocals lit (DefinednessConstraints disjoint)
             _ -> return lit
 
         checkFactorial :: MonadWriter [Doc] m => Expression -> m ()

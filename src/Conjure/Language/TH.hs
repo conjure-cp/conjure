@@ -10,9 +10,9 @@ import Conjure.Language.Parser
 import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
 
 
--- parsec
-import Text.Parsec ( SourcePos, setPosition )
-import Text.Parsec.Pos ( newPos )
+-- megaparsec
+import Text.Megaparsec.Prim ( setPosition )
+import Text.Megaparsec.Pos ( SourcePos, newPos )
 
 -- template-haskell
 import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )

@@ -48,7 +48,7 @@ tests = do
         return $ fromMaybe "-O0" (lookup "SR_OPTIONS" env)
     putStrLn $ "Using Savile Row options: " ++ unwords (map T.unpack (srOptions srExtraOptions))
     let baseDir = "tests/exhaustive"
-    dirs <- mapM (isTestDir baseDir) =<< getDirectoryContents baseDir
+    dirs <- mapM (isTestDir baseDir) =<< allDirs baseDir
     testCases <- mapM (testSingleDir srExtraOptions) (catMaybes dirs)
     return (testGroup "exhaustive" testCases)
 
@@ -68,29 +68,29 @@ data TestDirFiles = TestDirFiles
 
 -- returns True if the argument points to a directory that is not hidden
 isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
-isTestDir baseDir possiblyDir = do
-    b <- (&&) <$> doesDirectoryExist (baseDir </> possiblyDir)
-              <*> doesFileExist (baseDir </> possiblyDir </> possiblyDir ++ ".essence")
-    if not b
-        then return Nothing
-        else Just <$> do
-            params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents (baseDir </> possiblyDir)
+isTestDir baseDir dir = do
+    essenceFiles <- filter (".essence" `isSuffixOf`) <$> getDirectoryContents dir
+    case essenceFiles of
+        ["disabled.essence"] -> return Nothing          -- ignore
+        [f] -> Just <$> do
+            params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents dir
             expecteds <- do
-                let dir = baseDir </> possiblyDir </> "expected"
-                isDir <- doesDirectoryExist dir
+                let dirExpected = dir </> "expected"
+                isDir <- doesDirectoryExist dirExpected
                 if isDir
-                    then getDirectoryContents dir
+                    then getDirectoryContents dirExpected
                     else return []
             return TestDirFiles
-                { name           = possiblyDir
-                , tBaseDir       = baseDir </> possiblyDir
-                , outputsDir     = baseDir </> possiblyDir </> "outputs"
-                , expectedsDir   = baseDir </> possiblyDir </> "expected"
-                , essenceFile    = baseDir </> possiblyDir </> possiblyDir ++ ".essence"
+                { name           = drop (length baseDir + 1) dir
+                , tBaseDir       = dir
+                , outputsDir     = dir </> "outputs"
+                , expectedsDir   = dir </> "expected"
+                , essenceFile    = dir </> f
                 , paramFiles     = params
                 , expectedModels = filter (".eprime"   `isSuffixOf`) expecteds
                 , expectedSols   = filter (".solution" `isSuffixOf`) expecteds
                 }
+        _ -> return Nothing
 
 
 -- the first FilePath is the base directory for the exhaustive tests

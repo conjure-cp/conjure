@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find unused: bool
+such that
+    together({[true; int(1..1)]},
+             partition({[true; int(1..1)]}) - partition({[false; int(1..1)]}))
