@@ -75,7 +75,7 @@ translateQnName qnName = case qnName of
 
 parseTopLevels :: Parser [Statement]
 parseTopLevels = do
-    let one = msum $ map try
+    let one = msum
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
@@ -188,7 +188,7 @@ parseRange p = msum [try pRange, pSingle]
     where
         pRange = do
             fr <- optional p
-            dot; dot
+            dotdot
             to <- optional p
             return $ case (fr,to) of
                 (Nothing, Nothing) -> RangeOpen
@@ -211,11 +211,13 @@ parseDomainWithRepr
            ]
     where
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
-        pDomainAtom = msum $ map try
-            [ pBool, pInt, pEnum, pReference
-            , pMatrix, pTupleWithout, pTupleWith
+        pDomainAtom = msum
+            [ pBool, pInt, try pEnum, try pReference
+            , pMatrix, try pTupleWithout, pTupleWith
             , pRecord, pVariant
-            , pSet, pMSet, pFunction, pFunction'
+            , pSet
+            , pMSet
+            , try pFunction', pFunction
             , pSequence
             , pRelation
             , pPartition
@@ -343,10 +345,10 @@ parseAttributes = do
     xs <- parens (parseAttribute `sepBy` comma) <|> return []
     return $ DomainAttributes xs
     where
-        parseAttribute = msum [try parseNameValue, try parseDAName, parseDontCare]
+        parseAttribute = msum [parseDontCare, try parseNameValue, parseDAName]
         parseNameValue = DANameValue <$> (Name <$> identifierText) <*> parseExpr
         parseDAName = DAName <$> (Name <$> identifierText)
-        parseDontCare = do dot; dot ; return DADotDot
+        parseDontCare = do dotdot ; return DADotDot
 
 parseSetAttr :: Parser (SetAttr Expression)
 parseSetAttr = do
@@ -590,7 +592,7 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
                 pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
                 pRList   = do
                     i <- optional parseExpr
-                    dot; dot
+                    dotdot
                     j <- optional parseExpr
                     return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
             is <- brackets $ pIndexer `sepBy1` comma
@@ -956,6 +958,9 @@ comma = lexeme L_Comma <?> "comma"
 
 dot :: Parser ()
 dot = lexeme L_Dot <?> "dot"
+
+dotdot :: Parser ()
+dotdot = (dot >> dot) <?> ".."
 
 colon :: Parser ()
 colon = lexeme L_Colon <?> "colon"
