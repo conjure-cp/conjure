@@ -39,7 +39,7 @@ module Conjure.Prelude
     , ExceptT(..)
     , sh
     , scope
-    , allFiles, allFilesWithSuffix
+    , allDirs, allFiles, allFilesWithSuffix
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
@@ -499,14 +499,20 @@ scope ma = do
     modify (const st)
     return a
 
+allDirs :: FilePath -> IO [FilePath]
+allDirs x = do
+    let dots i = not ( i == "." || i == ".." )
+    isDir <- doesDirectoryExist x
+    ys' <- getDirectoryContents x `catchError` const (return [])
+    let ys = filter dots ys'
+    ([x | isDir] ++) <$> concatMapM allDirs (map (x </>) ys)
+
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
     let dots i = not ( i == "." || i == ".." )
     ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
-    if null ys
-        then return [x]
-        else (x :) <$> concatMapM allFiles (map (x </>) ys)
+    (x :) <$> concatMapM allFiles (map (x </>) ys)
 
 allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
 allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
