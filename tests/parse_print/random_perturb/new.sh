@@ -11,7 +11,7 @@ if [ -d "${TESTCASE}" ]; then
     NUM=$(ls "${TESTCASE}/"*.essence 2> /dev/null | grep -v disabled.essence | wc -l)
     if [ "$NUM" -eq "1" ]; then
         echo "Generating random perturbations in ${TESTCASE}"
-        parallel runhaskell ${SCRIPT_DIR}/gen.hs "delete" "${TESTCASE}" "${TESTCASE}/"*.essence ::: $(seq -w 1 10)
-        parallel runhaskell ${SCRIPT_DIR}/gen.hs "change" "${TESTCASE}" "${TESTCASE}/"*.essence ::: $(seq -w 1 10)
+        runhaskell ${SCRIPT_DIR}/gen.hs "delete" "${TESTCASE}" "${TESTCASE}/"*.essence 10
+        runhaskell ${SCRIPT_DIR}/gen.hs "change" "${TESTCASE}" "${TESTCASE}/"*.essence 10
     fi
 fi
