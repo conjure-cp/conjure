@@ -41,12 +41,17 @@ parseModel = inCompleteFile $ do
         pLanguage :: Parser LanguageVersion
         pLanguage = do
             l  <- lexeme L_language *> identifierText
+            -- ESSENCE' is accepted, just for convenience
+            unless (l `elem` ["Essence", "ESSENCE'"]) $ fail $
+                "language name has to be Essence, but given:" <+> pretty l
             is <- sepBy1 integer dot
+            unless (is >= [1,0]) $ fail $
+                "language version expected to be at least 1.0, but given:" <+> prettyList id "." is
             return (LanguageVersion (Name l) (map fromInteger is))
-    l  <- pLanguage
+    l  <- optional pLanguage
     xs <- many parseTopLevels
     return Model
-        { mLanguage = l
+        { mLanguage = fromMaybe (LanguageVersion "Essence" [0]) l
         , mStatements = concat xs
         , mInfo = def
         }
@@ -353,6 +358,8 @@ parseAttributes = do
 parseSetAttr :: Parser (SetAttr Expression)
 parseSetAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "set" attrs
+        ["size", "minSize", "maxSize"]
     SetAttr <$> case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -364,6 +371,10 @@ parseSetAttr = do
 parseMSetAttr :: Parser (MSetAttr Expression)
 parseMSetAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "mset" attrs
+        [ "size", "minSize", "maxSize"
+        , "minOccur", "maxOccur"
+        ]
     size <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -382,6 +393,11 @@ parseMSetAttr = do
 parseFunctionAttr :: Parser (FunctionAttr Expression)
 parseFunctionAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "function" attrs
+        [ "size", "minSize", "maxSize"
+        , "injective", "surjective", "bijective"
+        , "total"
+        ]
     size <- case filterSizey attrs of
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
@@ -404,6 +420,11 @@ parseFunctionAttr = do
 parseSequenceAttr :: Parser (SequenceAttr Expression)
 parseSequenceAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "sequence" attrs
+        [ "size", "minSize", "maxSize"
+        , "injective", "surjective", "bijective"
+        , "total"
+        ]
     size <- case filterSizey attrs of
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
         [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
@@ -423,6 +444,13 @@ parseSequenceAttr = do
 parseRelationAttr :: Parser (RelationAttr Expression)
 parseRelationAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "relation" attrs
+        [ "size", "minSize", "maxSize"
+        , "reflexive", "irreflexive", "coreflexive"
+        , "symmetric", "antiSymmetric", "aSymmetric"
+        , "transitive", "total", "connex", "Euclidean"
+        , "serial", "equivalence", "partialOrder"
+        ]
     size <- case filterSizey attrs of
         [] -> return SizeAttr_None
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
@@ -438,6 +466,12 @@ parseRelationAttr = do
 parsePartitionAttr :: Parser (PartitionAttr Expression)
 parsePartitionAttr = do
     DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes "partition" attrs
+        [ "size", "minSize", "maxSize"
+        , "regular"
+        , "numParts", "minNumParts", "maxNumParts"
+        , "partSize", "minPartSize", "maxPartSize"
+        ]
     unless (null $ filterAttrName ["complete"] attrs) $
         fail $ vcat [ "Partitions do not support the 'complete' attribute."
                     , "They are complete by default."
@@ -462,6 +496,18 @@ parsePartitionAttr = do
         as -> fail ("incompatible attributes:" <+> stringToDoc (show as))
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
+
+checkExtraAttributes :: Doc -> [DomainAttribute a] -> [Name] -> Parser ()
+checkExtraAttributes ty attrs supported = do
+    let extras = mapMaybe f attrs
+    unless (null extras) $ fail $ vcat
+        [ "Unsupported attributes for" <+> ty <> ":" <+> prettyList id "," extras
+        , "Only these are supported:" <+> prettyList id "," supported
+        ]
+    where
+        f (DANameValue nm _) | nm `notElem` supported = Just nm
+        f (DAName      nm  ) | nm `notElem` supported = Just nm
+        f _ = Nothing
 
 filterAttrName :: Ord a => [Name] -> [DomainAttribute a] -> [DomainAttribute a]
 filterAttrName keep = sort . filter f
@@ -692,7 +738,7 @@ parseQuantifiedExpr = do
                             return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
                         ]
     qnGuard     <- optional (comma *> parseExpr)
-    qnBody      <- dot *> parseExpr <?> "expecting body of a quantified expression"
+    qnBody      <- dot *> parseExpr <?> "body of a quantified expression"
 
     let qnMap pat = case qnOver of
             Left dom -> GenDomainNoRepr pat dom
@@ -913,7 +959,7 @@ runLexerAndParser p s inp = do
             in  fail $ vcat
                     [ msg
                     , pretty theLine
-                    , pretty $ replicate (col-1) ' ' ++ "^"
+                    , pretty $ replicate (col-4) ' ' ++ "^^^^^^^"
                     ]
         Right x -> return x
 
