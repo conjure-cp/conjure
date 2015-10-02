@@ -9,6 +9,7 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
+import Conjure.Language.CategoryOf ( categoryChecking )
 import Conjure.Language.Pretty
 import Conjure.Language.Lenses
 import Conjure.Process.Enums ( removeEnumsFromModel )
@@ -27,7 +28,7 @@ typeCheckModel_StandAlone
     => Model
     -> m Model
 typeCheckModel_StandAlone model0 = do
-    -- for better error messages, type-check before sanity-checking.
+    -- for better error messages, type-check and category-check before sanity-checking.
     -- sanity checking will modify the model.
     -- then, type-check once more just in case the newly generated
     -- stuff is broken.
@@ -36,6 +37,7 @@ typeCheckModel_StandAlone model0 = do
           >>= removeEnumsFromModel      >>= logDebugId "[removeEnumsFromModel]"
           >>= resolveNames              >>= logDebugId "[resolveNames]"
           >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
+          >>= categoryChecking          >>= logDebugId "[categoryChecking]"
           >>= sanityChecks              >>= logDebugId "[sanityChecks]"
           >>= typeCheckModel            >>= logDebugId "[typeCheckModel]"
     return model1

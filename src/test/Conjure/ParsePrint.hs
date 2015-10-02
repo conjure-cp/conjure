@@ -67,9 +67,15 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
                     Left err -> return (Left err)
                     Right () -> return (Right model)
     case result of
-        Left ""     -> return ()
-        Left err    -> writeFile (tBaseDir </> "stderr") (renderNormal err)
-        Right model -> writeModel PlainEssence (Just (tBaseDir </> "stdout")) model
+        Left ""     -> do
+            removeFileIfExists (tBaseDir </> "stderr")
+            removeFileIfExists (tBaseDir </> "stdout")
+        Left err    -> do
+            writeFile (tBaseDir </> "stderr") (renderNormal err)
+            removeFileIfExists (tBaseDir </> "stdout")
+        Right model -> do
+            writeModel PlainEssence (Just (tBaseDir </> "stdout")) model
+            removeFileIfExists (tBaseDir </> "stderr")
 
     let
         readIfExists :: FilePath -> IO String

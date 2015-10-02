@@ -40,6 +40,7 @@ module Conjure.Prelude
     , sh
     , scope
     , allDirs, allFiles, allFilesWithSuffix
+    , removeFileIfExists
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
@@ -122,6 +123,8 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
+import System.IO.Error ( isDoesNotExistError )
+import Control.Exception ( catch, throwIO )
 
 -- safe
 import Safe as X ( at, atNote, atMay, readMay, readNote, headNote, fromJustNote )
@@ -516,6 +519,14 @@ allFiles x = do
 
 allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
 allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+
+-- from http://stackoverflow.com/questions/8502201/remove-file-if-it-exists
+removeFileIfExists :: FilePath -> IO ()
+removeFileIfExists f = removeFile f `catch` handleExists
+    where
+        handleExists e
+            | isDoesNotExistError e = return ()
+            | otherwise = throwIO e
 
 setRandomSeed :: Int -> IO ()
 setRandomSeed = setStdGen . mkStdGen
