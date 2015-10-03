@@ -42,7 +42,7 @@ parseModel = inCompleteFile $ do
         pLanguage = do
             l  <- lexeme L_language *> identifierText
             -- ESSENCE' is accepted, just for convenience
-            unless (l `elem` ["Essence", "ESSENCE'"]) $ fail $
+            unless (l `elem` ["Essence", "ESSENCE", "ESSENCE'"]) $ fail $
                 "language name has to be Essence, but given:" <+> pretty l
             is <- sepBy1 integer dot
             unless (is >= [1,0]) $ fail $
