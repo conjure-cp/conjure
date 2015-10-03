@@ -46,7 +46,7 @@ parseModel = inCompleteFile $ do
                 "language name has to be Essence, but given:" <+> pretty l
             is <- sepBy1 integer dot
             unless (is >= [1,0]) $ fail $
-                "language version expected to be at least 1.0, but given:" <+> prettyList id "." is
+                "language version expected to be at least 1.0, but given:" <+> pretty (intercalate "." (map show is))
             return (LanguageVersion (Name l) (map fromInteger is))
     l  <- optional pLanguage
     xs <- many parseTopLevels
