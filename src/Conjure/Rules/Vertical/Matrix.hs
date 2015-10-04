@@ -180,7 +180,7 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
             _ -> na "rule_Comprehension_Hist"
         matrix               <- match opHist expr
         TypeMatrix{}         <- typeOf matrix
-        DomainMatrix index _ <- domainOf matrix
+        index:_              <- indexDomainsOf matrix
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-hist"
@@ -220,8 +220,8 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         (x,y)                 <- match opEq p
         TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}          <- typeOf y
-        DomainMatrix indexX _ <- domainOf x
-        DomainMatrix indexY _ <- domainOf y
+        indexX:_              <- indexDomainsOf x
+        indexY:_              <- indexDomainsOf y
         return
             ( "Horizontal rule for matrix ="
             , do
@@ -243,8 +243,8 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
         (x,y)                 <- match opNeq p
         TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}          <- typeOf y
-        DomainMatrix indexX _ <- domainOf x
-        DomainMatrix indexY _ <- domainOf y
+        indexX:_              <- indexDomainsOf x
+        indexY:_              <- indexDomainsOf y
         return
             ( "Horizontal rule for matrix !="
             , do

@@ -34,6 +34,7 @@ module Conjure.Language.Definition
     , extractLettings
     , tupleLitIfNeeded
     , patternToExpr
+    , emptyCollectionX
 
     , module Conjure.Language.NameGen
 
@@ -962,3 +963,9 @@ tupleLitIfNeeded xs = AbstractLiteral (AbsLitTuple xs)
 
 nbUses :: Data x => Name -> x -> Int
 nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
+
+emptyCollectionX :: Expression -> Bool
+emptyCollectionX (Constant x) = emptyCollection x
+emptyCollectionX (AbstractLiteral x) = emptyCollectionAbsLit x
+emptyCollectionX (Typed x _) = emptyCollectionX x
+emptyCollectionX _ = False
