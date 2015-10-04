@@ -1,7 +1,5 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-{-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Definition
     ( forgetRepr, rangesInts

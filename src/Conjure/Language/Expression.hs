@@ -1,35 +1,21 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE UndecidableInstances #-}
 
 module Conjure.Language.Expression
-    ( forgetRepr, rangesInts
-
-    , quantifiedVar, auxiliaryVar
-    , lambdaToFunction
-
-    , e2c
-    , nbUses
-
-    , Statement(..), SearchOrder(..), Objective(..)
+    ( Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
-
-    , Name(..)
     , Expression(..), ReferenceTo(..), InBubble(..)
-    , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
     , GeneratorOrCondition(..), Generator(..), generatorPat
-
-    , ExpressionLike(..), ReferenceContainer(..)
-
+    , e2c
+    , quantifiedVar, auxiliaryVar
+    , lambdaToFunction
     , tupleLitIfNeeded
     , patternToExpr
     , emptyCollectionX
-
-    , module Conjure.Language.NameGen
-
+    , nbUses
     ) where
 
 -- conjure
@@ -39,7 +25,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.AdHoc
 
 import Conjure.Language.Name
-import Conjure.Language.NameGen ( NameGen(..), NameGenState, runNameGen )
+import Conjure.Language.NameGen ( NameGen(..) )
 import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Type
