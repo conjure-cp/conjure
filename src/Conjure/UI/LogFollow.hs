@@ -28,7 +28,6 @@ import qualified Data.Text as T
 import qualified Data.Text.Lazy as L
 import qualified Data.Text.Lazy.Builder as L
 import qualified Text.PrettyPrint as Pr
--- import Text.Read(read)
 
 import qualified Data.IntSet as I
 import Data.Set(Set)
@@ -39,16 +38,17 @@ import qualified Data.Map as M
 import Data.List(maximumBy)
 import System.FilePath(takeExtension)
 
-import Data.Global(declareIORef)
-import Data.IORef(readIORef, IORef, writeIORef)
+import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
+import System.IO.Unsafe ( unsafePerformIO )
 
 type HoleHash    = Int
 type GenOrd      = Int
-type Pref         = Int
+type Pref        = Int
 type AnswerStore =  Map HoleHash (Set (QuestionAnswered, GenOrd) )
 
 answeredRef :: IORef AnswerStore
-answeredRef = declareIORef "answeredRefGlobal" M.empty
+{-# NOINLINE answeredRef #-}
+answeredRef = unsafePerformIO (newIORef M.empty)
 
 refAnswers :: (MonadIO m) => FilePath ->  m ()
 refAnswers fp = do
