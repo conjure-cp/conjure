@@ -74,19 +74,31 @@ instantiateE (Comprehension body gensOrConds) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
             enumeration <- enumerateDomain domainConstant
             concatMapM
-                (\ val -> scope $ bind pat val >> loop rest )
+                (\ val -> scope $ do
+                    valid <- bind pat val
+                    if valid
+                        then loop rest
+                        else return [] )
                 enumeration
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
             enumeration <- enumerateDomain domainConstant
             concatMapM
-                (\ val -> scope $ bind (Single pat) val >> loop rest )
+                (\ val -> scope $ do
+                    valid <- bind (Single pat) val
+                    if valid
+                        then loop rest
+                        else return [] )
                 enumeration
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
             enumeration <- enumerateInConstant exprConstant
             concatMapM
-                (\ val -> scope $ bind pat val >> loop rest )
+                (\ val -> scope $ do
+                    valid <- bind pat val
+                    if valid
+                        then loop rest
+                        else return [] )
                 enumeration
         loop (Condition expr : rest) = do
             constant <- instantiateE expr
@@ -95,7 +107,8 @@ instantiateE (Comprehension body gensOrConds) = do
                 else return []
         loop (ComprehensionLetting n expr : rest) = do
             constant <- instantiateE expr
-            bind (Single n) constant
+            valid <- bind (Single n) constant
+            unless valid (bug "ComprehensionLetting.bind expected to be valid")
             loop rest
 
     constants <- loop gensOrConds
@@ -338,9 +351,16 @@ instantiateR (RangeUpperBounded x) = RangeUpperBounded <$> instantiateE x
 instantiateR (RangeBounded x y) = RangeBounded <$> instantiateE x <*> instantiateE y
 
 
-bind :: MonadState [(Name, Expression)] m => AbstractPattern -> Constant -> m ()
-bind (Single nm) val = modify ((nm, Constant val) :)
-bind (AbsPatTuple  pats) (ConstantAbstract (AbsLitTuple    vals)) = zipWithM_ bind pats vals
-bind (AbsPatMatrix pats) (ConstantAbstract (AbsLitMatrix _ vals)) = zipWithM_ bind pats vals
-bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals)) = zipWithM_ bind pats vals
+bind :: MonadState [(Name, Expression)] m
+    => AbstractPattern
+    -> Constant
+    -> m Bool -- False means skip
+bind (Single nm) val = modify ((nm, Constant val) :) >> return True
+bind (AbsPatTuple  pats) (ConstantAbstract (AbsLitTuple    vals))
+    | length pats == length vals = and <$> zipWithM bind pats vals
+bind (AbsPatMatrix pats) (ConstantAbstract (AbsLitMatrix _ vals))
+    | length pats == length vals = and <$> zipWithM bind pats vals
+bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals))
+    | length pats == length vals = and <$> zipWithM bind pats vals
+    | otherwise                  = return False
 bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:" <+> pretty val]
