@@ -312,6 +312,7 @@ modelAll :: FilePath -> Model -> IO ()
 modelAll dir = ignoreLogs . runNameGen . outputModels Config
     { logLevel                   = LogNone
     , verboseTrail               = False
+    , rewritesTrail              = False
     , logRuleFails               = False
     , logRuleSuccesses           = False
     , logRuleAttempts            = False

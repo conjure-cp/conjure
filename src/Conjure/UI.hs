@@ -23,6 +23,7 @@ data UI
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
+        , rewritesTrail              :: Bool
         , logRuleFails               :: Bool
         , logRuleSuccesses           :: Bool
         , logRuleAttempts            :: Bool
@@ -55,6 +56,7 @@ data UI
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
+        , rewritesTrail              :: Bool
         , logRuleFails               :: Bool
         , logRuleSuccesses           :: Bool
         , logRuleAttempts            :: Bool
@@ -185,6 +187,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Whether to generate verbose trails or not."
+        , rewritesTrail    = False &= name "rewrites-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate trails about the applied rewritings or not."
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -346,6 +352,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Whether to generate verbose trails or not."
+        , rewritesTrail    = False &= name "rewrites-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate trails about the applied rewritings or not."
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit

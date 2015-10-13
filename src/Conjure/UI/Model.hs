@@ -247,6 +247,7 @@ remaining config modelZipper minfo = do
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
                     , aRuleName = ruleName
+                    , aBefore = hole focus
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
                     }
@@ -354,6 +355,9 @@ strategyToDriver config questions = do
                             config
                             (strategyQ  config) pickedQNumber                   pickedQDescr
                             (strategyA' config) pickedANumber (length optionsA) pickedADescr
+                            (aText pickedA)
+                            (aBefore pickedA)
+                            (aAnswer pickedA)
             , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
@@ -438,16 +442,22 @@ addToTrail
     :: Config
     -> Strategy -> Int ->        Doc
     -> Strategy -> Int -> Int -> Doc
+    -> Doc -> Expression -> Expression
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
            questionStrategy questionNumber                 questionDescr
            answerStrategy   answerNumber   answerNumbers   answerDescr
+           ruleDescr oldExpr newExpr
            oldInfo = newInfo
     where
-        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++ [(questionNumber, answerNumber, answerNumbers)]
-                          , miTrailVerbose = if verboseTrail
-                                                  then miTrailVerbose oldInfo ++ [theQ, theA]
-                                                  else []
+        newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)
+                                            : miTrailCompact oldInfo
+                          , miTrailVerbose  = if verboseTrail
+                                                    then theA : theQ : miTrailVerbose oldInfo
+                                                    else []
+                          , miTrailRewrites = if rewritesTrail
+                                                    then theRewrite : miTrailRewrites oldInfo
+                                                    else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
@@ -464,6 +474,11 @@ addToTrail Config{..}
                 : map pretty (lines (renderWide answerDescr))
             , dDecision = answerNumber
             , dNumOptions = Just answerNumbers
+            }
+        theRewrite = TrailRewrites
+            { trRule   = stringToText $ renderWide ruleDescr
+            , trBefore = map stringToText $ lines $ renderWide $ pretty oldExpr
+            , trAfter  = map stringToText $ lines $ renderWide $ pretty newExpr
             }
 
 
@@ -482,6 +497,18 @@ addTrueConstraints m =
                           ]
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
+
+
+reverseTrails :: Model -> Model
+reverseTrails m =
+    let
+        oldInfo = mInfo m
+        newInfo = oldInfo { miTrailCompact  = reverse (miTrailCompact  oldInfo)
+                          , miTrailVerbose  = reverse (miTrailVerbose  oldInfo)
+                          , miTrailRewrites = reverse (miTrailRewrites oldInfo)
+                          }
+    in
+        m { mInfo = newInfo }
 
 
 oneSuchThat :: Model -> Model
@@ -817,6 +844,7 @@ epilogue model = return model
     >>= checkIfHasUndefined           >>= logDebugId "[checkIfHasUndefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
     >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
+    >>= return . reverseTrails        >>= logDebugId "[reverseTrails]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 

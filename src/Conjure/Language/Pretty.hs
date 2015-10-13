@@ -121,16 +121,19 @@ instance Pretty JSON.Value where
 instance Pretty JSON.Object where
     pretty = prBraces . vcat . punctuate "," . map f . sortBy (comp `on` fst) . M.toList
         where
-            f (key@"description", Array value) = pretty (show key) <> ":" <+> prettyArrayVCat value
+            f (key, Array value)
+                | all (\ v -> case v of String{} -> True ; _ -> False ) value
+                = pretty (show key) <> ":" <+> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <+> pretty value
 
             keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                        , "strategyQ", "strategyA"
-                       , "trailCompact", "trailVerbose"
+                       , "trailCompact", "trailVerbose", "trailRewrites"
                        , "nameGenState"
                        , "representations", "representationsTree"
                        , "originalDomains"
                        , "questionAnswered"
+                       , "before", "after"
                        ]
 
             comp a b =

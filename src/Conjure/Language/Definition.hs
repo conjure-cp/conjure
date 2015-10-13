@@ -14,7 +14,7 @@ module Conjure.Language.Definition
     , nbUses
 
     , Model(..), LanguageVersion(..)
-    , ModelInfo(..), Decision(..)
+    , ModelInfo(..), Decision(..), TrailRewrites(..)
     , Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
     , Strategy(..)
@@ -169,6 +169,7 @@ data ModelInfo = ModelInfo
                           , Int     -- number of answers
                           ) ]
     , miTrailVerbose :: [Decision]
+    , miTrailRewrites :: [TrailRewrites]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
     }
@@ -185,7 +186,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -297,7 +298,27 @@ instance FromJSON  Decision where parseJSON = genericParseJSON decisionJSONOptio
 
 
 ------------------------------------------------------------------------------------------------------------------------
--- Misc ---------------------------------------------------------------------------------------------------------------
+-- TrailRewrites -------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+data TrailRewrites = TrailRewrites
+    { trRule   :: Text
+    , trBefore :: [Text]
+    , trAfter  :: [Text]
+    }
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+trJSONOptions :: JSON.Options
+trJSONOptions = jsonOptions { JSON.fieldLabelModifier = map toLower . drop 2 }
+
+instance Serialize TrailRewrites
+instance Hashable  TrailRewrites
+instance ToJSON    TrailRewrites where toJSON = genericToJSON trJSONOptions
+instance FromJSON  TrailRewrites where parseJSON = genericParseJSON trJSONOptions
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- Misc ----------------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
 
 extractLettings :: Model -> [(Name, Expression)]

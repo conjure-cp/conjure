@@ -71,6 +71,7 @@ mainWithArgs Modelling{..} = do
             { Config.outputDirectory            = outputDirectory
             , Config.logLevel                   = logLevel
             , Config.verboseTrail               = verboseTrail
+            , Config.rewritesTrail              = rewritesTrail
             , Config.logRuleFails               = logRuleFails
             , Config.logRuleSuccesses           = logRuleSuccesses
             , Config.logRuleAttempts            = logRuleAttempts

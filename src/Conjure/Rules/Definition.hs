@@ -46,6 +46,7 @@ data QuestionType
 
 data Answer = Answer
     { aText      :: Doc
+    , aBefore    :: Expression
     , aAnswer    :: Expression
     , aFullModel :: ModelWIP
     , aRuleName  :: Doc
@@ -79,6 +80,7 @@ updateModelWIPInfo upd (TryThisFirst z info) = TryThisFirst z (upd info)
 data Config = Config
     { logLevel                   :: LogLevel
     , verboseTrail               :: Bool
+    , rewritesTrail              :: Bool
     , logRuleFails               :: Bool
     , logRuleSuccesses           :: Bool
     , logRuleAttempts            :: Bool
@@ -104,6 +106,7 @@ instance Default Config where
     def = Config
         { logLevel                   = LogNone
         , verboseTrail               = False
+        , rewritesTrail              = False
         , logRuleFails               = False
         , logRuleSuccesses           = False
         , logRuleAttempts            = False
