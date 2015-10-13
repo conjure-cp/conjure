@@ -3,29 +3,11 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
-find aux1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find aux1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find aux2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
+find aux1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find aux1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 such that
-    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
-    aux1_ExplicitVarSizeWithFlags_Values[1] <
-    aux1_ExplicitVarSizeWithFlags_Values[2],
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q12] = false ->
-         aux1_ExplicitVarSizeWithFlags_Values[q12] = false
-             | q12 : int(1..2)]),
-    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
-    aux1_ExplicitVarSizeWithFlags_Flags[1],
-    or([aux1_ExplicitVarSizeWithFlags_Flags[q19] /\
-        aux1_ExplicitVarSizeWithFlags_Values[q19] = false
-            | q19 : int(1..2)]),
-    or([aux1_ExplicitVarSizeWithFlags_Flags[q19] /\
-        aux1_ExplicitVarSizeWithFlags_Values[q19]
-            | q19 : int(1..2)]),
-    and([aux1_ExplicitVarSizeWithFlags_Flags[q16] ->
-         false = aux1_ExplicitVarSizeWithFlags_Values[q16] \/
-         aux1_ExplicitVarSizeWithFlags_Values[q16]
-             | q16 : int(1..2)]),
     aux2_ExplicitVarSizeWithFlags_Flags[2] ->
     aux2_ExplicitVarSizeWithFlags_Values[1] <
     aux2_ExplicitVarSizeWithFlags_Values[2],
@@ -44,6 +26,24 @@ such that
          false = aux2_ExplicitVarSizeWithFlags_Values[q32] \/
          aux2_ExplicitVarSizeWithFlags_Values[q32]
              | q32 : int(1..2)]),
+    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux1_ExplicitVarSizeWithFlags_Values[1] <
+    aux1_ExplicitVarSizeWithFlags_Values[2],
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q12] = false ->
+         aux1_ExplicitVarSizeWithFlags_Values[q12] = false
+             | q12 : int(1..2)]),
+    aux1_ExplicitVarSizeWithFlags_Flags[2] ->
+    aux1_ExplicitVarSizeWithFlags_Flags[1],
+    or([aux1_ExplicitVarSizeWithFlags_Flags[q19] /\
+        aux1_ExplicitVarSizeWithFlags_Values[q19] = false
+            | q19 : int(1..2)]),
+    or([aux1_ExplicitVarSizeWithFlags_Flags[q19] /\
+        aux1_ExplicitVarSizeWithFlags_Values[q19]
+            | q19 : int(1..2)]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[q16] ->
+         false = aux1_ExplicitVarSizeWithFlags_Values[q16] \/
+         aux1_ExplicitVarSizeWithFlags_Values[q16]
+             | q16 : int(1..2)]),
     sum([toInt(false = b) * 5 | true]) + toInt(2 = x /\ b) * x = i,
     or([aux1_ExplicitVarSizeWithFlags_Flags[q21] /\
         and([toInt(false = aux1_ExplicitVarSizeWithFlags_Values[q21]) * 5 +

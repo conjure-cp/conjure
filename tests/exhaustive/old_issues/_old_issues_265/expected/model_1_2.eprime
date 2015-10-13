@@ -5,12 +5,26 @@ given f_Function1DPartial_Flags: matrix indexed by [bool] of bool
 given f_Function1DPartial_Values: matrix indexed by [bool] of bool
 find fprime_Function1DPartial_Flags: matrix indexed by [bool] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [bool] of bool
-find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find aux2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 find aux1_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find aux1_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 such that
+    2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+    aux1_ExplicitVarSizeWithMarker_Values[1] <
+    aux1_ExplicitVarSizeWithMarker_Values[2],
+    and([q12 > aux1_ExplicitVarSizeWithMarker_Marker ->
+         aux1_ExplicitVarSizeWithMarker_Values[q12] = false
+             | q12 : int(1..2)]),
+    and([or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+             aux1_ExplicitVarSizeWithMarker_Values[q16] = q14
+                 | q16 : int(1..2)])
+             | q14 : bool, f_Function1DPartial_Flags[q14]]),
+    and([q17 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         or([q18 = aux1_ExplicitVarSizeWithMarker_Values[q17]
+                 | q18 : bool, f_Function1DPartial_Flags[q18]])
+             | q17 : int(1..2)]),
     aux2_ExplicitVarSizeWithFlags_Flags[2] ->
     aux2_ExplicitVarSizeWithFlags_Values[1] <
     aux2_ExplicitVarSizeWithFlags_Values[2],
@@ -29,20 +43,6 @@ such that
              q33 = aux2_ExplicitVarSizeWithFlags_Values[q32]
                  | q33 : bool])
              | q32 : int(1..2)]),
-    2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-    aux1_ExplicitVarSizeWithMarker_Values[1] <
-    aux1_ExplicitVarSizeWithMarker_Values[2],
-    and([q12 > aux1_ExplicitVarSizeWithMarker_Marker ->
-         aux1_ExplicitVarSizeWithMarker_Values[q12] = false
-             | q12 : int(1..2)]),
-    and([or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-             aux1_ExplicitVarSizeWithMarker_Values[q16] = q14
-                 | q16 : int(1..2)])
-             | q14 : bool, f_Function1DPartial_Flags[q14]]),
-    and([q17 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-         or([q18 = aux1_ExplicitVarSizeWithMarker_Values[q17]
-                 | q18 : bool, f_Function1DPartial_Flags[q18]])
-             | q17 : int(1..2)]),
     and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
          fprime_Function1DPartial_Flags[q5]
              | q5 : bool, f_Function1DPartial_Flags[q5]]),

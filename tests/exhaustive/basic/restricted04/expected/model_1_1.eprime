@@ -3,13 +3,23 @@ language ESSENCE' 1.0
 find x_FunctionNDPartial_Flags: matrix indexed by [int(1..2), int(1..2)] of bool
 find x_FunctionNDPartial_Values:
         matrix indexed by [int(1..2), int(1..2)] of int(1..3)
+find aux2_Occurrence: matrix indexed by [int(1..2), int(1..3)] of bool
 find aux1_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find aux1_ExplicitVarSizeWithMarker_Values_1:
         matrix indexed by [int(1..2)] of int(1)
 find aux1_ExplicitVarSizeWithMarker_Values_2:
         matrix indexed by [int(1..2)] of int(1..2)
-find aux2_Occurrence: matrix indexed by [int(1..2), int(1..3)] of bool
 such that
+    and([and([x_FunctionNDPartial_Flags[q21_1, q21_2] ->
+              aux2_Occurrence[q15, x_FunctionNDPartial_Values[q21_1, q21_2]]
+                  | q21_1 : int(1..2), q21_2 : int(1..2)])
+             | q15 : int(1..2)]),
+    and([and([aux2_Occurrence[q15, q18] ->
+              or([x_FunctionNDPartial_Flags[q22_1, q22_2] /\
+                  x_FunctionNDPartial_Values[q22_1, q22_2] = q18
+                      | q22_1 : int(1..2), q22_2 : int(1..2)])
+                  | q18 : int(1..3)])
+             | q15 : int(1..2)]),
     2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
     aux1_ExplicitVarSizeWithMarker_Values_1[1] <
     aux1_ExplicitVarSizeWithMarker_Values_1[2]
@@ -37,16 +47,6 @@ such that
                  | q14_1 : int(1..2), q14_2 : int(1..2),
                    or([1 = q14_1 /\ q13_2 = q14_2 | q13_2 : int(1..2)])])
              | q12 : int(1..2)]),
-    and([and([x_FunctionNDPartial_Flags[q21_1, q21_2] ->
-              aux2_Occurrence[q15, x_FunctionNDPartial_Values[q21_1, q21_2]]
-                  | q21_1 : int(1..2), q21_2 : int(1..2)])
-             | q15 : int(1..2)]),
-    and([and([aux2_Occurrence[q15, q18] ->
-              or([x_FunctionNDPartial_Flags[q22_1, q22_2] /\
-                  x_FunctionNDPartial_Values[q22_1, q22_2] = q18
-                      | q22_1 : int(1..2), q22_2 : int(1..2)])
-                  | q18 : int(1..3)])
-             | q15 : int(1..2)]),
     and([q15 <= aux1_ExplicitVarSizeWithMarker_Marker ->
          or([aux2_Occurrence[q15, q17] /\
              q17 = aux1_ExplicitVarSizeWithMarker_Values_2[q15]

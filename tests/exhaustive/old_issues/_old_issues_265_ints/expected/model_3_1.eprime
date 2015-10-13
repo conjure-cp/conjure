@@ -5,16 +5,11 @@ given f_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 given f_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
 find fprime_Function1DPartial_Flags: matrix indexed by [int(0, 1)] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [int(0, 1)] of int(0, 1)
-find aux2_Occurrence: matrix indexed by [int(0, 1)] of bool
 find aux1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find aux1_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..2)] of int(0, 1)
+find aux2_Occurrence: matrix indexed by [int(0, 1)] of bool
 such that
-    and([fprime_Function1DPartial_Flags[q27] -> aux2_Occurrence[q27]
-             | q27 : int(0, 1)]),
-    and([aux2_Occurrence[q24] ->
-         or([fprime_Function1DPartial_Flags[q28] /\ q28 = q24 | q28 : int(0, 1)])
-             | q24 : int(0, 1)]),
     aux1_ExplicitVarSizeWithFlags_Flags[2] ->
     aux1_ExplicitVarSizeWithFlags_Values[1] <
     aux1_ExplicitVarSizeWithFlags_Values[2],
@@ -31,6 +26,11 @@ such that
          or([q20 = aux1_ExplicitVarSizeWithFlags_Values[q19]
                  | q20 : int(0, 1), f_Function1DPartial_Flags[q20]])
              | q19 : int(1..2)]),
+    and([fprime_Function1DPartial_Flags[q27] -> aux2_Occurrence[q27]
+             | q27 : int(0, 1)]),
+    and([aux2_Occurrence[q24] ->
+         or([fprime_Function1DPartial_Flags[q28] /\ q28 = q24 | q28 : int(0, 1)])
+             | q24 : int(0, 1)]),
     and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
          fprime_Function1DPartial_Flags[q5]
              | q5 : int(0, 1), f_Function1DPartial_Flags[q5]]),

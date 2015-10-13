@@ -3,28 +3,12 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
+find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 find aux1_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find aux1_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2)] of bool
-find aux2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find aux2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
 such that
-    2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-    aux1_ExplicitVarSizeWithMarker_Values[1] <
-    aux1_ExplicitVarSizeWithMarker_Values[2],
-    and([q12 > aux1_ExplicitVarSizeWithMarker_Marker ->
-         aux1_ExplicitVarSizeWithMarker_Values[q12] = false
-             | q12 : int(1..2)]),
-    or([q39 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-        aux1_ExplicitVarSizeWithMarker_Values[q39] = false
-            | q39 : int(1..2)]),
-    or([q39 <= aux1_ExplicitVarSizeWithMarker_Marker /\
-        aux1_ExplicitVarSizeWithMarker_Values[q39]
-            | q39 : int(1..2)]),
-    and([q14 <= aux1_ExplicitVarSizeWithMarker_Marker ->
-         false = aux1_ExplicitVarSizeWithMarker_Values[q14] \/
-         aux1_ExplicitVarSizeWithMarker_Values[q14]
-             | q14 : int(1..2)]),
     aux2_ExplicitVarSizeWithFlags_Flags[2] ->
     aux2_ExplicitVarSizeWithFlags_Values[1] <
     aux2_ExplicitVarSizeWithFlags_Values[2],
@@ -43,6 +27,22 @@ such that
          false = aux2_ExplicitVarSizeWithFlags_Values[q27] \/
          aux2_ExplicitVarSizeWithFlags_Values[q27]
              | q27 : int(1..2)]),
+    2 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+    aux1_ExplicitVarSizeWithMarker_Values[1] <
+    aux1_ExplicitVarSizeWithMarker_Values[2],
+    and([q12 > aux1_ExplicitVarSizeWithMarker_Marker ->
+         aux1_ExplicitVarSizeWithMarker_Values[q12] = false
+             | q12 : int(1..2)]),
+    or([q39 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q39] = false
+            | q39 : int(1..2)]),
+    or([q39 <= aux1_ExplicitVarSizeWithMarker_Marker /\
+        aux1_ExplicitVarSizeWithMarker_Values[q39]
+            | q39 : int(1..2)]),
+    and([q14 <= aux1_ExplicitVarSizeWithMarker_Marker ->
+         false = aux1_ExplicitVarSizeWithMarker_Values[q14] \/
+         aux1_ExplicitVarSizeWithMarker_Values[q14]
+             | q14 : int(1..2)]),
     sum([toInt(false = b) * 5 | true]) + toInt(2 = x /\ b) * x = i,
     or([q16 <= aux1_ExplicitVarSizeWithMarker_Marker /\
         and([toInt(false = aux1_ExplicitVarSizeWithMarker_Values[q16]) * 5 +
