@@ -197,8 +197,7 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainReference ename _  , ConstantInt i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else fromMaybe (bug $ "addEnumsAndUnnamedsBack 2:" <+> pretty (i, ename))
-                                   (lookup (i, ename) ctxt)
+                    else ConstantInt i -- assume this was an int if if is not in the unnameds list
 
             (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
                 ConstantAbstract $ AbsLitTuple
