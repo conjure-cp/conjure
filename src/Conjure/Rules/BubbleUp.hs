@@ -12,6 +12,11 @@ rule_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
             ( "Merging nested bubbles"
             , return $ WithLocals body (DefinednessConstraints (locals1 ++ locals2))
             )
+    theRule (WithLocals (WithLocals body (AuxiliaryVars locals1)) (AuxiliaryVars locals2)) =
+        return
+            ( "Merging nested bubbles"
+            , return $ WithLocals body (AuxiliaryVars (locals1 ++ locals2))
+            )
     theRule _ = na "rule_MergeNested"
 
 
@@ -95,36 +100,39 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
         let cons  = concat [ xs | SuchThat xs <- locals ]
 
-        (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
+        -- TODO: what to do with the conditions?
+        -- should we `dontCare unless condition`?
+        -- discard for now
+        (_conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
+            Condition{} -> return ([goc], [])
+            ComprehensionLetting{} -> return ([goc], [])
+            Generator (GenDomainHasRepr patName domain) -> return ([], [(patName, domain)])
             _ -> na "rule_LiftVars"
 
-        let patRef = Reference patName Nothing
+
+        let patRefs = [ Reference patName Nothing | (patName, _) <- generators ]
+        let indexDomains = map snd generators
 
         let upd (Reference nm _) | nm `elem` map fst decls
                 = let r = Reference nm Nothing
-                  in  [essence| &r[&patRef] |]
+                  in  make opMatrixIndexing r patRefs
             upd r = r
 
         let declsLifted =
                 [ Declaration (FindOrGiven LocalFind nm domLifted)
                 | (nm, dom) <- decls
-                , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
+                , let domLifted = foldr (\ i j -> DomainMatrix (forgetRepr i) j ) dom indexDomains
                 ]
 
         let consLifted =
-                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
+                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr n d) | (n,d) <- generators]
                 | c <- transformBi upd cons
                 ]
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
-            , return $ WithLocals
-                         (Comprehension (transform upd body)
-                             $  transformBi upd gocBefore
-                             ++ [Generator (GenDomainHasRepr patName indexDomain)]
-                             ++ transformBi upd gocAfter)
-                          (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
+            , return $ WithLocals (Comprehension (transform upd body) (transformBi upd gensOrConds))
+                                  (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
     theRule WithLocals{} = na "rule_LiftVars"
     theRule p = do
