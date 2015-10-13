@@ -314,7 +314,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom -> typeOf dom
             RecordField _ ty    -> return ty
             VariantField _ ty   -> return ty
-    typeOf p@(WithLocals x (DefinednessConstraints cs)) = do
+    typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
             unless (typeUnify TypeBool ty) $ fail $ vcat
@@ -322,8 +322,25 @@ instance TypeOf Expression where
                     , "Condition:" <+> pretty c
                     , "In:" <+> pretty p
                     ]
-        typeOf x
-    typeOf (WithLocals x _) = typeOf x                  -- TODO: do this properly, looking into locals and other ctxt
+        typeOf h
+    typeOf p@(WithLocals h (AuxiliaryVars stmts)) = do
+        forM_ stmts $ \ stmt ->
+            case stmt of
+                Declaration{} -> return ()                  -- TODO: what other checks make sense?
+                SuchThat xs -> forM_ xs $ \ x -> do
+                    ty <- typeOf x
+                    case ty of
+                        TypeBool{} -> return ()
+                        _ -> fail $ vcat
+                            [ "Inside a bubble, in a 'such that' statement:" <++> pretty x
+                            , "Expected type `bool`, but got:" <++> pretty ty
+                            ]
+                _ -> fail $ vcat
+                    [ "Unexpected statement inside a bubble."
+                    , "Expected type `find` or `such that`, but got:" <++> pretty stmt
+                    , "The complete expression:" <+> pretty p
+                    ]
+        typeOf h
     typeOf p@(Comprehension x gensOrConds) = do
         forM_ gensOrConds $ \ goc -> case goc of
             Generator{} -> return ()                    -- TODO: do this properly
