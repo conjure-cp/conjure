@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
-module Conjure.Representations.Function.FunctionND ( functionND ) where
+module Conjure.Representations.Function.FunctionND ( functionND, viewAsDomainTuple, mkLensAsDomainTuple ) where
 
 -- conjure
 import Conjure.Prelude
@@ -26,7 +27,7 @@ functionND = Representation chck downD structuralCons downC up
         chck :: TypeOf_ReprCheck
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Total _)
-                    innerDomainFr@(DomainTuple innerDomainFrs)
+                    innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs =
             DomainFunction "FunctionND" attrs
                 <$> f innerDomainFr
@@ -38,7 +39,7 @@ functionND = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "FunctionND"
                     (FunctionAttr _ PartialityAttr_Total _)
-                    (DomainTuple innerDomainFrs)
+                    (viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
@@ -52,16 +53,18 @@ functionND = Representation chck downD structuralCons downC up
         structuralCons f downX1
             (DomainFunction "FunctionND"
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
-                (DomainTuple innerDomainFrs)
+                innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
 
-            let innerDomainFr =  DomainTuple innerDomainFrs
-
             let
-                frArity = genericLength innerDomainFrs
-
-                index x m 1     = make opIndexing m                     (make opIndexing x 1)
-                index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
+                kRange = case innerDomainFr of
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                        DomainRecord rs -> map (fromName . fst) rs
+                        _ -> bug $ vcat [ "FunctionNDPartial.structuralCons"
+                                        , "innerDomainFr:" <+> pretty innerDomainFr
+                                        ]
+                toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
+                index x m = make opMatrixIndexing m (toIndex x)
 
             let injectiveCons values = do
                     tyTo <- typeOf innerDomainTo
@@ -73,7 +76,7 @@ functionND = Representation chck downD structuralCons downC up
                     if canAllDiff
                         then do
                             (iPat, i) <- quantifiedVar
-                            let valuesIndexedI = index i values frArity
+                            let valuesIndexedI = index i values
                             return $ return $ -- list
                                 [essence|
                                     allDiff([ &valuesIndexedI
@@ -83,8 +86,8 @@ functionND = Representation chck downD structuralCons downC up
                         else do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
-                            let valuesIndexedI = index i values frArity
-                            let valuesIndexedJ = index j values frArity
+                            let valuesIndexedI = index i values
+                            let valuesIndexedJ = index j values
                             return $ return $ -- list
                                 [essence|
                                     forAll &iPat, &jPat : &innerDomainFr .
@@ -94,7 +97,7 @@ functionND = Representation chck downD structuralCons downC up
             let surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
-                    let valuesIndexedJ = index j values frArity
+                    let valuesIndexedJ = index j values
                     return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainTo .
@@ -115,7 +118,7 @@ functionND = Representation chck downD structuralCons downC up
 
             let innerStructuralCons values = do
                     (iPat, i) <- quantifiedVar
-                    let valuesIndexedI = index i values frArity
+                    let valuesIndexedI = index i values
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
 
                     -- preparing structural constraints for the inner guys
@@ -142,15 +145,16 @@ functionND = Representation chck downD structuralCons downC up
         downC ( name
               , DomainFunction "FunctionND"
                     (FunctionAttr _ PartialityAttr_Total _)
-                    (DomainTuple innerDomainFrs)
+                    innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
-              ) | all domainCanIndexMatrix innerDomainFrs = do
+              ) | all domainCanIndexMatrix innerDomainFrs
+                , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             z <- zeroVal innerDomainTo
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
-                                            | (ConstantAbstract (AbsLitTuple k), v) <- vals
+                                            | (inspect -> Just k, v) <- vals
                                             , k == indices
                                             ]
 
@@ -192,7 +196,10 @@ functionND = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionND"
                                 (FunctionAttr _ PartialityAttr_Total _)
-                                (DomainTuple innerDomainFrs) _)) =
+                                innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs) _))
+
+            | Just (mk, _inspect) <- mkLensAsDomainTuple innerDomainFr =
+
             case lookup (nameValues name) ctxt of
                 Just valuesMatrix -> do
                     let
@@ -206,12 +213,12 @@ functionND = Representation chck downD structuralCons downC up
                             case lookup i (zip froms vals) of
                                 Nothing -> fail "Value not found. FunctionND.up.index"
                                 Just v  -> index v is
-                        index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
+                        index m is = bug ("FunctionND.up.index" <+> pretty m <+> pretty (show is))
 
                     indices  <- allIndices innerDomainFrs
                     vals     <- forM indices $ \ these -> do
                         value <- index valuesMatrix these
-                        return (ConstantAbstract (AbsLitTuple these), value)
+                        return (mk these, value)
                     return ( name
                            , ConstantAbstract $ AbsLitFunction vals
                            )
@@ -223,3 +230,30 @@ functionND = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionND"
+
+
+viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
+viewAsDomainTuple (DomainTuple doms) = Just doms
+viewAsDomainTuple (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)
+viewAsDomainTuple _ = Nothing
+
+
+mkLensAsDomainTuple :: Domain r x -> Maybe ( [Constant] -> Constant             -- how to make a literal
+                                           , Constant -> Maybe [Constant]       -- how to inspect a literal
+                                           )
+mkLensAsDomainTuple (DomainTuple _) =
+    Just
+        ( \ vals -> ConstantAbstract (AbsLitTuple vals)
+        , \ val -> case val of
+                ConstantAbstract (AbsLitTuple vals) -> Just vals
+                _ -> Nothing
+        )
+mkLensAsDomainTuple (DomainRecord doms) =
+    let names = doms |> sortBy (comparing fst) |> map fst
+    in  Just
+        ( \ vals -> ConstantAbstract (AbsLitRecord (zip names vals))
+        , \ val -> case val of
+                ConstantAbstract (AbsLitRecord vals) -> Just (vals |> sortBy (comparing fst) |> map snd)
+                _ -> Nothing
+        )
+mkLensAsDomainTuple _ = Nothing

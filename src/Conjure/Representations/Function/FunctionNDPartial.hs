@@ -15,34 +15,13 @@ import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
+import Conjure.Representations.Function.FunctionND ( viewAsDomainTuple, mkLensAsDomainTuple )
 
 
 functionNDPartial :: forall m . (MonadFail m, NameGen m) => Representation m
 functionNDPartial = Representation chck downD structuralCons downC up
 
     where
-
-        viewAsDomainTuple (DomainTuple doms) = Just doms
-        viewAsDomainTuple (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)
-        viewAsDomainTuple _ = Nothing
-
-        -- domain -> (how to make abslit, how to inspect abslit)
-        mkLensAsDomainTuple (DomainTuple _) =
-            Just
-                ( \ vals -> ConstantAbstract (AbsLitTuple vals)
-                , \ val -> case val of
-                        ConstantAbstract (AbsLitTuple vals) -> Just vals
-                        _ -> Nothing
-                )
-        mkLensAsDomainTuple (DomainRecord doms) =
-            let names = doms |> sortBy (comparing fst) |> map fst
-            in  Just
-                ( \ vals -> ConstantAbstract (AbsLitRecord (zip names vals))
-                , \ val -> case val of
-                        ConstantAbstract (AbsLitRecord vals) -> Just (vals |> sortBy (comparing fst) |> map snd)
-                        _ -> Nothing
-                )
-        mkLensAsDomainTuple _ = Nothing
 
         chck :: TypeOf_ReprCheck
         chck f (DomainFunction _
@@ -253,7 +232,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                             case lookup i (zip froms vals) of
                                 Nothing -> fail "Value not found. FunctionNDPartial.up.index"
                                 Just v  -> index v is
-                        index m is = bug ("RelationAsMatrix.up.index" <+> pretty m <+> pretty (show is))
+                        index m is = bug ("FunctionNDPartial.up.index" <+> pretty m <+> pretty (show is))
 
                     indices  <- allIndices innerDomainFrs
                     vals     <- forM indices $ \ these -> do

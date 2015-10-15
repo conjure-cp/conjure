@@ -26,7 +26,6 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
         "FunctionND"                     <- representationOf func
-        TypeFunction (TypeTuple ts) _    <- typeOf func
         DomainFunction _ _ indexDomain _ <- domainOf func
         [values]                         <- downX1 func
         let upd val old = lambdaToFunction pat old val
@@ -34,10 +33,13 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
             ( "Mapping over a function, FunctionND representation"
             , do
                 (jPat, j) <- quantifiedVar
-                let toIndex   = [ [essence| &j[&k] |]
-                                | k' <- [1 .. genericLength ts]
-                                , let k = fromInt k'
-                                ]
+                let kRange = case indexDomain of
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                        DomainRecord rs -> map (fromName . fst) rs
+                        _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                        , "indexDomain:" <+> pretty indexDomain
+                                        ]
+                    toIndex       = [ [essence| &j[&k] |] | k <- kRange ]
                     valuesIndexed = make opMatrixIndexing values toIndex
                     val  = [essence| (&j, &valuesIndexed) |]
                 return $ Comprehension (upd val body)

@@ -370,7 +370,7 @@ nested _ _ Right{} = return ()
 nested c d (Left err) = fail $ vcat
     [ "The value is not a member of the domain."
     , "Value :" <+> pretty c
-    , "Domain:" <+> pretty (show d)
+    , "Domain:" <+> pretty d
     , "Because of:", nest 4 err
     ]
 
@@ -378,7 +378,7 @@ constantNotInDomain :: (MonadFail m, Pretty r) => Constant -> Domain r Constant 
 constantNotInDomain c d = fail $ vcat
     [ "The value is not a member of the domain."
     , "Value :" <+> pretty c
-    , "Domain:" <+> pretty (show d)
+    , "Domain:" <+> pretty d
     ]
 
 
