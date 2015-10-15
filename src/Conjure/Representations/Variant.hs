@@ -51,7 +51,7 @@ variant = Representation chck downD structuralCons downC up
 
             return $ \ rec -> do
                 (which:refs) <- downX1 rec
-                (sort . concat) <$> sequence
+                concat <$> sequence
                     [ do
                         isc <- innerStructuralCons which (fromInt i) ref dom
                         let dcs = dontCares        which (fromInt i) ref

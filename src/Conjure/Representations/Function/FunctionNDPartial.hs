@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Function.FunctionNDPartial ( functionNDPartial ) where
 
@@ -21,10 +22,32 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
     where
 
+        viewAsDomainTuple (DomainTuple doms) = Just doms
+        viewAsDomainTuple (DomainRecord doms) = Just (doms |> sortBy (comparing fst) |> map snd)
+        viewAsDomainTuple _ = Nothing
+
+        -- domain -> (how to make abslit, how to inspect abslit)
+        mkLensAsDomainTuple (DomainTuple _) =
+            Just
+                ( \ vals -> ConstantAbstract (AbsLitTuple vals)
+                , \ val -> case val of
+                        ConstantAbstract (AbsLitTuple vals) -> Just vals
+                        _ -> Nothing
+                )
+        mkLensAsDomainTuple (DomainRecord doms) =
+            let names = doms |> sortBy (comparing fst) |> map fst
+            in  Just
+                ( \ vals -> ConstantAbstract (AbsLitRecord (zip names vals))
+                , \ val -> case val of
+                        ConstantAbstract (AbsLitRecord vals) -> Just (vals |> sortBy (comparing fst) |> map snd)
+                        _ -> Nothing
+                )
+        mkLensAsDomainTuple _ = Nothing
+
         chck :: TypeOf_ReprCheck
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
-                    innerDomainFr@(DomainTuple innerDomainFrs)
+                    innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs =
             DomainFunction "FunctionNDPartial" attrs
                 <$> f innerDomainFr
@@ -37,7 +60,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
-                    (DomainTuple innerDomainFrs)
+                    (viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
@@ -54,23 +77,25 @@ functionNDPartial = Representation chck downD structuralCons downC up
         structuralCons f downX1
             (DomainFunction "FunctionNDPartial"
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
-                (DomainTuple innerDomainFrs)
+                innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
-            let innerDomainFr =  DomainTuple innerDomainFrs
-
             let
-                frArity = genericLength innerDomainFrs
-
-                index x m 1     = make opIndexing m                     (make opIndexing x 1)
-                index x m arity = make opIndexing (index x m (arity-1)) (make opIndexing x (fromInt arity))
+                kRange = case innerDomainFr of
+                        DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                        DomainRecord rs -> map (fromName . fst) rs
+                        _ -> bug $ vcat [ "FunctionNDPartial.structuralCons"
+                                        , "innerDomainFr:" <+> pretty innerDomainFr
+                                        ]
+                toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
+                index x m = make opMatrixIndexing m (toIndex x)
 
             let injectiveCons flags values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
-                    let flagsIndexedI  = index i flags  frArity
-                    let valuesIndexedI = index i values frArity
-                    let flagsIndexedJ  = index j flags  frArity
-                    let valuesIndexedJ = index j values frArity
+                    let flagsIndexedI  = index i flags
+                    let valuesIndexedI = index i values
+                    let flagsIndexedJ  = index j flags
+                    let valuesIndexedJ = index j values
                     return $ return $ -- list
                         [essence|
                             and([ &valuesIndexedI != &valuesIndexedJ
@@ -86,8 +111,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
 
-                    let flagsIndexed  = index j flags  frArity
-                    let valuesIndexed = index j values frArity
+                    let flagsIndexed  = index j flags
+                    let valuesIndexed = index j values
                     return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainTo .
@@ -104,13 +129,13 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let cardinality flags = do
                     (iPat, i) <- quantifiedVar
-                    let flagsIndexed  = index i flags  frArity
+                    let flagsIndexed  = index i flags
                     return [essence| sum &iPat : &innerDomainFr . toInt(&flagsIndexed) |]
 
             let dontCareInactives flags values = do
                     (iPat, i) <- quantifiedVar
-                    let flagsIndexed  = index i flags  frArity
-                    let valuesIndexed = index i values frArity
+                    let flagsIndexed  = index i flags
+                    let valuesIndexed = index i values
                     return $ return $ -- list
                         [essence|
                             forAll &iPat : &innerDomainFr . &flagsIndexed = false ->
@@ -119,8 +144,8 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             let innerStructuralCons flags values = do
                     (iPat, i) <- quantifiedVar
-                    let flagsIndexed  = index i flags  frArity
-                    let valuesIndexed = index i values frArity
+                    let flagsIndexed  = index i flags
+                    let valuesIndexed = index i values
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &flagsIndexed -> &b |]
 
                     -- preparing structural constraints for the inner guys
@@ -148,15 +173,16 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downC ( name
               , DomainFunction "FunctionNDPartial"
                     (FunctionAttr _ PartialityAttr_Partial _)
-                    (DomainTuple innerDomainFrs)
+                    innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo
               , ConstantAbstract (AbsLitFunction vals)
-              ) | all domainCanIndexMatrix innerDomainFrs = do
+              ) | all domainCanIndexMatrix innerDomainFrs
+                , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
             z <- zeroVal innerDomainTo
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
-                                            | (ConstantAbstract (AbsLitTuple k), v) <- vals
+                                            | (inspect -> Just k, v) <- vals
                                             , k == indices
                                             ]
 
@@ -210,7 +236,9 @@ functionNDPartial = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
                                 (FunctionAttr _ PartialityAttr_Partial _)
-                                (DomainTuple innerDomainFrs) _)) =
+                                innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs) _))
+
+            | Just (mk, _inspect) <- mkLensAsDomainTuple innerDomainFr =
 
             case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just valuesMatrix) -> do
@@ -233,7 +261,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                         value <- index valuesMatrix these
                         case flag of
                             ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just (ConstantAbstract (AbsLitTuple these), value))
+                            ConstantBool True  -> return (Just (mk these, value))
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty flag
                                 , "                           , and    :" <+> pretty value

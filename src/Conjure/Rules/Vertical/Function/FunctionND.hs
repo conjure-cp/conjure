@@ -9,14 +9,9 @@ rule_Image :: Rule
 rule_Image = "function-image{FunctionND}" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
         "FunctionND" <- representationOf f
-        [values]            <- downX1 f
-        TypeTuple ts        <- typeOf x
-        let
-            toIndex   = [ [essence| &x[&k] |]
-                        | k' <- [1 .. genericLength ts]
-                        , let k = fromInt k'
-                        ]
-            valuesIndexed = make opMatrixIndexing values toIndex
+        [values]     <- downX1 f
+        toIndex      <- downX1 x
+        let valuesIndexed = make opMatrixIndexing values toIndex
         return
             ( "Function image, FunctionND representation"
             , return valuesIndexed
