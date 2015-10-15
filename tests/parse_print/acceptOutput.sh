@@ -12,6 +12,12 @@ if [ -d "${TESTCASE}" ]; then
         touch "${TESTCASE}"/stdout "${TESTCASE}"/stderr
         cp "${TESTCASE}"/stdout "${TESTCASE}"/stdout.expected
         cp "${TESTCASE}"/stderr "${TESTCASE}"/stderr.expected
-        find "${TESTCASE}" -depth 1 -size 0 -delete
+        find \
+            "${TESTCASE}"/stdout \
+            "${TESTCASE}"/stderr \
+            "${TESTCASE}"/stdout.expected \
+            "${TESTCASE}"/stderr.expected \
+            -size 0 \
+            -exec rm {} \;
     fi
 fi
