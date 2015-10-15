@@ -1,0 +1,18 @@
+language ESSENCE' 1.0
+
+find x_FunctionND: matrix indexed by [int(7..8), bool] of int(13, 17)
+given fin1: int
+given p_FunctionND: matrix indexed by [int(7..8), bool] of int(13, 17)
+such that
+    and([sum([x_FunctionND[q6_fst, q6_snd]
+                  | q6_fst : int(7..8), q6_snd : bool, q6_fst = q4_fst /\ q6_snd = q4_snd])
+         = p_FunctionND[q4_fst, q4_snd]
+         /\ or([q8_fst = q4_fst /\ q8_snd = q4_snd | q8_fst : int(7..8), q8_snd : bool])
+             | q4_fst : int(7..8), q4_snd : bool]),
+    and([sum([p_FunctionND[q11_fst, q11_snd]
+                  | q11_fst : int(7..8), q11_snd : bool, q11_fst = q9_fst /\ q11_snd = q9_snd])
+         = x_FunctionND[q9_fst, q9_snd]
+         /\
+         or([q13_fst = q9_fst /\ q13_snd = q9_snd | q13_fst : int(7..8), q13_snd : bool])
+             | q9_fst : int(7..8), q9_snd : bool])
+
