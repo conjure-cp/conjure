@@ -21,7 +21,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, runLexer )
 
 -- megaparsec
-import Text.Megaparsec.Prim ( (<?>), token, try, eof, ParsecT )
+import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, ParsecT )
 import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
 import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
 import Text.Megaparsec.Combinator ( between, sepBy, sepBy1 )
@@ -45,7 +45,7 @@ parseModel = inCompleteFile $ do
             unless (l `elem` ["Essence", "ESSENCE", "ESSENCE'"]) $ fail $
                 "language name has to be Essence, but given:" <+> pretty l
             is <- sepBy1 integer dot
-            unless (is >= [1,0]) $ fail $
+            unless (is >= [1]) $ fail $
                 "language version expected to be at least 1.0, but given:" <+> pretty (intercalate "." (map show is))
             return (LanguageVersion (Name l) (map fromInteger is))
     l  <- optional pLanguage
@@ -179,7 +179,7 @@ parseTopLevels = do
                     xs <- brackets $ parseSearchOrder `sepBy` comma
                     return [ SearchOrder xs ]
                     <?> "branching on"
-                ]
+                ] <?> "statement"
     concat <$> some one
 
 parseSearchOrder :: Parser SearchOrder
@@ -189,7 +189,7 @@ parseSearchOrder = msum [try pBranchingOn, pCut]
         pCut = Cut <$> parseExpr
 
 parseRange :: Parser a -> Parser (Range a)
-parseRange p = msum [try pRange, pSingle]
+parseRange p = msum [try pRange, pSingle] <?> "range"
     where
         pRange = do
             fr <- optional p
@@ -205,13 +205,13 @@ parseRange p = msum [try pRange, pSingle]
             return (RangeSingle x)
 
 parseDomain :: Parser (Domain () Expression)
-parseDomain = forgetRepr <$> parseDomainWithRepr
+parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
 parseDomainWithRepr
     = shuntingYardDomain
     $ some
-    $ msum [ Right <$> try pDomainAtom
+    $ msum [ Right <$> try pDomainAtom <?> "domain"
            , Left  <$> parseOp'
            ]
     where
@@ -752,7 +752,7 @@ parseQuantifiedExpr = do
 
 
 parseAbstractPattern :: Parser AbstractPattern
-parseAbstractPattern = msum $ map try
+parseAbstractPattern = label "pattern" $ msum $ map try
     [ AbstractPatternMetaVar <$> parseMetaVariable
     , Single <$> parseName
     , do
@@ -768,11 +768,10 @@ parseAbstractPattern = msum $ map try
     ]
 
 parseLiteral :: Parser Expression
-parseLiteral = msum ( map try
+parseLiteral = label "value" $ msum
     [ Constant <$> pBool
     , Constant <$> pInt
     , AbstractLiteral <$> pMatrix
-    , AbstractLiteral <$> pMatrix'
     , AbstractLiteral <$> pTupleWith
     , AbstractLiteral <$> pTupleWithout
     , AbstractLiteral <$> pRecord
@@ -783,7 +782,7 @@ parseLiteral = msum ( map try
     , AbstractLiteral <$> pSequence
     , AbstractLiteral <$> pRelation
     , AbstractLiteral <$> pPartition
-    ] ) <?> "value"
+    ]
     where
         pBool = do
             x <- False <$ lexeme L_false
@@ -794,15 +793,19 @@ parseLiteral = msum ( map try
         pInt = ConstantInt . fromInteger <$> integer
 
         pMatrix = do
-            xs <- brackets (sepBy parseExpr comma)
-            let r = mkDomainIntB 1 (fromInt (genericLength xs))
-            return (AbsLitMatrix r xs)
-
-        pMatrix' = brackets $ do
+            lexeme L_OpenBracket
             xs <- sepBy parseExpr comma
-            lexeme L_SemiColon
-            r <- parseDomain
-            return (AbsLitMatrix r xs)
+            msum
+                [ do
+                    let r = mkDomainIntB 1 (fromInt (genericLength xs))
+                    lexeme L_CloseBracket
+                    return (AbsLitMatrix r xs)
+                , do
+                    lexeme L_SemiColon
+                    r <- parseDomain
+                    lexeme L_CloseBracket
+                    return (AbsLitMatrix r xs)
+                ]
 
         pTupleWith = do
             lexeme L_tuple
@@ -951,9 +954,9 @@ data ParserState = ParserState { enumDomains :: [Name] }
 type Parser a = StateT ParserState (ParsecT [LexemePos] Identity) a
 
 runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
-runLexerAndParser p s inp = do
+runLexerAndParser p file inp = do
     ls <- runLexer inp
-    case runParser p s ls of
+    case runParser p file ls of
         Left (msg, line, col) ->
             let theLine = T.lines inp `at` (line - 1)
             in  fail $ vcat
@@ -964,15 +967,12 @@ runLexerAndParser p s inp = do
         Right x -> return x
 
 runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
-runParser p s ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) s ls)
+runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) file ls)
     where
         modifyErr :: ParseError -> Either (Doc, Int, Int) a
         modifyErr e = Left $
             let pos  = errorPos e
-                eDoc = pretty $ show e
-            in  ( vcat [ pretty s <+> eDoc
-                       , pretty (show pos)
-                       ]
+            in  ( pretty file <> ":" <> pretty (show e)
                 , sourceLine   pos
                 , sourceColumn pos
                 )

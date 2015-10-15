@@ -53,10 +53,11 @@ essence = QuasiQuoter
     }
 
 locationTH :: Q SourcePos
-locationTH = aux <$> location
-    where
-        aux :: Loc -> SourcePos
-        aux loc = uncurry (newPos (loc_filename loc)) (loc_start loc)
+locationTH = do
+    loc <- location
+    let file = loc_filename loc
+    let (line, col) = loc_start loc
+    return (newPos file line col)
 
 expE :: Expression -> Maybe ExpQ
 expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
