@@ -106,6 +106,7 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) = do
         , validating
         , [checkExpectedAndExtraFiles t]
         , [equalNumberOfSolutions t]
+        , [noDuplicateSolutions t]
         ]
     where
         conjuring =
@@ -261,7 +262,9 @@ equalNumberOfSolutions TestDirFiles{..} =
         params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
         solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
         let
-            grouped :: [(Maybe String, [(String, Int)])]
+            grouped :: [ ( Maybe String             -- the parameter
+                         , [(String, Int)]          -- model, number of solutions
+                         ) ]
             grouped =
                 (if null params
                     then
@@ -300,6 +303,68 @@ equalNumberOfSolutions TestDirFiles{..} =
                            ]
                 | (param, modelSols) <- differentOnes
                 ]
+
+
+noDuplicateSolutions :: TestDirFiles -> TestTree
+noDuplicateSolutions TestDirFiles{..} =
+    testCase "Checking duplicate solutions" $ do
+        dirShouldExist outputsDir
+        models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+        params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+        solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
+        solutionContents <- forM solutions $ \ s -> do m <- readModelFromFile (outputsDir </> s)
+                                                       return (s, m)
+        let
+            grouped :: [ ( Maybe String             -- the parameter
+                         , [(String, [String])]     -- model, duplicate solutions
+                         ) ]
+            grouped =
+                (if null params
+                    then
+                        [ (Nothing, (model, duplicateSolutions))
+                        | model' <- models
+                        , let model = splitOn "." model' |> head
+                        , let solnPrefix = model
+                        , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
+                        , let duplicateSolutions =
+                                [ s1name
+                                | (s1name, s1) <- thisSolutions
+                                , not $ null [ s2name | (s2name, s2) <- thisSolutions
+                                             , s1name /= s2name && s1 == s2
+                                             ]
+                                ]
+                        , not (null duplicateSolutions)
+                        ]
+                    else
+                        [ (Just param, (model, duplicateSolutions))
+                        | model          <- map (head . splitOn ".") models
+                        , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                        , model == model2
+                        , let solnPrefix = model ++ "-" ++ param
+                        , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
+                        , let duplicateSolutions =
+                                [ s1name
+                                | (s1name, s1) <- thisSolutions
+                                , not $ null [ s2name | (s2name, s2) <- thisSolutions
+                                             , s1name /= s2name && s1 == s2
+                                             ]
+                                ]
+                        , not (null duplicateSolutions)
+                        ])
+                |> sortBy  (comparing fst)
+                |> groupBy ((==) `on` fst)
+                |> map (\ grp -> (fst (head grp), map snd grp) )
+
+        unless (null grouped) $
+            assertFailure $ show $ vcat
+                [ case param of
+                    Nothing -> "For model" <+> pretty model <++> rest
+                    Just p  -> "For parameter" <+> pretty p <+> ", for model" <+> pretty model <++> rest
+                | (param, duplicateSols) <- grouped
+                , (model, sols) <- duplicateSols
+                , let rest = "Duplicate solutions:" <++> prettyList id "," sols
+                ]
+
 
 dirShouldExist :: FilePath -> IO ()
 dirShouldExist d = do
