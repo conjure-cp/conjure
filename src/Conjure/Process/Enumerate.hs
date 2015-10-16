@@ -9,18 +9,14 @@ import Conjure.Prelude
 import Conjure.Language.AdHoc
 import Conjure.Language
 import Conjure.UI.IO
-
--- shelly
-import Shelly ( run, lastStderr )
-
--- text
-import qualified Data.Text as T ( null )
-
--- pipes
-import qualified Pipes
+import Conjure.UI as UI ( UI(..) )
+import {-# SOURCE #-} Conjure.UI.MainHelper
 
 -- temporary
 import System.IO.Temp ( withSystemTempDirectory )
+
+-- pipes
+import qualified Pipes
 
 
 -- | This class is only to track where `enumerateDomain` might get called.
@@ -86,19 +82,38 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     let essenceFile = tmpDir </> "out.essence"
     let outDir = tmpDir </> "outDir"
     writeModel PlainEssence (Just essenceFile) model
-    (_, stderrSR) <- sh $ do
-        stdoutSR <- run "conjure"
-            [ "solve"
-            , "--validate-solutions=no"
-            , stringToText essenceFile
-            , "-o", stringToText outDir
-            , "--savilerow-options"
-            , stringToText $ "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
-            , "--minion-options"   , "-cpulimit 60"
-            ]
-        stderrSR <- lastStderr
-        return (stdoutSR, stderrSR)
-    unless (T.null stderrSR) $ fail (pretty stderrSR)
+    ignoreLogs $ mainWithArgs Solve
+        { UI.essence                    = essenceFile
+        , validateSolutionsOpt          = False
+        , outputDirectory               = outDir
+        , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
+        , minionOptions                 = "-cpulimit 60"
+        -- default values for the rest
+        , essenceParams                 = []
+        , numberingStart                = 1
+        , smartFilenames                = False
+        , logLevel                      = LogNone
+        , verboseTrail                  = False
+        , rewritesTrail                 = False
+        , logRuleFails                  = False
+        , logRuleSuccesses              = False
+        , logRuleAttempts               = False
+        , logChoices                    = False
+        , strategyQ                     = "f"
+        , strategyA                     = "c"
+        , representations               = Nothing
+        , representationsFinds          = Nothing
+        , representationsGivens         = Nothing
+        , representationsAuxiliaries    = Nothing
+        , representationsQuantifieds    = Nothing
+        , representationsCuts           = Nothing
+        , channelling                   = False
+        , representationLevels          = True
+        , seed                          = Nothing
+        , limitModels                   = Nothing
+        , limitTime                     = Nothing
+        , outputBinary                  = False
+        }
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ fail $ vcat [ "Enumerate domain: too many."
                                                                 , "Nb solutions found:" <+> pretty (length solutions)
