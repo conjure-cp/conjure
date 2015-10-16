@@ -103,8 +103,8 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, reverse, lookup, elem, unlines, words
-                              , zipWith, concatMap, all, lines, notElem, foldr
-                              , sum, product, unzip, zip, zip3, foldr1, foldl, any
+                              , zipWith, concatMap, lines, notElem, foldr
+                              , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
                               , head, init, tail, last
@@ -118,7 +118,7 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
-                              , and, or
+                              , and, or, all, any
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 

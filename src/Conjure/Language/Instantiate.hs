@@ -351,7 +351,7 @@ instantiateR (RangeUpperBounded x) = RangeUpperBounded <$> instantiateE x
 instantiateR (RangeBounded x y) = RangeBounded <$> instantiateE x <*> instantiateE y
 
 
-bind :: MonadState [(Name, Expression)] m
+bind :: (Functor m, MonadState [(Name, Expression)] m)
     => AbstractPattern
     -> Constant
     -> m Bool -- False means skip
