@@ -151,7 +151,7 @@ toCompletion config m = do
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
                                  } }
-    logInfo $ modelInfo m3
+    logDebug $ modelInfo m3
     loopy (StartOver m3)
     where
         driver = strategyToDriver config
@@ -365,16 +365,16 @@ strategyToDriver config questions = do
 executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
-    logInfo ("Picking the only option:" <+> doc)
+    logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
 executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
         Auto _      -> bug "executeStrategy: Auto"
         PickFirst   -> do
-            logInfo ("Picking the first option:" <+> doc)
+            logDebug ("Picking the first option:" <+> doc)
             return [(1, doc, option)]
         Sparse     -> do
-            logInfo ("Picking the first option (in sparse order):" <+> doc)
+            logDebug ("Picking the first option (in sparse order):" <+> doc)
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
@@ -400,7 +400,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let nbOptions = length options
             pickedIndex <- liftIO $ randomRIO (1, nbOptions)
             let (pickedDescr, picked) = at options (pickedIndex - 1)
-            logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
+            logDebug ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [(pickedIndex, pickedDescr, picked)]
         Compact -> bug "executeStrategy: Compact"
         FollowLog -> bug "executeStrategy: FollowLog"
@@ -410,7 +410,7 @@ executeAnswerStrategy :: (MonadIO m, MonadLog m)
                       => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [(Int, Doc, Answer)]
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
-    logInfo ("Picking the only option:" <+> doc)
+    logDebug ("Picking the only option:" <+> doc)
     c <- storeChoice config q option
     return [(1, doc, c)]
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =

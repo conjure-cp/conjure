@@ -440,14 +440,14 @@ class (Functor m, Applicative m, Monad m) => MonadLog m where
 
 data LogLevel
     = LogNone
-    | LogFollow
     | LogInfo
+    | LogFollow
     | LogWarn
     | LogDebug
     | LogDebugVerbose
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-instance Default LogLevel where def = LogNone
+instance Default LogLevel where def = LogInfo
 
 logInfo :: MonadLog m => Doc -> m ()
 logInfo = log LogInfo

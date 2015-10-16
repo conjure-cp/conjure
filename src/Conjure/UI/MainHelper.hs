@@ -161,7 +161,7 @@ mainWithArgs config@Solve{..} = do
 
     where
         conjuring = do
-            pp $ "Generating models for" <+> pretty essence
+            pp logLevel $ "Generating models for" <+> pretty essence
             -- tl;dr: rm -rf outputDirectory
             -- removeDirectoryRecursive gets upset if the dir doesn't exist.
             -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
@@ -172,8 +172,8 @@ mainWithArgs config@Solve{..} = do
             mainWithArgs modelling
             eprimes <- filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
             when (null eprimes) $ bug "Failed to generate models."
-            pp $ "Generated models:" <+> vcat (map pretty eprimes)
-            pp $ "Saved under:" <+> pretty outputDirectory
+            pp logLevel $ "Generated models:" <+> vcat (map pretty eprimes)
+            pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
         savileRows eprimes = fmap concat $
@@ -191,8 +191,9 @@ mainWithArgs config@Solve{..} = do
                         [ (sol, p) | (_, p, sol) <- solutions ]
 
 
-pp :: MonadIO m => Doc -> m ()
-pp = liftIO . putStrLn . renderWide
+pp :: MonadIO m => LogLevel -> Doc -> m ()
+pp LogNone = const $ return ()
+pp _       = liftIO . putStrLn . renderWide
 
 
 savileRowNoParam :: UI -> FilePath -> IO [ ( FilePath       -- model
@@ -200,7 +201,7 @@ savileRowNoParam :: UI -> FilePath -> IO [ ( FilePath       -- model
                                            , FilePath       -- solution
                                            ) ]
 savileRowNoParam Solve{..} modelPath = sh $ do
-    pp $ hsep ["Savile Row:", pretty modelPath]
+    pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     eprimeModel <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let args =
@@ -244,7 +245,7 @@ savileRowWithParams :: UI -> FilePath -> FilePath -> IO [ ( FilePath       -- mo
                                                           , FilePath       -- solution
                                                           ) ]
 savileRowWithParams Solve{..} modelPath paramPath = sh $ do
-    pp $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
+    pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     essenceParam <- liftIO $ readModelFromFile paramPath
@@ -289,7 +290,7 @@ savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 validateSolutionNoParam :: UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
-    pp $ hsep ["Validating solution:", pretty solutionPath]
+    pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
     result   <- runExceptT $ ignoreLogs $ validateSolution essenceM def solution
@@ -301,7 +302,7 @@ validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
-    pp $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
+    pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath

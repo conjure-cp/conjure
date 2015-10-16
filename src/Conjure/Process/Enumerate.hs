@@ -88,11 +88,11 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         , outputDirectory               = outDir
         , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
         , minionOptions                 = "-cpulimit 60"
+        , logLevel                      = LogNone
         -- default values for the rest
         , essenceParams                 = []
         , numberingStart                = 1
         , smartFilenames                = False
-        , logLevel                      = LogNone
         , verboseTrail                  = False
         , rewritesTrail                 = False
         , logRuleFails                  = False
