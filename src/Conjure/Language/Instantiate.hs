@@ -118,7 +118,7 @@ instantiateE (Comprehension body gensOrConds) = do
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
 instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty
-
+instantiateE (Reference _    (Just (Alias x))) = instantiateE x
 instantiateE (Reference name _) = do
     ctxt <- gets id
     case name `lookup` ctxt of
