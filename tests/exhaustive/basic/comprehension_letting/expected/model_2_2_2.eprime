@@ -4,7 +4,7 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find s_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4)] of int(1..4)
 letting let1 be -100
-find x: int(let1..100)
+find x: int(-100..100)
 find aux1: int(-16..3)
 such that
     and([and([q4 <= s_ExplicitVarSizeWithMarker_Marker,

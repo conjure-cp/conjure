@@ -7,7 +7,7 @@ given fin4: int
 given a_Explicit_Occurrence:
         matrix indexed by [int(1..fin1), int(fin3..fin4)] of bool
 letting let1 be -1000
-find x: int(let1..1000)
+find x: int(-1000..1000)
 such that
     x =
     max([max([q2 | q2 : int(fin3..fin4), a_Explicit_Occurrence[q1, q2]])

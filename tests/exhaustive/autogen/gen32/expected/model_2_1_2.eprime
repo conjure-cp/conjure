@@ -1,33 +1,33 @@
 language ESSENCE' 1.0
 
 letting let1 be -4
-find var2_ExplicitVarSizeWithMarker_Marker: int(0..1 + (5 - let1) + 1)
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
 find var2_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..1 + (5 - let1) + 1)] of int(let1..5, 2)
-find var2_Occurrence: matrix indexed by [int(let1..5, 2)] of bool
+        matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
 such that
-    or([q11 <= var2_ExplicitVarSizeWithMarker_Marker /\
-        !var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q11]]
-            | q11 : int(1..1 + (5 - let1) + 1)])
+    or([q6 <= var2_ExplicitVarSizeWithMarker_Marker /\
+        !var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q6]]
+            | q6 : int(1..11)])
     \/
-    or([var2_Occurrence[q10] /\
-        !or([q13 <= var2_ExplicitVarSizeWithMarker_Marker /\
-             var2_ExplicitVarSizeWithMarker_Values[q13] = q10
-                 | q13 : int(1..1 + (5 - let1) + 1)])
-            | q10 : int(let1..5, 2)]),
+    or([var2_Occurrence[q5] /\
+        !or([q8 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q8] = q5
+                 | q8 : int(1..11)])
+            | q5 : int(-4..5, 2)]),
     and([q1 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
          var2_ExplicitVarSizeWithMarker_Values[q1] <
          var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
-             | q1 : int(1..1 + (5 - let1) + 1 - 1)]),
+             | q1 : int(1..10)]),
     and([q2 > var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q2] = let1
-             | q2 : int(1..1 + (5 - let1) + 1)]),
-    and([var2_Occurrence[q5] ->
-         or([q7 <= var2_ExplicitVarSizeWithMarker_Marker /\
-             var2_ExplicitVarSizeWithMarker_Values[q7] = q5
-                 | q7 : int(1..1 + (5 - let1) + 1)])
-             | q5 : int(let1..5, 2)]),
-    and([q9 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q9]]
-             | q9 : int(1..1 + (5 - let1) + 1)])
+         var2_ExplicitVarSizeWithMarker_Values[q2] = -4
+             | q2 : int(1..11)]),
+    and([var2_Occurrence[q9] ->
+         or([q11 <= var2_ExplicitVarSizeWithMarker_Marker /\
+             var2_ExplicitVarSizeWithMarker_Values[q11] = q9
+                 | q11 : int(1..11)])
+             | q9 : int(-4..5, 2)]),
+    and([q13 <= var2_ExplicitVarSizeWithMarker_Marker ->
+         var2_Occurrence[var2_ExplicitVarSizeWithMarker_Values[q13]]
+             | q13 : int(1..11)])
 

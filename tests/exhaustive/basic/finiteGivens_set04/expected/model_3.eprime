@@ -9,7 +9,7 @@ given a_Explicit_ExplicitVarSizeWithFlags_Flags:
 given a_Explicit_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4)
 letting let1 be -1000
-find x: int(let1..1000)
+find x: int(-1000..1000)
 such that
     x =
     max([max([a_Explicit_ExplicitVarSizeWithFlags_Values[q1, q3]

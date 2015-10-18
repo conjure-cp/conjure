@@ -6,20 +6,20 @@ such that
     and([and([x_Explicit_RelationAsMatrix[q6, q10_1, 3] -> false
                   | q10_1 : int(1..2)])
          \/
-         or([x_Explicit_RelationAsMatrix[q6, q20_1, 3] /\ q20_1 = 2 | q20_1 : int(1..2)])
+         or([x_Explicit_RelationAsMatrix[q6, q18_1, 3] /\ q18_1 = 2 | q18_1 : int(1..2)])
          /\
-         and([x_Explicit_RelationAsMatrix[q6, q15_1, 3] -> 2 = q15_1
-                  | q15_1 : int(1..2)])
+         and([x_Explicit_RelationAsMatrix[q6, q13_1, 3] -> 2 = q13_1
+                  | q13_1 : int(1..2)])
              | q6 : int(1..2)]),
-    or([and([x_Explicit_RelationAsMatrix[q24, q26_1, 3] -> false
-                 | q26_1 : int(1..2)])
-            | q24 : int(1..2)]),
-    or([and([x_Explicit_RelationAsMatrix[q31, q33_1, 3] -> 2 = q33_1
-                 | q33_1 : int(1..2)])
+    or([and([x_Explicit_RelationAsMatrix[q22, q24_1, 3] -> false
+                 | q24_1 : int(1..2)])
+            | q22 : int(1..2)]),
+    or([and([x_Explicit_RelationAsMatrix[q27, q29_1, 3] -> 2 = q29_1
+                 | q29_1 : int(1..2)])
         /\
-        or([x_Explicit_RelationAsMatrix[q31, q38_1, 3] /\ q38_1 = 2
-                | q38_1 : int(1..2)])
-            | q31 : int(1..2)]),
+        or([x_Explicit_RelationAsMatrix[q27, q34_1, 3] /\ q34_1 = 2
+                | q34_1 : int(1..2)])
+            | q27 : int(1..2)]),
     flatten(x_Explicit_RelationAsMatrix[1, .., ..]) <lex
     flatten(x_Explicit_RelationAsMatrix[2, .., ..])
 

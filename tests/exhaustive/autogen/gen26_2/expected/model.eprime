@@ -1,81 +1,14 @@
 language ESSENCE' 1.0
 
-letting let1 be 10
 letting let2 be 0
 letting let3 be 0
-find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..let2)
+find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..0)
 find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
-        matrix indexed by [int(1..let2)] of int(0..let3)
+        matrix indexed by [int(1..0)] of int(0..let3)
 find var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..let2), int(1..let3)] of bool
+        matrix indexed by [int(1..0), int(1..let3)] of bool
 such that
     false,
-    and([1 =
-         sum([toInt(q10 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
-                    or([q12 <=
-                        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q10]
-                        /\
-                        var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q10,
-                                                                                                              q12]
-                        = q1
-                            | q12 : int(1..let3)]))
-                  | q10 : int(1..let2)])
-             | q1 : bool]),
-    and([q14 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q14]
-         >= 1
-             | q14 : int(1..let2)]),
-    and([q4 + 1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
-         <
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
-                                                                                               + 1]
-         \/
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
-         =
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
-                                                                                               + 1]
-         /\
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q4,
-                                                                                               ..]
-         <lex
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q4
-                                                                                               + 1,
-                                                                                               ..]
-             | q4 : int(1..let2 - 1)]),
-    and([q5 > var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5]
-         = 0
-         /\
-         and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q5,
-                                                                                                    q13]
-              = false
-                  | q13 : int(1..let3)])
-             | q5 : int(1..let2)]),
-    let1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker,
-    var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker <= let2,
-    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         and([q7 + 1 <=
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
-              ->
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
-                                                                                                    q7]
-              <
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
-                                                                                                    q7 + 1]
-                  | q7 : int(1..let3 - 1)])
-             | q6 : int(1..let2)]),
-    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         and([q8 >
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
-              ->
-              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
-                                                                                                    q8]
-              = false
-                  | q8 : int(1..let3)])
-             | q6 : int(1..let2)]),
-    and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
-         <= let3
-             | q6 : int(1..let2)])
+    10 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker,
+    var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker <= 0
 
