@@ -55,7 +55,7 @@ refineParam eprimeModel essenceParam0 = do
             map fst essenceLettings \\
             (essenceGivenNames ++ generatedLettingNames)
     unless (null extraLettings) $
-        userErr1 $ "Too many lettings statement in the parameter file:" <++> prettyList id "," extraLettings
+        userErr1 $ "Too many letting statements in the parameter file:" <++> prettyList id "," extraLettings
 
 
     let eprimeLettingsForEnums =
