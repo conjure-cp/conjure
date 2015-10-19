@@ -58,7 +58,7 @@ instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 enumerateDomainMax :: Int
 enumerateDomainMax = 10000
 
-enumerateDomain :: (MonadFail m, EnumerateDomain m) => Domain () Constant -> m [Constant]
+enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -115,10 +115,11 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         , outputBinary                  = False
         }
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
-    when (length solutions >= enumerateDomainMax) $ fail $ vcat [ "Enumerate domain: too many."
-                                                                , "Nb solutions found:" <+> pretty (length solutions)
-                                                                , "When working on domain:" <++> pretty d
-                                                                ]
+    when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat
+        [ "Enumerate domain: too many."
+        , "Nb solutions found:" <+> pretty (length solutions)
+        , "When working on domain:" <++> pretty d
+        ]
     enumeration <- fmap concat $ forM solutions $ \ solutionFile -> do
         Model _ decls _ <- readModelFromFile (outDir </> solutionFile)
         let (enumeration, errs) = mconcat

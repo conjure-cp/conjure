@@ -11,6 +11,7 @@ module Conjure.Representations.Combined
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -108,7 +109,7 @@ downC inp0 = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up
-    :: (MonadFail m, NameGen m, EnumerateDomain m)
+    :: (MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
     =>  [(Name, Constant)]
     ->   (Name, DomainC)
     -> m (Name, Constant)

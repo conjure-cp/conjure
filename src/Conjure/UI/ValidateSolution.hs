@@ -2,6 +2,7 @@ module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
@@ -13,6 +14,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 
 validateSolution
     :: ( MonadFail m
+       , MonadUserError m
        , MonadLog m
        , EnumerateDomain m
        )

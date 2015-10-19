@@ -582,7 +582,7 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (EnumerateDomain m) => Model -> m Model
+updateDeclarations :: (MonadUserError m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -850,8 +850,8 @@ epilogue model = return model
 
 
 applicableRules
-    :: forall m n . ( MonadLog n, NameGen n, EnumerateDomain n
-                    , MonadLog m, NameGen m, EnumerateDomain m, MonadFail m, MonadUserError m
+    :: forall m n . ( MonadUserError n, MonadLog n, NameGen n, EnumerateDomain n
+                    , MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m, MonadFail m
                     )
     => Config
     -> [Rule]

@@ -7,6 +7,7 @@ module Conjure.Process.FiniteGivens
 
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
@@ -34,7 +35,7 @@ finiteGivens m = flip evalStateT 1 $ do
 
 
 finiteGivensParam
-    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Model                                -- eprime
     -> Model                                -- essence-param
     -> m (Model, [Name])                    -- essence-param

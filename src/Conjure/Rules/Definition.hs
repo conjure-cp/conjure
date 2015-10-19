@@ -138,9 +138,11 @@ data Rule = Rule
     { rName  :: Doc
     , rApply
         :: forall n m a .
-            ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
+            ( MonadFail n, MonadUserError n, MonadLog n
+            , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
                 -- a fail in {n} means that the rule isn't applicable
-            , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m
+            , MonadFail m, MonadUserError m, MonadLog m
+            , NameGen m, EnumerateDomain m
                 -- a fail in {m} means a bug
             )
         => Zipper a Expression            -- to query context
@@ -151,8 +153,10 @@ data Rule = Rule
 namedRule
     :: Doc
     -> (forall n m a .
-            ( MonadFail n, MonadLog n, NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
-            , MonadFail m, MonadLog m, NameGen m, EnumerateDomain m
+            ( MonadFail n, MonadUserError n, MonadLog n
+            , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
+            , MonadFail m, MonadUserError m, MonadLog m
+            , NameGen m, EnumerateDomain m
             ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
