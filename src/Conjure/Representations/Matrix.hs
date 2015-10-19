@@ -55,10 +55,23 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
 
         -- TODO: check if indices are the same
         matrixDownC :: TypeOf_DownC m
+        matrixDownC ( name                                                  -- special-case for empty matrix literals
+                    , domain@(DomainMatrix indexDomain _)
+                    , ConstantAbstract (AbsLitMatrix _ [])
+                    ) = do
+            mids1
+                :: Maybe [(Name, DomainX Expression)]
+                <- downD1 (name, fmap Constant domain)
+            let
+                addEmptyLiteral :: (Name, DomainX Expression) -> m (Name, DomainC, Constant)
+                addEmptyLiteral (nm, dom) = do
+                    dom' <- mapM e2c dom
+                    return (nm, dom', ConstantAbstract (AbsLitMatrix indexDomain []))
+            mapM (mapM addEmptyLiteral) mids1
         matrixDownC ( name
-                   , DomainMatrix indexDomain innerDomain
-                   , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
-                   ) = do
+                    , DomainMatrix indexDomain innerDomain
+                    , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
+                    ) = do
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
                 <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]
