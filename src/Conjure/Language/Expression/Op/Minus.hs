@@ -48,7 +48,7 @@ instance EvaluateOp OpMinus where
                 | e <- allElems
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
-                ]                
+                ]
         return $ ConstantAbstract $ AbsLitMSet $ concat outs
     evaluateOp (OpMinus (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
         let outs =

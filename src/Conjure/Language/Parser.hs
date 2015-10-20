@@ -645,7 +645,7 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
             return $ \ x -> foldl (\ m f -> f m ) x is
         parseFactorial :: Parser (Expression -> Expression)
         parseFactorial = do
-            lexeme L_ExclamationMark            
+            lexeme L_ExclamationMark
             return $ \ x -> mkOp "factorial" [x]
         parseFuncApply :: Parser (Expression -> Expression)
         parseFuncApply = parens $ do

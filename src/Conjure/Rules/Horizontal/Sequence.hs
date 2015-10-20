@@ -523,7 +523,7 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
     theRule [essence| &a subsequence &b |] = do
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
- 
+
         DomainSequence _ (SequenceAttr aSizeAttr _) _ <- domainOf a
         aMaxSize <- case aSizeAttr of
                     SizeAttr_Size x -> return x

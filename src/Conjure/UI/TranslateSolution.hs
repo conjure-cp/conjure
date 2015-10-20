@@ -36,7 +36,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     let eprimeLettingsForEnums =
             [ (nm, fromInt (genericLength vals))
             | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
-            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements 
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements
             , nm1 == nm2
             , let nm = nm1 `mappend` "_EnumSize"
             ]

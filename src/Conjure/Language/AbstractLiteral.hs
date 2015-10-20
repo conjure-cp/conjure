@@ -135,7 +135,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
 
-    typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
+    typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny)
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
 
 

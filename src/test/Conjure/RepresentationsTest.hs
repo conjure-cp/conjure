@@ -232,7 +232,7 @@ tests = testGroup "representations"
     , testGroup "matrix of ((bool, int), bool)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool])
-            highConstant = 
+            highConstant =
                 ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
                     [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
                     , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
@@ -575,7 +575,7 @@ tests = testGroup "representations"
 
     , testGroup "(bool, matrix of (int, matrix of int))" $
         let
-            highDomain = 
+            highDomain =
                 DomainTuple
                     [ DomainBool
                     , DomainMatrix (intDomain 1 3) (DomainTuple

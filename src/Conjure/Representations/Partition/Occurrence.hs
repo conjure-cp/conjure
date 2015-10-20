@@ -160,7 +160,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
                   Just (ConstantAbstract (AbsLitMatrix _ partMatrix)) ) -> do
                     elems <- domainValues innerDomain
-                    vals  <- fmap catMaybes $ forM (zip3 flagMatrix elems partMatrix) $ \ (flag, el, part) -> 
+                    vals  <- fmap catMaybes $ forM (zip3 flagMatrix elems partMatrix) $ \ (flag, el, part) ->
                         case flag of
                             ConstantBool b -> return $ if b then Just (part, el) else Nothing
                             _ -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag

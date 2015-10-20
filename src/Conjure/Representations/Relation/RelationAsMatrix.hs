@@ -123,7 +123,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains)) =
-            
+
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in RelationAsMatrix up)"

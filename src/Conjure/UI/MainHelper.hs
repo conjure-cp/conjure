@@ -38,7 +38,7 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 
 -- async
 import Control.Concurrent.Async ( mapConcurrently )
-    
+
 
 mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
 mainWithArgs Modelling{..} = do

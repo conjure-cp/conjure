@@ -54,7 +54,7 @@ setExplicit = Representation chck downD structuralCons downC up
             return $ \ ref -> do
                 refs <- downX1 ref
                 case refs of
-                    [m] -> 
+                    [m] ->
                         concat <$> sequence
                             [ ordering m
                             , innerStructuralCons m

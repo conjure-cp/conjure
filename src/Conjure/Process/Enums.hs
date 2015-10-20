@@ -63,7 +63,7 @@ removeEnumsFromModel =
                     = DomainReference nm (Just d)
                 onD p = p
 
-            let model' = model { mStatements = statements' 
+            let model' = model { mStatements = statements'
                                     |> transformBi onD
                                     |> transformBi onX
                                }
@@ -98,7 +98,7 @@ removeEnumsFromModel =
                     = DomainReference nm (Just d)
                 onD p = p
 
-            let model' = model { mStatements = concat statements' 
+            let model' = model { mStatements = concat statements'
                                     |> transformBi onD
                                }
 
@@ -180,7 +180,7 @@ addEnumsAndUnnamedsBack
     -> Constant                         -- the constant with ints in place of enums & unnameds
     -> Constant                         -- the constant with enums & unnameds again
 addEnumsAndUnnamedsBack unnameds ctxt = helper
-    
+
     where
 
         helper domain constant = case (domain, constant) of

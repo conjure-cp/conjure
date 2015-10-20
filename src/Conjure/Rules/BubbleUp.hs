@@ -62,7 +62,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             ( "Bubbling up (through comprehension), not reached a relational context yet."
             , return $ WithLocals (Comprehension body gensOrConds) (DefinednessConstraints localsLifted)
             )
-        
+
     theRule p = do
         let
             f x@(WithLocals y (DefinednessConstraints locals@(_:_))) = do

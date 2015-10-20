@@ -34,7 +34,7 @@ instance EvaluateOp OpSubsequence where
         (viewConstantSequence -> Just xs)
         (viewConstantSequence -> Just ys)) =
             return $ fromBool $
-                or [ and (zipWith (==) xs zs) 
+                or [ and (zipWith (==) xs zs)
                    | zs <- subsequences ys
                    , length zs >= length xs
                    ]

@@ -381,7 +381,7 @@ instance ToJSON    a => ToJSON    (MSetAttr a) where toJSON = genericToJSON json
 instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (MSetAttr a) where def = MSetAttr def def
 instance Pretty a => Pretty (MSetAttr a) where
-    pretty (MSetAttr a b) = 
+    pretty (MSetAttr a b) =
         let inside = filter (/=prEmpty) [ pretty a
                                         , pretty b
                                         ]
