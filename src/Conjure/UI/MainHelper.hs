@@ -25,6 +25,7 @@ import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, renderWide )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Language.NameResolution ( resolveNames )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -115,10 +116,10 @@ mainWithArgs TranslateSolution{..} = do
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
-    join $ validateSolution
-        <$> readModelFromFile essence
-        <*> maybe (return def) readModelFromFile essenceParamO
-        <*> readModelFromFile essenceSolution
+    runNameGen $ join $ validateSolution
+        <$> (resolveNames =<< readModelFromFile essence)
+        <*> (resolveNames =<< maybe (return def) readModelFromFile essenceParamO)
+        <*> (resolveNames =<< readModelFromFile essenceSolution)
 mainWithArgs Pretty{..} = do
     model <- readModelFromFile essence
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
@@ -324,7 +325,11 @@ validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
-    result   <- runExceptT $ ignoreLogs $ validateSolution essenceM def solution
+    result   <- runExceptT $ ignoreLogs $ runNameGen $ join $
+        validateSolution
+            <$> resolveNames essenceM
+            <*> pure def
+            <*> resolveNames solution
     case result of
         Left err -> bug err
         Right () -> return ()
@@ -337,7 +342,11 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath
-    result   <- runExceptT $ ignoreLogs $ validateSolution essenceM param solution
+    result   <- runExceptT $ ignoreLogs $ runNameGen $ join $
+        validateSolution
+            <$> resolveNames essenceM
+            <*> resolveNames param
+            <*> resolveNames solution
     case result of
         Left err -> bug err
         Right () -> return ()
