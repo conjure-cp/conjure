@@ -336,12 +336,12 @@ srStdoutHandler
             line <- hGetLine h
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
-                    eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
-                    essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
                     let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum solutionNumber ++ ext
-                    -- let filenameEprimeSol  = mkFilename ".eprime-solution"
+                    let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
-                    -- writeFile filenameEprimeSol  (renderNormal eprimeSol)
+                    eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
+                    writeFile filenameEprimeSol  (renderNormal eprimeSol)
+                    essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
                     writeFile filenameEssenceSol (renderNormal essenceSol)
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
                          (srStdoutHandler args (solutionNumber+1) h)
