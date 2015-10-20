@@ -41,7 +41,7 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 import Control.Concurrent.Async ( mapConcurrently )
     
 
-mainWithArgs :: (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
+mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
@@ -164,6 +164,7 @@ mainWithArgs config@Solve{..} = do
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
 
     where
+        conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
             -- tl;dr: rm -rf outputDirectory
@@ -183,6 +184,7 @@ mainWithArgs config@Solve{..} = do
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
 
+        savileRows :: [FilePath] -> IO (Either Doc [(FilePath, FilePath, FilePath)])
         savileRows eprimes = fmap combineResults $
             if null essenceParams
                 then mapConcurrently (savileRowNoParam config)
@@ -190,6 +192,7 @@ mainWithArgs config@Solve{..} = do
                 else mapConcurrently (uncurry (savileRowWithParams config))
                         [ (m, p) | m <- eprimes, p <- essenceParams ]
 
+        validating :: [(FilePath, FilePath, FilePath)] -> IO ()
         validating solutions = void $
             if null essenceParams
                 then mapConcurrently (validateSolutionNoParam config)
@@ -218,7 +221,7 @@ savileRowNoParam ui@Solve{..} modelPath = sh $ errExit False $ do
     eprimeModel <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let srArgs = srMkArgs ui outBase modelPath
     (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
-                                (srStdoutHandler
+                                (liftIO . srStdoutHandler
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , eprimeModel, def
@@ -249,7 +252,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
                : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))
                : srMkArgs ui outBase modelPath
     (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
-                                (srStdoutHandler
+                                (liftIO . srStdoutHandler
                                     ( outputDirectory, outBase
                                     , modelPath, paramPath
                                     , eprimeModel, essenceParam
@@ -275,35 +278,37 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: MonadIO m
-    => (FilePath, FilePath, FilePath, FilePath, Model, Model)
+    :: (FilePath, FilePath, FilePath, FilePath, Model, Model)
     -> Int
     -> Handle
-    -> m [Either String (FilePath, FilePath, FilePath)]
+    -> IO [Either String (FilePath, FilePath, FilePath)]
 srStdoutHandler
         args@( outputDirectory, outBase
              , modelPath, paramPath
              , eprimeModel, essenceParam
              )
         solutionNumber h = do
-    eof <- liftIO $ hIsEOF h
+    eof <- hIsEOF h
     if eof
         then do
-            liftIO $ hClose h
+            hClose h
             return []
         else do
-            line <- liftIO $ hGetLine h
+            line <- hGetLine h
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
-                    eprimeSol  <- liftIO $ readModel id ("<memory>", stringToText solutionText)
-                    essenceSol <- liftIO $ ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
-                    let filename = outputDirectory </> outBase ++ "-solution" ++ paddedNum solutionNumber ++ ".solution"
-                    liftIO $ writeFile filename (renderNormal essenceSol)
-                    rest <- srStdoutHandler args (solutionNumber+1) h
-                    return (Right (modelPath, paramPath, filename) : rest)
-                Nothing -> do
-                    rest <- srStdoutHandler args solutionNumber h
-                    return (Left line : rest)
+                    eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
+                    essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
+                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum solutionNumber ++ ext
+                    -- let filenameEprimeSol  = mkFilename ".eprime-solution"
+                    let filenameEssenceSol = mkFilename ".solution"
+                    -- writeFile filenameEprimeSol  (renderNormal eprimeSol)
+                    writeFile filenameEssenceSol (renderNormal essenceSol)
+                    fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
+                         (srStdoutHandler args (solutionNumber+1) h)
+                Nothing ->
+                    fmap (Left line :)
+                         (srStdoutHandler args solutionNumber h)
 
 
 srCleanUp :: Text -> sols -> Sh (Either Doc sols)
