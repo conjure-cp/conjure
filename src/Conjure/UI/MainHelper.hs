@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.UI.MainHelper ( mainWithArgs ) where
 
@@ -155,12 +156,48 @@ mainWithArgs config@Solve{..} = do
     when (null givens && not (null essenceParams)) $
         userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
 
+    savedHashes <- do
+        mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
+        case mfile of
+            Nothing -> return []
+            Just file -> return (lines file)
+
     -- start the show!
-    eprimes    <- conjuring
-    msolutions <- liftIO $ savileRows eprimes
-    case msolutions of
-        Left msg        -> userErr1 msg
-        Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
+    newHashes <- execWriterT $ do
+        eprimes <- doIfNotCached
+            ( essenceM
+            -- when the following flags change, invalidate hash
+            -- nested tuples, because :(
+            , ( outputDirectory
+              , numberingStart
+              , smartFilenames
+              , strategyQ
+              , strategyA
+              )
+            , ( representations
+              , representationsFinds
+              , representationsGivens
+              , representationsAuxiliaries
+              , representationsQuantifieds
+              , representationsCuts
+              )
+            , ( channelling
+              , representationLevels
+              , seed
+              , limitModels
+              , limitTime
+              , outputBinary
+              )
+            )
+            savedHashes
+            (pp logLevel "Using cached models." >> getEprimes)
+            conjuring
+        msolutions <- liftIO $ savileRows eprimes
+        case msolutions of
+            Left msg        -> userErr1 msg
+            Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
+
+    liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
 
     where
         conjuring :: m [FilePath]
@@ -174,11 +211,14 @@ mainWithArgs config@Solve{..} = do
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
             mainWithArgs modelling
-            eprimes <- filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
+            eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
             pp logLevel $ "Generated models:" <+> vcat (map pretty eprimes)
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
+
+        getEprimes :: m [FilePath]
+        getEprimes = filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
 
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
@@ -356,3 +396,16 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
         Right () -> return ()
 validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
+
+doIfNotCached
+    :: (Monad m, Hashable h)
+    => h                        -- thing to hash
+    -> [String]                 -- saved hashes
+    -> m a                      -- the result from cache
+    -> m a                      -- the action
+    -> WriterT [String] m a     -- the results and accumulating new hashes in the writer
+doIfNotCached (show . hash -> h) savedHashes getResult act = do
+    tell [h]
+    lift $ if h `elem` savedHashes
+            then getResult
+            else act

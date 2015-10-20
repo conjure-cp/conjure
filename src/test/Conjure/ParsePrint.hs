@@ -11,9 +11,6 @@ import Conjure.Language.NameGen ( runNameGen )
 import Conjure.UI.IO ( readModelFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 
--- base
-import System.IO ( readFile )
-
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
@@ -79,11 +76,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
 
     let
         readIfExists :: FilePath -> IO String
-        readIfExists f = do
-            e <- doesFileExist f
-            if e
-                then readFile f
-                else return ""
+        readIfExists f = fromMaybe "" <$> readFileIfExists f
 
     step "Checking stdout"
     stdoutG <- readIfExists (tBaseDir </> "stdout")

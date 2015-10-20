@@ -40,7 +40,7 @@ module Conjure.Prelude
     , sh
     , scope
     , allDirs, allFiles, allFilesWithSuffix
-    , removeFileIfExists
+    , removeFileIfExists, readFileIfExists
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
@@ -122,7 +122,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine, readFile )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
 
@@ -526,6 +526,13 @@ removeFileIfExists f = removeFile f `catch` handleExists
     where
         handleExists e
             | isDoesNotExistError e = return ()
+            | otherwise = throwIO e
+
+readFileIfExists :: FilePath -> IO (Maybe String)
+readFileIfExists f = (Just <$> readFile f) `catch` handleExists
+    where
+        handleExists e
+            | isDoesNotExistError e = return Nothing
             | otherwise = throwIO e
 
 setRandomSeed :: Int -> IO ()
