@@ -45,8 +45,6 @@ rule_Eq = "function-eq" `namedRule` theRule where
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                                 /\
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
-                                /\
-                            defined(&x) = defined(&y)
                        |]
             )
 
@@ -81,8 +79,6 @@ rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
                 (iPat, i) <- quantifiedVar
                 return [essence|
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
-                                /\
-                            defined(&x) subsetEq defined(&y)
                        |]
             )
 
@@ -225,39 +221,19 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined"
         func <- match opDefined expr
-        DomainFunction _ _ domFr _domTo <- domainOf func
-        unless (null [ () | DomainAny{} <- universe domFr ]) $ na "Cannot compute the domain of defined(f)"
+        TypeFunction{} <- typeOf func
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over defined(f)"
             , do
-                (auxName, aux) <- auxiliaryVar
-                (jPat, j) <- quantifiedVar
-                (kPat, k) <- quantifiedVar
-                (lPat, l) <- quantifiedVar
-                let k1 = [essence| &k[1] |]
-                let l1 = [essence| &l[1] |]
-                return $ WithLocals
-                    (Comprehension
-                        (upd j body)
+                (iPat, i) <- quantifiedVar
+                let i1 = [essence| &i[1] |]
+                return $
+                    Comprehension
+                        (upd i1 body)
                         $  gocBefore
-                        ++ [ Generator (GenInExpr jPat aux) ]
-                        ++ transformBi (upd j) gocAfter)
-                    (AuxiliaryVars
-                        [ Declaration (FindOrGiven LocalFind auxName (DomainSet def def (forgetRepr domFr)))
-                        , SuchThat
-                            [ make opAnd $ Comprehension
-                                [essence| &k1 in &aux |]
-                                [ Generator (GenInExpr kPat func) ]
-                            , make opAnd $
-                                Comprehension
-                                    (make opOr $ Comprehension
-                                        [essence| &l1 = &k |]
-                                        [ Generator (GenInExpr lPat func) ]
-                                    )
-                                    [ Generator (GenInExpr kPat aux) ]
-                            ]
-                        ])
+                        ++ [ Generator (GenInExpr iPat func) ]
+                        ++ transformBi (upd i1) gocAfter
             )
     theRule _ = na "rule_Comprehension_Defined"
 
@@ -269,11 +245,28 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
         func <- match opRange expr
-        DomainFunction _ _ _domFr domTo <- domainOf func
+        DomainFunction _ attrs _domFr domTo <- domainOf func
         let upd val old = lambdaToFunction pat old val
-        return
-            ( "Mapping over range(f)"
-            , do
+        let
+            isInjective =
+                case attrs of
+                    FunctionAttr _ _ JectivityAttr_Injective -> True
+                    FunctionAttr _ _ JectivityAttr_Bijective -> True
+                    _ -> False
+
+            -- the range is already alldiff
+            caseInjective = do
+                (iPat, i) <- quantifiedVar
+                let i2 = [essence| &i[2] |]
+                return $
+                    Comprehension
+                        (upd i2 body)
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr iPat func) ]
+                        ++ transformBi (upd i2) gocAfter
+
+            -- this is the expensive case: introduce an aux set for the range to make it alldiff
+            caseNonInjective = do
                 (auxName, aux) <- auxiliaryVar
                 (jPat, j) <- quantifiedVar
                 (kPat, k) <- quantifiedVar
@@ -301,6 +294,16 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                                     [ Generator (GenInExpr kPat aux) ]
                             ]
                         ])
+
+        when isInjective $
+            unless (null [ () | DomainAny{} <- universe domTo ]) $
+                na "Cannot compute the domain of range(f)"
+
+        return
+            ( "Mapping over range(f)"
+            , if isInjective
+                then caseInjective
+                else caseNonInjective
             )
     theRule _ = na "rule_Comprehension_Range"
 
