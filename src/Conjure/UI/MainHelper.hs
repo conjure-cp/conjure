@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE MultiWayIf #-}
 
 module Conjure.UI.MainHelper ( mainWithArgs ) where
 

@@ -5,12 +5,12 @@ module Conjure.Representations.Sequence.ExplicitBounded ( sequenceExplicitBounde
 -- conjure
 import Conjure.Prelude
 import Conjure.Language
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m) => Representation m
+sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where

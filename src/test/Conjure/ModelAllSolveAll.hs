@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE MultiWayIf #-}
 
 module Conjure.ModelAllSolveAll ( tests ) where
 

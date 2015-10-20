@@ -7,7 +7,14 @@ module Conjure.Process.Enumerate
 
 import Conjure.Prelude
 import Conjure.Language.AdHoc
-import Conjure.Language
+import Conjure.UserError
+import Conjure.Language.AbstractLiteral
+import Conjure.Language.Constant
+import Conjure.Language.Domain
+import Conjure.Language.Pretty
+import Conjure.Language.Definition
+import Conjure.Language.NameGen
+
 import Conjure.UI.IO
 import Conjure.UI as UI ( UI(..) )
 import {-# SOURCE #-} Conjure.UI.MainHelper
@@ -21,12 +28,13 @@ import qualified Pipes
 
 -- | This class is only to track where `enumerateDomain` might get called.
 --   It is essentially MonadIO, but doesn't allow arbitrary IO.
-class (Functor m, Applicative m, Monad m) => EnumerateDomain m where liftIO' :: IO a -> m a
+class (Functor m, Applicative m, Monad m, MonadUserError m) => EnumerateDomain m where liftIO' :: IO a -> m a
 instance EnumerateDomain IO where liftIO' = id
 instance EnumerateDomain m => EnumerateDomain (IdentityT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (MaybeT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (ExceptT m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (ReaderT r m) where liftIO' = lift . liftIO'
+instance (EnumerateDomain m, Monoid w) => EnumerateDomain (WriterT w m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
@@ -52,6 +60,14 @@ instance Monad EnumerateDomainNoIO where
 
 instance MonadFail EnumerateDomainNoIO where
     fail = Failed
+
+instance MonadUserError EnumerateDomainNoIO where
+    userErr docs = Failed (vcat $ "User error:" : docs)
+
+instance NameGen EnumerateDomainNoIO where
+    nextName _ = fail "nextName{EnumerateDomainNoIO}"
+    exportNameGenState = fail "exportNameGenState{EnumerateDomainNoIO}"
+    importNameGenState _ = fail "importNameGenState{EnumerateDomainNoIO}"
 
 instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 

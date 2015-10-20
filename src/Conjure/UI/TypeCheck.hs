@@ -1,5 +1,4 @@
 {-# LANGUAGE TupleSections #-}
-{-# LANGUAGE LambdaCase #-}
 
 module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 

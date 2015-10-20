@@ -1,5 +1,4 @@
 {-# LANGUAGE RecordWildCards #-}
-{-# LANGUAGE LambdaCase #-}
 {-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE ViewPatterns #-}
 

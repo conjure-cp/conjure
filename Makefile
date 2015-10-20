@@ -21,6 +21,8 @@ ghci:
 	    -XQuasiQuotes                              \
 	    -XScopedTypeVariables                      \
 	    -XTypeOperators                            \
+	    -XLambdaCase                               \
+	    -XMultiWayIf                               \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \

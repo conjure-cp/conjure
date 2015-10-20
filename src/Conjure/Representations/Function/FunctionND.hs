@@ -6,14 +6,8 @@ module Conjure.Representations.Function.FunctionND ( functionND, viewAsDomainTup
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
+import Conjure.Language
 import Conjure.Language.TypeOf
-import Conjure.Language.Pretty
-import Conjure.Language.TH
-import Conjure.Language.Lenses
-import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
@@ -150,7 +144,6 @@ functionND = Representation chck downD structuralCons downC up
               , ConstantAbstract (AbsLitFunction vals)
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
-            z <- zeroVal innerDomainTo
             let
                 check :: [Constant] -> Maybe Constant
                 check indices = listToMaybe [ v
@@ -171,7 +164,7 @@ functionND = Representation chck downD structuralCons downC up
                     domVals <- domainValues i
                     let active val = check $ prevIndices ++ [val]
                     return $ ConstantAbstract $ AbsLitMatrix i
-                                [ fromMaybe z (active val)
+                                [ fromMaybe (bug "FunctionND downC") (active val)
                                 | val <- domVals ]
                 unrollC (i:is) prevIndices = do
                     domVals <- domainValues i

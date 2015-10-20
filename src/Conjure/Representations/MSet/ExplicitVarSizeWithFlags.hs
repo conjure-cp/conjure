@@ -7,12 +7,12 @@ import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m) => Representation m
+msetExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where

@@ -6,19 +6,15 @@ module Conjure.Representations.Function.FunctionNDPartial ( functionNDPartial ) 
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TH
-import Conjure.Language.Lenses
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 import Conjure.Representations.Function.FunctionND ( viewAsDomainTuple, mkLensAsDomainTuple )
 
 
-functionNDPartial :: forall m . (MonadFail m, NameGen m) => Representation m
+functionNDPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 functionNDPartial = Representation chck downD structuralCons downC up
 
     where

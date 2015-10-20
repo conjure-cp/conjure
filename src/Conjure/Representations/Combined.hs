@@ -11,12 +11,9 @@ module Conjure.Representations.Combined
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.UserError
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Language.Instantiate
-import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.Enumerate ( EnumerateDomain, EnumerateDomainNoIO )
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
@@ -44,7 +41,7 @@ import Conjure.Representations.Partition.PartitionAsSet
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
 downToX1
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     => FindOrGiven
     -> Name
     -> DomainX Expression
@@ -54,7 +51,7 @@ downToX1 forg name domain = rDownToX (dispatch domain) forg name domain
 -- | Refine (down) a domain (D), one level (1).
 --   The domain is allowed to be at the class level.
 downD1
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>           (Name, DomainX Expression)
     -> m (Maybe [(Name, DomainX Expression)])
 downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
@@ -62,7 +59,7 @@ downD1 (name, domain) = rDownD (dispatch domain) (name, domain)
 -- | Refine (down) a domain, together with a constant (C), one level (1).
 --   The domain has to be fully instantiated.
 downC1
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>           (Name, DomainC, Constant)
     -> m (Maybe [(Name, DomainC, Constant)])
 downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, constant)
@@ -72,7 +69,7 @@ downC1 (name, domain, constant) = rDownC (dispatch domain) (name, domain, consta
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up1
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>   (Name, DomainC)
     ->  [(Name, Constant)]
     -> m (Name, Constant)
@@ -82,7 +79,7 @@ up1 (name, domain) ctxt = rUp (dispatch domain) ctxt (name, domain)
 -- | Refine (down) a domain (D), all the way.
 --   The domain is allowed to be at the class level.
 downD
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>    (Name, DomainX Expression)
     -> m [(Name, DomainX Expression)]
 downD inp@(_, domain) = do
@@ -94,7 +91,7 @@ downD inp@(_, domain) = do
 -- | Refine (down) a domain, together with a constant (C), all the way.
 --   The domain has to be fully instantiated.
 downC
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>    (Name, DomainC, Constant)
     -> m [(Name, DomainC, Constant)]
 downC inp0 = do
@@ -109,7 +106,7 @@ downC inp0 = do
 --   The high level domain (i.e. the target domain) has to be given.
 --   The domain has to be fully instantiated.
 up
-    :: (MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     =>  [(Name, Constant)]
     ->   (Name, DomainC)
     -> m (Name, Constant)
@@ -137,7 +134,7 @@ up ctxt (name, highDomain) = do
 
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
-dispatch :: (MonadFail m, NameGen m, Pretty x) => Domain HasRepresentation x -> Representation m
+dispatch :: (MonadFail m, NameGen m, EnumerateDomain m, Pretty x) => Domain HasRepresentation x -> Representation m
 dispatch domain = do
     let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
@@ -176,7 +173,7 @@ dispatch domain = do
             _ -> nope
         _ -> nope
 
-type AllRepresentations = [[Representation (Either Doc)]]
+type AllRepresentations = [[Representation EnumerateDomainNoIO]]
 
 -- | No levels!
 reprsStandardOrderNoLevels :: AllRepresentations
@@ -225,7 +222,11 @@ reprsSparseOrder = map return
 
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
-reprOptions :: (Pretty r, Pretty x, ExpressionLike x) => AllRepresentations -> Domain r x -> [Domain HasRepresentation x]
+reprOptions
+    :: (Pretty r, Pretty x, ExpressionLike x)
+    => AllRepresentations
+    -> Domain r x
+    -> [Domain HasRepresentation x]
 reprOptions reprs domain = go reprs
     where
         go [] = []
@@ -240,7 +241,7 @@ reprOptions reprs domain = go reprs
 --   Makes recursive calls to generate the complete structural constraints.
 --   Takes in a function to refine inner guys.
 getStructurals
-    :: (MonadFail m, NameGen m)
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
     => (Expression -> m [Expression])
     -> DomainX Expression
     -> m (Expression -> m [Expression])

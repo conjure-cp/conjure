@@ -261,6 +261,8 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        LambdaCase
+        MultiWayIf
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -326,6 +328,8 @@ Test-Suite conjure-testing
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings
+        LambdaCase
+        MultiWayIf
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

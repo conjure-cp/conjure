@@ -582,7 +582,7 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (MonadUserError m, EnumerateDomain m) => Model -> m Model
+updateDeclarations :: (MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -601,29 +601,28 @@ updateDeclarations model = do
                 Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
-                SearchOrder orders -> return $ return $ SearchOrder $ concat
-                    [ case order of
-                        BranchingOn nm ->
+                SearchOrder orders -> do
+                    orders' <- forM orders $ \case
+                        BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            in  nub $ concatMap (onEachDomainSearch nm) domains
+                            fmap nub $ concatMapM (onEachDomainSearch nm) domains
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
-                    | order <- orders
-                    ]
+                    return [ SearchOrder (concat orders') ]
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =
-            case downD (nm, domain) of
+            runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
                 Right outs -> forM outs $ \ (n, d) -> do
                     d' <- transformBiM trySimplify $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
-            case downD (nm, domain) of
+            runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
-                Right outs -> [ BranchingOn n
-                              | (n, _) <- outs
-                              ]
+                Right outs -> return [ BranchingOn n
+                                     | (n, _) <- outs
+                                     ]
 
     statements <- concatMapM onEachStatement (withAfter (mStatements model))
     return model { mStatements = statements }
@@ -1237,6 +1236,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
            , MonadFail m
            , MonadUserError m
            , NameGen m
+           , EnumerateDomain m
            )
         => Bool
         -> FindOrGiven
@@ -1257,7 +1257,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => m [Expression]
+            mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+                          => m [Expression]
             mkStructurals = do
                 logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -1267,7 +1268,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
                 return resolved
 
-            addStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+            addStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+                           => Model -> m Model
             addStructurals
                 | forg == Given = return
                 | usedBefore = return
