@@ -234,9 +234,9 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     vals     <- forM indices $ \ these -> do
                         flag  <- index flagMatrix   these
                         value <- index valuesMatrix these
-                        case flag of
-                            ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just (mk these, value))
+                        case viewConstantBool flag of
+                            Just False -> return Nothing
+                            Just True  -> return (Just (mk these, value))
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty flag
                                 , "                           , and    :" <+> pretty value

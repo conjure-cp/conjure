@@ -5,10 +5,7 @@ module Conjure.Representations.Relation.RelationAsMatrix ( relationAsMatrix ) wh
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
@@ -149,9 +146,9 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     indices  <- allIndices innerDomains
                     vals     <- forM indices $ \ these -> do
                         indexed <- index constant these
-                        case indexed of
-                            ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just these)
+                        case viewConstantBool indexed of
+                            Just False -> return Nothing
+                            Just True  -> return (Just these)
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty indexed
                                 , "When working on:" <+> pretty name

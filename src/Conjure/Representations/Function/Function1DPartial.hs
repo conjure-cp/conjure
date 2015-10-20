@@ -168,12 +168,12 @@ function1DPartial = Representation chck downD structuralCons downC up
                   Just (ConstantAbstract (AbsLitMatrix _ valuesMatrix)) ) -> do
                     froms          <- domainValues innerDomainFr
                     functionValues <- forM (zip3 flagMatrix froms valuesMatrix) $ \ (flag, from, to) ->
-                        case flag of
-                            ConstantBool b -> return $ if b then Just (from,to) else Nothing
-                            _ -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
-                                             , "When working on:" <+> pretty name
-                                             , "With domain:" <+> pretty domain
-                                             ]
+                        case viewConstantBool flag of
+                            Just b  -> return $ if b then Just (from,to) else Nothing
+                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
+                                                   , "When working on:" <+> pretty name
+                                                   , "With domain:" <+> pretty domain
+                                                   ]
                     return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Function1DPartial up 1)"

@@ -121,7 +121,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
-            let trues  = replicate (length constants)              (ConstantBool True)
+            let trues  = replicate (length constants)                                   (ConstantBool True)
             let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantBool False)
 
             return $ Just
@@ -156,7 +156,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                     return (name, ConstantAbstract $ AbsLitSet
                                                     [ v
                                                     | (i,v) <- zip flags vals
-                                                    , i == ConstantBool True
+                                                    , viewConstantBool i == Just True
                                                     ] )
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)

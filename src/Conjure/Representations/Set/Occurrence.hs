@@ -68,7 +68,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                             return (name, ConstantAbstract $ AbsLitSet
                                             [ ConstantInt v
                                             | (v,b) <- zip innerDomainVals vals
-                                            , b == ConstantBool True
+                                            , viewConstantBool b == Just True
                                             ] )
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)

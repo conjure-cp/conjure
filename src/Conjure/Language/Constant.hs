@@ -7,6 +7,7 @@ module Conjure.Language.Constant
     , validateConstantForDomain
     , mkUndef, isUndef
     , emptyCollection
+    , viewConstantBool
     , viewConstantInt
     , viewConstantTuple
     , viewConstantRecord
@@ -381,6 +382,12 @@ constantNotInDomain c d = fail $ vcat
     , "Domain:" <+> pretty d
     ]
 
+
+viewConstantBool      :: MonadFail m => Constant -> m Bool
+viewConstantBool      (ConstantBool i) = return i
+viewConstantBool      (ConstantInt  0) = return False
+viewConstantBool      (ConstantInt  1) = return True
+viewConstantBool      constant = fail ("Expecting a boolean integer, but got:" <+> pretty constant)
 
 viewConstantInt       :: MonadFail m => Constant -> m Integer
 viewConstantInt       (ConstantInt i) = return i
