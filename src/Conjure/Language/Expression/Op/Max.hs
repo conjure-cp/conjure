@@ -36,7 +36,9 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
             TypeMatrix _ TypeInt -> return TypeInt
             TypeSet TypeInt -> return TypeInt
             TypeMSet TypeInt -> return TypeInt
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside max:" <+> pretty ty
+                                       ]
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
