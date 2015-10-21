@@ -7,8 +7,6 @@ given p_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13..15)
 such that
     and([x_Function1D[q5] = p_Function1D[q5] | q5 : int(1..E_EnumSize)]),
     and([p_Function1D[q6] = x_Function1D[q6] | q6 : int(1..E_EnumSize)]),
-    and([or([q10 = q8 | q10 : int(1..E_EnumSize)]) | q8 : int(1..E_EnumSize)]),
-    and([or([q14 = q12 | q14 : int(1..E_EnumSize)]) | q12 : int(1..E_EnumSize)]),
     allDiff(x_Function1D),
     and([or([x_Function1D[q2] = q1 | q2 : int(1..E_EnumSize)]) | q1 : int(13..15)])
 
