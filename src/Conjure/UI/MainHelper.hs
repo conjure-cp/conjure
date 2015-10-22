@@ -25,7 +25,7 @@ import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, renderWide )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -116,10 +116,11 @@ mainWithArgs TranslateSolution{..} = do
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
-    runNameGen $ join $ validateSolution
-        <$> (resolveNames =<< readModelFromFile essence)
-        <*> (resolveNames =<< maybe (return def) readModelFromFile essenceParamO)
-        <*> (resolveNames =<< readModelFromFile essenceSolution)
+    essence2  <- readModelFromFile essence
+    param2    <- maybe (return def) readModelFromFile essenceParamO
+    solution2 <- readModelFromFile essenceSolution
+    [essence3, param3, solution3] <- runNameGen $ resolveNamesMulti [essence2, param2, solution2]
+    runNameGen $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
     model <- readModelFromFile essence
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
@@ -165,7 +166,7 @@ mainWithArgs config@Solve{..} = do
     -- start the show!
     newHashes <- execWriterT $ do
         eprimes <- doIfNotCached
-            ( essenceM
+            ( sort (mStatements essenceM)
             -- when the following flags change, invalidate hash
             -- nested tuples, because :(
             , ( outputDirectory
@@ -369,11 +370,8 @@ validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
-    result   <- runExceptT $ ignoreLogs $ runNameGen $ join $
-        validateSolution
-            <$> resolveNames essenceM
-            <*> pure def
-            <*> resolveNames solution
+    [essenceM2, solution2] <- ignoreLogs $ runNameGen $ resolveNamesMulti [essenceM, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essenceM2 def solution2
     case result of
         Left err -> bug err
         Right () -> return ()
@@ -386,11 +384,8 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath
-    result   <- runExceptT $ ignoreLogs $ runNameGen $ join $
-        validateSolution
-            <$> resolveNames essenceM
-            <*> resolveNames param
-            <*> resolveNames solution
+    [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen $ resolveNamesMulti [essenceM, param, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essenceM2 param2 solution2
     case result of
         Left err -> bug err
         Right () -> return ()

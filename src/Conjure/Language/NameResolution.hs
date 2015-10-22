@@ -2,6 +2,7 @@
 
 module Conjure.Language.NameResolution
     ( resolveNames
+    , resolveNamesMulti
     , resolveNamesX
     ) where
 
@@ -14,21 +15,25 @@ import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
 
+resolveNamesMulti :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => [Model] -> m [Model]
+resolveNamesMulti = flip evalStateT [] . go
+    where
+        go [] = return []
+        go (m:ms) = (:) <$> resolveNames_ m <*> go ms
+
 resolveNames :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
-resolveNames model = flip evalStateT [] $ do
+resolveNames = flip evalStateT [] . resolveNames_
+
+resolveNames_
+    :: ( MonadFail m
+       , MonadUserError m
+       , MonadState [(Name, ReferenceTo)] m
+       , NameGen m
+       )
+    => Model -> m Model
+resolveNames_ model = do
     statements <- mapM resolveStatement (mStatements model)
     mapM_ check (universeBi statements)
-    duplicateNames <- gets (id                                   -- all names defined in the model
-                            >>> filter (\ (_,d) -> case d of
-                                    RecordField{}  -> False      -- filter out the RecordField's
-                                    VariantField{} -> False      --        and the VariantField's
-                                    _              -> True )
-                            >>> map fst                          -- strip the ReferenceTo's
-                            >>> histogram
-                            >>> filter (\ (_,n) -> n > 1 )       -- keep those that are defined multiple times
-                            >>> map fst)
-    unless (null duplicateNames) $
-        userErr1 ("Some names are defined multiple times:" <+> prettyList id "," duplicateNames)
     return model { mStatements = statements }
 
 shadowing
@@ -86,7 +91,13 @@ resolveStatement st =
                     x' <- resolveX x
                     modify ((nm, Alias x') :)
                     return (Declaration (Letting nm x'))
-                _ -> fail ("Unexpected declaration:" <+> pretty st)
+                LettingDomainDefnUnnamed{}  -> return st             -- ignoring
+                LettingDomainDefnEnum _ nms -> do
+                    modify ( [ (nm, Alias (Constant (ConstantInt i)))
+                             | (nm, i) <- zip nms [1..]
+                             ] ++)
+                    return st
+                GivenDomainDefnEnum{}       -> return st             -- ignoring
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
