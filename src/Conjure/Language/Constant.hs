@@ -93,7 +93,7 @@ instance TypeOf Constant where
     typeOf ConstantBool{}             = return TypeBool
     typeOf ConstantInt{}              = return TypeInt
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
-    typeOf (ConstantField _ ty) = return ty
+    typeOf (ConstantField _ ty)       = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
     typeOf (DomainInConstant dom)     = typeOf dom
     typeOf (TypedConstant _ ty)       = return ty

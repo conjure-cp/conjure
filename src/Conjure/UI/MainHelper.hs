@@ -358,7 +358,9 @@ srCleanUp stdoutSR solutions = do
     if
         | exitCodeSR == 0 -> return (Right solutions)
         | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) ->
-            return (Left "Invalid instance, a where statement evaluated to false.")
+            return (Left (vcat [ "Invalid instance, a where statement evaluated to false."
+                               , "(It can be an implicit where statement added by Conjure.)"
+                               ]))
         | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                   , "Savile Row stderr:"    <+> pretty stderrSR
                                   , "Savile Row exit-code:" <+> pretty exitCodeSR

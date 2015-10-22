@@ -89,6 +89,8 @@ enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
         | vals <- replicateM (length indexInts) inners
         ]
 
+enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) = return []
+
 -- the sledgehammer approach
 enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-" ++ show (hash d)) $ \ tmpDir -> do
     let model = Model { mLanguage = LanguageVersion "Essence" [1,0]
