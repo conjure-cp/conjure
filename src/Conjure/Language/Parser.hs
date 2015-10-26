@@ -24,7 +24,7 @@ import Conjure.Language.Lexer ( Lexeme(..), LexemePos, lexemeFace, lexemeText, r
 import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, ParsecT )
 import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
 import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
-import Text.Megaparsec.Combinator ( between, sepBy, sepBy1 )
+import Text.Megaparsec.Combinator ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
 import Text.Megaparsec.ShowToken ( showToken )
 import qualified Text.Megaparsec.Prim as P ( runParser )
 
@@ -84,7 +84,7 @@ parseTopLevels = do
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
-                        is <- parseName `sepEndBy1` comma
+                        is <- commaSeparated parseName
                         j  <- colon >> parseDomain
                         return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
@@ -92,8 +92,8 @@ parseTopLevels = do
                     <?> "find statement"
                 , do
                     lexeme L_given
-                    decls <- flip sepEndBy1 comma $ do
-                        is <- parseName `sepEndBy1` comma
+                    decls <- commaSeparated $ do
+                        is <- commaSeparated parseName
                         msum
                             [ do
                                 colon
@@ -115,8 +115,8 @@ parseTopLevels = do
                     <?> "given statement"
                 , do
                     lexeme L_letting
-                    decls <- flip sepEndBy1 comma $ do
-                        is <- parseName `sepEndBy1` comma
+                    decls <- commaSeparated $ do
+                        is <- commaSeparated parseName
                         lexeme L_be
                         msum
                             [ do
@@ -132,7 +132,7 @@ parseTopLevels = do
                                                ]
                                     , do
                                         lexeme L_enum
-                                        ys <- braces (parseName `sepBy` comma) <|> return []
+                                        ys <- braces (commaSeparated parseName) <|> return []
                                         modify (\ st -> st { enumDomains = is ++ enumDomains st } )
                                         return [ Declaration (LettingDomainDefnEnum i ys)
                                                | i <- is
@@ -154,13 +154,13 @@ parseTopLevels = do
                     <?> "letting statement"
                 , do
                     lexeme L_where
-                    xs <- parseExpr `sepEndBy1` comma
+                    xs <- commaSeparated parseExpr
                     return [Where xs]
                     <?> "where statement"
                 , do
                     lexeme L_such
                     lexeme L_that
-                    xs <- parseExpr `sepEndBy1` comma
+                    xs <- commaSeparated parseExpr
                     return [SuchThat xs]
                     <?> "such that statement"
                 , do
@@ -176,7 +176,7 @@ parseTopLevels = do
                 , do
                     lexeme L_branching
                     lexeme L_on
-                    xs <- brackets $ parseSearchOrder `sepBy` comma
+                    xs <- brackets $ commaSeparated parseSearchOrder
                     return [ SearchOrder xs ]
                     <?> "branching on"
                 ] <?> "statement"
@@ -235,12 +235,13 @@ parseDomainWithRepr
 
         pBool = do
             lexeme L_bool
-            _ <- optional $ parens $ parseRange parseExpr `sepBy` comma  -- parse and discard, compatibility with SR
+            -- parse and discard, compatibility with SR
+            _ <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             return DomainBool
 
         pInt = do
             lexeme L_int
-            mxs <- optional $ parens $ parseRange parseExpr `sepBy` comma
+            mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
             return $ DomainInt xs
 
@@ -250,7 +251,7 @@ parseDomainWithRepr
 
         pEnum = do
             r  <- identifierText
-            xs <- optional $ parens $ parseRange parseExpr `sepBy` comma
+            xs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             st <- get
             guard (Name r `elem` enumDomains st)
             return $ DomainEnum (Name r) xs Nothing
@@ -259,14 +260,14 @@ parseDomainWithRepr
             lexeme L_matrix
             lexeme L_indexed
             lexeme L_by
-            xs <- brackets (parseDomain `sepBy1` comma)
+            xs <- brackets (commaSeparated parseDomain)
             lexeme L_of
             y  <- parseDomainWithRepr
             return $ foldr DomainMatrix y xs
 
         pTupleWith = do
             lexeme L_tuple
-            xs <- parens $ parseDomainWithRepr `sepBy` comma
+            xs <- parens $ commaSeparated0 parseDomainWithRepr
             return $ DomainTuple xs
 
         pTupleWithout = do
@@ -279,7 +280,7 @@ parseDomainWithRepr
                          lexeme L_Colon
                          d <- parseDomainWithRepr
                          return (n,d)
-            xs <- braces $ one `sepBy` comma
+            xs <- braces $ commaSeparated0 one
             return $ DomainRecord xs
 
         pVariant = do
@@ -288,7 +289,7 @@ parseDomainWithRepr
                          lexeme L_Colon
                          d <- parseDomainWithRepr
                          return (n,d)
-            xs <- braces $ one `sepBy` comma
+            xs <- braces $ commaSeparated0 one
             return $ DomainVariant xs
 
         pSet = do
@@ -347,7 +348,7 @@ parseDomainWithRepr
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
-    xs <- parens (parseAttribute `sepBy` comma) <|> return []
+    xs <- parens (commaSeparated0 parseAttribute) <|> return []
     return $ DomainAttributes xs
     where
         parseAttribute = msum [parseDontCare, try parseNameValue, parseDAName]
@@ -590,12 +591,12 @@ parseComprehension :: Parser Expression
 parseComprehension = brackets $ do
     x   <- parseExpr
     lexeme L_Bar
-    gens <- sepBy1 (letting <|> try generator <|> condition) comma
+    gens <- commaSeparated (letting <|> try generator <|> condition)
     return (Comprehension x (concat gens))
     where
         generator :: Parser [GeneratorOrCondition]
         generator = do
-            pats <- parseAbstractPattern `sepBy1` comma
+            pats <- commaSeparated parseAbstractPattern
             msum
                 [ do
                     lexeme L_Colon
@@ -641,7 +642,7 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
                     dotdot
                     j <- optional parseExpr
                     return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
-            is <- brackets $ pIndexer `sepBy1` comma
+            is <- brackets $ commaSeparated pIndexer
             return $ \ x -> foldl (\ m f -> f m ) x is
         parseFactorial :: Parser (Expression -> Expression)
         parseFactorial = do
@@ -649,7 +650,7 @@ parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
             return $ \ x -> mkOp "factorial" [x]
         parseFuncApply :: Parser (Expression -> Expression)
         parseFuncApply = parens $ do
-            xs <- parseExpr `sepBy1` comma
+            xs <- commaSeparated parseExpr
             let underscore = Reference "_" Nothing
             let ys = [ if underscore == x then Nothing else Just x | x <- xs ]
             return $ \ x -> Op $ MkOpRelationProj $ OpRelationProj x ys
@@ -691,7 +692,7 @@ parseOthers = [ parseFunctional l
         parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do
             lexeme l
-            xs <- parens $ parseExpr `sepBy1` comma
+            xs <- parens $ commaSeparated parseExpr
             return $ case (l,xs) of
                 (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
                 _ -> mkOp (fromString $ show $ lexemeFace l) xs
@@ -726,7 +727,7 @@ parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
 parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
     Name qnName <- parseName
-    qnPats      <- parseAbstractPattern `sepBy1` comma
+    qnPats      <- commaSeparated parseAbstractPattern
     qnOver      <- msum [ Left  <$> (colon *> parseDomain)
                         , Right <$> do
                             lexeme L_in
@@ -757,13 +758,13 @@ parseAbstractPattern = label "pattern" $ msum $ map try
     , Single <$> parseName
     , do
         void $ optional $ lexeme L_tuple
-        xs <- parens $ parseAbstractPattern `sepBy1` comma
+        xs <- parens $ commaSeparated parseAbstractPattern
         return (AbsPatTuple xs)
     , do
-        xs <- brackets $ parseAbstractPattern `sepBy1` comma
+        xs <- brackets $ commaSeparated parseAbstractPattern
         return (AbsPatMatrix xs)
     , do
-        xs <- braces $ parseAbstractPattern `sepBy1` comma
+        xs <- braces $ commaSeparated parseAbstractPattern
         return (AbsPatSet xs)
     ]
 
@@ -794,7 +795,7 @@ parseLiteral = label "value" $ msum
 
         pMatrix = do
             lexeme L_OpenBracket
-            xs <- sepBy parseExpr comma
+            xs <- commaSeparated0 parseExpr
             msum
                 [ do
                     let r = mkDomainIntB 1 (fromInt (genericLength xs))
@@ -809,7 +810,7 @@ parseLiteral = label "value" $ msum
 
         pTupleWith = do
             lexeme L_tuple
-            xs <- parens $ sepBy parseExpr comma
+            xs <- parens $ commaSeparated0 parseExpr
             return (AbsLitTuple xs)
 
         pTupleWithout = do
@@ -822,7 +823,7 @@ parseLiteral = label "value" $ msum
                          lexeme L_Eq
                          x <- parseExpr
                          return (n,x)
-            xs <- braces $ one `sepBy` comma
+            xs <- braces $ commaSeparated0 one
             return $ AbsLitRecord xs
 
         pVariant = do
@@ -835,38 +836,38 @@ parseLiteral = label "value" $ msum
             return $ AbsLitVariant Nothing n x
 
         pSet = do
-            xs <- braces (sepBy parseExpr comma)
+            xs <- braces (commaSeparated0 parseExpr)
             return (AbsLitSet xs)
 
         pMSet = do
             lexeme L_mset
-            xs <- parens (sepBy parseExpr comma)
+            xs <- parens (commaSeparated0 parseExpr)
             return (AbsLitMSet xs)
 
         pFunction = do
             lexeme L_function
-            xs <- parens (sepBy inner comma)
+            xs <- parens (commaSeparated0 inner)
             return (AbsLitFunction xs)
             where
                 inner = arrowedPair parseExpr
 
         pSequence = do
             lexeme L_sequence
-            xs <- parens (sepBy parseExpr comma)
+            xs <- parens (commaSeparated0 parseExpr)
             return (AbsLitSequence xs)
 
         pRelation = do
             lexeme L_relation
-            xs <- parens (sepBy (try pTupleWith <|> pTupleWithout) comma)
+            xs <- parens (commaSeparated0 (try pTupleWith <|> pTupleWithout))
             return (AbsLitRelation [is | AbsLitTuple is <- xs])
             -- return [xMake| value.relation.values := xs |]
 
         pPartition = do
             lexeme L_partition
-            xs <- parens (sepBy inner comma)
+            xs <- parens (commaSeparated0 inner)
             return (AbsLitPartition xs)
             where
-                inner = braces (sepBy parseExpr comma)
+                inner = braces (commaSeparated0 parseExpr)
 
 shuntingYardExpr :: Parser [Either Lexeme Expression] -> Parser Expression
 shuntingYardExpr p = do
@@ -999,6 +1000,14 @@ integer = do
     where isInt LIntLiteral {} = True
           isInt _ = False
 
+-- parse a comma separated list of things. can be 0 things.
+commaSeparated0 :: Parser a -> Parser [a]
+commaSeparated0 p = sepEndBy p comma
+
+-- parse a comma separated list of things. has to be at least 1 thing.
+commaSeparated :: Parser a -> Parser [a]
+commaSeparated p = sepEndBy1 p comma 
+
 comma :: Parser ()
 comma = lexeme L_Comma <?> "comma"
 
@@ -1049,7 +1058,3 @@ inCompleteFile parser = do
     result <- parser
     eof
     return result
-
-
-sepEndBy1 :: Parser a -> Parser () -> Parser [a]
-sepEndBy1 p separator = sepBy1 p separator <* optional separator
