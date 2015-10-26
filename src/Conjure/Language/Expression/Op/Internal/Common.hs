@@ -262,6 +262,8 @@ functionals =
     , L_pred
     , L_succ
 
+    , L_powerSet
+
     ]
 
 
@@ -269,9 +271,9 @@ boolsOut :: MonadFail m => Constant -> m [Bool]
 boolsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM boolsOut cs
 boolsOut b = return <$> boolOut b
 
-intsOut :: MonadFail m => Constant -> m [Integer]
-intsOut (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM intsOut cs
-intsOut b = return <$> intOut b
+intsOut :: MonadFail m => Doc -> Constant -> m [Integer]
+intsOut doc (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM (intsOut doc) cs
+intsOut doc b = return <$> intOut ("intsOut" <+> doc) b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b
 raiseTypeError p = fail ("Type error in" <+> pretty p)

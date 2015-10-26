@@ -7,6 +7,8 @@ module Conjure.Language.Constant
     , validateConstantForDomain
     , mkUndef, isUndef
     , emptyCollection
+    , viewConstantBool
+    , viewConstantInt
     , viewConstantTuple
     , viewConstantRecord
     , viewConstantVariant
@@ -91,7 +93,7 @@ instance TypeOf Constant where
     typeOf ConstantBool{}             = return TypeBool
     typeOf ConstantInt{}              = return TypeInt
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
-    typeOf (ConstantField _ ty) = return ty
+    typeOf (ConstantField _ ty)       = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
     typeOf (DomainInConstant dom)     = typeOf dom
     typeOf (TypedConstant _ ty)       = return ty
@@ -138,17 +140,36 @@ intPow :: Integer -> Integer -> Integer
 intPow = (^)
 
 domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
-domainSizeOfRanges = liftM genericLength . valuesInIntDomain
+domainSizeOfRanges = fmap genericLength . valuesInIntDomain
 
 instance DomainSizeOf Constant Constant where
     domainSizeOf = fmap ConstantInt . domainSizeOf
 
 instance Pretty Constant where
+
+    -- hack, oh sweet hack!
+    -- print a domain instead of a type when printing an empty matrix literal.
+    -- this means we print "int()" instead of "int" inside the index of a matrix type
+    -- SR expects it this way...
+    pretty (TypedConstant (ConstantAbstract (AbsLitMatrix _ [])) ty) =
+        let
+            pretty' (TypeMatrix index innerNested)
+                = "matrix indexed by" <+> prettyList prBrackets "," (map pretty' indices)
+                                      <+> "of" <+> pretty inner
+                where
+                    (indices,inner) = first (index:) $ collect innerNested
+                    collect (TypeMatrix i j) = first (i:) $ collect j
+                    collect x = ([],x)
+            pretty' TypeInt = "int()"
+            pretty' t = pretty t
+        in
+            prParens $ "[] : `" <> pretty' ty <> "`"
+
     pretty (ConstantBool False)          = "false"
     pretty (ConstantBool True )          = "true"
     pretty (ConstantInt  x    )          = pretty x
     pretty (ConstantEnum _ _ x)          = pretty x
-    pretty (ConstantField n _)     = pretty n
+    pretty (ConstantField n _)           = pretty n
     pretty (ConstantAbstract x)          = pretty x
     pretty (DomainInConstant d)          = "`" <> pretty d <> "`"
     pretty (TypedConstant x ty)          = prParens $ pretty x <+> ":" <+> "`" <> pretty ty <> "`"
@@ -156,8 +177,10 @@ instance Pretty Constant where
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt
-    intOut (ConstantInt x) = return x
-    intOut c = fail ("Expecting an integer, but found:" <+> pretty c)
+    intOut _ (ConstantInt x) = return x
+    intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
+                               , "Called from:" <+> doc
+                               ]
 
     fromBool = ConstantBool
     boolOut (ConstantBool x) = return x
@@ -300,7 +323,7 @@ validateConstantForDomain
     d@(DomainMatrix dIndex dInner) = do
         nested c d $
             mapM_ (`validateConstantForDomain` dInner) vals
-        unless (cIndex == dIndex) $ fail $ vcat
+        unless (cIndex == dIndex || cIndex == DomainInt []) $ fail $ vcat
             [ "The indices do not match between the value and the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -348,7 +371,7 @@ nested _ _ Right{} = return ()
 nested c d (Left err) = fail $ vcat
     [ "The value is not a member of the domain."
     , "Value :" <+> pretty c
-    , "Domain:" <+> pretty (show d)
+    , "Domain:" <+> pretty d
     , "Because of:", nest 4 err
     ]
 
@@ -356,9 +379,19 @@ constantNotInDomain :: (MonadFail m, Pretty r) => Constant -> Domain r Constant 
 constantNotInDomain c d = fail $ vcat
     [ "The value is not a member of the domain."
     , "Value :" <+> pretty c
-    , "Domain:" <+> pretty (show d)
+    , "Domain:" <+> pretty d
     ]
 
+
+viewConstantBool      :: MonadFail m => Constant -> m Bool
+viewConstantBool      (ConstantBool i) = return i
+viewConstantBool      (ConstantInt  0) = return False
+viewConstantBool      (ConstantInt  1) = return True
+viewConstantBool      constant = fail ("Expecting a boolean integer, but got:" <+> pretty constant)
+
+viewConstantInt       :: MonadFail m => Constant -> m Integer
+viewConstantInt       (ConstantInt i) = return i
+viewConstantInt       constant = fail ("Expecting an integer, but got:" <+> pretty constant)
 
 viewConstantTuple     :: MonadFail m => Constant -> m [Constant]
 viewConstantTuple     (ConstantAbstract (AbsLitTuple xs)) = return xs

@@ -36,10 +36,12 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
             TypeMatrix _ TypeInt -> return TypeInt
             TypeSet TypeInt -> return TypeInt
             TypeMSet TypeInt -> return TypeInt
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside max:" <+> pretty ty
+                                       ]
 
 instance EvaluateOp OpMax where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
     evaluateOp (OpMax (DomainInConstant (DomainInt rs))) = do
         is <- rangesInts rs
@@ -47,17 +49,17 @@ instance EvaluateOp OpMax where
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantMatrix -> Just (_, xs))) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 1") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 2") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax (viewConstantMSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMax 3") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)

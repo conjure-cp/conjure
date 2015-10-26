@@ -65,7 +65,13 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
                         return [essence| &values[&x] |]
                     _ -> return ch
             imageChild ch = return ch
-        (p', flags) <- runWriterT (descendM imageChild p)
+        topMost <- asks isTopMostZ
+        (p', flags) <-
+            if topMost
+                then -- this term sits at the topmost level, requires special treatment
+                    runWriterT (imageChild p)
+                else
+                    runWriterT (descendM imageChild p)
         case flags of
             [] -> na "rule_Image_Bool"
             _  -> do

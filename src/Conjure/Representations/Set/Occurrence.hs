@@ -4,11 +4,7 @@ module Conjure.Representations.Set.Occurrence ( setOccurrence ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Constant
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
@@ -66,13 +62,13 @@ setOccurrence = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
             case lookup (outName name) ctxt of
                 Just constantMatrix ->
-                    case constantMatrix of
-                        ConstantAbstract (AbsLitMatrix _ vals) -> do
+                    case viewConstantMatrix constantMatrix of
+                        Just (_, vals) -> do
                             innerDomainVals <- valuesInIntDomain intRanges
                             return (name, ConstantAbstract $ AbsLitSet
                                             [ ConstantInt v
                                             | (v,b) <- zip innerDomainVals vals
-                                            , b == ConstantBool True
+                                            , viewConstantBool b == Just True
                                             ] )
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)
@@ -81,7 +77,8 @@ setOccurrence = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Set Occurrence up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

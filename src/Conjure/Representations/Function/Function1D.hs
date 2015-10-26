@@ -9,6 +9,8 @@ module Conjure.Representations.Function.Function1D
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Constant
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
@@ -54,7 +56,25 @@ function1D = Representation chck downD structuralCons downC up
                 innerDomainFr
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
 
-            let injectiveCons m = return $ return [essence| allDiff(&m) |]
+            let injectiveCons m = do
+                    tyTo <- typeOf innerDomainTo
+                    let canAllDiff = case tyTo of
+                            TypeBool{} -> True
+                            TypeInt{}  -> True
+                            TypeEnum{} -> True
+                            _          -> False
+                    if canAllDiff
+                        then
+                            return $ return $ -- list
+                                [essence| allDiff(&m) |]
+                        else do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence|
+                                    forAll &iPat, &jPat : &innerDomainFr .
+                                        &i .< &j -> &m[&i] != &m[&j]
+                                |]
 
             let surjectiveCons m = do
                     (iPat, i) <- quantifiedVar
@@ -128,14 +148,15 @@ function1D = Representation chck downD structuralCons downC up
                                 innerDomainFr _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Function1D up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
-                    case constant of
-                        ConstantAbstract (AbsLitMatrix _ vals) -> do
+                    case viewConstantMatrix constant of
+                        Just (_, vals) -> do
                             froms <- domainValues innerDomainFr
                             return ( name
                                    , ConstantAbstract $ AbsLitFunction $ zip froms vals

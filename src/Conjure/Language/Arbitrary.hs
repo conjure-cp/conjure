@@ -31,7 +31,7 @@ instance Arbitrary a => Arbitrary (AnyDomainTuple a) where
         return $ AnyDomainTuple $ DomainTuple xs
     shrink (AnyDomainTuple d) =
         case d of
-            DomainTuple xs -> 
+            DomainTuple xs ->
                 [ AnyDomainTuple (DomainTuple ys)
                 | ys <- subsequences xs
                 , not (null ys)
@@ -50,7 +50,7 @@ instance Arbitrary AnyConstantTuple where
         return $ AnyConstantTuple $ ConstantAbstract $ AbsLitTuple xs
     shrink (AnyConstantTuple c) =
         case c of
-            ConstantAbstract (AbsLitTuple xs) -> 
+            ConstantAbstract (AbsLitTuple xs) ->
                 [ AnyConstantTuple $ ConstantAbstract $ AbsLitTuple ys
                 | ys <- subsequences xs
                 , not (null ys)

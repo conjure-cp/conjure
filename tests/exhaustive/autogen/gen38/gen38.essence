@@ -1,0 +1,16 @@
+language Essence 1.4
+
+find x : matrix indexed by [int(1..15)] of int(1..3)
+find y : matrix indexed by [int(1..15)] of int(1..3)
+
+such that
+or([{ 5 = aux9
+                            @ find aux9: int(1, 2..3)
+                              such that
+                                  and([x[q47] > 0 ->
+                                       y[q47] <= aux9
+                                           | q47 : int(1..15)]),
+                                  or([x[q47] > 0 /\
+                                      y[q47] = aux9
+                                          | q47 : int(1..15)])
+                            }   | true])

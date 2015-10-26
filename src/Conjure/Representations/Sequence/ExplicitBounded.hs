@@ -4,16 +4,13 @@ module Conjure.Representations.Sequence.ExplicitBounded ( sequenceExplicitBounde
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m) => Representation m
+sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
@@ -166,8 +163,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
@@ -182,13 +179,15 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameMarker name)
+                    [ "(in Sequence ExplicitBounded up 1)"
+                    , "No value for:" <+> pretty (nameMarker name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in Sequence ExplicitBounded up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

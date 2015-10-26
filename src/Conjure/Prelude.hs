@@ -32,18 +32,19 @@ module Conjure.Prelude
     , allContexts, ascendants
     , headInf
     , paddedNum
-    , dropExtension
-    , MonadLog(..), LogLevel(..), LoggerT
-    , runLoggerPipeIO, runLoggerIO, runLogger, ignoreLogs
+    , dropExtension, dropDirs
+    , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
     , histogram
     , ExceptT(..)
     , sh
     , scope
-    , allFiles, allFilesWithSuffix
+    , allDirs, allFiles, allFilesWithSuffix
+    , removeFileIfExists, readFileIfExists
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
+    , isTopMostZ
     ) where
 
 import GHC.Err as X ( error )
@@ -68,25 +69,26 @@ import GHC.Num as X ( Num(..) )
 -- some more type classes
 import GHC.Generics as X ( Generic )
 import Data.Functor as X ( Functor(..) )
-import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some )
+import Control.Applicative as X ( Applicative(..), (<$>), (<*), (*>), (<|>), many, some, optional )
 import qualified Control.Monad ( fail )
-import Control.Monad as X ( Monad(return, (>>), (>>=)), MonadPlus(..), guard, void, mzero, msum, when, unless
-                          , zipWithM, zipWithM_
-                          , (<=<), (>=>), (=<<), foldM, ap, replicateM, liftM
-                          , filterM, join
-                          )
-import Control.Monad.Trans.Class as X ( MonadTrans(lift) )
 
+import Control.Monad                as X ( Monad(return, (>>), (>>=))
+                                         , (<=<), (>=>), (=<<), ap, join
+                                         , guard, void, when, unless
+                                         , zipWithM, zipWithM_, foldM, filterM, replicateM
+                                         , MonadPlus(..), mzero, msum )
+import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
 import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
-import Control.Monad.State.Strict   as X ( MonadState, StateT(..), gets, modify, evalStateT, runStateT, evalState, runState )
+import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
+                                         , evalStateT, runStateT, evalState, runState )
 import Control.Monad.Trans.Identity as X ( IdentityT(..) )
 import Control.Monad.Trans.Maybe    as X ( MaybeT(..), runMaybeT )
-import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(..), execWriterT, runWriter )
-import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT )
-import Control.Arrow             as X ( first, second, (***), (&&&) )
-import Control.Category          as X ( (<<<), (>>>) )
+import Control.Monad.Writer.Strict  as X ( MonadWriter(listen, tell), WriterT(runWriterT), execWriterT, runWriter )
+import Control.Monad.Reader         as X ( MonadReader(ask), ReaderT(..), runReaderT, asks )
+import Control.Arrow                as X ( first, second, (***), (&&&) )
+import Control.Category             as X ( (<<<), (>>>) )
 
 
 import Data.Data         as X ( Data, Typeable )
@@ -97,11 +99,12 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , group, groupBy, sort, sortBy
                               , genericLength, genericIndex, genericTake
                               , isSuffixOf, isPrefixOf, isInfixOf
+                              , stripPrefix
                               , subsequences, transpose, elemIndex
                               , replicate, length
                               , (++), map, concat, null, reverse, lookup, elem, unlines, words
-                              , zipWith, concatMap, all, lines, notElem, foldr
-                              , sum, product, unzip, zip, zip3, foldr1, foldl, any
+                              , zipWith, concatMap, lines, notElem, foldr
+                              , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
                               , head, init, tail, last
@@ -115,11 +118,13 @@ import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
-                              , and, or
+                              , and, or, all, any
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine, readFile )
+import System.IO.Error ( isDoesNotExistError )
+import Control.Exception ( catch, throwIO )
 
 -- safe
 import Safe as X ( at, atNote, atMay, readMay, readNote, headNote, fromJustNote )
@@ -138,8 +143,8 @@ import qualified Data.Aeson.Types as JSON
 -- QuickCheck
 import Test.QuickCheck ( Gen )
 
--- parsec
-import Text.Parsec ( ParsecT )
+-- megaparsec
+import Text.Megaparsec.Prim ( ParsecT )
 
 -- pretty
 import Text.PrettyPrint as X
@@ -156,7 +161,7 @@ import Data.Generics.Uniplate.Data as X
     , descend, descendM
     , descendBi, descendBiM
     , universe, universeBi
-    , children
+    , children, childrenBi
     , uniplate
     )
 import Data.Generics.Uniplate.Zipper as Zipper ( Zipper, down, right, up, hole )
@@ -180,6 +185,7 @@ import qualified Data.Set as S
 import System.Directory as X
     ( getDirectoryContents, doesDirectoryExist, doesFileExist
     , createDirectoryIfMissing, removeDirectoryRecursive
+    , removeFile
     )
 import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )
@@ -278,7 +284,7 @@ maybeRead = fmap fst . listToMaybe . reads
 padShowInt :: Show a => Int -> a -> String
 padShowInt n i = let s = show i in replicate (n - length s) '0' ++ s
 
-decodeFromFile :: Serialize a => FilePath -> IO a
+decodeFromFile :: (Serialize a, MonadFail IO) => FilePath -> IO a
 decodeFromFile path = do
     con <- ByteString.readFile path
     either (fail . stringToDoc) return (decode con)
@@ -327,9 +333,6 @@ instance MonadFail Identity where
 instance MonadFail Maybe where
     fail = const Nothing
 
-instance MonadFail IO where
-    fail msg = Control.Monad.fail $ Pr.renderStyle (Pr.style { Pr.lineLength = 120 }) $ vcat ["There were errors.", msg]
-
 instance (a ~ Doc) => MonadFail (Either a) where
     fail = Left
 
@@ -354,11 +357,8 @@ instance MonadFail m => MonadFail (ReaderT r m) where
 instance MonadFail Gen where
     fail = Control.Monad.fail . show
 
-instance MonadFail (ParsecT g l m) where
+instance MonadFail (ParsecT l m) where
     fail = Control.Monad.fail . show
-
-instance MonadFail m => MonadFail (LoggerT m) where
-    fail = lift . fail
 
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
@@ -382,8 +382,15 @@ instance (Monad m) => Monad (ExceptT m) where
             Right x -> runExceptT (k x)
     fail = ExceptT . return . Left . stringToDoc
 
+instance MonadIO m => MonadIO (ExceptT m) where
+    liftIO comp = ExceptT $ do
+        res <- liftIO comp
+        return (Right res)
+
 instance MonadTrans ExceptT where
-    lift comp = ExceptT (Right `liftM` comp)
+    lift comp = ExceptT $ do
+        res <- comp
+        return (Right res)
 
 -- | "failCheaply: premature optimisation at its finest." - Oz
 --   If you have a (MonadFail m => m a) action at hand which doesn't require anything else from the monad m,
@@ -419,8 +426,13 @@ paddedNum x = replicate (6 - length s) '0' ++ s
     where s = show x
 
 
+-- | splits from the "."s, drops the last component, glues back together what's left
 dropExtension :: FilePath -> FilePath
 dropExtension = intercalate "." . init . splitOn "."
+
+-- | splits from the "/"s, drops all but last component, returns what's left
+dropDirs :: FilePath -> FilePath
+dropDirs = last . splitOn "/"
 
 
 class (Functor m, Applicative m, Monad m) => MonadLog m where
@@ -428,14 +440,14 @@ class (Functor m, Applicative m, Monad m) => MonadLog m where
 
 data LogLevel
     = LogNone
-    | LogFollow
     | LogInfo
+    | LogFollow
     | LogWarn
     | LogDebug
     | LogDebugVerbose
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
-instance Default LogLevel where def = LogNone
+instance Default LogLevel where def = LogInfo
 
 logInfo :: MonadLog m => Doc -> m ()
 logInfo = log LogInfo
@@ -448,6 +460,12 @@ logDebug = log LogDebug
 
 logDebugVerbose :: MonadLog m => Doc -> m ()
 logDebugVerbose = log LogDebugVerbose
+
+instance MonadLog m => MonadLog (ReaderT r m) where
+    log l m = lift (log l m)
+
+instance (MonadLog m, Monoid w) => MonadLog (WriterT w m) where
+    log l m = lift (log l m)
 
 instance MonadLog m => MonadLog (StateT st m) where
     log l m = lift (log l m)
@@ -463,23 +481,6 @@ instance Monad m => MonadLog (Pipes.Proxy a b () (Either (LogLevel, Doc) d) m) w
 
 ignoreLogs :: Monad m => IdentityT m a -> m a
 ignoreLogs = runIdentityT
-
-newtype LoggerT m a = LoggerT (WriterT [(LogLevel, Doc)] m a)
-    deriving (Functor, Applicative, Monad, MonadTrans, MonadIO)
-
-instance (Applicative m, Monad m) => MonadLog (LoggerT m) where
-    log lvl msg = LoggerT $ tell [(lvl, msg)]
-
-runLogger :: Monad m => LogLevel -> LoggerT m a -> m (a, [Doc])
-runLogger l (LoggerT ma) = do
-    (a, logs) <- runWriterT ma
-    return (a, [ msg | (lvl, msg) <- logs , lvl <= l ])
-
-runLoggerIO :: MonadIO m => LogLevel -> LoggerT m a -> m a
-runLoggerIO l logger = do
-    (a, logs) <- runLogger l logger
-    liftIO $ print (vcat logs)
-    return a
 
 runLoggerPipeIO :: MonadIO m => LogLevel -> Pipes.Producer (Either (LogLevel, Doc) a) m r -> m r
 runLoggerPipeIO l logger = Pipes.runEffect $ Pipes.for logger each
@@ -501,17 +502,38 @@ scope ma = do
     modify (const st)
     return a
 
+allDirs :: FilePath -> IO [FilePath]
+allDirs x = do
+    let dots i = not ( i == "." || i == ".." )
+    isDir <- doesDirectoryExist x
+    ys' <- getDirectoryContents x `catchError` const (return [])
+    let ys = filter dots ys'
+    ([x | isDir] ++) <$> concatMapM allDirs (map (x </>) ys)
+
 allFiles :: FilePath -> IO [FilePath]
 allFiles x = do
     let dots i = not ( i == "." || i == ".." )
     ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
-    if null ys
-        then return [x]
-        else (x :) <$> concatMapM allFiles (map (x </>) ys)
+    (x :) <$> concatMapM allFiles (map (x </>) ys)
 
 allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
 allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+
+-- from http://stackoverflow.com/questions/8502201/remove-file-if-it-exists
+removeFileIfExists :: FilePath -> IO ()
+removeFileIfExists f = removeFile f `catch` handleExists
+    where
+        handleExists e
+            | isDoesNotExistError e = return ()
+            | otherwise = throwIO e
+
+readFileIfExists :: FilePath -> IO (Maybe String)
+readFileIfExists f = (Just <$> readFile f) `catch` handleExists
+    where
+        handleExists e
+            | isDoesNotExistError e = return Nothing
+            | otherwise = throwIO e
 
 setRandomSeed :: Int -> IO ()
 setRandomSeed = setStdGen . mkStdGen
@@ -520,3 +542,8 @@ nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
 nchoosek f n k = f n `div` (f k * f (n-k))
 
 type JSONValue = JSON.Value
+
+-- | return true if this is a top-most zipper.
+--   i.e. we cannot go any more up.
+isTopMostZ :: Zipper a b -> Bool
+isTopMostZ = maybe True (const False) . up

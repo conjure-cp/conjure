@@ -63,7 +63,7 @@ removeEnumsFromModel =
                     = DomainReference nm (Just d)
                 onD p = p
 
-            let model' = model { mStatements = statements' 
+            let model' = model { mStatements = statements'
                                     |> transformBi onD
                                     |> transformBi onX
                                }
@@ -98,7 +98,7 @@ removeEnumsFromModel =
                     = DomainReference nm (Just d)
                 onD p = p
 
-            let model' = model { mStatements = concat statements' 
+            let model' = model { mStatements = concat statements'
                                     |> transformBi onD
                                }
 
@@ -180,10 +180,12 @@ addEnumsAndUnnamedsBack
     -> Constant                         -- the constant with ints in place of enums & unnameds
     -> Constant                         -- the constant with enums & unnameds again
 addEnumsAndUnnamedsBack unnameds ctxt = helper
-    
+
     where
 
         helper domain constant = case (domain, constant) of
+
+            (_, c@ConstantUndefined{}) -> c
 
             (DomainBool , c) -> c
             (DomainInt{}, c) -> c
@@ -195,8 +197,7 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainReference ename _  , ConstantInt i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else fromMaybe (bug $ "addEnumsAndUnnamedsBack 2:" <+> pretty (i, ename))
-                                   (lookup (i, ename) ctxt)
+                    else ConstantInt i -- assume this was an int if if is not in the unnameds list
 
             (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
                 ConstantAbstract $ AbsLitTuple

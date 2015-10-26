@@ -6,6 +6,7 @@ module Conjure.Language.CategoryOf
 
 -- conjure
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -56,14 +57,14 @@ instance CategoryOf FindOrGiven where
 
 -- | Category checking to check if domains have anything >CatParameter in them.
 --   Run only after name resolution.
-categoryChecking :: MonadFail m => Model -> m Model
+categoryChecking :: (MonadFail m, MonadUserError m) => Model -> m Model
 categoryChecking m = do
-    errors1 <- liftM concat $ forM (mStatements m) $ \ st -> case st of
+    errors1 <- fmap concat $ forM (mStatements m) $ \ st -> case st of
         Declaration (FindOrGiven _forg name domain) -> do
             let cat = categoryOf domain
             return [(domain, (name, cat)) | cat > CatParameter]
         _ -> return []
-    errors2 <- liftM concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
+    errors2 <- fmap concat $ forM (universeBi (mStatements m) :: [Domain () Expression]) $ \ domain -> do
         let cat = categoryOf domain
         return [ (domain, cat)
                | cat > CatQuantified
@@ -72,7 +73,7 @@ categoryChecking m = do
 
     if null errors1 && null errors2
         then return m
-        else fail $ vcat
+        else userErr1 $ vcat
             $  [ "Category checking failed." ]
             ++ concat [ [ "The domain   :" <+> pretty domain
                         , "Its category :" <+> pretty cat

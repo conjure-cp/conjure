@@ -10,7 +10,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
-import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.ShowToken ( ShowToken(..) )
 
 
 type LexemePos = (Lexeme, SourcePos)
@@ -143,9 +144,9 @@ data Lexeme
     | L_normIndices
 
     -- in the rule language
-    | L_lambda
-    | L_quantifier
-    | L_representation
+    -- | L_lambda
+    -- | L_quantifier
+    -- | L_representation
 
     -- arithmetic operators
 
@@ -214,6 +215,7 @@ data Lexeme
     | L_CloseCurly
 
     | L_Newline
+    | L_Carriage
     | L_Space
     | L_Tab
 
@@ -239,6 +241,7 @@ data Lexeme
 
     | L_subsequence
     | L_substring
+    | L_powerSet
 
     | L_pred
     | L_succ
@@ -255,6 +258,7 @@ textToLexeme t = M.lookup t mapTextToLexeme
 
 lexemeFace :: Lexeme -> Pr.Doc
 lexemeFace L_Newline = "new line"
+lexemeFace L_Carriage = "\\r"
 lexemeFace L_Space   = "space character"
 lexemeFace L_Tab     = "tab character"
 lexemeFace (LIntLiteral i) = Pr.integer i
@@ -265,6 +269,7 @@ lexemeFace l = case M.lookup l mapLexemeToText of
     Just t  -> Pr.text (T.unpack t)
 
 lexemeWidth :: Lexeme -> Int
+lexemeWidth L_Carriage = 0
 lexemeWidth L_Tab = 4
 lexemeWidth (LIntLiteral i) = length (show i)
 lexemeWidth (LIdentifier i) = T.length i
@@ -369,9 +374,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )
     , ( L_normIndices, "normIndices" )
-    , ( L_lambda, "lambda" )
-    , ( L_quantifier, "quantifier" )
-    , ( L_representation, "representation" )
+    -- , ( L_lambda, "lambda" )
+    -- , ( L_quantifier, "quantifier" )
+    -- , ( L_representation, "representation" )
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )
     , ( L_Times           , "*"     )
@@ -411,8 +416,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_CloseCurly      , "}"     )
 
     , ( L_Newline         , "\n"    )
-    -- , ( L_Newline         , "\r"    )
-    -- , ( L_Newline         , "\n\r"  )
+    , ( L_Carriage        , "\r"    )
     , ( L_Space           , " "     )
     , ( L_Tab             , "\t"    )
 
@@ -438,6 +442,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_subsequence     , "subsequence"  )
     , ( L_substring       , "substring"    )
+    , ( L_powerSet        , "powerSet"     )
 
     , ( L_pred, "pred" )
     , ( L_succ, "succ" )
@@ -467,13 +472,14 @@ runLexer text = do
         calcPos _   []     = []
         calcPos pos (x:xs) = (x, pos) : calcPos (nextPos pos x) xs
 
-        nextPos pos L_Newline = incSourceLine (setSourceColumn pos 1) 1
-        nextPos pos l         = incSourceColumn pos (lexemeWidth l)
+        nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
+        nextPos pos l          = incSourceColumn pos (lexemeWidth l)
 
 removeSpaces :: [LexemePos] -> [LexemePos]
 removeSpaces = filter (not . space . fst)
     where
         space L_Newline {} = True
+        space L_Carriage{} = True
         space L_Tab     {} = True
         space L_Space   {} = True
         space LComment  {} = True
@@ -527,3 +533,12 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
                                 else let (commentLine,rest2) = T.span (/='\n') rest1
                                      in  Just (rest2, LComment commentLine)
 
+
+instance ShowToken [(Lexeme, Text.Megaparsec.Pos.SourcePos)] where
+    showToken = intercalate ", " . map showToken
+
+instance ShowToken (Lexeme, Text.Megaparsec.Pos.SourcePos) where
+    showToken = showToken . fst
+
+instance ShowToken Lexeme where
+    showToken = show . lexemeFace

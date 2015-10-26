@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find x : function record { fst : int(7..8), snd : bool } --> int(13,17)
+
+such that x(record { fst = 7, snd = true}) = 13
+such that x(record { fst = 8, snd = false}) = 17

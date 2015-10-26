@@ -51,7 +51,7 @@ variant = Representation chck downD structuralCons downC up
 
             return $ \ rec -> do
                 (which:refs) <- downX1 rec
-                (sort . concat) <$> sequence
+                concat <$> sequence
                     [ do
                         isc <- innerStructuralCons which (fromInt i) ref dom
                         let dcs = dontCares        which (fromInt i) ref
@@ -77,13 +77,15 @@ variant = Representation chck downD structuralCons downC up
                     in  case lookup iName ctxt of
                             Just val -> return (name, ConstantAbstract $ AbsLitVariant (Just dsForgotten) iTag val)
                             Nothing -> fail $ vcat $
-                                [ "No value for:" <+> pretty iName
+                                [ "(in Variant up 1)"
+                                , "No value for:" <+> pretty iName
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty (DomainRecord ds)
                                 ] ++
                                 ("Bindings in context:" : prettyContext ctxt)
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (mkName name "_tag")
+                    [ "(in Variant up 2)"
+                    , "No value for:" <+> pretty (mkName name "_tag")
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty (DomainRecord ds)
                     ] ++

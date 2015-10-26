@@ -27,6 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpApart x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpApart where
+    evaluateOp (OpApart _ ConstantUndefined{}) = return (fromBool True)
     evaluateOp (OpApart (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
         return $ ConstantBool $ not $ or
             [ and [ y `elem` xs | y <- ys ]

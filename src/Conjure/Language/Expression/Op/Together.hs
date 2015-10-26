@@ -27,6 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpTogether where
+    evaluateOp (OpTogether _ ConstantUndefined{}) = return (fromBool False)
     evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
         return $ ConstantBool $ or
             [ and [ y `elem` xs | y <- ys ]

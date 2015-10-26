@@ -3,12 +3,13 @@ module Conjure.Language.AdHoc where
 import Conjure.Prelude
 import Conjure.Language.Name
 
+-- aeson
 import qualified Data.Aeson.Types as JSON ( Value )
 
 
 class ExpressionLike a where
     fromInt :: Integer -> a
-    intOut :: MonadFail m => a -> m Integer
+    intOut :: MonadFail m => Doc -> a -> m Integer
 
     fromBool :: Bool -> a
     boolOut :: MonadFail m => a -> m Bool

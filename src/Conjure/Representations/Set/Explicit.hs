@@ -4,10 +4,7 @@ module Conjure.Representations.Set.Explicit ( setExplicit ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 
 
@@ -57,7 +54,7 @@ setExplicit = Representation chck downD structuralCons downC up
             return $ \ ref -> do
                 refs <- downX1 ref
                 case refs of
-                    [m] -> 
+                    [m] ->
                         concat <$> sequence
                             [ ordering m
                             , innerStructuralCons m
@@ -82,14 +79,15 @@ setExplicit = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainSet "Explicit" (SetAttr (SizeAttr_Size _)) _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in Set Explicit up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant ->
-                    case constant of
-                        ConstantAbstract (AbsLitMatrix _ vals) ->
+                    case viewConstantMatrix constant of
+                        Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet vals))
                         _ -> fail $ vcat
                                 [ "Expecting a matrix literal for:" <+> pretty (outName name)

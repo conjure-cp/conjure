@@ -4,19 +4,15 @@ module Conjure.Representations.MSet.ExplicitVarSizeWithFlags ( msetExplicitVarSi
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Lenses
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.Pretty
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m) => Representation m
+msetExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
@@ -171,11 +167,11 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
-                    case flagMatrix of
+                    case viewConstantMatrix flagMatrix of
                         -- TODO: check if indices match
-                        ConstantAbstract (AbsLitMatrix _ flags) ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                        Just (_, flags) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitMSet $ concat
                                                     [ replicate (fromInteger i) v
                                                     | (ConstantInt i,v) <- zip flags vals
@@ -193,13 +189,15 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlag name)
+                    [ "(in MSet ExplicitVarSizeWithFlags up 1)"
+                    , "No value for:" <+> pretty (nameFlag name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in MSet ExplicitVarSizeWithFlags up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

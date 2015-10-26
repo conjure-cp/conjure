@@ -4,7 +4,6 @@ module Conjure.Language.Expression.Op.Restrict where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Process.Enumerate ( enumerateDomain )
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -30,11 +29,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpRestrict x) where
 instance EvaluateOp OpRestrict where
     evaluateOp (OpRestrict (viewConstantFunction -> Just xs) domX) = do
         dom       <- domainOut domX
-        valsInDom <- enumerateDomain (dom :: Domain () Constant)
         return $ ConstantAbstract $ AbsLitFunction $ sortNub
             [ x
             | x@(a,_) <- xs
-            , a `elem` valsInDom
+            , case validateConstantForDomain a (dom :: Domain () Constant) of
+                Nothing -> False
+                Just{}  -> True
             ]
     evaluateOp op = na $ "evaluateOp{OpRestrict}:" <++> pretty (show op)
 

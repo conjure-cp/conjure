@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find b: bool
+find i: int(0..5)
+find x: int(1..2)
+such that
+    sum([toInt(false = b) * 5 | true]) + toInt(2 = x /\ b) * x = i,
+    or([false = b | true]) \/ 2 = sum([x | true]) /\ b
+

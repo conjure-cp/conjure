@@ -12,7 +12,42 @@ import System.Console.CmdArgs hiding ( Default(..) )
 
 
 data UI
-    = Modelling
+    = Solve
+        { essence                    :: FilePath       -- essence, mandatory
+        , essenceParams              :: [FilePath]
+        , validateSolutionsOpt       :: Bool
+        -- flags related to output
+        , outputDirectory            :: FilePath
+        , numberingStart             :: Int
+        , smartFilenames             :: Bool
+        -- flags related to logging
+        , logLevel                   :: LogLevel
+        , verboseTrail               :: Bool
+        , rewritesTrail              :: Bool
+        , logRuleFails               :: Bool
+        , logRuleSuccesses           :: Bool
+        , logRuleAttempts            :: Bool
+        , logChoices                 :: Bool
+        -- flags related to modelling decisions
+        , strategyQ                  :: String
+        , strategyA                  :: String
+        , representations            :: Maybe String
+        , representationsFinds       :: Maybe String
+        , representationsGivens      :: Maybe String
+        , representationsAuxiliaries :: Maybe String
+        , representationsQuantifieds :: Maybe String
+        , representationsCuts        :: Maybe String
+        , channelling                :: Bool
+        , representationLevels       :: Bool                -- (def: True)
+        , seed                       :: Maybe Int
+        , limitModels                :: Maybe Int
+        , limitTime                  :: Maybe Int
+        , outputBinary               :: Bool
+        -- flags for SR and Minion
+        , savilerowOptions           :: String
+        , minionOptions              :: String
+        }
+    | Modelling
         { essence                    :: FilePath       -- essence, mandatory
         -- flags related to output
         , outputDirectory            :: FilePath
@@ -21,6 +56,7 @@ data UI
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
+        , rewritesTrail              :: Bool
         , logRuleFails               :: Bool
         , logRuleSuccesses           :: Bool
         , logRuleAttempts            :: Bool
@@ -35,6 +71,7 @@ data UI
         , representationsQuantifieds :: Maybe String        -- (def: representations)
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
+        , representationLevels       :: Bool                -- (def: True)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -111,7 +148,179 @@ data UI
 
 ui :: UI
 ui = modes
-    [ Modelling
+    [ Solve
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
+        , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
+                                   &= args
+        , validateSolutionsOpt = True
+                                   &= name "validate-solutions"
+                                   &= groupname "Flags"
+                                   &= explicit
+                                   &= help "Enable/disable solution validation. On by default."
+        , outputDirectory  = "conjure-output"
+                                   &= typDir
+                                   &= name "output-directory"
+                                   &= name "o"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output directory. Generated models will be saved here.\n\
+                                           \Default value: 'conjure-output'"
+        , numberingStart   = 1     &= name "numbering-start"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Starting value to output files.\n\
+                                           \Default value: 1"
+        , smartFilenames   = False &= name "smart-filenames"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Use \"smart names\" for the models.\n\
+                                           \Turned off by default.\n\
+                                           \Caution: With this flag, Conjure will use the answers when producing \
+                                           \a filename. It will ignore the order of questions. \
+                                           \This will become a problem if anything other than 'f' is used for questions."
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        , verboseTrail     = False &= name "verbose-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate verbose trails or not."
+        , rewritesTrail    = False &= name "rewrites-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate trails about the applied rewritings or not."
+        , logRuleFails     = False &= name "log-rule-fails"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule failures. (Caution: can be a lot!)"
+        , logRuleSuccesses = False &= name "log-rule-successes"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule applications."
+        , logRuleAttempts  = False &= name "log-rule-attempts"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
+        , logChoices       = False &= name "log-choices"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Store the choices in a way that can be reused be by -al"
+        , strategyQ        = "f"   &= typ "STRATEGY"
+                                   &= name "strategy-q"
+                                   &= name "q"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when selecting the next question to answer. \
+                                           \Options: f (for first), i (for interactive), r (for random), x (for all). \
+                                           \The letter a (for auto) can be prepended to automatically skip \
+                                           \when there is only one option at any point.\n\
+                                           \Default value: f"
+        , strategyA        = "c"   &= typ "STRATEGY"
+                                   &= name "strategy-a"
+                                   &= name "a"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
+                                           \Moreover, c (for compact) can be used to pick the most 'compact' option \
+                                           \at every decision point.\n\
+                                           \And, s (for sparse) can be used to pick the most 'sparse' option \
+                                           \at every decision point. \
+                                           \This can be particularly useful for --representations-givens\n\
+                                           \ l (for follow log) tries to pick the given choices as far as possible\n\
+                                           \Default value: c"
+        , representations = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation.\n\
+                                           \Default value: same as --strategy-a"
+        , representationsFinds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-finds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a decision variable.\n\
+                                           \Default value: same as --representations"
+        , representationsGivens = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-givens"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a parameter.\n\
+                                           \Default value: c (for compact)"
+        , representationsAuxiliaries = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-auxiliaries"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
+                                           \Default value: same as --representations"
+        , representationsQuantifieds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-quantifieds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a quantified variable.\n\
+                                           \Default value: same as --representations"
+        , representationsCuts = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-cuts"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
+                                           \Default value: same as --representations-cuts"
+        , channelling = True       &= name "channelling"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to produce channelled models or not.\n\
+                                           \Can be true or false. (true by default)\n\
+                                           \    false: Do not produce channelled models.\n\
+                                           \    true : Produce channelled models."
+        , representationLevels = True
+                                   &= name "representation-levels"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
+                                           \These levels are used to cut down the number of generated models.\n\
+                                           \Can be true or false. (true by default)"
+        , seed = Nothing           &= name "seed"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "The seed for the random number generator."
+        , limitModels = Nothing    &= name "limit-models"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Maximum number of models to generate."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Time limit in seconds. (CPU time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
+        , savilerowOptions = "-O2"
+                                   &= name "savilerow-options"
+                                   &= groupname "Options for other tools"
+                                   &= explicit
+                                   &= help "Options to be passed to Savile Row.\n\
+                                           \By default: '-O2'"
+        , minionOptions = def      &= name "minion-options"
+                                   &= groupname "Options for other tools"
+                                   &= explicit
+                                   &= help "Options to be passed to Minion."
+        }                          &= name "solve"
+                                   &= explicit
+                                   &= help "This is a combined mode, and it is available for convenience.\n\
+                                           \It runs conjure in the modelling mode followed by \
+                                           \parameter refinement if required, \
+                                           \then Savile Row + Minion to solve, and \
+                                           \then solution translation."
+    , Modelling
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
         , outputDirectory  = "conjure-output"
@@ -143,6 +352,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Whether to generate verbose trails or not."
+        , rewritesTrail    = False &= name "rewrites-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate trails about the applied rewritings or not."
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -231,6 +444,13 @@ ui = modes
                                            \Can be true or false. (true by default)\n\
                                            \    false: Do not produce channelled models.\n\
                                            \    true : Produce channelled models."
+        , representationLevels = True
+                                   &= name "representation-levels"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
+                                           \These levels are used to cut down the number of generated models.\n\
+                                           \Can be true or false. (true by default)"
         , seed = Nothing           &= name "seed"
                                    &= groupname "Model generation"
                                    &= explicit

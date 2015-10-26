@@ -4,18 +4,15 @@ module Conjure.Representations.Set.ExplicitVarSizeWithFlags ( setExplicitVarSize
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.Pretty
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m) => Representation m
+setExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
@@ -124,7 +121,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
-            let trues  = replicate (length constants)              (ConstantBool True)
+            let trues  = replicate (length constants)                                   (ConstantBool True)
             let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantBool False)
 
             return $ Just
@@ -151,15 +148,15 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         up ctxt (name, domain) =
             case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
-                    case flagMatrix of
+                    case viewConstantMatrix flagMatrix of
                         -- TODO: check if indices match
-                        ConstantAbstract (AbsLitMatrix _ flags) ->
-                            case constantMatrix of
-                                ConstantAbstract (AbsLitMatrix _ vals) ->
+                        Just (_, flags) ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitSet
                                                     [ v
                                                     | (i,v) <- zip flags vals
-                                                    , i == ConstantBool True
+                                                    , viewConstantBool i == Just True
                                                     ] )
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
@@ -174,13 +171,15 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlag name)
+                    [ "(in Set ExplicitVarSizeWithFlags up 1)"
+                    , "No value for:" <+> pretty (nameFlag name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in Set ExplicitVarSizeWithFlags up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

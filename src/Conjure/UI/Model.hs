@@ -20,7 +20,7 @@ import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
-import Conjure.Language.CategoryOf
+import Conjure.Language.CategoryOf ( Category(..), categoryChecking, categoryOf )
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
 import Conjure.Language.Lenses
@@ -35,11 +35,15 @@ import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Process.DealWithCuts ( dealWithCuts )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 
-import Conjure.Representations ( downX1, downD, reprOptions, getStructurals, reprsStandardOrder, reprsSparseOrder )
+import Conjure.Representations
+    ( downX1, downD, reprOptions, getStructurals
+    , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
+    )
 
 import Conjure.Rules.Definition
 
@@ -79,10 +83,12 @@ import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
 import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
+-- base
+import System.IO ( hFlush, stdout )
 
 -- uniplate
-import Data.Generics.Uniplate.Zipper ( Zipper, zipperBi, fromZipper, hole, replaceHole )
-import Data.Generics.Uniplate.Zipper as Zipper ( up )
+import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
+import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
@@ -90,7 +96,7 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m)
+    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> m ()
@@ -117,8 +123,8 @@ outputModels config model = do
                     let gen =
                             if smartFilenames config
                                 then [ choice
-                                     | [_question, (_strategy, choice, numOptions)] <-
-                                             eprime |> mInfo |> miTrailCompact |> chunksOf 2
+                                     | (_question, choice, numOptions) <-
+                                             eprime |> mInfo |> miTrailCompact
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
@@ -135,21 +141,26 @@ outputModels config model = do
 
 
 toCompletion
-    :: (MonadIO m, MonadFail m, MonadUserError m, NameGen m)
+    :: (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue m
-    logInfo $ modelInfo m2
-    loopy m2
+    let m2Info = mInfo m2
+    let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
+                                 , miStrategyA = strategyA config
+                                 } }
+    logDebug $ modelInfo m3
+    loopy (StartOver m3)
     where
         driver = strategyToDriver config
-        loopy model = do
-            logDebug $ "[loopy]" <+> pretty model
-            qs <- remaining config model
+        loopy modelWIP = do
+            logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
+            qs <- remainingWIP config modelWIP
             if null qs
                 then do
+                    let model = modelWIPOut modelWIP
                     model' <- epilogue model
                     yield (Right model')
                 else do
@@ -157,36 +168,43 @@ toCompletion config m = do
                     mapM_ loopy nextModels
 
 
-remaining
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
+-- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location
+--   and new rules will be tried using P as the top of the zipper-tree.
+--   The whole model (containing P too) will be tried later for completeness.
+remainingWIP
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
-    -> Model
+    -> ModelWIP
     -> m [Question]
-remaining config model | Just modelZipper <- zipperBi model = do
-    let
-        loopLevels :: Monad m => [m [a]] -> m [a]
-        loopLevels [] = return []
-        loopLevels (a:as) = do bs <- a
-                               if null bs
-                                   then loopLevels as
-                                   else return bs
+remainingWIP config (StartOver model)
+    | Just modelZipper <- mkModelZipper model = do
+        qs <- remaining config modelZipper (mInfo model)
+        return qs
+    | otherwise = bug "remainingWIP: Cannot create zipper."
+remainingWIP config wip@(TryThisFirst modelZipper info) = do
+    qs <- remaining config modelZipper info
+    case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
+        (False, _, _)  -> return qs                                         -- not null, return
+        (_, Just r, _) -> remainingWIP config (TryThisFirst r info)         -- there is a sibling to the right
+        (_, _, Just u) -> remainingWIP config (TryThisFirst u info)         -- there is a parent
+        _              -> remainingWIP config (StartOver (modelWIPOut wip)) -- we are done here,
+                                                                            -- start-over the whole model in case
+                                                                            -- something on the left needs attention.
 
-        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m)
-                     => [Rule]
-                     -> m [(Zipper Model Expression, [(Doc, RuleResult m)])]
-        processLevel rulesAtLevel =
-            fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
-                ys <- applicableRules config rulesAtLevel x
-                return $ if null ys
-                            then Nothing
-                            else Just (x, ys)
 
-    questions <- loopLevels $ map processLevel (allRules config)
+remaining
+    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    => Config
+    -> ModelZipper
+    -> ModelInfo
+    -> m [Question]
+remaining config modelZipper minfo = do
+    questions <- getQuestions config modelZipper
     forM questions $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            importNameGenState $ model |> mInfo |> miNameGenState
+            importNameGenState $ minfo |> miNameGenState
             ruleResultExpr <- ruleResult
-            let fullModelBeforeHook = fromZipper (replaceHole ruleResultExpr focus)
+            let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
             case (mtyBefore, mtyAfter) of
@@ -212,17 +230,24 @@ remaining config model | Just modelZipper <- zipperBi model = do
                                 , "After :" <+> pretty ruleResultExpr
                                 , "Error :" <+> pretty msg
                                 ]
-            let updNameGenState m0 = do
+
+            fullModelAfterHook <- case ruleResultHook of
+                Nothing   -> do
                     namegenst <- exportNameGenState
-                    let mi0 = mInfo m0
-                    let mi1 = mi0 { miNameGenState = namegenst }
-                    let m1  = m0  { mInfo = mi1 }
-                    return m1
-            fullModelAfterHook <- ruleResultHook fullModelBeforeHook >>= updNameGenState
+                    return (TryThisFirst fullModelBeforeHook minfo { miNameGenState = namegenst })
+                Just hook -> do
+                    namegenst1 <- exportNameGenState
+                    let m1 = fromModelZipper fullModelBeforeHook minfo { miNameGenState = namegenst1 }
+                    m2 <- hook m1
+                    namegenst2 <- exportNameGenState
+                    let m3 = m2 { mInfo = (mInfo m2) { miNameGenState = namegenst2 } }
+                    return (StartOver m3)
+
             return
                 ( Answer
                     { aText = ruleName <> ":" <+> ruleResultDescr
                     , aRuleName = ruleName
+                    , aBefore = hole focus
                     , aAnswer = ruleResultExpr
                     , aFullModel = fullModelAfterHook
                     }
@@ -238,7 +263,59 @@ remaining config model | Just modelZipper <- zipperBi model = do
             , qAscendants = tail (ascendants focus)
             , qAnswers = map fst answers1
             }
-remaining _ _ = return []
+
+
+-- | Computes all applicable questions.
+--   strategyQ == PickFirst is special-cased for performance.
+getQuestions
+    :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    => Config
+    -> ModelZipper
+    -> m [(ModelZipper, [(Doc, RuleResult m)])]
+getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$>
+    let
+        loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
+        loopLevels [] = return Nothing
+        loopLevels (a:as) = do bs <- a
+                               case bs of
+                                   Nothing -> loopLevels as
+                                   Just {} -> return bs
+
+        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+                     => [Rule]
+                     -> m (Maybe (ModelZipper, [(Doc, RuleResult m)]))
+        processLevel rulesAtLevel =
+            let
+                go [] = return Nothing
+                go (x:xs) = do
+                     ys <- applicableRules config rulesAtLevel x
+                     if null ys
+                         then go xs
+                         else return (Just (x, ys))
+            in
+                go (allContextsExceptReferences modelZipper)
+    in
+        loopLevels (map processLevel (allRules config))
+getQuestions config modelZipper =
+    let
+        loopLevels :: Monad m => [m [a]] -> m [a]
+        loopLevels [] = return []
+        loopLevels (a:as) = do bs <- a
+                               if null bs
+                                   then loopLevels as
+                                   else return bs
+
+        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+                     => [Rule]
+                     -> m [(ModelZipper, [(Doc, RuleResult m)])]
+        processLevel rulesAtLevel =
+            fmap catMaybes $ forM (allContextsExceptReferences modelZipper) $ \ x -> do
+                ys <- applicableRules config rulesAtLevel x
+                return $ if null ys
+                            then Nothing
+                            else Just (x, ys)
+    in
+        loopLevels (map processLevel (allRules config))
 
 
 strategyToDriver :: Config -> Driver
@@ -273,28 +350,31 @@ strategyToDriver config questions = do
         pickedAs <- executeAnswerStrategy config pickedQ optionsA (strategyA' config)
         return
             [ theModel
-                |> addToTrail
-                        config
-                        (strategyQ  config) pickedQNumber (length optionsQ) [pickedQDescr]
-                        (strategyA' config) pickedANumber (length optionsA) [pickedADescr]
             | (pickedANumber, pickedADescr, pickedA) <- pickedAs
-            , let theModel = aFullModel pickedA
+            , let upd = addToTrail
+                            config
+                            (strategyQ  config) pickedQNumber                   pickedQDescr
+                            (strategyA' config) pickedANumber (length optionsA) pickedADescr
+                            (aText pickedA)
+                            (aBefore pickedA)
+                            (aAnswer pickedA)
+            , let theModel = updateModelWIPInfo upd (aFullModel pickedA)
             ]
 
 
 executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
-    logInfo ("Picking the only option:" <+> doc)
+    logDebug ("Picking the only option:" <+> doc)
     return [(1, doc, option)]
 executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
     case strategy of
         Auto _      -> bug "executeStrategy: Auto"
         PickFirst   -> do
-            logInfo ("Picking the first option:" <+> doc)
+            logDebug ("Picking the first option:" <+> doc)
             return [(1, doc, option)]
         Sparse     -> do
-            logInfo ("Picking the first option (in sparse order):" <+> doc)
+            logDebug ("Picking the first option (in sparse order):" <+> doc)
             return [(1, doc, option)]
         PickAll     -> return [ (i,d,o) | (i,(d,o)) <- zip [1..] options ]
         Interactive -> liftIO $ do
@@ -302,6 +382,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let
                 pickIndex = do
                     putStr "Pick option: "
+                    hFlush stdout
                     line <- getLine
                     case (line, readMay line) of
                         ("", _) -> return 1
@@ -319,7 +400,7 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
             let nbOptions = length options
             pickedIndex <- liftIO $ randomRIO (1, nbOptions)
             let (pickedDescr, picked) = at options (pickedIndex - 1)
-            logInfo ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
+            logDebug ("Randomly picking option #" <> pretty pickedIndex <+> "out of" <+> pretty nbOptions)
             return [(pickedIndex, pickedDescr, picked)]
         Compact -> bug "executeStrategy: Compact"
         FollowLog -> bug "executeStrategy: FollowLog"
@@ -329,7 +410,7 @@ executeAnswerStrategy :: (MonadIO m, MonadLog m)
                       => Config -> Question -> [(Doc, Answer)] -> Strategy -> m [(Int, Doc, Answer)]
 executeAnswerStrategy _  _ [] _ = bug "executeStrategy: nothing to choose from"
 executeAnswerStrategy config q [(doc, option)] (viewAuto -> (_, True)) = do
-    logInfo ("Picking the only option:" <+> doc)
+    logDebug ("Picking the only option:" <+> doc)
     c <- storeChoice config q option
     return [(1, doc, c)]
 executeAnswerStrategy config question options st@(viewAuto -> (strategy, _)) =
@@ -359,38 +440,45 @@ compactCompareAnswer = comparing (expressionDepth . aAnswer)
 
 addToTrail
     :: Config
-    -> Strategy -> Int -> Int -> [Doc]
-    -> Strategy -> Int -> Int -> [Doc]
-    -> Model -> Model
+    -> Strategy -> Int ->        Doc
+    -> Strategy -> Int -> Int -> Doc
+    -> Doc -> Expression -> Expression
+    -> ModelInfo -> ModelInfo
 addToTrail Config{..}
-           questionStrategy questionNumber questionNumbers questionDescr
+           questionStrategy questionNumber                 questionDescr
            answerStrategy   answerNumber   answerNumbers   answerDescr
-           model = model { mInfo = newInfo }
+           ruleDescr oldExpr newExpr
+           oldInfo = newInfo
     where
-        oldInfo = mInfo model
-        newInfo = oldInfo { miTrailCompact = miTrailCompact oldInfo ++
-                                    [ (questionStrategy, questionNumber, questionNumbers)
-                                    , (answerStrategy  , answerNumber,   answerNumbers  )
-                                    ]
-                          , miTrailVerbose = if verboseTrail
-                                                  then miTrailVerbose oldInfo ++ [theQ, theA]
-                                                  else []
+        newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)
+                                            : miTrailCompact oldInfo
+                          , miTrailVerbose  = if verboseTrail
+                                                    then theA : theQ : miTrailVerbose oldInfo
+                                                    else []
+                          , miTrailRewrites = if rewritesTrail
+                                                    then theRewrite : miTrailRewrites oldInfo
+                                                    else []
                           }
         theQ = Decision
             { dDescription = map (stringToText . renderWide)
-                $ ("Question #" <> pretty questionNumber <+> "out of" <+> pretty (show questionNumbers))
+                $ ("Question #" <> pretty questionNumber)
                 : ("  (Using strategy:" <+> pretty (show questionStrategy) <> ")")
-                : questionDescr
+                : map pretty (lines (renderWide questionDescr))
             , dDecision = questionNumber
-            , dNumOptions = questionNumbers
+            , dNumOptions = Nothing
             }
         theA = Decision
             { dDescription = map (stringToText . renderWide)
                 $ ("Answer #" <> pretty answerNumber <+> "out of" <+> pretty (show answerNumbers))
                 : ("  (Using strategy:" <+> pretty (show answerStrategy) <> ")")
-                : answerDescr
+                : map pretty (lines (renderWide answerDescr))
             , dDecision = answerNumber
-            , dNumOptions = answerNumbers
+            , dNumOptions = Just answerNumbers
+            }
+        theRewrite = TrailRewrites
+            { trRule   = stringToText $ renderWide ruleDescr
+            , trBefore = map stringToText $ lines $ renderWide $ pretty oldExpr
+            , trAfter  = map stringToText $ lines $ renderWide $ pretty newExpr
             }
 
 
@@ -410,8 +498,17 @@ addTrueConstraints m =
     in
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
 
-nbUses :: Data x => Name -> x -> Int
-nbUses nm here = length [ () | Reference nm2 _ <- universeBi here, nm == nm2 ]
+
+reverseTrails :: Model -> Model
+reverseTrails m =
+    let
+        oldInfo = mInfo m
+        newInfo = oldInfo { miTrailCompact  = reverse (miTrailCompact  oldInfo)
+                          , miTrailVerbose  = reverse (miTrailVerbose  oldInfo)
+                          , miTrailRewrites = reverse (miTrailRewrites oldInfo)
+                          }
+    in
+        m { mInfo = newInfo }
 
 
 oneSuchThat :: Model -> Model
@@ -452,15 +549,6 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
         breakConjunctions x = [x]
 
 
-toIntIsNoOp :: Model -> Model
-toIntIsNoOp model =
-    let
-        f [essence| toInt(&x) |] = x
-        f x = x
-    in
-        model { mStatements = mStatements model |> transformBi f }
-
-
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
@@ -494,60 +582,55 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: Model -> Model
-updateDeclarations model =
+updateDeclarations :: (MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
 
-        statements = concatMap onEachStatement (withAfter (mStatements model))
-
         onEachStatement (inStatement, afters) =
             case inStatement of
-                Declaration (FindOrGiven forg nm _) ->
+                Declaration (FindOrGiven forg nm _) -> do
                     let
                         -- the refined domains for the high level declaration
                         domains = [ d | (n, d) <- representations, n == nm ]
-                    in
-                        -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
-                        -- and 2 disticnt representations in the inner level. removing them with nub.
-                        nub $ concatMap (onEachDomain forg nm) domains
-                Declaration (GivenDomainDefnEnum name) ->
+                    -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
+                    -- and 2 disticnt representations in the inner level. removing them with nub.
+                    fmap nub $ concatMapM (onEachDomain forg nm) domains
+                Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
-                Declaration (Letting nm _)             -> [ inStatement | nbUses nm afters > 0 ]
-                Declaration LettingDomainDefnEnum{}    -> []
-                Declaration LettingDomainDefnUnnamed{} -> []
-                SearchOrder orders -> return $ SearchOrder $ concat
-                    [ case order of
-                        BranchingOn nm ->
+                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
+                Declaration LettingDomainDefnEnum{}    -> return []
+                Declaration LettingDomainDefnUnnamed{} -> return []
+                SearchOrder orders -> do
+                    orders' <- forM orders $ \case
+                        BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            in  nub $ concatMap (onEachDomainSearch nm) domains
+                            fmap nub $ concatMapM (onEachDomainSearch nm) domains
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
-                    | order <- orders
-                    ]
-                _ -> [inStatement]
+                    return [ SearchOrder (concat orders') ]
+                _ -> return [inStatement]
 
         onEachDomain forg nm domain =
-            case downD (nm, domain) of
+            runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
-                Right outs -> [ Declaration (FindOrGiven forg n d')
-                              | (n, d) <- outs
-                              , let d' = fmap trySimplify $ forgetRepr d
-                              ]
+                Right outs -> forM outs $ \ (n, d) -> do
+                    d' <- transformBiM trySimplify $ forgetRepr d
+                    return $ Declaration (FindOrGiven forg n d')
 
         onEachDomainSearch nm domain =
-            case downD (nm, domain) of
+            runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
-                Right outs -> [ BranchingOn n
-                              | (n, _) <- outs
-                              ]
+                Right outs -> return [ BranchingOn n
+                                     | (n, _) <- outs
+                                     ]
 
-    in
-        model { mStatements = statements }
+    statements <- concatMapM onEachStatement (withAfter (mStatements model))
+    return model { mStatements = statements }
 
 
 -- | checking whether any `Reference`s with `DeclHasRepr`s are left in the model
 checkIfAllRefined :: MonadFail m => Model -> m Model
-checkIfAllRefined m | Just modelZipper <- zipperBi m = do
+checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we exclude the mInfo here
     let returnMsg x = return
             $ ""
             : ("Not refined:" <+> pretty (hole x))
@@ -605,23 +688,84 @@ checkIfAllRefined m | Just modelZipper <- zipperBi m = do
 checkIfAllRefined m = return m
 
 
-topLevelBubbles :: MonadFail m => Model -> m Model
+-- | checking whether any undefined values creeped into the final model
+checkIfHasUndefined :: MonadFail m => Model -> m Model
+checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
+    let returnMsg x = return
+            $ ""
+            : ("Undefined value in the final model:" <+> pretty (hole x))
+            : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+              | i <- allNats
+              | c <- tail (ascendants x)
+              ]
+
+    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+                case hole x of
+                    Constant ConstantUndefined{} -> returnMsg x
+                    _ -> return []
+    unless (null fails) (fail (vcat fails))
+    return m
+checkIfHasUndefined m = return m
+
+
+topLevelBubbles :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
 topLevelBubbles m = do
     let
-        onStmt (SuchThat xs) = onExprs SuchThat xs
-        onStmt (Where    xs) = onExprs Where    xs
-        onStmt (Objective obj (WithLocals h (Left  locals))) = (          locals  ++ [Objective obj h]) |> onStmts
-        onStmt (Objective obj (WithLocals h (Right locals))) = ([SuchThat locals] ++ [Objective obj h]) |> onStmts
-        onStmt s = [s]
+        onStmt (SuchThat xs) = onExprs xs
+        onStmt (Where    xs) = concatMapM onWheres xs
+        onStmt (Objective obj (WithLocals h locals)) =
+            case locals of
+                AuxiliaryVars          locs -> (           locs  ++ [Objective obj h] ) |> onStmts
+                DefinednessConstraints locs -> ( [SuchThat locs] ++ [Objective obj h] ) |> onStmts
+        onStmt (Declaration decl) =
+            let
+                f (WithLocals h locs) = tell [locs] >> return h
+                f x = return x
 
-        onExpr wrap (WithLocals h (Left  locals)) = (      locals  ++ [wrap [h]]) |> onStmts
-        onExpr wrap (WithLocals h (Right locals)) = ([wrap locals] ++ [wrap [h]]) |> onStmts
-        onExpr wrap x = [wrap [x]]
+                (decl', locals) = runWriter (transformBiM f decl)
 
-        onStmts = concatMap onStmt
-        onExprs wrap = concatMap (onExpr wrap)
+                conv :: InBubble -> [Statement]
+                conv (AuxiliaryVars locs) = locs
+                conv (DefinednessConstraints locs) = [SuchThat locs]
 
-    return m { mStatements = onStmts (mStatements m) }
+                newStmts :: [Statement]
+                newStmts = concatMap conv locals
+            in
+                if null newStmts
+                    then return [Declaration decl]
+                    else onStmts (newStmts ++ [Declaration decl'])
+        onStmt s = return [s]
+
+        -- a where that has a bubble at the top-most level will be replaced
+        -- with a Comprehension. this is to avoid creating a where with decision variables inside.
+        onWheres (WithLocals h (DefinednessConstraints locals)) =
+            return $ map (Where . return) (locals ++ [h])
+        onWheres (WithLocals h (AuxiliaryVars locals)) = do
+            let (localfinds, gens) = mconcat
+                    [ case local of
+                        Declaration (FindOrGiven LocalFind nm dom) ->
+                            ([nm], [Generator (GenDomainNoRepr (Single nm) dom)])
+                        SuchThat xs ->
+                            ([], map Condition xs)
+                        _ -> bug ("topLevelBubbles.onWheres:" <+> pretty local)
+                    | local <- locals
+                    ]
+            let forgetReprsOfLocalFinds (Reference nm _) | nm `elem` localfinds = Reference nm Nothing
+                forgetReprsOfLocalFinds x = descend forgetReprsOfLocalFinds x
+            let out = Comprehension h gens
+            out' <- resolveNamesX (forgetReprsOfLocalFinds out)
+            return [Where [out']]
+        onWheres x = return [Where [x]]
+
+        onExpr (WithLocals h (AuxiliaryVars          locals)) = (          locals  ++ [SuchThat [h]]) |> onStmts
+        onExpr (WithLocals h (DefinednessConstraints locals)) = ([SuchThat locals] ++ [SuchThat [h]]) |> onStmts
+        onExpr x = return [SuchThat [x]]
+
+        onStmts = concatMapM onStmt
+        onExprs = concatMapM onExpr
+
+    statements' <- onStmts (mStatements m)
+    return m { mStatements = statements' }
 
 
 sliceThemMatrices :: Monad m => Model -> m Model
@@ -656,6 +800,20 @@ sliceThemMatrices model = do
     return model { mStatements = statements }
 
 
+removeExtraSlices :: Monad m => Model -> m Model
+removeExtraSlices model = do
+    let
+        -- a slice at the end of a chain of slices & indexings
+        -- does no good in Essence and should be removed
+        onExpr :: Monad m => Expression -> m Expression
+        onExpr (match opSlicing -> Just (m,_,_)) = onExpr m
+        onExpr p@(match opIndexing -> Just _) = return p
+        onExpr p = descendM onExpr p
+
+    statements <- descendBiM onExpr (mStatements model)
+    return model { mStatements = statements }
+
+
 prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
@@ -667,34 +825,36 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
-    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
+    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
+    >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadLog m) => Model -> m Model
+epilogue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
-    >>= return . updateDeclarations   >>= logDebugId "[updateDeclarations]"
+    >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
+    >>= checkIfHasUndefined           >>= logDebugId "[checkIfHasUndefined]"
     >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
-    >>= return . toIntIsNoOp          >>= logDebugId "[toIntIsNoOp]"
     >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
+    >>= return . reverseTrails        >>= logDebugId "[reverseTrails]"
     >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
     >>= return . languageEprime       >>= logDebugId "[languageEprime]"
 
 
 applicableRules
-    :: forall m n . ( MonadLog n, NameGen n
-                    , MonadLog m, NameGen m, MonadFail m, MonadUserError m
+    :: forall m n . ( MonadUserError n, MonadLog n, NameGen n, EnumerateDomain n
+                    , MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m, MonadFail m
                     )
     => Config
     -> [Rule]
-    -> Zipper Model Expression
+    -> ModelZipper
     -> n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
@@ -702,7 +862,7 @@ applicableRules Config{..} rulesAtLevel x = do
     let logSuccess = if logRuleSuccesses then logInfo else const (return ())
 
     mys <- sequence [ do logAttempt ("attempting rule" <+> rName r <+> "on" <+> pretty (hole x))
-                         applied <- runExceptT $ rApply r x (hole x)
+                         applied <- runExceptT $ runReaderT (rApply r x (hole x)) x
                          return (rName r, applied)
                     | r <- rulesAtLevel ]
     forM_ mys $ \ (rule, my) ->
@@ -733,9 +893,9 @@ allRules config =
     , [ rule_PartialEvaluate
       ]
     , paramRules
-    , [ rule_ChooseRepr config
-      , rule_ChooseReprForComprehension (representationsQuantifieds config)
-      , rule_ChooseReprForLocals        (representationsAuxiliaries config)
+    , [ rule_ChooseRepr                 config
+      , rule_ChooseReprForComprehension config
+      , rule_ChooseReprForLocals        config
       ]
     , verticalRules
     , horizontalRules
@@ -891,10 +1051,13 @@ horizontalRules =
 
     , Horizontal.Function.rule_Comprehension_Literal
     , Horizontal.Function.rule_Image_Bool
+    , Horizontal.Function.rule_Image_BoolMatrixIndexed
+    , Horizontal.Function.rule_Image_BoolTupleIndexed
     , Horizontal.Function.rule_Image_Int
+    , Horizontal.Function.rule_Image_IntMatrixIndexed
+    , Horizontal.Function.rule_Image_IntTupleIndexed
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Comprehension_ImageSet
-    , Horizontal.Function.rule_Image_Literal
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
     , Horizontal.Function.rule_DotLeq
@@ -1043,9 +1206,10 @@ rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given, CutFind] = do
-        let reprsWhichOrder = if (forg, representationsGivens config) == (Given, Sparse)
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
+                | representationLevels config == False                    = reprsStandardOrderNoLevels
+                | otherwise                                               = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
@@ -1057,7 +1221,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                     CutFind -> ChooseRepr_Cut
                                     _       -> bug "rule_ChooseRepr ruleResultType"
                              , ruleResult = return out
-                             , ruleResultHook = hook
+                             , ruleResultHook = Just hook
                              }
                 | dom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
@@ -1072,6 +1236,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
            , MonadFail m
            , MonadUserError m
            , NameGen m
+           , EnumerateDomain m
            )
         => Bool
         -> FindOrGiven
@@ -1092,7 +1257,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => m [Expression]
+            mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+                          => m [Expression]
             mkStructurals = do
                 logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -1102,7 +1268,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
                 return resolved
 
-            addStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+            addStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+                           => Model -> m Model
             addStructurals
                 | forg == Given = return
                 | usedBefore = return
@@ -1166,8 +1333,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                                      -- for abstract stuff inside aliases.
 
 
-rule_ChooseReprForComprehension :: Strategy -> Rule
-rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" (const theRule) where
+rule_ChooseReprForComprehension :: Config -> Rule
+rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (const theRule) where
 
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (nm, domain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
@@ -1176,9 +1343,10 @@ rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" 
 
         ty <- typeOf domain
 
-        let reprsWhichOrder = if strategy == Sparse
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | representationsGivens config == Sparse = reprsSparseOrder
+                | representationLevels config == False   = reprsStandardOrderNoLevels
+                | otherwise                              = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
@@ -1211,7 +1379,7 @@ rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" 
                                 ++ transformBi updateRepr gocAfter
                     out <- resolveNamesX out'
                     return out
-                , ruleResultHook = return
+                , ruleResultHook = Nothing
                 }
             | genOption <- genOptions
             ]
@@ -1223,10 +1391,10 @@ rule_ChooseReprForComprehension strategy = Rule "choose-repr-for-comprehension" 
         gen ref
 
 
-rule_ChooseReprForLocals :: Strategy -> Rule
-rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule) where
+rule_ChooseReprForLocals :: Config -> Rule
+rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) where
 
-    theRule (WithLocals body (Left locals)) = do
+    theRule (WithLocals body (AuxiliaryVars locals)) = do
         (stmtBefore, (nm, domain), stmtAfter) <- matchFirst locals $ \ local -> case local of
             Declaration (FindOrGiven LocalFind nm domain) -> return (nm, domain)
             _ -> na "rule_ChooseReprForLocals"
@@ -1238,9 +1406,10 @@ rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule
         unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
             fail $ "This local variable seems to be handled before:" <+> pretty nm
 
-        let reprsWhichOrder = if strategy == Sparse
-                                then reprsSparseOrder
-                                else reprsStandardOrder
+        let reprsWhichOrder
+                | representationsAuxiliaries config == Sparse   = reprsSparseOrder
+                | representationLevels config == False          = reprsStandardOrderNoLevels
+                | otherwise                                     = reprsStandardOrder
         let domOpts = reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
@@ -1264,7 +1433,7 @@ rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule
                             | nm == nm'
                             = Reference nm (Just (DeclHasRepr LocalFind nm thisDom))
                         updateRepr p = p
-                    let out' = WithLocals (transform updateRepr body) $ Left
+                    let out' = WithLocals (transform updateRepr body) $ AuxiliaryVars
                                 (  stmtBefore
                                 ++ [ Declaration (FindOrGiven
                                                     LocalFind
@@ -1276,7 +1445,7 @@ rule_ChooseReprForLocals strategy = Rule "choose-repr-for-locals" (const theRule
                                 )
                     out <- resolveNamesX out'
                     return out
-                , ruleResultHook = return
+                , ruleResultHook = Nothing
                 }
             | genOption <- genOptions
             ]
@@ -1360,8 +1529,8 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         case ty of
             TypeMatrix _ TypeBool -> fail "allDiff can stay"
             TypeMatrix _ TypeInt  -> fail "allDiff can stay"
-            TypeMatrix _ _ -> return ()
-            _ -> fail "allDiff on something other than a matrix."
+            TypeMatrix _ _        -> return ()
+            _                     -> fail "allDiff on something other than a matrix."
         DomainMatrix index _ <- domainOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty
@@ -1520,7 +1689,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
                 , ruleResultType  = ExpressionRefinement
                 , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
-                , ruleResultHook  = return
+                , ruleResultHook  = Nothing
                 } ]
     theRule _ _ = na "rule_InlineConditions"
 
@@ -1571,16 +1740,17 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
             , do
                 (auxName, aux) <- auxiliaryVar
                 return $ WithLocals aux
-                    (Left [ Declaration (FindOrGiven LocalFind auxName auxDomain)
-                          , SuchThat
-                              [ make opAnd $ Comprehension
-                                  (binOp body aux)
-                                  gensOrConds
-                              , make opOr  $ Comprehension
-                                  [essence| &body = &aux |]
-                                  gensOrConds
-                              ]
-                          ])
+                    (AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName auxDomain)
+                        , SuchThat
+                            [ make opAnd $ Comprehension
+                                (binOp body aux)
+                                gensOrConds
+                            , make opOr  $ Comprehension
+                                [essence| &body = &aux |]
+                                gensOrConds
+                            ]
+                        ])
             )
 
 
@@ -1676,7 +1846,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
             ( "Shifting quantifier inwards"
             , return $ make opIndexing
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
                         indexer
@@ -1690,16 +1860,18 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
         (mkQuan, inner)                 <- match opQuantifier p
         matrix                          <- match opFlatten inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
-        let
-            flattenIfNeeded = case ty of
-                TypeMatrix{} -> make opFlatten
-                TypeList{}   -> make opFlatten
-                _            -> id
+        case ty of
+            TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
+            TypeList{}   -> return ()
+            _            -> na "rule_QuantifierShift2"
+        let flattenIfNeeded = if matrixNumDims ty > 1
+                                then make opFlatten
+                                else id
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map (mkQuan . flattenIfNeeded) elems))
             )
@@ -1709,14 +1881,14 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)   <- match opQuantifier p
-        matrix            <- match opConcatenate inner
-        (_, index, elems) <- match matrixLiteral matrix
+        (mkQuan, inner)                 <- match opQuantifier p
+        matrix                          <- match opConcatenate inner
+        (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
-                            TypeAny
+                            ty
                             index
                             (map mkQuan elems))
             )

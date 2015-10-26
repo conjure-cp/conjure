@@ -21,6 +21,8 @@ ghci:
 	    -XQuasiQuotes                              \
 	    -XScopedTypeVariables                      \
 	    -XTypeOperators                            \
+	    -XLambdaCase                               \
+	    -XMultiWayIf                               \
 	    -fwarn-incomplete-patterns                 \
 	    -fwarn-incomplete-uni-patterns             \
 	    -fwarn-missing-signatures                  \
@@ -32,7 +34,7 @@ ghci:
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
 	    -Werror                                    \
-	    `find src -name *.hs | grep -v Main | grep -v '\.#'`
+	    `find src -name *.hs | grep -v Main.hs | grep -v '\.#'`
 
 clean:
 	@bash etc/build/clean.sh

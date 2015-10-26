@@ -23,7 +23,7 @@ data AbstractLiteral x
     = AbsLitTuple [x]
     | AbsLitRecord [(Name, x)]
     | AbsLitVariant (Maybe [(Name, Domain () x)]) Name x            -- Nothing before name resolution
-    | AbsLitMatrix (Domain () x) [x]
+    | AbsLitMatrix (Domain () x) [x]                                -- the domain is the index domain
     | AbsLitSet [x]
     | AbsLitMSet [x]
     | AbsLitFunction [(x, x)]
@@ -135,7 +135,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
             TypeTuple ts -> return (TypeRelation ts)
             _ -> bug "expecting TypeTuple in typeOf"
 
-    typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny) 
+    typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny)
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
 
 

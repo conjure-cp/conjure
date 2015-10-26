@@ -1,6 +1,7 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE NoMonomorphismRestriction #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Domain
     ( Domain(..)
@@ -21,6 +22,8 @@ module Conjure.Language.Domain
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
+    , innerDomainOf
+    , singletonDomainInt
     ) where
 
 -- conjure
@@ -42,7 +45,6 @@ import Data.Set as S ( Set, empty, toList, union )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
-    | DomainIntEmpty                -- this is int(), not the same as int or int(..)
     | DomainInt [Range x]
     | DomainEnum
         Name
@@ -107,7 +109,6 @@ instance TypeOf (Domain r x) where
 typeOfDomain :: MonadFail m => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain DomainIntEmpty{}          = return TypeInt
 typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
@@ -139,7 +140,6 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
-        go DomainIntEmpty = DomainIntEmpty
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
@@ -175,7 +175,6 @@ instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON js
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
 reprTree DomainBool{}    = Tree Nothing []
-reprTree DomainIntEmpty  = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
@@ -371,7 +370,7 @@ instance Pretty a => Pretty (SizeAttr a) where
     pretty (SizeAttr_Size       x  ) = "size"    <+> pretty x
     pretty (SizeAttr_MinSize    x  ) = "minSize" <+> pretty x
     pretty (SizeAttr_MaxSize    x  ) = "maxSize" <+> pretty x
-    pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <+> ", maxSize" <+> pretty y
+    pretty (SizeAttr_MinMaxSize x y) = "minSize" <+> pretty x <> ", maxSize" <+> pretty y
 
 
 data MSetAttr a = MSetAttr (SizeAttr a) (OccurAttr a)
@@ -382,7 +381,7 @@ instance ToJSON    a => ToJSON    (MSetAttr a) where toJSON = genericToJSON json
 instance FromJSON  a => FromJSON  (MSetAttr a) where parseJSON = genericParseJSON jsonOptions
 instance Default (MSetAttr a) where def = MSetAttr def def
 instance Pretty a => Pretty (MSetAttr a) where
-    pretty (MSetAttr a b) = 
+    pretty (MSetAttr a b) =
         let inside = filter (/=prEmpty) [ pretty a
                                         , pretty b
                                         ]
@@ -406,7 +405,7 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty OccurAttr_None = prEmpty
     pretty (OccurAttr_MinOccur    x  ) = "minOccur" <+> pretty x
     pretty (OccurAttr_MaxOccur    x  ) = "maxOccur" <+> pretty x
-    pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <+> ", maxOccur" <+> pretty y
+    pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
 
 
 data FunctionAttr x
@@ -655,11 +654,11 @@ instance Arbitrary a => Arbitrary (Range a) where
         ]
 
 rangesInts :: (MonadFail m, ExpressionLike c) => [Range c] -> m [Integer]
-rangesInts = liftM (sortNub . concat) . mapM rangeInts
+rangesInts = fmap (sortNub . concat) . mapM rangeInts
     where
-        rangeInts (RangeSingle x) = return <$> intOut x
-        rangeInts (RangeBounded x y) = do x' <- intOut x
-                                          y' <- intOut y
+        rangeInts (RangeSingle x) = return <$> intOut "rangeInts 1" x
+        rangeInts (RangeBounded x y) = do x' <- intOut "rangeInts 2" x
+                                          y' <- intOut "rangeInts 3" y
                                           return [x' .. y']
         rangeInts _ = fail "Infinite range (or not an integer range)"
 
@@ -694,7 +693,6 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
-    pretty DomainIntEmpty = "int()"
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
@@ -805,3 +803,24 @@ normaliseRange  norm (RangeSingle x)       = RangeBounded (norm x) (norm x)
 normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)
 normaliseRange  norm (RangeUpperBounded x) = RangeUpperBounded (norm x)
 normaliseRange  norm (RangeBounded x y)    = RangeBounded (norm x) (norm y)
+
+innerDomainOf :: (MonadFail m, Show x) => Domain () x -> m (Domain () x)
+innerDomainOf (DomainMatrix _ t) = return t
+innerDomainOf (DomainSet _ _ t) = return t
+innerDomainOf (DomainMSet _ _ t) = return t
+innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
+innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
+innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
+innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
+
+singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x
+singletonDomainInt (DomainInt [RangeSingle a]) = Just a
+singletonDomainInt (DomainInt [RangeBounded a b]) =
+    let
+        followAlias (isAlias -> Just x) = followAlias x
+        followAlias x = x
+    in
+        if followAlias a == followAlias b
+            then Just a
+            else Nothing
+singletonDomainInt _ = Nothing

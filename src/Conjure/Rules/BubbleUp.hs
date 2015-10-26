@@ -7,79 +7,24 @@ import Conjure.Rules.Import
 
 rule_MergeNested :: Rule
 rule_MergeNested = "bubble-up-merge-nested" `namedRule` theRule where
-    theRule (WithLocals (WithLocals body (Right locals1)) (Right locals2)) =
+    theRule (WithLocals (WithLocals body (DefinednessConstraints locals1)) (DefinednessConstraints locals2)) =
         return
             ( "Merging nested bubbles"
-            , return $ WithLocals body (Right (locals1 ++ locals2))
+            , return $ WithLocals body (DefinednessConstraints (locals1 ++ locals2))
+            )
+    theRule (WithLocals (WithLocals body (AuxiliaryVars locals1)) (AuxiliaryVars locals2)) =
+        return
+            ( "Merging nested bubbles"
+            , return $ WithLocals body (AuxiliaryVars (locals1 ++ locals2))
             )
     theRule _ = na "rule_MergeNested"
 
 
--- rule_Comprehension :: Rule
--- rule_Comprehension = "bubble-up-comprehension" `namedRule` theRule where
---     -- theRule (Comprehension body gensOrConds) = do
---     --     (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---     --         Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---     --         _ -> na "rule_Comprehension"
---     --     locals' <- forM locals $ \ l -> case l of
---     --         SuchThat xs -> return xs
---     --         _ -> fail ("rule_Comprehension, not a SuchThat:" <+> pretty l)
---     --     return
---     --         ( "Bubble in the generator of a comprehension."
---     --         , const $ Comprehension body
---     --             $  gocBefore
---     --             ++ [Generator (GenInExpr pat expr)]
---     --             ++ map Condition (concat locals')
---     --             ++ gocAfter
---     --         )
---     theRule _ = na "rule_Comprehension"
---
---
--- rule_VarDecl :: Rule
--- rule_VarDecl = "bubble-up-VarDecl" `namedRule` theRule where
---     theRule Comprehension{} = na "rule_VarDecl Comprehension"
---     theRule WithLocals{}    = na "rule_VarDecl WithLocals"
---     theRule p = do
---         let
---             -- f x@(WithLocals y locals) = do
---             --     let decls = [ decl | decl@Declaration{} <- locals ]
---             --     if length decls == length locals
---             --         then tell decls >> return y         -- no cons, all decls
---             --         else               return x
---             f x = return x
---         (p', collected) <- runWriterT (descendM f p)
---         when (null collected) $
---             na "rule_VarDecl doesn't have any bubbly children"
---         return
---             ( "Bubbling up only declarations, no constraints in the bubble."
---             , const $ WithLocals p' collected []
---             )
---
---
--- rule_LocalInComprehension :: Rule
--- rule_LocalInComprehension = "bubble-up-local-in-comprehension" `namedRule` theRule where
---     theRule p = do
---         -- (mkQuan, Comprehension body gensOrConds) <- match opQuantifier p
---         -- (gocBefore, (pat, expr, locals), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---         --     Generator (GenInExpr pat@Single{} (WithLocals expr locals)) -> return (pat, expr, locals)
---         --     _ -> na "rule_Comprehension"
---         -- return
---         --     ( "Bubble in the generator of a comprehension."
---         --     , const $ WithLocals
---         --         ( mkQuan $ Comprehension body
---         --             $  gocBefore
---         --             ++ [Generator (GenInExpr pat expr)]
---         --             ++ gocAfter
---         --         )
---         --         locals
---         --     )
-
-
 rule_ToAnd :: Rule
 rule_ToAnd = "bubble-to-and" `namedRule` theRule where
-    theRule (WithLocals x (Left  [])) = return ("Empty bubble is no bubble", return x)
-    theRule (WithLocals x (Right [])) = return ("Empty bubble is no bubble", return x)
-    theRule (WithLocals x (Right locals@(_:_))) = do
+    theRule (WithLocals x (AuxiliaryVars [])) = return ("Empty bubble is no bubble", return x)
+    theRule (WithLocals x (DefinednessConstraints [])) = return ("Empty bubble is no bubble", return x)
+    theRule (WithLocals x (DefinednessConstraints locals@(_:_))) = do
         TypeBool <- typeOf x
         let out = make opAnd $ fromList (x:locals)
         return
@@ -95,7 +40,7 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
 
     -- if anything in a comprehension is undefined, the whole comprehension is undefined
     -- this is for the non-bool case.
-    theRule (Comprehension (WithLocals body (Right locals@(_:_))) gensOrConds) = do
+    theRule (Comprehension (WithLocals body (DefinednessConstraints locals@(_:_))) gensOrConds) = do
 
         ty <- typeOf body
         case ty of
@@ -115,12 +60,12 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
 
         return
             ( "Bubbling up (through comprehension), not reached a relational context yet."
-            , return $ WithLocals (Comprehension body gensOrConds) (Right localsLifted)
+            , return $ WithLocals (Comprehension body gensOrConds) (DefinednessConstraints localsLifted)
             )
-        
+
     theRule p = do
         let
-            f x@(WithLocals y (Right locals@(_:_))) = do
+            f x@(WithLocals y (DefinednessConstraints locals@(_:_))) = do
                 ty <- typeOf y
                 case ty of
                     TypeBool ->                return x         -- do not bubble-up if it is attached to a bool
@@ -131,52 +76,68 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             na "rule_NotBoolYet doesn't have any bubbly children"
         return
             ( "Bubbling up, not reached a relational context yet."
-            , return $ WithLocals p' (Right collected)
+            , return $ WithLocals p' (DefinednessConstraints collected)
             )
 
 
 rule_LiftVars :: Rule
 rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
-    theRule (Comprehension (WithLocals body (Left locals@(_:_))) gensOrConds) = do
+
+    theRule (Comprehension (WithLocals body locals) gensOrConds)
+        | and [ case goc of
+                    Condition{} -> True
+                    ComprehensionLetting{} -> True
+                    _ -> False
+              | goc <- gensOrConds
+              ]                                                 -- if gensOrConds do not contain generators
+        = return
+            ( "Bubbling up when a comprehension doesn't contain any generators."
+            , return $ WithLocals (Comprehension body gensOrConds) locals
+            )
+
+    theRule (Comprehension (WithLocals body (AuxiliaryVars locals@(_:_))) gensOrConds) = do
 
         let decls = [ (nm,dom) | Declaration (FindOrGiven LocalFind nm dom) <- locals ]
         let cons  = concat [ xs | SuchThat xs <- locals ]
 
-        (gocBefore, (patName, indexDomain), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName domain) -> return (patName, domain)
+        -- TODO: what to do with the conditions?
+        -- should we `dontCare unless condition`?
+        -- discard for now
+        (_conditions, generators) <- fmap mconcat $ forM gensOrConds $ \ goc -> case goc of
+            Condition{} -> return ([goc], [])
+            ComprehensionLetting{} -> return ([goc], [])
+            Generator (GenDomainHasRepr patName domain) -> return ([], [(patName, domain)])
             _ -> na "rule_LiftVars"
 
-        let patRef = Reference patName Nothing
+
+        let patRefs = [ Reference patName Nothing | (patName, _) <- generators ]
+        let indexDomains = map snd generators
 
         let upd (Reference nm _) | nm `elem` map fst decls
                 = let r = Reference nm Nothing
-                  in  [essence| &r[&patRef] |]
+                  in  make opMatrixIndexing r patRefs
             upd r = r
 
         let declsLifted =
                 [ Declaration (FindOrGiven LocalFind nm domLifted)
                 | (nm, dom) <- decls
-                , let domLifted = DomainMatrix (forgetRepr indexDomain) dom
+                , let domLifted = foldr (\ i j -> DomainMatrix (forgetRepr i) j ) dom indexDomains
                 ]
 
         let consLifted =
-                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr patName indexDomain)]
+                [ make opAnd $ Comprehension c [Generator (GenDomainHasRepr n d) | (n,d) <- generators]
                 | c <- transformBi upd cons
                 ]
 
         return
             ( "Bubbling up auxiliary variables through a comprehension."
-            , return $ WithLocals
-                         (Comprehension (transform upd body)
-                             $  transformBi upd gocBefore
-                             ++ [Generator (GenDomainHasRepr patName indexDomain)]
-                             ++ transformBi upd gocAfter)
-                          (Left (declsLifted ++ [SuchThat consLifted]))
+            , return $ WithLocals (Comprehension (transform upd body) (transformBi upd gensOrConds))
+                                  (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
     theRule WithLocals{} = na "rule_LiftVars"
     theRule p = do
         let
-            f (WithLocals y (Left locals@(_:_))) = do
+            f (WithLocals y (AuxiliaryVars locals@(_:_))) = do
                 tell locals
                 return y
             f x = return x
@@ -185,5 +146,5 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             na "rule_LiftVars doesn't have any bubbly children"
         return
             ( "Bubbling up auxiliary variables."
-            , return $ WithLocals p' (Left collected)
+            , return $ WithLocals p' (AuxiliaryVars collected)
             )
