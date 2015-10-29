@@ -1006,7 +1006,7 @@ commaSeparated0 p = sepEndBy p comma
 
 -- parse a comma separated list of things. has to be at least 1 thing.
 commaSeparated :: Parser a -> Parser [a]
-commaSeparated p = sepEndBy1 p comma 
+commaSeparated p = sepEndBy1 p comma
 
 comma :: Parser ()
 comma = lexeme L_Comma <?> "comma"
