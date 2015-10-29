@@ -217,7 +217,7 @@ reprsStandardOrder =
     ]
 
 reprsSparseOrder :: AllRepresentations
-reprsSparseOrder = map return
+reprsSparseOrder = map return $
     [ primitive, tuple, record, variant, matrix downD1 downC1 up1
 
     , setExplicit, setExplicitVarSizeWithMarker
@@ -234,7 +234,7 @@ reprsSparseOrder = map return
     , relationAsSet dispatch
     , relationAsMatrix
     ]
-    ++ [ partitionAsSetAllFlavours True dispatch ]
+    ++ partitionAsSetAllFlavours True dispatch
 
 
 -- | For a domain, produce a list of domains with different representation options.
