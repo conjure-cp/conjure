@@ -42,11 +42,14 @@ partitionAsSet _ repr = bug ("(4) partitionAsSet called with:" <+> pretty (show 
 
 partitionAsSetAllFlavours
     :: forall m . (MonadFail m, NameGen m)
-    => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
+    => Bool
+    -> (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
     -> [Representation m]
-partitionAsSetAllFlavours dispatch =
+partitionAsSetAllFlavours useLevels dispatch =
     [ partitionAsSet_ dispatch repr1 repr2
     | (repr1, repr2) <- map snd flavours
+    , not useLevels || repr1 /= "ExplicitVarSizeWithFlags"
+    , not useLevels || repr2 /= "ExplicitVarSizeWithFlags"
     ]
 
 

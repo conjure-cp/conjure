@@ -182,7 +182,20 @@ type AllRepresentations = [[Representation EnumerateDomainNoIO]]
 
 -- | No levels!
 reprsStandardOrderNoLevels :: AllRepresentations
-reprsStandardOrderNoLevels = [concat reprsStandardOrder]
+reprsStandardOrderNoLevels = return $ concat
+    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
+      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , msetExplicitVarSizeWithFlags
+      , function1D, function1DPartial, functionND, functionNDPartial
+      , sequenceExplicitBounded
+      , relationAsMatrix
+      -- , partitionOccurrence
+      ]
+    , [ functionAsRelation dispatch
+      , relationAsSet dispatch
+      ]
+    , partitionAsSetAllFlavours False dispatch
+    ]
 
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
@@ -200,7 +213,7 @@ reprsStandardOrder =
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
       ]
-    , partitionAsSetAllFlavours dispatch
+    , partitionAsSetAllFlavours True dispatch
     ]
 
 reprsSparseOrder :: AllRepresentations
@@ -221,7 +234,7 @@ reprsSparseOrder = map return
     , relationAsSet dispatch
     , relationAsMatrix
     ]
-    ++ [ partitionAsSetAllFlavours dispatch ]
+    ++ [ partitionAsSetAllFlavours True dispatch ]
 
 
 -- | For a domain, produce a list of domains with different representation options.
