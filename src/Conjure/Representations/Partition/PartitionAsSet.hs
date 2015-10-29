@@ -47,10 +47,15 @@ partitionAsSetAllFlavours
     -> [Representation m]
 partitionAsSetAllFlavours useLevels dispatch =
     [ partitionAsSet_ dispatch repr1 repr2
-    | (repr1, repr2) <- map snd flavours
-    , not useLevels || repr1 /= "ExplicitVarSizeWithFlags"
-    , not useLevels || repr2 /= "ExplicitVarSizeWithFlags"
+    | (repr1, repr2) <- map snd (if useLevels then flavoursWithLevels else flavours)
     ]
+
+
+flavoursWithLevels :: [(Int, (HasRepresentation, HasRepresentation))]
+flavoursWithLevels = zip [1..] [ (a,b) | a <- opts1, b <- opts2 ]
+    where
+        opts1 = ["Explicit", "ExplicitVarSizeWithMarker"]
+        opts2 = ["Explicit", "ExplicitVarSizeWithMarker"]
 
 
 flavours :: [(Int, (HasRepresentation, HasRepresentation))]
