@@ -37,6 +37,9 @@ import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
 
+-- text
+import Data.Text as T ( isPrefixOf )
+
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
@@ -168,8 +171,10 @@ dispatch domain = do
             "RelationAsSet"                 -> relationAsSet dispatch
             _ -> nope
         DomainPartition r _ _ -> case r of
-            "PartitionAsSet"                -> partitionAsSet dispatch
-            "Occurrence"                    -> partitionOccurrence
+            HasRepresentation (Name nm)
+                | T.isPrefixOf "PartitionAsSet" nm
+                -> partitionAsSet dispatch r
+            HasRepresentation (Name "Occurrence") -> partitionOccurrence
             _ -> nope
         _ -> nope
 
@@ -194,8 +199,8 @@ reprsStandardOrder =
       ]
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
-      , partitionAsSet dispatch
       ]
+    , partitionAsSetAllFlavours dispatch
     ]
 
 reprsSparseOrder :: AllRepresentations
@@ -215,9 +220,8 @@ reprsSparseOrder = map return
 
     , relationAsSet dispatch
     , relationAsMatrix
-
-    , partitionAsSet dispatch
     ]
+    ++ [ partitionAsSetAllFlavours dispatch ]
 
 
 -- | For a domain, produce a list of domains with different representation options.
