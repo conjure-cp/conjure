@@ -4,17 +4,14 @@ module Conjure.Representations.Function.Function1DPartial ( function1DPartial ) 
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TH
-import Conjure.Language.ZeroVal ( zeroVal )
+import Conjure.Language
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-function1DPartial :: forall m . (MonadFail m, NameGen m) => Representation m
+function1DPartial :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 function1DPartial = Representation chck downD structuralCons downC up
 
     where
@@ -65,7 +62,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                             and([ &values[&i] != &values[&j]
                                 | &iPat : &innerDomainFr
                                 , &jPat : &innerDomainFr
-                                , &i != &j
+                                , &i .< &j
                                 , &flags[&i]
                                 , &flags[&j]
                                 ])
@@ -171,21 +168,23 @@ function1DPartial = Representation chck downD structuralCons downC up
                   Just (ConstantAbstract (AbsLitMatrix _ valuesMatrix)) ) -> do
                     froms          <- domainValues innerDomainFr
                     functionValues <- forM (zip3 flagMatrix froms valuesMatrix) $ \ (flag, from, to) ->
-                        case flag of
-                            ConstantBool b -> return $ if b then Just (from,to) else Nothing
-                            _ -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
-                                             , "When working on:" <+> pretty name
-                                             , "With domain:" <+> pretty domain
-                                             ]
+                        case viewConstantBool flag of
+                            Just b  -> return $ if b then Just (from,to) else Nothing
+                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
+                                                   , "When working on:" <+> pretty name
+                                                   , "With domain:" <+> pretty domain
+                                                   ]
                     return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlags name)
+                    [ "(in Function1DPartial up 1)"
+                    , "No value for:" <+> pretty (nameFlags name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameValues name)
+                    [ "(in Function1DPartial up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

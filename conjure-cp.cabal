@@ -26,6 +26,7 @@ Library
                      , Conjure.Language
                      , Conjure.Language.AdHoc
                      , Conjure.Language.Definition
+                     , Conjure.Language.Expression
                      , Conjure.Language.Name
                      , Conjure.Language.NameGen
                      , Conjure.Language.Constant
@@ -205,6 +206,7 @@ Library
                      -- supporting modules for the user interfacing parts
                      , Conjure.UI
                      , Conjure.UI.IO
+                     , Conjure.UI.MainHelper
                      , Conjure.UI.Model
                      , Conjure.UI.RefineParam
                      , Conjure.UI.TranslateSolution
@@ -216,12 +218,13 @@ Library
                      , Conjure.UI.DomainPruning
 
                      , Conjure.UI.LogFollow
-                     
+
                      , Data.Global
                      , Data.Global.Registry
 
     build-depends    : base
                      , aeson
+                     , async
                      , bytestring
                      , cereal
                      , cmdargs
@@ -232,7 +235,7 @@ Library
                      , hashable
                      , integer-gmp
                      , mtl
-                     , parsec >= 3
+                     , megaparsec >= 4.1.1
                      , pipes
                      , pretty > 1.1.1.1
                      , QuickCheck
@@ -244,6 +247,7 @@ Library
                      , stm
                      , syb
                      , template-haskell
+                     , temporary
                      , text
                      , transformers >= 0.4
                      , uniplate
@@ -258,6 +262,8 @@ Library
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
+        LambdaCase
+        MultiWayIf
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -296,6 +302,8 @@ Executable conjure
         -fwarn-unused-matches
         -Wall
         -rtsopts
+        -threaded
+        -with-rtsopts=-N
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
@@ -303,7 +311,7 @@ Executable conjure
         -fprof-auto-exported
 
 
-test-suite conjure-testing
+Test-Suite conjure-testing
     type             : exitcode-stdio-1.0
     default-language : Haskell2010
     hs-source-dirs   : src/test
@@ -321,6 +329,8 @@ test-suite conjure-testing
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings
+        LambdaCase
+        MultiWayIf
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
@@ -333,6 +343,8 @@ test-suite conjure-testing
         -fwarn-unused-matches
         -Wall
         -rtsopts
+        -threaded
+        -with-rtsopts=-N
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:

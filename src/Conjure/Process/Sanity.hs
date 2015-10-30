@@ -5,6 +5,7 @@ module Conjure.Process.Sanity ( sanityChecks ) where
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language
+import Conjure.Language.CategoryOf
 
 
 sanityChecks :: (MonadFail m, MonadUserError m) => Model -> m Model
@@ -16,8 +17,10 @@ sanityChecks model = do
         check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
             forM_ (mStatements m) $ \ st -> case st of
-                Declaration FindOrGiven{} -> mapM_ (checkDomain (Just st)) (universeBi st)
-                _                         -> mapM_ (checkDomain Nothing  ) (universeBi st)
+                Declaration (FindOrGiven Given _ _) -> return () -- skip
+                Declaration FindOrGiven{}           -> mapM_ (checkDomain (Just st)) (universeBi (forgetRefs st))
+                _                                   -> mapM_ (checkDomain Nothing  ) (universeBi (forgetRefs st))
+            mapM_ checkFactorial (universeBi $ mStatements m)
             statements2 <- transformBiM checkLit (mStatements m)
             return m { mStatements = statements2 }
 
@@ -25,6 +28,10 @@ sanityChecks model = do
         -- check for binary relation attrobutes
         checkDomain :: MonadWriter [Doc] m => (Maybe Statement) -> Domain () Expression -> m ()
         checkDomain mstmt domain = case domain of
+            DomainInt rs | isInfinite rs -> recordErr
+                        [ "Infinite integer domain."
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
+                        ]
             DomainMSet _ (MSetAttr size occur) _ ->
                 case (size, occur) of
                     (SizeAttr_Size{}, _) -> return ()
@@ -34,7 +41,7 @@ sanityChecks model = do
                     (_, OccurAttr_MinMaxOccur{}) -> return ()
                     _ -> recordErr
                         [ "mset requires (at least) one of the following attributes: size, maxSize, maxOccur"
-                        , "When working on:" <++> maybe (pretty domain) pretty mstmt
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
             DomainRelation _ (RelationAttr _ binRelAttr) [a,b]
                 | binRelAttr /= def && a /= b
@@ -42,7 +49,7 @@ sanityChecks model = do
                         [ "Binary relation attributes can only be used for binary relation between identical domains."
                         , "Either remove these attributes:" <+> pretty binRelAttr
                         , "Or make sure that the relation is between identical domains."
-                        , "When working on:" <++> maybe (pretty domain) pretty mstmt
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
             DomainRelation _ (RelationAttr _ binRelAttr) innerDoms
                 | binRelAttr /= def && length innerDoms /= 2
@@ -50,7 +57,7 @@ sanityChecks model = do
                         [ "Binary relation attributes can only be used on binary relations."
                         , "Either remove these attributes:" <+> pretty binRelAttr
                         , "Or make sure that the relation is binary."
-                        , "When working on:" <++> maybe (pretty domain) pretty mstmt
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
             _ -> return ()
 
@@ -65,7 +72,7 @@ sanityChecks model = do
         checkLit lit = case lit of
             AbstractLiteral (AbsLitFunction mappings) -> do
                 let defineds = fromList $ map fst mappings
-                return $ WithLocals lit (Right [ [essence| allDiff(&defineds) |] ])
+                return $ WithLocals lit (DefinednessConstraints [ [essence| allDiff(&defineds) |] ])
             AbstractLiteral (AbsLitPartition parts) -> do
                 let disjoint = concat
                         [ checks
@@ -76,10 +83,37 @@ sanityChecks model = do
                                        , el2 <- part2
                                        ]
                         ]
-                return $ WithLocals lit (Right disjoint)
+                return $
+                    if null disjoint
+                        then lit
+                        else WithLocals lit (DefinednessConstraints disjoint)
             _ -> return lit
 
-    errs <- execWriterT $ check model
+        checkFactorial :: MonadWriter [Doc] m => Expression -> m ()
+        checkFactorial p@[essence| factorial(&x) |]
+            | categoryOf x >= CatDecision
+            = recordErr
+                [ "The factorial function does not work on decision expressions."
+                , "Context:" <++> pretty p
+                ]
+        checkFactorial _ = return ()
+
+    (model', errs) <- runWriterT (check model)
     if null errs
-        then return model
+        then return model'
         else userErr errs
+
+-- | return True if a bunch of ranges represent an infinite domain.
+--   return False if finite. also, return false if unsure.
+isInfinite :: [Range a] -> Bool
+isInfinite [] = True
+isInfinite [RangeOpen{}] = True
+isInfinite [RangeLowerBounded{}] = True
+isInfinite [RangeUpperBounded{}] = True
+isInfinite _ = False
+
+forgetRefs :: Statement -> Statement
+forgetRefs = transformBi f
+    where
+        f (Reference nm _) = Reference nm Nothing
+        f x = x

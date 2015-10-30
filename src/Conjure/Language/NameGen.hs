@@ -9,7 +9,7 @@ import Conjure.UserError
 import Conjure.Language.Name
 
 -- containers
-import Data.Map as M
+import Data.Map.Strict as M
 
 -- pipes
 import qualified Pipes
@@ -44,6 +44,11 @@ instance (NameGen m, Monoid w) => NameGen (WriterT w m) where
     importNameGenState = lift . importNameGenState
 
 instance NameGen m => NameGen (ReaderT r m) where
+    nextName = lift . nextName
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
+
+instance NameGen m => NameGen (IdentityT m) where
     nextName = lift . nextName
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState

@@ -1,4 +1,5 @@
 {-# LANGUAGE Rank2Types #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 
@@ -6,6 +7,7 @@ module Conjure.Representations.Relation.RelationAsSet ( relationAsSet ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -57,10 +59,13 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
                                 | binRelAttrs == def
                                     -> return []
-                                | innerDomain1 == innerDomain2
+                                | forgetRepr innerDomain1 == forgetRepr innerDomain2
                                     -> mkBinRelCons binRelAttrs innerDomain1 rel
                                 | otherwise
-                                    -> bug "Binary relation between different domains."
+                                    -> bug $ vcat [ "Binary relation between different domains. (RelationAsSet)"
+                                                  , "innerDomain1:" <+> pretty innerDomain1
+                                                  , "innerDomain2:" <+> pretty innerDomain2
+                                                  ]
                             DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
                                     -> bug "Non-binary relation has binary relation attributes."
@@ -95,12 +100,13 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainRelation "RelationAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
-                    let tupleOut (ConstantAbstract (AbsLitTuple xs)) = return xs
+                    let tupleOut (viewConstantTuple -> Just xs) = return xs
                         tupleOut c = fail $ "Expecting a tuple, but got:" <+> pretty c
                     vals <- mapM tupleOut tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in RelationAsSet up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

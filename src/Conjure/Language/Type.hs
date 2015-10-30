@@ -6,6 +6,7 @@ module Conjure.Language.Type
     , typesUnify
     , mostDefined
     , homoType
+    , matrixNumDims
     , innerTypeOf
     , isPrimitiveType
     ) where
@@ -160,6 +161,11 @@ mostDefined = foldr f TypeAny
         f (TypeRelation as) (TypeRelation bs) | length as == length bs = TypeRelation (zipWith f as bs)
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
         f _ _ = TypeAny
+
+matrixNumDims :: Type -> Int
+matrixNumDims (TypeMatrix _ t) = 1 + matrixNumDims t
+matrixNumDims (TypeList     t) = 1 + matrixNumDims t
+matrixNumDims _ = 0
 
 homoType :: MonadFail m => Doc -> [Type] -> m Type
 homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)

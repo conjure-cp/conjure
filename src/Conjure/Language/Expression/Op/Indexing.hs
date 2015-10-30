@@ -43,7 +43,7 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     ]
             TypeTuple inns   -> do
                 TypeInt{} <- typeOf i
-                case intOut i of
+                case intOut "OpIndexing" i of
                     Nothing -> fail $ "Tuples can only be indexed by constants:" <++> pretty p
                     Just iInt | iInt <= 0 || iInt > genericLength inns -> fail $ "Out of bounds tuple indexing:" <++> pretty p
                               | otherwise -> return (at inns (fromInteger (iInt-1)))
@@ -72,6 +72,12 @@ instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) =>
                     ]
 
 instance EvaluateOp OpIndexing where
+    evaluateOp p@(OpIndexing m i) | isUndef i = do
+        ty   <- typeOf m
+        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                           TypeList tyTo     -> return tyTo
+                           _ -> fail "evaluateOp{OpIndexing}"
+        return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
     evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt index, vals)) (ConstantInt x)) = do
         ty   <- typeOf m
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
@@ -109,7 +115,7 @@ instance SimplifyOp OpIndexing x where
     simplifyOp _ = na "simplifyOp{OpIndexing}"
 
 instance Pretty x => Pretty (OpIndexing x) where
-    prettyPrec _ (OpIndexing  a b) = pretty a <> prBrackets (pretty b)
+    prettyPrec _ (OpIndexing  a b) = pretty a <++> prBrackets (pretty b)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpIndexing x) where
     varSymBreakingDescription (OpIndexing a b) = JSON.Object $ M.fromList

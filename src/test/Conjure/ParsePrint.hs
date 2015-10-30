@@ -1,0 +1,92 @@
+{-# LANGUAGE RecordWildCards #-}
+
+module Conjure.ParsePrint ( tests ) where
+
+-- conjure
+import Conjure.Prelude
+import Conjure.UserError ( runUserErrorT )
+import Conjure.Language.Definition ( Model )
+import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
+import Conjure.Language.NameGen ( runNameGen )
+import Conjure.UI.IO ( readModelFromFile, writeModel, EssenceFileMode(..) )
+import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
+
+-- tasty
+import Test.Tasty ( TestTree, testGroup )
+import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
+
+
+tests :: IO TestTree
+tests = do
+    let baseDir = "tests/parse_print"
+    dirs <- mapM (isTestDir baseDir) =<< allDirs baseDir
+    let testCases = map testSingleDir (catMaybes dirs)
+    return (testGroup "parse_print" testCases)
+
+
+data TestDirFiles = TestDirFiles
+    { name           :: String          -- a name for the test case
+    , tBaseDir       :: FilePath        -- dir
+    , essenceFile    :: FilePath        -- dir + filename
+    }
+    deriving Show
+
+
+-- returns True if the argument points to a directory that is not hidden
+isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
+isTestDir baseDir dir = do
+    essenceFiles <- filter (".essence" `isSuffixOf`) <$> getDirectoryContents dir
+    case essenceFiles of
+        ["disabled.essence"] -> return Nothing          -- ignore
+        [f] -> return $ Just TestDirFiles
+            { name           = drop (length baseDir + 1) dir
+            , tBaseDir       = dir
+            , essenceFile    = dir </> f
+            }
+        _ -> return Nothing
+
+
+-- the first FilePath is the base directory for the parse_print tests
+-- we know at this point that the second FilePath points to a directory D,
+-- which contains + an Essence file D/D.essence
+testSingleDir :: TestDirFiles -> TestTree
+testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
+    step "Conjuring"
+    model_ <- runUserErrorT (readModelFromFile essenceFile)
+    let
+        tyCheck :: Model -> Either Doc ()
+        tyCheck m = runNameGen $ ignoreLogs $ void $ typeCheckModel_StandAlone m
+    result <-
+        case model_ of
+            Left err    -> return (Left err)
+            Right model ->
+                case tyCheck model of
+                    Left err -> return (Left err)
+                    Right () -> return (Right model)
+    case result of
+        Left ""     -> do
+            removeFileIfExists (tBaseDir </> "stderr")
+            removeFileIfExists (tBaseDir </> "stdout")
+        Left err    -> do
+            writeFile (tBaseDir </> "stderr") (renderNormal err)
+            removeFileIfExists (tBaseDir </> "stdout")
+        Right model -> do
+            writeModel PlainEssence (Just (tBaseDir </> "stdout")) model
+            removeFileIfExists (tBaseDir </> "stderr")
+
+    let
+        readIfExists :: FilePath -> IO String
+        readIfExists f = fromMaybe "" <$> readFileIfExists f
+
+    step "Checking stdout"
+    stdoutG <- readIfExists (tBaseDir </> "stdout")
+    stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
+    unless (stdoutE == stdoutG) $
+        assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
+                                            , "was expecting:    " <++> pretty stdoutE ]
+    step "Checking stderr"
+    stderrG <- readIfExists (tBaseDir </> "stderr")
+    stderrE <- readIfExists (tBaseDir </> "stderr.expected")
+    unless (stderrE == stderrG) $
+        assertFailure $ renderNormal $ vcat [ "unexpected stderr:" <++> pretty stderrG
+                                            , "was expecting:    " <++> pretty stderrE ]

@@ -39,7 +39,7 @@ instance ( TypeOf x, Pretty x, ExpressionLike x
             _ -> raiseTypeError p
 
 instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
     evaluateOp (OpMin (DomainInConstant (DomainInt rs))) = do
         is <- rangesInts rs
@@ -47,17 +47,17 @@ instance EvaluateOp OpMin where
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
     evaluateOp (OpMin (viewConstantMatrix -> Just (_, xs))) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMin 1") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
     evaluateOp (OpMin (viewConstantSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMin 2") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
     evaluateOp (OpMin (viewConstantMSet -> Just xs)) = do
-        is <- concatMapM intsOut xs
+        is <- concatMapM (intsOut "OpMin 3") xs
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)

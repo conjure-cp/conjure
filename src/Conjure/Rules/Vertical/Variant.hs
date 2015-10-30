@@ -136,9 +136,10 @@ rule_Variant_Index = "variant-index" `namedRule` theRule where
             ( "Variant indexing on:" <+> pretty p
             , return $ WithLocals
                 (atNote "Variant indexing" xs argInt)                   -- the value is projected
-                (Right [ [essence| &xWhich = &argInt2 |]                -- the tag is equal to i
-                       | let argInt2 = fromInt (fromIntegral (argInt + 1))
-                       ])
+                (DefinednessConstraints
+                    [ [essence| &xWhich = &argInt2 |]                   -- the tag is equal to i
+                    | let argInt2 = fromInt (fromIntegral (argInt + 1))
+                    ])
             )
 
 

@@ -10,12 +10,12 @@ import Conjure.Language.Parser
 import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
 
 
--- parsec
-import Text.Parsec ( SourcePos, setPosition )
-import Text.Parsec.Pos ( newPos )
+-- megaparsec
+import Text.Megaparsec.Prim ( setPosition )
+import Text.Megaparsec.Pos ( SourcePos, newPos )
 
 -- template-haskell
-import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP )
+import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
 -- syb
@@ -53,10 +53,11 @@ essence = QuasiQuoter
     }
 
 locationTH :: Q SourcePos
-locationTH = aux <$> location
-    where
-        aux :: Loc -> SourcePos
-        aux loc = uncurry (newPos (loc_filename loc)) (loc_start loc)
+locationTH = do
+    loc <- location
+    let file = loc_filename loc
+    let (line, col) = loc_start loc
+    return (newPos file line col)
 
 expE :: Expression -> Maybe ExpQ
 expE (ExpressionMetaVar x) = Just [| $(varE (mkName x)) |]
@@ -73,7 +74,7 @@ expAP _ = Nothing
 
 
 patE :: Expression -> Maybe PatQ
-patE (ExpressionMetaVar x) = Just (varP (mkName x))
+patE (ExpressionMetaVar x) = toPat x
 patE _ = Nothing
 
 patD :: Domain () Expression -> Maybe PatQ
@@ -84,3 +85,7 @@ patAP :: AbstractPattern -> Maybe PatQ
 patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
 patAP _ = Nothing
 
+
+toPat :: String -> Maybe PatQ
+toPat "_" = Just wildP
+toPat x = Just (varP (mkName x))

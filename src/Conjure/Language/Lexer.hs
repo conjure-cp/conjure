@@ -10,7 +10,8 @@ import qualified Data.Text as T
 import qualified Data.Text.Read as T
 import qualified Text.PrettyPrint as Pr
 
-import Text.Parsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColumn, setSourceColumn )
+import Text.Megaparsec.ShowToken ( ShowToken(..) )
 
 
 type LexemePos = (Lexeme, SourcePos)
@@ -143,9 +144,9 @@ data Lexeme
     | L_normIndices
 
     -- in the rule language
-    | L_lambda
-    | L_quantifier
-    | L_representation
+    -- | L_lambda
+    -- | L_quantifier
+    -- | L_representation
 
     -- arithmetic operators
 
@@ -240,6 +241,7 @@ data Lexeme
 
     | L_subsequence
     | L_substring
+    | L_powerSet
 
     | L_pred
     | L_succ
@@ -372,9 +374,9 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )
     , ( L_normIndices, "normIndices" )
-    , ( L_lambda, "lambda" )
-    , ( L_quantifier, "quantifier" )
-    , ( L_representation, "representation" )
+    -- , ( L_lambda, "lambda" )
+    -- , ( L_quantifier, "quantifier" )
+    -- , ( L_representation, "representation" )
     , ( L_Plus            , "+"     )
     , ( L_Minus           , "-"     )
     , ( L_Times           , "*"     )
@@ -440,6 +442,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_subsequence     , "subsequence"  )
     , ( L_substring       , "substring"    )
+    , ( L_powerSet        , "powerSet"     )
 
     , ( L_pred, "pred" )
     , ( L_succ, "succ" )
@@ -530,3 +533,12 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
                                 else let (commentLine,rest2) = T.span (/='\n') rest1
                                      in  Just (rest2, LComment commentLine)
 
+
+instance ShowToken [(Lexeme, Text.Megaparsec.Pos.SourcePos)] where
+    showToken = intercalate ", " . map showToken
+
+instance ShowToken (Lexeme, Text.Megaparsec.Pos.SourcePos) where
+    showToken = showToken . fst
+
+instance ShowToken Lexeme where
+    showToken = show . lexemeFace

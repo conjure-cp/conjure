@@ -8,6 +8,7 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+import Conjure.Process.Enumerate ( EnumerateDomainNoIO(..) )
 import Conjure.Representations ( downC, up, downC1, up1 )
 
 -- tasty
@@ -231,7 +232,7 @@ tests = testGroup "representations"
     , testGroup "matrix of ((bool, int), bool)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool])
-            highConstant = 
+            highConstant =
                 ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
                     [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
                     , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 3], ConstantBool False]
@@ -574,7 +575,7 @@ tests = testGroup "representations"
 
     , testGroup "(bool, matrix of (int, matrix of int))" $
         let
-            highDomain = 
+            highDomain =
                 DomainTuple
                     [ DomainBool
                     , DomainMatrix (intDomain 1 3) (DomainTuple
@@ -1117,8 +1118,9 @@ downC1Test
     -> Assertion
 downC1Test high low' =
     case downC1 high of
-        Left err -> assertFailure (show err)
-        Right low -> Pr low @?= Pr low'
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done low -> Pr low @?= Pr low'
 
 downTest
     :: (Name, Domain HasRepresentation Constant, Constant)
@@ -1126,8 +1128,9 @@ downTest
     -> Assertion
 downTest high lows' =
     case downC high of
-        Left err -> assertFailure (show err)
-        Right lows -> Pr lows @?= Pr lows'
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done lows -> Pr lows @?= Pr lows'
 
 up1Test
     :: (Name, Domain HasRepresentation Constant)
@@ -1136,8 +1139,9 @@ up1Test
     -> Assertion
 up1Test info lows high' =
     case up1 info lows of
-        Left err -> assertFailure (show err)
-        Right high -> Pr high @?= Pr high'
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done high -> Pr high @?= Pr high'
 
 upTest
     :: (Name, Domain HasRepresentation Constant)
@@ -1146,8 +1150,9 @@ upTest
     -> Assertion
 upTest info lows high' =
     case up lows info of
-        Left err -> assertFailure (show err)
-        Right high -> Pr high @?= Pr high'
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done high -> Pr high @?= Pr high'
 
 
 testCasesAuto
@@ -1165,23 +1170,27 @@ downUp1Test
     -> Assertion
 downUp1Test high =
     case downC1 high of
-        Left err -> assertFailure (show err)
-        Right mlows -> do
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done mlows -> do
             let lows = maybe [dropDomain high] (map dropDomain) mlows   -- use high if we cannot go downC1
             case up1 (dropConstant high) lows of
-                Left err -> assertFailure (show err)
-                Right high' -> Pr high' @?= Pr (dropDomain high)
+                TriedIO -> assertFailure "TriedIO"
+                Failed err -> assertFailure (show err)
+                Done high' -> Pr high' @?= Pr (dropDomain high)
 
 downUpTest
     :: (Name, Domain HasRepresentation Constant, Constant)
     -> Assertion
 downUpTest high =
     case downC high of
-        Left err -> assertFailure (show err)
-        Right lows ->
+        TriedIO -> assertFailure "TriedIO"
+        Failed err -> assertFailure (show err)
+        Done lows ->
             case up (map dropDomain lows) (dropConstant high) of
-                Left err -> assertFailure (show err)
-                Right high' -> Pr high' @?= Pr (dropDomain high)
+                TriedIO -> assertFailure "TriedIO"
+                Failed err -> assertFailure (show err)
+                Done high' -> Pr high' @?= Pr (dropDomain high)
 
 
 intDomain :: Default r => Integer -> Integer -> Domain r Constant

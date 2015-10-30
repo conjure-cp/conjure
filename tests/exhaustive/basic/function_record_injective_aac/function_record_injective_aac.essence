@@ -1,0 +1,9 @@
+language Essence 1.3
+
+letting n be 2
+
+letting D be domain int(1..n)
+
+find square : function record{fst:D,snd:D} --> D
+
+such that total(square), injective(square)

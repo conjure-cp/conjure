@@ -9,6 +9,7 @@ import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsAndUnnamedsBack )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.UI.RefineParam ( refineParam )
 import Conjure.Representations ( up )
 
@@ -21,6 +22,7 @@ translateSolution
        , MonadUserError m
        , MonadLog m
        , NameGen m
+       , EnumerateDomain m
        )
     => Model      -- eprime model
     -> Model      -- essence param
@@ -34,7 +36,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     let eprimeLettingsForEnums =
             [ (nm, fromInt (genericLength vals))
             | nm1                                          <- eprimeModel |> mInfo |> miEnumGivens
-            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements 
+            , Declaration (LettingDomainDefnEnum nm2 vals) <- essenceParam' |> mStatements
             , nm1 == nm2
             , let nm = nm1 `mappend` "_EnumSize"
             ]
@@ -91,8 +93,8 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                              , "But got:" <+> pretty s
                              ]
 
-    return def
-        { mStatements = unnamedsAsEnumDomains ++
+    let outStmts =
+            unnamedsAsEnumDomains ++
             sortNub
                 [ Declaration (Letting n (Constant (normaliseConstant y)))
                 | (n, d, x) <- essenceLettings
@@ -101,4 +103,15 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                                 intToEnumConstant
                                 d x
                 ]
-        }
+
+    let undefs = [ u | u@ConstantUndefined{} <- universeBi outStmts ]
+
+    if null undefs
+        then return def { mStatements = outStmts }
+        else bug $ vcat
+            [ "Undefined values in the output:" <++> vcat (map pretty undefs)
+            , ""
+            , "Complete output would have been the following."
+            , ""
+            , pretty $ def { mStatements = outStmts }
+            ]

@@ -34,8 +34,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSubset x) where
 
 instance EvaluateOp OpSubset where
     evaluateOp (OpSubset a b) = do
-        x <- evaluateOp (OpSubsetEq b a)
-        y <- evaluateOp (OpNeq b a)
+        x <- evaluateOp (OpSubsetEq a b)
+        y <- evaluateOp (OpNeq a b)
         evaluateOp (OpAnd (fromList [x,y]))
 
 instance SimplifyOp OpSubset x where

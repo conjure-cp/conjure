@@ -5,10 +5,7 @@ module Conjure.Representations.Relation.RelationAsMatrix ( relationAsMatrix ) wh
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.TH
-import Conjure.Language.Pretty
+import Conjure.Language
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
@@ -58,9 +55,14 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     [m] -> do
                         binRelCons <- if binRelAttr == def then return [] else
                             case innerDomains of
-                                [innerDomain1, innerDomain2] | innerDomain1 == innerDomain2 ->
-                                    mkBinRelCons binRelAttr innerDomain1 rel
-                                [_, _] -> bug "Binary relation between different domains."
+                                [innerDomain1, innerDomain2]
+                                    | forgetRepr innerDomain1 == forgetRepr innerDomain2 ->
+                                        mkBinRelCons binRelAttr innerDomain1 rel
+                                    | otherwise ->
+                                          bug $ vcat [ "Binary relation between different domains. (RelationAsMatrix)"
+                                                     , "innerDomain1:" <+> pretty innerDomain1
+                                                     , "innerDomain2:" <+> pretty innerDomain2
+                                                     ]
                                 _      -> bug "Non-binary relation."
                         concat <$> sequence
                             [ mkSizeCons sizeAttr <$> cardinality m
@@ -118,10 +120,11 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains)) =
-            
+
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
-                    [ "No value for:" <+> pretty (outName name)
+                    [ "(in RelationAsMatrix up)"
+                    , "No value for:" <+> pretty (outName name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
@@ -143,9 +146,9 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                     indices  <- allIndices innerDomains
                     vals     <- forM indices $ \ these -> do
                         indexed <- index constant these
-                        case indexed of
-                            ConstantBool False -> return Nothing
-                            ConstantBool True  -> return (Just these)
+                        case viewConstantBool indexed of
+                            Just False -> return Nothing
+                            Just True  -> return (Just these)
                             _ -> fail $ vcat
                                 [ "Expecting a boolean literal, but got:" <+> pretty indexed
                                 , "When working on:" <+> pretty name

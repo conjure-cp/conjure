@@ -6,10 +6,7 @@ module Conjure.Representations.Matrix
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TH
+import Conjure.Language
 import Conjure.Representations.Internal
 
 
@@ -58,10 +55,23 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
 
         -- TODO: check if indices are the same
         matrixDownC :: TypeOf_DownC m
+        matrixDownC ( name                                                  -- special-case for empty matrix literals
+                    , domain@(DomainMatrix indexDomain _)
+                    , ConstantAbstract (AbsLitMatrix _ [])
+                    ) = do
+            mids1
+                :: Maybe [(Name, DomainX Expression)]
+                <- downD1 (name, fmap Constant domain)
+            let
+                addEmptyLiteral :: (Name, DomainX Expression) -> m (Name, DomainC, Constant)
+                addEmptyLiteral (nm, dom) = do
+                    dom' <- mapM e2c dom
+                    return (nm, dom', ConstantAbstract (AbsLitMatrix indexDomain []))
+            mapM (mapM addEmptyLiteral) mids1
         matrixDownC ( name
-                   , DomainMatrix indexDomain innerDomain
-                   , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
-                   ) = do
+                    , DomainMatrix indexDomain innerDomain
+                    , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
+                    ) = do
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
                 <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]
@@ -108,7 +118,8 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     -- and we just pass it through
                     case lookup name ctxt of
                         Nothing -> fail $ vcat $
-                            [ "No value for:" <+> pretty name
+                            [ "(in Matrix up 1)"
+                            , "No value for:" <+> pretty name
                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                             ] ++
                             ("Bindings in context:" : prettyContext ctxt)
@@ -122,15 +133,16 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                         <- forM mid2 $ \ (n, _) ->
                             case lookup n ctxt of
                                 Nothing -> fail $ vcat $
-                                    [ "No value for:" <+> pretty n
+                                    [ "(in Matrix up 2)"
+                                    , "No value for:" <+> pretty n
                                     , "When working on:" <+> pretty name
                                     , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                     ] ++
                                     ("Bindings in context:" : prettyContext ctxt)
                                 Just constant ->
                                     -- this constant is a ConstantMatrix, containing one component of the things to go into up1
-                                    case constant of
-                                        ConstantAbstract (AbsLitMatrix _ c) -> return (n, c)
+                                    case viewConstantMatrix constant of
+                                        Just (_, vals) -> return (n, vals)
                                         _ -> fail $ vcat
                                             [ "Expecting a matrix literal for:" <+> pretty n
                                             , "But got:" <+> pretty constant
@@ -138,14 +150,36 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                                             , "With domain:" <+> pretty (DomainMatrix indexDomain innerDomain)
                                             ]
 
-                    let midNames     = map fst mid3
-                    let midConstants = map snd mid3
+                    let
+                        midNames :: [Name]
+                        midNames     = map fst mid3
+
+                        midConstants :: [[Constant]]
+                        midConstants = map snd mid3
+
+                        midConstantsMaxLength = maximum (0 : map length midConstants)
+
+                        midConstantsPadded :: [[Constant]]
+                        midConstantsPadded =
+                            [ cs ++ replicate (midConstantsMaxLength - length cs) z
+                            | let z = ConstantUndefined "midConstantsPadded" TypeAny
+                            , cs <- midConstants
+                            ]
+
+                    -- -- assertion, midConstants should not be rugged
+                    -- case midConstants of
+                    --     (x:xs) | any (length x /=) (map length xs) -> fail $ vcat
+                    --         [ "midConstants is rugged"
+                    --         , "midConstants      :" <+> vcat (map (prettyList prBrackets ",") midConstants)
+                    --         , "midConstantsPadded:" <+> vcat (map (prettyList prBrackets ",") midConstantsPadded)
+                    --         ]
+                    --     _ -> return ()
 
                     mid4
                         :: [(Name, Constant)]
                         <- sequence
                             [ up1 (name, innerDomain) (zip midNames cs)
-                            | cs <- transpose midConstants
+                            | cs <- transpose midConstantsPadded
                             ]
                     let values = map snd mid4
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)

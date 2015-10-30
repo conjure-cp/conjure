@@ -1,0 +1,19 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given f_Function1DPartial_Flags: matrix indexed by [bool] of bool
+given f_Function1DPartial_Values: matrix indexed by [bool] of bool
+find fprime_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find fprime_Function1DPartial_Values: matrix indexed by [bool] of bool
+such that
+    and([fprime_Function1DPartial_Values[q5] = f_Function1DPartial_Values[q5] /\
+         fprime_Function1DPartial_Flags[q5]
+             | q5 : bool, f_Function1DPartial_Flags[q5]]),
+    and([fprime_Function1DPartial_Flags[q6] ->
+         f_Function1DPartial_Values[q6] = fprime_Function1DPartial_Values[q6] /\
+         f_Function1DPartial_Flags[q6]
+             | q6 : bool]),
+    and([fprime_Function1DPartial_Flags[q1] = false ->
+         fprime_Function1DPartial_Values[q1] = false
+             | q1 : bool])
+

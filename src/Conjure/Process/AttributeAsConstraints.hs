@@ -25,8 +25,8 @@ attributeAsConstraints m = do
 
 
 attributeAsConstraints_OnLocals :: MonadFail m => Expression -> m Expression
-attributeAsConstraints_OnLocals (WithLocals h (Left locals)) =
-    WithLocals h . Left <$> attributeAsConstraints_OnStmts locals
+attributeAsConstraints_OnLocals (WithLocals h (AuxiliaryVars locals)) =
+    WithLocals h . AuxiliaryVars <$> attributeAsConstraints_OnStmts locals
 attributeAsConstraints_OnLocals x = return x
 
 
@@ -36,14 +36,14 @@ attributeAsConstraints_OnStmts statements0 = do
     -- collecting top level attribute-as-constraints
     (statements1, topLevelAACs) <- runWriterT $ forM statements0 $ \ st -> case st of
         Where xs -> do
-            xs1 <- liftM concat $ forM xs $ \ x -> case x of
+            xs1 <- fmap concat $ forM xs $ \ x -> case x of
                 Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
                     tell [(nm, attr, val)]
                     return []
                 _ -> return [x]
             return [ Where xs1 | not (null xs1) ]
         SuchThat xs -> do
-            xs1 <- liftM concat $ forM xs $ \ x -> case x of
+            xs1 <- fmap concat $ forM xs $ \ x -> case x of
                 Op (MkOpAttributeAsConstraint (OpAttributeAsConstraint (Reference nm _) attr val)) -> do
                     tell [(nm, attr, val)]
                     return []

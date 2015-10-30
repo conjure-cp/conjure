@@ -1,4 +1,5 @@
 {-# LANGUAGE QuasiQuotes #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Rules.Vertical.Matrix where
 
@@ -171,34 +172,6 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Nested"
 
 
--- withAuxVar :: Name -> Domain () Expression -> (Expression -> Expression) -> Expression
--- withAuxVar nm dom f =
---     WithLocals
---         (Reference nm Nothing)
---         [ Declaration (FindOrGiven LocalFind nm dom)
---         , SuchThat [f (Reference nm Nothing)]
---         ]
---         []
---
---
--- rule_Comprehension_ToSet2 :: Rule
--- rule_Comprehension_ToSet2 = "matrix-toSet2" `namedRule` theRule where
---     theRule p = do
---         let lu (Comprehension body goc) = return (body, goc)
---             lu (Reference _ (Just (Alias ref))) = lu ref
---             lu _ = fail "not a comprehension"
---         inToSet     <- match opToSet p
---         (body, goc) <- lu inToSet
---         domBody     <- domainOf body
---         return
---             ( "Vertical rule for comprehension over matrix-hist"
---             , do withAuxVar
---                     (fresh `at` 0)
---                     (DomainSet () def (forgetRepr domBody)) $ \ aux ->
---                         make opAnd $ Comprehension [essence| &body in &aux |] goc
---             )
-
-
 rule_Comprehension_Hist :: Rule
 rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -207,7 +180,7 @@ rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
             _ -> na "rule_Comprehension_Hist"
         matrix               <- match opHist expr
         TypeMatrix{}         <- typeOf matrix
-        DomainMatrix index _ <- domainOf matrix
+        index:_              <- indexDomainsOf matrix
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for comprehension over matrix-hist"
@@ -247,19 +220,20 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
         (x,y)                 <- match opEq p
         TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}          <- typeOf y
-        DomainMatrix indexX _ <- domainOf x
-        DomainMatrix indexY _ <- domainOf y
+        indexX:_              <- indexDomainsOf x
+        indexY:_              <- indexDomainsOf y
         return
             ( "Horizontal rule for matrix ="
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
-                 return [essence| (forAll &iPat : &indexX . &x[&i] = &y[&i])
-                                /\
-                               (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
-                                /\
-                               (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
-                               |]
+                 return [essence|
+                     (forAll &iPat : &indexX . &x[&i] = &y[&i])
+                     /\
+                     (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
+                     /\
+                     (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
+                                |]
             )
 
 
@@ -269,15 +243,16 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
         (x,y)                 <- match opNeq p
         TypeMatrix{}          <- typeOf x        -- TODO: check if x and y have the same arity
         TypeMatrix{}          <- typeOf y
-        DomainMatrix indexX _ <- domainOf x
-        DomainMatrix indexY _ <- domainOf y
+        indexX:_              <- indexDomainsOf x
+        indexY:_              <- indexDomainsOf y
         return
             ( "Horizontal rule for matrix !="
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| (exists &iPat : &indexX . &x[&i] != &y[&i])
-                                 \/
-                               (exists &iPat : &indexY . &x[&i] != &y[&i])
+                 return [essence|
+                     (exists &iPat : &indexX . &x[&i] != &y[&i])
+                     \/
+                     (exists &iPat : &indexY . &x[&i] != &y[&i])
                                 |]
             )
 
@@ -399,8 +374,7 @@ rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, singleVal), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenDomainHasRepr patName (DomainInt [RangeSingle a])) -> return (Single patName, a)
-            Generator (GenDomainHasRepr patName (DomainInt [RangeBounded a b])) | a == b -> return (Single patName, a)
+            Generator (GenDomainHasRepr patName (singletonDomainInt -> Just a)) -> return (Single patName, a)
             _ -> na "rule_Comprehension_SingletonDomain"
         let upd val old = lambdaToFunction pat old val
         return
@@ -441,7 +415,7 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
         (matrix, indexer)            <- match opIndexing p
         (_, DomainInt ranges, elems) <- match matrixLiteral matrix
         indexInts                    <- rangesInts ranges
-        indexerInt                   <- intOut indexer
+        indexerInt                   <- intOut "rule_MatrixIndexing" indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of

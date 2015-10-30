@@ -35,8 +35,11 @@ instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
-    evaluateOp p | any isUndef (universeBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut x
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p@(OpProduct x)
+        | Just xs <- listOut x
+        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

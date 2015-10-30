@@ -1,9 +1,9 @@
 module Conjure.UI.IO
     ( readModelFromFile
-    , readModelFromFileWithMode
     , readModelPreambleFromFile
     , writeModel, writeModels
     , EssenceFileMode(..)
+    , readModel
     ) where
 
 -- conjure
@@ -12,9 +12,6 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-
--- base
-import System.IO ( withFile, IOMode(..), hGetContents )
 
 -- aeson
 import qualified Data.Aeson ( decodeStrict )
@@ -34,44 +31,24 @@ import qualified Data.ByteString.Char8 as BS ( putStrLn )
 data EssenceFileMode = BinaryEssence | PlainEssence
 
 
-guessMode :: MonadIO m => FilePath -> m EssenceFileMode
-guessMode fp = liftIO $ withFile fp ReadMode $ \ h -> do
-    contents <- hGetContents h
-    let strip (ch:xs) | ch `elem` (" \t\n" :: String) = strip xs
-        strip ('$':xs) = strip $ dropWhile (/='\n') xs
-        strip xs = xs
-    if "language" `isPrefixOf` strip contents
-        then return PlainEssence
-        else return BinaryEssence
-
-
 readModelFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
 readModelFromFile fp = do
-    mode <- guessMode fp
-    readModelFromFileWithMode mode fp
-
-
-readModelFromFileWithMode :: (MonadIO m, MonadFail m, MonadUserError m) => EssenceFileMode -> FilePath -> m Model
-readModelFromFileWithMode PlainEssence fp = do
-    pair <- liftIO $ pairWithContents fp
-    readModel id pair
-readModelFromFileWithMode BinaryEssence fp = do
     con <- liftIO $ BS.readFile fp
     case Data.Serialize.decode con of
-        Left err -> fail $ vcat [ "Decoding binary file failed: " <+> pretty fp
-                                , pretty err
-                                ]
         Right res -> return res
+        Left _ -> do
+            pair <- liftIO $ pairWithContents fp
+            readModel id pair
 
 
 readModelPreambleFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
 readModelPreambleFromFile fp = do
-    mode <- guessMode fp
-    case mode of
-        PlainEssence -> do
+    con <- liftIO $ BS.readFile fp
+    case Data.Serialize.decode con of
+        Right res -> return res
+        Left _ -> do
             pair <- liftIO $ pairWithContents fp
             readModel onlyPreamble pair
-        BinaryEssence -> readModelFromFileWithMode BinaryEssence fp
 
 
 readModel :: (MonadUserError m, MonadFail m) => (Text -> Text) -> (FilePath, Text) -> m Model
@@ -112,8 +89,8 @@ onlyPreamble
 
 
 writeModel :: MonadIO m => EssenceFileMode -> Maybe FilePath -> Model -> m ()
-writeModel PlainEssence   Nothing   spec = liftIO $    putStrLn     (renderNormal spec)
-writeModel PlainEssence   (Just fp) spec = liftIO $    writeFile fp (renderNormal spec)
+writeModel PlainEssence  Nothing   spec = liftIO $    putStrLn     (renderNormal spec)
+writeModel PlainEssence  (Just fp) spec = liftIO $    writeFile fp (renderNormal spec)
 writeModel BinaryEssence Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
 writeModel BinaryEssence (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
 

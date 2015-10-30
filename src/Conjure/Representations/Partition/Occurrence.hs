@@ -6,12 +6,8 @@ module Conjure.Representations.Partition.Occurrence ( partitionOccurrence ) wher
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Language.Definition
-import Conjure.Language.Constant ( normaliseConstant )
-import Conjure.Language.Domain
+import Conjure.Language
 import Conjure.Language.DomainSizeOf
-import Conjure.Language.TH
-import Conjure.Language.Pretty
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
@@ -160,13 +156,13 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
                   Just (ConstantAbstract (AbsLitMatrix _ partMatrix)) ) -> do
                     elems <- domainValues innerDomain
-                    vals  <- liftM catMaybes $ forM (zip3 flagMatrix elems partMatrix) $ \ (flag, el, part) -> 
-                        case flag of
-                            ConstantBool b -> return $ if b then Just (part, el) else Nothing
-                            _ -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
-                                             , "When working on:" <+> pretty name
-                                             , "With domain:" <+> pretty domain
-                                             ]
+                    vals  <- fmap catMaybes $ forM (zip3 flagMatrix elems partMatrix) $ \ (flag, el, part) ->
+                        case viewConstantBool flag of
+                            Just b  -> return $ if b then Just (part, el) else Nothing
+                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
+                                                   , "When working on:" <+> pretty name
+                                                   , "With domain:" <+> pretty domain
+                                                   ]
                     let parts = sortNub $ map fst vals
                     return ( name
                            , normaliseConstant $ ConstantAbstract $ AbsLitPartition
@@ -175,13 +171,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 ]
                            )
                 (Nothing, _) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameFlags name)
+                    [ "(in Partition Occurrence up 1)"
+                    , "No value for:" <+> pretty (nameFlags name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
-                    [ "No value for:" <+> pretty (nameParts name)
+                    [ "(in Partition Occurrence up 2)"
+                    , "No value for:" <+> pretty (nameParts name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

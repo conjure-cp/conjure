@@ -2,17 +2,21 @@ module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
 validateSolution
     :: ( MonadFail m
+       , MonadUserError m
        , MonadLog m
+       , EnumerateDomain m
        )
     => Model      -- essence model
     -> Model      -- essence param
@@ -110,7 +114,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     ConstantBool True -> return ()
                     _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
                                                      , "Original statement was:" <+> pretty x
-                                                     , hang "Relevant values:" 4 $ vcat
+                                                     , "Relevant values:" <++> vcat
                                                          [ "letting" <+> pretty nm <+> "be" <+> pretty val
                                                          | (nm, val) <- vals
                                                          , nm `elem` (universeBi x :: [Name])
@@ -125,7 +129,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                     ConstantBool True -> return ()
                     _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
                                                      , "Original statement was:" <+> pretty x
-                                                     , hang "Relevant values:" 4 $ vcat
+                                                     , "Relevant values:" <++> vcat
                                                          [ "letting" <+> pretty nm <+> "be" <+> pretty val
                                                          | (nm, val) <- vals
                                                          , nm `elem` (universeBi x :: [Name])

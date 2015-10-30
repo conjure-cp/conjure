@@ -30,7 +30,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSlicing x) where
 instance EvaluateOp OpSlicing where
     evaluateOp (OpSlicing (viewConstantMatrix -> Just (DomainInt index, vals)) lb ub) = do
         indexVals <- valuesInIntDomain index
-        outVals   <- liftM catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
+        outVals   <- fmap catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
             case lb of
                 Just (ConstantInt lower) | lower > thisIndex -> return Nothing
                 _ -> case ub of

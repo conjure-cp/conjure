@@ -4,6 +4,8 @@ module Conjure.Language.Expression.Op.Neq where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.Expression.Op.Eq
+import Conjure.Language.Expression.Op.Not
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -27,7 +29,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpNeq x) where
 instance EvaluateOp OpNeq where
     evaluateOp (OpNeq ConstantUndefined{} _) = return $ fromBool False
     evaluateOp (OpNeq _ ConstantUndefined{}) = return $ fromBool False
-    evaluateOp (OpNeq x y) = return $ ConstantBool $ x /= y
+    evaluateOp (OpNeq x y) = do
+        out <- evaluateOp (OpEq x y)
+        evaluateOp (OpNot out)
 
 instance SimplifyOp OpNeq x where
     simplifyOp _ = na "simplifyOp{OpNeq}"
