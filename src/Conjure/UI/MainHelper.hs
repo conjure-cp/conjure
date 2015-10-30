@@ -18,6 +18,7 @@ import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
+import Conjure.UI.DomainPruning ( domainPruning )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
@@ -145,6 +146,14 @@ mainWithArgs ParameterGenerator{..} = do
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
                (Just essenceOut)
                output
+mainWithArgs DomainPruning{..} = do
+    -- when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
+    model <- readModelFromFile essence
+    domainPruning showErrors only includes model
+    -- output <- domainPruning model
+    -- writeModel (if outputBinary then BinaryEssence else PlainEssence)
+    --            (Just essenceOut)
+    --            output
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     essenceM <- readModelFromFile essence
