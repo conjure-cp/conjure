@@ -34,11 +34,12 @@ split
     -> Producer Model m ()
 split m = do
     let upd stmts = m { mStatements = stmts }
-    let toPermute st@Declaration{} = Right st
-        toPermute st@SearchOrder{} = Right st
-        toPermute (Where xs)       = Left [Where [x] | x <- xs]
-        toPermute st@Objective{}   = Left [st]
-        toPermute (SuchThat xs)    = Left [SuchThat [x] | x <- xs]
+    let toPermute st@Declaration{}     = Right st
+        toPermute st@SearchOrder{}     = Right st
+        toPermute st@SearchHeuristic{} = Right st
+        toPermute (Where xs)           = Left [Where [x] | x <- xs]
+        toPermute st@Objective{}       = Left [st]
+        toPermute (SuchThat xs)        = Left [SuchThat [x] | x <- xs]
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat

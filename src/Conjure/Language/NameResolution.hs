@@ -99,6 +99,13 @@ resolveStatement st =
                     return st
                 GivenDomainDefnEnum{}       -> return st             -- ignoring
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
+        SearchHeuristic nm -> do
+            let allowed = ["static", "sdf", "conflict", "srf"]
+            if nm `elem` allowed
+                then return (SearchHeuristic nm)
+                else userErr1 $ vcat [ "Invalid heuristic:" <+> pretty nm
+                                     , "Allowed values are:" <+> prettyList id "," allowed
+                                     ]
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs

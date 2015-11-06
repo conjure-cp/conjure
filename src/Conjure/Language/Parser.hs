@@ -179,6 +179,11 @@ parseTopLevels = do
                     xs <- brackets $ commaSeparated parseSearchOrder
                     return [ SearchOrder xs ]
                     <?> "branching on"
+                , do
+                    lexeme L_heuristic
+                    nm <- parseName
+                    return [ SearchHeuristic nm ]
+                    <?> "branching on"
                 ] <?> "statement"
     concat <$> some one
 

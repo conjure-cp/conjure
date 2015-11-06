@@ -49,6 +49,7 @@ import qualified Data.Vector as V               -- vector
 data Statement
     = Declaration Declaration
     | SearchOrder [SearchOrder]
+    | SearchHeuristic Name
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
@@ -62,6 +63,7 @@ instance FromJSON  Statement where parseJSON = genericParseJSON jsonOptions
 instance Pretty Statement where
     pretty (Declaration x) = pretty x
     pretty (SearchOrder nms) = "branching on" <++> prettyList prBrackets "," nms
+    pretty (SearchHeuristic nm) = "heuristic" <+> pretty nm
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
@@ -72,6 +74,7 @@ instance VarSymBreakingDescription Statement where
         , ("children", varSymBreakingDescription x)
         ]
     varSymBreakingDescription SearchOrder{} = JSON.Null
+    varSymBreakingDescription SearchHeuristic{} = JSON.Null
     varSymBreakingDescription (Where xs) = JSON.Object $ M.fromList
         [ ("type", JSON.String "Where")
         , ("symmetricChildren", JSON.Bool True)

@@ -69,6 +69,7 @@ typeCheckModel model1 = do
                             [ "In a 'branching on' statement:" <++> pretty x
                             , "Expected type `bool`, but got:" <++> pretty ty
                             ]
+            SearchHeuristic{} -> return ()
             Where xs -> forM_ xs $ \ x -> do
                 mty <- runExceptT $ typeOf x
                 case mty of

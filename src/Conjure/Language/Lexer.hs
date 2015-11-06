@@ -40,6 +40,7 @@ data Lexeme
     | L_maximising
     | L_branching
     | L_on
+    | L_heuristic
 
     -- type: boolean
     | L_bool
@@ -304,6 +305,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_maximising , "maximizing" )
     , ( L_branching  , "branching"  )
     , ( L_on         , "on"         )
+    , ( L_heuristic  , "heuristic"  )
 
     , ( L_bool, "bool" )
     , ( L_false, "false" )

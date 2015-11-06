@@ -106,6 +106,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                      , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
                                      ]
         SearchOrder{} -> return ()
+        SearchHeuristic{} -> return ()
         Where xs -> do
             vals     <- gets id
             forM_ xs $ \ x -> do

@@ -28,6 +28,7 @@ parameterGenerator = runNameGen . resolveNames >=> core
                 Declaration (FindOrGiven Find  _  _  ) -> return []
                 Declaration {}                         -> return [st]
                 SearchOrder {}                         -> return []
+                SearchHeuristic {}                     -> return []
                 Where       xs                         -> return [SuchThat xs]
                 Objective   {}                         -> return []
                 SuchThat    {}                         -> return []
