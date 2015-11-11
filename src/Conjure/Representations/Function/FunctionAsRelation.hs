@@ -20,10 +20,15 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
-        chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) =
-            DomainFunction Function_AsRelation attrs <$> f innerDomainFr <*> f innerDomainTo
-        chck _ _ = []
+        chck :: TypeOf_ReprCheck m
+        chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) = do
+            innerDomainFr' <- f innerDomainFr
+            innerDomainTo' <- f innerDomainTo
+            return [ DomainFunction Function_AsRelation attrs fr to
+                   | fr <- innerDomainFr'
+                   , to <- innerDomainTo'
+                   ]
+        chck _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName Function_AsRelation Nothing

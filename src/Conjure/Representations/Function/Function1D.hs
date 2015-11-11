@@ -25,15 +25,18 @@ function1D = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
+        chck :: TypeOf_ReprCheck m
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr =
-            DomainFunction Function_1D attrs
-                <$> f innerDomainFr
-                <*> f innerDomainTo
-        chck _ _ = []
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
+            innerDomainFr' <- f innerDomainFr
+            innerDomainTo' <- f innerDomainTo
+            return [ DomainFunction Function_1D attrs fr to
+                   | fr <- innerDomainFr'
+                   , to <- innerDomainTo'
+                   ]
+        chck _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName Function_1D Nothing

@@ -20,9 +20,9 @@ tuple = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
-        chck f (DomainTuple ds) = DomainTuple <$> mapM f ds
-        chck _ _ = []
+        chck :: TypeOf_ReprCheck m
+        chck f (DomainTuple ds) = map DomainTuple <$> mapM f ds
+        chck _ _ = return []
 
         mkName name i = mconcat [name, "_", Name (pack (show (i :: Int)))]
 

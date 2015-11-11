@@ -30,18 +30,18 @@ type DomainC = Domain HasRepresentation Constant
 -- * rCheck is for calculating all representation options.
 --   It take a function to be used as a "checker" for inner domains, if any.
 data Representation (m :: * -> *) = Representation
-    { rCheck          :: TypeOf_ReprCheck
-    , rDownD          :: TypeOf_DownD          m
-    , rStructural     :: TypeOf_Structural     m
-    , rDownC          :: TypeOf_DownC          m
-    , rUp             :: TypeOf_Up             m
+    { rCheck          :: TypeOf_ReprCheck  m
+    , rDownD          :: TypeOf_DownD      m
+    , rStructural     :: TypeOf_Structural m
+    , rDownC          :: TypeOf_DownC      m
+    , rUp             :: TypeOf_Up         m
     }
 
-type TypeOf_ReprCheck =
+type TypeOf_ReprCheck (m :: * -> *) =
        forall x r . (Pretty r, Pretty x, ExpressionLike x)
-    => (Domain r x -> [DomainX x])                  -- other checkers for inner domains
+    => (Domain r x -> m [DomainX x])                -- other checkers for inner domains
     -> Domain r x                                   -- this domain
-    -> [DomainX x]                                  -- with all repr options
+    -> m [DomainX x]                                -- with all repr options
 
 type TypeOf_DownD (m :: * -> *) =
                  (Name, DomainX Expression)
@@ -84,5 +84,5 @@ rDownToX repr forg name domain = do
                       ]
 
 mkOutName :: HasRepresentation -> Maybe Name -> Name -> Name
-mkOutName r Nothing       origName = mconcat [origName, "_", Name (representationToText r)]
-mkOutName r (Just suffix) origName = mconcat [origName, "_", Name (representationToText r), "_", suffix]
+mkOutName r Nothing       origName = mconcat [origName, "_", Name (representationToShortText r)]
+mkOutName r (Just suffix) origName = mconcat [origName, "_", Name (representationToShortText r), "_", suffix]

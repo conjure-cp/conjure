@@ -16,15 +16,18 @@ function1DPartial = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
+        chck :: TypeOf_ReprCheck m
         chck f (DomainFunction _
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr =
-            DomainFunction Function_1DPartial attrs
-                <$> f innerDomainFr
-                <*> f innerDomainTo
-        chck _ _ = []
+                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
+            innerDomainFr' <- f innerDomainFr
+            innerDomainTo' <- f innerDomainTo
+            return [ DomainFunction Function_1DPartial attrs fr to
+                   | fr <- innerDomainFr'
+                   , to <- innerDomainTo'
+                   ]
+        chck _ _ = return []
 
         nameFlags  = mkOutName Function_1DPartial (Just "Flags")
         nameValues = mkOutName Function_1DPartial (Just "Values")

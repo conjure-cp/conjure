@@ -18,11 +18,11 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
+        chck :: TypeOf_ReprCheck m
         chck f (DomainPartition _ attrs innerDomain)
             | domainCanIndexMatrix innerDomain
-            = DomainPartition Partition_Occurrence attrs <$> f innerDomain
-        chck _ _ = []
+            = map (DomainPartition Partition_Occurrence attrs) <$> f innerDomain
+        chck _ _ = return []
 
         nameFlags    = mkOutName Partition_Occurrence (Just "Flags")
         nameParts    = mkOutName Partition_Occurrence (Just "Parts")

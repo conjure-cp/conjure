@@ -1210,7 +1210,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
                 | representationLevels config == False                    = reprsStandardOrderNoLevels
                 | otherwise                                               = reprsStandardOrder
-        let domOpts = reprOptions reprsWhichOrder inpDom
+        domOpts <- reprOptions reprsWhichOrder inpDom
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty inpDom
         let options =
@@ -1347,7 +1347,7 @@ rule_ChooseReprForComprehension config = Rule "choose-repr-for-comprehension" (c
                 | representationsGivens config == Sparse = reprsSparseOrder
                 | representationLevels config == False   = reprsStandardOrderNoLevels
                 | otherwise                              = reprsStandardOrder
-        let domOpts = reprOptions reprsWhichOrder domain
+        domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 
@@ -1410,7 +1410,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
                 | representationLevels config == False          = reprsStandardOrderNoLevels
                 | otherwise                                     = reprsStandardOrder
-        let domOpts = reprOptions reprsWhichOrder domain
+        domOpts <- reprOptions reprsWhichOrder domain
         when (null domOpts) $
             bug $ "No representation matches this beast:" <++> pretty domain
 

@@ -17,11 +17,11 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
     where
 
-        chck :: TypeOf_ReprCheck
-        chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
+        chck :: TypeOf_ReprCheck m
+        chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = return []
         chck f (DomainSet _ attrs innerDomain) =
-            DomainSet Set_ExplicitVarSizeWithFlags attrs <$> f innerDomain
-        chck _ _ = []
+            map (DomainSet Set_ExplicitVarSizeWithFlags attrs) <$> f innerDomain
+        chck _ _ = return []
 
         nameFlag   = mkOutName Set_ExplicitVarSizeWithFlags (Just "Flags")
         nameValues = mkOutName Set_ExplicitVarSizeWithFlags (Just "Values")

@@ -13,7 +13,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.Instantiate
-import Conjure.Process.Enumerate ( EnumerateDomain, EnumerateDomainNoIO )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 import Conjure.Representations.Internal
 import Conjure.Representations.Primitive
@@ -134,7 +134,9 @@ up ctxt (name, highDomain) = do
 
 -- | Combine all known representations into one.
 --   Dispatch into the actual implementation of the representation depending on the provided domain.
-dispatch :: (MonadFail m, NameGen m, EnumerateDomain m, Pretty x) => Domain HasRepresentation x -> Representation m
+dispatch
+    :: (MonadFail m, NameGen m, EnumerateDomain m, Pretty x)
+    => Domain HasRepresentation x -> Representation m
 dispatch domain = do
     let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
@@ -169,33 +171,27 @@ dispatch domain = do
             _ -> nope
         DomainPartition r _ _ -> case r of
             Partition_Occurrence -> partitionOccurrence
-            Partition_AsSet      -> partitionAsSet dispatch
+            Partition_AsSet{}    -> partitionAsSet dispatch
             _ -> nope
         _ -> nope
 
-type AllRepresentations = [[Representation EnumerateDomainNoIO]]
+
+type AllRepresentations m = [[Representation m]]
+
 
 -- | No levels!
-reprsStandardOrderNoLevels :: AllRepresentations
-reprsStandardOrderNoLevels = return $ concat
-    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitVarSizeWithFlags
-      , function1D, function1DPartial, functionND, functionNDPartial
-      , sequenceExplicitBounded
-      , relationAsMatrix
-      -- , partitionOccurrence
-      ]
-    , [ functionAsRelation dispatch
-      , relationAsSet dispatch
-      , partitionAsSet dispatch
-      ]
-    ]
+reprsStandardOrderNoLevels
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
+    => AllRepresentations m
+reprsStandardOrderNoLevels = return $ concat reprsStandardOrder
+
 
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
-reprsStandardOrder :: AllRepresentations
+reprsStandardOrder
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
+    => AllRepresentations m
 reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
@@ -211,7 +207,10 @@ reprsStandardOrder =
       ]
     ]
 
-reprsSparseOrder :: AllRepresentations
+
+reprsSparseOrder
+    :: (MonadFail m, NameGen m, EnumerateDomain m)
+    => AllRepresentations m
 reprsSparseOrder = map return $
     [ primitive, tuple, record, variant, matrix downD1 downC1 up1
 
@@ -235,18 +234,18 @@ reprsSparseOrder = map return $
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
 reprOptions
-    :: (Pretty r, Pretty x, ExpressionLike x)
-    => AllRepresentations
+    :: (Pretty r, Pretty x, ExpressionLike x, Monad m)
+    => AllRepresentations m
     -> Domain r x
-    -> [Domain HasRepresentation x]
+    -> m [Domain HasRepresentation x]
 reprOptions reprs domain = go reprs
     where
-        go [] = []
-        go (reprsThisLevel:reprsNextLevels) =
-            let matchesOnThisLevel = concat [ rCheck r (reprOptions reprs) domain | r <- reprsThisLevel ]
-            in  if null matchesOnThisLevel
-                    then go reprsNextLevels
-                    else matchesOnThisLevel
+        go [] = return []
+        go (reprsThisLevel:reprsNextLevels) = do
+            matchesOnThisLevel <- concat <$> sequence [ rCheck r (reprOptions reprs) domain | r <- reprsThisLevel ]
+            if null matchesOnThisLevel
+                then go reprsNextLevels
+                else return matchesOnThisLevel
 
 
 -- | For a domain, returns the structural constraints.

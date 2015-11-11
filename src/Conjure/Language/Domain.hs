@@ -15,7 +15,7 @@ module Conjure.Language.Domain
     , PartitionAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
-    , textToRepresentation, representationToText
+    , textToRepresentation, representationToShortText, representationToFullText
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
@@ -696,7 +696,7 @@ data HasRepresentation
     | Relation_AsMatrix
     | Relation_AsSet
 
-    | Partition_AsSet
+    | Partition_AsSet HasRepresentation HasRepresentation       -- representations for the inner sets, attached
     | Partition_Occurrence              -- TODO
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -794,36 +794,69 @@ instance Pretty a => Pretty (Range a) where
 
 instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
-    pretty r = pretty (representationToText r)
+    pretty r = pretty (representationToFullText r)
 
-textToRepresentation :: Text -> Maybe HasRepresentation
-textToRepresentation s = lookup s luTextRepresentation
+textToRepresentation :: Text -> [HasRepresentation] -> Maybe HasRepresentation
+textToRepresentation t []             | t == "Occurrence"                 = return Set_Occurrence                 
+textToRepresentation t []             | t == "Explicit"                   = return Set_Explicit                   
+textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags   
+textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker  
+textToRepresentation t []             | t == "ExplicitVarSizeWithDefault" = return Set_ExplicitVarSizeWithDefault 
+textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return MSet_ExplicitVarSizeWithFlags  
+textToRepresentation t []             | t == "Function1D"                 = return Function_1D                    
+textToRepresentation t []             | t == "Function1DPartial"          = return Function_1DPartial             
+textToRepresentation t []             | t == "FunctionND"                 = return Function_ND                    
+textToRepresentation t []             | t == "FunctionNDPartial"          = return Function_NDPartial             
+textToRepresentation t []             | t == "FunctionAsRelation"         = return Function_AsRelation            
+textToRepresentation t []             | t == "ExplicitBounded"            = return Sequence_ExplicitBounded       
+textToRepresentation t []             | t == "RelationAsMatrix"           = return Relation_AsMatrix              
+textToRepresentation t []             | t == "RelationAsSet"              = return Relation_AsSet                 
+textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
+textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence            
+textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
 
-representationToText :: HasRepresentation -> Text
-representationToText r =
-    case lookup r (map swap luTextRepresentation) of
-        Nothing -> bug ("representationToText:" <+> pretty (show r))
-        Just t  -> t
+representationToShortText :: HasRepresentation -> Text
+representationToShortText Set_Occurrence                 = "Occurrence"                
+representationToShortText Set_Explicit                   = "Explicit"                  
+representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"  
+representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker" 
+representationToShortText Set_ExplicitVarSizeWithDefault = "ExplicitVarSizeWithDefault"
+representationToShortText MSet_ExplicitVarSizeWithFlags  = "ExplicitVarSizeWithFlags"  
+representationToShortText Function_1D                    = "Function1D"                
+representationToShortText Function_1DPartial             = "Function1DPartial"         
+representationToShortText Function_ND                    = "FunctionND"                
+representationToShortText Function_NDPartial             = "FunctionNDPartial"         
+representationToShortText Function_AsRelation            = "FunctionAsRelation"        
+representationToShortText Sequence_ExplicitBounded       = "ExplicitBounded"           
+representationToShortText Relation_AsMatrix              = "RelationAsMatrix"          
+representationToShortText Relation_AsSet                 = "RelationAsSet"             
+representationToShortText Partition_AsSet{}              = "PartitionAsSet"
+representationToShortText Partition_Occurrence           = "PartitionOccurrence"       
+representationToShortText r = bug ("representationToText:" <+> pretty (show r))
 
-luTextRepresentation :: [(Text, HasRepresentation)]
-luTextRepresentation =
-    [ ( "Occurrence"                   , Set_Occurrence                 )
-    , ( "Explicit"                     , Set_Explicit                   )
-    , ( "ExplicitVarSizeWithFlags"     , Set_ExplicitVarSizeWithFlags   )
-    , ( "ExplicitVarSizeWithMarker"    , Set_ExplicitVarSizeWithMarker  )
-    , ( "ExplicitVarSizeWithDefault"   , Set_ExplicitVarSizeWithDefault )
-    , ( "ExplicitVarSizeWithFlags"     , MSet_ExplicitVarSizeWithFlags  )
-    , ( "Function1D"                   , Function_1D                    )
-    , ( "Function1DPartial"            , Function_1DPartial             )
-    , ( "FunctionND"                   , Function_ND                    )
-    , ( "FunctionNDPartial"            , Function_NDPartial             )
-    , ( "FunctionAsRelation"           , Function_AsRelation            )
-    , ( "ExplicitBounded"              , Sequence_ExplicitBounded       )
-    , ( "RelationAsMatrix"             , Relation_AsMatrix              )
-    , ( "RelationAsSet"                , Relation_AsSet                 )
-    , ( "PartitionAsSet"               , Partition_AsSet                )
-    , ( "PartitionOccurrence"          , Partition_Occurrence           )
-    ]
+representationToFullText :: HasRepresentation -> Text
+representationToFullText Set_Occurrence                 = "Occurrence"                
+representationToFullText Set_Explicit                   = "Explicit"                  
+representationToFullText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"  
+representationToFullText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker" 
+representationToFullText Set_ExplicitVarSizeWithDefault = "ExplicitVarSizeWithDefault"
+representationToFullText MSet_ExplicitVarSizeWithFlags  = "ExplicitVarSizeWithFlags"  
+representationToFullText Function_1D                    = "Function1D"                
+representationToFullText Function_1DPartial             = "Function1DPartial"         
+representationToFullText Function_ND                    = "FunctionND"                
+representationToFullText Function_NDPartial             = "FunctionNDPartial"         
+representationToFullText Function_AsRelation            = "FunctionAsRelation"        
+representationToFullText Sequence_ExplicitBounded       = "ExplicitBounded"           
+representationToFullText Relation_AsMatrix              = "RelationAsMatrix"          
+representationToFullText Relation_AsSet                 = "RelationAsSet"             
+representationToFullText (Partition_AsSet repr1 repr2)  = mconcat [ "PartitionAsSet["
+                                                                  , representationToFullText repr1
+                                                                  , ","
+                                                                  , representationToFullText repr2, "]"
+                                                                  ]
+representationToFullText Partition_Occurrence           = "PartitionOccurrence"       
+representationToFullText r = bug ("representationToText:" <+> pretty (show r))
+
 
 normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool

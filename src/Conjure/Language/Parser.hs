@@ -234,12 +234,16 @@ parseDomainWithRepr
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ braces $ do nm <- identifierText
-                                       case textToRepresentation nm of
-                                           Nothing -> fail ("Not a valid representation name:" <+> pretty nm)
-                                           Just r  -> return r
+        parseRepr = msum [ braces parseReprInner
                          , return NoRepresentation
                          ]
+
+        parseReprInner = do
+            nm     <- identifierText
+            inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
+            case textToRepresentation nm inners of
+                Nothing -> fail ("Not a valid representation:" <+> pretty nm)
+                Just r  -> return r
 
         pBool = do
             lexeme L_bool

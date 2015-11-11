@@ -22,9 +22,9 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
 
     where
 
-        chck :: TypeOf_ReprCheck
-        chck f (DomainMatrix indexDomain innerDomain) = DomainMatrix indexDomain <$> f innerDomain
-        chck _ _ = []
+        chck :: TypeOf_ReprCheck m
+        chck f (DomainMatrix indexDomain innerDomain) = map (DomainMatrix indexDomain) <$> f innerDomain
+        chck _ _ = return []
 
         matrixDownD :: TypeOf_DownD m
         matrixDownD (name, DomainMatrix indexDomain innerDomain) = do
