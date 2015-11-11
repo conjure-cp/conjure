@@ -20,11 +20,11 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         chck :: TypeOf_ReprCheck
         chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
         chck f (DomainSet _ attrs innerDomain) =
-            DomainSet "ExplicitVarSizeWithFlags" attrs <$> f innerDomain
+            DomainSet Set_ExplicitVarSizeWithFlags attrs <$> f innerDomain
         chck _ _ = []
 
-        nameFlag   name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Flags"]
-        nameValues name = mconcat [name, "_", "ExplicitVarSizeWithFlags", "_Values"]
+        nameFlag   = mkOutName Set_ExplicitVarSizeWithFlags (Just "Flags")
+        nameValues = mkOutName Set_ExplicitVarSizeWithFlags (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
@@ -47,7 +47,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainSet "ExplicitVarSizeWithFlags" (SetAttr attrs) innerDomain) = do
+        structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithFlags (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
                 orderingWhenFlagged flags values = do

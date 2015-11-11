@@ -6,6 +6,7 @@ module Conjure.Representations.Internal
     , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
     , DomainX, DomainC
     , rDownToX
+    , mkOutName
     ) where
 
 -- conjure
@@ -81,3 +82,7 @@ rDownToX repr forg name domain = do
                             Nothing -> Reference n (Just (DeclHasRepr forg n d))
                       | (n,d) <- pairs
                       ]
+
+mkOutName :: HasRepresentation -> Maybe Name -> Name -> Name
+mkOutName r Nothing       origName = mconcat [origName, "_", Name (representationToText r)]
+mkOutName r (Just suffix) origName = mconcat [origName, "_", Name (representationToText r), "_", suffix]

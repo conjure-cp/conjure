@@ -17,11 +17,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck
         chck f (DomainSequence _ attrs@(SequenceAttr sizeAttr _) innerDomain) | hasMaxSize sizeAttr =
-            DomainSequence "ExplicitBounded" attrs <$> f innerDomain
+            DomainSequence Sequence_ExplicitBounded attrs <$> f innerDomain
         chck _ _ = []
 
-        nameMarker name = mconcat [name, "_", "ExplicitBounded", "_Length"]
-        nameValues name = mconcat [name, "_", "ExplicitBounded", "_Values" ]
+        nameMarker = mkOutName Sequence_ExplicitBounded (Just "Length")
+        nameValues = mkOutName Sequence_ExplicitBounded (Just "Values")
 
         hasMaxSize SizeAttr_Size{} = True
         hasMaxSize SizeAttr_MaxSize{} = True
@@ -33,7 +33,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         getMaxSize _ = fail "Unknown maxSize"
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSequence "ExplicitBounded" (SequenceAttr (SizeAttr_Size size) _) innerDomain) =
+        downD (name, DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) _) innerDomain) =
             return $ Just
                 [ ( nameMarker name
                   , DomainInt [RangeBounded size size]
@@ -43,7 +43,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                       (DomainInt [RangeBounded 1 size])
                       innerDomain
                   ) ]
-        downD (name, DomainSequence "ExplicitBounded" (SequenceAttr sizeAttr _) innerDomain) = do
+        downD (name, DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
             return $ Just
                 [ ( nameMarker name
@@ -57,7 +57,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitBounded"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainSequence "ExplicitBounded" (SequenceAttr (SizeAttr_Size size) _) innerDomain) = do
+        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) _) innerDomain) = do
             let
                 innerStructuralCons values = do
                     (iPat, i) <- quantifiedVar
@@ -78,7 +78,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         return $ concat [ isc
                                         ]
                     _ -> na "{structuralCons} ExplicitBounded"
-        structuralCons f downX1 (DomainSequence "ExplicitBounded" (SequenceAttr sizeAttr _) innerDomain) = do
+        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
             let
                 dontCareAfterMarker marker values = do

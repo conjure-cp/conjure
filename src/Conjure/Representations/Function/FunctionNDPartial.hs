@@ -24,16 +24,16 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs =
-            DomainFunction "FunctionNDPartial" attrs
+            DomainFunction Function_NDPartial attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
         chck _ _ = []
 
-        nameFlags  name = mconcat [name, "_", "FunctionNDPartial_Flags"]
-        nameValues name = mconcat [name, "_", "FunctionNDPartial_Values"]
+        nameFlags  = mkOutName Function_NDPartial (Just "Flags")
+        nameValues = mkOutName Function_NDPartial (Just "Values")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction "FunctionNDPartial"
+        downD (name, DomainFunction Function_NDPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     (viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
@@ -50,7 +50,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
-            (DomainFunction "FunctionNDPartial"
+            (DomainFunction Function_NDPartial
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
@@ -146,7 +146,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction "FunctionNDPartial"
+              , DomainFunction Function_NDPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo
@@ -209,7 +209,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
         downC _ = na "{downC} FunctionNDPartial"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction "FunctionNDPartial"
+        up ctxt (name, domain@(DomainFunction Function_NDPartial
                                 (FunctionAttr _ PartialityAttr_Partial _)
                                 innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs) _))
 

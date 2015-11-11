@@ -24,15 +24,16 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck
         chck f (DomainRelation _ attrs innerDomains) =
-            DomainRelation "RelationAsSet" attrs <$> mapM f innerDomains
+            DomainRelation Relation_AsSet attrs <$> mapM f innerDomains
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "RelationAsSet"]
+        outName :: Name -> Name
+        outName = mkOutName Relation_AsSet Nothing
 
-        outDomain (DomainRelation "RelationAsSet" (RelationAttr sizeAttr _binRelAttrs) innerDomains) = do
+        outDomain (DomainRelation Relation_AsSet (RelationAttr sizeAttr _binRelAttrs) innerDomains) = do
             let repr = case sizeAttr of
-                        SizeAttr_Size{} -> "Explicit"
-                        _               -> "ExplicitVarSizeWithMarker"
+                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
+                        _               -> Set_ExplicitVarSizeWithMarker
             return (DomainSet repr (SetAttr sizeAttr) (DomainTuple innerDomains))
         outDomain domain = na $ vcat [ "{outDomain} RelationAsSet"
                                      , "domain:" <+> pretty domain
@@ -56,7 +57,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                 case refs of
                     [set] -> do
                         binRelCons <- case inDom of
-                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
+                            DomainRelation Relation_AsSet (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
                                 | binRelAttrs == def
                                     -> return []
                                 | forgetRepr innerDomain1 == forgetRepr innerDomain2
@@ -66,7 +67,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                                   , "innerDomain1:" <+> pretty innerDomain1
                                                   , "innerDomain2:" <+> pretty innerDomain2
                                                   ]
-                            DomainRelation "RelationAsSet" (RelationAttr _ binRelAttrs) innerDomains
+                            DomainRelation Relation_AsSet (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
                                     -> bug "Non-binary relation has binary relation attributes."
                             _ -> return []
@@ -97,7 +98,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainRelation "RelationAsSet" _ _)) =
+        up ctxt (name, domain@(DomainRelation Relation_AsSet _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
                     let tupleOut (viewConstantTuple -> Just xs) = return xs

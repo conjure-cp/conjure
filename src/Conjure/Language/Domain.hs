@@ -15,6 +15,7 @@ module Conjure.Language.Domain
     , PartitionAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
+    , textToRepresentation, representationToText
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , forgetRepr, changeRepr, defRepr
@@ -673,7 +674,31 @@ expandRanges r =
                 else map (RangeSingle . fromInt) is
 
 
-data HasRepresentation = NoRepresentation | HasRepresentation Name
+data HasRepresentation
+    = NoRepresentation
+
+    | Set_Occurrence
+    | Set_Explicit
+    | Set_ExplicitVarSizeWithFlags
+    | Set_ExplicitVarSizeWithMarker
+    | Set_ExplicitVarSizeWithDefault    -- TODO
+
+    | MSet_ExplicitVarSizeWithFlags
+
+    | Function_1D
+    | Function_1DPartial
+    | Function_ND
+    | Function_NDPartial
+    | Function_AsRelation
+
+    | Sequence_ExplicitBounded
+
+    | Relation_AsMatrix
+    | Relation_AsSet
+
+    | Partition_AsSet
+    | Partition_Occurrence              -- TODO
+
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize HasRepresentation
@@ -681,11 +706,9 @@ instance Hashable  HasRepresentation
 instance ToJSON    HasRepresentation where toJSON = genericToJSON jsonOptions
 instance FromJSON  HasRepresentation where parseJSON = genericParseJSON jsonOptions
 
-instance IsString  HasRepresentation where
-    fromString = HasRepresentation . fromString
-
 instance Default HasRepresentation where
     def = NoRepresentation
+
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
@@ -771,7 +794,36 @@ instance Pretty a => Pretty (Range a) where
 
 instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
-    pretty (HasRepresentation r) = pretty r
+    pretty r = pretty (representationToText r)
+
+textToRepresentation :: Text -> Maybe HasRepresentation
+textToRepresentation s = lookup s luTextRepresentation
+
+representationToText :: HasRepresentation -> Text
+representationToText r =
+    case lookup r (map swap luTextRepresentation) of
+        Nothing -> bug ("representationToText:" <+> pretty (show r))
+        Just t  -> t
+
+luTextRepresentation :: [(Text, HasRepresentation)]
+luTextRepresentation =
+    [ ( "Occurrence"                   , Set_Occurrence                 )
+    , ( "Explicit"                     , Set_Explicit                   )
+    , ( "ExplicitVarSizeWithFlags"     , Set_ExplicitVarSizeWithFlags   )
+    , ( "ExplicitVarSizeWithMarker"    , Set_ExplicitVarSizeWithMarker  )
+    , ( "ExplicitVarSizeWithDefault"   , Set_ExplicitVarSizeWithDefault )
+    , ( "ExplicitVarSizeWithFlags"     , MSet_ExplicitVarSizeWithFlags  )
+    , ( "Function1D"                   , Function_1D                    )
+    , ( "Function1DPartial"            , Function_1DPartial             )
+    , ( "FunctionND"                   , Function_ND                    )
+    , ( "FunctionNDPartial"            , Function_NDPartial             )
+    , ( "FunctionAsRelation"           , Function_AsRelation            )
+    , ( "ExplicitBounded"              , Sequence_ExplicitBounded       )
+    , ( "RelationAsMatrix"             , Relation_AsMatrix              )
+    , ( "RelationAsSet"                , Relation_AsSet                 )
+    , ( "PartitionAsSet"               , Partition_AsSet                )
+    , ( "PartitionOccurrence"          , Partition_Occurrence           )
+    ]
 
 normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool

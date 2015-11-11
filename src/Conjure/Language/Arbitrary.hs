@@ -190,10 +190,10 @@ arbitraryDomainAndConstant = sized dispatch
                                 Left err -> bug err
                                 Right s  -> min 10 s
             size <- choose (0 :: Integer, sizeUpTo)
-            repr <- pickFromList ["Explicit"] -- no other representation yet!
+            repr <- pickFromList [Set_Explicit]
             let domainOut =
                     DomainSet
-                        (HasRepresentation repr)
+                        repr
                         (SetAttr (SizeAttr_Size (ConstantInt size)))
                         dom
             return ( domainOut
@@ -221,8 +221,8 @@ arbitraryDomainAndConstant = sized dispatch
                                 Left err -> bug err
                                 Right s  -> min 10 s
             maxSize <- choose (0 :: Integer, sizeUpTo)
-            repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
-            return ( DomainSet (HasRepresentation repr)
+            repr <- pickFromList [Set_ExplicitVarSizeWithFlags, Set_ExplicitVarSizeWithMarker]
+            return ( DomainSet repr
                                (SetAttr (SizeAttr_MaxSize (ConstantInt maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
@@ -239,10 +239,10 @@ arbitraryDomainAndConstant = sized dispatch
                                 Right s  -> min 10 s
             minSize <- choose (0 :: Integer, sizeUpTo)
             maxSize <- choose (minSize, sizeUpTo)
-            repr <- pickFromList ["ExplicitVarSizeWithBoolMarkers", "ExplicitVarSizeWithIntMarker" ] -- these representations do not exist yet!
+            repr <- pickFromList [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
             let domainOut =
                     DomainSet
-                        (HasRepresentation repr)
+                        repr
                         (SetAttr (SizeAttr_MinMaxSize
                                     (ConstantInt minSize)
                                     (ConstantInt maxSize)))

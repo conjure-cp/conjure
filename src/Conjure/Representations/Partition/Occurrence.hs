@@ -21,15 +21,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         chck :: TypeOf_ReprCheck
         chck f (DomainPartition _ attrs innerDomain)
             | domainCanIndexMatrix innerDomain
-            = DomainPartition "Occurrence" attrs <$> f innerDomain
+            = DomainPartition Partition_Occurrence attrs <$> f innerDomain
         chck _ _ = []
 
-        nameFlags    name = mconcat [name, "_", "Occurrence", "_", "Flags"]
-        nameParts    name = mconcat [name, "_", "Occurrence", "_", "Parts"]
-        nameNumParts name = mconcat [name, "_", "Occurrence", "_", "NumParts"]
+        nameFlags    = mkOutName Partition_Occurrence (Just "Flags")
+        nameParts    = mkOutName Partition_Occurrence (Just "Parts")
+        nameNumParts = mkOutName Partition_Occurrence (Just "NumParts")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainPartition "Occurrence" (PartitionAttr{..}) innerDomain)
+        downD (name, DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain)
             | domainCanIndexMatrix innerDomain = do
             maxNbParts <- domainSizeOf innerDomain
             return $ Just
@@ -151,7 +151,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainPartition "Occurrence" _ innerDomain)) =
+        up ctxt (name, domain@(DomainPartition Partition_Occurrence _ innerDomain)) =
             case (lookup (nameFlags name) ctxt, lookup (nameParts name) ctxt) of
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
                   Just (ConstantAbstract (AbsLitMatrix _ partMatrix)) ) -> do

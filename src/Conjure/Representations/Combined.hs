@@ -37,9 +37,6 @@ import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
 
--- text
-import Data.Text as T ( isPrefixOf )
-
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
 --   The domain is allowed to be at the class level.
@@ -148,33 +145,30 @@ dispatch domain = do
         DomainVariant{} -> variant
         DomainMatrix{}  -> matrix downD1 downC1 up1
         DomainSet r _ _ -> case r of
-            "Occurrence"                    -> setOccurrence
-            "Explicit"                      -> setExplicit
-            "ExplicitVarSizeWithMarker"     -> setExplicitVarSizeWithMarker
-            "ExplicitVarSizeWithFlags"      -> setExplicitVarSizeWithFlags
+            Set_Occurrence                    -> setOccurrence
+            Set_Explicit                      -> setExplicit
+            Set_ExplicitVarSizeWithMarker     -> setExplicitVarSizeWithMarker
+            Set_ExplicitVarSizeWithFlags      -> setExplicitVarSizeWithFlags
             _ -> nope
         DomainMSet r _ _ -> case r of
-            "ExplicitVarSizeWithFlags"      -> msetExplicitVarSizeWithFlags
+            MSet_ExplicitVarSizeWithFlags     -> msetExplicitVarSizeWithFlags
             _ -> nope
         DomainFunction r _ _ _ -> case r of
-            "Function1D"                    -> function1D
-            "Function1DPartial"             -> function1DPartial
-            "FunctionND"                    -> functionND
-            "FunctionNDPartial"             -> functionNDPartial
-            "FunctionAsRelation"            -> functionAsRelation dispatch
+            Function_1D                       -> function1D
+            Function_1DPartial                -> function1DPartial
+            Function_ND                       -> functionND
+            Function_NDPartial                -> functionNDPartial
+            Function_AsRelation               -> functionAsRelation dispatch
             _ -> nope
         DomainSequence r _ _ -> case r of
-            "ExplicitBounded"               -> sequenceExplicitBounded
+            Sequence_ExplicitBounded          -> sequenceExplicitBounded
             _ -> nope
         DomainRelation r _ _ -> case r of
-            "RelationAsMatrix"              -> relationAsMatrix
-            "RelationAsSet"                 -> relationAsSet dispatch
+            Relation_AsMatrix                 -> relationAsMatrix
+            Relation_AsSet                    -> relationAsSet dispatch
             _ -> nope
         DomainPartition r _ _ -> case r of
-            HasRepresentation (Name nm)
-                | T.isPrefixOf "PartitionAsSet" nm
-                -> partitionAsSet dispatch r
-            HasRepresentation (Name "Occurrence") -> partitionOccurrence
+            Partition_Occurrence -> partitionOccurrence
             _ -> nope
         _ -> nope
 
@@ -193,8 +187,8 @@ reprsStandardOrderNoLevels = return $ concat
       ]
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
+      , partitionAsSet dispatch
       ]
-    , partitionAsSetAllFlavours False dispatch
     ]
 
 -- | A list of all representations.
@@ -212,8 +206,8 @@ reprsStandardOrder =
       ]
     , [ functionAsRelation dispatch
       , relationAsSet dispatch
+      , partitionAsSet dispatch
       ]
-    , partitionAsSetAllFlavours True dispatch
     ]
 
 reprsSparseOrder :: AllRepresentations
@@ -226,15 +220,15 @@ reprsSparseOrder = map return $
     , msetExplicitVarSizeWithFlags
 
     , function1D, functionND
-    , functionAsRelation dispatch
+    , functionAsRelation dispatch                   -- TODO: this is often sparser, should be promoted
     , function1DPartial, functionNDPartial                    -- redundant
 
     , sequenceExplicitBounded
 
     , relationAsSet dispatch
     , relationAsMatrix
+    , partitionAsSet dispatch
     ]
-    ++ partitionAsSetAllFlavours True dispatch
 
 
 -- | For a domain, produce a list of domains with different representation options.

@@ -22,17 +22,19 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck
         chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) =
-            DomainFunction "FunctionAsRelation" attrs <$> f innerDomainFr <*> f innerDomainTo
+            DomainFunction Function_AsRelation attrs <$> f innerDomainFr <*> f innerDomainTo
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "FunctionAsRelation"]
+        outName :: Name -> Name
+        outName = mkOutName Function_AsRelation Nothing
 
-        outDomain (DomainFunction "FunctionAsRelation"
+        outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
+        outDomain (DomainFunction Function_AsRelation
                     (FunctionAttr sizeAttr _partilityAttr _jectivityAttr)
                     innerDomainFr innerDomainTo) = do
             let repr = if all domainCanIndexMatrix [innerDomainFr, innerDomainTo]
-                        then "RelationAsMatrix"
-                        else "RelationAsSet"
+                        then Relation_AsMatrix      -- TODO: do not hard-code
+                        else Relation_AsSet
             return (DomainRelation repr (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
         outDomain domain = na $ vcat [ "{outDomain} FunctionAsRelation"
                                      , "domain:" <+> pretty domain
@@ -138,7 +140,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction "FunctionAsRelation" _ _ _)) =
+        up ctxt (name, domain@(DomainFunction Function_AsRelation _ _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitRelation pairs)) -> do
                     let pairOut [a,b] = return (a,b)

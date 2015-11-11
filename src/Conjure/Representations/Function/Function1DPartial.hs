@@ -21,16 +21,16 @@ function1DPartial = Representation chck downD structuralCons downC up
                     attrs@(FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr =
-            DomainFunction "Function1DPartial" attrs
+            DomainFunction Function_1DPartial attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
         chck _ _ = []
 
-        nameFlags  name = mconcat [name, "_", "Function1DPartial_Flags"]
-        nameValues name = mconcat [name, "_", "Function1DPartial_Values"]
+        nameFlags  = mkOutName Function_1DPartial (Just "Flags")
+        nameValues = mkOutName Function_1DPartial (Just "Values")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction "Function1DPartial"
+        downD (name, DomainFunction Function_1DPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
@@ -49,7 +49,7 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
-            (DomainFunction "Function1DPartial"
+            (DomainFunction Function_1DPartial
                 (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
                 innerDomainFr
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
@@ -124,7 +124,7 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction "Function1DPartial"
+              , DomainFunction Function_1DPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
                     innerDomainTo
@@ -160,7 +160,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         downC _ = na "{downC} Function1DPartial"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction "Function1DPartial"
+        up ctxt (name, domain@(DomainFunction Function_1DPartial
                                 (FunctionAttr _ PartialityAttr_Partial _)
                                 innerDomainFr _)) =
             case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of

@@ -15,13 +15,14 @@ setOccurrence = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck
-        chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = DomainSet "Occurrence" attrs <$> f innerDomain
+        chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = DomainSet Set_Occurrence attrs <$> f innerDomain
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "Occurrence"]
+        outName :: Name -> Name
+        outName = mkOutName Set_Occurrence Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet "Occurrence" _attrs innerDomain@DomainInt{}) = return $ Just
+        downD (name, DomainSet Set_Occurrence _attrs innerDomain@DomainInt{}) = return $ Just
             [ ( outName name
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
@@ -29,7 +30,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         downD _ = na "{downD} Occurrence"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons _ downX1 (DomainSet "Occurrence" (SetAttr attrs) innerDomain@DomainInt{}) =
+        structuralCons _ downX1 (DomainSet Set_Occurrence (SetAttr attrs) innerDomain@DomainInt{}) =
             return $ \ set -> do
                 refs <- downX1 set
                 case refs of
@@ -42,7 +43,7 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainSet "Occurrence" _attrs innerDomain@(DomainInt intRanges)
+              , DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges)
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges

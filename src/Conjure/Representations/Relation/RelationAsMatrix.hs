@@ -18,13 +18,14 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck
         chck f (DomainRelation _ attrs innerDomains) | all domainCanIndexMatrix innerDomains =
-            DomainRelation "RelationAsMatrix" attrs <$> mapM f innerDomains
+            DomainRelation Relation_AsMatrix attrs <$> mapM f innerDomains
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "RelationAsMatrix"]
+        outName :: Name -> Name
+        outName = mkOutName Relation_AsMatrix Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainRelation "RelationAsMatrix" _ innerDomains) | all domainCanIndexMatrix innerDomains = do
+        downD (name, DomainRelation Relation_AsMatrix _ innerDomains) | all domainCanIndexMatrix innerDomains = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
                 [ ( outName name
@@ -37,7 +38,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1
-            (DomainRelation "RelationAsMatrix" (RelationAttr sizeAttr binRelAttr) innerDomains)
+            (DomainRelation Relation_AsMatrix (RelationAttr sizeAttr binRelAttr) innerDomains)
                 | all domainCanIndexMatrix innerDomains = do
             let cardinality m = do
                     let unroll _ [] = fail "RelationAsMatrix.cardinality.unroll []"
@@ -73,7 +74,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainRelation "RelationAsMatrix" _ innerDomains
+              , DomainRelation Relation_AsMatrix _ innerDomains
               , ConstantAbstract (AbsLitRelation vals)
               ) | all domainCanIndexMatrix innerDomains = do
             let
@@ -119,7 +120,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainRelation "RelationAsMatrix" _ innerDomains)) =
+        up ctxt (name, domain@(DomainRelation Relation_AsMatrix _ innerDomains)) =
 
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $

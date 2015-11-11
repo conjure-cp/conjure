@@ -234,7 +234,10 @@ parseDomainWithRepr
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ HasRepresentation <$> braces parseName
+        parseRepr = msum [ braces $ do nm <- identifierText
+                                       case textToRepresentation nm of
+                                           Nothing -> fail ("Not a valid representation name:" <+> pretty nm)
+                                           Just r  -> return r
                          , return NoRepresentation
                          ]
 

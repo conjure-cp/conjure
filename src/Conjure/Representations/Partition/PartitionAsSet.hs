@@ -26,21 +26,23 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck
-        chck f (DomainPartition _ attrs innerDomain) = DomainPartition "PartitionAsSet" attrs <$> f innerDomain
+        chck f (DomainPartition _ attrs innerDomain) = DomainPartition Partition_AsSet attrs <$> f innerDomain
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "PartitionAsSet"]
+        outName :: Name -> Name
+        outName = mkOutName Partition_AsSet Nothing
 
-        outDomain (DomainPartition "PartitionAsSet" (PartitionAttr{..}) innerDomain) = do
+        outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
+        outDomain (DomainPartition Partition_AsSet (PartitionAttr{..}) innerDomain) = do
             innerType <- typeOf innerDomain
             let repr1 = case partsNum of
-                        SizeAttr_Size{} -> "Explicit"
-                        _               -> "ExplicitVarSizeWithMarker"
+                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
+                        _               -> Set_ExplicitVarSizeWithMarker
             let repr2 = case partsSize of
-                        SizeAttr_Size{} -> "Explicit"
+                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
                         _               -> if typesUnify [innerType, TypeInt]
-                                             then "Occurrence"
-                                             else "ExplicitVarSizeWithMarker"
+                                             then Set_Occurrence
+                                             else Set_ExplicitVarSizeWithMarker
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
                                      , "domain:" <+> pretty domain
@@ -119,7 +121,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) =
+        up ctxt (name, domain@(DomainPartition Partition_AsSet _ _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in PartitionAsSet up)"

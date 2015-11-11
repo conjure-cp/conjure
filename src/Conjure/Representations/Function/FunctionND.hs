@@ -23,15 +23,15 @@ functionND = Representation chck downD structuralCons downC up
                     attrs@(FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs =
-            DomainFunction "FunctionND" attrs
+            DomainFunction Function_ND attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
         chck _ _ = []
 
-        nameValues name = mconcat [name, "_", "FunctionND"]
+        nameValues = mkOutName Function_ND Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction "FunctionND"
+        downD (name, DomainFunction Function_ND
                     (FunctionAttr _ PartialityAttr_Total _)
                     (viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
@@ -45,7 +45,7 @@ functionND = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
-            (DomainFunction "FunctionND"
+            (DomainFunction Function_ND
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
                 innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                 innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
@@ -137,7 +137,7 @@ functionND = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction "FunctionND"
+              , DomainFunction Function_ND
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
                     innerDomainTo
@@ -187,7 +187,7 @@ functionND = Representation chck downD structuralCons downC up
         downC _ = na "{downC} FunctionND"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction "FunctionND"
+        up ctxt (name, domain@(DomainFunction Function_ND
                                 (FunctionAttr _ PartialityAttr_Total _)
                                 innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs) _))
 

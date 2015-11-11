@@ -19,11 +19,11 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck
         chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = []
-        chck f (DomainSet _ attrs innerDomain) = DomainSet "ExplicitVarSizeWithMarker" attrs <$> f innerDomain
+        chck f (DomainSet _ attrs innerDomain) = DomainSet Set_ExplicitVarSizeWithMarker attrs <$> f innerDomain
         chck _ _ = []
 
-        nameMarker name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Marker"]
-        nameValues name = mconcat [name, "_", "ExplicitVarSizeWithMarker", "_Values" ]
+        nameMarker = mkOutName Set_ExplicitVarSizeWithMarker (Just "Marker")
+        nameValues = mkOutName Set_ExplicitVarSizeWithMarker (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
@@ -45,7 +45,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitVarSizeWithMarker"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainSet "ExplicitVarSizeWithMarker" (SetAttr attrs) innerDomain) = do
+        structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithMarker (SetAttr attrs) innerDomain) = do
             maxSize <- getMaxSize attrs innerDomain
             let
                 orderingUpToMarker marker values = do

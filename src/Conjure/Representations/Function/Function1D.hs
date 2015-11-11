@@ -30,15 +30,16 @@ function1D = Representation chck downD structuralCons downC up
                     attrs@(FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr =
-            DomainFunction "Function1D" attrs
+            DomainFunction Function_1D attrs
                 <$> f innerDomainFr
                 <*> f innerDomainTo
         chck _ _ = []
 
-        outName name = mconcat [name, "_", "Function1D"]
+        outName :: Name -> Name
+        outName = mkOutName Function_1D Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction "Function1D"
+        downD (name, DomainFunction Function_1D
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
@@ -51,7 +52,7 @@ function1D = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
-            (DomainFunction "Function1D"
+            (DomainFunction Function_1D
                 (FunctionAttr sizeAttr PartialityAttr_Total jectivityAttr)
                 innerDomainFr
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
@@ -119,7 +120,7 @@ function1D = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction "Function1D"
+              , DomainFunction Function_1D
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
                     innerDomainTo
@@ -143,7 +144,7 @@ function1D = Representation chck downD structuralCons downC up
         downC _ = na "{downC} Function1D"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction "Function1D"
+        up ctxt (name, domain@(DomainFunction Function_1D
                                 (FunctionAttr _ PartialityAttr_Total _)
                                 innerDomainFr _)) =
             case lookup (outName name) ctxt of
