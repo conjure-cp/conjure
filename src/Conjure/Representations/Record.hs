@@ -19,11 +19,11 @@ record = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainRecord ds) = do
+        chck f _ (DomainRecord ds) = do
             let names = map fst ds
             outDoms <- mapM (f . snd) ds
             return [ DomainRecord (zip names ds') | ds' <- outDoms ]
-        chck _ _ = return []
+        chck _ _ _ = return []
 
         mkName name n = mconcat [name, "_", n]
 

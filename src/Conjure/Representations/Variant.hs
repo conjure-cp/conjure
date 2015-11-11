@@ -20,11 +20,11 @@ variant = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainVariant ds) = do
+        chck f _ (DomainVariant ds) = do
             let names = map fst ds
             outDoms <- mapM (f . snd) ds
             return [ DomainVariant (zip names ds') | ds' <- outDoms ]
-        chck _ _ = return []
+        chck _ _ _ = return []
 
         mkName name n = mconcat [name, "_", n]
 

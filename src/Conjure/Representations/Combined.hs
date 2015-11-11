@@ -170,8 +170,8 @@ dispatch domain = do
             Relation_AsSet                    -> relationAsSet dispatch
             _ -> nope
         DomainPartition r _ _ -> case r of
-            Partition_Occurrence -> partitionOccurrence
-            Partition_AsSet{}    -> partitionAsSet dispatch
+            Partition_Occurrence              -> partitionOccurrence
+            Partition_AsSet{}                 -> partitionAsSet dispatch
             _ -> nope
         _ -> nope
 
@@ -183,7 +183,20 @@ type AllRepresentations m = [[Representation m]]
 reprsStandardOrderNoLevels
     :: (MonadFail m, NameGen m, EnumerateDomain m)
     => AllRepresentations m
-reprsStandardOrderNoLevels = return $ concat reprsStandardOrder
+reprsStandardOrderNoLevels = return $ concat
+    [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
+      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , msetExplicitVarSizeWithFlags
+      , function1D, function1DPartial, functionND, functionNDPartial
+      , sequenceExplicitBounded
+      , relationAsMatrix
+      -- , partitionOccurrence
+      ]
+    , [ functionAsRelation dispatch
+      , relationAsSet dispatch
+      , partitionAsSet dispatch
+      ]
+    ]
 
 
 -- | A list of all representations.
@@ -235,14 +248,17 @@ reprsSparseOrder = map return $
 --   This function should never return an empty list.
 reprOptions
     :: (Pretty r, Pretty x, ExpressionLike x, Monad m)
-    => AllRepresentations m
+    => Bool                             -- use levels or not
+    -> AllRepresentations m
     -> Domain r x
     -> m [Domain HasRepresentation x]
-reprOptions reprs domain = go reprs
+reprOptions useLevels reprs domain = go reprs
     where
         go [] = return []
         go (reprsThisLevel:reprsNextLevels) = do
-            matchesOnThisLevel <- concat <$> sequence [ rCheck r (reprOptions reprs) domain | r <- reprsThisLevel ]
+            matchesOnThisLevel <- concat <$> sequence [ rCheck r (reprOptions useLevels reprs) useLevels domain
+                                                      | r <- reprsThisLevel
+                                                      ]
             if null matchesOnThisLevel
                 then go reprsNextLevels
                 else return matchesOnThisLevel

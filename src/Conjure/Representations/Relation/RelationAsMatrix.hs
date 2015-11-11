@@ -17,9 +17,9 @@ relationAsMatrix = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainRelation _ attrs innerDomains) | all domainCanIndexMatrix innerDomains = do
+        chck f _ (DomainRelation _ attrs innerDomains) | all domainCanIndexMatrix innerDomains = do
             map (DomainRelation Relation_AsMatrix attrs) <$> mapM f innerDomains
-        chck _ _ = return []
+        chck _ _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName Relation_AsMatrix Nothing

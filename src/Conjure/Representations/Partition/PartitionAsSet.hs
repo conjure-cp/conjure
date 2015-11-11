@@ -26,7 +26,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainPartition _ attrs innerDomain) = do
+        chck f _ (DomainPartition _ attrs innerDomain) = do
             innerType <- typeOf innerDomain
             let repr1 = case partsNum attrs of
                         SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
@@ -38,7 +38,7 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
                                              else Set_ExplicitVarSizeWithMarker
             innerDomain' <- f innerDomain
             return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d | d <- innerDomain' ]
-        chck _ _ = return []
+        chck _ _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName (Partition_AsSet def def) Nothing

@@ -18,9 +18,9 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = return []
-        chck f (DomainSet _ attrs innerDomain) = map (DomainSet Set_ExplicitVarSizeWithMarker attrs) <$> f innerDomain
-        chck _ _ = return []
+        chck _ _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = return []
+        chck f _ (DomainSet _ attrs innerDomain) = map (DomainSet Set_ExplicitVarSizeWithMarker attrs) <$> f innerDomain
+        chck _ _ _ = return []
 
         nameMarker = mkOutName Set_ExplicitVarSizeWithMarker (Just "Marker")
         nameValues = mkOutName Set_ExplicitVarSizeWithMarker (Just "Values")
