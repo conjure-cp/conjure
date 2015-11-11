@@ -3,120 +3,48 @@
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Conjure.Representations.Partition.PartitionAsSet
-    ( partitionAsSet
-    , partitionAsSetAllFlavours
-    ) where
+module Conjure.Representations.Partition.PartitionAsSet ( partitionAsSet ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
-
--- text
-import Data.Text as T ( stripPrefix )
 
 
 partitionAsSet
     :: forall m . (MonadFail m, NameGen m)
     => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
-    -> HasRepresentation
     -> Representation m
-partitionAsSet dispatch (HasRepresentation (Name repr)) =
-    case T.stripPrefix "PartitionAsSet" repr of
-        Nothing -> bug ("(1) partitionAsSet called with:" <+> pretty repr)
-        Just num_ ->
-            case readMay (textToString num_) of
-                Nothing -> bug ("(2) partitionAsSet called with:" <+> pretty repr)
-                Just num ->
-                    case [ b | (a,b) <- flavours, a == num ] of
-                        [(repr1, repr2)] -> partitionAsSet_ dispatch repr1 repr2
-                        _ -> bug ("(3) partitionAsSet called with:" <+> pretty repr)
-partitionAsSet _ repr = bug ("(4) partitionAsSet called with:" <+> pretty (show repr))
-
-
-partitionAsSetAllFlavours
-    :: forall m . (MonadFail m, NameGen m)
-    => Bool
-    -> (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
-    -> [Representation m]
-partitionAsSetAllFlavours useLevels dispatch =
-    [ partitionAsSet_ dispatch repr1 repr2
-    | (repr1, repr2) <- map snd (if useLevels then flavoursWithLevels else flavours)
-    ]
-
-
-flavoursWithLevels :: [(Int, (HasRepresentation, HasRepresentation))]
-flavoursWithLevels = zip [1..] [ (a,b) | a <- opts1, b <- opts2 ]
-    where
-        opts1 = ["Explicit", "ExplicitVarSizeWithMarker"]
-        opts2 = ["Explicit", "ExplicitVarSizeWithMarker"]
-
-
-flavours :: [(Int, (HasRepresentation, HasRepresentation))]
-flavours = zip [1..] [ (a,b) | a <- opts1, b <- opts2 ]
-    where
-        opts1 = ["Explicit", "ExplicitVarSizeWithMarker", "ExplicitVarSizeWithFlags"]
-        opts2 = ["Explicit", "ExplicitVarSizeWithMarker", "ExplicitVarSizeWithFlags", "Occurrence"]
-
-
-partitionAsSet_
-    :: forall m . (MonadFail m, NameGen m)
-    => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
-    -> HasRepresentation
-    -> HasRepresentation
-    -> Representation m
-partitionAsSet_ dispatch repr1 repr2 = Representation chck downD structuralCons downC up
+partitionAsSet dispatch = Representation chck downD structuralCons downC up
 
     where
-
-        thisReprFlavour = case [ a | (a,b) <- flavours, b == (repr1, repr2) ] of
-            [a] -> a
-            _   -> bug "partitionAsSet.thisReprFlavour"
-
-        thisReprName = "PartitionAsSet" `mappend` Name (stringToText (show thisReprFlavour))
 
         chck :: TypeOf_ReprCheck
-        chck f (DomainPartition _ attrs innerDomain) =
-            let
-                repr1Fixed = case partsNum  attrs of SizeAttr_Size{} -> True ; _ -> False
-                repr2Fixed = case partsSize attrs of SizeAttr_Size{} -> True ; _ -> False
-                repr2Inty  = case innerDomain of
-                                DomainInt{} -> True
-                                _           -> False
-                repr1CanBe = if repr1Fixed
-                                then ["Explicit"]
-                                else ["ExplicitVarSizeWithMarker", "ExplicitVarSizeWithFlags"]
-                repr2CanBe = concat
-                           [ if repr2Fixed
-                                then ["Explicit"]
-                                else ["ExplicitVarSizeWithMarker", "ExplicitVarSizeWithFlags"]
-                           , if repr2Inty
-                                then ["Occurrence"]
-                                else []
-                           ]
-            in
-                if repr1 `elem` repr1CanBe && repr2 `elem` repr2CanBe
-                    then DomainPartition (HasRepresentation thisReprName) attrs <$> f innerDomain
-                    else []
+        chck f (DomainPartition _ attrs innerDomain) = DomainPartition "PartitionAsSet" attrs <$> f innerDomain
         chck _ _ = []
 
-        outName name = mconcat [name, "_", thisReprName]
+        outName name = mconcat [name, "_", "PartitionAsSet"]
 
-        outDomain (DomainPartition repr (PartitionAttr{..}) innerDomain)
-            | repr == HasRepresentation thisReprName =
+        outDomain (DomainPartition "PartitionAsSet" (PartitionAttr{..}) innerDomain) = do
+            innerType <- typeOf innerDomain
+            let repr1 = case partsNum of
+                        SizeAttr_Size{} -> "Explicit"
+                        _               -> "ExplicitVarSizeWithMarker"
+            let repr2 = case partsSize of
+                        SizeAttr_Size{} -> "Explicit"
+                        _               -> if typesUnify [innerType, TypeInt]
+                                             then "Occurrence"
+                                             else "ExplicitVarSizeWithMarker"
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
-        outDomain domain =
-            na $ vcat [ "{outDomain} PartitionAsSet"
-                      , "repr1:"  <+> pretty repr1
-                      , "repr2:"  <+> pretty repr2
-                      , "domain:" <+> pretty domain
-                      ]
+        outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
+                                     , "domain:" <+> pretty domain
+                                     ]
 
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
@@ -191,7 +119,7 @@ partitionAsSet_ dispatch repr1 repr2 = Representation chck downD structuralCons 
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainPartition repr _ _)) | repr == HasRepresentation thisReprName =
+        up ctxt (name, domain@(DomainPartition "PartitionAsSet" _ _)) =
             case lookup (outName name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in PartitionAsSet up)"
