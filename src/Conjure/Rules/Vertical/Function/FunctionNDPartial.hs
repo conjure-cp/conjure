@@ -8,7 +8,7 @@ import Conjure.Rules.Import
 rule_Image_NotABool :: Rule
 rule_Image_NotABool = "function-image{FunctionNDPartial}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
-        "FunctionNDPartial" <- representationOf f
+        Function_NDPartial  <- representationOf f
         TypeFunction _ tyTo <- typeOf f
         case tyTo of
             TypeBool -> na "function ? --> bool"
@@ -33,7 +33,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
     theRule p = do
         let
             imageChild ch@[essence| image(&f,&x) |] = do
-                "FunctionNDPartial" <- representationOf f
+                Function_NDPartial  <- representationOf f
                 TypeFunction _ tyTo <- typeOf f
                 case tyTo of
                     TypeBool -> do
@@ -59,7 +59,7 @@ rule_Image_Bool = "function-image{FunctionNDPartial}-bool" `namedRule` theRule w
 rule_InDefined :: Rule
 rule_InDefined = "function-in-defined{FunctionNDPartial}" `namedRule` theRule where
     theRule [essence| &x in defined(&f) |] = do
-        "FunctionNDPartial" <- representationOf f
+        Function_NDPartial  <- representationOf f
         [flags,_values]     <- downX1 f
         toIndex             <- downX1 x
         let flagsIndexed  = make opMatrixIndexing flags toIndex
@@ -76,7 +76,7 @@ rule_Comprehension = "function-comprehension{FunctionNDPartial}" `namedRule` the
         (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "FunctionNDPartial"                   <- representationOf func
+        Function_NDPartial                    <- representationOf func
         DomainFunction _ _ innerDomainFr _    <- domainOf func
         [flags,values]                        <- downX1 func
         let upd val old = lambdaToFunction pat old val

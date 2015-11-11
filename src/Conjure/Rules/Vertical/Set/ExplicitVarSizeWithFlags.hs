@@ -11,10 +11,10 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithFlags}" `namedRule` t
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
-        TypeSet{}                   <- typeOf s
-        "ExplicitVarSizeWithFlags"  <- representationOf s
-        [flags, values]             <- downX1 s
-        DomainMatrix index _        <- domainOf values
+        TypeSet{}                    <- typeOf s
+        Set_ExplicitVarSizeWithFlags <- representationOf s
+        [flags, values]              <- downX1 s
+        DomainMatrix index _         <- domainOf values
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlags representation"
@@ -37,11 +37,11 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithFla
         (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
-        s                          <- match opPowerSet expr
-        TypeSet{}                  <- typeOf s
-        "ExplicitVarSizeWithFlags" <- representationOf s
-        [flags, values]            <- downX1 s
-        DomainMatrix index _       <- domainOf values
+        s                            <- match opPowerSet expr
+        TypeSet{}                    <- typeOf s
+        Set_ExplicitVarSizeWithFlags <- representationOf s
+        [flags, values]              <- downX1 s
+        DomainMatrix index _         <- domainOf values
         let upd val old = lambdaToFunction setPat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlagst representation"

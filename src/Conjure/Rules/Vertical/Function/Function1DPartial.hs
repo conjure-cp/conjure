@@ -11,8 +11,8 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
         (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "Function1DPartial"        <- representationOf func
-        TypeFunction {}            <- typeOf func
+        Function_1DPartial         <- representationOf func
+        TypeFunction{ }            <- typeOf func
         DomainFunction _ _ index _ <- domainOf func
         [flags,values]             <- downX1 func
         let upd val old = lambdaToFunction pat old val
@@ -35,7 +35,7 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
 rule_Image_NotABool :: Rule
 rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
-        "Function1DPartial" <- representationOf f
+        Function_1DPartial  <- representationOf f
         TypeFunction _ tyTo <- typeOf f
         case tyTo of
             TypeBool -> na "function ? --> bool"
@@ -56,7 +56,7 @@ rule_Image_Bool = "function-image{Function1DPartial}-bool" `namedRule` theRule w
     theRule p = do
         let
             imageChild ch@[essence| image(&f,&x) |] = do
-                "Function1DPartial" <- representationOf f
+                Function_1DPartial  <- representationOf f
                 TypeFunction _ tyTo <- typeOf f
                 case tyTo of
                     TypeBool -> do
@@ -86,7 +86,7 @@ rule_InDefined :: Rule
 rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule where
     theRule [essence| &x in defined(&f) |] = do
         TypeFunction{}      <- typeOf f
-        "Function1DPartial" <- representationOf f
+        Function_1DPartial  <- representationOf f
         [flags,_values]     <- downX1 f
         return
             ( "Function in defined, Function1DPartial representation"

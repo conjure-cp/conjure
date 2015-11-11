@@ -11,10 +11,10 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
-        TypeSet{}                   <- typeOf s
-        "ExplicitVarSizeWithMarker" <- representationOf s
-        [marker, values]            <- downX1 s
-        DomainMatrix index _        <- domainOf values
+        TypeSet{}                     <- typeOf s
+        Set_ExplicitVarSizeWithMarker <- representationOf s
+        [marker, values]              <- downX1 s
+        DomainMatrix index _          <- domainOf values
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
@@ -37,11 +37,11 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
         (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
-        s                           <- match opPowerSet expr
-        TypeSet{}                   <- typeOf s
-        "ExplicitVarSizeWithMarker" <- representationOf s
-        [marker, values]            <- downX1 s
-        DomainMatrix index _        <- domainOf values
+        s                             <- match opPowerSet expr
+        TypeSet{}                     <- typeOf s
+        Set_ExplicitVarSizeWithMarker <- representationOf s
+        [marker, values]              <- downX1 s
+        DomainMatrix index _          <- domainOf values
         let upd val old = lambdaToFunction setPat old val
         return
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
@@ -72,10 +72,10 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
 rule_Card :: Rule
 rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule p = do
-        s                           <- match opTwoBars p
-        TypeSet{}                   <- typeOf s
-        "ExplicitVarSizeWithMarker" <- representationOf s
-        [marker, _values]           <- downX1 s
+        s                             <- match opTwoBars p
+        TypeSet{}                     <- typeOf s
+        Set_ExplicitVarSizeWithMarker <- representationOf s
+        [marker, _values]             <- downX1 s
         return
             ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
             , return marker

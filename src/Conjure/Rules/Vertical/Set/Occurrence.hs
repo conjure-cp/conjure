@@ -12,7 +12,7 @@ rule_Comprehension = "set-comprehension{Occurrence}" `namedRule` theRule where
             Generator (GenInExpr pat@(Single iPat) s) -> return (pat, iPat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
-        "Occurrence"         <- representationOf s
+        Set_Occurrence       <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let i = Reference iPat Nothing
@@ -40,7 +40,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
                                                      _ -> na "rule_PowerSet_Comprehension: pat not s Single"
         s                    <- match opPowerSet expr
         TypeSet{}            <- typeOf s
-        "Occurrence"         <- representationOf s
+        Set_Occurrence       <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         return
@@ -73,10 +73,10 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
 rule_In :: Rule
 rule_In = "set-in{Occurrence}" `namedRule` theRule where
     theRule p = do
-        (x, s)       <- match opIn p
-        TypeSet{}    <- typeOf s
-        "Occurrence" <- representationOf s
-        [m]          <- downX1 s
+        (x, s)         <- match opIn p
+        TypeSet{}      <- typeOf s
+        Set_Occurrence <- representationOf s
+        [m]            <- downX1 s
         return
             ( "Vertical rule for set-in, Occurrence representation"
             , return $ make opIndexing m x

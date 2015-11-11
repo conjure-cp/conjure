@@ -11,8 +11,8 @@ rule_Comprehension = "sequence-comprehension{ExplicitBounded}" `namedRule` theRu
         (gocBefore, (pat, sequ), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension"
-        "ExplicitBounded"          <- representationOf sequ
-        TypeSequence{}             <- typeOf sequ
+        Sequence_ExplicitBounded <- representationOf sequ
+        TypeSequence{}           <- typeOf sequ
         DomainSequence _ (SequenceAttr sizeAttr _) _ <- domainOf sequ
         maxSize <- case sizeAttr of
                     SizeAttr_Size x -> return x
@@ -40,9 +40,9 @@ rule_Comprehension = "sequence-comprehension{ExplicitBounded}" `namedRule` theRu
 rule_Card :: Rule
 rule_Card = "sequence-cardinality{ExplicitBounded}" `namedRule` theRule where
     theRule [essence| |&s| |] = do
-        TypeSequence{}    <- typeOf s
-        "ExplicitBounded" <- representationOf s
-        [sLength, _]      <- downX1 s
+        TypeSequence{}           <- typeOf s
+        Sequence_ExplicitBounded <- representationOf s
+        [sLength, _]             <- downX1 s
         return
             ( "Vertical rule for sequence cardinality."
             , return sLength
@@ -53,8 +53,8 @@ rule_Card = "sequence-cardinality{ExplicitBounded}" `namedRule` theRule where
 rule_Image_NotABool :: Rule
 rule_Image_NotABool = "sequence-image{ExplicitBounded}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&sequ,&x) |] = do
-        "ExplicitBounded" <- representationOf sequ
-        TypeSequence tyTo <- typeOf sequ
+        Sequence_ExplicitBounded <- representationOf sequ
+        TypeSequence tyTo        <- typeOf sequ
         case tyTo of
             TypeBool -> na "sequence of bool"
             _        -> return ()
@@ -74,8 +74,8 @@ rule_Image_Bool = "sequence-image{ExplicitBounded}-bool" `namedRule` theRule whe
     theRule p = do
         let
             imageChild ch@[essence| image(&sequ,&x) |] = do
-                "ExplicitBounded" <- representationOf sequ
-                TypeSequence tyTo <- typeOf sequ
+                Sequence_ExplicitBounded <- representationOf sequ
+                TypeSequence tyTo        <- typeOf sequ
                 case tyTo of
                     TypeBool -> do
                         [sLength,sValues] <- downX1 sequ

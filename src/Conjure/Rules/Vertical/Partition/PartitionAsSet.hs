@@ -2,9 +2,6 @@ module Conjure.Rules.Vertical.Partition.PartitionAsSet where
 
 import Conjure.Rules.Import
 
--- text
-import Data.Text as T ( isPrefixOf )
-
 
 rule_Comprehension :: Rule
 rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRule where
@@ -12,11 +9,10 @@ rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRu
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
-        let p                =  matchDef opParts expr
-        TypePartition{}      <- typeOf p
-        Name reprName        <- representationOf p
-        unless (T.isPrefixOf "PartitionAsSet" reprName) $ na "rule_Comprehension"
-        [s]                  <- downX1 p
+        let p           =  matchDef opParts expr
+        TypePartition{} <- typeOf p
+        Partition_AsSet <- representationOf p
+        [s]             <- downX1 p
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, PartitionAsSet representation"

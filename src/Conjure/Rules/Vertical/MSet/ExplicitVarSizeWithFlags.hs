@@ -11,10 +11,10 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
             _ -> na "rule_Comprehension"
-        TypeMSet{}                  <- typeOf s
-        "ExplicitVarSizeWithFlags"  <- representationOf s
-        [flags, values]             <- downX1 s
-        DomainMatrix index _        <- domainOf values
+        TypeMSet{}                    <- typeOf s
+        MSet_ExplicitVarSizeWithFlags <- representationOf s
+        [flags, values]               <- downX1 s
+        DomainMatrix index _          <- domainOf values
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for mset-comprehension, ExplicitVarSizeWithFlags representation"
@@ -34,11 +34,11 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
 rule_Freq :: Rule
 rule_Freq = "mset-freq{ExplicitVarSizeWithFlags}" `namedRule` theRule where
     theRule p = do
-        (mset, x)                  <- match opFreq p
-        TypeMSet{}                 <- typeOf mset
-        "ExplicitVarSizeWithFlags" <- representationOf mset
-        [flags, values]            <- downX1 mset
-        DomainMatrix index _       <- domainOf values
+        (mset, x)                     <- match opFreq p
+        TypeMSet{}                    <- typeOf mset
+        MSet_ExplicitVarSizeWithFlags <- representationOf mset
+        [flags, values]               <- downX1 mset
+        DomainMatrix index _          <- domainOf values
         return
             ( "Vertical rule for mset-freq, ExplicitVarSizeWithFlags representation"
             , do

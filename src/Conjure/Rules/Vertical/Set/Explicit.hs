@@ -12,7 +12,7 @@ rule_Comprehension = "set-comprehension{Explicit}" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} s) -> return (pat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
         TypeSet{}            <- typeOf s
-        "Explicit"           <- representationOf s
+        Set_Explicit         <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let upd val old = lambdaToFunction pat old val
@@ -37,7 +37,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Explicit}" `namedRule`
             _ -> na "rule_PowerSet_Comprehension"
         s                    <- match opPowerSet expr
         TypeSet{}            <- typeOf s
-        "Explicit"           <- representationOf s
+        Set_Explicit         <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         let upd val old = lambdaToFunction setPat old val
@@ -69,7 +69,7 @@ rule_Card = "set-card{Explicit}" `namedRule` theRule where
     theRule p = do
         s                                         <- match opTwoBars p
         TypeSet{}                                 <- typeOf s
-        "Explicit"                                <- representationOf s
+        Set_Explicit                              <- representationOf s
         DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
         return
             ( "Vertical rule for set cardinality, Explicit representation."

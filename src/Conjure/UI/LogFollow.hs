@@ -179,16 +179,11 @@ compareDoms d1 d2 = getReps d1 == getReps d2
 --                                           ]
 
     where
-    getReps :: Domain HasRepresentation Expression -> [Name]
+    getReps :: Domain HasRepresentation Expression -> [HasRepresentation]
     getReps d = catMaybes [ getRep n | n <- universe d ]
 
-    getRep :: Domain HasRepresentation Expression -> Maybe Name
-    getRep (DomainSet (HasRepresentation r) _ _)         = Just r
-    getRep (DomainMSet (HasRepresentation r) _ _)        = Just r
-    getRep (DomainFunction (HasRepresentation r) _ _ _)  = Just r
-    getRep (DomainRelation (HasRepresentation r) _ _)    = Just r
-    getRep (DomainPartition (HasRepresentation r) _ _)   = Just r
-    getRep _ = Nothing
+    getRep :: Domain HasRepresentation Expression -> Maybe HasRepresentation
+    getRep = reprAtTopLevel
 
 
 storeChoice :: MonadLog m => Config -> Question -> Answer -> m Answer

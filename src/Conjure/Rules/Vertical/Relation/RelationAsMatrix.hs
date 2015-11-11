@@ -8,7 +8,7 @@ rule_Image = "relation-image{RelationAsMatrix}" `namedRule` theRule where
     theRule p = do
         (rel, args)         <- match opRelationImage p
         TypeRelation{}      <- typeOf rel
-        "RelationAsMatrix"  <- representationOf rel
+        Relation_AsMatrix   <- representationOf rel
         [m]                 <- downX1 rel
         let unroll = foldl (make opIndexing)
         return
@@ -25,7 +25,7 @@ rule_Comprehension = "relation-map_in_expr{RelationAsMatrix}" `namedRule` theRul
             _ -> na "rule_Comprehension"
         let upd val old        =  lambdaToFunction pat old val
         TypeRelation{}         <- typeOf rel
-        "RelationAsMatrix"     <- representationOf rel
+        Relation_AsMatrix      <- representationOf rel
         [m]                    <- downX1 rel
         mDom                   <- domainOf m
         let (mIndices, _)      =  getIndices mDom

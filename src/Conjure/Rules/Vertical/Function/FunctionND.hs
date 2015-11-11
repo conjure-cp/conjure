@@ -8,7 +8,7 @@ import Conjure.Rules.Import
 rule_Image :: Rule
 rule_Image = "function-image{FunctionND}" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do
-        "FunctionND" <- representationOf f
+        Function_ND  <- representationOf f
         [values]     <- downX1 f
         toIndex      <- downX1 x
         let valuesIndexed = make opMatrixIndexing values toIndex
@@ -25,7 +25,7 @@ rule_Comprehension = "function-comprehension{FunctionND}" `namedRule` theRule wh
         (gocBefore, (pat, func), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet,opToMSet,opToRelation] expr)
             _ -> na "rule_Comprehension"
-        "FunctionND"                     <- representationOf func
+        Function_ND                      <- representationOf func
         DomainFunction _ _ indexDomain _ <- domainOf func
         [values]                         <- downX1 func
         let upd val old = lambdaToFunction pat old val
@@ -57,7 +57,7 @@ rule_Comprehension_Defined = "function-comprehension_defined{FunctionND}" `named
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Defined"
         func                             <- match opDefined expr
-        "FunctionND"                     <- representationOf func
+        Function_ND                      <- representationOf func
         DomainFunction _ _ indexDomain _ <- domainOf func
         let upd val old = lambdaToFunction pat old val
         return
