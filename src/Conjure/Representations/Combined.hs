@@ -169,6 +169,7 @@ dispatch domain = do
             _ -> nope
         DomainPartition r _ _ -> case r of
             Partition_Occurrence -> partitionOccurrence
+            Partition_AsSet      -> partitionAsSet dispatch
             _ -> nope
         _ -> nope
 
