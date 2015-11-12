@@ -247,7 +247,7 @@ reprsSparseOrder = map return $
 -- | For a domain, produce a list of domains with different representation options.
 --   This function should never return an empty list.
 reprOptions
-    :: (Pretty r, Pretty x, ExpressionLike x, Monad m)
+    :: (Pretty r, Pretty x, ExpressionLike x, Monad m, Functor m)
     => Bool                             -- use levels or not
     -> AllRepresentations m
     -> Domain r x
