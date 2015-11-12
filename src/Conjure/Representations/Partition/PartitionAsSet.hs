@@ -26,18 +26,40 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f _ (DomainPartition _ attrs innerDomain) = do
+        chck f useLevels (DomainPartition _ attrs innerDomain) = do
             innerType <- typeOf innerDomain
-            let repr1 = case partsNum attrs of
-                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
-                        _               -> Set_ExplicitVarSizeWithMarker
-            let repr2 = case partsSize attrs of
-                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
-                        _               -> if typesUnify [innerType, TypeInt]
-                                             then Set_Occurrence
-                                             else Set_ExplicitVarSizeWithMarker
+            let
+                repr1Fixed = case partsNum  attrs of SizeAttr_Size{} -> True ; _ -> False
+                repr2Fixed = case partsSize attrs of SizeAttr_Size{} -> True ; _ -> False
+                repr2Inty  = case innerType       of TypeInt{}       -> True ; _ -> False
+                repr1Options
+                    | useLevels =
+                        if repr1Fixed
+                            then [Set_Explicit]
+                            else [Set_ExplicitVarSizeWithMarker]
+                    | otherwise =
+                        if repr1Fixed
+                            then [Set_Explicit]
+                            else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
+                repr2Options
+                    | useLevels = concat
+                        [ if repr2Fixed
+                            then [Set_Explicit]
+                            else [Set_ExplicitVarSizeWithMarker]
+                        , [ Set_Occurrence | repr2Inty ]
+                        ]
+                    | otherwise = concat
+                        [ if repr2Fixed
+                            then [Set_Explicit]
+                            else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
+                        , [Set_Occurrence | repr2Inty]
+                        ]
             innerDomain' <- f innerDomain
-            return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d | d <- innerDomain' ]
+            return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d
+                   | d     <- innerDomain'
+                   , repr1 <- repr1Options
+                   , repr2 <- repr2Options
+                   ]
         chck _ _ _ = return []
 
         outName :: Name -> Name
