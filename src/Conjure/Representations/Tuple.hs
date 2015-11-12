@@ -21,7 +21,7 @@ tuple = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f _ (DomainTuple ds) = map DomainTuple <$> mapM f ds
+        chck f _ (DomainTuple ds) = map DomainTuple . sequence <$> mapM f ds
         chck _ _ _ = return []
 
         mkName :: Name -> Int -> Name
