@@ -10,17 +10,21 @@ import qualified Conjure.ParsePrint ( tests )
 import qualified Golden ( tests )
 
 -- tasty
-import Test.Tasty
+import Test.Tasty ( defaultMainWithIngredients, defaultIngredients, testGroup )
 
 -- tasty-ant-xml
-import Test.Tasty.Runners.AntXML
+import Test.Tasty.Runners.AntXML ( antXMLRunner )
+
+-- tasty-rerun
+import Test.Tasty.Ingredients.Rerun ( rerunningTests )
+
 
 main :: IO ()
 main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
     typeCheckAllTests <- Conjure.TypeCheckAll.tests
     parsePrintTests <- Conjure.ParsePrint.tests
-    defaultMainWithIngredients (antXMLRunner : defaultIngredients)
+    defaultMainWithIngredients [rerunningTests (antXMLRunner : defaultIngredients)]
         $ testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
             , Conjure.RepresentationsTest.tests
