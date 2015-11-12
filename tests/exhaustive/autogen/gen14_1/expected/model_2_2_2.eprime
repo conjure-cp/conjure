@@ -115,30 +115,6 @@ such that
                 -> 1 = q78
                     | q78 : int(1..2)])
                | q104 : int(1..4)])),
-    and([q107 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         or([q110 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
-             (and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q110,
-                                                                                   q111]
-                   -> var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q107, q111]
-                       | q111 : int(1..2)])
-              /\
-              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q107, q112]
-                   -> var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q110, q112]
-                       | q112 : int(1..2)]))
-                 | q110 : int(1..4)])
-             | q107 : int(1..4)]),
-    and([q115 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
-         or([q118 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
-             (and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q118,
-                                                                                   q119]
-                   -> var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q115, q119]
-                       | q119 : int(1..2)])
-              /\
-              and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q115, q120]
-                   -> var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q118, q120]
-                       | q120 : int(1..2)]))
-                 | q118 : int(1..4)])
-             | q115 : int(1..4)]),
     and([1 =
          sum([toInt(q9 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
                     var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9, q1])
