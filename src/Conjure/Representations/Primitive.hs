@@ -11,7 +11,7 @@ import Conjure.Representations.Internal
 
 primitive :: forall m . MonadFail m => Representation m
 primitive = Representation
-    { rCheck = \ _ _ domain -> return $
+    { rCheck = \ _ domain -> return $
         case domain of
             DomainBool -> [DomainBool]
             DomainInt rs -> [DomainInt rs]

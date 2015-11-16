@@ -194,7 +194,7 @@ reprsStandardOrderNoLevels = return $ concat
       ]
     , [ functionAsRelation dispatch
       , relationAsSet      dispatch
-      , partitionAsSet     dispatch (reprOptions False reprsStandardOrderNoLevels)
+      , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels)
       ]
     ]
 
@@ -216,7 +216,7 @@ reprsStandardOrder =
       ]
     , [ functionAsRelation dispatch
       , relationAsSet      dispatch
-      , partitionAsSet     dispatch (reprOptions True reprsSparseOrder)
+      , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
       ]
     ]
 
@@ -240,7 +240,7 @@ reprsSparseOrder = map return $
 
     , relationAsSet      dispatch
     , relationAsMatrix
-    , partitionAsSet     dispatch (reprOptions True reprsSparseOrder)
+    , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
     ]
 
 
@@ -248,15 +248,14 @@ reprsSparseOrder = map return $
 --   This function should never return an empty list.
 reprOptions
     :: (Pretty r, Pretty x, ExpressionLike x, Monad m, Functor m)
-    => Bool                             -- use levels or not
-    -> AllRepresentations m
+    => AllRepresentations m
     -> Domain r x
     -> m [Domain HasRepresentation x]
-reprOptions useLevels reprs domain = go reprs
+reprOptions reprs domain = go reprs
     where
         go [] = return []
         go (reprsThisLevel:reprsNextLevels) = do
-            matchesOnThisLevel <- concat <$> sequence [ rCheck r (reprOptions useLevels reprs) useLevels domain
+            matchesOnThisLevel <- concat <$> sequence [ rCheck r (reprOptions reprs) domain
                                                       | r <- reprsThisLevel
                                                       ]
             if null matchesOnThisLevel

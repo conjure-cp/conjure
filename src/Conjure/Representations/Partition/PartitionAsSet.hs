@@ -27,7 +27,7 @@ partitionAsSet dispatch reprOptions = Representation chck downD structuralCons d
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f _useLevels (DomainPartition _ attrs innerDomain) = do
+        chck f (DomainPartition _ attrs innerDomain) = do
             -- this is a "lookahead"
             -- do the horizontal representation move: go from "partition of T" to "set of set of T"
             -- do representation selection on the set
@@ -39,45 +39,7 @@ partitionAsSet dispatch reprOptions = Representation chck downD structuralCons d
                 return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomainRepr
                        | DomainSet r1 _ (DomainSet r2 _ _) <- dHorizontalReprs
                        ]
-            --
-            -- reprOptions useLevels reprs) useLevels domain
-            --
-            -- let dPlaceHolders = DomainPartition NoRepresentation attrs innerDomain
-            --
-            -- innerType <- typeOf innerDomain
-            -- let
-            --     repr1Fixed = case partsNum  attrs of SizeAttr_Size{} -> True ; _ -> False
-            --     repr2Fixed = case partsSize attrs of SizeAttr_Size{} -> True ; _ -> False
-            --     repr2Inty  = case innerType       of TypeInt{}       -> True ; _ -> False
-            --     repr1Options
-            --         | useLevels =
-            --             if repr1Fixed
-            --                 then [Set_Explicit]
-            --                 else [Set_ExplicitVarSizeWithMarker]
-            --         | otherwise =
-            --             if repr1Fixed
-            --                 then [Set_Explicit]
-            --                 else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
-            --     repr2Options
-            --         | useLevels = concat
-            --             [ if repr2Fixed
-            --                 then [Set_Explicit]
-            --                 else [Set_ExplicitVarSizeWithMarker]
-            --             , [ Set_Occurrence | repr2Inty ]
-            --             ]
-            --         | otherwise = concat
-            --             [ if repr2Fixed
-            --                 then [Set_Explicit]
-            --                 else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
-            --             , [Set_Occurrence | repr2Inty]
-            --             ]
-            -- innerDomain' <- f innerDomain
-            -- return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d
-            --        | d     <- innerDomain'
-            --        , repr1 <- repr1Options
-            --        , repr2 <- repr2Options
-            --        ]
-        chck _ _ _ = return []
+        chck _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName (Partition_AsSet def def) Nothing

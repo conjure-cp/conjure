@@ -16,9 +16,9 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f _ (DomainSequence _ attrs@(SequenceAttr sizeAttr _) innerDomain) | hasMaxSize sizeAttr =
+        chck f (DomainSequence _ attrs@(SequenceAttr sizeAttr _) innerDomain) | hasMaxSize sizeAttr =
             map (DomainSequence Sequence_ExplicitBounded attrs) <$> f innerDomain
-        chck _ _ _ = return []
+        chck _ _ = return []
 
         nameMarker = mkOutName Sequence_ExplicitBounded (Just "Length")
         nameValues = mkOutName Sequence_ExplicitBounded (Just "Values")

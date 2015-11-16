@@ -41,7 +41,6 @@ data Representation (m :: * -> *) = Representation
 type TypeOf_ReprCheck (m :: * -> *) =
        forall x r . (Pretty r, Pretty x, ExpressionLike x)
     => (Domain r x -> m [DomainX x])                -- other checkers for inner domains
-    -> Bool                                         -- whether to use representation-levels for inners or not
     -> Domain r x                                   -- this domain
     -> m [DomainX x]                                -- with all repr options
 
