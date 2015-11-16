@@ -27,28 +27,31 @@ partitionAsSet dispatch reprOptions = Representation chck downD structuralCons d
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainPartition _ attrs innerDomain) = do
+        chck _ dom1@(DomainPartition _ attrs _) = do
             -- this is a "lookahead"
             -- do the horizontal representation move: go from "partition of T" to "set of set of T"
             -- do representation selection on the set
             -- lookup the chosen representations and store them inside Partition_AsSet
-            innerDomainReprs <- f innerDomain
-            fmap concat $ forM innerDomainReprs $ \ innerDomainRepr -> do
-                dHorizontalNoRepr <- outDomain (DomainPartition NoRepresentation attrs innerDomainRepr)
-                dHorizontalReprs  <- reprOptions dHorizontalNoRepr
-                return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomainRepr
-                       | DomainSet r1 _ (DomainSet r2 _ _) <- dHorizontalReprs
+                dom2 <- outDomain_ dom1
+                dom3 <- reprOptions dom2
+                return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomain
+                       | DomainSet r1 _ (DomainSet r2 _ innerDomain) <- dom3
                        ]
         chck _ _ = return []
 
         outName :: Name -> Name
         outName = mkOutName (Partition_AsSet def def) Nothing
 
+        outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
+        outDomain_ (DomainPartition () (PartitionAttr{..}) innerDomain) =
+            return (DomainSet () (SetAttr partsNum) (DomainSet () (SetAttr partsSize) innerDomain))
+        outDomain_ domain = na $ vcat [ "{outDomain_} PartitionAsSet"
+                                      , "domain:" <+> pretty domain
+                                      ]
+
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
         outDomain (DomainPartition (Partition_AsSet repr1 repr2) (PartitionAttr{..}) innerDomain) =
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
-        outDomain (DomainPartition NoRepresentation (PartitionAttr{..}) innerDomain) =
-            return (DomainSet NoRepresentation (SetAttr partsNum) (DomainSet NoRepresentation (SetAttr partsSize) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
                                      , "domain:" <+> pretty domain
                                      ]

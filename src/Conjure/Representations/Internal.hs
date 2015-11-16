@@ -39,9 +39,9 @@ data Representation (m :: * -> *) = Representation
     }
 
 type TypeOf_ReprCheck (m :: * -> *) =
-       forall x r . (Pretty r, Pretty x, ExpressionLike x)
-    => (Domain r x -> m [DomainX x])                -- other checkers for inner domains
-    -> Domain r x                                   -- this domain
+       forall x . (Pretty x, ExpressionLike x)
+    => (Domain () x -> m [DomainX x])               -- other checkers for inner domains
+    -> Domain () x                                  -- this domain
     -> m [DomainX x]                                -- with all repr options
 
 type TypeOf_DownD (m :: * -> *) =
@@ -66,8 +66,16 @@ type TypeOf_Up (m :: * -> *) =
     -> (Name, DomainC)                              -- the name and domain we are working on
     -> m (Name, Constant)                           -- the output constant, at the high level
 
-type DispatchFunction m x = Pretty x => Domain HasRepresentation x -> Representation m
-type ReprOptionsFunction m r x = (Pretty r, Pretty x, ExpressionLike x) => Domain r x -> m [Domain HasRepresentation x]
+
+type DispatchFunction m x
+        =  Pretty x
+        => Domain HasRepresentation x
+        -> Representation m
+
+type ReprOptionsFunction m r x
+        =  (Pretty x, ExpressionLike x)
+        => Domain () x
+        -> m [Domain HasRepresentation x]
 
 
 rDownToX
