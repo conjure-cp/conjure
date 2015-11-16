@@ -5,6 +5,7 @@ module Conjure.Representations.Internal
     ( Representation(..)
     , TypeOf_ReprCheck, TypeOf_DownD, TypeOf_Structural, TypeOf_DownC, TypeOf_Up
     , DomainX, DomainC
+    , DispatchFunction, ReprOptionsFunction
     , rDownToX
     , mkOutName
     ) where
@@ -65,6 +66,9 @@ type TypeOf_Up (m :: * -> *) =
        [(Name, Constant)]                           -- all known constants, representing a solution at the low level
     -> (Name, DomainC)                              -- the name and domain we are working on
     -> m (Name, Constant)                           -- the output constant, at the high level
+
+type DispatchFunction m x = Pretty x => Domain HasRepresentation x -> Representation m
+type ReprOptionsFunction m r x = (Pretty r, Pretty x, ExpressionLike x) => Domain r x -> m [Domain HasRepresentation x]
 
 
 rDownToX

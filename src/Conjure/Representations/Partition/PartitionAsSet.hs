@@ -10,8 +10,8 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
-import Conjure.Language.Type
-import Conjure.Language.TypeOf
+-- import Conjure.Language.Type
+-- import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
 import Conjure.Representations.Internal
@@ -19,47 +19,64 @@ import Conjure.Representations.Internal
 
 partitionAsSet
     :: forall m . (MonadFail m, NameGen m)
-    => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
+    => (forall x . DispatchFunction m x)
+    -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
-partitionAsSet dispatch = Representation chck downD structuralCons downC up
+partitionAsSet dispatch reprOptions = Representation chck downD structuralCons downC up
 
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f useLevels (DomainPartition _ attrs innerDomain) = do
-            innerType <- typeOf innerDomain
-            let
-                repr1Fixed = case partsNum  attrs of SizeAttr_Size{} -> True ; _ -> False
-                repr2Fixed = case partsSize attrs of SizeAttr_Size{} -> True ; _ -> False
-                repr2Inty  = case innerType       of TypeInt{}       -> True ; _ -> False
-                repr1Options
-                    | useLevels =
-                        if repr1Fixed
-                            then [Set_Explicit]
-                            else [Set_ExplicitVarSizeWithMarker]
-                    | otherwise =
-                        if repr1Fixed
-                            then [Set_Explicit]
-                            else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
-                repr2Options
-                    | useLevels = concat
-                        [ if repr2Fixed
-                            then [Set_Explicit]
-                            else [Set_ExplicitVarSizeWithMarker]
-                        , [ Set_Occurrence | repr2Inty ]
-                        ]
-                    | otherwise = concat
-                        [ if repr2Fixed
-                            then [Set_Explicit]
-                            else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
-                        , [Set_Occurrence | repr2Inty]
-                        ]
-            innerDomain' <- f innerDomain
-            return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d
-                   | d     <- innerDomain'
-                   , repr1 <- repr1Options
-                   , repr2 <- repr2Options
-                   ]
+        chck f _useLevels (DomainPartition _ attrs innerDomain) = do
+            -- this is a "lookahead"
+            -- do the horizontal representation move: go from "partition of T" to "set of set of T"
+            -- do representation selection on the set
+            -- lookup the chosen representations and store them inside Partition_AsSet
+            innerDomainReprs <- f innerDomain
+            fmap concat $ forM innerDomainReprs $ \ innerDomainRepr -> do
+                dHorizontalNoRepr <- outDomain (DomainPartition NoRepresentation attrs innerDomainRepr)
+                dHorizontalReprs  <- reprOptions dHorizontalNoRepr
+                return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomainRepr
+                       | DomainSet r1 _ (DomainSet r2 _ _) <- dHorizontalReprs
+                       ]
+            --
+            -- reprOptions useLevels reprs) useLevels domain
+            --
+            -- let dPlaceHolders = DomainPartition NoRepresentation attrs innerDomain
+            --
+            -- innerType <- typeOf innerDomain
+            -- let
+            --     repr1Fixed = case partsNum  attrs of SizeAttr_Size{} -> True ; _ -> False
+            --     repr2Fixed = case partsSize attrs of SizeAttr_Size{} -> True ; _ -> False
+            --     repr2Inty  = case innerType       of TypeInt{}       -> True ; _ -> False
+            --     repr1Options
+            --         | useLevels =
+            --             if repr1Fixed
+            --                 then [Set_Explicit]
+            --                 else [Set_ExplicitVarSizeWithMarker]
+            --         | otherwise =
+            --             if repr1Fixed
+            --                 then [Set_Explicit]
+            --                 else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
+            --     repr2Options
+            --         | useLevels = concat
+            --             [ if repr2Fixed
+            --                 then [Set_Explicit]
+            --                 else [Set_ExplicitVarSizeWithMarker]
+            --             , [ Set_Occurrence | repr2Inty ]
+            --             ]
+            --         | otherwise = concat
+            --             [ if repr2Fixed
+            --                 then [Set_Explicit]
+            --                 else [Set_ExplicitVarSizeWithMarker, Set_ExplicitVarSizeWithFlags]
+            --             , [Set_Occurrence | repr2Inty]
+            --             ]
+            -- innerDomain' <- f innerDomain
+            -- return [ DomainPartition (Partition_AsSet repr1 repr2) attrs d
+            --        | d     <- innerDomain'
+            --        , repr1 <- repr1Options
+            --        , repr2 <- repr2Options
+            --        ]
         chck _ _ _ = return []
 
         outName :: Name -> Name
@@ -68,6 +85,8 @@ partitionAsSet dispatch = Representation chck downD structuralCons downC up
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
         outDomain (DomainPartition (Partition_AsSet repr1 repr2) (PartitionAttr{..}) innerDomain) =
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
+        outDomain (DomainPartition NoRepresentation (PartitionAttr{..}) innerDomain) =
+            return (DomainSet NoRepresentation (SetAttr partsNum) (DomainSet NoRepresentation (SetAttr partsSize) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
                                      , "domain:" <+> pretty domain
                                      ]
