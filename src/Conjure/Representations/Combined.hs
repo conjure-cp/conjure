@@ -214,13 +214,14 @@ reprsStandardOrder =
       , relationAsMatrix
       -- , partitionOccurrence
       ]
-    , [ functionAsRelation dispatch (reprOptions reprsSparseOrder)
-      , relationAsSet      dispatch (reprOptions reprsSparseOrder)
-      , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
+    , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
+      , relationAsSet      dispatch (reprOptions reprsStandardOrder)
+      , partitionAsSet     dispatch (reprOptions reprsStandardOrder)
       ]
     ]
 
 
+-- | Sparser representations are to be preferred for parameters.
 reprsSparseOrder
     :: (MonadFail m, NameGen m, EnumerateDomain m)
     => AllRepresentations m
