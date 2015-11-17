@@ -54,6 +54,7 @@ import qualified Conjure.Rules.Vertical.Matrix as Vertical.Matrix
 
 import qualified Conjure.Rules.Horizontal.Set as Horizontal.Set
 import qualified Conjure.Rules.Vertical.Set.Explicit as Vertical.Set.Explicit
+import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithDummy as Vertical.Set.ExplicitVarSizeWithDummy
 import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithFlags as Vertical.Set.ExplicitVarSizeWithFlags
 import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker as Vertical.Set.ExplicitVarSizeWithMarker
 import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrence
@@ -965,6 +966,8 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_PowerSet_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card

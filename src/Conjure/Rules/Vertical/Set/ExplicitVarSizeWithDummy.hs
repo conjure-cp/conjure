@@ -1,30 +1,31 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker where
+module Conjure.Rules.Vertical.Set.ExplicitVarSizeWithDummy where
 
 import Conjure.Rules.Import
 
 
 rule_Comprehension :: Rule
-rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+rule_Comprehension = "set-comprehension{ExplicitVarSizeWithDummy}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, matchDefs [opToSet,opToMSet] s)
             _ -> na "rule_Comprehension"
-        TypeSet{}                     <- typeOf s
-        Set_ExplicitVarSizeWithMarker <- representationOf s
-        [marker, values]              <- downX1 s
-        DomainMatrix index _          <- domainOf values
+        TypeSet{}                    <- typeOf s
+        Set_ExplicitVarSizeWithDummy <- representationOf s
+        [values]                     <- downX1 s
+        DomainMatrix index inner     <- domainOf values
+        let dummy = [essence| max(`&inner`) |]
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
+            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithDummy representation"
             , do
                 (jPat, j) <- quantifiedVar
                 let val = [essence| &values[&j] |]
                 return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr jPat index)
-                           , Condition [essence| &j <= &marker |]
+                           , Condition [essence| &val != &dummy |]
                            ]
                         ++ transformBi (upd val) gocAfter
                )
@@ -32,35 +33,35 @@ rule_Comprehension = "set-comprehension{ExplicitVarSizeWithMarker}" `namedRule` 
 
 
 rule_PowerSet_Comprehension :: Rule
-rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithDummy}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
             _ -> na "rule_PowerSet_Comprehension"
-        s                             <- match opPowerSet expr
-        TypeSet{}                     <- typeOf s
-        Set_ExplicitVarSizeWithMarker <- representationOf s
-        [marker, values]              <- downX1 s
-        DomainMatrix index _          <- domainOf values
+        s                            <- match opPowerSet expr
+        TypeSet{}                    <- typeOf s
+        Set_ExplicitVarSizeWithDummy <- representationOf s
+        [values]                     <- downX1 s
+        DomainMatrix index inner     <- domainOf values
+        let dummy = [essence| max(`&inner`) |]
         let upd val old = lambdaToFunction setPat old val
         return
-            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
+            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithDummy representation"
             , do
                 outPats <- replicateM setPatNum quantifiedVar
-                let val = AbstractLiteral $ AbsLitSet
-                        [ [essence| &values[&j] |] | (_,j) <- outPats ]
+                let val = AbstractLiteral $ AbsLitSet [ [essence| &values[&j] |] | (_,j) <- outPats ]
                 return $ Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
-                              , Condition [essence| &patX <= &marker |]
+                              , Condition [essence| &values[&patX] != &dummy |]
                               ]
                             | (pat,patX) <- take 1 outPats
                             ]
                         , concat
                             [ [ Generator (GenDomainNoRepr pat index)
                               , Condition [essence| &patX > &beforeX |]
-                              , Condition [essence| &patX <= &marker |]
+                              , Condition [essence| &values[&patX] != &dummy |]
                               ]
                             | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
                             ]
@@ -68,16 +69,3 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
                         ]
             )
     theRule _ = na "rule_PowerSet_Comprehension"
-
-
-rule_Card :: Rule
-rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
-    theRule p = do
-        s                             <- match opTwoBars p
-        TypeSet{}                     <- typeOf s
-        Set_ExplicitVarSizeWithMarker <- representationOf s
-        [marker, _values]             <- downX1 s
-        return
-            ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
-            , return marker
-            )
