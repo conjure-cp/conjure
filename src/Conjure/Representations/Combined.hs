@@ -160,18 +160,23 @@ dispatch domain = do
             Function_1DPartial                -> function1DPartial
             Function_ND                       -> functionND
             Function_NDPartial                -> functionNDPartial
-            Function_AsRelation{}             -> functionAsRelation dispatch (bug "reprOptions inside dispatch")
+            Function_AsRelation{}             -> functionAsRelation dispatch
+                                                    (bug "reprOptions inside dispatch")
             _ -> nope
         DomainSequence r _ _ -> case r of
             Sequence_ExplicitBounded          -> sequenceExplicitBounded
             _ -> nope
         DomainRelation r _ _ -> case r of
             Relation_AsMatrix                 -> relationAsMatrix
-            Relation_AsSet{}                  -> relationAsSet dispatch (bug "reprOptions inside dispatch")
+            Relation_AsSet{}                  -> relationAsSet dispatch
+                                                    (bug "reprOptions inside dispatch")
+                                                    (bug "useLevels inside dispatch")
             _ -> nope
         DomainPartition r _ _ -> case r of
             Partition_Occurrence              -> partitionOccurrence
-            Partition_AsSet{}                 -> partitionAsSet dispatch (bug "reprOptions inside dispatch")
+            Partition_AsSet{}                 -> partitionAsSet dispatch
+                                                    (bug "reprOptions inside dispatch")
+                                                    (bug "useLevels inside dispatch")
             _ -> nope
         _ -> nope
 
@@ -193,8 +198,8 @@ reprsStandardOrderNoLevels = return $ concat
       -- , partitionOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
-      , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels)
-      , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels)
+      , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
+      , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
       ]
     ]
 
@@ -215,8 +220,8 @@ reprsStandardOrder =
       -- , partitionOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
-      , relationAsSet      dispatch (reprOptions reprsStandardOrder)
-      , partitionAsSet     dispatch (reprOptions reprsStandardOrder)
+      , relationAsSet      dispatch (reprOptions reprsStandardOrder) True
+      , partitionAsSet     dispatch (reprOptions reprsStandardOrder) True
       ]
     ]
 
@@ -239,9 +244,9 @@ reprsSparseOrder = map return
 
     , sequenceExplicitBounded
 
-    , relationAsSet      dispatch (reprOptions reprsSparseOrder)
+    , relationAsSet      dispatch (reprOptions reprsSparseOrder) False
     , relationAsMatrix
-    , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
+    , partitionAsSet     dispatch (reprOptions reprsSparseOrder) False
     ]
 
 

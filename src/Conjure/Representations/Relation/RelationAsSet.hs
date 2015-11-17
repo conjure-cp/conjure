@@ -18,8 +18,9 @@ relationAsSet
     :: forall m . (MonadFail m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
+    -> Bool
     -> Representation m
-relationAsSet dispatch reprOptions = Representation chck downD structuralCons downC up
+relationAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up
 
     where
 
@@ -29,6 +30,10 @@ relationAsSet dispatch reprOptions = Representation chck downD structuralCons do
             dom3 <- reprOptions dom2
             return [ DomainRelation (Relation_AsSet r) attrs innerDomains
                    | DomainSet r _ (DomainTuple innerDomains) <- dom3
+                   -- special hack: do not use Set_ExplicitVarSizeWithFlags when --representation-levels=yes
+                   , if useLevels
+                       then r /= Set_ExplicitVarSizeWithFlags
+                       else True
                    ]
         chck _ _ = return []
 

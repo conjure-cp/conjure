@@ -21,8 +21,9 @@ partitionAsSet
     :: forall m . (MonadFail m, NameGen m)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
+    -> Bool
     -> Representation m
-partitionAsSet dispatch reprOptions = Representation chck downD structuralCons downC up
+partitionAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up
 
     where
 
@@ -36,6 +37,10 @@ partitionAsSet dispatch reprOptions = Representation chck downD structuralCons d
             dom3 <- reprOptions dom2
             return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomain
                    | DomainSet r1 _ (DomainSet r2 _ innerDomain) <- dom3
+                   -- special hack: do not use Set_ExplicitVarSizeWithFlags when --representation-levels=yes
+                   , if useLevels
+                       then r1 /= Set_ExplicitVarSizeWithFlags && r2 /= Set_ExplicitVarSizeWithFlags
+                       else True
                    ]
         chck _ _ = return []
 
