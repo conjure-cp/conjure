@@ -694,7 +694,7 @@ data HasRepresentation
     | Sequence_ExplicitBounded
 
     | Relation_AsMatrix
-    | Relation_AsSet
+    | Relation_AsSet HasRepresentation                          -- carries: representation for the inner set
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
     | Partition_Occurrence              -- TODO
@@ -810,7 +810,7 @@ textToRepresentation t []             | t == "FunctionNDPartial"          = retu
 textToRepresentation t [repr]         | t == "FunctionAsRelation"         = return (Function_AsRelation repr)
 textToRepresentation t []             | t == "ExplicitBounded"            = return Sequence_ExplicitBounded
 textToRepresentation t []             | t == "RelationAsMatrix"           = return Relation_AsMatrix
-textToRepresentation t []             | t == "RelationAsSet"              = return Relation_AsSet
+textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
 textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
 textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
 textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
@@ -829,7 +829,7 @@ representationToShortText Function_NDPartial             = "FunctionNDPartial"
 representationToShortText Function_AsRelation{}          = "FunctionAsRelation"
 representationToShortText Sequence_ExplicitBounded       = "ExplicitBounded"
 representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
-representationToShortText Relation_AsSet                 = "RelationAsSet"
+representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
 representationToShortText r = bug ("representationToText:" <+> pretty (show r))
@@ -852,7 +852,11 @@ representationToFullText (Function_AsRelation repr)     = mconcat [ "FunctionAsR
                                                                   ]
 representationToFullText Sequence_ExplicitBounded       = "ExplicitBounded"
 representationToFullText Relation_AsMatrix              = "RelationAsMatrix"
-representationToFullText Relation_AsSet                 = "RelationAsSet"
+representationToFullText (Relation_AsSet repr)          = mconcat [ "RelationAsSet"
+                                                                  , "["
+                                                                  , representationToFullText repr
+                                                                  , "]"
+                                                                  ]
 representationToFullText (Partition_AsSet repr1 repr2)  = mconcat [ "PartitionAsSet"
                                                                   , "["
                                                                   , representationToFullText repr1

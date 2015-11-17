@@ -16,24 +16,35 @@ import Conjure.Representations.Common
 
 relationAsSet
     :: forall m . (MonadFail m, NameGen m)
-    => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
+    => (forall x . DispatchFunction m x)
+    -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
-relationAsSet dispatch = Representation chck downD structuralCons downC up
+relationAsSet dispatch reprOptions = Representation chck downD structuralCons downC up
 
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainRelation _ attrs innerDomains) =
-            map (DomainRelation Relation_AsSet attrs) . sequence <$> mapM f innerDomains
+        chck _ dom1@(DomainRelation _ attrs _) = do
+            dom2 <- outDomain_ dom1
+            dom3 <- reprOptions dom2
+            return [ DomainRelation (Relation_AsSet r) attrs innerDomains
+                   | DomainSet r _ (DomainTuple innerDomains) <- dom3
+                   ]
         chck _ _ = return []
 
         outName :: Name -> Name
-        outName = mkOutName Relation_AsSet Nothing
+        outName = mkOutName (Relation_AsSet def) Nothing
 
-        outDomain (DomainRelation Relation_AsSet (RelationAttr sizeAttr _binRelAttrs) innerDomains) = do
-            let repr = case sizeAttr of
-                        SizeAttr_Size{} -> Set_Explicit                     -- TODO: do not hard-code
-                        _               -> Set_ExplicitVarSizeWithMarker
+
+        outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
+        outDomain_ (DomainRelation () (RelationAttr sizeAttr _binRelAttrs) innerDomains) =
+            return (DomainSet () (SetAttr sizeAttr) (DomainTuple innerDomains))
+        outDomain_ domain = na $ vcat [ "{outDomain_} RelationAsSet"
+                                      , "domain:" <+> pretty domain
+                                      ]
+
+        outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
+        outDomain (DomainRelation (Relation_AsSet repr) (RelationAttr sizeAttr _binRelAttrs) innerDomains) =
             return (DomainSet repr (SetAttr sizeAttr) (DomainTuple innerDomains))
         outDomain domain = na $ vcat [ "{outDomain} RelationAsSet"
                                      , "domain:" <+> pretty domain
@@ -57,7 +68,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                 case refs of
                     [set] -> do
                         binRelCons <- case inDom of
-                            DomainRelation Relation_AsSet (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
+                            DomainRelation Relation_AsSet{} (RelationAttr _ binRelAttrs) [innerDomain1, innerDomain2]
                                 | binRelAttrs == def
                                     -> return []
                                 | forgetRepr innerDomain1 == forgetRepr innerDomain2
@@ -67,7 +78,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                                   , "innerDomain1:" <+> pretty innerDomain1
                                                   , "innerDomain2:" <+> pretty innerDomain2
                                                   ]
-                            DomainRelation Relation_AsSet (RelationAttr _ binRelAttrs) innerDomains
+                            DomainRelation Relation_AsSet{} (RelationAttr _ binRelAttrs) innerDomains
                                 | length innerDomains /= 2 && binRelAttrs /= def
                                     -> bug "Non-binary relation has binary relation attributes."
                             _ -> return []
@@ -98,7 +109,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainRelation Relation_AsSet _ _)) =
+        up ctxt (name, domain@(DomainRelation Relation_AsSet{} _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
                     let tupleOut (viewConstantTuple -> Just xs) = return xs
