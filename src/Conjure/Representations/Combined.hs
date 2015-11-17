@@ -206,6 +206,7 @@ reprsStandardOrderNoLevels = return $ concat
       ]
     ]
 
+
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.

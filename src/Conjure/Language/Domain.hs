@@ -801,7 +801,7 @@ textToRepresentation t []             | t == "Occurrence"                 = retu
 textToRepresentation t []             | t == "Explicit"                   = return Set_Explicit
 textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
 textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
-textToRepresentation t []             | t == "ExplicitVarSizeWithDummy" = return Set_ExplicitVarSizeWithDummy
+textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
 textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return MSet_ExplicitVarSizeWithFlags
 textToRepresentation t []             | t == "Function1D"                 = return Function_1D
 textToRepresentation t []             | t == "Function1DPartial"          = return Function_1DPartial
@@ -820,7 +820,7 @@ representationToShortText Set_Occurrence                 = "Occurrence"
 representationToShortText Set_Explicit                   = "Explicit"
 representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
-representationToShortText Set_ExplicitVarSizeWithDummy = "ExplicitVarSizeWithDummy"
+representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
 representationToShortText MSet_ExplicitVarSizeWithFlags  = "ExplicitVarSizeWithFlags"
 representationToShortText Function_1D                    = "Function1D"
 representationToShortText Function_1DPartial             = "Function1DPartial"
@@ -839,7 +839,7 @@ representationToFullText Set_Occurrence                 = "Occurrence"
 representationToFullText Set_Explicit                   = "Explicit"
 representationToFullText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToFullText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
-representationToFullText Set_ExplicitVarSizeWithDummy = "ExplicitVarSizeWithDummy"
+representationToFullText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
 representationToFullText MSet_ExplicitVarSizeWithFlags  = "ExplicitVarSizeWithFlags"
 representationToFullText Function_1D                    = "Function1D"
 representationToFullText Function_1DPartial             = "Function1DPartial"
