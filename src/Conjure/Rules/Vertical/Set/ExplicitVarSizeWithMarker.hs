@@ -47,7 +47,8 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithMar
             ( "Vertical rule for set-comprehension, ExplicitVarSizeWithMarker representation"
             , do
                 outPats <- replicateM setPatNum quantifiedVar
-                let val = AbstractLiteral $ AbsLitSet [ [essence| &j <= &marker |] | (_,j) <- outPats ]
+                let val = AbstractLiteral $ AbsLitSet
+                        [ [essence| &values[&j] |] | (_,j) <- outPats ]
                 return $ Comprehension (upd val body) $ concat
                         [ gocBefore
                         , concat
