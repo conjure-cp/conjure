@@ -25,8 +25,8 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         chck _ dom1@(DomainFunction _ attrs _ _) = do
             dom2 <- outDomain_ dom1
             dom3 <- reprOptions dom2
-            return [ DomainFunction (Function_AsRelation r) attrs innerDomainFr' innerDomainTo'
-                   | DomainRelation r _ [innerDomainFr', innerDomainTo'] <- dom3
+            return [ DomainFunction (Function_AsRelation r) attrs innerDomainFr innerDomainTo
+                   | DomainRelation r _ [innerDomainFr, innerDomainTo] <- dom3
                    ]
         chck _ _ = return []
 
