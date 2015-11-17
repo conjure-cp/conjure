@@ -395,7 +395,7 @@ rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theR
         (_mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opQuantifier p
         return
             ( "Removing quantifier of a single item"
-            , return $ singleVal
+            , return singleVal
             )
 
 

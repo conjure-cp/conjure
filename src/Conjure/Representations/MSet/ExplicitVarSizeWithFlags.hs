@@ -94,7 +94,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                 -- maxOccur is enforced by the domain of the flag
                 minOccurrenceCons flags = do
                     (iPat, i) <- quantifiedVar
-                    return $
+                    return
                         [ [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] >= &minOccur |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]

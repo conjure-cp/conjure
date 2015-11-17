@@ -36,7 +36,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
         outDomain_ (DomainFunction ()
                     (FunctionAttr sizeAttr _partilityAttr _jectivityAttr)
-                    innerDomainFr innerDomainTo) = do
+                    innerDomainFr innerDomainTo) =
             return (DomainRelation () (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
         outDomain_ domain = na $ vcat [ "{outDomain_} FunctionAsRelation"
                                       , "domain:" <+> pretty domain
@@ -45,7 +45,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
         outDomain (DomainFunction (Function_AsRelation repr)
                     (FunctionAttr sizeAttr _partilityAttr _jectivityAttr)
-                    innerDomainFr innerDomainTo) = do
+                    innerDomainFr innerDomainTo) =
             return (DomainRelation repr (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
         outDomain domain = na $ vcat [ "{outDomain} FunctionAsRelation"
                                      , "domain:" <+> pretty domain

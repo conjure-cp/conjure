@@ -47,7 +47,7 @@ rule_Image_Literal_Bool = "sequence-image-literal-bool" `namedRule` theRule wher
                     )
                 else
                     ( "Image of sequence literal"
-                    , return $ make opOr $ fromList $
+                    , return $ make opOr $ fromList
                           [ [essence| (&a = &arg) /\ &b |]              -- if this is ever true, the output is true.
                                                                         -- undefined is still false.
                           | (a',b) <- zip allNats elems
@@ -65,7 +65,7 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
             ( "Image of sequence literal"
             , return $
                 let
-                    val = make opSum $ fromList $
+                    val = make opSum $ fromList
                         -- if this is ever true, the output is the value of b.
                         [ [essence| toInt(&a = &arg) * &b |]
                         | (a',b) <- zip allNats elems

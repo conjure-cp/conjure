@@ -46,9 +46,9 @@ split m = do
             |> nub                  -- remove duplicates
             |> subsequences         -- generate all subsequences
             |> tail                 -- drop the first, contains nothing
-          ) $ \ stmts -> do
+          ) $ \ stmts ->
         Pipes.yield $ removeUnusedDecls $ upd $ decls ++ stmts
-    forM_ (nub decls) $ \ decl -> do
+    forM_ (nub decls) $ \ decl ->
         Pipes.yield $ upd [decl]
 
 

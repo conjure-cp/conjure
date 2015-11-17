@@ -224,7 +224,7 @@ reprsStandardOrder =
 reprsSparseOrder
     :: (MonadFail m, NameGen m, EnumerateDomain m)
     => AllRepresentations m
-reprsSparseOrder = map return $
+reprsSparseOrder = map return
     [ primitive, tuple, record, variant, matrix downD1 downC1 up1
 
     , setExplicit, setExplicitVarSizeWithMarker

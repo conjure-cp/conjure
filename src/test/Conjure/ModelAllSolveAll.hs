@@ -99,7 +99,7 @@ isTestDir baseDir dir = do
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: String -> TestDirFiles -> IO TestTree
-testSingleDir srExtraOptions t@(TestDirFiles{..}) = do
+testSingleDir srExtraOptions t@(TestDirFiles{..}) =
     return $ testGroup name $ concat
         [ [conjuring]
         , savileRows
