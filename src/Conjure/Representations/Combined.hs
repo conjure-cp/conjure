@@ -23,6 +23,7 @@ import Conjure.Representations.Record
 import Conjure.Representations.Variant
 import Conjure.Representations.Set.Occurrence
 import Conjure.Representations.Set.Explicit
+import Conjure.Representations.Set.ExplicitVarSizeWithDummy
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
 import Conjure.Representations.MSet.ExplicitVarSizeWithFlags
@@ -149,6 +150,7 @@ dispatch domain = do
         DomainSet r _ _ -> case r of
             Set_Occurrence                    -> setOccurrence
             Set_Explicit                      -> setExplicit
+            Set_ExplicitVarSizeWithDummy      -> setExplicitVarSizeWithDummy
             Set_ExplicitVarSizeWithMarker     -> setExplicitVarSizeWithMarker
             Set_ExplicitVarSizeWithFlags      -> setExplicitVarSizeWithFlags
             _ -> nope
@@ -185,7 +187,8 @@ reprsStandardOrderNoLevels
     => AllRepresentations m
 reprsStandardOrderNoLevels = return $ concat
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
+      , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
@@ -198,7 +201,6 @@ reprsStandardOrderNoLevels = return $ concat
       ]
     ]
 
-
 -- | A list of all representations.
 --   As a crude measure, implementing levels here.
 --   We shouldn't have levels between representations in the long run.
@@ -207,27 +209,29 @@ reprsStandardOrder
     => AllRepresentations m
 reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
-      , setOccurrence, setExplicit, setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
+      , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
+      , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
       , msetExplicitVarSizeWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
       -- , partitionOccurrence
       ]
-    , [ functionAsRelation dispatch (reprOptions reprsSparseOrder)
-      , relationAsSet      dispatch (reprOptions reprsSparseOrder)
-      , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
+    , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
+      , relationAsSet      dispatch (reprOptions reprsStandardOrder)
+      , partitionAsSet     dispatch (reprOptions reprsStandardOrder)
       ]
     ]
 
 
+-- | Sparser representations are to be preferred for parameters.
 reprsSparseOrder
     :: (MonadFail m, NameGen m, EnumerateDomain m)
     => AllRepresentations m
 reprsSparseOrder = map return
     [ primitive, tuple, record, variant, matrix downD1 downC1 up1
 
-    , setExplicit, setExplicitVarSizeWithMarker
+    , setExplicit, setExplicitVarSizeWithDummy, setExplicitVarSizeWithMarker
     , setOccurrence, setExplicitVarSizeWithFlags              -- redundant
 
     , msetExplicitVarSizeWithFlags
