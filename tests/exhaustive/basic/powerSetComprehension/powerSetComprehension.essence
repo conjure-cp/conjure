@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find x : set (minSize 3) of int(1..7)
+
+such that
+    forAll {i,j} subsetEq x . |i-j| >= 3
