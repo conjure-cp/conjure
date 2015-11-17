@@ -160,7 +160,7 @@ dispatch domain = do
             Function_1DPartial                -> function1DPartial
             Function_ND                       -> functionND
             Function_NDPartial                -> functionNDPartial
-            Function_AsRelation               -> functionAsRelation dispatch
+            Function_AsRelation{}             -> functionAsRelation dispatch (bug "reprOptions inside dispatch")
             _ -> nope
         DomainSequence r _ _ -> case r of
             Sequence_ExplicitBounded          -> sequenceExplicitBounded
@@ -192,7 +192,7 @@ reprsStandardOrderNoLevels = return $ concat
       , relationAsMatrix
       -- , partitionOccurrence
       ]
-    , [ functionAsRelation dispatch
+    , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
       , relationAsSet      dispatch
       , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels)
       ]
@@ -214,7 +214,7 @@ reprsStandardOrder =
       , relationAsMatrix
       -- , partitionOccurrence
       ]
-    , [ functionAsRelation dispatch
+    , [ functionAsRelation dispatch (reprOptions reprsSparseOrder)
       , relationAsSet      dispatch
       , partitionAsSet     dispatch (reprOptions reprsSparseOrder)
       ]
@@ -232,8 +232,8 @@ reprsSparseOrder = map return $
 
     , msetExplicitVarSizeWithFlags
 
+    , functionAsRelation dispatch (reprOptions reprsSparseOrder)
     , function1D, functionND
-    , functionAsRelation dispatch                   -- TODO: this is often sparser, should be promoted
     , function1DPartial, functionNDPartial                    -- redundant
 
     , sequenceExplicitBounded

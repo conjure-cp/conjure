@@ -23,7 +23,7 @@ relationAsSet dispatch = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainRelation _ attrs innerDomains) = 
+        chck f (DomainRelation _ attrs innerDomains) =
             map (DomainRelation Relation_AsSet attrs) . sequence <$> mapM f innerDomains
         chck _ _ = return []
 

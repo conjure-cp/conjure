@@ -32,11 +32,11 @@ partitionAsSet dispatch reprOptions = Representation chck downD structuralCons d
             -- do the horizontal representation move: go from "partition of T" to "set of set of T"
             -- do representation selection on the set
             -- lookup the chosen representations and store them inside Partition_AsSet
-                dom2 <- outDomain_ dom1
-                dom3 <- reprOptions dom2
-                return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomain
-                       | DomainSet r1 _ (DomainSet r2 _ innerDomain) <- dom3
-                       ]
+            dom2 <- outDomain_ dom1
+            dom3 <- reprOptions dom2
+            return [ DomainPartition (Partition_AsSet r1 r2) attrs innerDomain
+                   | DomainSet r1 _ (DomainSet r2 _ innerDomain) <- dom3
+                   ]
         chck _ _ = return []
 
         outName :: Name -> Name

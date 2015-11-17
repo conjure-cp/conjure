@@ -14,32 +14,38 @@ import Conjure.Representations.Internal
 
 functionAsRelation
     :: forall m . (MonadFail m, NameGen m)
-    => (forall x . Pretty x => Domain HasRepresentation x -> Representation m)
+    => (forall x . DispatchFunction m x)
+    -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
-functionAsRelation dispatch = Representation chck downD structuralCons downC up
+functionAsRelation dispatch reprOptions = Representation chck downD structuralCons downC up
 
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainFunction _ attrs innerDomainFr innerDomainTo) = do
-            innerDomainFr' <- f innerDomainFr
-            innerDomainTo' <- f innerDomainTo
-            return [ DomainFunction Function_AsRelation attrs fr to
-                   | fr <- innerDomainFr'
-                   , to <- innerDomainTo'
+        chck _ dom1@(DomainFunction _ attrs _ _) = do
+            dom2 <- outDomain_ dom1
+            dom3 <- reprOptions dom2
+            return [ DomainFunction (Function_AsRelation r) attrs innerDomainFr' innerDomainTo'
+                   | DomainRelation r _ [innerDomainFr', innerDomainTo'] <- dom3
                    ]
         chck _ _ = return []
 
         outName :: Name -> Name
-        outName = mkOutName Function_AsRelation Nothing
+        outName = mkOutName (Function_AsRelation def) Nothing
 
-        outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
-        outDomain (DomainFunction Function_AsRelation
+        outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
+        outDomain_ (DomainFunction ()
                     (FunctionAttr sizeAttr _partilityAttr _jectivityAttr)
                     innerDomainFr innerDomainTo) = do
-            let repr = if all domainCanIndexMatrix [innerDomainFr, innerDomainTo]
-                        then Relation_AsMatrix      -- TODO: do not hard-code
-                        else Relation_AsSet
+            return (DomainRelation () (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
+        outDomain_ domain = na $ vcat [ "{outDomain_} FunctionAsRelation"
+                                      , "domain:" <+> pretty domain
+                                      ]
+
+        outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
+        outDomain (DomainFunction (Function_AsRelation repr)
+                    (FunctionAttr sizeAttr _partilityAttr _jectivityAttr)
+                    innerDomainFr innerDomainTo) = do
             return (DomainRelation repr (RelationAttr sizeAttr def) [innerDomainFr, innerDomainTo])
         outDomain domain = na $ vcat [ "{outDomain} FunctionAsRelation"
                                      , "domain:" <+> pretty domain
@@ -145,7 +151,7 @@ functionAsRelation dispatch = Representation chck downD structuralCons downC up
                                                    ]
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainFunction Function_AsRelation _ _ _)) =
+        up ctxt (name, domain@(DomainFunction Function_AsRelation{} _ _ _)) =
             case lookup (outName name) ctxt of
                 Just (ConstantAbstract (AbsLitRelation pairs)) -> do
                     let pairOut [a,b] = return (a,b)
