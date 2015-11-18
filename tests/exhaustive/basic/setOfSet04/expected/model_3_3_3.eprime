@@ -1,34 +1,26 @@
 language ESSENCE' 1.0
 
-find x_Explicit_ExplicitVarSizeWithFlags_Flags:
-        matrix indexed by [int(1..2), int(1..3)] of bool
-find x_Explicit_ExplicitVarSizeWithFlags_Values:
+find x_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..2)] of int(0..3)
+find x_Explicit_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 such that
-    x_Explicit_ExplicitVarSizeWithFlags_Flags[1, ..] <lex
-    x_Explicit_ExplicitVarSizeWithFlags_Flags[2, ..]
+    x_Explicit_ExplicitVarSizeWithMarker_Marker[1] <
+    x_Explicit_ExplicitVarSizeWithMarker_Marker[2]
     \/
-    and([x_Explicit_ExplicitVarSizeWithFlags_Flags[1, q8] =
-         x_Explicit_ExplicitVarSizeWithFlags_Flags[2, q8]
-             | q8 : int(1..3)])
+    x_Explicit_ExplicitVarSizeWithMarker_Marker[1] =
+    x_Explicit_ExplicitVarSizeWithMarker_Marker[2]
     /\
-    x_Explicit_ExplicitVarSizeWithFlags_Values[1, ..] <lex
-    x_Explicit_ExplicitVarSizeWithFlags_Values[2, ..],
-    and([and([x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q3 + 1] ->
-              x_Explicit_ExplicitVarSizeWithFlags_Values[q2, q3] <
-              x_Explicit_ExplicitVarSizeWithFlags_Values[q2, q3 + 1]
+    x_Explicit_ExplicitVarSizeWithMarker_Values[1, ..] <lex
+    x_Explicit_ExplicitVarSizeWithMarker_Values[2, ..],
+    and([and([q3 + 1 <= x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q3] <
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]
                   | q3 : int(1..2)])
              | q2 : int(1..2)]),
-    and([and([x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q4] = false ->
-              x_Explicit_ExplicitVarSizeWithFlags_Values[q2, q4] = 1
+    and([and([q4 > x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+              x_Explicit_ExplicitVarSizeWithMarker_Values[q2, q4] = 1
                   | q4 : int(1..3)])
              | q2 : int(1..2)]),
-    and([and([x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q5 + 1] ->
-              x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q5]
-                  | q5 : int(1..2)])
-             | q2 : int(1..2)]),
-    and([sum([toInt(x_Explicit_ExplicitVarSizeWithFlags_Flags[q2, q6])
-                  | q6 : int(1..3)])
-         <= 3
-             | q2 : int(1..2)])
+    and([x_Explicit_ExplicitVarSizeWithMarker_Marker[q2] <= 3 | q2 : int(1..2)])
 

@@ -1,0 +1,86 @@
+language ESSENCE' 1.0
+
+given s: int
+given fin1: int
+given fin2: int
+given fin3: int
+given nums_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
+letting let1 be fin1
+letting let2 be fin2
+letting let3 be fin3
+find x_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..let1)] of int(let2..let3, 1 + max(`int(let2..let3)`))
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
+find x_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
+such that
+    and([x_ExplicitVarSizeWithDummy[q44] !=
+         max([q47 | q47 : int(let2..let3, 1 + max([q48 | q48 : int(let2..let3)]))])
+         ->
+         or([nums_Explicit[q46] = x_ExplicitVarSizeWithDummy[q44] | q46 : int(1..fin1)])
+             | q44 : int(1..let1)]),
+    s =
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q30]) *
+         x_ExplicitVarSizeWithFlags_Values[q30]
+             | q30 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/
+         x_ExplicitVarSizeWithDummy[q1] = 1 + max([q11 | q11 : int(let2..let3)])
+             | q1 : int(1..let1 - 1)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = 1 + max([q12 | q12 : int(let2..let3)]) ->
+         x_ExplicitVarSizeWithDummy[q2 + 1] = 1 + max([q13 | q13 : int(let2..let3)])
+             | q2 : int(1..let1 - 1)]),
+    1 <=
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] !=
+               1 + max([q14 | q14 : int(let2..let3)]))
+             | q3 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] !=
+               1 + max([q15 | q15 : int(let2..let3)]))
+             | q3 : int(1..let1)])
+    <= let1,
+    and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values[q5] <
+         x_ExplicitVarSizeWithFlags_Values[q5 + 1]
+             | q5 : int(1..let1 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q6] = false ->
+         x_ExplicitVarSizeWithFlags_Values[q6] = let2
+             | q6 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] ->
+         x_ExplicitVarSizeWithFlags_Flags[q7]
+             | q7 : int(1..let1 - 1)]),
+    1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) | q8 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) | q8 : int(1..let1)]) <= let1,
+    and([x_ExplicitVarSizeWithFlags_Flags[q32] ->
+         or([x_ExplicitVarSizeWithDummy[q34] !=
+             max([q35 | q35 : int(let2..let3, 1 + max([q36 | q36 : int(let2..let3)]))])
+             /\ x_ExplicitVarSizeWithDummy[q34] = x_ExplicitVarSizeWithFlags_Values[q32]
+                 | q34 : int(1..let1)])
+             | q32 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithDummy[q38] !=
+         max([q41 | q41 : int(let2..let3, 1 + max([q42 | q42 : int(let2..let3)]))])
+         ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q40] /\
+             x_ExplicitVarSizeWithFlags_Values[q40] = x_ExplicitVarSizeWithDummy[q38]
+                 | q40 : int(1..let1)])
+             | q38 : int(1..let1)]),
+    1 <= sum([toInt(x_Occurrence[q10]) | q10 : int(let2..let3)]),
+    sum([toInt(x_Occurrence[q10]) | q10 : int(let2..let3)]) <= let1,
+    and([x_Occurrence[q16] ->
+         or([x_ExplicitVarSizeWithDummy[q18] !=
+             max([q19 | q19 : int(let2..let3, 1 + max([q20 | q20 : int(let2..let3)]))])
+             /\ x_ExplicitVarSizeWithDummy[q18] = q16
+                 | q18 : int(1..let1)])
+             | q16 : int(let2..let3)]),
+    and([x_ExplicitVarSizeWithDummy[q22] !=
+         max([q23 | q23 : int(let2..let3, 1 + max([q24 | q24 : int(let2..let3)]))])
+         -> x_Occurrence[x_ExplicitVarSizeWithDummy[q22]]
+             | q22 : int(1..let1)]),
+    and([x_Occurrence[q25] ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q27] /\
+             x_ExplicitVarSizeWithFlags_Values[q27] = q25
+                 | q27 : int(1..let1)])
+             | q25 : int(let2..let3)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q29] ->
+         x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q29]]
+             | q29 : int(1..let1)])
+

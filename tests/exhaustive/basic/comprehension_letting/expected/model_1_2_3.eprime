@@ -1,84 +1,75 @@
 language ESSENCE' 1.0
 
 find s_Occurrence: matrix indexed by [int(1..4)] of bool
+find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..4, 5)
 find s_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find s_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4)] of int(1..4)
-find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
-find s_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..4)] of int(1..4)
 letting let1 be -100
 find x: int(-100..100)
-find aux1: int(-16..3)
+find aux1: int(-20..3)
 such that
-    and([and([s_Occurrence[i], q28 <= s_ExplicitVarSizeWithMarker_Marker,
-              i != s_ExplicitVarSizeWithMarker_Values[q28],
-              allDiff([i + s_ExplicitVarSizeWithMarker_Values[q28],
-                       i * s_ExplicitVarSizeWithMarker_Values[q28],
-                       i / s_ExplicitVarSizeWithMarker_Values[q28]; int(1..3)]),
-              (i - s_ExplicitVarSizeWithMarker_Values[q28]) % 2 = 0; int(1..5)])
+    and([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q27] != 5,
+              i != s_ExplicitVarSizeWithDummy[q27],
+              allDiff([i + s_ExplicitVarSizeWithDummy[q27],
+                       i * s_ExplicitVarSizeWithDummy[q27],
+                       i / s_ExplicitVarSizeWithDummy[q27]; int(1..3)]),
+              (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0; int(1..5)])
          ->
-         min([i + s_ExplicitVarSizeWithMarker_Values[q28],
-              i - s_ExplicitVarSizeWithMarker_Values[q28],
-              i * s_ExplicitVarSizeWithMarker_Values[q28],
-              i / s_ExplicitVarSizeWithMarker_Values[q28]; int(1..4)])
+         min([i + s_ExplicitVarSizeWithDummy[q27], i - s_ExplicitVarSizeWithDummy[q27],
+              i * s_ExplicitVarSizeWithDummy[q27],
+              i / s_ExplicitVarSizeWithDummy[q27]; int(1..4)])
          <= aux1
-             | i : int(1..4), q28 : int(1..4)]),
-    or([and([s_Occurrence[i], q28 <= s_ExplicitVarSizeWithMarker_Marker,
-             i != s_ExplicitVarSizeWithMarker_Values[q28],
-             allDiff([i + s_ExplicitVarSizeWithMarker_Values[q28],
-                      i * s_ExplicitVarSizeWithMarker_Values[q28],
-                      i / s_ExplicitVarSizeWithMarker_Values[q28]; int(1..3)]),
-             (i - s_ExplicitVarSizeWithMarker_Values[q28]) % 2 = 0; int(1..5)])
+             | i : int(1..4), q27 : int(1..4)]),
+    or([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q27] != 5,
+             i != s_ExplicitVarSizeWithDummy[q27],
+             allDiff([i + s_ExplicitVarSizeWithDummy[q27],
+                      i * s_ExplicitVarSizeWithDummy[q27],
+                      i / s_ExplicitVarSizeWithDummy[q27]; int(1..3)]),
+             (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0; int(1..5)])
         /\
-        min([i + s_ExplicitVarSizeWithMarker_Values[q28],
-             i - s_ExplicitVarSizeWithMarker_Values[q28],
-             i * s_ExplicitVarSizeWithMarker_Values[q28],
-             i / s_ExplicitVarSizeWithMarker_Values[q28]; int(1..4)])
+        min([i + s_ExplicitVarSizeWithDummy[q27], i - s_ExplicitVarSizeWithDummy[q27],
+             i * s_ExplicitVarSizeWithDummy[q27],
+             i / s_ExplicitVarSizeWithDummy[q27]; int(1..4)])
         = aux1
-            | i : int(1..4), q28 : int(1..4)]),
+            | i : int(1..4), q27 : int(1..4)]),
     x = aux1,
-    and([q2 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q2] <
-         s_ExplicitVarSizeWithMarker_Values[q2 + 1]
+    and([s_ExplicitVarSizeWithDummy[q2] < s_ExplicitVarSizeWithDummy[q2 + 1] \/
+         s_ExplicitVarSizeWithDummy[q2] = 5
              | q2 : int(1..3)]),
-    and([q3 > s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q3] = 1
-             | q3 : int(1..4)]),
-    and([q6 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q6]]
-             | q6 : int(1..4)]),
-    and([s_Occurrence[q7] ->
-         or([q9 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q9] = q7
-                 | q9 : int(1..4)])
+    and([s_ExplicitVarSizeWithDummy[q3] = 5 ->
+         s_ExplicitVarSizeWithDummy[q3 + 1] = 5
+             | q3 : int(1..3)]),
+    and([s_ExplicitVarSizeWithDummy[q7] != 5 ->
+         s_Occurrence[s_ExplicitVarSizeWithDummy[q7]]
              | q7 : int(1..4)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q10 + 1] ->
-         s_ExplicitVarSizeWithFlags_Values[q10] <
-         s_ExplicitVarSizeWithFlags_Values[q10 + 1]
-             | q10 : int(1..3)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q11] = false ->
-         s_ExplicitVarSizeWithFlags_Values[q11] = 1
-             | q11 : int(1..4)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q12 + 1] ->
-         s_ExplicitVarSizeWithFlags_Flags[q12]
-             | q12 : int(1..3)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q16] ->
-         s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q16]]
+    and([s_Occurrence[q8] ->
+         or([s_ExplicitVarSizeWithDummy[q10] != 5 /\ s_ExplicitVarSizeWithDummy[q10] = q8
+                 | q10 : int(1..4)])
+             | q8 : int(1..4)]),
+    and([q11 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q11] <
+         s_ExplicitVarSizeWithMarker_Values[q11 + 1]
+             | q11 : int(1..3)]),
+    and([q12 > s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q12] = 1
+             | q12 : int(1..4)]),
+    and([q15 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q15]]
+             | q15 : int(1..4)]),
+    and([s_Occurrence[q16] ->
+         or([q18 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q18] = q16
+                 | q18 : int(1..4)])
              | q16 : int(1..4)]),
-    and([s_Occurrence[q17] ->
-         or([s_ExplicitVarSizeWithFlags_Flags[q19] /\
-             s_ExplicitVarSizeWithFlags_Values[q19] = q17
-                 | q19 : int(1..4)])
-             | q17 : int(1..4)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q21] ->
-         or([q23 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q23] = s_ExplicitVarSizeWithFlags_Values[q21]
-                 | q23 : int(1..4)])
-             | q21 : int(1..4)]),
-    and([q25 <= s_ExplicitVarSizeWithMarker_Marker ->
-         or([s_ExplicitVarSizeWithFlags_Flags[q27] /\
-             s_ExplicitVarSizeWithFlags_Values[q27] = s_ExplicitVarSizeWithMarker_Values[q25]
-                 | q27 : int(1..4)])
-             | q25 : int(1..4)])
+    and([q20 <= s_ExplicitVarSizeWithMarker_Marker ->
+         or([s_ExplicitVarSizeWithDummy[q22] != 5 /\
+             s_ExplicitVarSizeWithDummy[q22] = s_ExplicitVarSizeWithMarker_Values[q20]
+                 | q22 : int(1..4)])
+             | q20 : int(1..4)]),
+    and([s_ExplicitVarSizeWithDummy[q24] != 5 ->
+         or([q26 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q26] = s_ExplicitVarSizeWithDummy[q24]
+                 | q26 : int(1..4)])
+             | q24 : int(1..4)])
 

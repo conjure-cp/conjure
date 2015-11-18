@@ -9,16 +9,16 @@ such that
     sum([toInt(q14 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker)
              | q14 : int(1..2 ** (1 + (b - 1)))])
     <=
-    sum([1   | q15_ExplicitVarSizeWithMarker_Marker : int(0..1 + (b - 1)),
-               q15_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..1 +
-                                                                                (b - 1))] of int(1..b),
-               and([q16 + 1 <= q15_ExplicitVarSizeWithMarker_Marker ->
-                    q15_ExplicitVarSizeWithMarker_Values[q16] <
-                    q15_ExplicitVarSizeWithMarker_Values[q16 + 1]
+    sum([1   | q15_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 +
+                                                                        (b - 1))] of int(1..b,
+                                                                                         1 +
+                                                                                         max([q23 | q23 : int(1..b)])),
+               and([q15_ExplicitVarSizeWithDummy[q16] < q15_ExplicitVarSizeWithDummy[q16 + 1]
+                    \/ q15_ExplicitVarSizeWithDummy[q16] = 1 + max([q20 | q20 : int(1..b)])
                         | q16 : int(1..1 + (b - 1) - 1)]),
-               and([q17 > q15_ExplicitVarSizeWithMarker_Marker ->
-                    q15_ExplicitVarSizeWithMarker_Values[q17] = 1
-                        | q17 : int(1..1 + (b - 1))])])
+               and([q15_ExplicitVarSizeWithDummy[q17] = 1 + max([q21 | q21 : int(1..b)]) ->
+                    q15_ExplicitVarSizeWithDummy[q17 + 1] = 1 + max([q22 | q22 : int(1..b)])
+                        | q17 : int(1..1 + (b - 1) - 1)])])
     / 8,
     and([1 =
          sum([toInt(q8 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
