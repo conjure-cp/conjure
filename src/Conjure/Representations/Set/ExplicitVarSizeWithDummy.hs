@@ -32,7 +32,9 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             _ -> domainSizeOf innerDomain
 
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
-        calcDummyElem dom = [essence| 1 + max(`&dom`) |]
+        calcDummyElem dom =
+            let theMax = bugFail "calcDummyElem" (maxOfDomain dom)
+            in  [essence| 1 + &theMax |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
         calcDummyElemC (DomainInt []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"

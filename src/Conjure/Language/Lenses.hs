@@ -1407,3 +1407,30 @@ fixRelationProj = transformBi f
                         Just TypeSequence{} -> make opImage func arg
                         _                   -> p
                 _ -> p
+
+
+maxOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
+maxOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.maxOfDomain []"
+maxOfDomain (DomainInt [r]) = maxOfRange r
+maxOfDomain (DomainInt rs ) = do
+    xs <- mapM maxOfRange rs
+    return (make opMax (fromList xs))
+maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
+
+maxOfRange :: MonadFail m => Range Expression -> m Expression
+maxOfRange (RangeSingle x) = return x
+maxOfRange (RangeBounded _ x) = return x
+maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty r)
+
+minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
+minOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.minOfDomain []"
+minOfDomain (DomainInt [r]) = minOfRange r
+minOfDomain (DomainInt rs ) = do
+    xs <- mapM minOfRange rs
+    return (make opMin (fromList xs))
+minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)
+
+minOfRange :: MonadFail m => Range Expression -> m Expression
+minOfRange (RangeSingle x) = return x
+minOfRange (RangeBounded x _) = return x
+minOfRange r = fail ("rule_DomainMinMax.minOfRange" <+> pretty r)
