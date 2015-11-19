@@ -1170,8 +1170,7 @@ otherRules =
         , rule_GeneratorsFirst
 
         , rule_DomainCardinality
-        , rule_DomainMin
-        , rule_DomainMax
+        , rule_DomainMinMax
 
         , rule_Pred
         , rule_Succ
@@ -1568,36 +1567,26 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             )
 
 
-rule_DomainMin :: Rule
-rule_DomainMin = "domain-min" `namedRule` theRule where
-    theRule p = do
-        maybeDomain <- match opMin p
-        d <- case maybeDomain of
-            Domain d -> return d
-            Reference _ (Just (Alias (Domain d))) -> return d
-            _ -> na "rule_DomainMin"
-        return
-            ( "min of a domain"
-            , do
-                (iPat, i) <- quantifiedVar
-                return [essence| min([ &i | &iPat : &d ]) |]
-            )
-
-
-rule_DomainMax :: Rule
-rule_DomainMax = "domain-max" `namedRule` theRule where
-    theRule p = do
-        maybeDomain <- match opMax p
-        d <- case maybeDomain of
-            Domain d -> return d
-            Reference _ (Just (Alias (Domain d))) -> return d
-            _ -> na "rule_DomainMax"
+rule_DomainMinMax :: Rule
+rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
+    theRule [essence| max(&maybeDomain) |] = do
+        d <- getDomain maybeDomain
         return
             ( "max of a domain"
-            , do
-                (iPat, i) <- quantifiedVar
-                return [essence| max([ &i | &iPat : &d ]) |]
+            , maxOfDomain d
             )
+    theRule [essence| min(&maybeDomain) |] = do
+        d <- getDomain maybeDomain
+        return
+            ( "min of a domain"
+            , minOfDomain d
+            )
+    theRule _ = na "rule_DomainMinMax"
+
+    getDomain :: MonadFail m => Expression -> m (Domain () Expression)
+    getDomain (Domain d) = return d
+    getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
+    getDomain _ = na "rule_DomainMinMax.getDomain"
 
 
 rule_Pred :: Rule
@@ -1608,7 +1597,7 @@ rule_Pred = "pred" `namedRule` theRule where
             TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
                                                                 -- since True becomes False
                                                                 --       False becomes out-of-bounds, hence False
-            TypeInt{}  -> return ( "Predecessor of boolean", return [essence| &x - 1 |] )
+            TypeInt{}  -> return ( "Predecessor of integer", return [essence| &x - 1 |] )
             _          -> na "rule_Pred"
     theRule _ = na "rule_Pred"
 
@@ -1622,7 +1611,7 @@ rule_Succ = "succ" `namedRule` theRule where
                                                                 -- since False becomes True
                                                                 --       True becomes out-of-bounds, hence False
                                                                 -- "succ" is exactly "negate" on bools
-            TypeInt{}  -> return ( "Succecessor of boolean", return [essence| &x + 1 |] )
+            TypeInt{}  -> return ( "Succecessor of integer", return [essence| &x + 1 |] )
             _          -> na "rule_Succ"
     theRule _ = na "rule_Succ"
 
