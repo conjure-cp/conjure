@@ -1,6 +1,6 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Conjure.ModelAllSolveAll ( tests ) where
+module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
 
 -- conjure
 import Conjure.Prelude
@@ -19,6 +19,7 @@ import System.Environment ( getEnvironment )
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCase, testCaseSteps, assertFailure )
+import Test.Tasty.Options ( IsOption(..) )
 
 -- shelly
 import Shelly ( run, errExit, lastStderr, lastExitCode )
@@ -41,20 +42,40 @@ srOptions srExtraOptions =
     ] ++ map stringToText (words srExtraOptions)
 
 
-tests :: IO TestTree
+-- | Which tests are we running?
+data QuickOrSlow = Quick | Slow | BothQuickAndSlow
+    deriving (Eq, Ord, Typeable)
+
+instance IsOption QuickOrSlow where
+    defaultValue = Quick
+
+    parseValue "quick" = return Quick
+    parseValue "slow" = return Slow
+    parseValue "all" = return BothQuickAndSlow
+    parseValue _ = Nothing
+    
+    optionName = return "select-tests"
+    optionHelp = return "Select which tests to run (quick/slow/all). Default is quick."
+
+data TestKind = TK_Invalid | TK_Slow | TK_Quick
+  deriving (Eq, Show)
+
+
+tests :: IO (QuickOrSlow -> TestTree)
 tests = do
     srExtraOptions <- do
         env <- getEnvironment
         return $ fromMaybe "-O0" (lookup "SR_OPTIONS" env)
     putStrLn $ "Using Savile Row options: " ++ unwords (map textToString (srOptions srExtraOptions))
     let baseDir = "tests/exhaustive"
-    dirs <- mapM (isTestDir baseDir) =<< allDirs baseDir
-    testCases <- mapM (testSingleDir srExtraOptions) (catMaybes dirs)
-    return (testGroup "exhaustive" testCases)
+    dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
+    let testCases = map (testSingleDir srExtraOptions) (catMaybes dirs)
+    return (\ quickOrSlow -> testGroup "exhaustive" (map ($ quickOrSlow) testCases) )
 
 
 data TestDirFiles = TestDirFiles
     { name           :: String          -- a name for the test case
+    , testKind       :: TestKind
     , tBaseDir       :: FilePath        -- dir
     , outputsDir     :: FilePath        -- dir
     , expectedsDir   :: FilePath        -- dir
@@ -69,11 +90,15 @@ data TestDirFiles = TestDirFiles
 -- returns True if the argument points to a directory that is not hidden
 isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
-    essenceFiles <- filter (".essence" `isSuffixOf`) <$> getDirectoryContents dir
+    dirContents <- getDirectoryContents dir
+    let testKind
+            | "invalid" `elem` dirContents = TK_Invalid
+            | "slow"    `elem` dirContents = TK_Slow
+            | otherwise                    = TK_Quick
+    let essenceFiles = filter (".essence" `isSuffixOf`) dirContents
     case essenceFiles of
-        ["disabled.essence"] -> return Nothing          -- ignore
         [f] -> Just <$> do
-            params    <- filter (".param"  `isSuffixOf`) <$> getDirectoryContents dir
+            let params = filter (".param"  `isSuffixOf`) dirContents
             expecteds <- do
                 let dirExpected = dir </> "expected"
                 isDir <- doesDirectoryExist dirExpected
@@ -89,6 +114,7 @@ isTestDir baseDir dir = do
                 , paramFiles     = params
                 , expectedModels = filter (".eprime"   `isSuffixOf`) expecteds
                 , expectedSols   = filter (".solution" `isSuffixOf`) expecteds
+                , testKind       = testKind
                 }
         _ -> return Nothing
 
@@ -98,17 +124,28 @@ isTestDir baseDir dir = do
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: String -> TestDirFiles -> IO TestTree
-testSingleDir srExtraOptions t@(TestDirFiles{..}) =
-    return $ testGroup name $ concat
-        [ [conjuring]
-        , savileRows
-        , validating
-        , [checkExpectedAndExtraFiles t]
-        , [equalNumberOfSolutions t]
-        , [noDuplicateSolutions t]
-        ]
+testSingleDir :: String -> TestDirFiles -> QuickOrSlow -> TestTree
+testSingleDir srExtraOptions t@(TestDirFiles{..}) quickOrSlow =
+    if shouldRun
+        then
+            testGroup name $ concat
+                [ [conjuring]
+                , savileRows
+                , validating
+                , [checkExpectedAndExtraFiles t]
+                , [equalNumberOfSolutions t]
+                , [noDuplicateSolutions t]
+                ]
+        else
+            testGroup name [testCase "Skip" (return ())]
     where
+
+        shouldRun
+            | testKind == TK_Invalid                                               = False
+            | testKind == TK_Quick && quickOrSlow `elem` [Quick, BothQuickAndSlow] = True
+            | testKind == TK_Slow  && quickOrSlow `elem` [Slow , BothQuickAndSlow] = True
+            | otherwise                                                            = False
+
         conjuring =
             testCase "Conjuring" $ do
                 -- tl;dr: rm -rf outputsDir

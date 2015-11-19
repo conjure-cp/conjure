@@ -19,7 +19,7 @@ import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
 tests :: IO TestTree
 tests = do
     let baseDir = "tests/parse_print"
-    dirs <- mapM (isTestDir baseDir) =<< allDirs baseDir
+    dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
     let testCases = map testSingleDir (catMaybes dirs)
     return (testGroup "parse_print" testCases)
 

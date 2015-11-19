@@ -39,7 +39,7 @@ module Conjure.Prelude
     , ExceptT(..)
     , sh
     , scope
-    , allDirs, allFiles, allFilesWithSuffix
+    , getAllDirs, getAllFiles, getAllFilesWithSuffix
     , removeFileIfExists, readFileIfExists
     , setRandomSeed, randomRIO
     , nchoosek
@@ -125,6 +125,8 @@ import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine, readFile )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
+
+import Data.Proxy as X ( Proxy(..) )
 
 -- safe
 import Safe as X ( at, atNote, atMay, readMay, readNote, headNote, fromJustNote )
@@ -318,9 +320,6 @@ jsonOptions = JSON.defaultOptions
     }
 
 
-data Proxy a = Proxy
-
-
 class (Functor m, Applicative m, Monad m) => MonadFail m where
     fail :: Doc -> m a
 
@@ -502,23 +501,23 @@ scope ma = do
     modify (const st)
     return a
 
-allDirs :: FilePath -> IO [FilePath]
-allDirs x = do
+getAllDirs :: FilePath -> IO [FilePath]
+getAllDirs x = do
     let dots i = not ( i == "." || i == ".." )
     isDir <- doesDirectoryExist x
     ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
-    ([x | isDir] ++) <$> concatMapM allDirs (map (x </>) ys)
+    ([x | isDir] ++) <$> concatMapM getAllDirs (map (x </>) ys)
 
-allFiles :: FilePath -> IO [FilePath]
-allFiles x = do
+getAllFiles :: FilePath -> IO [FilePath]
+getAllFiles x = do
     let dots i = not ( i == "." || i == ".." )
     ys' <- getDirectoryContents x `catchError` const (return [])
     let ys = filter dots ys'
-    (x :) <$> concatMapM allFiles (map (x </>) ys)
+    (x :) <$> concatMapM getAllFiles (map (x </>) ys)
 
-allFilesWithSuffix :: String -> FilePath -> IO [FilePath]
-allFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> allFiles fp
+getAllFilesWithSuffix :: String -> FilePath -> IO [FilePath]
+getAllFilesWithSuffix suffix fp = filter (suffix `isSuffixOf`) <$> getAllFiles fp
 
 -- from http://stackoverflow.com/questions/8502201/remove-file-if-it-exists
 removeFileIfExists :: FilePath -> IO ()

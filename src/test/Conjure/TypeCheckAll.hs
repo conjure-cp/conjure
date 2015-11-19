@@ -14,7 +14,7 @@ import Test.Tasty.HUnit ( testCase )
 tests :: IO TestTree
 tests = do
     let baseDir = "tests/exhaustive"
-    files <- allFilesWithSuffix ".essence" baseDir
+    files <- getAllFilesWithSuffix ".essence" baseDir
     let testCases = map testSingle files
     return (testGroup "type-checking" testCases)
 
