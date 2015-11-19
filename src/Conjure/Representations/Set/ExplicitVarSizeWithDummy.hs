@@ -31,10 +31,18 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             SizeAttr_MinMaxSize _ x -> return x
             _ -> domainSizeOf innerDomain
 
+        calcDummyDomain :: Pretty r => Domain r Expression -> Domain r Expression
+        calcDummyDomain (DomainInt [RangeBounded lb ub]) =
+                DomainInt [RangeBounded lb [essence| &ub + 1 |]]
+        calcDummyDomain dom@(DomainInt ranges) =
+            let dummyElem = calcDummyElem dom
+            in  DomainInt (ranges ++ [RangeSingle dummyElem])
+        calcDummyDomain dom = bug ("ExplicitVarSizeWithDummy.calcDummyDomain" <+> pretty dom)
+
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
         calcDummyElem dom =
             let theMax = bugFail "calcDummyElem" (maxOfDomain dom)
-            in  [essence| 1 + &theMax |]
+            in  [essence| &theMax + 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
         calcDummyElemC (DomainInt []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
@@ -49,14 +57,14 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         calcDummyElemC d = bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty d)
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain@(DomainInt ranges)) = do
-            let dummyElem = calcDummyElem innerDomain
+        downD (name, DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain@DomainInt{}) = do
+            let domainWithDummy = calcDummyDomain innerDomain
             maxSize <- getMaxSize attrs innerDomain
             return $ Just
                 [ ( outName name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxSize])
-                      (DomainInt (ranges ++ [RangeSingle dummyElem]))
+                      domainWithDummy
                   ) ]
         downD _ = na "{downD} ExplicitVarSizeWithDummy"
 
