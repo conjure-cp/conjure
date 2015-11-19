@@ -4,7 +4,7 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..8)
 find p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence:
         matrix indexed by [int(1..8), int(1..3)] of bool
 find p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..8), int(1..3)] of int(1..3, 4)
+        matrix indexed by [int(1..8), int(1..3)] of int(1..4)
 such that
     and([q53 <= p_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
          or([p_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q53, 1] /\

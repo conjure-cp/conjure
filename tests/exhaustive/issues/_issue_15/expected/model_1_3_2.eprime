@@ -14,14 +14,12 @@ such that
              | q50 : int(1..2 ** (1 + (b - 1)))])
     <=
     sum([1   | q51_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 +
-                                                                        (b - 1))] of int(1..b,
-                                                                                         1 +
-                                                                                         max([q59 | q59 : int(1..b)])),
+                                                                        (b - 1))] of int(1..b + 1),
                and([q51_ExplicitVarSizeWithDummy[q52] < q51_ExplicitVarSizeWithDummy[q52 + 1]
-                    \/ q51_ExplicitVarSizeWithDummy[q52] = 1 + max([q56 | q56 : int(1..b)])
+                    \/ q51_ExplicitVarSizeWithDummy[q52] = b + 1
                         | q52 : int(1..1 + (b - 1) - 1)]),
-               and([q51_ExplicitVarSizeWithDummy[q53] = 1 + max([q57 | q57 : int(1..b)]) ->
-                    q51_ExplicitVarSizeWithDummy[q53 + 1] = 1 + max([q58 | q58 : int(1..b)])
+               and([q51_ExplicitVarSizeWithDummy[q53] = b + 1 ->
+                    q51_ExplicitVarSizeWithDummy[q53 + 1] = b + 1
                         | q53 : int(1..1 + (b - 1) - 1)])])
     / 8,
     and([1 =

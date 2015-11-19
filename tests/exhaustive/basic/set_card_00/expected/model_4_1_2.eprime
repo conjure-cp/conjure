@@ -4,7 +4,7 @@ find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
-find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2)] of int(1..2, 3)
+find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2)] of int(1..3)
 such that
     s_Occurrence[sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q25])
                           | q25 : int(1..2)])],
