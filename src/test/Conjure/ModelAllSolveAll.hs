@@ -131,7 +131,7 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) quickOrSlow =
             testGroup name $ concat
                 [ [conjuring]
                 , savileRows
-                , validating
+                , [validating]
                 , [checkExpectedAndExtraFiles t]
                 , [equalNumberOfSolutions t]
                 , [noDuplicateSolutions t]
@@ -165,11 +165,14 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) quickOrSlow =
 
         validating =
             if null paramFiles
-                then [ validateSolutionNoParam    t   s | s <- expectedSols   ]
-                else [ validateSolutionWithParams t p s | p <- paramFiles
-                                                        , s <- expectedSols
-                                                        , dropExtension p `isInfixOf` dropExtension s
-                                                        ]
+                then validateSolutionNoParam t expectedSols
+                else validateSolutionWithParams t [ ( p
+                                                    , [ s | s <- expectedSols
+                                                          , dropExtension p `isInfixOf` dropExtension s
+                                                          ]
+                                                    )
+                                                  | p <- paramFiles
+                                                  ]
 
 
 savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
@@ -242,27 +245,32 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                                                                         ]
 
 
-validateSolutionNoParam :: TestDirFiles -> FilePath -> TestTree
-validateSolutionNoParam TestDirFiles{..} solutionPath =
-    testCase (unwords ["Validating solution:", solutionPath]) $ sh $ do
+validateSolutionNoParam :: TestDirFiles -> [FilePath] -> TestTree
+validateSolutionNoParam TestDirFiles{..} solutionPaths =
+    testCaseSteps "Validating solutions" $ \ step -> do
         essence  <- liftIO $ readModelFromFile essenceFile
-        solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-        result   <- liftIO $ runExceptT $ ignoreLogs $ validateSolution essence def solution
-        case result of
-            Left err -> liftIO $ assertFailure $ renderNormal err
-            Right () -> return ()
+        forM_ solutionPaths $ \ solutionPath -> do
+            step (unwords ["Validating solution:", solutionPath])
+            solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
+            result   <- liftIO $ runExceptT $ ignoreLogs $ validateSolution essence def solution
+            case result of
+                Left err -> liftIO $ assertFailure $ renderNormal err
+                Right () -> return ()
 
 
-validateSolutionWithParams :: TestDirFiles -> FilePath -> FilePath -> TestTree
-validateSolutionWithParams TestDirFiles{..} paramPath solutionPath =
-    testCase (unwords ["Validating solution:", paramPath, solutionPath]) $ sh $ do
+validateSolutionWithParams :: TestDirFiles -> [(FilePath, [FilePath])] -> TestTree
+validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
+    testCaseSteps "Validating solutions" $ \ step -> do
         essence  <- liftIO $ readModelFromFile essenceFile
-        param    <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
-        solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-        result   <- liftIO $ runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
-        case result of
-            Left err -> liftIO $ assertFailure $ renderNormal err
-            Right () -> return ()
+        forM_ paramSolutionPaths $ \ (paramPath, solutionPaths) -> do
+            param    <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
+            forM_ solutionPaths $ \ solutionPath -> do
+                step (unwords ["Validating solution:", paramPath, solutionPath])
+                solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
+                result   <- liftIO $ runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
+                case result of
+                    Left err -> liftIO $ assertFailure $ renderNormal err
+                    Right () -> return ()
 
 
 checkExpectedAndExtraFiles :: TestDirFiles -> TestTree
@@ -289,7 +297,7 @@ checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step 
 
     step "Checking expected files"
     forM_ expecteds $ \ item -> do
-        step (unwords ["Checking expected file", item])
+        step (unwords ["Checking expected file:", item])
         let expectedPath  = expectedsDir </> item
         let generatedPath = outputsDir   </> item
         isFile <- doesFileExist generatedPath
@@ -343,11 +351,11 @@ equalNumberOfSolutions TestDirFiles{..} =
 
         unless (null differentOnes) $
             assertFailure $ show $ vcat
-                [ (maybe
+                [ maybe
                     id
                     (\ p -> hang ("For parameter" <+> pretty p) 4 )
                     param
-                  ) $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
+                    $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
                            | (model, nbSols) <- modelSols
                            ]
                 | (param, modelSols) <- differentOnes
