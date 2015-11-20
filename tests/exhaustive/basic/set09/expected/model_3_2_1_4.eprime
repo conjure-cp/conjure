@@ -4,7 +4,7 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find x_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4)] of int(2..5)
 find x_Occurrence: matrix indexed by [int(2..5)] of bool
-find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..5, 6)
+find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
 find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..4)] of int(2..5)

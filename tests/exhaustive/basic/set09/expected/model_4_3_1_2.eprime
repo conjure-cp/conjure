@@ -7,7 +7,7 @@ find x_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find y_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4)] of int(2..5)
-find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..5, 6)
+find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q27] /\
          q28 <= y_ExplicitVarSizeWithMarker_Marker

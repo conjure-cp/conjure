@@ -9,43 +9,36 @@ letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
 find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3, 1 + max(`int(let2..let3)`))
+        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
 find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
 find x_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..let1)] of int(let2..let3)
 such that
-    and([x_ExplicitVarSizeWithDummy[q41] !=
-         max([q42 | q42 : int(let2..let3, 1 + max([q43 | q43 : int(let2..let3)]))])
-         -> nums_Occurrence[x_ExplicitVarSizeWithDummy[q41]]
-             | q41 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithDummy[q28] != let3 + 1 ->
+         nums_Occurrence[x_ExplicitVarSizeWithDummy[q28]]
+             | q28 : int(1..let1)]),
     s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/
-         x_ExplicitVarSizeWithDummy[q1] = 1 + max([q9 | q9 : int(let2..let3)])
+         x_ExplicitVarSizeWithDummy[q1] = let3 + 1
              | q1 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q2] = 1 + max([q10 | q10 : int(let2..let3)]) ->
-         x_ExplicitVarSizeWithDummy[q2 + 1] = 1 + max([q11 | q11 : int(let2..let3)])
+    and([x_ExplicitVarSizeWithDummy[q2] = let3 + 1 ->
+         x_ExplicitVarSizeWithDummy[q2 + 1] = let3 + 1
              | q2 : int(1..let1 - 1)]),
     1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] !=
-               1 + max([q12 | q12 : int(let2..let3)]))
-             | q3 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] !=
-               1 + max([q13 | q13 : int(let2..let3)]))
-             | q3 : int(1..let1)])
-    <= let1,
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]) <=
+    let1,
     1 <= sum([toInt(x_Occurrence[q5]) | q5 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q5]) | q5 : int(let2..let3)]) <= let1,
-    and([x_Occurrence[q31] ->
-         or([x_ExplicitVarSizeWithDummy[q33] !=
-             max([q34 | q34 : int(let2..let3, 1 + max([q35 | q35 : int(let2..let3)]))])
-             /\ x_ExplicitVarSizeWithDummy[q33] = q31
-                 | q33 : int(1..let1)])
-             | q31 : int(let2..let3)]),
-    and([x_ExplicitVarSizeWithDummy[q37] !=
-         max([q38 | q38 : int(let2..let3, 1 + max([q39 | q39 : int(let2..let3)]))])
-         -> x_Occurrence[x_ExplicitVarSizeWithDummy[q37]]
-             | q37 : int(1..let1)]),
+    and([x_Occurrence[q22] ->
+         or([x_ExplicitVarSizeWithDummy[q24] != let3 + 1 /\
+             x_ExplicitVarSizeWithDummy[q24] = q22
+                 | q24 : int(1..let1)])
+             | q22 : int(let2..let3)]),
+    and([x_ExplicitVarSizeWithDummy[q26] != let3 + 1 ->
+         x_Occurrence[x_ExplicitVarSizeWithDummy[q26]]
+             | q26 : int(1..let1)]),
     and([q6 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q6] <
          x_ExplicitVarSizeWithMarker_Values[q6 + 1]
@@ -55,25 +48,22 @@ such that
              | q7 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
-    and([q15 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([x_ExplicitVarSizeWithDummy[q17] !=
-             max([q18 | q18 : int(let2..let3, 1 + max([q19 | q19 : int(let2..let3)]))])
-             /\ x_ExplicitVarSizeWithDummy[q17] = x_ExplicitVarSizeWithMarker_Values[q15]
-                 | q17 : int(1..let1)])
-             | q15 : int(1..let1)]),
-    and([x_ExplicitVarSizeWithDummy[q21] !=
-         max([q24 | q24 : int(let2..let3, 1 + max([q25 | q25 : int(let2..let3)]))])
-         ->
-         or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q23] = x_ExplicitVarSizeWithDummy[q21]
-                 | q23 : int(1..let1)])
-             | q21 : int(1..let1)]),
-    and([q27 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q27]]
-             | q27 : int(1..let1)]),
-    and([x_Occurrence[q28] ->
-         or([q30 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q30] = q28
-                 | q30 : int(1..let1)])
-             | q28 : int(let2..let3)])
+    and([q10 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([x_ExplicitVarSizeWithDummy[q12] != let3 + 1 /\
+             x_ExplicitVarSizeWithDummy[q12] = x_ExplicitVarSizeWithMarker_Values[q10]
+                 | q12 : int(1..let1)])
+             | q10 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithDummy[q14] != let3 + 1 ->
+         or([q16 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q16] = x_ExplicitVarSizeWithDummy[q14]
+                 | q16 : int(1..let1)])
+             | q14 : int(1..let1)]),
+    and([q18 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q18]]
+             | q18 : int(1..let1)]),
+    and([x_Occurrence[q19] ->
+         or([q21 <= x_ExplicitVarSizeWithMarker_Marker /\
+             x_ExplicitVarSizeWithMarker_Values[q21] = q19
+                 | q21 : int(1..let1)])
+             | q19 : int(let2..let3)])
 

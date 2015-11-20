@@ -12,16 +12,16 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
 find x_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..let1)] of int(let2..let3)
 find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3, 1 + max(`int(let2..let3)`))
+        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 such that
-    and([x_ExplicitVarSizeWithFlags_Flags[q29] ->
-         or([nums_Explicit[q31] = x_ExplicitVarSizeWithFlags_Values[q29]
-                 | q31 : int(1..fin1)])
-             | q29 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q20] ->
+         or([nums_Explicit[q22] = x_ExplicitVarSizeWithFlags_Values[q20]
+                 | q22 : int(1..fin1)])
+             | q20 : int(1..let1)]),
     s =
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q27]) *
-         x_ExplicitVarSizeWithFlags_Values[q27]
-             | q27 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q18]) *
+         x_ExplicitVarSizeWithFlags_Values[q18]
+             | q18 : int(1..let1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] <
          x_ExplicitVarSizeWithFlags_Values[q1 + 1]
@@ -35,30 +35,23 @@ such that
     1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..let1)]),
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q4]) | q4 : int(1..let1)]) <= let1,
     and([x_ExplicitVarSizeWithDummy[q6] < x_ExplicitVarSizeWithDummy[q6 + 1] \/
-         x_ExplicitVarSizeWithDummy[q6] = 1 + max([q10 | q10 : int(let2..let3)])
+         x_ExplicitVarSizeWithDummy[q6] = let3 + 1
              | q6 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q7] = 1 + max([q11 | q11 : int(let2..let3)]) ->
-         x_ExplicitVarSizeWithDummy[q7 + 1] = 1 + max([q12 | q12 : int(let2..let3)])
+    and([x_ExplicitVarSizeWithDummy[q7] = let3 + 1 ->
+         x_ExplicitVarSizeWithDummy[q7 + 1] = let3 + 1
              | q7 : int(1..let1 - 1)]),
     1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q8] !=
-               1 + max([q13 | q13 : int(let2..let3)]))
-             | q8 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q8] !=
-               1 + max([q14 | q14 : int(let2..let3)]))
-             | q8 : int(1..let1)])
-    <= let1,
-    and([x_ExplicitVarSizeWithDummy[q16] !=
-         max([q19 | q19 : int(let2..let3, 1 + max([q20 | q20 : int(let2..let3)]))])
-         ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q18] /\
-             x_ExplicitVarSizeWithFlags_Values[q18] = x_ExplicitVarSizeWithDummy[q16]
-                 | q18 : int(1..let1)])
-             | q16 : int(1..let1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q22] ->
-         or([x_ExplicitVarSizeWithDummy[q24] !=
-             max([q25 | q25 : int(let2..let3, 1 + max([q26 | q26 : int(let2..let3)]))])
-             /\ x_ExplicitVarSizeWithDummy[q24] = x_ExplicitVarSizeWithFlags_Values[q22]
-                 | q24 : int(1..let1)])
-             | q22 : int(1..let1)])
+    sum([toInt(x_ExplicitVarSizeWithDummy[q8] != let3 + 1) | q8 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q8] != let3 + 1) | q8 : int(1..let1)]) <=
+    let1,
+    and([x_ExplicitVarSizeWithDummy[q11] != let3 + 1 ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q13] /\
+             x_ExplicitVarSizeWithFlags_Values[q13] = x_ExplicitVarSizeWithDummy[q11]
+                 | q13 : int(1..let1)])
+             | q11 : int(1..let1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q15] ->
+         or([x_ExplicitVarSizeWithDummy[q17] != let3 + 1 /\
+             x_ExplicitVarSizeWithDummy[q17] = x_ExplicitVarSizeWithFlags_Values[q15]
+                 | q17 : int(1..let1)])
+             | q15 : int(1..let1)])
 

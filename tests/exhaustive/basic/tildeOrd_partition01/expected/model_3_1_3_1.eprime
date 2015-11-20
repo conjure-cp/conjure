@@ -1,0 +1,884 @@
+language ESSENCE' 1.0
+
+find a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..4)
+find a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..4)] of int(0..2)
+find a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..4), int(1..2)] of int(1..2)
+find b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker: int(0..4)
+find b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence:
+        matrix indexed by [int(1..4), int(1..2)] of bool
+such that
+    or([q29 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+        (toInt(or([q127 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                   (and([q129 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q127]
+                         ->
+                         or([q131 <=
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                             /\
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                q131]
+                             =
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q127,
+                                                                                                                q129]
+                                 | q131 : int(1..2)])
+                             | q129 : int(1..2)])
+                    /\
+                    and([q133 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                         ->
+                         or([q135 <=
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q127]
+                             /\
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q127,
+                                                                                                                q135]
+                             =
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                q133]
+                                 | q135 : int(1..2)])
+                             | q133 : int(1..2)]))
+                       | q127 : int(1..4)]))
+         <
+         toInt(or([q138 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                   (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q138, q139]
+                         ->
+                         or([q141 <=
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                             /\
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                q141]
+                             = q139
+                                 | q141 : int(1..2)])
+                             | q139 : int(1..2)])
+                    /\
+                    and([q143 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                         ->
+                         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q138,
+                                                                                      a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                                                                         q143]]
+                             | q143 : int(1..2)]))
+                       | q138 : int(1..4)]))
+         /\
+         (and([q145 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+               (or([q148 <=
+                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                    /\
+                    (toInt(or([q169 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                  q169]
+                               =
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                  q148]
+                                   | q169 : int(1..2)]))
+                     <
+                     toInt(or([q171 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                  q171]
+                               =
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                  q148]
+                                   | q171 : int(1..2)]))
+                     /\
+                     (and([q172 <=
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                           /\
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                              q172]
+                           <
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                              q148]
+                           ->
+                           toInt(or([q181 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q181]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q172]
+                                         | q181 : int(1..2)]))
+                           =
+                           toInt(or([q183 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q183]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q172]
+                                         | q183 : int(1..2)]))
+                               | q172 : int(1..2)])
+                      /\
+                      and([and([q173 <=
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29],
+                                !or([q175 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q175]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q173]
+                                         | q175 : int(1..2)]),
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                   q173]
+                                <
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                   q148]; int(1..3)])
+                           ->
+                           toInt(or([q177 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q177]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q173]
+                                         | q177 : int(1..2)]))
+                           =
+                           toInt(or([q179 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q179]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q173]
+                                         | q179 : int(1..2)]))
+                               | q173 : int(1..2)])))
+                        | q148 : int(1..2)])
+                \/
+                or([q149 <=
+                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                    /\
+                    !or([q151 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                         /\
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                            q151]
+                         =
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                            q149]
+                             | q151 : int(1..2)])
+                    /\
+                    (toInt(or([q153 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                  q153]
+                               =
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                  q149]
+                                   | q153 : int(1..2)]))
+                     <
+                     toInt(or([q155 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                  q155]
+                               =
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                  q149]
+                                   | q155 : int(1..2)]))
+                     /\
+                     (and([q156 <=
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                           /\
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                              q156]
+                           <
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                              q149]
+                           ->
+                           toInt(or([q165 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q165]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q156]
+                                         | q165 : int(1..2)]))
+                           =
+                           toInt(or([q167 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q167]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q156]
+                                         | q167 : int(1..2)]))
+                               | q156 : int(1..2)])
+                      /\
+                      and([and([q157 <=
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29],
+                                !or([q159 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q159]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q157]
+                                         | q159 : int(1..2)]),
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                   q157]
+                                <
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                   q149]; int(1..3)])
+                           ->
+                           toInt(or([q161 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                        q161]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q157]
+                                         | q161 : int(1..2)]))
+                           =
+                           toInt(or([q163 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q163]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                        q157]
+                                         | q163 : int(1..2)]))
+                               | q157 : int(1..2)])))
+                        | q149 : int(1..2)]))
+               ->
+               toInt(or([q229 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q231 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q229]
+                               ->
+                               or([q233 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                      q233]
+                                   =
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q229,
+                                                                                                                      q231]
+                                       | q233 : int(1..2)])
+                                   | q231 : int(1..2)])
+                          /\
+                          and([q235 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                               ->
+                               or([q237 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q229]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q229,
+                                                                                                                      q237]
+                                   =
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                      q235]
+                                       | q237 : int(1..2)])
+                                   | q235 : int(1..2)]))
+                             | q229 : int(1..4)]))
+               =
+               toInt(or([q240 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q240, q241]
+                               ->
+                               or([q243 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                      q243]
+                                   = q241
+                                       | q243 : int(1..2)])
+                                   | q241 : int(1..2)])
+                          /\
+                          and([q245 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q145]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q240,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q145,
+                                                                                                                                                                               q245]]
+                                   | q245 : int(1..2)]))
+                             | q240 : int(1..4)]))
+                   | q145 : int(1..4)])
+          /\
+          and([and([q185 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker,
+                    !or([q188 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q190 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q188]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q188,
+                                                                                                                                                                               q190]]
+                                   | q190 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q191] ->
+                               or([q193 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q188]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q188,
+                                                                                                                      q193]
+                                   = q191
+                                       | q193 : int(1..2)])
+                                   | q191 : int(1..2)]))
+                             | q188 : int(1..4)]),
+                    or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q194] /\
+                        (toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q194])
+                         <
+                         toInt(or([q207 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                      q207]
+                                   = q194
+                                       | q207 : int(1..2)]))
+                         /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q195]
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q195])
+                               =
+                               toInt(or([q213 <=
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                         /\
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q213]
+                                         = q195
+                                             | q213 : int(1..2)]))
+                                   | q195 : int(1..2), q195 < q194])
+                          /\
+                          and([and([q208 <=
+                                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29],
+                                    !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q209] /\
+                                         q209 =
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q208]
+                                             | q209 : int(1..2)]),
+                                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                       q208]
+                                    < q194; int(1..3)])
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185,
+                                                                                                  a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                                                                                     q208]])
+                               =
+                               toInt(or([q211 <=
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                         /\
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q211]
+                                         =
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q208]
+                                             | q211 : int(1..2)]))
+                                   | q208 : int(1..2)])))
+                            | q194 : int(1..2)])
+                    \/
+                    or([q196 <=
+                        a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                        /\
+                        !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q197] /\
+                             q197 =
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                q196]
+                                 | q197 : int(1..2)])
+                        /\
+                        (toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                                                                               q196]])
+                         <
+                         toInt(or([q199 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                      q199]
+                                   =
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                      q196]
+                                       | q199 : int(1..2)]))
+                         /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q195]
+                               /\
+                               q195 <
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                  q196]
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q195])
+                               =
+                               toInt(or([q205 <=
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                         /\
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q205]
+                                         = q195
+                                             | q205 : int(1..2)]))
+                                   | q195 : int(1..2)])
+                          /\
+                          and([and([q200 <=
+                                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29],
+                                    !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q201] /\
+                                         q201 =
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q200]
+                                             | q201 : int(1..2)]),
+                                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                       q200]
+                                    <
+                                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                       q196]; int(1..3)])
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185,
+                                                                                                  a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                                                                                     q200]])
+                               =
+                               toInt(or([q203 <=
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q29]
+                                         /\
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q203]
+                                         =
+                                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q29,
+                                                                                                                            q200]
+                                             | q203 : int(1..2)]))
+                                   | q200 : int(1..2)])))
+                            | q196 : int(1..2)]); int(1..3)])
+               ->
+               toInt(or([q216 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q218 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q216]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q216,
+                                                                                                                                                                               q218]]
+                                   | q218 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q219] ->
+                               or([q221 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q216]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q216,
+                                                                                                                      q221]
+                                   = q219
+                                       | q221 : int(1..2)])
+                                   | q219 : int(1..2)]))
+                             | q216 : int(1..4)]))
+               =
+               toInt(or([q224 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q224, q225]
+                               -> b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q225]
+                                   | q225 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q185, q226] ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q224, q226]
+                                   | q226 : int(1..2)]))
+                             | q224 : int(1..4)]))
+                   | q185 : int(1..4)])))
+            | q29 : int(1..4)])
+    \/
+    or([q31 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+        !or([q34 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+             (and([q36 <=
+                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q34]
+                   ->
+                   b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q34,
+                                                                                                                                                                   q36]]
+                       | q36 : int(1..2)])
+              /\
+              and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q37] ->
+                   or([q39 <=
+                       a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q34]
+                       /\
+                       a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q34,
+                                                                                                          q39]
+                       = q37
+                           | q39 : int(1..2)])
+                       | q37 : int(1..2)]))
+                 | q34 : int(1..4)])
+        /\
+        (toInt(or([q42 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                   (and([q44 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q42]
+                         ->
+                         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                      a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q42,
+                                                                                                                                                                         q44]]
+                             | q44 : int(1..2)])
+                    /\
+                    and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q45] ->
+                         or([q47 <=
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q42]
+                             /\
+                             a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q42,
+                                                                                                                q47]
+                             = q45
+                                 | q47 : int(1..2)])
+                             | q45 : int(1..2)]))
+                       | q42 : int(1..4)]))
+         <
+         toInt(or([q50 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                   (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q50, q51] ->
+                         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q51]
+                             | q51 : int(1..2)])
+                    /\
+                    and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q52] ->
+                         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q50, q52]
+                             | q52 : int(1..2)]))
+                       | q50 : int(1..4)]))
+         /\
+         (and([q54 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+               (or([q57 <=
+                    a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                    /\
+                    (toInt(or([q70 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                  q70]
+                               =
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                  q57]
+                                   | q70 : int(1..2)]))
+                     <
+                     toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                        a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                                                                           q57]])
+                     /\
+                     (and([q71 <=
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                           /\
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                              q71]
+                           <
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                              q57]
+                           ->
+                           toInt(or([q77 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q77]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q71]
+                                         | q77 : int(1..2)]))
+                           =
+                           toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                              a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                                                                                 q71]])
+                               | q71 : int(1..2)])
+                      /\
+                      and([and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                             q56],
+                                !or([q75 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q75]
+                                     = q56
+                                         | q75 : int(1..2)]),
+                                q56 <
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                   q57]; int(1..3)])
+                           ->
+                           toInt(or([q73 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q73]
+                                     = q56
+                                         | q73 : int(1..2)]))
+                           = toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q56])
+                               | q56 : int(1..2)])))
+                        | q57 : int(1..2)])
+                \/
+                or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q55] /\
+                    !or([q68 <=
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                         /\
+                         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                            q68]
+                         = q55
+                             | q68 : int(1..2)])
+                    /\
+                    (toInt(or([q59 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                               /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                  q59]
+                               = q55
+                                   | q59 : int(1..2)]))
+                     < toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q55])
+                     /\
+                     (and([q60 <=
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                           /\
+                           a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                              q60]
+                           < q55
+                           ->
+                           toInt(or([q66 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q66]
+                                     =
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q60]
+                                         | q66 : int(1..2)]))
+                           =
+                           toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31,
+                                                                                              a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                                                                                 q60]])
+                               | q60 : int(1..2)])
+                      /\
+                      and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q56] /\
+                           !or([q64 <=
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                /\
+                                a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                   q64]
+                                = q56
+                                    | q64 : int(1..2)])
+                           ->
+                           toInt(or([q62 <=
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                     /\
+                                     a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                        q62]
+                                     = q56
+                                         | q62 : int(1..2)]))
+                           = toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q56])
+                               | q56 : int(1..2), q56 < q55])))
+                        | q55 : int(1..2)]))
+               ->
+               toInt(or([q108 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q110 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q108]
+                               ->
+                               or([q112 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                      q112]
+                                   =
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q108,
+                                                                                                                      q110]
+                                       | q112 : int(1..2)])
+                                   | q110 : int(1..2)])
+                          /\
+                          and([q114 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                               ->
+                               or([q116 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q108]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q108,
+                                                                                                                      q116]
+                                   =
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                      q114]
+                                       | q116 : int(1..2)])
+                                   | q114 : int(1..2)]))
+                             | q108 : int(1..4)]))
+               =
+               toInt(or([q119 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q119, q120]
+                               ->
+                               or([q122 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                      q122]
+                                   = q120
+                                       | q122 : int(1..2)])
+                                   | q120 : int(1..2)])
+                          /\
+                          and([q124 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q54]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q119,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q54,
+                                                                                                                                                                               q124]]
+                                   | q124 : int(1..2)]))
+                             | q119 : int(1..4)]))
+                   | q54 : int(1..4)])
+          /\
+          and([and([q79 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker,
+                    !or([q82 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q84 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q82]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q82,
+                                                                                                                                                                               q84]]
+                                   | q84 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q85] ->
+                               or([q87 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q82]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q82,
+                                                                                                                      q87]
+                                   = q85
+                                       | q87 : int(1..2)])
+                                   | q85 : int(1..2)]))
+                             | q82 : int(1..4)]),
+                    or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q88] /\
+                        (toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q88]) <
+                         toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q88])
+                         /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89] ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89]) =
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89])
+                                   | q89 : int(1..2), q89 < q88])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89] /\
+                               !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q92] /\
+                                    q92 = q89
+                                        | q92 : int(1..2)])
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89]) =
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89])
+                                   | q89 : int(1..2), q89 < q88])))
+                            | q88 : int(1..2)])
+                    \/
+                    or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q88] /\
+                        !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q91] /\
+                             q91 = q88
+                                 | q91 : int(1..2)])
+                        /\
+                        (toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q88]) <
+                         toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q88])
+                         /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89] ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89]) =
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89])
+                                   | q89 : int(1..2), q89 < q88])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89] /\
+                               !or([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q90] /\
+                                    q90 = q89
+                                        | q90 : int(1..2)])
+                               ->
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q89]) =
+                               toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q31, q89])
+                                   | q89 : int(1..2), q89 < q88])))
+                            | q88 : int(1..2)]); int(1..3)])
+               ->
+               toInt(or([q95 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([q97 <=
+                               a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q95]
+                               ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79,
+                                                                                            a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q95,
+                                                                                                                                                                               q97]]
+                                   | q97 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q98] ->
+                               or([q100 <=
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q95]
+                                   /\
+                                   a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q95,
+                                                                                                                      q100]
+                                   = q98
+                                       | q100 : int(1..2)])
+                                   | q98 : int(1..2)]))
+                             | q95 : int(1..4)]))
+               =
+               toInt(or([q103 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                         (and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q103, q104]
+                               -> b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q104]
+                                   | q104 : int(1..2)])
+                          /\
+                          and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q79, q105] ->
+                               b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q103, q105]
+                                   | q105 : int(1..2)]))
+                             | q103 : int(1..4)]))
+                   | q79 : int(1..4)])))
+            | q31 : int(1..4)]),
+    and([1 =
+         sum([toInt(q19 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                    or([q21 <=
+                        a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q19]
+                        /\
+                        a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q19,
+                                                                                                           q21]
+                        = q1
+                            | q21 : int(1..2)]))
+                  | q19 : int(1..4)])
+             | q1 : int(1..2)]),
+    and([q25 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q25]
+         >= 1
+             | q25 : int(1..4)]),
+    and([q4 + 1 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
+         <
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
+                                                                                            + 1]
+         \/
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4]
+         =
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q4
+                                                                                            + 1]
+         /\
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q4,
+                                                                                            ..]
+         <lex
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q4
+                                                                                            + 1,
+                                                                                            ..]
+             | q4 : int(1..3)]),
+    and([q5 > a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5]
+         = 0
+         /\
+         and([a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q5,
+                                                                                                 q10]
+              = 1 | q10 : int(1..2)])
+             | q5 : int(1..4)]),
+    and([q6 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         (2 <=
+          a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+          ->
+          a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
+                                                                                             1]
+          <
+          a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
+                                                                                             2])
+             | q6 : int(1..4)]),
+    and([q6 <= a_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([q8 >
+              a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q6]
+              ->
+              a_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q6,
+                                                                                                 q8]
+              = 1 | q8 : int(1..2)])
+             | q6 : int(1..4)]),
+    and([1 =
+         sum([toInt(q22 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                    b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q22, q11])
+                  | q22 : int(1..4)])
+             | q11 : int(1..2)]),
+    and([q23 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q23,
+                                                                                 q24])
+                  | q24 : int(1..2)])
+         >= 1
+             | q23 : int(1..4)]),
+    and([q14 + 1 <= b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q14, ..] <lex
+         b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q14 + 1, ..]
+             | q14 : int(1..3)]),
+    and([q15 > b_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([b_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q15, q18] =
+              false
+                  | q18 : int(1..2)])
+             | q15 : int(1..4)])
+
