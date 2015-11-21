@@ -177,62 +177,68 @@ testSingleDir srExtraOptions t@(TestDirFiles{..}) quickOrSlow =
 
 savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
 savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
-    testCase (unwords ["Savile Row:", modelPath]) $ sh $ errExit False $ do
+    testCase (unwords ["Savile Row:", modelPath]) $ do
         let outBase = dropExtension modelPath
-        liftIO $ fileShouldExist (outputsDir </> outBase ++ ".eprime")
-        stdoutSR <- run "savilerow" $
-            [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
-            , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
-            , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
-            , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
-            , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-            ] ++ srOptions srExtraOptions
-        stderrSR   <- lastStderr
-        exitCodeSR <- lastExitCode
+        fileShouldExist (outputsDir </> outBase ++ ".eprime")
+        (stdoutSR, stderrSR, exitCodeSR) <-
+            sh $ errExit False $ do
+                stdoutSR <- run "savilerow" $
+                    [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
+                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
+                    ] ++ srOptions srExtraOptions
+                stderrSR   <- lastStderr
+                exitCodeSR <- lastExitCode
+                return (stdoutSR, stderrSR, exitCodeSR)
         if
             | exitCodeSR == 0 -> do
-                eprimeModel       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
+                eprimeModel       <- readModelFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> liftIO (getDirectoryContents outputsDir)
-                forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                                          <$> getDirectoryContents outputsDir
+                forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
                     let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                     writeFile filename (renderNormal s)
             | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
-            | otherwise -> liftIO $ assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                                        , "Savile Row stderr:"    <+> pretty stderrSR
-                                                                        , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                                                        ]
+            | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                                               , "Savile Row stderr:"    <+> pretty stderrSR
+                                                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                                               ]
 
 
 savileRowWithParams :: String -> TestDirFiles -> FilePath -> FilePath -> TestTree
 savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
-    testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ errExit False $ do
-        liftIO $ fileShouldExist (outputsDir </> modelPath)
-        liftIO $ fileShouldExist (tBaseDir   </> paramPath)
-        model       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
-        param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
-        eprimeParam <- liftIO $ ignoreLogs $ runNameGen $ refineParam model param
+    testCase (unwords ["Savile Row:", modelPath, paramPath]) $ do
+        fileShouldExist (outputsDir </> modelPath)
+        fileShouldExist (tBaseDir   </> paramPath)
+        model       <- readModelFromFile (outputsDir </> modelPath)
+        param       <- readModelFromFile (tBaseDir   </> paramPath)
+        eprimeParam <- ignoreLogs $ runNameGen $ refineParam model param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-        liftIO $ writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
-        stdoutSR <- run "savilerow" $
-            [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
-            , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
-            , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
-            , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
-            , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
-            , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-            ] ++ srOptions srExtraOptions
-        stderrSR   <- lastStderr
-        exitCodeSR <- lastExitCode
+        writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
+        (stdoutSR, stderrSR, exitCodeSR) <-
+            sh $ errExit False $ do
+                stdoutSR <- run "savilerow" $
+                    [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
+                    , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
+                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
+                    ] ++ srOptions srExtraOptions
+                stderrSR   <- lastStderr
+                exitCodeSR <- lastExitCode
+                return (stdoutSR, stderrSR, exitCodeSR)
         if
             | exitCodeSR == 0 -> do
-                eprimeModel       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
+                eprimeModel       <- readModelFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> liftIO (getDirectoryContents outputsDir)
-                forM_ (take nbEprimeSolutions allNats) $ \ i -> liftIO $ do
+                                          <$> getDirectoryContents outputsDir
+                forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
@@ -242,37 +248,40 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
                             writeFile filename (renderNormal s)
             | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
-            | otherwise -> liftIO $ assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                                        , "Savile Row stderr:"    <+> pretty stderrSR
-                                                                        , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                                                        ]
+            | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                                               , "Savile Row stderr:"    <+> pretty stderrSR
+                                                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                                               ]
 
 
 validateSolutionNoParam :: TestDirFiles -> [FilePath] -> TestTree
 validateSolutionNoParam TestDirFiles{..} solutionPaths =
     testCaseSteps "Validating solutions" $ \ step -> do
-        essence  <- liftIO $ readModelFromFile essenceFile
+        essence <- readModelFromFile essenceFile
         forM_ solutionPaths $ \ solutionPath -> do
             step (unwords ["Validating solution:", solutionPath])
-            solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-            result   <- liftIO $ runExceptT $ ignoreLogs $ validateSolution essence def solution
+            fileShouldExist (outputsDir </> solutionPath)
+            solution <- readModelFromFile (outputsDir </> solutionPath)
+            result   <- runExceptT $ ignoreLogs $ validateSolution essence def solution
             case result of
-                Left err -> liftIO $ assertFailure $ renderNormal err
+                Left err -> assertFailure $ renderNormal err
                 Right () -> return ()
 
 
 validateSolutionWithParams :: TestDirFiles -> [(FilePath, [FilePath])] -> TestTree
 validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
     testCaseSteps "Validating solutions" $ \ step -> do
-        essence  <- liftIO $ readModelFromFile essenceFile
+        essence <- readModelFromFile essenceFile
         forM_ paramSolutionPaths $ \ (paramPath, solutionPaths) -> do
-            param    <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
+            fileShouldExist (tBaseDir </> paramPath)
+            param <- readModelFromFile (tBaseDir </> paramPath)
             forM_ solutionPaths $ \ solutionPath -> do
                 step (unwords ["Validating solution:", paramPath, solutionPath])
-                solution <- liftIO $ readModelFromFile (outputsDir </> solutionPath)
-                result   <- liftIO $ runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
+                fileShouldExist (outputsDir </> solutionPath)
+                solution <- readModelFromFile (outputsDir </> solutionPath)
+                result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
                 case result of
-                    Left err -> liftIO $ assertFailure $ renderNormal err
+                    Left err -> assertFailure $ renderNormal err
                     Right () -> return ()
 
 
