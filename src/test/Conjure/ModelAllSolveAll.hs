@@ -179,6 +179,7 @@ savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
 savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
     testCase (unwords ["Savile Row:", modelPath]) $ sh $ errExit False $ do
         let outBase = dropExtension modelPath
+        liftIO $ fileShouldExist (outputsDir </> outBase ++ ".eprime")
         stdoutSR <- run "savilerow" $
             [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
             , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
@@ -209,6 +210,8 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
 savileRowWithParams :: String -> TestDirFiles -> FilePath -> FilePath -> TestTree
 savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ sh $ errExit False $ do
+        liftIO $ fileShouldExist (outputsDir </> modelPath)
+        liftIO $ fileShouldExist (tBaseDir   </> paramPath)
         model       <- liftIO $ readModelFromFile (outputsDir </> modelPath)
         param       <- liftIO $ readModelFromFile (tBaseDir   </> paramPath)
         eprimeParam <- liftIO $ ignoreLogs $ runNameGen $ refineParam model param
@@ -428,6 +431,12 @@ dirShouldExist d = do
     b <- doesDirectoryExist d
     unless b $
         assertFailure $ "dir does not exist: " ++ d
+
+fileShouldExist :: FilePath -> IO ()
+fileShouldExist f = do
+    b <- doesFileExist f
+    unless b $
+        assertFailure $ "file does not exist: " ++ f
 
 
 modelAll :: FilePath -> Model -> IO ()
