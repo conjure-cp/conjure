@@ -60,7 +60,7 @@ import qualified Conjure.Rules.Vertical.Set.ExplicitVarSizeWithMarker as Vertica
 import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrence
 
 import qualified Conjure.Rules.Horizontal.MSet as Horizontal.MSet
-import qualified Conjure.Rules.Vertical.MSet.ExplicitVarSizeWithFlags as Vertical.MSet.ExplicitVarSizeWithFlags
+import qualified Conjure.Rules.Vertical.MSet.ExplicitWithFlags as Vertical.MSet.ExplicitWithFlags
 
 import qualified Conjure.Rules.Horizontal.Function as Horizontal.Function
 import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function.Function1D
@@ -977,8 +977,8 @@ verticalRules =
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
 
-    , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Comprehension
-    , Vertical.MSet.ExplicitVarSizeWithFlags.rule_Freq
+    , Vertical.MSet.ExplicitWithFlags.rule_Comprehension
+    , Vertical.MSet.ExplicitWithFlags.rule_Freq
 
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Comprehension_Defined

@@ -26,7 +26,7 @@ import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithDummy
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
-import Conjure.Representations.MSet.ExplicitVarSizeWithFlags
+import Conjure.Representations.MSet.ExplicitWithFlags
 import Conjure.Representations.Function.Function1D
 import Conjure.Representations.Function.Function1DPartial
 import Conjure.Representations.Function.FunctionND
@@ -155,7 +155,7 @@ dispatch domain = do
             Set_ExplicitVarSizeWithFlags      -> setExplicitVarSizeWithFlags
             _ -> nope
         DomainMSet r _ _ -> case r of
-            MSet_ExplicitVarSizeWithFlags     -> msetExplicitVarSizeWithFlags
+            MSet_ExplicitWithFlags            -> msetExplicitWithFlags
             _ -> nope
         DomainFunction r _ _ _ -> case r of
             Function_1D                       -> function1D
@@ -194,7 +194,7 @@ reprsStandardOrderNoLevels = return $ concat
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitVarSizeWithFlags
+      , msetExplicitWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -217,7 +217,7 @@ reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitVarSizeWithFlags
+      , msetExplicitWithFlags
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -240,7 +240,7 @@ reprsSparseOrder = map return
     , setExplicit, setExplicitVarSizeWithDummy, setExplicitVarSizeWithMarker
     , setOccurrence, setExplicitVarSizeWithFlags              -- redundant
 
-    , msetExplicitVarSizeWithFlags
+    , msetExplicitWithFlags
 
     , functionAsRelation dispatch (reprOptions reprsSparseOrder)
     , function1D, functionND

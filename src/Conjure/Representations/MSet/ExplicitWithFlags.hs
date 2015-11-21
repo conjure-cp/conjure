@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Representations.MSet.ExplicitVarSizeWithFlags ( msetExplicitVarSizeWithFlags ) where
+module Conjure.Representations.MSet.ExplicitWithFlags ( msetExplicitWithFlags ) where
 
 -- conjure
 import Conjure.Prelude
@@ -12,18 +12,18 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-msetExplicitVarSizeWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
+msetExplicitWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+msetExplicitWithFlags = Representation chck downD structuralCons downC up
 
     where
 
         chck :: TypeOf_ReprCheck m
         chck f (DomainMSet _ attrs innerDomain) =
-            map (DomainMSet MSet_ExplicitVarSizeWithFlags attrs) <$> f innerDomain
+            map (DomainMSet MSet_ExplicitWithFlags attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameFlag   = mkOutName MSet_ExplicitVarSizeWithFlags (Just "Flags")
-        nameValues = mkOutName MSet_ExplicitVarSizeWithFlags (Just "Values")
+        nameFlag   = mkOutName MSet_ExplicitWithFlags (Just "Flags")
+        nameValues = mkOutName MSet_ExplicitWithFlags (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             MSetAttr (SizeAttr_Size x) _ -> return x
@@ -63,7 +63,7 @@ msetExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitVarSizeWithFlags"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainMSet MSet_ExplicitVarSizeWithFlags attrs@(MSetAttr sizeAttrs _) innerDomain) = do
+        structuralCons f downX1 (DomainMSet MSet_ExplicitWithFlags attrs@(MSetAttr sizeAttrs _) innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
             let
                 orderingWhenFlagged flags values = do
