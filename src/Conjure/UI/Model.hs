@@ -61,6 +61,7 @@ import qualified Conjure.Rules.Vertical.Set.Occurrence as Vertical.Set.Occurrenc
 
 import qualified Conjure.Rules.Horizontal.MSet as Horizontal.MSet
 import qualified Conjure.Rules.Vertical.MSet.ExplicitWithFlags as Vertical.MSet.ExplicitWithFlags
+import qualified Conjure.Rules.Vertical.MSet.ExplicitWithRepetition as Vertical.MSet.ExplicitWithRepetition
 
 import qualified Conjure.Rules.Horizontal.Function as Horizontal.Function
 import qualified Conjure.Rules.Vertical.Function.Function1D as Vertical.Function.Function1D
@@ -979,6 +980,8 @@ verticalRules =
 
     , Vertical.MSet.ExplicitWithFlags.rule_Comprehension
     , Vertical.MSet.ExplicitWithFlags.rule_Freq
+
+    , Vertical.MSet.ExplicitWithRepetition.rule_Comprehension
 
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Comprehension_Defined

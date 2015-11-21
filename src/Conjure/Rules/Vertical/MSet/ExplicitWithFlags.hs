@@ -6,7 +6,7 @@ import Conjure.Rules.Import
 
 
 rule_Comprehension :: Rule
-rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` theRule where
+rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, s), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} s) -> return (pat, s)
@@ -17,7 +17,7 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
         DomainMatrix index _   <- domainOf values
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for mset-comprehension, ExplicitVarSizeWithFlags representation"
+            ( "Vertical rule for mset-comprehension, ExplicitWithFlags representation"
             , do
                 (jPat, j) <- quantifiedVar
                 let val = [essence| &values[&j] |]
@@ -32,7 +32,7 @@ rule_Comprehension = "mset-comprehension{ExplicitVarSizeWithFlags}" `namedRule` 
 
 
 rule_Freq :: Rule
-rule_Freq = "mset-freq{ExplicitVarSizeWithFlags}" `namedRule` theRule where
+rule_Freq = "mset-freq{ExplicitWithFlags}" `namedRule` theRule where
     theRule p = do
         (mset, x)              <- match opFreq p
         TypeMSet{}             <- typeOf mset
@@ -40,7 +40,7 @@ rule_Freq = "mset-freq{ExplicitVarSizeWithFlags}" `namedRule` theRule where
         [flags, values]        <- downX1 mset
         DomainMatrix index _   <- domainOf values
         return
-            ( "Vertical rule for mset-freq, ExplicitVarSizeWithFlags representation"
+            ( "Vertical rule for mset-freq, ExplicitWithFlags representation"
             , do
                 (iPat, i) <- quantifiedVar
                 return

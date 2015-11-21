@@ -684,6 +684,7 @@ data HasRepresentation
     | Set_ExplicitVarSizeWithDummy
 
     | MSet_ExplicitWithFlags
+    | MSet_ExplicitWithRepetition
 
     | Function_1D
     | Function_1DPartial
@@ -803,6 +804,7 @@ textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = retu
 textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
 textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
 textToRepresentation t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
+textToRepresentation t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
 textToRepresentation t []             | t == "Function1D"                 = return Function_1D
 textToRepresentation t []             | t == "Function1DPartial"          = return Function_1DPartial
 textToRepresentation t []             | t == "FunctionND"                 = return Function_ND
@@ -822,6 +824,7 @@ representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithF
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
 representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
 representationToShortText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
+representationToShortText MSet_ExplicitWithRepetition    = "ExplicitWithRepetition"
 representationToShortText Function_1D                    = "Function1D"
 representationToShortText Function_1DPartial             = "Function1DPartial"
 representationToShortText Function_ND                    = "FunctionND"
@@ -835,23 +838,11 @@ representationToShortText Partition_Occurrence           = "PartitionOccurrence"
 representationToShortText r = bug ("representationToText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
-representationToFullText Set_Occurrence                 = "Occurrence"
-representationToFullText Set_Explicit                   = "Explicit"
-representationToFullText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
-representationToFullText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
-representationToFullText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
-representationToFullText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
-representationToFullText Function_1D                    = "Function1D"
-representationToFullText Function_1DPartial             = "Function1DPartial"
-representationToFullText Function_ND                    = "FunctionND"
-representationToFullText Function_NDPartial             = "FunctionNDPartial"
 representationToFullText (Function_AsRelation repr)     = mconcat [ "FunctionAsRelation"
                                                                   , "["
                                                                   , representationToFullText repr
                                                                   , "]"
                                                                   ]
-representationToFullText Sequence_ExplicitBounded       = "ExplicitBounded"
-representationToFullText Relation_AsMatrix              = "RelationAsMatrix"
 representationToFullText (Relation_AsSet repr)          = mconcat [ "RelationAsSet"
                                                                   , "["
                                                                   , representationToFullText repr
@@ -864,8 +855,7 @@ representationToFullText (Partition_AsSet repr1 repr2)  = mconcat [ "PartitionAs
                                                                   , representationToFullText repr2
                                                                   , "]"
                                                                   ]
-representationToFullText Partition_Occurrence           = "PartitionOccurrence"
-representationToFullText r = bug ("representationToText:" <+> pretty (show r))
+representationToFullText r = representationToShortText r
 
 
 normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c

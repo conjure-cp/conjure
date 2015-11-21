@@ -1,0 +1,219 @@
+{-# LANGUAGE QuasiQuotes #-}
+
+module Conjure.Representations.MSet.ExplicitWithRepetition ( msetExplicitWithRepetition ) where
+
+-- conjure
+import Conjure.Prelude
+import Conjure.Language
+import Conjure.Language.DomainSizeOf
+import Conjure.Language.Expression.DomainSizeOf ()
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
+import Conjure.Representations.Internal
+import Conjure.Representations.Common
+
+
+msetExplicitWithRepetition :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+msetExplicitWithRepetition = Representation chck downD structuralCons downC up
+
+    where
+
+        chck :: TypeOf_ReprCheck m
+        chck f (DomainMSet _ attrs innerDomain) =
+            map (DomainMSet MSet_ExplicitWithRepetition attrs) <$> f innerDomain
+        chck _ _ = return []
+
+        nameFlag   = mkOutName MSet_ExplicitWithRepetition (Just "Flag")
+        nameValues = mkOutName MSet_ExplicitWithRepetition (Just "Values")
+
+        getMaxSize attrs innerDomain = case attrs of
+            MSetAttr (SizeAttr_Size x) _ -> return x
+            MSetAttr (SizeAttr_MaxSize x) _ -> return x
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
+            MSetAttr _ (OccurAttr_MaxOccur x) -> do y <- domainSizeOf innerDomain ; return (x * y)
+            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> do y <- domainSizeOf innerDomain ; return (x * y)
+            _ -> fail ("getMaxSize, mset not supported. attributes:" <+> pretty attrs)
+
+        getMinOccur attrs = case attrs of
+            MSetAttr _ (OccurAttr_MinOccur x) -> Just x
+            MSetAttr _ (OccurAttr_MinMaxOccur x _) -> Just x
+            _ -> Nothing
+
+        getMaxOccurAsGiven attrs = case attrs of
+            MSetAttr _ (OccurAttr_MaxOccur x) -> return x
+            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
+            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
+
+        getMaxOccur attrs = case attrs of
+            MSetAttr _ (OccurAttr_MaxOccur x) -> return x
+            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
+            MSetAttr (SizeAttr_Size x) _ -> return x
+            MSetAttr (SizeAttr_MaxSize x) _ -> return x
+            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
+            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
+
+        downD :: TypeOf_DownD m
+        downD (name, DomainMSet _ attrs innerDomain) = do
+            maxSize  <- getMaxSize attrs innerDomain
+            maxOccur <- getMaxOccur attrs
+            let indexDomain =           mkDomainIntB 1 [essence| &maxSize * &maxOccur |]
+            let flagDomain  = defRepr $ mkDomainIntB 0 [essence| &maxSize * &maxOccur |]
+            return $ Just
+                [ ( nameFlag name
+                  , flagDomain
+                  )
+                , ( nameValues name
+                  , DomainMatrix indexDomain innerDomain
+                  )
+                ]
+        downD _ = na "{downD} ExplicitVarSizeWithRepetition"
+
+        structuralCons :: TypeOf_Structural m
+        structuralCons f downX1 (DomainMSet MSet_ExplicitWithRepetition attrs@(MSetAttr sizeAttrs _) innerDomain) = do
+            maxSize  <- getMaxSize attrs innerDomain
+            maxOccur <- getMaxOccur attrs
+            let maxIndex = [essence| &maxSize * &maxOccur |]
+            let
+                orderingUpToFlag flag values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            forAll &iPat : int(1..&maxIndex-1) . &i+1 <= &flag -> &values[&i] .<= &values[&i+1]
+                        |]
+
+                dontCareAfterFlag flag values = do
+                    (iPat, i) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            forAll &iPat : int(1..&maxIndex) . &i > &flag -> dontCare(&values[&i])
+                        |]
+
+                minOccurrenceCons mset flag values = do
+                    (iPat, i) <- quantifiedVar
+                    return
+                        [ [essence|
+                            forAll &iPat : int(1..&maxIndex) .
+                                &i <= &flag -> freq(&mset, &values[&i]) >= &minOccur
+                                  |]
+                        | Just minOccur <- [getMinOccur attrs]
+                        ]
+
+                maxOccurrenceCons mset flag values = do
+                    (iPat, i) <- quantifiedVar
+                    return
+                        [ [essence|
+                            forAll &iPat : int(1..&maxIndex) .
+                                &i <= &flag -> freq(&mset, &values[&i]) <= &maxOccur_
+                                  |]
+                        | Just maxOccur_ <- [getMaxOccurAsGiven attrs]
+                        ]
+
+                innerStructuralCons flag values = do
+                    (iPat, i) <- quantifiedVar
+                    let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) . &i <= &flag -> &b |]
+
+                    -- preparing structural constraints for the inner guys
+                    innerStructuralConsGen <- f innerDomain
+
+                    let inLoop = [essence| &values[&i] |]
+                    outs <- innerStructuralConsGen inLoop
+                    return (map activeZone outs)
+
+            return $ \ mset -> do
+                refs <- downX1 mset
+                case refs of
+                    [flag, values] ->
+                        concat <$> sequence
+                            [ orderingUpToFlag  flag values
+                            , dontCareAfterFlag flag values
+                            , minOccurrenceCons mset flag values
+                            , maxOccurrenceCons mset flag values
+                            , return (mkSizeCons sizeAttrs flag)
+                            , innerStructuralCons flag values
+                            ]
+                    _ -> na "{structuralCons} ExplicitVarSizeWithRepetition"
+
+        structuralCons _ _ _ = na "{structuralCons} ExplicitVarSizeWithRepetition"
+
+        downC :: TypeOf_DownC m
+        downC ( name
+              , domain@(DomainMSet _ attrs innerDomain)
+              , ConstantAbstract (AbsLitMSet constants)
+              ) = do
+            maxSize   <- getMaxSize attrs innerDomain
+            maxOccur  <- getMaxOccur attrs
+
+            maxSizeInt <-
+                case maxSize of
+                    ConstantInt x -> return x
+                    _ -> fail $ vcat
+                            [ "Expecting an integer for the maxSize attribute."
+                            , "But got:" <+> pretty maxSize
+                            , "When working on:" <+> pretty name
+                            , "With domain:" <+> pretty domain
+                            ]
+            maxOccurInt <-
+                case maxOccur of
+                    ConstantInt x -> return x
+                    _ -> fail $ vcat
+                            [ "Expecting an integer for the maxOccur attribute."
+                            , "But got:" <+> pretty maxSize
+                            , "When working on:" <+> pretty name
+                            , "With domain:" <+> pretty domain
+                            ]
+            let maxIndexInt = maxSizeInt * maxOccurInt
+
+            let indexDomain0 = mkDomainIntB 0 (ConstantInt maxIndexInt)
+            let indexDomain1 = mkDomainIntB 1 (ConstantInt maxIndexInt)
+
+            z <- zeroVal innerDomain
+            let zeroes = replicate (fromInteger (maxIndexInt - genericLength constants)) z
+
+            return $ Just
+                [ ( nameFlag name
+                  , defRepr indexDomain0
+                  , ConstantInt (genericLength constants)
+                  )
+                , ( nameValues name
+                  , DomainMatrix indexDomain1 innerDomain
+                  , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
+                  )
+                ]
+        downC _ = na "{downC} ExplicitVarSizeWithRepetition"
+
+        up :: TypeOf_Up m
+        up ctxt (name, domain) =
+            case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
+                (Just flag, Just constantMatrix) ->
+                    case viewConstantInt flag of
+                        -- TODO: check if indices match
+                        Just flagInt ->
+                            case viewConstantMatrix constantMatrix of
+                                Just (_, vals) ->
+                                    return (name, ConstantAbstract $ AbsLitMSet
+                                                    (genericTake flagInt vals) )
+                                _ -> fail $ vcat
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        , "But got:" <+> pretty constantMatrix
+                                        , "When working on:" <+> pretty name
+                                        , "With domain:" <+> pretty domain
+                                        ]
+                        _ -> fail $ vcat
+                                [ "Expecting an integer literal for:" <+> pretty (nameFlag name)
+                                , "But got:" <+> pretty flag
+                                , "When working on:" <+> pretty name
+                                , "With domain:" <+> pretty domain
+                                ]
+                (Nothing, _) -> fail $ vcat $
+                    [ "(in MSet ExplicitVarSizeWithRepetition up 1)"
+                    , "No value for:" <+> pretty (nameFlag name)
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty domain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
+                (_, Nothing) -> fail $ vcat $
+                    [ "(in MSet ExplicitVarSizeWithRepetition up 2)"
+                    , "No value for:" <+> pretty (nameValues name)
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty domain
+                    ] ++
+                    ("Bindings in context:" : prettyContext ctxt)
