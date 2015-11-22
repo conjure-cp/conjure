@@ -1,5 +1,6 @@
 .PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all
 
+SHELL := /bin/bash
 
 install:
 	@bash etc/build/install.sh
