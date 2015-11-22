@@ -1,4 +1,5 @@
-.PHONY: install preinstall refreeze ghci clean
+.PHONY: install preinstall refreeze ghci clean runtests_once_quick runtests_once_slow runtests_once_all runtests_quick runtests_slow runtests_all
+
 
 install:
 	@bash etc/build/install.sh
@@ -38,3 +39,35 @@ ghci:
 
 clean:
 	@bash etc/build/clean.sh
+
+
+runtests_once_quick:
+	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-update +RTS -s
+
+runtests_once_slow:
+	dist/build/conjure-testing/conjure-testing --select-tests slow --rerun-update +RTS -s
+
+runtests_once_all:
+	dist/build/conjure-testing/conjure-testing --select-tests all --rerun-update +RTS -s
+
+
+runtests_quick:
+	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-update +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s
+
+runtests_slow:
+	dist/build/conjure-testing/conjure-testing --select-tests slow --rerun-update +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests slow --rerun-filter failures,exceptions,new +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests slow --rerun-filter failures,exceptions,new +RTS -s
+
+runtests_all:
+	dist/build/conjure-testing/conjure-testing --select-tests all --rerun-update +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests all --rerun-filter failures,exceptions,new +RTS -s
+	tests/acceptAllOutputs.sh > /dev/null
+	dist/build/conjure-testing/conjure-testing --select-tests all --rerun-filter failures,exceptions,new +RTS -s
