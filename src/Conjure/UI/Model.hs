@@ -595,9 +595,7 @@ updateDeclarations model = do
                     let
                         -- the refined domains for the high level declaration
                         domains = [ d | (n, d) <- representations, n == nm ]
-                    -- duplicate declarations can happen, due to say ExplicitVarSizeWithMarker in the outer level
-                    -- and 2 disticnt representations in the inner level. removing them with nub.
-                    fmap nub $ concatMapM (onEachDomain forg nm) domains
+                    concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
                 Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
