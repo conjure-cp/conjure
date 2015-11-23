@@ -43,22 +43,22 @@ clean:
 
 
 runtests_quick:
-	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-update                         +RTS -s > >(tee runtests_quick_stdout1.log) 2> >(tee runtests_quick_stderr1.log >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout2.log) 2> >(tee runtests_quick_stderr2.log >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout3.log) 2> >(tee runtests_quick_stderr3.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-update                         +RTS -s > >(tee runtests_quick_stdout1.log) 2> >(tee runtests_quick_stderr1.log >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout2.log) 2> >(tee runtests_quick_stderr2.log >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout3.log) 2> >(tee runtests_quick_stderr3.log >&2)
 
 runtests_slow:
-	dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-update                         +RTS -s > >(tee runtests_slow_stdout1.log)  2> >(tee runtests_slow_stderr1.log  >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout2.log)  2> >(tee runtests_slow_stderr2.log  >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout3.log)  2> >(tee runtests_slow_stderr3.log  >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-update                         +RTS -s > >(tee runtests_slow_stdout1.log)  2> >(tee runtests_slow_stderr1.log  >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout2.log)  2> >(tee runtests_slow_stderr2.log  >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout3.log)  2> >(tee runtests_slow_stderr3.log  >&2)
 
 runtests_all:
-	dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-update                         +RTS -s > >(tee runtests_all_stdout1.log)   2> >(tee runtests_all_stderr1.log   >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout2.log)   2> >(tee runtests_all_stderr2.log   >&2)
-	tests/acceptAllOutputs.sh > /dev/null
-	dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout3.log)   2> >(tee runtests_all_stderr3.log   >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-update                         +RTS -s > >(tee runtests_all_stdout1.log)   2> >(tee runtests_all_stderr1.log   >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout2.log)   2> >(tee runtests_all_stderr2.log   >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout3.log)   2> >(tee runtests_all_stderr3.log   >&2)
