@@ -37,9 +37,8 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
                    ]
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName (Relation_AsSet def) Nothing
-
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
         outDomain_ (DomainRelation () (RelationAttr sizeAttr _binRelAttrs) innerDomains) =
@@ -58,7 +57,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
-            return $ Just [ ( outName name , outDom ) ]
+            return $ Just [ ( outName inDom name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 inDom = do
@@ -103,7 +102,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
             outDom <- outDomain inDom
             rDownC
                 (dispatch outDom)
-                ( outName name
+                ( outName inDom name
                 , outDom
                 , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitTuple) vals
                 )
@@ -115,7 +114,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation Relation_AsSet{} _ _)) =
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
                     let tupleOut (viewConstantTuple -> Just xs) = return xs
                         tupleOut c = fail $ "Expecting a tuple, but got:" <+> pretty c
@@ -123,13 +122,13 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
                     return (name, ConstantAbstract (AbsLitRelation vals))
                 Nothing -> fail $ vcat $
                     [ "(in RelationAsSet up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant -> fail $ vcat $
-                    [ "Incompatible value for:" <+> pretty (outName name)
+                    [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     , "Expected a set value, but got:" <+> pretty constant

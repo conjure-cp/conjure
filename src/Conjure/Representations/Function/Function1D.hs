@@ -38,15 +38,15 @@ function1D = Representation chck downD structuralCons downC up
                    ]
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName Function_1D Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction Function_1D
+        downD (name, domain@(DomainFunction Function_1D
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
-            [ ( outName name
+                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr = return $ Just
+            [ ( outName domain name
               , DomainMatrix
                   (forgetRepr innerDomainFr)
                   innerDomainTo
@@ -123,10 +123,10 @@ function1D = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction Function_1D
+              , domain@(DomainFunction Function_1D
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr
-                    innerDomainTo
+                    innerDomainTo)
               , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
             froms            <- domainValues innerDomainFr
@@ -140,7 +140,7 @@ function1D = Representation chck downD structuralCons downC up
                                 Just v  -> return v
                 ]
             return $ Just
-                [ ( outName name
+                [ ( outName domain name
                   , DomainMatrix (forgetRepr innerDomainFr) innerDomainTo
                   , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomainFr) valsOut
                   ) ]
@@ -150,10 +150,10 @@ function1D = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainFunction Function_1D
                                 (FunctionAttr _ PartialityAttr_Total _)
                                 innerDomainFr _)) =
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in Function1D up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
@@ -166,7 +166,7 @@ function1D = Representation chck downD structuralCons downC up
                                    , ConstantAbstract $ AbsLitFunction $ zip froms vals
                                    )
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
+                                [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain

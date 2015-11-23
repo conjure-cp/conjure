@@ -32,20 +32,20 @@ functionNDPartial = Representation chck downD structuralCons downC up
                    ]
         chck _ _ = return []
 
-        nameFlags  = mkOutName Function_NDPartial (Just "Flags")
-        nameValues = mkOutName Function_NDPartial (Just "Values")
+        nameFlags  = mkOutName (Just "Flags")
+        nameValues = mkOutName (Just "Values")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction Function_NDPartial
+        downD (name, domain@(DomainFunction Function_NDPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     (viewAsDomainTuple -> Just innerDomainFrs)
-                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
+                    innerDomainTo)) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
-                [ ( nameFlags name
+                [ ( nameFlags domain name
                   , unroll (map forgetRepr innerDomainFrs) DomainBool
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
@@ -149,10 +149,10 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction Function_NDPartial
+              , domain@(DomainFunction Function_NDPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
-                    innerDomainTo
+                    innerDomainTo)
               , ConstantAbstract (AbsLitFunction vals)
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
@@ -199,11 +199,11 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             (outFlags, outValues) <- unrollC (map forgetRepr innerDomainFrs) []
             return $ Just
-                [ ( nameFlags name
+                [ ( nameFlags domain name
                   , unrollD (map forgetRepr innerDomainFrs) DomainBool
                   , outFlags
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , unrollD (map forgetRepr innerDomainFrs) innerDomainTo
                   , outValues
                   )
@@ -218,7 +218,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
             | Just (mk, _inspect) <- mkLensAsDomainTuple innerDomainFr =
 
-            case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameFlags domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flagMatrix, Just valuesMatrix) -> do
                     let
                         allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
@@ -252,14 +252,14 @@ functionNDPartial = Representation chck downD structuralCons downC up
 
                 (Nothing, _) -> fail $ vcat $
                     [ "(in FunctionNDPartial up 1)"
-                    , "No value for:" <+> pretty (nameFlags name)
+                    , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in FunctionNDPartial up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

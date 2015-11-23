@@ -23,8 +23,8 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             map (DomainSet Set_ExplicitVarSizeWithDummy attrs) <$> f innerDomain
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName Set_ExplicitVarSizeWithDummy Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
@@ -57,11 +57,11 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         calcDummyElemC d = bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty d)
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain@DomainInt{}) = do
+        downD (name, domain@(DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain@DomainInt{})) = do
             let domainWithDummy = calcDummyDomain innerDomain
             maxSize <- getMaxSize attrs innerDomain
             return $ Just
-                [ ( outName name
+                [ ( outName domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxSize])
                       domainWithDummy
@@ -137,7 +137,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             let dummyElem = calcDummyElemC innerDomain
             let dummies = replicate (fromInteger (maxSizeInt - genericLength constants)) dummyElem
             return $ Just
-                [ ( outName name
+                [ ( outName domain name
                   , DomainMatrix (indexDomain 1) innerDomain
                   , ConstantAbstract $ AbsLitMatrix (indexDomain 1) (constants ++ dummies)
                   )
@@ -147,10 +147,10 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet Set_ExplicitVarSizeWithDummy _ innerDomain)) = do
             let dummyElem = calcDummyElemC innerDomain
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in Set ExplicitVarSizeWithDummy up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
@@ -160,7 +160,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
                         Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet [ v | v <- vals, v /= dummyElem ]))
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
+                                [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain

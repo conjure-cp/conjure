@@ -18,6 +18,7 @@ module Conjure.Language.Domain
     , textToRepresentation, representationToShortText, representationToFullText
     , isPrimitiveDomain, domainCanIndexMatrix, getIndices
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
+    , reprTreeEncoded
     , forgetRepr, changeRepr, defRepr
     , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainAny
     , typeOfDomain
@@ -41,6 +42,9 @@ import Test.QuickCheck ( Arbitrary(..), choose, oneof, vectorOf, sized )
 
 -- containers
 import Data.Set as S ( Set, empty, toList, union )
+
+-- syb
+import Data.Data ( toConstr, constrIndex )
 
 
 data Domain r x
@@ -172,6 +176,26 @@ instance Serialize a => Serialize (Tree a)
 instance Hashable  a => Hashable  (Tree a)
 instance ToJSON    a => ToJSON    (Tree a) where toJSON = genericToJSON jsonOptions
 instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON jsonOptions
+
+-- | This is to be used when defining `Conjure.Representations.Internal.mkOutName`.
+--   Reason is to avoid sharing variables for parts of the same decision variable with differing representations.
+--   Example case:
+--      (1) find x : set {A} of (int(a..b) , set {B} of int(c..d))
+--      (2) find x : set {A} of (int(a..b) , set {C} of int(c..d))
+--      Here x_1's should not be shared!
+--      If they are, the channelling and symmetry breaking constraints will clash and solutions will be lost.
+reprTreeEncoded :: Domain HasRepresentation x -> Text
+reprTreeEncoded = mconcat . enc1 . reprTree
+    where
+        enc1 (Tree lbl sub) =
+            (maybe
+                (bug "reprTreeEncoded: top-most representation is Nothing")
+                representationToShortText
+                lbl)
+            : concatMap enc sub
+        enc  (Tree lbl sub) =
+            (maybe "" representationConstrIndex lbl)
+            : concatMap enc sub
 
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
@@ -710,6 +734,9 @@ instance FromJSON  HasRepresentation where parseJSON = genericParseJSON jsonOpti
 instance Default HasRepresentation where
     def = NoRepresentation
 
+representationConstrIndex :: HasRepresentation -> Text
+representationConstrIndex = stringToText . ("R"++) . show . constrIndex . toConstr
+
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
@@ -835,7 +862,7 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
-representationToShortText r = bug ("representationToText:" <+> pretty (show r))
+representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
 representationToFullText (Function_AsRelation repr)     = mconcat [ "FunctionAsRelation"

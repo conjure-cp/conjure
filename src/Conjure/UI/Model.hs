@@ -484,8 +484,8 @@ addToTrail Config{..}
             }
 
 
--- | Add a true-constraint, for every decision variable and
---                          for every parameter that is not used in the model.
+-- | Add a true-constraint, for every decision variable (whether it is used or not in the model) and
+--                          for every parameter (that is not used in the model).
 --   A true-constraint has no effect, other than forcing Conjure to produce a representation.
 --   It can be used to make sure that a declaration doesn't get lost (if it isn't used anywhere in the model)
 --   It can also be used to produce "extra" representations (if it is used in the model)

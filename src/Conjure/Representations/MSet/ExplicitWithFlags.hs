@@ -22,8 +22,8 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
             map (DomainMSet MSet_ExplicitWithFlags attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameFlag   = mkOutName MSet_ExplicitWithFlags (Just "Flags")
-        nameValues = mkOutName MSet_ExplicitWithFlags (Just "Values")
+        nameFlag   = mkOutName (Just "Flags")
+        nameValues = mkOutName (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             MSetAttr (SizeAttr_Size x) _ -> return x
@@ -47,16 +47,16 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
             _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
-        downD (name, DomainMSet _ attrs innerDomain) = do
+        downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
             maxSize  <- getMaxSize attrs innerDomain
             maxOccur <- getMaxOccur attrs
             let indexDomain =           mkDomainIntB 1 maxSize
             let flagDomain  = defRepr $ mkDomainIntB 0 maxOccur
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , DomainMatrix indexDomain flagDomain
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix indexDomain innerDomain
                   )
                 ]
@@ -152,11 +152,11 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
             let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt 0)
 
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , DomainMatrix indexDomain DomainBool
                   , ConstantAbstract $ AbsLitMatrix indexDomain (counts ++ falses)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix indexDomain innerDomain
                   , ConstantAbstract $ AbsLitMatrix indexDomain (map fst constants ++ zeroes)
                   )
@@ -165,7 +165,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
-            case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameFlag domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
                     case viewConstantMatrix flagMatrix of
                         -- TODO: check if indices match
@@ -177,27 +177,27 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                                                     | (ConstantInt i,v) <- zip flags vals
                                                     ] )
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (nameFlag name)
+                                [ "Expecting a matrix literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
                     [ "(in MSet ExplicitVarSizeWithFlags up 1)"
-                    , "No value for:" <+> pretty (nameFlag name)
+                    , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in MSet ExplicitVarSizeWithFlags up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

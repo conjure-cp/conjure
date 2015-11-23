@@ -31,16 +31,17 @@ functionND = Representation chck downD structuralCons downC up
                    ]
         chck _ _ = return []
 
-        nameValues = mkOutName Function_ND Nothing
+        nameValues :: Domain HasRepresentation x -> Name -> Name
+        nameValues = mkOutName Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction Function_ND
+        downD (name, domain@(DomainFunction Function_ND
                     (FunctionAttr _ PartialityAttr_Total _)
                     (viewAsDomainTuple -> Just innerDomainFrs)
-                    innerDomainTo) | all domainCanIndexMatrix innerDomainFrs = do
+                    innerDomainTo)) | all domainCanIndexMatrix innerDomainFrs = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
-                [ ( nameValues name
+                [ ( nameValues domain name
                   , unroll (map forgetRepr innerDomainFrs) innerDomainTo
                   )
                 ]
@@ -140,10 +141,10 @@ functionND = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction Function_ND
+              , domain@(DomainFunction Function_ND
                     (FunctionAttr _ PartialityAttr_Total _)
                     innerDomainFr@(viewAsDomainTuple -> Just innerDomainFrs)
-                    innerDomainTo
+                    innerDomainTo)
               , ConstantAbstract (AbsLitFunction vals)
               ) | all domainCanIndexMatrix innerDomainFrs
                 , Just (_mk, inspect) <- mkLensAsDomainTuple innerDomainFr = do
@@ -181,7 +182,7 @@ functionND = Representation chck downD structuralCons downC up
 
             outValues <- unrollC (map forgetRepr innerDomainFrs) []
             return $ Just
-                [ ( nameValues name
+                [ ( nameValues domain name
                   , unrollD (map forgetRepr innerDomainFrs) innerDomainTo
                   , outValues
                   )
@@ -196,7 +197,7 @@ functionND = Representation chck downD structuralCons downC up
 
             | Just (mk, _inspect) <- mkLensAsDomainTuple innerDomainFr =
 
-            case lookup (nameValues name) ctxt of
+            case lookup (nameValues domain name) ctxt of
                 Just valuesMatrix -> do
                     let
                         allIndices :: (MonadFail m, Pretty r) => [Domain r Constant] -> m [[Constant]]
@@ -220,7 +221,7 @@ functionND = Representation chck downD structuralCons downC up
                            )
                 Nothing -> fail $ vcat $
                     [ "(in FunctionND up)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

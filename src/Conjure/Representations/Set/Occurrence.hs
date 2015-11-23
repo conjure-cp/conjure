@@ -18,12 +18,12 @@ setOccurrence = Representation chck downD structuralCons downC up
         chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = map (DomainSet Set_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName Set_Occurrence Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet Set_Occurrence _attrs innerDomain@DomainInt{}) = return $ Just
-            [ ( outName name
+        downD (name, domain@(DomainSet Set_Occurrence _attrs innerDomain@DomainInt{})) = return $ Just
+            [ ( outName domain name
               , DomainMatrix (forgetRepr innerDomain) DomainBool
               )
             ]
@@ -43,12 +43,12 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges)
+              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges))
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
                 return $ Just
-                    [ ( outName name
+                    [ ( outName domain name
                       , DomainMatrix (forgetRepr innerDomain) DomainBool
                       , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
@@ -61,7 +61,7 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Just constantMatrix ->
                     case viewConstantMatrix constantMatrix of
                         Just (_, vals) -> do
@@ -72,14 +72,14 @@ setOccurrence = Representation chck downD structuralCons downC up
                                             , viewConstantBool b == Just True
                                             ] )
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
+                                [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constantMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 Nothing -> fail $ vcat $
                     [ "(in Set Occurrence up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

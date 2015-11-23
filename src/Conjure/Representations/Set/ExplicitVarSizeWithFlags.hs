@@ -23,8 +23,8 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             map (DomainSet Set_ExplicitVarSizeWithFlags attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameFlag   = mkOutName Set_ExplicitVarSizeWithFlags (Just "Flags")
-        nameValues = mkOutName Set_ExplicitVarSizeWithFlags (Just "Values")
+        nameFlag   = mkOutName (Just "Flags")
+        nameValues = mkOutName (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
@@ -33,14 +33,14 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
+        downD (name, domain@(DomainSet _ (SetAttr attrs) innerDomain)) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain = mkDomainIntB 1 maxSize
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , DomainMatrix (forgetRepr indexDomain) DomainBool
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix (forgetRepr indexDomain) innerDomain
                   )
                 ]
@@ -125,7 +125,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantBool False)
 
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , DomainMatrix
                       (forgetRepr indexDomain)
                       DomainBool
@@ -133,7 +133,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                       (forgetRepr indexDomain)
                       (trues ++ falses)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix
                       (forgetRepr indexDomain)
                       innerDomain
@@ -146,7 +146,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
-            case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameFlag domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flagMatrix, Just constantMatrix) ->
                     case viewConstantMatrix flagMatrix of
                         -- TODO: check if indices match
@@ -159,27 +159,27 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                                                     , viewConstantBool i == Just True
                                                     ] )
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (nameFlag name)
+                                [ "Expecting a matrix literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flagMatrix
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Set ExplicitVarSizeWithFlags up 1)"
-                    , "No value for:" <+> pretty (nameFlag name)
+                    , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in Set ExplicitVarSizeWithFlags up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

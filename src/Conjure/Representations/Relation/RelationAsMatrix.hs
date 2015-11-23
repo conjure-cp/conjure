@@ -21,14 +21,15 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             map (DomainRelation Relation_AsMatrix attrs) . sequence <$> mapM f innerDomains
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName Relation_AsMatrix Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainRelation Relation_AsMatrix _ innerDomains) | all domainCanIndexMatrix innerDomains = do
+        downD (name, domain@(DomainRelation Relation_AsMatrix _ innerDomains))
+                        | all domainCanIndexMatrix innerDomains = do
             let unroll is j = foldr DomainMatrix j is
             return $ Just
-                [ ( outName name
+                [ ( outName domain name
                   , unroll (map forgetRepr innerDomains) DomainBool
                   ) ]
         downD (name, domain) = na $ vcat [ "{downD} RelationAsMatrix"
@@ -74,7 +75,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainRelation Relation_AsMatrix _ innerDomains
+              , domain@(DomainRelation Relation_AsMatrix _ innerDomains)
               , ConstantAbstract (AbsLitRelation vals)
               ) | all domainCanIndexMatrix innerDomains = do
             let
@@ -108,7 +109,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
             outConstant <- unrollC (map forgetRepr innerDomains) []
 
             return $ Just
-                [ ( outName name
+                [ ( outName domain name
                   , unrollD (map forgetRepr innerDomains) DomainBool
                   , outConstant
                   ) ]
@@ -122,10 +123,10 @@ relationAsMatrix = Representation chck downD structuralCons downC up
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainRelation Relation_AsMatrix _ innerDomains)) =
 
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in RelationAsMatrix up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

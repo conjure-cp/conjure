@@ -44,8 +44,8 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                    ]
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName (Partition_AsSet def def) Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
         outDomain_ (DomainPartition () (PartitionAttr{..}) innerDomain) =
@@ -64,7 +64,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
-            return $ Just [ ( outName name , outDom ) ]
+            return $ Just [ ( outName inDom name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
@@ -123,7 +123,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
             outDom <- outDomain inDom
             rDownC
                 (dispatch outDom)
-                ( outName name
+                ( outName inDom name
                 , outDom
                 , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) vals
                 )
@@ -135,10 +135,10 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition Partition_AsSet{} _ _)) =
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in PartitionAsSet up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
@@ -151,7 +151,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                 Just (ConstantUndefined msg ty) ->        -- undefined propagates
                     return (name, ConstantUndefined ("PartitionAsSet " `mappend` msg) ty)
                 Just constant -> fail $ vcat $
-                    [ "Incompatible value for:" <+> pretty (outName name)
+                    [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     , "Expected a set value, but got:" <+> pretty constant

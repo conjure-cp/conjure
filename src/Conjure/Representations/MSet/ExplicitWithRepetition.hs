@@ -22,8 +22,8 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             map (DomainMSet MSet_ExplicitWithRepetition attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameFlag   = mkOutName MSet_ExplicitWithRepetition (Just "Flag")
-        nameValues = mkOutName MSet_ExplicitWithRepetition (Just "Values")
+        nameFlag   = mkOutName (Just "Flag")
+        nameValues = mkOutName (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             MSetAttr (SizeAttr_Size x) _ -> return x
@@ -52,16 +52,16 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
-        downD (name, DomainMSet _ attrs innerDomain) = do
+        downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
             maxSize  <- getMaxSize attrs innerDomain
             maxOccur <- getMaxOccur attrs
             let indexDomain =           mkDomainIntB 1 [essence| &maxSize * &maxOccur |]
             let flagDomain  = defRepr $ mkDomainIntB 0 [essence| &maxSize * &maxOccur |]
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , flagDomain
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix indexDomain innerDomain
                   )
                 ]
@@ -169,11 +169,11 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             let zeroes = replicate (fromInteger (maxIndexInt - genericLength constants)) z
 
             return $ Just
-                [ ( nameFlag name
+                [ ( nameFlag domain name
                   , defRepr indexDomain0
                   , ConstantInt (genericLength constants)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix indexDomain1 innerDomain
                   , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
                   )
@@ -182,7 +182,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
-            case (lookup (nameFlag name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameFlag domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just flag, Just constantMatrix) ->
                     case viewConstantInt flag of
                         -- TODO: check if indices match
@@ -192,27 +192,27 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                                     return (name, ConstantAbstract $ AbsLitMSet
                                                     (genericTake flagInt vals) )
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
                         _ -> fail $ vcat
-                                [ "Expecting an integer literal for:" <+> pretty (nameFlag name)
+                                [ "Expecting an integer literal for:" <+> pretty (nameFlag domain name)
                                 , "But got:" <+> pretty flag
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
                     [ "(in MSet ExplicitVarSizeWithRepetition up 1)"
-                    , "No value for:" <+> pretty (nameFlag name)
+                    , "No value for:" <+> pretty (nameFlag domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in MSet ExplicitVarSizeWithRepetition up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

@@ -22,8 +22,8 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         chck f (DomainSet _ attrs innerDomain) = map (DomainSet Set_ExplicitVarSizeWithMarker attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameMarker = mkOutName Set_ExplicitVarSizeWithMarker (Just "Marker")
-        nameValues = mkOutName Set_ExplicitVarSizeWithMarker (Just "Values")
+        nameMarker = mkOutName (Just "Marker")
+        nameValues = mkOutName (Just "Values")
 
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
@@ -31,14 +31,14 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             _ -> domainSizeOf innerDomain
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet _ (SetAttr attrs) innerDomain) = do
+        downD (name, domain@(DomainSet _ (SetAttr attrs) innerDomain)) = do
             maxSize <- getMaxSize attrs innerDomain
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
                   )
                 ]
@@ -108,11 +108,11 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
                   , ConstantInt (genericLength constants)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
                   , ConstantAbstract $ AbsLitMatrix (indexDomain 1) (constants ++ zeroes)
                   )
@@ -121,7 +121,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
-            case (lookup (nameMarker name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
@@ -131,27 +131,27 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                 (_, ConstantUndefined msg ty) ->         -- undefined propagates
                                     return (name, ConstantUndefined ("Set-ExplicitVarSizeWithMarker " `mappend` msg) ty)
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
                         _ -> fail $ vcat
-                                [ "Expecting an integer literal for:" <+> pretty (nameMarker name)
+                                [ "Expecting an integer literal for:" <+> pretty (nameMarker domain name)
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Set ExplicitVarSizeWithMarker up 1)"
-                    , "No value for:" <+> pretty (nameMarker name)
+                    , "No value for:" <+> pretty (nameMarker domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in Set ExplicitVarSizeWithMarker up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

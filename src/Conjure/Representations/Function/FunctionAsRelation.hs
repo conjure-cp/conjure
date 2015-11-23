@@ -30,8 +30,8 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
                    ]
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName (Function_AsRelation def) Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
         outDomain_ (DomainFunction ()
@@ -54,7 +54,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
         downD :: TypeOf_DownD m
         downD (name, inDom) = do
             outDom <- outDomain inDom
-            return $ Just [ ( outName name , outDom ) ]
+            return $ Just [ ( outName inDom name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1
@@ -140,7 +140,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
             outDom <- outDomain inDom
             rDownC
                 (dispatch outDom)
-                ( outName name
+                ( outName inDom name
                 , outDom
                 , ConstantAbstract $ AbsLitRelation $ map (\ (a,b) -> [a,b] ) vals
                 )
@@ -152,7 +152,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainFunction Function_AsRelation{} _ _ _)) =
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Just (ConstantAbstract (AbsLitRelation pairs)) -> do
                     let pairOut [a,b] = return (a,b)
                         pairOut c = fail $ "Expecting a 2-tuple, but got:" <+> prettyList prParens "," c
@@ -160,13 +160,13 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
                     return (name, ConstantAbstract (AbsLitFunction vals))
                 Nothing -> fail $ vcat $
                     [ "(in FunctionAsRelation up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just constant -> fail $ vcat $
-                    [ "Incompatible value for:" <+> pretty (outName name)
+                    [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     , "Expected a set value, but got:" <+> pretty constant

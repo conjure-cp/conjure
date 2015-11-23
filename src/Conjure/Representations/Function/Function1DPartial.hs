@@ -29,20 +29,20 @@ function1DPartial = Representation chck downD structuralCons downC up
                    ]
         chck _ _ = return []
 
-        nameFlags  = mkOutName Function_1DPartial (Just "Flags")
-        nameValues = mkOutName Function_1DPartial (Just "Values")
+        nameFlags  = mkOutName (Just "Flags")
+        nameValues = mkOutName (Just "Values")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainFunction Function_1DPartial
+        downD (name, domain@(DomainFunction Function_1DPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
-                    innerDomainTo) | domainCanIndexMatrix innerDomainFr = return $ Just
-            [ ( nameFlags name
+                    innerDomainTo)) | domainCanIndexMatrix innerDomainFr = return $ Just
+            [ ( nameFlags domain name
               , DomainMatrix
                   (forgetRepr innerDomainFr)
                   DomainBool
               )
-            , ( nameValues name
+            , ( nameValues domain name
               , DomainMatrix
                   (forgetRepr innerDomainFr)
                   innerDomainTo
@@ -127,10 +127,10 @@ function1DPartial = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainFunction Function_1DPartial
+              , domain@(DomainFunction Function_1DPartial
                     (FunctionAttr _ PartialityAttr_Partial _)
                     innerDomainFr
-                    innerDomainTo
+                    innerDomainTo)
               , ConstantAbstract (AbsLitFunction vals)
               ) | domainCanIndexMatrix innerDomainFr = do
             z <- zeroVal innerDomainTo
@@ -143,7 +143,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                                 Just v  -> return (ConstantBool True , v)
                 ]
             return $ Just
-                [ ( nameFlags name
+                [ ( nameFlags domain name
                   , DomainMatrix
                       (forgetRepr innerDomainFr)
                       DomainBool
@@ -151,7 +151,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                       (forgetRepr innerDomainFr)
                       flagsOut
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix
                       (forgetRepr innerDomainFr)
                       innerDomainTo
@@ -166,7 +166,7 @@ function1DPartial = Representation chck downD structuralCons downC up
         up ctxt (name, domain@(DomainFunction Function_1DPartial
                                 (FunctionAttr _ PartialityAttr_Partial _)
                                 innerDomainFr _)) =
-            case (lookup (nameFlags name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameFlags domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
                   Just (ConstantAbstract (AbsLitMatrix _ valuesMatrix)) ) -> do
                     froms          <- domainValues innerDomainFr
@@ -180,21 +180,21 @@ function1DPartial = Representation chck downD structuralCons downC up
                     return ( name, ConstantAbstract $ AbsLitFunction $ catMaybes functionValues )
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Function1DPartial up 1)"
-                    , "No value for:" <+> pretty (nameFlags name)
+                    , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in Function1DPartial up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 _ -> fail $ vcat $
-                    [ "Expected matrix literals for:" <+> pretty (nameFlags name)
-                                            <+> "and" <+> pretty (nameValues name)
+                    [ "Expected matrix literals for:" <+> pretty (nameFlags domain name)
+                                            <+> "and" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

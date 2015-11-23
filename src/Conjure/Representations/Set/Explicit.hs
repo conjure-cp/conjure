@@ -18,12 +18,12 @@ setExplicit = Representation chck downD structuralCons downC up
             map (DomainSet Set_Explicit attrs) <$> f innerDomain
         chck _ _ = return []
 
-        outName :: Name -> Name
-        outName = mkOutName Set_Explicit Nothing
+        outName :: Domain HasRepresentation x -> Name -> Name
+        outName = mkOutName Nothing
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain) = return $ Just
-            [ ( outName name
+        downD (name, domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain)) = return $ Just
+            [ ( outName domain name
               , DomainMatrix
                   (DomainInt [RangeBounded 1 size])
                   innerDomain
@@ -65,12 +65,12 @@ setExplicit = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain
+              , domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain)
               , ConstantAbstract (AbsLitSet constants)
               ) =
             let outIndexDomain = mkDomainIntB 1 size
             in  return $ Just
-                    [ ( outName name
+                    [ ( outName domain name
                       , DomainMatrix outIndexDomain innerDomain
                       , ConstantAbstract $ AbsLitMatrix outIndexDomain constants
                       ) ]
@@ -78,10 +78,10 @@ setExplicit = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainSet Set_Explicit (SetAttr (SizeAttr_Size _)) _)) =
-            case lookup (outName name) ctxt of
+            case lookup (outName domain name) ctxt of
                 Nothing -> fail $ vcat $
                     [ "(in Set Explicit up)"
-                    , "No value for:" <+> pretty (outName name)
+                    , "No value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
@@ -91,7 +91,7 @@ setExplicit = Representation chck downD structuralCons downC up
                         Just (_, vals) ->
                             return (name, ConstantAbstract (AbsLitSet vals))
                         _ -> fail $ vcat
-                                [ "Expecting a matrix literal for:" <+> pretty (outName name)
+                                [ "Expecting a matrix literal for:" <+> pretty (outName domain name)
                                 , "But got:" <+> pretty constant
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain

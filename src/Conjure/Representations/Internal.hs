@@ -95,6 +95,6 @@ rDownToX repr forg name domain = do
                       | (n,d) <- pairs
                       ]
 
-mkOutName :: HasRepresentation -> Maybe Name -> Name -> Name
-mkOutName r Nothing       origName = mconcat [origName, "_", Name (representationToShortText r)]
-mkOutName r (Just suffix) origName = mconcat [origName, "_", Name (representationToShortText r), "_", suffix]
+mkOutName ::  Maybe Name -> Domain HasRepresentation x -> Name -> Name
+mkOutName Nothing       domain origName = mconcat [origName, "_", Name (reprTreeEncoded domain)]
+mkOutName (Just suffix) domain origName = mconcat [origName, "_", Name (reprTreeEncoded domain), "_", suffix]

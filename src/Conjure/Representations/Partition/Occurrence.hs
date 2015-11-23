@@ -24,26 +24,26 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             = map (DomainPartition Partition_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameFlags    = mkOutName Partition_Occurrence (Just "Flags")
-        nameParts    = mkOutName Partition_Occurrence (Just "Parts")
-        nameNumParts = mkOutName Partition_Occurrence (Just "NumParts")
+        nameFlags    = mkOutName (Just "Flags")
+        nameParts    = mkOutName (Just "Parts")
+        nameNumParts = mkOutName (Just "NumParts")
 
         downD :: TypeOf_DownD m
-        downD (name, DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain)
+        downD (name, domain@(DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain))
             | domainCanIndexMatrix innerDomain = do
             maxNbParts <- domainSizeOf innerDomain
             return $ Just
-                [ ( nameFlags name
+                [ ( nameFlags domain name
                   , DomainMatrix
                       (forgetRepr innerDomain)
                       DomainBool
                   )
-                , ( nameParts name
+                , ( nameParts domain name
                   , DomainMatrix
                       (forgetRepr innerDomain)
                       (DomainInt [RangeBounded 1 maxNbParts])
                   )
-                , ( nameNumParts name
+                , ( nameNumParts domain name
                   , DomainInt [RangeBounded 0 maxNbParts]
                   )
                 ]
@@ -152,7 +152,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain@(DomainPartition Partition_Occurrence _ innerDomain)) =
-            case (lookup (nameFlags name) ctxt, lookup (nameParts name) ctxt) of
+            case (lookup (nameFlags domain name) ctxt, lookup (nameParts domain name) ctxt) of
                 ( Just (ConstantAbstract (AbsLitMatrix _ flagMatrix)) ,
                   Just (ConstantAbstract (AbsLitMatrix _ partMatrix)) ) -> do
                     elems <- domainValues innerDomain
@@ -172,21 +172,21 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                            )
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Partition Occurrence up 1)"
-                    , "No value for:" <+> pretty (nameFlags name)
+                    , "No value for:" <+> pretty (nameFlags domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in Partition Occurrence up 2)"
-                    , "No value for:" <+> pretty (nameParts name)
+                    , "No value for:" <+> pretty (nameParts domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 _ -> fail $ vcat $
-                    [ "Expected matrix literals for:" <+> pretty (nameFlags name)
-                                            <+> "and" <+> pretty (nameParts name)
+                    [ "Expected matrix literals for:" <+> pretty (nameFlags domain name)
+                                            <+> "and" <+> pretty (nameParts domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++

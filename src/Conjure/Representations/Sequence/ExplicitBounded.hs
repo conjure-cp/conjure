@@ -20,8 +20,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             map (DomainSequence Sequence_ExplicitBounded attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameMarker = mkOutName Sequence_ExplicitBounded (Just "Length")
-        nameValues = mkOutName Sequence_ExplicitBounded (Just "Values")
+        nameMarker = mkOutName (Just "Length")
+        nameValues = mkOutName (Just "Values")
 
         hasMaxSize SizeAttr_Size{} = True
         hasMaxSize SizeAttr_MaxSize{} = True
@@ -33,23 +33,29 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         getMaxSize _ = fail "Unknown maxSize"
 
         downD :: TypeOf_DownD m
-        downD (name, DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) _) innerDomain) =
+        downD (name, domain@(DomainSequence
+                        Sequence_ExplicitBounded
+                        (SequenceAttr (SizeAttr_Size size) _)
+                        innerDomain)) =
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , DomainInt [RangeBounded size size]
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 size])
                       innerDomain
                   ) ]
-        downD (name, DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr _) innerDomain) = do
+        downD (name, domain@(DomainSequence
+                        Sequence_ExplicitBounded
+                        (SequenceAttr sizeAttr _)
+                        innerDomain)) = do
             maxSize <- getMaxSize sizeAttr
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , DomainInt [RangeBounded 0 maxSize]
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxSize])
                       innerDomain
@@ -115,15 +121,15 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) innerDomain
+              , domain@(DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) innerDomain)
               , ConstantAbstract (AbsLitSequence constants)
               ) =
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , DomainInt [RangeBounded size size]
                   , ConstantInt (genericLength constants)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix (DomainInt [RangeBounded 1 size]) innerDomain
                   , ConstantAbstract $ AbsLitMatrix (DomainInt [RangeBounded 1 size]) constants
                   )
@@ -146,11 +152,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
             return $ Just
-                [ ( nameMarker name
+                [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
                   , ConstantInt (genericLength constants)
                   )
-                , ( nameValues name
+                , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
                   , ConstantAbstract $ AbsLitMatrix (indexDomain 1) (constants ++ zeroes)
                   )
@@ -159,7 +165,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
-            case (lookup (nameMarker name) ctxt, lookup (nameValues name) ctxt) of
+            case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
                         ConstantInt card ->
@@ -167,27 +173,27 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))
                                 _ -> fail $ vcat
-                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues name)
+                                        [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
                                         , "But got:" <+> pretty constantMatrix
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
                         _ -> fail $ vcat
-                                [ "Expecting an integer literal for:" <+> pretty (nameMarker name)
+                                [ "Expecting an integer literal for:" <+> pretty (nameMarker domain name)
                                 , "But got:" <+> pretty marker
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]
                 (Nothing, _) -> fail $ vcat $
                     [ "(in Sequence ExplicitBounded up 1)"
-                    , "No value for:" <+> pretty (nameMarker name)
+                    , "No value for:" <+> pretty (nameMarker domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 (_, Nothing) -> fail $ vcat $
                     [ "(in Sequence ExplicitBounded up 2)"
-                    , "No value for:" <+> pretty (nameValues name)
+                    , "No value for:" <+> pretty (nameValues domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
                     ] ++
