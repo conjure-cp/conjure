@@ -169,8 +169,7 @@ mainWithArgs config@Solve{..} = do
             ( sort (mStatements essenceM)
             -- when the following flags change, invalidate hash
             -- nested tuples, because :(
-            , ( outputDirectory
-              , numberingStart
+            , ( numberingStart
               , smartFilenames
               , strategyQ
               , strategyA
