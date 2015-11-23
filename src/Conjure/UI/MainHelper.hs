@@ -37,8 +37,8 @@ import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 -- text
 import qualified Data.Text as T ( unlines, isInfixOf )
 
--- async
-import Control.Concurrent.Async ( mapConcurrently )
+-- parallel-io
+import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
 
 
 mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
@@ -197,6 +197,7 @@ mainWithArgs config@Solve{..} = do
         case msolutions of
             Left msg        -> userErr1 msg
             Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
+        liftIO $ stopGlobalPool
 
     liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
 
@@ -227,18 +228,21 @@ mainWithArgs config@Solve{..} = do
         savileRows :: [FilePath] -> IO (Either Doc [(FilePath, FilePath, FilePath)])
         savileRows eprimes = fmap combineResults $
             if null essenceParams
-                then mapConcurrently (savileRowNoParam config)
-                        eprimes
-                else mapConcurrently (uncurry (savileRowWithParams config))
-                        [ (m, p) | m <- eprimes, p <- essenceParams ]
+                then parallel [ savileRowNoParam config m
+                              | m <- eprimes
+                              ]
+                else parallel [ savileRowWithParams config m p
+                              | m <- eprimes
+                              , p <- essenceParams
+                              ]
 
         validating :: [(FilePath, FilePath, FilePath)] -> IO ()
-        validating solutions = void $
+        validating solutions =
             if null essenceParams
-                then mapConcurrently (validateSolutionNoParam config)
-                        [ sol | (_, _, sol) <- solutions ]
-                else mapConcurrently (uncurry (validateSolutionWithParams config))
-                        [ (sol, p) | (_, p, sol) <- solutions ]
+                then parallel_ [ validateSolutionNoParam config sol
+                               | (_, _, sol) <- solutions ]
+                else parallel_ [ validateSolutionWithParams config sol p
+                               | (_, p, sol) <- solutions ]
 
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()

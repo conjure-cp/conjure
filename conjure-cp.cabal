@@ -227,7 +227,6 @@ Library
 
     build-depends    : base
                      , aeson
-                     , async
                      , bytestring
                      , cereal >= 0.5.1.0
                      , cmdargs
@@ -237,8 +236,9 @@ Library
                      , filepath
                      , hashable
                      , integer-gmp
-                     , mtl
                      , megaparsec >= 4.1.1
+                     , mtl
+                     , parallel-io
                      , pipes
                      , pretty > 1.1.1.1
                      , QuickCheck
