@@ -92,7 +92,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                     return
                         [ [essence|
                             forAll &iPat : int(1..&maxIndex) .
-                                &i <= &flag -> freq(&mset, &values[&i]) >= &minOccur
+                                &i <= &flag -> (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]

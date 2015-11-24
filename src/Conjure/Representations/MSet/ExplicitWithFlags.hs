@@ -95,7 +95,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                 minOccurrenceCons flags = do
                     (iPat, i) <- quantifiedVar
                     return
-                        [ [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] >= &minOccur |]
+                        [ [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] = 0 \/ &flags[&i] >= &minOccur |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
 
