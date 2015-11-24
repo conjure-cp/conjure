@@ -164,8 +164,8 @@ mainWithArgs config@Solve{..} = do
             Just file -> return (lines file)
 
     -- start the show!
-    newHashes <- execWriterT $ do
-        eprimes <- doIfNotCached
+    (eprimes, newHashes) <- runWriterT $ do
+        doIfNotCached
             ( sort (mStatements essenceM)
             -- when the following flags change, invalidate hash
             -- nested tuples, because :(
@@ -192,13 +192,12 @@ mainWithArgs config@Solve{..} = do
             savedHashes
             (pp logLevel "Using cached models." >> getEprimes)
             conjuring
-        msolutions <- liftIO $ savileRows eprimes
-        case msolutions of
-            Left msg        -> userErr1 msg
-            Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
-        liftIO $ stopGlobalPool
-
     liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
+    msolutions <- liftIO $ savileRows eprimes
+    case msolutions of
+        Left msg        -> userErr1 msg
+        Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
+    liftIO $ stopGlobalPool
 
     where
         conjuring :: m [FilePath]

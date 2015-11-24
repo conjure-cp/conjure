@@ -122,7 +122,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getContents, getLine, readFile )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getLine )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
 
@@ -183,6 +183,9 @@ import qualified Text.PrettyPrint as Pr
 
 -- containers
 import qualified Data.Set as S
+
+-- strict
+import System.IO.Strict ( readFile )
 
 import System.Directory as X
     ( getDirectoryContents, doesDirectoryExist, doesFileExist
