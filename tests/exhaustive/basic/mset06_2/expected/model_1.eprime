@@ -1,0 +1,15 @@
+language ESSENCE' 1.0
+
+find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..12)] of int(0..3)
+find x_ExplicitWithFlags_Values: matrix indexed by [int(1..12)] of int(1..4)
+such that
+    and([x_ExplicitWithFlags_Flags[q1 + 1] > 0 ->
+         x_ExplicitWithFlags_Values[q1] < x_ExplicitWithFlags_Values[q1 + 1]
+             | q1 : int(1..11)]),
+    and([x_ExplicitWithFlags_Flags[q2] = 0 -> x_ExplicitWithFlags_Values[q2] = 1
+             | q2 : int(1..12)]),
+    and([x_ExplicitWithFlags_Flags[q3 + 1] > 0 -> x_ExplicitWithFlags_Flags[q3] > 0
+             | q3 : int(1..11)]),
+    and([x_ExplicitWithFlags_Flags[q4] = 0 \/ x_ExplicitWithFlags_Flags[q4] >= 2
+             | q4 : int(1..12)])
+

@@ -4,13 +4,13 @@ given fin1: int
 given fin2: int
 given fin3: int
 given fin4: int
-given a_Explicit_ExplicitVarSizeWithDummy:
+given a_ExplicitR6_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4 + 1)
 letting let1 be -1000
 find x: int(-1000..1000)
 such that
     x =
-    max([max([a_Explicit_ExplicitVarSizeWithDummy[q1, q3]
-                  | q3 : int(1..fin2), a_Explicit_ExplicitVarSizeWithDummy[q1, q3] != fin4 + 1])
+    max([max([a_ExplicitR6_ExplicitVarSizeWithDummy[q1, q3]
+                  | q3 : int(1..fin2), a_ExplicitR6_ExplicitVarSizeWithDummy[q1, q3] != fin4 + 1])
              | q1 : int(1..fin1)])
 
