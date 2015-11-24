@@ -668,7 +668,7 @@ tests = testGroup "representations"
                     , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 8]
                     ]
             mid =
-                [ ( "x_Explicit"
+                [ ( "x_ExplicitR3"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 2))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                         [ ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 3]
@@ -678,7 +678,7 @@ tests = testGroup "representations"
                         ]
                   ) ]
             low =
-                [ ( "x_Explicit_Explicit"
+                [ ( "x_ExplicitR3_Explicit"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                         [ ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [ConstantInt 2, ConstantInt 3]
@@ -802,11 +802,11 @@ tests = testGroup "representations"
                     , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
-                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                [ ( "x_ExplicitVarSizeWithMarkerR5_Marker"
                   , intDomain 0 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Values"
+                , ( "x_ExplicitVarSizeWithMarkerR5_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
@@ -817,15 +817,15 @@ tests = testGroup "representations"
                   )
                 ]
             low =
-                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                [ ( "x_ExplicitVarSizeWithMarkerR5_Marker"
                   , intDomain 0 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker"
+                , ( "x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker"
                   , DomainMatrix   (intDomain 1 4) (intDomain 0 3)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantInt 1,ConstantInt 2,ConstantInt 3,ConstantInt 0]
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values"
+                , ( "x_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
@@ -889,11 +889,11 @@ tests = testGroup "representations"
                     , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
-                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                [ ( "x_ExplicitVarSizeWithFlagsR4_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Values"
+                , ( "x_ExplicitVarSizeWithFlagsR4_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
@@ -904,11 +904,11 @@ tests = testGroup "representations"
                   )
                 ]
             low =
-                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                [ ( "x_ExplicitVarSizeWithFlagsR4_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags"
+                , ( "x_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Flags"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) DomainBool)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool True,ConstantBool False,ConstantBool False]
@@ -917,7 +917,7 @@ tests = testGroup "representations"
                       , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False,ConstantBool False,ConstantBool False]
                       ]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Values"
+                , ( "x_ExplicitVarSizeWithFlagsR4_Values_ExplicitVarSizeWithFlags_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 3) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2,ConstantInt 0,ConstantInt 0]
@@ -987,11 +987,11 @@ tests = testGroup "representations"
                     , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
-                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                [ ( "x_ExplicitVarSizeWithMarkerR2_Marker"
                   , intDomain 0 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Values"
+                , ( "x_ExplicitVarSizeWithMarkerR2_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
@@ -1002,11 +1002,11 @@ tests = testGroup "representations"
                   )
                 ]
             low =
-                [ ( "x_ExplicitVarSizeWithMarker_Marker"
+                [ ( "x_ExplicitVarSizeWithMarkerR2_Marker"
                   , intDomain 0 4
                   , ConstantInt 3
                   )
-                , ( "x_ExplicitVarSizeWithMarker_Values_Occurrence"
+                , ( "x_ExplicitVarSizeWithMarkerR2_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
@@ -1052,11 +1052,11 @@ tests = testGroup "representations"
                     , ConstantAbstract $ AbsLitSet [ConstantInt 3, ConstantInt 4, ConstantInt 6]
                     ]
             mid =
-                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                [ ( "x_ExplicitVarSizeWithFlagsR2_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Values"
+                , ( "x_ExplicitVarSizeWithFlagsR2_Values"
                   , DomainMatrix   (intDomain 1 4) (DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize (ConstantInt 3))) (intDomain 0 9))
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitSet [ConstantInt 2]
@@ -1067,11 +1067,11 @@ tests = testGroup "representations"
                   )
                 ]
             low =
-                [ ( "x_ExplicitVarSizeWithFlags_Flags"
+                [ ( "x_ExplicitVarSizeWithFlagsR2_Flags"
                   , DomainMatrix   (intDomain 1 4) DomainBool
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4) [ConstantBool True,ConstantBool True,ConstantBool True,ConstantBool False]
                   )
-                , ( "x_ExplicitVarSizeWithFlags_Values_Occurrence"
+                , ( "x_ExplicitVarSizeWithFlagsR2_Values_Occurrence"
                   , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 0 9) DomainBool)
                   , ConstantAbstract $ AbsLitMatrix (intDomain 1 4)
                       [ ConstantAbstract $ AbsLitMatrix (intDomain 0 9) -- 2
