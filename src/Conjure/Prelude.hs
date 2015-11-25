@@ -107,6 +107,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, dropWhile, unwords, intersect
                               , take, drop
+                              , takeWhile
                               , head, init, tail, last
                               , inits, tails
                               , findIndex

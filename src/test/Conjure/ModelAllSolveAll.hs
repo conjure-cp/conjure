@@ -6,7 +6,6 @@ module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.ModelDiff
 import Conjure.UI.IO
 import Conjure.UI.Model
 import Conjure.UI.RefineParam
@@ -25,10 +24,15 @@ import Test.Tasty.Options ( IsOption(..) )
 import Shelly ( run, errExit, lastStderr, lastExitCode )
 
 -- text
-import qualified Data.Text as T ( isInfixOf, unlines )
+import qualified Data.Text as T ( isInfixOf, lines, unlines )
+import qualified Data.Text.IO as T ( readFile )
 
 -- containers
 import qualified Data.Set as S ( fromList, toList, empty, null, difference )
+
+-- Diff
+import Data.Algorithm.Diff ( Diff(..), getGroupedDiff )
+import Data.Algorithm.DiffOutput ( ppDiff )
 
 
 srOptions :: String -> [Text]
@@ -315,11 +319,22 @@ checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step 
         isFile <- doesFileExist generatedPath
         if isFile
             then do
-                e <- readModelFromFile expectedPath
-                g <- readModelFromFile generatedPath
-                case modelDiff e g of
-                    Nothing -> return ()
-                    Just msg -> assertFailure $ renderNormal $ "files differ:" <+> msg
+                e <- T.lines <$> T.readFile expectedPath
+                g <- takeWhile (/= "$ Conjure's") . T.lines <$> T.readFile generatedPath
+                let
+                    fmapDiff f (First x) = First (f x)
+                    fmapDiff f (Second x) = Second (f x)
+                    fmapDiff f (Both x y) = Both (f x) (f y)
+
+                    isBoth Both{} = True
+                    isBoth _ = False
+
+                    diffs = filter (not . isBoth) $ getGroupedDiff e g
+                    diffsString = fmap (fmapDiff (fmap textToString)) diffs
+
+                if null diffs
+                    then return ()
+                    else assertFailure $ renderNormal $ vcat ["files differ.", pretty (ppDiff diffsString)]
             else assertFailure $ "file doesn't exist: " ++ generatedPath
 
 
