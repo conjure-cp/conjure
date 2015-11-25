@@ -1,3 +1,4 @@
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
