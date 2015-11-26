@@ -100,7 +100,7 @@ resolveStatement st =
                 GivenDomainDefnEnum{}       -> return st             -- ignoring
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
         SearchHeuristic nm -> do
-            let allowed = ["static", "sdf", "conflict", "srf"]
+            let allowed = ["static", "sdf", "conflict", "srf", "ldf", "wdeg", "domoverwdeg"]
             if nm `elem` allowed
                 then return (SearchHeuristic nm)
                 else userErr1 $ vcat [ "Invalid heuristic:" <+> pretty nm
