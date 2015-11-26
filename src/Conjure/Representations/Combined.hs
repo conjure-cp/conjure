@@ -200,7 +200,7 @@ reprsStandardOrderNoLevels = return $ concat
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
-      -- , partitionOccurrence
+      , partitionOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
       , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
@@ -223,7 +223,7 @@ reprsStandardOrder =
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
-      -- , partitionOccurrence
+      , partitionOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
       , relationAsSet      dispatch (reprOptions reprsStandardOrder) True
@@ -253,6 +253,8 @@ reprsSparseOrder = map return
     , relationAsSet      dispatch (reprOptions reprsSparseOrder) False
     , relationAsMatrix
     , partitionAsSet     dispatch (reprOptions reprsSparseOrder) False
+
+    , partitionOccurrence
     ]
 
 
