@@ -11,6 +11,7 @@ import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
+import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
@@ -23,7 +24,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 --      (indicating the total number of parts)
 --   only use part numbers from 1.._NumParts, never use the others
 --      part(i) is used -> part(i-1) is used, forAll i:int(3..maxNumParts)
-partitionOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
+partitionOccurrence :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 partitionOccurrence = Representation chck downD structuralCons downC up
 
     where
@@ -60,15 +61,14 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 , ( nameFirstIndex domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      (DomainInt [RangeBounded 0 maxNumParts])      -- 0 if never used
+                      innerDomain                                   -- dontCare if not used
                   )
                 ]
         downD _ = na "{downD} Occurrence"
 
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainPartition _ attrs innerDomain)
-                | domainCanIndexMatrix innerDomain
-                = do
+                | domainCanIndexMatrix innerDomain = do
             maxNumParts <- domainSizeOf innerDomain
             let
                 numPartsChannelling whichPart numPartsVar = do
@@ -84,7 +84,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                     (jPat, j) <- quantifiedVar
                     return $ return -- for list
                         [essence|
-                            and([ &partSizesVar[&i] = sum([ 1 | &jPat : int(1..&maxNumParts) , &whichPart[&j] = &i ])
+                            and([ &partSizesVar[&i] = sum([ 1 | &jPat : &innerDomain , &whichPart[&j] = &i ])
                                 | &iPat : int(1..&maxNumParts)
                                 ])
                         |]
@@ -108,7 +108,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                         , -- firstIndexVar[i] is 0, if nothing is in part i
                           [essence|
                             forAll &iPat : int(1..&maxNumParts) .
-                                &partSizesVar[&i] = 0 <-> &firstIndexVar[&i] = 0
+                                &partSizesVar[&i] = 0 -> dontCare(&firstIndexVar[&i])
                           |]
                         ]
 
@@ -198,6 +198,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             maxNumParts  <- case viewConstantInt maxNumParts' of
                 Just i -> return i
                 Nothing -> bug ("expecting an integer literal, but got:" <+> pretty maxNumParts')
+            z <- zeroVal innerDomain
             let
                 whichPartValInside :: [Integer]
                 whichPartValInside =
@@ -233,7 +234,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                         Just i  -> ConstantInt (fromIntegral i)
                                      | p <- [1..genericLength vals] ]
                                         ++ replicate (fromInteger (maxNumParts - genericLength vals))
-                                                     (ConstantInt 0)))
+                                                     z))
             return $ Just
                 [ ( numPartsVar   , numPartsDom   , numPartsVal   )
                 , ( whichPart     , whichPartDom  , whichPartVal  )
