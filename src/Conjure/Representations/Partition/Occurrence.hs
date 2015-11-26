@@ -7,6 +7,7 @@ module Conjure.Representations.Partition.Occurrence ( partitionOccurrence ) wher
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
@@ -38,7 +39,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         namePartSizes  = mkOutName (Just "PartSizes")
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
-        downD :: TypeOf_DownD m
+        -- downD :: TypeOf_DownD m
         downD (name, domain@(DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain))
             | domainCanIndexMatrix innerDomain = do
             maxNumParts <- domainSizeOf innerDomain
@@ -182,19 +183,63 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                               , "domain:" <+> pretty domain
                                               ]
 
-        -- downC ( name
-        --       , inDom
-        --       , ConstantAbstract (AbsLitPartition vals)
-        --       ) = do
-        --     outDom <- outDomain (name, inDom)
-        --     rDownC
-        --         (dispatch outDom)
-        --         ( outName name
-        --         , outDom
-        --         , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) vals
-        --         )
-        -- TODO
         downC :: TypeOf_DownC m
+        downC ( name
+              , inDom@(DomainPartition Partition_Occurrence _ innerDomain)
+              , inConstant@(ConstantAbstract (AbsLitPartition vals))
+              ) = do
+            Just [ ( numPartsVar   , numPartsDom   )
+                 , ( whichPart     , whichPartDom  )
+                 , ( partSizesVar  , partSizesDom  )
+                 , ( firstIndexVar , firstIndexDom )
+                 ] <- downD (name, inDom)
+            members      <- domainValues innerDomain
+            maxNumParts' <- domainSizeOf innerDomain
+            maxNumParts  <- case viewConstantInt maxNumParts' of
+                Just i -> return i
+                Nothing -> bug ("expecting an integer literal, but got:" <+> pretty maxNumParts')
+            let
+                whichPartValInside :: [Integer]
+                whichPartValInside =
+                        [ case whichPartIsIt of
+                            [p] -> p
+                            []  -> bug $ vcat [ "Not found:" <+> pretty mem
+                                              , "Inside:" <+> pretty inConstant
+                                              ]
+                            _   -> bug $ vcat [ "Found multiple times:" <+> pretty mem
+                                              , "Inside:" <+> pretty inConstant
+                                              ]
+                        | mem <- members
+                        , let whichPartIsIt = [ p
+                                              | (p, pVals) <- zip [1..] vals
+                                              , mem `elem` pVals
+                                              ]
+                        ]
+                numPartsVal   = ConstantInt (genericLength vals)
+                whichPartVal  = ConstantAbstract (AbsLitMatrix
+                                    (DomainInt [RangeBounded 1 maxNumParts'])
+                                    (map ConstantInt whichPartValInside))
+                partSizesVal  = ConstantAbstract (AbsLitMatrix
+                                    (DomainInt [RangeBounded 1 maxNumParts'])
+                                    (map (ConstantInt . genericLength) vals
+                                        ++ replicate (fromInteger (maxNumParts - genericLength vals))
+                                                     (ConstantInt 0)))
+                firstIndexVal = ConstantAbstract (AbsLitMatrix
+                                    (DomainInt [RangeBounded 1 maxNumParts'])
+                                    ([ case findIndex (p==) whichPartValInside of
+                                        Nothing -> bug $ vcat [ "Not found:" <+> pretty p
+                                                              , "Inside:" <+> prettyList id "," whichPartValInside
+                                                              ]
+                                        Just i  -> ConstantInt (fromIntegral i)
+                                     | p <- [1..genericLength vals] ]
+                                        ++ replicate (fromInteger (maxNumParts - genericLength vals))
+                                                     (ConstantInt 0)))
+            return $ Just
+                [ ( numPartsVar   , numPartsDom   , numPartsVal   )
+                , ( whichPart     , whichPartDom  , whichPartVal  )
+                , ( partSizesVar  , partSizesDom  , partSizesVal  )
+                , ( firstIndexVar , firstIndexDom , firstIndexVal )
+                ]
         downC (name, domain, constant) = na $ vcat [ "{downC} Occurrence"
                                                    , "name:" <+> pretty name
                                                    , "domain:" <+> pretty domain
