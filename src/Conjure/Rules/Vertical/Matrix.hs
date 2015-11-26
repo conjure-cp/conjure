@@ -158,8 +158,8 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, innerBody, innerGof), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} (Comprehension innerBody innerGof)) -> return (pat, innerBody, innerGof)
+        (gocBefore, (pat, Comprehension innerBody innerGof), gocAfter) <- matchFirst gensOrConds $ \case
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension_Nested"
         let upd val old = lambdaToFunction pat old val
         return

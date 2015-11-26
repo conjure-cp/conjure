@@ -11,27 +11,27 @@ rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule w
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
-        partition_              <- match opParts expr
-        TypePartition{}         <- typeOf partition_
-        Partition_Occurrence    <- representationOf partition_
-        [flags, parts, nbParts] <- downX1 partition_
-        indexDom                <- forgetRepr <$> domainOf nbParts
+        partition_                      <- match opParts expr
+        TypePartition{}                 <- typeOf partition_
+        DomainPartition _ _ innerDomain <- domainOf partition_
+        Partition_Occurrence            <- representationOf partition_
+        [numPartsVar, whichPart, _partSizesVar, _firstIndexVar] <- downX1 partition_
+        indexDom                        <- forgetRepr <$> domainOf numPartsVar
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, Occurrence representation"
             , do
                 (pPat, p) <- quantifiedVar
-                (iPat, i) <- quantifiedVar
-                    -- the value, a set representing the i'th part
-                let val = make opToSet $ Comprehension i
-                        [ Generator (GenDomainNoRepr iPat indexDom)
-                        , Condition [essence| &flags[&i] |]
-                        , Condition [essence| &parts[&i] = &p |]
+                (kPat, k) <- quantifiedVar
+                -- the value, a set representing part number p
+                let val = make opToSet $ Comprehension k
+                        [ Generator (GenDomainNoRepr kPat innerDomain)
+                        , Condition [essence| &whichPart[&k] = &p |]
                         ]
                 return $ Comprehension (upd val body)
                         $  gocBefore
                         ++ [ Generator (GenDomainNoRepr pPat indexDom)          -- part number p
-                           , Condition [essence| &p <= &nbParts |]
+                           , Condition [essence| &p <= &numPartsVar |]
                            ]
                         ++ transformBi (upd val) gocAfter
             )

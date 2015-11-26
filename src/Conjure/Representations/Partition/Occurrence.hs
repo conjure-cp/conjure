@@ -33,8 +33,8 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             = map (DomainPartition Partition_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameWhichPart  = mkOutName (Just "WhichPart")
         nameNumParts   = mkOutName (Just "NumParts")
+        nameWhichPart  = mkOutName (Just "WhichPart")
         namePartSizes  = mkOutName (Just "PartSizes")
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
