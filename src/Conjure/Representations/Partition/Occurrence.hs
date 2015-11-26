@@ -33,9 +33,10 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             = map (DomainPartition Partition_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 
-        nameWhichPart = mkOutName (Just "WhichPart")
-        nameNumParts  = mkOutName (Just "NumParts")
-        namePartSizes = mkOutName (Just "PartSizes")
+        nameWhichPart  = mkOutName (Just "WhichPart")
+        nameNumParts   = mkOutName (Just "NumParts")
+        namePartSizes  = mkOutName (Just "PartSizes")
+        nameFirstIndex = mkOutName (Just "FirstIndex")
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain))
@@ -54,6 +55,11 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
                       (DomainInt [RangeBounded 0 maxNumParts])
+                  )
+                , ( nameFirstIndex domain name
+                  , DomainMatrix
+                      (DomainInt [RangeBounded 1 maxNumParts])
+                      (DomainInt [RangeBounded 0 maxNumParts])      -- 0 if never used
                   )
                 ]
         downD _ = na "{downD} Occurrence"
@@ -80,6 +86,38 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                             and([ &partSizesVar[&i] = sum([ 1 | &jPat : int(1..&maxNumParts) , &whichPart[&j] = &i ])
                                 | &iPat : int(1..&maxNumParts)
                                 ])
+                        |]
+
+                firstIndexChannelling whichPart numPartsVar partSizesVar firstIndexVar = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return
+                        [ -- firstIndexVar[i] is <= all indices belonging to part i
+                          [essence|
+                            forAll &iPat : int(1..&maxNumParts) , &i <= &numPartsVar .
+                                forAll &jPat : &innerDomain .
+                                    &whichPart[&j] = &i -> &firstIndexVar[&i] <= &j
+                          |]
+                        , -- firstIndexVar[i] is equal to one of those
+                          [essence|
+                            forAll &iPat : int(1..&maxNumParts) , &i <= &numPartsVar .
+                                exists &jPat : &innerDomain .
+                                    &whichPart[&j] = &i /\ &firstIndexVar[&i] = &j
+                          |]
+                        , -- firstIndexVar[i] is 0, if nothing is in part i
+                          [essence|
+                            forAll &iPat : int(1..&maxNumParts) .
+                                &partSizesVar[&i] = 0 <-> &firstIndexVar[&i] = 0
+                          |]
+                        ]
+
+                symmetryBreaking numPartsVar firstIndexVar = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return -- for list
+                        [essence|
+                          forAll &iPat, &jPat : int(1..&maxNumParts) , &i <= &numPartsVar /\ &j <= &numPartsVar .
+                              &i < &j <-> &firstIndexVar[&i] < &firstIndexVar[&j]
                         |]
 
                 numPartsCons numPartsVar =
@@ -129,14 +167,16 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 regular _ _ = return []
 
             return $ \ inpPartition -> do
-                [numPartsVar, whichPart, partSizesVar] <- downX1 inpPartition
+                [numPartsVar, whichPart, partSizesVar, firstIndexVar] <- downX1 inpPartition
                 concat <$> sequence
-                    [ partSizeCons                   numPartsVar partSizesVar
-                    , numPartsCons                   numPartsVar
-                    , numPartsChannelling  whichPart numPartsVar
-                    , partSizesChannelling whichPart             partSizesVar
-                    , noGaps               whichPart numPartsVar
-                    , regular                        numPartsVar partSizesVar
+                    [ partSizeCons                    numPartsVar partSizesVar
+                    , numPartsCons                    numPartsVar
+                    , noGaps                whichPart numPartsVar
+                    , regular                         numPartsVar partSizesVar
+                    , numPartsChannelling   whichPart numPartsVar
+                    , partSizesChannelling  whichPart             partSizesVar
+                    , firstIndexChannelling whichPart numPartsVar partSizesVar firstIndexVar
+                    , symmetryBreaking                numPartsVar              firstIndexVar
                     ]
         structuralCons _ _ domain = na $ vcat [ "{structuralCons} Occurrence"
                                               , "domain:" <+> pretty domain
