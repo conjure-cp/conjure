@@ -1,7 +1,15 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE BangPatterns #-}
 
-module Conjure.Language.NameGen where
+module Conjure.Language.NameGen
+    ( NameGen
+    , NameGenM
+    , NameGenState
+    , nextName
+    , exportNameGenState
+    , importNameGenState
+    , runNameGen
+    ) where
 
 -- conjure
 import Conjure.Prelude
