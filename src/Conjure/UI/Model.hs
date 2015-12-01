@@ -201,10 +201,13 @@ remaining
     -> ModelInfo
     -> m [Question]
 remaining config modelZipper minfo = do
+    -- note: the call to getQuestions can update the NameGen state
+    importNameGenState (minfo |> miNameGenState)
     questions <- getQuestions config modelZipper
+    namegenst0 <- exportNameGenState
     forM questions $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
-            importNameGenState $ minfo |> miNameGenState
+            importNameGenState namegenst0
             ruleResultExpr <- ruleResult
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
