@@ -7,7 +7,7 @@ find x_PartitionOccurrence_FirstIndex:
         matrix indexed by [int(1..4)] of int(1..4)
 such that
     and([q11 <= x_PartitionOccurrence_NumParts ->
-         sum([toInt(x_PartitionOccurrence_WhichPart[q12] = q11) | q12 : int(1..4)]) = 2
+         sum([toInt(x_PartitionOccurrence_WhichPart[q14] = q11) | q14 : int(1..4)]) = 2
              | q11 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts ->
          x_PartitionOccurrence_PartSizes[q1] = 0

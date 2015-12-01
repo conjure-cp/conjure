@@ -8,32 +8,35 @@ find p_PartitionOccurrence_FirstIndex:
 find p_PartitionAsSet_ExplicitR3_Explicit:
         matrix indexed by [int(1..3), int(1..1)] of int(1..3)
 such that
-    and([q47 <= p_PartitionOccurrence_NumParts ->
-         or([or([p_PartitionOccurrence_WhichPart[q48] = q47 /\ q48 = 1
-                     | q48 : int(1..3)])
+    and([q51 <= p_PartitionOccurrence_NumParts ->
+         or([or([p_PartitionOccurrence_WhichPart[q58] = q51 /\ q58 = 1
+                     | q58 : int(1..3)])
              /\
-             and([p_PartitionOccurrence_WhichPart[q48] = q47 -> 1 = q48 | q48 : int(1..3)]),
-             or([p_PartitionOccurrence_WhichPart[q48] = q47 /\ q48 = 2 | q48 : int(1..3)]) /\
-             and([p_PartitionOccurrence_WhichPart[q48] = q47 -> 2 = q48 | q48 : int(1..3)]),
-             or([p_PartitionOccurrence_WhichPart[q48] = q47 /\ q48 = 3 | q48 : int(1..3)]) /\
-             and([p_PartitionOccurrence_WhichPart[q48] = q47 -> 3 = q48
-                      | q48 : int(1..3)]); int(1..3)])
-             | q47 : int(1..3)]),
-    or([q72 <= p_PartitionOccurrence_NumParts /\
-        (and([p_PartitionOccurrence_WhichPart[q73] = q72 -> 1 = q73 | q73 : int(1..3)])
+             and([p_PartitionOccurrence_WhichPart[q60] = q51 -> 1 = q60 | q60 : int(1..3)]),
+             or([p_PartitionOccurrence_WhichPart[q66] = q51 /\ q66 = 2 | q66 : int(1..3)]) /\
+             and([p_PartitionOccurrence_WhichPart[q68] = q51 -> 2 = q68 | q68 : int(1..3)]),
+             or([p_PartitionOccurrence_WhichPart[q74] = q51 /\ q74 = 3 | q74 : int(1..3)]) /\
+             and([p_PartitionOccurrence_WhichPart[q76] = q51 -> 3 = q76
+                      | q76 : int(1..3)]); int(1..3)])
+             | q51 : int(1..3)]),
+    or([q82 <= p_PartitionOccurrence_NumParts /\
+        (and([p_PartitionOccurrence_WhichPart[q85] = q82 -> 1 = q85 | q85 : int(1..3)])
          /\
-         or([p_PartitionOccurrence_WhichPart[q73] = q72 /\ q73 = 1 | q73 : int(1..3)]))
-            | q72 : int(1..3)]),
-    or([q81 <= p_PartitionOccurrence_NumParts /\
-        (and([p_PartitionOccurrence_WhichPart[q82] = q81 -> 2 = q82 | q82 : int(1..3)])
+         or([p_PartitionOccurrence_WhichPart[q91] = q82 /\ q91 = 1 | q91 : int(1..3)]))
+            | q82 : int(1..3)]),
+    or([q93 <= p_PartitionOccurrence_NumParts /\
+        (and([p_PartitionOccurrence_WhichPart[q96] = q93 -> 2 = q96 | q96 : int(1..3)])
          /\
-         or([p_PartitionOccurrence_WhichPart[q82] = q81 /\ q82 = 2 | q82 : int(1..3)]))
-            | q81 : int(1..3)]),
-    or([q90 <= p_PartitionOccurrence_NumParts /\
-        (and([p_PartitionOccurrence_WhichPart[q91] = q90 -> 3 = q91 | q91 : int(1..3)])
+         or([p_PartitionOccurrence_WhichPart[q102] = q93 /\ q102 = 2
+                 | q102 : int(1..3)]))
+            | q93 : int(1..3)]),
+    or([q104 <= p_PartitionOccurrence_NumParts /\
+        (and([p_PartitionOccurrence_WhichPart[q107] = q104 -> 3 = q107
+                  | q107 : int(1..3)])
          /\
-         or([p_PartitionOccurrence_WhichPart[q91] = q90 /\ q91 = 3 | q91 : int(1..3)]))
-            | q90 : int(1..3)]),
+         or([p_PartitionOccurrence_WhichPart[q113] = q104 /\ q113 = 3
+                 | q113 : int(1..3)]))
+            | q104 : int(1..3)]),
     and([q1 <= p_PartitionOccurrence_NumParts ->
          1 = p_PartitionOccurrence_PartSizes[q1]
              | q1 : int(1..3)]),
@@ -68,30 +71,30 @@ such that
           p_PartitionOccurrence_FirstIndex[q9] < p_PartitionOccurrence_FirstIndex[q10])
              | q9 : int(1..3), q10 : int(1..3)]),
     and([1 =
-         sum([toInt(p_PartitionAsSet_ExplicitR3_Explicit[q42, 1] = q11)
-                  | q42 : int(1..3)])
+         sum([toInt(p_PartitionAsSet_ExplicitR3_Explicit[q46, 1] = q11)
+                  | q46 : int(1..3)])
              | q11 : int(1..3)]),
     and([p_PartitionAsSet_ExplicitR3_Explicit[q14, ..] <lex
          p_PartitionAsSet_ExplicitR3_Explicit[q14 + 1, ..]
              | q14 : int(1..2)]),
     and([or([q22 <= p_PartitionOccurrence_NumParts /\
-             (and([p_PartitionOccurrence_WhichPart[q23] = q22 ->
-                   p_PartitionAsSet_ExplicitR3_Explicit[q20, 1] = q23
-                       | q23 : int(1..3)])
+             (and([p_PartitionOccurrence_WhichPart[q25] = q22 ->
+                   p_PartitionAsSet_ExplicitR3_Explicit[q20, 1] = q25
+                       | q25 : int(1..3)])
               /\
-              or([p_PartitionOccurrence_WhichPart[q23] = q22 /\
-                  q23 = p_PartitionAsSet_ExplicitR3_Explicit[q20, 1]
-                      | q23 : int(1..3)]))
+              or([p_PartitionOccurrence_WhichPart[q31] = q22 /\
+                  q31 = p_PartitionAsSet_ExplicitR3_Explicit[q20, 1]
+                      | q31 : int(1..3)]))
                  | q22 : int(1..3)])
              | q20 : int(1..3)]),
-    and([q31 <= p_PartitionOccurrence_NumParts ->
-         or([or([p_PartitionOccurrence_WhichPart[q32] = q31 /\
-                 q32 = p_PartitionAsSet_ExplicitR3_Explicit[q35, 1]
-                     | q32 : int(1..3)])
+    and([q33 <= p_PartitionOccurrence_NumParts ->
+         or([or([p_PartitionOccurrence_WhichPart[q41] = q33 /\
+                 q41 = p_PartitionAsSet_ExplicitR3_Explicit[q37, 1]
+                     | q41 : int(1..3)])
              /\
-             and([p_PartitionOccurrence_WhichPart[q32] = q31 ->
-                  p_PartitionAsSet_ExplicitR3_Explicit[q35, 1] = q32
-                      | q32 : int(1..3)])
-                 | q35 : int(1..3)])
-             | q31 : int(1..3)])
+             and([p_PartitionOccurrence_WhichPart[q43] = q33 ->
+                  p_PartitionAsSet_ExplicitR3_Explicit[q37, 1] = q43
+                      | q43 : int(1..3)])
+                 | q37 : int(1..3)])
+             | q33 : int(1..3)])
 
