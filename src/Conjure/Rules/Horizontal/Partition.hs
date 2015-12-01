@@ -129,15 +129,14 @@ rule_Party = "partition-party" `namedRule` theRule where
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
-                 return $ WithLocals
-                     (Comprehension (upd j body)
+                 return $
+                     Comprehension (upd j body)
                          $  gocBefore
                          ++ [ Generator (GenInExpr iPat (make opParts p))
                             , Condition [essence| &wanted in &i |]
                             , Generator (GenInExpr jPat (mkModifier i))
                             ]
-                         ++ transformBi (upd j) gocAfter)
-                    (DefinednessConstraints [ [essence| &wanted in participants(&p) |] ])
+                         ++ transformBi (upd j) gocAfter
             )
     theRule _ = na "rule_Party"
 
