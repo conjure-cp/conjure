@@ -158,16 +158,40 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
-        (gocBefore, (pat, Comprehension innerBody innerGof), gocAfter) <- matchFirst gensOrConds $ \case
+        (gocBefore, (pat, Comprehension innerBody innerGocs), gocAfter) <- matchFirst gensOrConds $ \case
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension_Nested"
         let upd val old = lambdaToFunction pat old val
+        let
+            -- update the quantified variable names inside innerBody&innerGocs_ here,
+            -- because they may be shadowed.
+            updateQuantified innerBody_ innerGocs_ = do
+                let olds = concatMap collectOldQuantifiers innerGocs_
+                if null olds
+                    then return (innerBody_, innerGocs_)
+                    else do
+                        oldnews <- forM olds $ \ old -> do
+                            (Single new, _) <- quantifiedVar
+                            return (old, new)
+                        let
+                            f :: Name -> Name
+                            f nm = fromMaybe nm (lookup nm oldnews)
+                        return (transformBi f (innerBody_, innerGocs_))
+
+            collectOldQuantifiers = \case
+                Generator (GenDomainNoRepr  pt _) -> universeBi pt
+                Generator (GenDomainHasRepr nm _) -> [nm]
+                Generator (GenInExpr        pt _) -> universeBi pt
+                Condition _                       -> []
+                ComprehensionLetting nm _         -> [nm]
+
+        (innerBody', innerGocs') <- updateQuantified innerBody innerGocs
         return
             ( "Nested matrix comprehension"
-            , return $ Comprehension (upd innerBody body)
+            , return $ Comprehension (upd innerBody' body)
                          $  gocBefore
-                         ++ innerGof
-                         ++ transformBi (upd innerBody) gocAfter
+                         ++ innerGocs'
+                         ++ transformBi (upd innerBody') gocAfter
             )
     theRule _ = na "rule_Comprehension_Nested"
 
