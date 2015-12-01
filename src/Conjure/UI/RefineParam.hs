@@ -8,6 +8,9 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Constant ( emptyCollection )
+import Conjure.Language.Type ( Type(..), mostDefined )
+import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
@@ -83,7 +86,30 @@ refineParam eprimeModel essenceParam0 = do
                                 [ "No value for parameter:" <+> pretty n
                                 , "With domain:" <+> pretty d
                                 ]
-                Just v  -> return $ Just (n, d, v)
+                Just v  ->
+                    if emptyCollection v
+                        then do
+                            (c, cTyMaybe) <- case v of
+                                TypedConstant c cTy
+                                    | elem TypeAny (universe cTy)       -- we may be able to do better!
+                                        -> return (c, Just cTy)
+                                    | otherwise
+                                        -> return (v, Nothing)          -- already sufficiently typed
+                                _ -> return (v, Just TypeAny)           -- empty collection, unknown type
+                            case cTyMaybe of
+                                Nothing -> return $ Just (n, d, v)
+                                Just cTy1 -> do
+                                    -- calculate the type of the domain, unify with the type we already have
+                                    cTy2 <- typeOf d
+                                    let cTy = mostDefined [cTy1, cTy2]
+                                    if elem TypeAny (universe cTy)
+                                        then userErr1 $ vcat
+                                            [ "Cannot fully determine the type of parameter" <+> pretty n
+                                            , "Domain:" <+> pretty d
+                                            , "Value :" <+> pretty v
+                                            ]
+                                        else return $ Just (n, d, TypedConstant c cTy)
+                        else return $ Just (n, d, v)
             | (n, d) <- essenceGivens' ++ map (,DomainInt []) generatedLettingNames
             ]
 
@@ -94,8 +120,20 @@ refineParam eprimeModel essenceParam0 = do
                 _     -> bug ("refineParam: Multiple values for" <+> pretty nm)
         f p = p
 
-    let essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
-    eprimeLettings <- fmap concat $ mapM downC essenceGivensAndLettings'
+    let
+        essenceGivensAndLettings' :: [(Name, Domain HasRepresentation Constant, Constant)]
+        essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
+
+    logDebug $ "[essenceGivensAndLettings]" <+> vcat [ vcat [ "name    :" <+> pretty n
+                                                            , "domain  :" <+> pretty d
+                                                            , "constant:" <+> pretty c
+                                                            ]
+                                                     | (n,d,c) <- essenceGivensAndLettings'
+                                                     ]
+
+    eprimeLettings
+        :: [(Name, Domain HasRepresentation Constant, Constant)]
+        <- fmap concat $ mapM downC essenceGivensAndLettings'
 
     return $ languageEprime def
         { mStatements =
