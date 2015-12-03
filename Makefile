@@ -1,4 +1,4 @@
-.PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all
+.PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all runtests_slow2
 
 SHELL := /bin/bash
 
@@ -55,6 +55,14 @@ runtests_slow:
 	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout2.log)  2> >(tee runtests_slow_stderr2.log  >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
 	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout3.log)  2> >(tee runtests_slow_stderr3.log  >&2)
+
+runtests_slow2:
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Conjuring  +RTS -s > >(tee runtests_slow2_Conjuring__stdout.log) 2> >(tee runtests_slow2_Conjuring__stderr.log >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Savile     +RTS -s > >(tee runtests_slow2_SavileRow__stdout.log) 2> >(tee runtests_slow2_SavileRow__stderr.log >&2)
+	-tests/acceptAllOutputs.sh > /dev/null
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Check      +RTS -s > >(tee runtests_slow2_Checking___stdout.log) 2> >(tee runtests_slow2_Checking___stderr.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Validating +RTS -s > >(tee runtests_slow2_Validating_stdout.log) 2> >(tee runtests_slow2_Validating_stderr.log >&2)
 
 runtests_all:
 	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-update                         +RTS -s > >(tee runtests_all_stdout1.log)   2> >(tee runtests_all_stderr1.log   >&2)
