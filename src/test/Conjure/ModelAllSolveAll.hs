@@ -58,7 +58,7 @@ instance IsOption QuickOrSlow where
     parseValue "slow" = return Slow
     parseValue "all" = return BothQuickAndSlow
     parseValue _ = Nothing
-    
+
     optionName = return "select-tests"
     optionHelp = return "Select which tests to run (quick/slow/all). Default is quick."
 

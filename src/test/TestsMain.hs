@@ -27,7 +27,7 @@ main = do
     parsePrintTests       <- Conjure.ParsePrint.tests
     let ingredients =
             [ rerunningTests ( antXMLRunner
-                             : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.QuickOrSlow)] 
+                             : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.QuickOrSlow)]
                              : defaultIngredients
                              ) ]
     defaultMainWithIngredients ingredients $ askOption $ \ quickOrSlow ->
