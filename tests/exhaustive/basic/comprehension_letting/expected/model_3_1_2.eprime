@@ -43,14 +43,14 @@ such that
     and([q2 > s_ExplicitVarSizeWithMarker_Marker ->
          s_ExplicitVarSizeWithMarker_Values[q2] = 1
              | q2 : int(1..4)]),
-    and([s_Occurrence[q23] ->
-         or([q25 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q25] = q23
-                 | q25 : int(1..4)])
-             | q23 : int(1..4)]),
-    and([q27 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q27]]
-             | q27 : int(1..4)]),
+    and([s_Occurrence[q26] ->
+         or([q28 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q28] = q26
+                 | q28 : int(1..4)])
+             | q26 : int(1..4)]),
+    and([q30 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q30]]
+             | q30 : int(1..4)]),
     and([s_ExplicitVarSizeWithDummy[q5] < s_ExplicitVarSizeWithDummy[q5 + 1] \/
          s_ExplicitVarSizeWithDummy[q5] = 5
              | q5 : int(1..3)]),
