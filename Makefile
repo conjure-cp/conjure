@@ -1,4 +1,4 @@
-.PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all runtests_slow2
+.PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all
 
 SHELL := /bin/bash
 
@@ -43,30 +43,25 @@ clean:
 
 
 runtests_quick:
-	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-update                         +RTS -s > >(tee runtests_quick_stdout1.log) 2> >(tee runtests_quick_stderr1.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=quick -p Conjuring  +RTS -s > >(tee runtests_quick_Conjuring__stdout.log) 2> >(tee runtests_quick_Conjuring__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout2.log) 2> >(tee runtests_quick_stderr2.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=quick -p Savile     +RTS -s > >(tee runtests_quick_SavileRow__stdout.log) 2> >(tee runtests_quick_SavileRow__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests quick --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_quick_stdout3.log) 2> >(tee runtests_quick_stderr3.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=quick -p Check      +RTS -s > >(tee runtests_quick_Checking___stdout.log) 2> >(tee runtests_quick_Checking___stderr.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=quick -p Validating +RTS -s > >(tee runtests_quick_Validating_stdout.log) 2> >(tee runtests_quick_Validating_stderr.log >&2)
 
 runtests_slow:
-	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-update                         +RTS -s > >(tee runtests_slow_stdout1.log)  2> >(tee runtests_slow_stderr1.log  >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Conjuring  +RTS -s > >(tee runtests_slow_Conjuring__stdout.log) 2> >(tee runtests_slow_Conjuring__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout2.log)  2> >(tee runtests_slow_stderr2.log  >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Savile     +RTS -s > >(tee runtests_slow_SavileRow__stdout.log) 2> >(tee runtests_slow_SavileRow__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests slow  --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_slow_stdout3.log)  2> >(tee runtests_slow_stderr3.log  >&2)
-
-runtests_slow2:
-	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Conjuring  +RTS -s > >(tee runtests_slow2_Conjuring__stdout.log) 2> >(tee runtests_slow2_Conjuring__stderr.log >&2)
-	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Savile     +RTS -s > >(tee runtests_slow2_SavileRow__stdout.log) 2> >(tee runtests_slow2_SavileRow__stderr.log >&2)
-	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Check      +RTS -s > >(tee runtests_slow2_Checking___stdout.log) 2> >(tee runtests_slow2_Checking___stderr.log >&2)
-	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Validating +RTS -s > >(tee runtests_slow2_Validating_stdout.log) 2> >(tee runtests_slow2_Validating_stderr.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Check      +RTS -s > >(tee runtests_slow_Checking___stdout.log) 2> >(tee runtests_slow_Checking___stderr.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=slow -p Validating +RTS -s > >(tee runtests_slow_Validating_stdout.log) 2> >(tee runtests_slow_Validating_stderr.log >&2)
 
 runtests_all:
-	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-update                         +RTS -s > >(tee runtests_all_stdout1.log)   2> >(tee runtests_all_stderr1.log   >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=all -p Conjuring  +RTS -s > >(tee runtests_all_Conjuring__stdout.log) 2> >(tee runtests_all_Conjuring__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout2.log)   2> >(tee runtests_all_stderr2.log   >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=all -p Savile     +RTS -s > >(tee runtests_all_SavileRow__stdout.log) 2> >(tee runtests_all_SavileRow__stderr.log >&2)
 	-tests/acceptAllOutputs.sh > /dev/null
-	-dist/build/conjure-testing/conjure-testing --select-tests all   --rerun-filter failures,exceptions,new +RTS -s > >(tee runtests_all_stdout3.log)   2> >(tee runtests_all_stderr3.log   >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=all -p Check      +RTS -s > >(tee runtests_all_Checking___stdout.log) 2> >(tee runtests_all_Checking___stderr.log >&2)
+	-dist/build/conjure-testing/conjure-testing --select-tests=all -p Validating +RTS -s > >(tee runtests_all_Validating_stdout.log) 2> >(tee runtests_all_Validating_stderr.log >&2)
