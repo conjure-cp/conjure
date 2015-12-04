@@ -105,6 +105,7 @@ data UI
         }
     | Pretty
         { essence          :: FilePath
+        , normaliseQuantified :: Bool
         , logLevel         :: LogLevel
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
@@ -584,6 +585,10 @@ ui = modes
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Log level."
+        , normaliseQuantified = False
+                                   &= name "normalise-quantified"
+                                   &= explicit
+                                   &= help "Whether to normalise the names of quantified variables or not. Off by default."
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."

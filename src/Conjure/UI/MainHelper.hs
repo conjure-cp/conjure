@@ -18,6 +18,7 @@ import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
+import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
@@ -122,9 +123,11 @@ mainWithArgs ValidateSolution{..} = do
     [essence3, param3, solution3] <- runNameGen $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
-    model <- readModelFromFile essence
+    model0 <- readModelFromFile essence
+    let norm = if normaliseQuantified then normaliseQuantifiedVariables else id
+    let model1 = norm model0
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
-               Nothing model
+               Nothing model1
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
