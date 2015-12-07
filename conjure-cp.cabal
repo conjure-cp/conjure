@@ -304,7 +304,6 @@ Executable conjure
         -Wall
         -rtsopts
         -threaded
-        -with-rtsopts=-N
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
@@ -347,7 +346,6 @@ Test-Suite conjure-testing
         -Wall
         -rtsopts
         -threaded
-        -with-rtsopts=-N
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
