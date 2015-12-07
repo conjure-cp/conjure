@@ -152,7 +152,7 @@ arbitraryDomainAndConstant = sized dispatch
                     ]
 
             if null allVals
-                then error "allVals null"
+                then bug "allVals null"
                 else return ( DomainInt rs
                             , ConstantInt <$> pickFromList allVals
                             )

@@ -9,10 +9,13 @@ import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
 import Conjure.Language.Pretty
 
+-- base
+import GHC.Stack ( errorWithStackTrace )
+
 
 -- call this function instead of "error"
 bug :: Doc -> a
-bug message = error $ unlines
+bug message = errorWithStackTrace $ unlines
     [ "This should never happen, sorry!"
     , ""
     , "Please report a bug."

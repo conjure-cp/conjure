@@ -4,6 +4,7 @@ module Conjure.Language.TH ( essence, essenceStmts, module X ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Parser
@@ -33,8 +34,8 @@ essenceStmts = QuasiQuoter
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
-    , quoteType = error "quoteType"
-    , quoteDec  = error "quoteDec"
+    , quoteType = bug "quoteType"
+    , quoteDec  = bug "quoteDec"
     }
 
 essence :: QuasiQuoter
@@ -48,8 +49,8 @@ essence = QuasiQuoter
         l <- locationTH
         e <- runIO $ parseIO (setPosition l *> parseExpr) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
-    , quoteType = error "quoteType"
-    , quoteDec  = error "quoteDec"
+    , quoteType = bug "quoteType"
+    , quoteDec  = bug "quoteDec"
     }
 
 locationTH :: Q SourcePos
