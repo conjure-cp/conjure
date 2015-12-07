@@ -57,10 +57,10 @@ parseModel = inCompleteFile $ do
         }
 
 
-parseIO :: Parser a -> String -> IO a
+parseIO :: MonadFail m => Parser a -> String -> m a
 parseIO p s =
     case runLexerAndParser (inCompleteFile p) "" (T.pack s) of
-        Left err -> error (show err)
+        Left err -> fail err
         Right x  -> return x
 
 

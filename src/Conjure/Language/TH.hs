@@ -16,7 +16,7 @@ import Text.Megaparsec.Prim ( setPosition )
 import Text.Megaparsec.Pos ( SourcePos, newPos )
 
 -- template-haskell
-import Language.Haskell.TH ( Q, runIO, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
+import Language.Haskell.TH ( Q, Loc(..), location, mkName, ExpQ, varE, appE, PatQ, varP, wildP )
 import Language.Haskell.TH.Quote ( QuasiQuoter(..), dataToExpQ, dataToPatQ )
 
 -- syb
@@ -27,12 +27,12 @@ essenceStmts :: QuasiQuoter
 essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
+        e <- parseIO (setPosition l *> parseTopLevels) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseTopLevels) str
+        e <- parseIO (setPosition l *> parseTopLevels) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
@@ -42,12 +42,12 @@ essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseExpr) str
+        e <- parseIO (setPosition l *> parseExpr) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
-        e <- runIO $ parseIO (setPosition l *> parseExpr) str
+        e <- parseIO (setPosition l *> parseExpr) str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"

@@ -30,7 +30,6 @@ module Conjure.Prelude
     , Proxy(..)
     , MonadFail(..), failCheaply, na
     , allContexts, ascendants
-    , headInf
     , paddedNum
     , dropExtension, dropDirs
     , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
@@ -128,6 +127,9 @@ import System.IO.Error ( isDoesNotExistError )
 import Control.Exception ( catch, throwIO )
 
 import Data.Proxy as X ( Proxy(..) )
+
+-- template-haskell
+import qualified Language.Haskell.TH as TH ( Q )
 
 -- safe
 import Safe as X ( at, atNote, atMay, readMay, readNote, headNote, fromJustNote )
@@ -366,6 +368,9 @@ instance MonadFail (ParsecT l m) where
 instance MonadFail m => MonadFail (Pipes.Proxy a b c d m) where
     fail = lift . fail
 
+instance MonadFail TH.Q where
+    fail = Control.Monad.fail . show
+
 
 newtype ExceptT m a = ExceptT { runExceptT :: m (Either Doc a) }
 
@@ -417,11 +422,6 @@ allContexts z0 = concatMap subtreeOf (allSiblings z0)
 
 ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
-
-
-headInf :: [a] -> a
-headInf (a:_) = a
-headInf _ = error "End of infinite stream! Well done!"
 
 
 paddedNum :: Show a => a -> String
