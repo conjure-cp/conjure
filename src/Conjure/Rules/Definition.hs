@@ -52,7 +52,7 @@ data Answer = Answer
     , aRuleName  :: Doc
     }
 
-type Driver = (forall m . (MonadIO m, MonadFail m, MonadLog m) => [Question] -> m [ModelWIP])
+type Driver = (forall m . (MonadIO m, MonadLog m) => [Question] -> m [ModelWIP])
 
 type ModelZipper = Zipper (LanguageVersion, [Statement]) Expression
 

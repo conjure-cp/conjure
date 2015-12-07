@@ -143,7 +143,7 @@ outputModels config model = do
 
 
 toCompletion
-    :: (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    :: forall m . (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
@@ -156,7 +156,10 @@ toCompletion config m = do
     logDebug $ modelInfo m3
     loopy (StartOver m3)
     where
+        driver :: Driver
         driver = strategyToDriver config
+
+        loopy :: ModelWIP -> Producer LogOrModel m ()
         loopy modelWIP = do
             logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
             qs <- remainingWIP config modelWIP
