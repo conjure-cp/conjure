@@ -11,7 +11,7 @@ rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule w
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
-        partition_                      <- match opParts expr
+        let partition_                  =  matchDef opParts expr
         TypePartition{}                 <- typeOf partition_
         DomainPartition _ _ innerDomain <- domainOf partition_
         Partition_Occurrence            <- representationOf partition_

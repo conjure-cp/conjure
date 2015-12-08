@@ -9,10 +9,10 @@ rule_Comprehension = "partition-comprehension{PartitionAsSet}" `namedRule` theRu
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
             _ -> na "rule_Comprehension"
-        let p           =  matchDef opParts expr
-        TypePartition{}   <- typeOf p
-        Partition_AsSet{} <- representationOf p
-        [s]               <- downX1 p
+        let partition_    =  matchDef opParts expr
+        TypePartition{}   <- typeOf partition_
+        Partition_AsSet{} <- representationOf partition_
+        [s]               <- downX1 partition_
         let upd val old = lambdaToFunction pat old val
         return
             ( "Vertical rule for partition-comprehension, PartitionAsSet representation"
