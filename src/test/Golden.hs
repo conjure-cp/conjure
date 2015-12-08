@@ -11,8 +11,12 @@ import Test.Tasty.Golden.Advanced ( goldenTest )
 import Shelly ( run )
 
 -- text
-import Data.Text as T ( Text, unpack, lines )
+import Data.Text as T ( Text, lines )
 import Data.Text.IO as T ( readFile, writeFile )
+
+-- Diff
+import Data.Algorithm.Diff ( Diff(..), getGroupedDiff )
+import Data.Algorithm.DiffOutput ( ppDiff )
 
 
 tests :: TestTree
@@ -26,31 +30,24 @@ tests = testGroup "golden"
                 goldenFile generatedFile
                 (\ gold gen -> return $
                     let
-                        goldLines  = T.lines  gold
-                        goldLength = length   goldLines
-                        genLines   = T.lines  gen
-                        genLength  = length   genLines
-                        diffs      =
-                            if goldLength /= genLength
-                                then
-                                    [ Just [ "Different number of lines."
-                                           , "    Expected: " ++ show goldLength
-                                           , "    But got : " ++ show genLength
-                                           ]
-                                    ]
-                                else
-                                    [ if goldLine == genLine
-                                        then Nothing
-                                        else Just [ "Expected: " ++ T.unpack goldLine
-                                                  , "But got : " ++ T.unpack genLine
-                                                  ]
-                                    -- drop 2 lines, to skip the version bit
-                                    -- otherwise this test would never be able to pass!
-                                    | (goldLine, genLine) <- zip (drop 2 goldLines) (drop 2 genLines)
-                                    ]
-                    in  case concat (catMaybes diffs) of
-                            [] -> Nothing
-                            ls -> Just (unlines ("Files differ.":ls)) )
+                        fmapDiff f (First x) = First (f x)
+                        fmapDiff f (Second x) = Second (f x)
+                        fmapDiff f (Both x y) = Both (f x) (f y)
+
+                        isBoth Both{} = True
+                        isBoth _ = False
+
+                        -- drop 2 lines, to skip the version bit
+                        -- otherwise this test would never be able to pass!
+                        goldLines = drop 2 (T.lines gold)
+                        genLines  = drop 2 (T.lines gen)
+
+                        diffs = filter (not . isBoth) $ getGroupedDiff goldLines genLines
+                        diffsString = fmap (fmapDiff (fmap textToString)) diffs
+                    in
+                        if null diffs
+                            then Nothing
+                            else Just (unlines ["files differ.", ppDiff diffsString]) )
                 (do stdout <- sh $ run "conjure" ["--help=all"]
                     T.writeFile generatedFile stdout)
     ]
