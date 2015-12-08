@@ -293,6 +293,10 @@ conjure pretty [OPTIONS] FILE
   Pretty print as Essence file to stdout. This mode can be used to view a
   binary Essence file in textual form.
 
+Flags:
+     --normalise-quantified                  Whether to normalise the names
+                                             of quantified variables or not.
+                                             Off by default.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of
