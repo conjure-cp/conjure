@@ -342,7 +342,7 @@ srStdoutHandler
             line <- hGetLine h
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
-                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum solutionNumber ++ ext
+                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum 6 '0' solutionNumber ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel id ("<memory>", stringToText solutionText)

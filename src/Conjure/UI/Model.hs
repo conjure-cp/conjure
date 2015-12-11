@@ -130,7 +130,7 @@ outputModels config model = do
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
-                                else paddedNum i
+                                else paddedNum 6 '0' i
                     let filename = dir </> "model" ++ gen ++ ".eprime"
                     liftIO $ writeFile filename (renderNormal eprime)
                     return (i+1)

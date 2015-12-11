@@ -145,7 +145,46 @@ instance FromJSON  Declaration where parseJSON = genericParseJSON jsonOptions
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm (Domain x)) = hang ("letting" <+> pretty nm <+> "be domain") 8 (pretty x)
-    pretty (Letting nm x) = hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
+    pretty (Letting nm x) =
+        let
+            extract (viewConstantMatrix   -> Just (_, rows)) = Just rows
+            extract (viewConstantTuple    -> Just rows     ) = Just rows
+            extract (viewConstantSet      -> Just rows     ) = Just rows
+            extract (viewConstantMSet     -> Just rows     ) = Just rows
+            extract (viewConstantSequence -> Just rows     ) = Just rows
+            extract _ = Nothing
+
+            isPrim2D (Constant (extract -> Just rows)) = mapM isPrim1D rows
+            isPrim2D _ = Nothing
+
+            isPrim1D (extract -> Just cells) = mapM isPrim cells
+            isPrim1D _ = Nothing
+
+            isPrim (ConstantBool val) = Just (Left val)
+            isPrim (ConstantInt  val) = Just (Right val)
+            isPrim _ = Nothing
+
+            showPrim _ (Left True)  = "T"
+            showPrim _ (Left False) = "_"
+            showPrim n (Right i) = paddedNum n ' ' i
+
+            maxWidth primTable =
+                maximum
+                    [ maximum [ either (const 0) (length . show) cell | cell <- row ]
+                    | row <- primTable ]
+
+            comment width primTable =
+                unlines
+                    $ "$ Here is a simple \"visualisation\" for the value above."
+                    : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
+                      | row <- primTable ]
+
+            modifier =
+                case isPrim2D x of
+                    Just primTable -> \ s -> vcat [s, pretty (comment (maxWidth primTable) primTable)]
+                    Nothing        -> id
+        in
+            modifier $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
         hang ("given"   <+> pretty name) 8 "new type enum"
     pretty (LettingDomainDefnEnum name values) =

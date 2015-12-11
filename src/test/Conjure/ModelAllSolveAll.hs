@@ -203,10 +203,10 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
-                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
+                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
-                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                     writeFile filename (renderNormal s)
             | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
             | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
@@ -243,13 +243,13 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
-                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum i
+                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
                     res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
                     case res of
                         Left err -> assertFailure $ renderNormal err
                         Right s  -> do
-                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum i ++ ".solution"
+                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                             writeFile filename (renderNormal s)
             | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
             | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR

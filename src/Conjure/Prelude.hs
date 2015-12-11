@@ -424,8 +424,8 @@ ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
 
 
-paddedNum :: Show a => a -> String
-paddedNum x = replicate (6 - length s) '0' ++ s
+paddedNum :: Show a => Int -> Char -> a -> String
+paddedNum n ch x = replicate (n - length s) ch ++ s
     where s = show x
 
 
