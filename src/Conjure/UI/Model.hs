@@ -888,7 +888,16 @@ applicableRules Config{..} rulesAtLevel x = do
            , res <- ress
            , let ruleResult' = do
                     rResult <- ruleResult res
-                    resolveNamesX rResult
+                    merr <- runExceptT (resolveNamesX rResult)
+                    case merr of
+                        Left err -> bug $ vcat
+                            [ "Name resolution failed after rule application."
+                            , "Rule:" <+> pretty name
+                            , "Rule result:" <+> pretty rResult
+                            , "           :" <+> pretty (show rResult)
+                            , "The error  :" <+> err
+                            ]
+                        Right r  -> return r
            ]
 
 
