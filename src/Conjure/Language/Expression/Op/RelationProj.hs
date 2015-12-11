@@ -68,6 +68,8 @@ instance EvaluateOp OpRelationProj where
     -- leave the OpImage evaluator in -- it is just easier
     evaluateOp (OpRelationProj f@(viewConstantFunction -> Just _) [Just arg]) =
         evaluateOp (OpImage f arg)
+    evaluateOp (OpRelationProj f@(viewConstantSequence -> Just _) [Just arg]) =
+        evaluateOp (OpImage f arg)
     evaluateOp op = na $ "evaluateOp{OpRelationProj}:" <++> pretty (show op)
 
 instance SimplifyOp OpRelationProj x where
