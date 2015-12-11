@@ -76,7 +76,19 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             , return $ WithLocals (Comprehension body gensOrConds) (DefinednessConstraints localsLifted)
             )
 
-    theRule Comprehension{} = na "rule_NotBoolYet Comprehension"
+    theRule (Comprehension x gensOrConds) = do
+        let (gensOrConds', Any changed) = mconcat
+                [ case goc of
+                    Generator (GenInExpr pat (WithLocals y (DefinednessConstraints cons)))
+                        -> (Generator (GenInExpr pat y) : map Condition cons, Any True)
+                    _ -> ([goc], Any False)
+                | goc <- gensOrConds
+                ]
+        unless changed (na "rule_NotBoolYet")
+        return
+            ( "Bubbling up, attached to a generator inside a comprehension"
+            , return $ Comprehension x gensOrConds'
+            )
 
     theRule p = do
         let
