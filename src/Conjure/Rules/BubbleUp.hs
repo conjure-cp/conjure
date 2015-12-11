@@ -49,9 +49,9 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
 
         forM_ gensOrConds $ \ goc -> case goc of
             Generator GenDomainHasRepr{} -> return ()
-            Generator {}                 -> na "rule_NotBoolYet"        -- no other generators
+            Generator {}                 -> na "rule_NotBoolYet"        -- no other generators, only GenDomainHasRepr
             Condition {}                 -> return ()
-            ComprehensionLetting {}      -> return ()
+            ComprehensionLetting {}      -> na "rule_NotBoolYet"        -- no lettings
 
         let localsLifted =
                 [ make opAnd $ Comprehension c gensOrConds
@@ -62,6 +62,8 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             ( "Bubbling up (through comprehension), not reached a relational context yet."
             , return $ WithLocals (Comprehension body gensOrConds) (DefinednessConstraints localsLifted)
             )
+
+    theRule Comprehension{} = na "rule_NotBoolYet Comprehension"
 
     theRule p = do
         let
