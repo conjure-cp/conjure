@@ -178,12 +178,12 @@ instance Pretty Declaration where
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
-            comment1D _ [] = ""
-            comment1D width primTable =
-                unlines
-                    [ "$ Here is a simple \"visualisation\" for the value above."
-                    , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
-                    ]
+            -- comment1D _ [] = ""
+            -- comment1D width primTable =
+            --     unlines
+            --         [ "$ Here is a simple \"visualisation\" for the value above."
+            --         , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
+            --         ]
 
             modifierX =
                 case x of
@@ -191,10 +191,9 @@ instance Pretty Declaration where
                     _          -> id
 
             modifierC c =
-                case (isPrim2D c, isPrim1D c) of
-                    (Just primTable, _) -> \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
-                    (_, Just primTable) -> \ s -> vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
-                    _                   -> id
+                case isPrim2D c of
+                    Just primTable -> \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
+                    _              -> id
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
