@@ -154,7 +154,7 @@ instance Pretty Declaration where
             extract (viewConstantSequence -> Just rows     ) = Just rows
             extract _ = Nothing
 
-            isPrim2D (Constant (extract -> Just rows)) = mapM isPrim1D rows
+            isPrim2D (extract -> Just rows) = mapM isPrim1D rows
             isPrim2D _ = Nothing
 
             isPrim1D (extract -> Just cells) = mapM isPrim cells
@@ -168,23 +168,33 @@ instance Pretty Declaration where
             showPrim _ (Left False) = "_"
             showPrim n (Right i) = paddedNum n ' ' i
 
-            maxWidth primTable =
-                maximum
-                    [ maximum [ either (const 0) (length . show) cell | cell <- row ]
-                    | row <- primTable ]
+            maxIntWidth primTable =
+                maximum [ length (show i) | i <- universeBi primTable :: [Int] ]
 
-            comment width primTable =
+            comment2D width primTable =
                 unlines
                     $ "$ Here is a simple \"visualisation\" for the value above."
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
-            modifier =
-                case isPrim2D x of
-                    Just primTable -> \ s -> vcat [s, pretty (comment (maxWidth primTable) primTable)]
-                    Nothing        -> id
+            comment1D width primTable =
+                unlines
+                    [ "$ Here is a simple \"visualisation\" for the value above."
+                    , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
+                    ]
+
+            modifierX =
+                case x of
+                    Constant c -> modifierC c
+                    _          -> id
+
+            modifierC c =
+                case (isPrim2D c, isPrim1D c) of
+                    (Just primTable, _) -> \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
+                    (_, Just primTable) -> \ s -> vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
+                    _                   -> id
         in
-            modifier $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
+            modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
         hang ("given"   <+> pretty name) 8 "new type enum"
     pretty (LettingDomainDefnEnum name values) =
