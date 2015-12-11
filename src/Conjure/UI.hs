@@ -154,11 +154,11 @@ ui = modes
                                    &= argPos 0
         , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
                                    &= args
-        , validateSolutionsOpt = True
+        , validateSolutionsOpt = False
                                    &= name "validate-solutions"
                                    &= groupname "Flags"
                                    &= explicit
-                                   &= help "Enable/disable solution validation. On by default."
+                                   &= help "Enable/disable solution validation. Off by default."
         , outputDirectory  = "conjure-output"
                                    &= typDir
                                    &= name "output-directory"
