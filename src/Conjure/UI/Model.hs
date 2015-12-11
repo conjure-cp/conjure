@@ -888,14 +888,28 @@ applicableRules Config{..} rulesAtLevel x = do
            , res <- ress
            , let ruleResult' = do
                     rResult <- ruleResult res
+                    case (hole x, rResult) of
+                        (Reference nm1 _, Reference nm2 _)
+                            | name /= "choose-repr"
+                            , nm1 == nm2 -> bug $ vcat
+                            [ "Rule applied inside a Reference."
+                            , "Rule              :" <+> pretty name
+                            , "Rule input        :" <+> pretty (hole x)
+                            , "Rule output       :" <+> pretty rResult
+                            , "Rule input  (show):" <+> pretty (show (hole x))
+                            , "Rule output (show):" <+> pretty (show rResult)
+                            ]
+                        _ -> return ()
                     merr <- runExceptT (resolveNamesX rResult)
                     case merr of
                         Left err -> bug $ vcat
                             [ "Name resolution failed after rule application."
-                            , "Rule:" <+> pretty name
-                            , "Rule result:" <+> pretty rResult
-                            , "           :" <+> pretty (show rResult)
-                            , "The error  :" <+> err
+                            , "Rule              :" <+> pretty name
+                            , "Rule input        :" <+> pretty (hole x)
+                            , "Rule output       :" <+> pretty rResult
+                            , "Rule input  (show):" <+> pretty (show (hole x))
+                            , "Rule output (show):" <+> pretty (show rResult)
+                            , "The error         :" <+> err
                             ]
                         Right r  -> return r
            ]
