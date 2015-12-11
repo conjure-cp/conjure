@@ -1,0 +1,95 @@
+language Essence 1.3
+
+$ from: http://www.bbc.co.uk/news/uk-35058761
+
+given n : int $ board size
+letting ADDR be domain int(1..n)
+
+given horizontalHints : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR      $ per row
+find horizontalLocs   : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR      $ starting positions of each shape
+such that
+    forAll row : ADDR . |horizontalLocs[row]| = |horizontalHints[row]|
+such that
+    forAll row : ADDR . forAll (index, _) in horizontalHints[row] , index > 1 .
+        horizontalLocs[row](index) > horizontalLocs[row](index-1) + horizontalHints[row](index-1)
+
+given verticalHints : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR        $ per column
+find verticalLocs   : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR        $ starting positions of each shape
+such that
+    forAll col : ADDR . |verticalLocs[col]| = |verticalHints[col]|
+such that
+    forAll col : ADDR . forAll (index, _) in verticalHints[col] , index > 1 .
+        verticalLocs[col](index) > verticalLocs[col](index-1) + verticalHints[col](index-1)
+
+find bitmap : matrix indexed by [ADDR, ADDR] of bool
+
+given prefilled : set of (ADDR, ADDR)
+such that
+    forAll (i,j) in prefilled . bitmap[i,j] = true
+
+
+$ channelling the horizontal placements to the bitmap
+such that
+    and([ and([ bitmap[row,i] = true            $ the shape itself
+              | i : ADDR
+              , i >= thisStart
+              , i <= thisFinish
+              ]) /\
+          and([ bitmap[row,i] = false           $ the shape is the first, before it is empty
+              | i : ADDR
+              , i < thisStart
+              , index = 1                       $ (the first)
+              ]) /\
+          and([ bitmap[row,i] = false           $ the shape is the last, after it is empty
+              | i : ADDR
+              , i > thisFinish
+              , index = lastIndex               $ (the last)
+              ]) /\
+          and([ bitmap[row,i] = false           $ the shape is in the middle, the gap is empty
+              | i : ADDR
+              , letting nextStart be horizontalLocs[row](index+1)
+              , i > thisFinish
+              , i < nextStart
+              , index < lastIndex               $ (in the middle)
+              ])
+        | row   : ADDR
+        , letting lastIndex be |horizontalHints[row]|
+        , index : ADDR
+        , index <= lastIndex
+        , letting thisStart  be horizontalLocs[row](index)
+        , letting thisWidth  be horizontalHints[row](index)
+        , letting thisFinish be thisStart + thisWidth - 1
+        ])
+
+$ channelling the vertical placements to the bitmap
+such that
+    and([ and([ bitmap[i,col] = true            $ the shape itself
+              | i : ADDR
+              , i >= thisStart
+              , i <= thisFinish
+              ]) /\
+          and([ bitmap[i,col] = false           $ the shape is the first, before it is empty
+              | i : ADDR
+              , i < thisStart
+              , index = 1                       $ (the first)
+              ]) /\
+          and([ bitmap[i,col] = false           $ the shape is the last, after it is empty
+              | i : ADDR
+              , i > thisFinish
+              , index = lastIndex               $ (the last)
+              ]) /\
+          and([ bitmap[i,col] = false           $ the shape is in the middle, the gap is empty
+              | i : ADDR
+              , letting nextStart be verticalLocs[col](index+1)
+              , i > thisFinish
+              , i < nextStart
+              , index < lastIndex               $ (in the middle)
+              ])
+        | col   : ADDR
+        , letting lastIndex be |verticalHints[col]|
+        , index : ADDR
+        , index <= lastIndex
+        , letting thisStart  be verticalLocs[col](index)
+        , letting thisWidth  be verticalHints[col](index)
+        , letting thisFinish be thisStart + thisWidth - 1
+        ])

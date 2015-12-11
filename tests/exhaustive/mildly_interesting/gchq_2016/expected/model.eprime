@@ -1,0 +1,137 @@
+language ESSENCE' 1.0
+
+given n: int
+given horizontalHints_ExplicitBounded_Length:
+        matrix indexed by [int(1..n)] of int(0..n)
+given horizontalHints_ExplicitBounded_Values:
+        matrix indexed by [int(1..n), int(1..n)] of int(1..n)
+find horizontalLocs_ExplicitBounded_Length:
+        matrix indexed by [int(1..n)] of int(0..n)
+find horizontalLocs_ExplicitBounded_Values:
+        matrix indexed by [int(1..n), int(1..n)] of int(1..n)
+given verticalHints_ExplicitBounded_Length:
+        matrix indexed by [int(1..n)] of int(0..n)
+given verticalHints_ExplicitBounded_Values:
+        matrix indexed by [int(1..n), int(1..n)] of int(1..n)
+find verticalLocs_ExplicitBounded_Length:
+        matrix indexed by [int(1..n)] of int(0..n)
+find verticalLocs_ExplicitBounded_Values:
+        matrix indexed by [int(1..n), int(1..n)] of int(1..n)
+find bitmap: matrix indexed by [int(1..n), int(1..n)] of bool
+given fin1: int
+given prefilled_Explicit_1: matrix indexed by [int(1..fin1)] of int(1..n)
+given prefilled_Explicit_2: matrix indexed by [int(1..fin1)] of int(1..n)
+such that
+    and([horizontalLocs_ExplicitBounded_Length[row] =
+         horizontalHints_ExplicitBounded_Length[row]
+             | row : int(1..n)]),
+    and([and([and([horizontalLocs_ExplicitBounded_Values[row, q10] >
+                   horizontalLocs_ExplicitBounded_Values[row, q10 - 1] +
+                   horizontalHints_ExplicitBounded_Values[row, q10 - 1],
+                   q10 <= horizontalLocs_ExplicitBounded_Length[row],
+                   q10 - 1 <= horizontalLocs_ExplicitBounded_Length[row],
+                   q10 - 1 <= horizontalHints_ExplicitBounded_Length[row]; int(1..4)])
+                  | q10 : int(1..n), q10 <= horizontalHints_ExplicitBounded_Length[row], q10 > 1])
+             | row : int(1..n)]),
+    and([verticalLocs_ExplicitBounded_Length[col] =
+         verticalHints_ExplicitBounded_Length[col]
+             | col : int(1..n)]),
+    and([and([and([verticalLocs_ExplicitBounded_Values[col, q12] >
+                   verticalLocs_ExplicitBounded_Values[col, q12 - 1] +
+                   verticalHints_ExplicitBounded_Values[col, q12 - 1],
+                   q12 <= verticalLocs_ExplicitBounded_Length[col],
+                   q12 - 1 <= verticalLocs_ExplicitBounded_Length[col],
+                   q12 - 1 <= verticalHints_ExplicitBounded_Length[col]; int(1..4)])
+                  | q12 : int(1..n), q12 <= verticalHints_ExplicitBounded_Length[col], q12 > 1])
+             | col : int(1..n)]),
+    and([bitmap[prefilled_Explicit_1[q14], prefilled_Explicit_2[q14]]
+             | q14 : int(1..fin1)]),
+    and([and([i >= horizontalLocs_ExplicitBounded_Values[row, index] /\
+              index <= horizontalLocs_ExplicitBounded_Length[row]
+              /\
+              and([i <=
+                   horizontalLocs_ExplicitBounded_Values[row, index] +
+                   horizontalHints_ExplicitBounded_Values[row, index]
+                   - 1,
+                   index <= horizontalLocs_ExplicitBounded_Length[row],
+                   index <= horizontalHints_ExplicitBounded_Length[row]; int(1..3)])
+              -> bitmap[row, i]
+                  | i : int(1..n)])
+         /\
+         and([i < horizontalLocs_ExplicitBounded_Values[row, index] /\
+              index <= horizontalLocs_ExplicitBounded_Length[row]
+              -> bitmap[row, i] = false
+                  | i : int(1..n), index = 1])
+         /\
+         and([and([i >
+                   horizontalLocs_ExplicitBounded_Values[row, index] +
+                   horizontalHints_ExplicitBounded_Values[row, index]
+                   - 1,
+                   index <= horizontalLocs_ExplicitBounded_Length[row],
+                   index <= horizontalHints_ExplicitBounded_Length[row]; int(1..3)])
+              -> bitmap[row, i] = false
+                  | i : int(1..n), index = horizontalHints_ExplicitBounded_Length[row]])
+         /\
+         and([and([i >
+                   horizontalLocs_ExplicitBounded_Values[row, index] +
+                   horizontalHints_ExplicitBounded_Values[row, index]
+                   - 1,
+                   index <= horizontalLocs_ExplicitBounded_Length[row],
+                   index <= horizontalHints_ExplicitBounded_Length[row]; int(1..3)])
+              /\
+              (i < horizontalLocs_ExplicitBounded_Values[row, index + 1] /\
+               index + 1 <= horizontalLocs_ExplicitBounded_Length[row])
+              -> bitmap[row, i] = false
+                  | i : int(1..n), index < horizontalHints_ExplicitBounded_Length[row]])
+             | row : int(1..n), index : int(1..n),
+               index <= horizontalHints_ExplicitBounded_Length[row]]),
+    and([and([i >= verticalLocs_ExplicitBounded_Values[col, index] /\
+              index <= verticalLocs_ExplicitBounded_Length[col]
+              /\
+              and([i <=
+                   verticalLocs_ExplicitBounded_Values[col, index] +
+                   verticalHints_ExplicitBounded_Values[col, index]
+                   - 1,
+                   index <= verticalLocs_ExplicitBounded_Length[col],
+                   index <= verticalHints_ExplicitBounded_Length[col]; int(1..3)])
+              -> bitmap[i, col]
+                  | i : int(1..n)])
+         /\
+         and([i < verticalLocs_ExplicitBounded_Values[col, index] /\
+              index <= verticalLocs_ExplicitBounded_Length[col]
+              -> bitmap[i, col] = false
+                  | i : int(1..n), index = 1])
+         /\
+         and([and([i >
+                   verticalLocs_ExplicitBounded_Values[col, index] +
+                   verticalHints_ExplicitBounded_Values[col, index]
+                   - 1,
+                   index <= verticalLocs_ExplicitBounded_Length[col],
+                   index <= verticalHints_ExplicitBounded_Length[col]; int(1..3)])
+              -> bitmap[i, col] = false
+                  | i : int(1..n), index = verticalHints_ExplicitBounded_Length[col]])
+         /\
+         and([and([i >
+                   verticalLocs_ExplicitBounded_Values[col, index] +
+                   verticalHints_ExplicitBounded_Values[col, index]
+                   - 1,
+                   index <= verticalLocs_ExplicitBounded_Length[col],
+                   index <= verticalHints_ExplicitBounded_Length[col]; int(1..3)])
+              /\
+              (i < verticalLocs_ExplicitBounded_Values[col, index + 1] /\
+               index + 1 <= verticalLocs_ExplicitBounded_Length[col])
+              -> bitmap[i, col] = false
+                  | i : int(1..n), index < verticalHints_ExplicitBounded_Length[col]])
+             | col : int(1..n), index : int(1..n),
+               index <= verticalHints_ExplicitBounded_Length[col]]),
+    and([and([q4 > horizontalLocs_ExplicitBounded_Length[q3] ->
+              horizontalLocs_ExplicitBounded_Values[q3, q4] = 1
+                  | q4 : int(1..n)])
+             | q3 : int(1..n)]),
+    and([horizontalLocs_ExplicitBounded_Length[q3] <= n | q3 : int(1..n)]),
+    and([and([q7 > verticalLocs_ExplicitBounded_Length[q6] ->
+              verticalLocs_ExplicitBounded_Values[q6, q7] = 1
+                  | q7 : int(1..n)])
+             | q6 : int(1..n)]),
+    and([verticalLocs_ExplicitBounded_Length[q6] <= n | q6 : int(1..n)])
+
