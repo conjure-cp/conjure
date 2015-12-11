@@ -169,7 +169,7 @@ instance Pretty Declaration where
             showPrim n (Right i) = paddedNum n ' ' i
 
             maxIntWidth primTable =
-                maximum (0 : [ length (show i) | i <- universeBi primTable :: [Int] ])
+                maximum (0 : [ length (show i) | i <- universeBi primTable :: [Integer] ])
 
             comment2D width primTable =
                 unlines
