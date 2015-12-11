@@ -143,31 +143,31 @@ rule_Subset = "sequence-subset" `namedRule` theRule where
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
         return
-            ( "Horizontal rule for set subset"
+            ( "Horizontal rule for sequence subset"
             , return [essence| &a subsetEq &b /\ &a != &b |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
-rule_Supset = "set-supset" `namedRule` theRule where
+rule_Supset = "sequence-supset" `namedRule` theRule where
     theRule [essence| &a supset &b |] = do
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
         return
-            ( "Horizontal rule for set supset"
+            ( "Horizontal rule for sequence supset"
             , return [essence| &b subset &a |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
-rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
+rule_SupsetEq = "sequence-subsetEq" `namedRule` theRule where
     theRule [essence| &a supsetEq &b |] = do
         TypeSequence{} <- typeOf a
         TypeSequence{} <- typeOf b
         return
-            ( "Horizontal rule for set supsetEq"
+            ( "Horizontal rule for sequence supsetEq"
             , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
@@ -360,6 +360,7 @@ rule_Restrict_Comprehension = "sequence-restrict-comprehension" `namedRule` theR
 
 rule_Image_Bool :: Rule
 rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
+    theRule Reference{} = na "rule_Image_Int"
     theRule p = do
         let
             onChildren
@@ -405,6 +406,7 @@ rule_Image_Bool = "sequence-image-bool" `namedRule` theRule where
 
 rule_Image_Int :: Rule
 rule_Image_Int = "sequence-image-int" `namedRule` theRule where
+    theRule Reference{} = na "rule_Image_Int"
     theRule p = do
         let
             onChildren
