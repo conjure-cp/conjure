@@ -171,12 +171,14 @@ instance Pretty Declaration where
             maxIntWidth primTable =
                 maximum (0 : [ length (show i) | i <- universeBi primTable :: [Integer] ])
 
+            comment2D _ [] = ""
             comment2D width primTable =
                 unlines
                     $ "$ Here is a simple \"visualisation\" for the value above."
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
+            comment1D _ [] = ""
             comment1D width primTable =
                 unlines
                     [ "$ Here is a simple \"visualisation\" for the value above."
