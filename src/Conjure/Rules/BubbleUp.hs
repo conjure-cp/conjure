@@ -24,6 +24,19 @@ rule_ToAnd :: Rule
 rule_ToAnd = "bubble-to-and" `namedRule` theRule where
     theRule (WithLocals x (AuxiliaryVars [])) = return ("Empty bubble is no bubble", return x)
     theRule (WithLocals x (DefinednessConstraints [])) = return ("Empty bubble is no bubble", return x)
+    theRule (WithLocals x (DefinednessConstraints cons))
+        | let isTrueCons (Constant (ConstantBool True)) = True
+              isTrueCons _ = False
+        , all isTrueCons cons
+        = return ("Trivially defined", return x)
+    theRule (WithLocals x (DefinednessConstraints cons))
+        | let isFalseCons (Constant (ConstantBool False)) = True
+              isFalseCons _ = False
+        , any isFalseCons cons
+        , length cons > 1
+        = return ( "Trivially undefined"
+                 , return (WithLocals x (DefinednessConstraints [Constant (ConstantBool False)]))
+                 )
     theRule (WithLocals x (DefinednessConstraints locals@(_:_))) = do
         TypeBool <- typeOf x
         let out = make opAnd $ fromList (x:locals)
