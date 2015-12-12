@@ -171,14 +171,12 @@ instance Pretty Declaration where
             maxIntWidth primTable =
                 maximum (0 : [ length (show i) | i <- universeBi primTable :: [Integer] ])
 
-            comment2D _ [] = ""
             comment2D width primTable =
                 unlines
                     $ "$ Here is a simple \"visualisation\" for the value above."
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
-            -- comment1D _ [] = ""
             -- comment1D width primTable =
             --     unlines
             --         [ "$ Here is a simple \"visualisation\" for the value above."
@@ -192,8 +190,9 @@ instance Pretty Declaration where
 
             modifierC c =
                 case isPrim2D c of
+                    Nothing        -> id
+                    Just []        -> id
                     Just primTable -> \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
-                    _              -> id
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
