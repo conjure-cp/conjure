@@ -1217,6 +1217,9 @@ otherRules =
         , rule_DotLeq_IntLike
         ]
 
+    ,   [ rule_Comprehension_Simplify
+        ]
+
     ,   [ rule_InlineConditions
         , rule_InlineConditions_MaxMin
         ]
@@ -1914,3 +1917,17 @@ rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
                             index
                             (map mkQuan elems))
             )
+
+
+rule_Comprehension_Simplify :: Rule
+rule_Comprehension_Simplify = "comprehension-simplify" `namedRule` theRule where
+    theRule (Comprehension x gocs)
+        | let isTrueCondition (Condition (Constant (ConstantBool True))) = True
+              isTrueCondition _ = False
+        , let gocs' = filter (not . isTrueCondition) gocs
+        , length gocs' < length gocs
+        = return
+            ( "Removing true conditions"
+            , return $ Comprehension x gocs'
+            )
+    theRule _ = na "rule_Comprehension_Simplify"
