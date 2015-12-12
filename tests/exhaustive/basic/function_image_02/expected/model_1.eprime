@@ -4,6 +4,6 @@ find b: bool
 find i: int(0..5)
 find x: int(1..2)
 such that
-    sum([toInt(false = b) * 5 | true]) + toInt(2 = x /\ b) * x = i,
-    or([false = b | true]) \/ 2 = x /\ b
+    toInt(false = b) * 5 + toInt(2 = x /\ b) * x = i,
+    false = b \/ 2 = x /\ b
 
