@@ -191,8 +191,10 @@ instance Pretty Declaration where
             modifierC c =
                 case isPrim2D c of
                     Nothing        -> id
-                    Just []        -> id
-                    Just primTable -> \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
+                    Just primTable ->
+                        if null (concat primTable)
+                            then id
+                            else \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
