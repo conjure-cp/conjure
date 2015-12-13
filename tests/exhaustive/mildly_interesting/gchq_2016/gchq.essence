@@ -5,21 +5,21 @@ $ from: http://www.bbc.co.uk/news/uk-35058761
 given n : int $ board size
 letting ADDR be domain int(1..n)
 
-given horizontalHints : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR      $ per row
+given horizontalClues : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR      $ per row
 find horizontalLocs   : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR      $ starting positions of each shape
 such that
-    forAll row : ADDR . |horizontalLocs[row]| = |horizontalHints[row]|
+    forAll row : ADDR . |horizontalLocs[row]| = |horizontalClues[row]|
 such that
-    forAll row : ADDR . forAll (index, _) in horizontalHints[row] , index > 1 .
-        horizontalLocs[row](index) > horizontalLocs[row](index-1) + horizontalHints[row](index-1)
+    forAll row : ADDR . forAll (index, _) in horizontalClues[row] , index > 1 .
+        horizontalLocs[row](index) > horizontalLocs[row](index-1) + horizontalClues[row](index-1)
 
-given verticalHints : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR        $ per column
+given verticalClues : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR        $ per column
 find verticalLocs   : matrix indexed by [ADDR] of sequence (maxSize n) of ADDR        $ starting positions of each shape
 such that
-    forAll col : ADDR . |verticalLocs[col]| = |verticalHints[col]|
+    forAll col : ADDR . |verticalLocs[col]| = |verticalClues[col]|
 such that
-    forAll col : ADDR . forAll (index, _) in verticalHints[col] , index > 1 .
-        verticalLocs[col](index) > verticalLocs[col](index-1) + verticalHints[col](index-1)
+    forAll col : ADDR . forAll (index, _) in verticalClues[col] , index > 1 .
+        verticalLocs[col](index) > verticalLocs[col](index-1) + verticalClues[col](index-1)
 
 find bitmap : matrix indexed by [ADDR, ADDR] of bool
 
@@ -53,11 +53,11 @@ such that
               , index < lastIndex               $ (in the middle)
               ])
         | row   : ADDR
-        , letting lastIndex be |horizontalHints[row]|
+        , letting lastIndex be |horizontalClues[row]|
         , index : ADDR
         , index <= lastIndex
         , letting thisStart  be horizontalLocs[row](index)
-        , letting thisWidth  be horizontalHints[row](index)
+        , letting thisWidth  be horizontalClues[row](index)
         , letting thisFinish be thisStart + thisWidth - 1
         ])
 
@@ -86,10 +86,10 @@ such that
               , index < lastIndex               $ (in the middle)
               ])
         | col   : ADDR
-        , letting lastIndex be |verticalHints[col]|
+        , letting lastIndex be |verticalClues[col]|
         , index : ADDR
         , index <= lastIndex
         , letting thisStart  be verticalLocs[col](index)
-        , letting thisWidth  be verticalHints[col](index)
+        , letting thisWidth  be verticalClues[col](index)
         , letting thisFinish be thisStart + thisWidth - 1
         ])
