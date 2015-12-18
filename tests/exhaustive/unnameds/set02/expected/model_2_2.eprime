@@ -1,0 +1,24 @@
+language ESSENCE' 1.0
+
+given n: int
+find s_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..1 + (n - 1))] of int(1..n + 1)
+such that
+    and([[or([s_ExplicitVarSizeWithDummy[q6] != n + 1 /\
+              s_ExplicitVarSizeWithDummy[q6] = q3
+                  | q6 : int(1..1 + (n - 1))])
+              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1,
+                q2 = q1 + 1 -> q3 = q1, q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+         <=lex
+         [or([s_ExplicitVarSizeWithDummy[q8] != n + 1 /\
+              s_ExplicitVarSizeWithDummy[q8] = q2
+                  | q8 : int(1..1 + (n - 1))])
+              | q2 : int(1..n)]
+             | q1 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/
+         s_ExplicitVarSizeWithDummy[q1] = n + 1
+             | q1 : int(1..1 + (n - 1) - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q2] = n + 1 ->
+         s_ExplicitVarSizeWithDummy[q2 + 1] = n + 1
+             | q2 : int(1..1 + (n - 1) - 1)])
+
