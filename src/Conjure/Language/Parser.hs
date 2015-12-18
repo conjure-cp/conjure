@@ -727,7 +727,9 @@ parseWithLocals = braces $ do
     return (WithLocals i locals)
 
 parseName :: Parser Name
-parseName = Name <$> identifierText
+parseName = msum [ NameMetaVar <$> parseMetaVariable
+                 , Name <$> identifierText
+                 ]
 
 parseReference :: Parser Expression
 parseReference = Reference <$> parseName <*> pure Nothing

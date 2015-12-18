@@ -1,6 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Conjure.Language.TH ( essence, essenceStmts, module X ) where
+module Conjure.Language.TH
+    ( essence
+    , essenceStmts
+    , module X
+    , locationTH            -- unused, exporting only to silence the warning
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -12,7 +17,7 @@ import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because i
 
 
 -- megaparsec
-import Text.Megaparsec.Prim ( setPosition )
+-- import Text.Megaparsec.Prim ( setPosition )
 import Text.Megaparsec.Pos ( SourcePos, newPos )
 
 -- template-haskell
@@ -26,14 +31,12 @@ import Data.Generics.Aliases ( extQ )
 essenceStmts :: QuasiQuoter
 essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e <- parseIO (setPosition l *> parseTopLevels) str
-        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        e <- parseIO parseTopLevels str
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expN) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
-        l <- locationTH
-        e <- parseIO (setPosition l *> parseTopLevels) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+        e <- parseIO parseTopLevels str
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patN) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
@@ -41,14 +44,12 @@ essenceStmts = QuasiQuoter
 essence :: QuasiQuoter
 essence = QuasiQuoter
     { quoteExp = \ str -> do
-        l <- locationTH
-        e <- parseIO (setPosition l *> parseExpr) str
-        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        e <- parseIO parseExpr str
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expN) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
-        l <- locationTH
-        e <- parseIO (setPosition l *> parseExpr) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+        e <- parseIO parseExpr str
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patN) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
@@ -73,6 +74,10 @@ expAP :: AbstractPattern -> Maybe ExpQ
 expAP (AbstractPatternMetaVar x) = Just [| $(varE (mkName x)) |]
 expAP _ = Nothing
 
+expN :: Name -> Maybe ExpQ
+expN (NameMetaVar x) = Just [| $(varE (mkName x)) |]
+expN _ = Nothing
+
 
 patE :: Expression -> Maybe PatQ
 patE (ExpressionMetaVar x) = toPat x
@@ -85,6 +90,10 @@ patD _ = Nothing
 patAP :: AbstractPattern -> Maybe PatQ
 patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
 patAP _ = Nothing
+
+patN :: Name -> Maybe PatQ
+patN (NameMetaVar x) = Just (varP (mkName x))
+patN _ = Nothing
 
 
 toPat :: String -> Maybe PatQ
