@@ -10,7 +10,7 @@ module Conjure.Language.Expression
     , AbstractPattern(..)
     , GeneratorOrCondition(..), Generator(..), generatorPat
     , e2c
-    , quantifiedVar, auxiliaryVar
+    , quantifiedVar, lettingVar, auxiliaryVar
     , lambdaToFunction
     , tupleLitIfNeeded
     , patternToExpr
@@ -528,6 +528,12 @@ quantifiedVar = do
     let pat = Single nm
         ref = Reference nm Nothing
     return (pat, ref)
+
+lettingVar :: NameGen m => m (Name, Expression)
+lettingVar = do
+    nm <- nextName "l"
+    let ref = Reference nm Nothing
+    return (nm, ref)
 
 auxiliaryVar :: NameGen m => m (Name, Expression)
 auxiliaryVar = do

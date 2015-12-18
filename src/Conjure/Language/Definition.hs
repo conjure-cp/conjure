@@ -7,7 +7,7 @@ module Conjure.Language.Definition
     , initInfo
     , allContextsExceptReferences
 
-    , quantifiedVar, auxiliaryVar
+    , quantifiedVar, lettingVar, auxiliaryVar
     , lambdaToFunction
 
     , e2c
