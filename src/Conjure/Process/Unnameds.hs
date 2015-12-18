@@ -1,4 +1,5 @@
 {-# LANGUAGE TupleSections #-}
+{-# LANGUAGE QuasiQuotes #-}
 
 module Conjure.Process.Unnameds
     ( removeUnnamedsFromModel
