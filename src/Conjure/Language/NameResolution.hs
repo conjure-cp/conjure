@@ -85,7 +85,7 @@ resolveStatement st =
             case decl of
                 FindOrGiven forg nm dom       -> do
                     dom' <- resolveD dom
-                    modify ((nm, DeclNoRepr forg nm dom') :)
+                    modify ((nm, DeclNoRepr forg nm dom' NoRegion) :)
                     return (Declaration (FindOrGiven forg nm dom'))
                 Letting nm x                  -> do
                     x' <- resolveX x
@@ -156,6 +156,10 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
             | DeclHasRepr{} <- refto                    -- but the old one did, do not update
             -> return p
+        Just (DeclNoRepr forg_ nm_ dom_ _)              -- if the newly found guy doesn't have a repr
+            | DeclNoRepr _ _ _ region <- refto          -- and the old one didn't have one either
+                                                        -- preserve the region information
+            -> return (Reference nm (Just (DeclNoRepr forg_ nm_ dom_ region)))
         Just (Alias r) -> do
             r' <- resolveX r
             return (Reference nm (Just (Alias r')))
@@ -179,7 +183,7 @@ resolveX p@Comprehension{} = scope $ do
                             return
                                 ( gen''
                                 , case pat of
-                                    Single nm' -> DeclNoRepr Quantified nm' dom'
+                                    Single nm' -> DeclNoRepr Quantified nm' dom' NoRegion
                                     _ -> InComprehension gen''
                                 )
                         GenDomainHasRepr nm dom ->

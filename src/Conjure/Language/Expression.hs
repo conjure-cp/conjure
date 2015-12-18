@@ -5,7 +5,7 @@
 module Conjure.Language.Expression
     ( Statement(..), SearchOrder(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
-    , Expression(..), ReferenceTo(..), InBubble(..)
+    , Expression(..), ReferenceTo(..), Region(..), InBubble(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
     , GeneratorOrCondition(..), Generator(..), generatorPat
@@ -364,10 +364,10 @@ instance TypeOf Expression where
                         GenDomainNoRepr  pat domain -> typeOf domain                 >>= lu pat
                         GenDomainHasRepr pat domain -> typeOf domain                 >>= lu (Single pat)
                         GenInExpr        pat expr   -> typeOf expr   >>= innerTypeOf >>= lu pat
-            DeclNoRepr  _ _ dom -> typeOf dom
-            DeclHasRepr _ _ dom -> typeOf dom
-            RecordField _ ty    -> return ty
-            VariantField _ ty   -> return ty
+            DeclNoRepr  _ _ dom _ -> typeOf dom
+            DeclHasRepr _ _ dom   -> typeOf dom
+            RecordField _ ty      -> return ty
+            VariantField _ ty     -> return ty
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
@@ -600,6 +600,8 @@ data ReferenceTo
     = Alias           Expression
     | InComprehension Generator
     | DeclNoRepr      FindOrGiven Name (Domain () Expression)
+                      Region -- the region of this reference
+                             -- references with the same region identifier will get the same representation
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
     | RecordField     Name Type         -- the type of the field with this name
     | VariantField    Name Type         -- the type of the variant with this name
@@ -611,12 +613,22 @@ instance ToJSON    ReferenceTo where toJSON = genericToJSON jsonOptions
 instance FromJSON  ReferenceTo where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty ReferenceTo where
-    pretty (Alias           x  ) = "Alias"           <+> prParens (pretty x)
+    pretty (Alias x) = "Alias" <+> prParens (pretty x)
     pretty (InComprehension gen) = "InComprehension" <+> prParens (pretty gen)
-    pretty (DeclNoRepr      forg nm dom) = "DeclNoRepr"  <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
-    pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
-    pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (DeclNoRepr  forg nm dom _) = "DeclNoRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
+    pretty (DeclHasRepr forg nm dom  ) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
+    pretty (RecordField  nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (VariantField nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+
+data Region
+    = NoRegion
+    | Region Int
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize Region
+instance Hashable  Region
+instance ToJSON    Region where toJSON = genericToJSON jsonOptions
+instance FromJSON  Region where parseJSON = genericParseJSON jsonOptions
 
 
 ------------------------------------------------------------------------------------------------------------------------
