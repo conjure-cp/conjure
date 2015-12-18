@@ -604,7 +604,7 @@ updateDeclarations model = do
                     concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
-                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
+                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm (afters, mInfo model) > 0 ]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
                 SearchOrder orders -> do
