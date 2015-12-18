@@ -156,6 +156,10 @@ resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolv
         Just DeclNoRepr{}                               -- if the newly found guy doesn't have a repr
             | DeclHasRepr{} <- refto                    -- but the old one did, do not update
             -> return p
+        Just (DeclNoRepr forg_ nm_ dom_ _)              -- if the newly found guy doesn't have a repr
+            | DeclNoRepr _ _ _ region <- refto          -- and the old one didn't have one either
+                                                        -- preserve the region information
+            -> return (Reference nm (Just (DeclNoRepr forg_ nm_ dom_ region)))
         Just (Alias r) -> do
             r' <- resolveX r
             return (Reference nm (Just (Alias r')))
