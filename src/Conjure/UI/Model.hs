@@ -498,7 +498,7 @@ addToTrail Config{..}
 addTrueConstraints :: Model -> Model
 addTrueConstraints m =
     let
-        mkTrueConstraint forg nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr forg nm dom)))
+        mkTrueConstraint forg nm dom = Op $ MkOpTrue $ OpTrue (Reference nm (Just (DeclNoRepr forg nm dom NoRegion)))
         trueConstraints = [ mkTrueConstraint forg nm d
                           | (Declaration (FindOrGiven forg nm d), after) <- withAfter (mStatements m)
                           , forg == Find || (forg == Given && nbUses nm after == 0)
@@ -1241,7 +1241,7 @@ delayedRules =
 rule_ChooseRepr :: Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
-    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom))) | forg `elem` [Find, Given, CutFind] = do
+    theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
         let reprsWhichOrder
                 | (forg, representationsGivens config) == (Given, Sparse) = reprsSparseOrder
                 | representationLevels config == False                    = reprsStandardOrderNoLevels
@@ -1262,7 +1262,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 | dom <- domOpts
                 , let msg = "Choosing representation for" <+> pretty nm <> ":" <++> pretty dom
                 , let out = Reference nm (Just (DeclHasRepr forg nm dom))
-                , let hook = mkHook (channelling config) forg nm dom
+                , let hook = mkHook (channelling config) forg nm dom region
                 ]
         return options
     theRule _ = na "rule_ChooseRepr"
@@ -1278,12 +1278,14 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
         -> FindOrGiven
         -> Name
         -> Domain HasRepresentation Expression
+        -> Region
         -> Model
         -> m Model
     mkHook useChannelling   -- whether to use channelling or not
            forg             -- find or given
            name             -- name of the original declaration
            domain           -- domain with representation selected
+           region           -- the region of the Reference we are working on
            model = do
         let
 
@@ -1344,14 +1346,29 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                         }
                 in  return m { mInfo = newInfo }
 
-            fixReprForOthers
+            fixReprForAllOthers
                 | useChannelling = return           -- no-op, if channelling=yes
                 | otherwise = \ m ->
                 let
-                    f (Reference nm _) | nm == name = Reference nm (Just (DeclHasRepr forg name domain))
+                    f (Reference nm _)
+                        | nm == name
+                        = Reference nm (Just (DeclHasRepr forg name domain))
                     f x = x
                 in
                     return m { mStatements = transformBi f (mStatements m) }
+
+            fixReprForSameRegion
+                | region == NoRegion = return       -- no-op, if we aren't in a particular region
+                | otherwise = \ m ->
+                let
+                    f (Reference nm (Just (DeclNoRepr _ _ _ region')))
+                        | nm == name
+                        , region' == region
+                        = Reference nm (Just (DeclHasRepr forg name domain))
+                    f x = x
+                in
+                    return m { mStatements = transformBi f (mStatements m) }
+
 
         logDebugVerbose $ vcat
             [ "Name        :" <+> pretty name
@@ -1364,7 +1381,9 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             >>= addStructurals       -- unless usedBefore: add structurals
             >>= addChannels          -- for each in previously recorded representation
             >>= recordThis           -- unless usedBefore: record (name, domain) as being used in the model
-            >>= fixReprForOthers     -- fix the representation of this guy in the whole model, if channelling=no
+            >>= fixReprForAllOthers  -- fix the representation of this guy in the whole model, if channelling=no
+            >>= fixReprForSameRegion -- fix the representation of this guy in the whole model,
+                                     -- for those references with the same "region"
             >>= resolveNames         -- we need to re-resolve names to avoid repeatedly selecting representations
                                      -- for abstract stuff inside aliases.
 

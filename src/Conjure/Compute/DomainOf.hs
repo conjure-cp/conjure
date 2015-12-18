@@ -48,8 +48,8 @@ instance DomainOf ReferenceTo where
     --     innX <- innerDomainOf domX
     --     return innX
     domainOf x@InComprehension{} = fail $ vcat [ "domainOf-ReferenceTo-InComprehension", pretty x, pretty (show x) ]
-    domainOf (DeclNoRepr  _ _ dom) = return dom
-    domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
+    domainOf (DeclNoRepr  _ _ dom _) = return dom
+    domainOf (DeclHasRepr _ _ dom  ) = return (forgetRepr dom)
     domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"
     domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
 

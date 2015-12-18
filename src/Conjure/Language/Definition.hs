@@ -21,7 +21,7 @@ module Conjure.Language.Definition
     , QuestionAnswered(..), viewAuto, parseStrategy
 
     , Name(..)
-    , Expression(..), ReferenceTo(..), InBubble(..)
+    , Expression(..), ReferenceTo(..), Region(..), InBubble(..)
     , Constant(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)

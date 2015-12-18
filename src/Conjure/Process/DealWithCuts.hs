@@ -27,7 +27,7 @@ dealWithCuts m = flip evalStateT (St False []) $ do
                         Cut x -> do
                             varName <- nextName "cut"
                             let varDecl = Declaration (FindOrGiven Find varName DomainBool)
-                            let varRef  = Reference varName (Just (DeclNoRepr Find varName DomainBool))
+                            let varRef  = Reference varName (Just (DeclNoRepr Find varName DomainBool NoRegion))
                             tell ( [ varDecl ]
                                  , [ [essence| !&varRef <-> &x |] ]
                                  )
