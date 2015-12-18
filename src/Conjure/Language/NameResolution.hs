@@ -85,7 +85,7 @@ resolveStatement st =
             case decl of
                 FindOrGiven forg nm dom       -> do
                     dom' <- resolveD dom
-                    modify ((nm, DeclNoRepr forg nm dom') :)
+                    modify ((nm, DeclNoRepr forg nm dom' NoRegion) :)
                     return (Declaration (FindOrGiven forg nm dom'))
                 Letting nm x                  -> do
                     x' <- resolveX x
@@ -179,7 +179,7 @@ resolveX p@Comprehension{} = scope $ do
                             return
                                 ( gen''
                                 , case pat of
-                                    Single nm' -> DeclNoRepr Quantified nm' dom'
+                                    Single nm' -> DeclNoRepr Quantified nm' dom' NoRegion
                                     _ -> InComprehension gen''
                                 )
                         GenDomainHasRepr nm dom ->

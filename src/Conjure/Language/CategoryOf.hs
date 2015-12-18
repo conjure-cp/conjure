@@ -32,13 +32,12 @@ instance CategoryOf Expression where
     categoryOf x                 = maximum                            $ CatBottom : map categoryOf (children x)
 
 instance CategoryOf ReferenceTo where
-    categoryOf (Alias              x) = categoryOf x
-    categoryOf (InComprehension    _) = CatQuantified
-    categoryOf (DeclNoRepr  forg _ _) = categoryOf forg
-    categoryOf (DeclHasRepr forg _ _) = categoryOf forg
-    categoryOf RecordField{}          = CatBottom
-    categoryOf VariantField{}         = CatBottom
-    categoryOf (Region _ refTo)       = categoryOf refTo
+    categoryOf (Alias                x) = categoryOf x
+    categoryOf (InComprehension      _) = CatQuantified
+    categoryOf (DeclNoRepr  forg _ _ _) = categoryOf forg
+    categoryOf (DeclHasRepr forg _ _  ) = categoryOf forg
+    categoryOf RecordField{}            = CatBottom
+    categoryOf VariantField{}           = CatBottom
 
 instance CategoryOf Generator where
      categoryOf (GenDomainNoRepr  _ x) = categoryOf x
