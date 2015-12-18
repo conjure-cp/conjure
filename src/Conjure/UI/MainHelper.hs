@@ -152,6 +152,7 @@ mainWithArgs config@Solve{..} = do
     -- some sanity checks
     essenceM <- readModelFromFile essence
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
+              ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
     when (not (null givens) && null essenceParams) $
         userErr1 $ vcat
             [ "The problem specification is parameterised, but no *.param files are given."
