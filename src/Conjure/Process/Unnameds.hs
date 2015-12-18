@@ -50,7 +50,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- quantifiedVar
-            let nameExpr = Reference name Nothing
+            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
             return $ Just [essence|
                 and([ [ &k1 in &nameExpr | &k1Pat : int(1..&unnamedSize) ]
                           >=lex

@@ -628,6 +628,7 @@ instance Pretty ReferenceTo where
 
 data Region
     = NoRegion
+    | Region_UnnamedSymBreaking
     | Region Int
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
