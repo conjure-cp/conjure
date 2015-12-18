@@ -368,6 +368,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom -> typeOf dom
             RecordField _ ty    -> return ty
             VariantField _ ty   -> return ty
+            Region _ refTo' -> typeOf (Reference nm (Just refTo'))
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
@@ -603,6 +604,10 @@ data ReferenceTo
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
     | RecordField     Name Type         -- the type of the field with this name
     | VariantField    Name Type         -- the type of the variant with this name
+    | Region
+        Int -- the region of this reference
+            -- references with the same region identifier will get the same representation
+        ReferenceTo
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
@@ -617,6 +622,7 @@ instance Pretty ReferenceTo where
     pretty (DeclHasRepr     forg nm dom) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (RecordField     nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField    nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
+    pretty (Region n refTo) = "Region" <+> pretty n <+> prParens (pretty refTo)
 
 
 ------------------------------------------------------------------------------------------------------------------------

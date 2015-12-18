@@ -52,6 +52,7 @@ instance DomainOf ReferenceTo where
     domainOf (DeclHasRepr _ _ dom) = return (forgetRepr dom)
     domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"
     domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
+    domainOf (Region _ refTo) = domainOf refTo
 
 
 instance DomainOf Expression where
