@@ -30,7 +30,7 @@ import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
 import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
-import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
+import Conjure.Process.Unnameds ( removeUnnamedsFromModel, addUnnamedStructurals )
 import Conjure.Process.FiniteGivens ( finiteGivens )
 import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
@@ -828,6 +828,7 @@ prologue model = return model
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
     >>= return . initInfo             >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
+    >>= addUnnamedStructurals         >>= logDebugId "[addUnnamedStructurals]"
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
