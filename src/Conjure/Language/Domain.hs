@@ -185,7 +185,7 @@ instance FromJSON  a => FromJSON  (Tree a) where parseJSON = genericParseJSON js
 --      Here x_1's should not be shared!
 --      If they are, the channelling and symmetry breaking constraints will clash and solutions will be lost.
 reprTreeEncoded :: Domain HasRepresentation x -> Text
-reprTreeEncoded d = (mconcat . enc1 . reprTree) d
+reprTreeEncoded = mconcat . enc1 . reprTree
     where
         enc1 (Tree lbl sub) =
             (maybe
