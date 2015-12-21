@@ -11,7 +11,9 @@ preinstall:
 	@runhaskell etc/build/gen_Expression.hs
 
 refreeze:
-	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )
+	rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox
+	BUILD_TESTS=yes make
+	cabal freeze --enable-tests
 
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
