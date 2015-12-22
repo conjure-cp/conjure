@@ -31,8 +31,11 @@ addUnnamedStructurals model = do
     let allFinds = model |> ModelStats.finds
     -- TODO: the following is too much, a subset of allUnnnameds and allFinds will have to be selected
     cons <- sequence [ mkUnnamedStructuralCons unnamed decVar
-                     | unnamed <- allUnnnameds
-                     , decVar  <- allFinds
+                     | (unnamed, decVar) <-
+                         [ (unnamed, decVar)
+                         | unnamed <- allUnnnameds
+                         , decVar  <- allFinds
+                         ]
                      ]
     case catMaybes cons of
         []         -> return model
