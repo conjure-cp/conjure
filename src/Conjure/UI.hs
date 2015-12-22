@@ -153,7 +153,7 @@ ui = modes
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
         , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
-                                   &= args
+                                   &= args                  -- TODO: make sure these are *.param files
         , validateSolutionsOpt = False
                                    &= name "validate-solutions"
                                    &= groupname "Flags"
