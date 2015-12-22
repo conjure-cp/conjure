@@ -193,9 +193,9 @@ reprTreeEncoded = mconcat . enc1 . reprTree
                 representationToShortText
                 lbl)
             : concatMap enc sub
-        enc  (Tree lbl sub) =
-            (maybe "" representationConstrIndex lbl)
-            : concatMap enc sub
+        enc (Tree lbl sub) =
+            (maybe [] representationConstrIndex lbl)
+            ++ concatMap enc sub
 
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
@@ -734,9 +734,11 @@ instance FromJSON  HasRepresentation where parseJSON = genericParseJSON jsonOpti
 instance Default HasRepresentation where
     def = NoRepresentation
 
-representationConstrIndex :: HasRepresentation -> Text
-representationConstrIndex = stringToText . ("R"++) . show . constrIndex . toConstr
-
+representationConstrIndex :: HasRepresentation -> [Text]
+representationConstrIndex r = oneLevel r : concatMap representationConstrIndex (children r)
+    where
+        oneLevel :: HasRepresentation -> Text
+        oneLevel = stringToText . ("R"++) . show . constrIndex . toConstr
 
 instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 

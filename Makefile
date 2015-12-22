@@ -1,4 +1,4 @@
-.PHONY: install preinstall refreeze ghci clean runtests_quick runtests_slow runtests_all
+.PHONY: install preinstall freeze refreeze ghci clean runtests_quick runtests_slow runtests_all
 
 SHELL := /bin/bash
 
@@ -10,8 +10,14 @@ preinstall:
 	@runhaskell etc/build/gen_Operator.hs
 	@runhaskell etc/build/gen_Expression.hs
 
+freeze:
+	@cabal freeze --enable-tests
+	@cat cabal.config | grep -v '             base ==' > tmp ; mv tmp cabal.config
+
 refreeze:
-	( rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox && BUILD_TESTS=yes RUN_TESTS=yes make && cabal freeze )
+	rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox
+	BUILD_TESTS=yes make
+	make freeze
 
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
