@@ -64,5 +64,24 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
+    onDomain (DomainMSet _ _ (DomainReference n _)) | n == unnamedName = do
+            (iPat , i ) <- quantifiedVar
+            (jPat , j ) <- lettingVar
+            (k1Pat, k1) <- quantifiedVar
+            (k2Pat, k2) <- quantifiedVar
+            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+            return $ Just [essence|
+                and([ [ freq(&nameExpr, &k1) | &k1Pat : int(1..&unnamedSize) ]
+                          >=lex
+                      [ freq(&nameExpr, &k2) | &k1Pat : int(1..&unnamedSize)
+                                         , &k2Pat : int(1..&unnamedSize)
+                                         , &k1 = &i               -> &k2 = &j
+                                         , &k1 = &j               -> &k2 = &i
+                                         , &k1 != &i /\ &k1 != &j -> &k2 = &k1
+                                         ]
+                    | &iPat : int(1..&unnamedSize - 1)
+                    , letting &jPat be &i + 1
+                    ])
+                           |]
     onDomain _ = return Nothing
 
