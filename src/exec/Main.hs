@@ -22,7 +22,7 @@ main = do
             mainWithArgs input
     case limitTime input of
         Just sec | sec > 0 -> do
-            putStrLn $ "Running with a timelimit of " ++ show sec ++ " seconds."
+            putStrLn $ "Running with a time limit of " ++ show sec ++ " seconds."
             res <- timeout (sec * 1000000) workload
             case res of
                 Nothing -> do
