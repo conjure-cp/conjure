@@ -4,27 +4,22 @@ letting n be 5
 find s_ExplicitWithRepetition_Flag: int(0..6)
 find s_ExplicitWithRepetition_Values: matrix indexed by [int(1..6)] of int(1..5)
 such that
-    and([[sum([toInt(q7 <= s_ExplicitWithRepetition_Flag) *
-               toInt(s_ExplicitWithRepetition_Values[q7] = q3)
+    and([[sum([toInt(q7 <= s_ExplicitWithRepetition_Flag) * toInt(s_ExplicitWithRepetition_Values[q7] = q3)
                    | q7 : int(1..6)])
-              | q2 : int(1..5), q3 : int(1..5), q2 = q1 -> q3 = q1 + 1,
-                q2 = q1 + 1 -> q3 = q1, q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+              | q2 : int(1..5), q3 : int(1..5), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
+                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
          <=lex
-         [sum([toInt(q9 <= s_ExplicitWithRepetition_Flag) *
-               toInt(s_ExplicitWithRepetition_Values[q9] = q2)
+         [sum([toInt(q9 <= s_ExplicitWithRepetition_Flag) * toInt(s_ExplicitWithRepetition_Values[q9] = q2)
                    | q9 : int(1..6)])
               | q2 : int(1..5)]
              | q1 : int(1..4)]),
     and([q1 + 1 <= s_ExplicitWithRepetition_Flag ->
          s_ExplicitWithRepetition_Values[q1] <= s_ExplicitWithRepetition_Values[q1 + 1]
              | q1 : int(1..5)]),
-    and([q2 > s_ExplicitWithRepetition_Flag ->
-         s_ExplicitWithRepetition_Values[q2] = 1
-             | q2 : int(1..6)]),
+    and([q2 > s_ExplicitWithRepetition_Flag -> s_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..6)]),
     and([q4 <= s_ExplicitWithRepetition_Flag ->
          sum([toInt(q11 <= s_ExplicitWithRepetition_Flag) *
-              toInt(s_ExplicitWithRepetition_Values[q11] =
-                    s_ExplicitWithRepetition_Values[q4])
+              toInt(s_ExplicitWithRepetition_Values[q11] = s_ExplicitWithRepetition_Values[q4])
                   | q11 : int(1..6)])
          <= 2
              | q4 : int(1..6)]),
