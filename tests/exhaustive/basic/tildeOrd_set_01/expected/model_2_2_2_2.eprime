@@ -11,9 +11,7 @@ such that
               toInt(or([b_Explicit[q42] = a_Explicit[q31] | q42 : int(1..3)]))
                   | q31 : int(1..3)])
          /\
-         and([!or([a_Explicit[q38] = b_Explicit[q32] | q38 : int(1..3)]) /\
-              b_Explicit[q32] < a_Explicit[q7]
-              ->
+         and([!or([a_Explicit[q38] = b_Explicit[q32] | q38 : int(1..3)]) /\ b_Explicit[q32] < a_Explicit[q7] ->
               toInt(or([a_Explicit[q34] = b_Explicit[q32] | q34 : int(1..3)])) =
               toInt(or([b_Explicit[q36] = b_Explicit[q32] | q36 : int(1..3)]))
                   | q32 : int(1..3)]))
@@ -28,9 +26,7 @@ such that
                toInt(or([b_Explicit[q24] = a_Explicit[q13] | q24 : int(1..3)]))
                    | q13 : int(1..3)])
           /\
-          and([!or([a_Explicit[q20] = b_Explicit[q14] | q20 : int(1..3)]) /\
-               b_Explicit[q14] < b_Explicit[q8]
-               ->
+          and([!or([a_Explicit[q20] = b_Explicit[q14] | q20 : int(1..3)]) /\ b_Explicit[q14] < b_Explicit[q8] ->
                toInt(or([a_Explicit[q16] = b_Explicit[q14] | q16 : int(1..3)])) =
                toInt(or([b_Explicit[q18] = b_Explicit[q14] | q18 : int(1..3)]))
                    | q14 : int(1..3)])))

@@ -4,10 +4,8 @@ given fin1: int
 given fin2: int
 given fin3: int
 given fin4: int
-given a_ExplicitR5_ExplicitVarSizeWithMarker_Marker:
-        matrix indexed by [int(1..fin1)] of int(0..fin2)
-given a_ExplicitR5_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4)
+given a_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..fin1)] of int(0..fin2)
+given a_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4)
 letting let1 be -1000
 find x: int(-1000..1000)
 such that

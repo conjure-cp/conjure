@@ -4,6 +4,5 @@ find f_Function1DPartial_Flags: matrix indexed by [int(1..2)] of bool
 find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(3..4)
 such that
     sum([toInt(f_Function1DPartial_Flags[q5]) | q5 : int(1..2)]) = 1,
-    and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 3
-             | q1 : int(1..2)])
+    and([f_Function1DPartial_Flags[q1] = false -> f_Function1DPartial_Values[q1] = 3 | q1 : int(1..2)])
 

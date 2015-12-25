@@ -1,28 +1,20 @@
 language ESSENCE' 1.0
 
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
-find s_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..2)] of int(1..2)
+find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
-find s_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..2)] of int(1..2)
+find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 such that
     or([q19 <= s_ExplicitVarSizeWithMarker_Marker /\
-        s_ExplicitVarSizeWithMarker_Values[q19] =
-        sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q21]) | q21 : int(1..2)])
+        s_ExplicitVarSizeWithMarker_Values[q19] = sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q21]) | q21 : int(1..2)])
             | q19 : int(1..2)]),
-    s_ExplicitVarSizeWithFlags_Flags[2] ->
-    s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
-    and([s_ExplicitVarSizeWithFlags_Flags[q2] = false ->
-         s_ExplicitVarSizeWithFlags_Values[q2] = 1
-             | q2 : int(1..2)]),
+    s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],
+    and([s_ExplicitVarSizeWithFlags_Flags[q2] = false -> s_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Flags[1],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->
     s_ExplicitVarSizeWithMarker_Values[1] < s_ExplicitVarSizeWithMarker_Values[2],
-    and([q7 > s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q7] = 1
-             | q7 : int(1..2)]),
+    and([q7 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q7] = 1 | q7 : int(1..2)]),
     and([q10 <= s_ExplicitVarSizeWithMarker_Marker ->
          or([s_ExplicitVarSizeWithFlags_Flags[q12] /\
              s_ExplicitVarSizeWithFlags_Values[q12] = s_ExplicitVarSizeWithMarker_Values[q10]
@@ -34,19 +26,14 @@ such that
                  | q16 : int(1..2)])
              | q14 : int(1..2)]),
     and([s_Occurrence[q22] ->
-         or([s_ExplicitVarSizeWithFlags_Flags[q24] /\
-             s_ExplicitVarSizeWithFlags_Values[q24] = q22
-                 | q24 : int(1..2)])
+         or([s_ExplicitVarSizeWithFlags_Flags[q24] /\ s_ExplicitVarSizeWithFlags_Values[q24] = q22 | q24 : int(1..2)])
              | q22 : int(1..2)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q26] ->
-         s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q26]]
+    and([s_ExplicitVarSizeWithFlags_Flags[q26] -> s_Occurrence[s_ExplicitVarSizeWithFlags_Values[q26]]
              | q26 : int(1..2)]),
     and([s_Occurrence[q27] ->
-         or([q29 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q29] = q27
+         or([q29 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q29] = q27
                  | q29 : int(1..2)])
              | q27 : int(1..2)]),
-    and([q31 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q31]]
+    and([q31 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q31]]
              | q31 : int(1..2)])
 

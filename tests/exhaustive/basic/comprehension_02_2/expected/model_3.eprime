@@ -8,14 +8,11 @@ such that
                        | q6 : int(1..2), q6 <= i_ExplicitVarSizeWithMarker_Marker]))
          * i_ExplicitVarSizeWithMarker_Values[q4]
              | i_ExplicitVarSizeWithMarker_Marker : int(0..2),
-               i_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(7..8),
-               q4 : int(1..2),
+               i_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(7..8), q4 : int(1..2),
                2 <= i_ExplicitVarSizeWithMarker_Marker ->
                i_ExplicitVarSizeWithMarker_Values[1] < i_ExplicitVarSizeWithMarker_Values[2],
-               and([q2 > i_ExplicitVarSizeWithMarker_Marker ->
-                    i_ExplicitVarSizeWithMarker_Values[q2] = 7
+               and([q2 > i_ExplicitVarSizeWithMarker_Marker -> i_ExplicitVarSizeWithMarker_Values[q2] = 7
                         | q2 : int(1..2)]),
-               1 <= i_ExplicitVarSizeWithMarker_Marker,
-               i_ExplicitVarSizeWithMarker_Marker <= 2,
+               1 <= i_ExplicitVarSizeWithMarker_Marker, i_ExplicitVarSizeWithMarker_Marker <= 2,
                q4 <= i_ExplicitVarSizeWithMarker_Marker])
 

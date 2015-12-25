@@ -2,13 +2,10 @@ language ESSENCE' 1.0
 
 letting let1 be -4
 find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
-find var2_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
-find var2_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
-find var2_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 such that
     or([var2_ExplicitVarSizeWithFlags_Flags[q38] /\
         !or([var2_ExplicitVarSizeWithDummy[q40] != 6 /\
@@ -22,21 +19,15 @@ such that
                  | q43 : int(1..11)])
             | q41 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Values[q1] <
-         var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
+         var2_ExplicitVarSizeWithFlags_Values[q1] < var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false ->
-         var2_ExplicitVarSizeWithFlags_Values[q2] = -4
+    and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false -> var2_ExplicitVarSizeWithFlags_Values[q2] = -4
              | q2 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Flags[q3]
-             | q3 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q6] < var2_ExplicitVarSizeWithDummy[q6 + 1]
-         \/ var2_ExplicitVarSizeWithDummy[q6] = 6
+    and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q6] < var2_ExplicitVarSizeWithDummy[q6 + 1] \/
+         var2_ExplicitVarSizeWithDummy[q6] = 6
              | q6 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q7] = 6 ->
-         var2_ExplicitVarSizeWithDummy[q7 + 1] = 6
-             | q7 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q7] = 6 -> var2_ExplicitVarSizeWithDummy[q7 + 1] = 6 | q7 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q11] != 6 ->
          or([var2_ExplicitVarSizeWithFlags_Flags[q13] /\
              var2_ExplicitVarSizeWithFlags_Values[q13] = var2_ExplicitVarSizeWithDummy[q11]
@@ -48,22 +39,18 @@ such that
                  | q17 : int(1..11)])
              | q15 : int(1..11)]),
     and([q18 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q18] <
-         var2_ExplicitVarSizeWithMarker_Values[q18 + 1]
+         var2_ExplicitVarSizeWithMarker_Values[q18] < var2_ExplicitVarSizeWithMarker_Values[q18 + 1]
              | q18 : int(1..10)]),
-    and([q19 > var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q19] = -4
+    and([q19 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q19] = -4
              | q19 : int(1..11)]),
     and([q22 <= var2_ExplicitVarSizeWithMarker_Marker ->
          or([var2_ExplicitVarSizeWithFlags_Flags[q24] /\
-             var2_ExplicitVarSizeWithFlags_Values[q24] =
-             var2_ExplicitVarSizeWithMarker_Values[q22]
+             var2_ExplicitVarSizeWithFlags_Values[q24] = var2_ExplicitVarSizeWithMarker_Values[q22]
                  | q24 : int(1..11)])
              | q22 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q26] ->
          or([q28 <= var2_ExplicitVarSizeWithMarker_Marker /\
-             var2_ExplicitVarSizeWithMarker_Values[q28] =
-             var2_ExplicitVarSizeWithFlags_Values[q26]
+             var2_ExplicitVarSizeWithMarker_Values[q28] = var2_ExplicitVarSizeWithFlags_Values[q26]
                  | q28 : int(1..11)])
              | q26 : int(1..11)]),
     and([q30 <= var2_ExplicitVarSizeWithMarker_Marker ->

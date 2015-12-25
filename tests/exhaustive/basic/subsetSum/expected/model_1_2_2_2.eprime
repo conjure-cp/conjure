@@ -9,33 +9,23 @@ letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
-find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 such that
-    and([x_Occurrence[q12] -> or([nums_Explicit[q14] = q12 | q14 : int(1..fin1)])
-             | q12 : int(let2..let3)]),
+    and([x_Occurrence[q12] -> or([nums_Explicit[q14] = q12 | q14 : int(1..fin1)]) | q12 : int(let2..let3)]),
     s =
-    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) *
-         x_ExplicitVarSizeWithDummy[q11]
-             | q11 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) * x_ExplicitVarSizeWithDummy[q11] | q11 : int(1..let1)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1,
     and([x_ExplicitVarSizeWithDummy[q2] < x_ExplicitVarSizeWithDummy[q2 + 1] \/
          x_ExplicitVarSizeWithDummy[q2] = let3 + 1
              | q2 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q3] = let3 + 1 ->
-         x_ExplicitVarSizeWithDummy[q3 + 1] = let3 + 1
+    and([x_ExplicitVarSizeWithDummy[q3] = let3 + 1 -> x_ExplicitVarSizeWithDummy[q3 + 1] = let3 + 1
              | q3 : int(1..let1 - 1)]),
-    1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q4] != let3 + 1) | q4 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q4] != let3 + 1) | q4 : int(1..let1)]) <=
-    let1,
-    and([x_ExplicitVarSizeWithDummy[q7] != let3 + 1 ->
-         x_Occurrence[x_ExplicitVarSizeWithDummy[q7]]
+    1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q4] != let3 + 1) | q4 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q4] != let3 + 1) | q4 : int(1..let1)]) <= let1,
+    and([x_ExplicitVarSizeWithDummy[q7] != let3 + 1 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q7]]
              | q7 : int(1..let1)]),
     and([x_Occurrence[q8] ->
-         or([x_ExplicitVarSizeWithDummy[q10] != let3 + 1 /\
-             x_ExplicitVarSizeWithDummy[q10] = q8
-                 | q10 : int(1..let1)])
+         or([x_ExplicitVarSizeWithDummy[q10] != let3 + 1 /\ x_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..let1)])
              | q8 : int(let2..let3)])
 

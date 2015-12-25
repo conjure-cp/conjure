@@ -7,18 +7,11 @@ find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1)] of int(1, 2)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 such that
     1 <= x_ExplicitVarSizeWithMarker_Marker /\
-    (y_ExplicitVarSizeWithDummy[1] != 2 /\
-     y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithMarker_Values[1])
+    (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithMarker_Values[1])
     -> false,
-    1 > x_ExplicitVarSizeWithMarker_Marker ->
-    x_ExplicitVarSizeWithMarker_Values[1] = 1,
-    x_Occurrence[1] ->
-    1 <= x_ExplicitVarSizeWithMarker_Marker /\
-    x_ExplicitVarSizeWithMarker_Values[1] = 1,
-    1 <= x_ExplicitVarSizeWithMarker_Marker ->
-    x_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]],
-    y_Occurrence[1] ->
-    y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = 1,
-    y_ExplicitVarSizeWithDummy[1] != 2 ->
-    y_Occurrence[y_ExplicitVarSizeWithDummy[1]]
+    1 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    x_Occurrence[1] -> 1 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[1]],
+    y_Occurrence[1] -> y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = 1,
+    y_ExplicitVarSizeWithDummy[1] != 2 -> y_Occurrence[y_ExplicitVarSizeWithDummy[1]]
 

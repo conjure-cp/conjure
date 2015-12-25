@@ -5,7 +5,5 @@ find var1_Function1DPartial_Values: matrix indexed by [bool] of bool
 such that
     var1_Function1DPartial_Values[true],
     var1_Function1DPartial_Flags[true],
-    and([var1_Function1DPartial_Flags[q1] = false ->
-         var1_Function1DPartial_Values[q1] = false
-             | q1 : bool])
+    and([var1_Function1DPartial_Flags[q1] = false -> var1_Function1DPartial_Values[q1] = false | q1 : bool])
 

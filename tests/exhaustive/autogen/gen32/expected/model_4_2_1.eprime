@@ -2,10 +2,8 @@ language ESSENCE' 1.0
 
 letting let1 be -4
 find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
-find var2_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
-find var2_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
 such that
     or([var2_ExplicitVarSizeWithFlags_Flags[q20] /\
@@ -20,21 +18,15 @@ such that
                  | q25 : int(1..11)])
             | q23 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Values[q1] <
-         var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
+         var2_ExplicitVarSizeWithFlags_Values[q1] < var2_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false ->
-         var2_ExplicitVarSizeWithFlags_Values[q2] = -4
+    and([var2_ExplicitVarSizeWithFlags_Flags[q2] = false -> var2_ExplicitVarSizeWithFlags_Values[q2] = -4
              | q2 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Flags[q3]
-             | q3 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q6] < var2_ExplicitVarSizeWithDummy[q6 + 1]
-         \/ var2_ExplicitVarSizeWithDummy[q6] = 6
+    and([var2_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q6] < var2_ExplicitVarSizeWithDummy[q6 + 1] \/
+         var2_ExplicitVarSizeWithDummy[q6] = 6
              | q6 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q7] = 6 ->
-         var2_ExplicitVarSizeWithDummy[q7 + 1] = 6
-             | q7 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q7] = 6 -> var2_ExplicitVarSizeWithDummy[q7 + 1] = 6 | q7 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q11] != 6 ->
          or([var2_ExplicitVarSizeWithFlags_Flags[q13] /\
              var2_ExplicitVarSizeWithFlags_Values[q13] = var2_ExplicitVarSizeWithDummy[q11]
@@ -46,19 +38,14 @@ such that
                  | q17 : int(1..11)])
              | q15 : int(1..11)]),
     and([var2_Occurrence[q26] ->
-         or([var2_ExplicitVarSizeWithFlags_Flags[q28] /\
-             var2_ExplicitVarSizeWithFlags_Values[q28] = q26
+         or([var2_ExplicitVarSizeWithFlags_Flags[q28] /\ var2_ExplicitVarSizeWithFlags_Values[q28] = q26
                  | q28 : int(1..11)])
              | q26 : int(-4..5, 2)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q30] ->
-         var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q30]]
+    and([var2_ExplicitVarSizeWithFlags_Flags[q30] -> var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q30]]
              | q30 : int(1..11)]),
     and([var2_Occurrence[q31] ->
-         or([var2_ExplicitVarSizeWithDummy[q33] != 6 /\
-             var2_ExplicitVarSizeWithDummy[q33] = q31
-                 | q33 : int(1..11)])
+         or([var2_ExplicitVarSizeWithDummy[q33] != 6 /\ var2_ExplicitVarSizeWithDummy[q33] = q31 | q33 : int(1..11)])
              | q31 : int(-4..5, 2)]),
-    and([var2_ExplicitVarSizeWithDummy[q35] != 6 ->
-         var2_Occurrence[var2_ExplicitVarSizeWithDummy[q35]]
+    and([var2_ExplicitVarSizeWithDummy[q35] != 6 -> var2_Occurrence[var2_ExplicitVarSizeWithDummy[q35]]
              | q35 : int(1..11)])
 
