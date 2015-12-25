@@ -1,31 +1,21 @@
 language ESSENCE' 1.0
 
 find x_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..2)] of bool
-find x_ExplicitR6_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..2), int(1..3)] of int(1..3)
-find x_ExplicitR5_ExplicitVarSizeWithMarker_Marker:
-        matrix indexed by [int(1..2)] of int(0..3)
-find x_ExplicitR5_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..2), int(1..3)] of int(1..2)
+find x_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2), int(1..3)] of int(1..3)
+find x_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)] of int(0..3)
+find x_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 such that
     x_ExplicitR2_Occurrence[1, ..] <lex x_ExplicitR2_Occurrence[2, ..],
-    and([sum([toInt(x_ExplicitR2_Occurrence[q2, q3]) | q3 : int(1..2)]) <= 3
-             | q2 : int(1..2)]),
-    x_ExplicitR6_ExplicitVarSizeWithDummy[1, ..] <lex
-    x_ExplicitR6_ExplicitVarSizeWithDummy[2, ..],
-    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6] <
-              x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6 + 1]
-              \/ x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6] = 3
+    and([sum([toInt(x_ExplicitR2_Occurrence[q2, q3]) | q3 : int(1..2)]) <= 3 | q2 : int(1..2)]),
+    x_ExplicitR6_ExplicitVarSizeWithDummy[1, ..] <lex x_ExplicitR6_ExplicitVarSizeWithDummy[2, ..],
+    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6] < x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6 + 1] \/
+              x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q6] = 3
                   | q6 : int(1..2)])
              | q5 : int(1..2)]),
-    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q7] = 3 ->
-              x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q7 + 1] = 3
+    and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q7] = 3 -> x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q7 + 1] = 3
                   | q7 : int(1..2)])
              | q5 : int(1..2)]),
-    and([sum([toInt(x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q8] != 3)
-                  | q8 : int(1..3)])
-         <= 3
-             | q5 : int(1..2)]),
+    and([sum([toInt(x_ExplicitR6_ExplicitVarSizeWithDummy[q5, q8] != 3) | q8 : int(1..3)]) <= 3 | q5 : int(1..2)]),
     and([or([and([x_ExplicitR2_Occurrence[q13, q14] ->
                   or([x_ExplicitR6_ExplicitVarSizeWithDummy[q11, q16] != 3 /\
                       x_ExplicitR6_ExplicitVarSizeWithDummy[q11, q16] = q14
@@ -48,14 +38,9 @@ such that
                       | q25 : int(1..2)])
                  | q22 : int(1..2)])
              | q20 : int(1..2)]),
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] <
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]
-    \/
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] =
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]
-    /\
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..] <lex
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..],
+    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] < x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] \/
+    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] = x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] /\
+    x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..] <lex x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..],
     and([and([q30 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q29] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q29, q30] <
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q29, q30 + 1]
@@ -65,8 +50,7 @@ such that
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q29, q31] = 1
                   | q31 : int(1..3)])
              | q29 : int(1..2)]),
-    and([x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q29] <= 3
-             | q29 : int(1..2)]),
+    and([x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q29] <= 3 | q29 : int(1..2)]),
     and([or([and([x_ExplicitR2_Occurrence[q36, q37] ->
                   or([q39 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q34] /\
                       x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q34, q39] = q37
@@ -74,14 +58,12 @@ such that
                       | q37 : int(1..2)])
              /\
              and([q41 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q34] ->
-                  x_ExplicitR2_Occurrence[q36,
-                                          x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q34, q41]]
+                  x_ExplicitR2_Occurrence[q36, x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q34, q41]]
                       | q41 : int(1..3)])
                  | q36 : int(1..2)])
              | q34 : int(1..2)]),
     and([or([and([q47 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q45] ->
-                  x_ExplicitR2_Occurrence[q43,
-                                          x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q45, q47]]
+                  x_ExplicitR2_Occurrence[q43, x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q45, q47]]
                       | q47 : int(1..3)])
              /\
              and([x_ExplicitR2_Occurrence[q43, q48] ->

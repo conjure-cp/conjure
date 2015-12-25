@@ -10,31 +10,23 @@ letting let2 be fin2
 letting let3 be fin3
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
-find x_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..let1)] of int(let2..let3)
 such that
     and([x_Occurrence[q12] -> nums_Occurrence[q12] | q12 : int(let2..let3)]),
     s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1,
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q2] <
-         x_ExplicitVarSizeWithFlags_Values[q2 + 1]
+         x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
              | q2 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q3] = false ->
-         x_ExplicitVarSizeWithFlags_Values[q3] = let2
+    and([x_ExplicitVarSizeWithFlags_Flags[q3] = false -> x_ExplicitVarSizeWithFlags_Values[q3] = let2
              | q3 : int(1..let1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] ->
-         x_ExplicitVarSizeWithFlags_Flags[q4]
-             | q4 : int(1..let1 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..let1 - 1)]),
     1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q5]) | q5 : int(1..let1)]),
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q5]) | q5 : int(1..let1)]) <= let1,
-    and([x_ExplicitVarSizeWithFlags_Flags[q8] ->
-         x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q8]]
+    and([x_ExplicitVarSizeWithFlags_Flags[q8] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q8]]
              | q8 : int(1..let1)]),
     and([x_Occurrence[q9] ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q11] /\
-             x_ExplicitVarSizeWithFlags_Values[q11] = q9
-                 | q11 : int(1..let1)])
+         or([x_ExplicitVarSizeWithFlags_Flags[q11] /\ x_ExplicitVarSizeWithFlags_Values[q11] = q9 | q11 : int(1..let1)])
              | q9 : int(let2..let3)])
 

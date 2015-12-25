@@ -35,11 +35,13 @@ import Conjure.Language.Expression.Op
 import Conjure.Language.TypeOf
 import Conjure.Language.RepresentationOf
 
-
 -- aeson
 import qualified Data.Aeson as JSON
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
+
+-- pretty
+import qualified Text.PrettyPrint as Pr ( cat )
 
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -283,7 +285,7 @@ viewIndexed m = (m, [])
 
 instance Pretty Expression where
 
-    prettyPrec _ (viewIndexed -> (m,is@(_:_))) = pretty m <> prettyList prBrackets "," is
+    prettyPrec _ (viewIndexed -> (m,is@(_:_))) = Pr.cat [pretty m, nest 4 (prettyList prBrackets "," is)]
 
     -- mostly for debugging: print what a reference is pointing at
     -- prettyPrec _ (Reference x Nothing) = pretty x <> "#`NOTHING`"

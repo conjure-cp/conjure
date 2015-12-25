@@ -1,24 +1,18 @@
 language ESSENCE' 1.0
 
 find x_FunctionNDPartial_Flags: matrix indexed by [int(7..8), bool] of bool
-find x_FunctionNDPartial_Values:
-        matrix indexed by [int(7..8), bool] of int(13, 17)
+find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), bool] of int(13, 17)
 given fin1: int
 given p_FunctionNDPartial_Flags: matrix indexed by [int(7..8), bool] of bool
-given p_FunctionNDPartial_Values:
-        matrix indexed by [int(7..8), bool] of int(13, 17)
+given p_FunctionNDPartial_Values: matrix indexed by [int(7..8), bool] of int(13, 17)
 such that
-    and([x_FunctionNDPartial_Values[q5_fst, q5_snd] =
-         p_FunctionNDPartial_Values[q5_fst, q5_snd]
-         /\ x_FunctionNDPartial_Flags[q5_fst, q5_snd]
-             | q5_fst : int(7..8), q5_snd : bool,
-               p_FunctionNDPartial_Flags[q5_fst, q5_snd]]),
+    and([x_FunctionNDPartial_Values[q5_fst, q5_snd] = p_FunctionNDPartial_Values[q5_fst, q5_snd] /\
+         x_FunctionNDPartial_Flags[q5_fst, q5_snd]
+             | q5_fst : int(7..8), q5_snd : bool, p_FunctionNDPartial_Flags[q5_fst, q5_snd]]),
     and([x_FunctionNDPartial_Flags[q6_fst, q6_snd] ->
-         p_FunctionNDPartial_Values[q6_fst, q6_snd] =
-         x_FunctionNDPartial_Values[q6_fst, q6_snd]
-         /\ p_FunctionNDPartial_Flags[q6_fst, q6_snd]
+         p_FunctionNDPartial_Values[q6_fst, q6_snd] = x_FunctionNDPartial_Values[q6_fst, q6_snd] /\
+         p_FunctionNDPartial_Flags[q6_fst, q6_snd]
              | q6_fst : int(7..8), q6_snd : bool]),
-    and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false ->
-         x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
+    and([x_FunctionNDPartial_Flags[q1_fst, q1_snd] = false -> x_FunctionNDPartial_Values[q1_fst, q1_snd] = 13
              | q1_fst : int(7..8), q1_snd : bool])
 

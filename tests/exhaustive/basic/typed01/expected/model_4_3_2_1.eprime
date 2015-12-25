@@ -11,19 +11,12 @@ such that
     (1 <= y_ExplicitVarSizeWithMarker_Marker /\
      y_ExplicitVarSizeWithMarker_Values[1] = x_ExplicitVarSizeWithFlags_Values[1])
     -> false,
-    x_ExplicitVarSizeWithFlags_Flags[1] = false ->
-    x_ExplicitVarSizeWithFlags_Values[1] = 1,
-    1 > y_ExplicitVarSizeWithMarker_Marker ->
-    y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,
+    1 > y_ExplicitVarSizeWithMarker_Marker -> y_ExplicitVarSizeWithMarker_Values[1] = 1,
     x_ExplicitVarSizeWithDummy[1] != 2 ->
-    x_ExplicitVarSizeWithFlags_Flags[1] /\
-    x_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithDummy[1],
+    x_ExplicitVarSizeWithFlags_Flags[1] /\ x_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithDummy[1],
     x_ExplicitVarSizeWithFlags_Flags[1] ->
-    x_ExplicitVarSizeWithDummy[1] != 2 /\
-    x_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1],
-    y_Occurrence[1] ->
-    1 <= y_ExplicitVarSizeWithMarker_Marker /\
-    y_ExplicitVarSizeWithMarker_Values[1] = 1,
-    1 <= y_ExplicitVarSizeWithMarker_Marker ->
-    y_Occurrence[y_ExplicitVarSizeWithMarker_Values[1]]
+    x_ExplicitVarSizeWithDummy[1] != 2 /\ x_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithFlags_Values[1],
+    y_Occurrence[1] -> 1 <= y_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithMarker_Values[1] = 1,
+    1 <= y_ExplicitVarSizeWithMarker_Marker -> y_Occurrence[y_ExplicitVarSizeWithMarker_Values[1]]
 

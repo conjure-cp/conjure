@@ -6,41 +6,30 @@ letting let1 be -100
 find x: int(-100..100)
 find aux1: int(-20..4)
 such that
-    and([and([s_ExplicitVarSizeWithDummy[q6] != 5, s_Occurrence[j],
-              s_ExplicitVarSizeWithDummy[q6] != j,
+    and([and([s_ExplicitVarSizeWithDummy[q6] != 5, s_Occurrence[j], s_ExplicitVarSizeWithDummy[q6] != j,
               allDiff([s_ExplicitVarSizeWithDummy[q6] + j, s_ExplicitVarSizeWithDummy[q6] * j,
                        s_ExplicitVarSizeWithDummy[q6] / j; int(1..3)]),
               (s_ExplicitVarSizeWithDummy[q6] - j) % 2 = 0; int(1..5)])
          ->
          min([s_ExplicitVarSizeWithDummy[q6] + j, s_ExplicitVarSizeWithDummy[q6] - j,
-              s_ExplicitVarSizeWithDummy[q6] * j,
-              s_ExplicitVarSizeWithDummy[q6] / j; int(1..4)])
+              s_ExplicitVarSizeWithDummy[q6] * j, s_ExplicitVarSizeWithDummy[q6] / j; int(1..4)])
          <= aux1
              | q6 : int(1..4), j : int(1..4)]),
-    or([and([s_ExplicitVarSizeWithDummy[q6] != 5, s_Occurrence[j],
-             s_ExplicitVarSizeWithDummy[q6] != j,
+    or([and([s_ExplicitVarSizeWithDummy[q6] != 5, s_Occurrence[j], s_ExplicitVarSizeWithDummy[q6] != j,
              allDiff([s_ExplicitVarSizeWithDummy[q6] + j, s_ExplicitVarSizeWithDummy[q6] * j,
                       s_ExplicitVarSizeWithDummy[q6] / j; int(1..3)]),
              (s_ExplicitVarSizeWithDummy[q6] - j) % 2 = 0; int(1..5)])
         /\
-        min([s_ExplicitVarSizeWithDummy[q6] + j, s_ExplicitVarSizeWithDummy[q6] - j,
-             s_ExplicitVarSizeWithDummy[q6] * j,
+        min([s_ExplicitVarSizeWithDummy[q6] + j, s_ExplicitVarSizeWithDummy[q6] - j, s_ExplicitVarSizeWithDummy[q6] * j,
              s_ExplicitVarSizeWithDummy[q6] / j; int(1..4)])
         = aux1
             | q6 : int(1..4), j : int(1..4)]),
     x = aux1,
-    and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/
-         s_ExplicitVarSizeWithDummy[q1] = 5
+    and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/ s_ExplicitVarSizeWithDummy[q1] = 5
              | q1 : int(1..3)]),
-    and([s_ExplicitVarSizeWithDummy[q2] = 5 ->
-         s_ExplicitVarSizeWithDummy[q2 + 1] = 5
-             | q2 : int(1..3)]),
+    and([s_ExplicitVarSizeWithDummy[q2] = 5 -> s_ExplicitVarSizeWithDummy[q2 + 1] = 5 | q2 : int(1..3)]),
     and([s_Occurrence[q10] ->
-         or([s_ExplicitVarSizeWithDummy[q12] != 5 /\
-             s_ExplicitVarSizeWithDummy[q12] = q10
-                 | q12 : int(1..4)])
+         or([s_ExplicitVarSizeWithDummy[q12] != 5 /\ s_ExplicitVarSizeWithDummy[q12] = q10 | q12 : int(1..4)])
              | q10 : int(1..4)]),
-    and([s_ExplicitVarSizeWithDummy[q14] != 5 ->
-         s_Occurrence[s_ExplicitVarSizeWithDummy[q14]]
-             | q14 : int(1..4)])
+    and([s_ExplicitVarSizeWithDummy[q14] != 5 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q14]] | q14 : int(1..4)])
 

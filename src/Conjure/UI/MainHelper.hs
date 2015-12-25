@@ -22,7 +22,7 @@ import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, renderWide )
+import Conjure.Language.Pretty ( pretty, prettyList, renderNormal )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -217,7 +217,7 @@ mainWithArgs config@Solve{..} = do
             mainWithArgs modelling
             eprimes <- getEprimes
             when (null eprimes) $ bug "Failed to generate models."
-            pp logLevel $ "Generated models:" <+> vcat (map pretty eprimes)
+            pp logLevel $ "Generated models:" <+> prettyList id "," eprimes
             pp logLevel $ "Saved under:" <+> pretty outputDirectory
             return eprimes
 
@@ -249,7 +249,7 @@ mainWithArgs config@Solve{..} = do
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
 pp LogNone = const $ return ()
-pp _       = liftIO . putStrLn . renderWide
+pp _       = liftIO . putStrLn . renderNormal
 
 
 savileRowNoParam

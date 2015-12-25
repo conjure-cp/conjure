@@ -9,45 +9,34 @@ letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
 find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
-find x_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..let1)] of int(let2..let3)
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
-find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 such that
-    and([q28 <= x_ExplicitVarSizeWithMarker_Marker ->
-         nums_Occurrence[x_ExplicitVarSizeWithMarker_Values[q28]]
+    and([q28 <= x_ExplicitVarSizeWithMarker_Marker -> nums_Occurrence[x_ExplicitVarSizeWithMarker_Values[q28]]
              | q28 : int(1..let1)]),
     s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q1] <
-         x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..let1 - 1)]),
-    and([q2 > x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q2] = let2
-             | q2 : int(1..let1)]),
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = let2 | q2 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
     1 <= sum([toInt(x_Occurrence[q4]) | q4 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q4]) | q4 : int(let2..let3)]) <= let1,
     and([x_Occurrence[q22] ->
-         or([q24 <= x_ExplicitVarSizeWithMarker_Marker /\
-             x_ExplicitVarSizeWithMarker_Values[q24] = q22
+         or([q24 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q24] = q22
                  | q24 : int(1..let1)])
              | q22 : int(let2..let3)]),
-    and([q26 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q26]]
+    and([q26 <= x_ExplicitVarSizeWithMarker_Marker -> x_Occurrence[x_ExplicitVarSizeWithMarker_Values[q26]]
              | q26 : int(1..let1)]),
     and([x_ExplicitVarSizeWithDummy[q5] < x_ExplicitVarSizeWithDummy[q5 + 1] \/
          x_ExplicitVarSizeWithDummy[q5] = let3 + 1
              | q5 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q6] = let3 + 1 ->
-         x_ExplicitVarSizeWithDummy[q6 + 1] = let3 + 1
+    and([x_ExplicitVarSizeWithDummy[q6] = let3 + 1 -> x_ExplicitVarSizeWithDummy[q6 + 1] = let3 + 1
              | q6 : int(1..let1 - 1)]),
-    1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q7] != let3 + 1) | q7 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q7] != let3 + 1) | q7 : int(1..let1)]) <=
-    let1,
+    1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q7] != let3 + 1) | q7 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q7] != let3 + 1) | q7 : int(1..let1)]) <= let1,
     and([x_ExplicitVarSizeWithDummy[q10] != let3 + 1 ->
          or([q12 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q12] = x_ExplicitVarSizeWithDummy[q10]
@@ -58,12 +47,9 @@ such that
              x_ExplicitVarSizeWithDummy[q16] = x_ExplicitVarSizeWithMarker_Values[q14]
                  | q16 : int(1..let1)])
              | q14 : int(1..let1)]),
-    and([x_ExplicitVarSizeWithDummy[q18] != let3 + 1 ->
-         x_Occurrence[x_ExplicitVarSizeWithDummy[q18]]
+    and([x_ExplicitVarSizeWithDummy[q18] != let3 + 1 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q18]]
              | q18 : int(1..let1)]),
     and([x_Occurrence[q19] ->
-         or([x_ExplicitVarSizeWithDummy[q21] != let3 + 1 /\
-             x_ExplicitVarSizeWithDummy[q21] = q19
-                 | q21 : int(1..let1)])
+         or([x_ExplicitVarSizeWithDummy[q21] != let3 + 1 /\ x_ExplicitVarSizeWithDummy[q21] = q19 | q21 : int(1..let1)])
              | q19 : int(let2..let3)])
 

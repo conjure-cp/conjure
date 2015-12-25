@@ -27,7 +27,7 @@ import qualified Data.Text as T ( Text, unpack )
 import Text.PrettyPrint
     ( parens, brackets, braces, empty       -- will be exported with new names
     , text                                  -- only used in this module
-    , style, renderStyle, lineLength
+    , style, renderStyle, lineLength, ribbonsPerLine
     )
 
 -- aeson
@@ -87,7 +87,7 @@ renderWide :: Pretty a => a -> String
 renderWide = render 240
 
 render :: Pretty a => Int -> a -> String
-render w = renderStyle (style { lineLength = w }) . pretty
+render w = renderStyle (style { lineLength = w, ribbonsPerLine = 1 }) . pretty
 
 prEmpty :: Doc
 prEmpty = empty

@@ -1,39 +1,27 @@
 language ESSENCE' 1.0
 
 find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
-find x_ExplicitVarSizeWithMarker_Values__tag:
-        matrix indexed by [int(1..4)] of int(1..2)
-find x_ExplicitVarSizeWithMarker_Values_theBool:
-        matrix indexed by [int(1..4)] of bool
-find x_ExplicitVarSizeWithMarker_Values_theInt:
-        matrix indexed by [int(1..4)] of int(1..2)
+find x_ExplicitVarSizeWithMarker_Values__tag: matrix indexed by [int(1..4)] of int(1..2)
+find x_ExplicitVarSizeWithMarker_Values_theBool: matrix indexed by [int(1..4)] of bool
+find x_ExplicitVarSizeWithMarker_Values_theInt: matrix indexed by [int(1..4)] of int(1..2)
 such that
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values__tag[q1] <
-         x_ExplicitVarSizeWithMarker_Values__tag[q1 + 1]
-         \/
-         x_ExplicitVarSizeWithMarker_Values__tag[q1] =
-         x_ExplicitVarSizeWithMarker_Values__tag[q1 + 1]
-         /\
+         x_ExplicitVarSizeWithMarker_Values__tag[q1] < x_ExplicitVarSizeWithMarker_Values__tag[q1 + 1] \/
+         x_ExplicitVarSizeWithMarker_Values__tag[q1] = x_ExplicitVarSizeWithMarker_Values__tag[q1 + 1] /\
          ((1 = x_ExplicitVarSizeWithMarker_Values__tag[q1] ->
-           x_ExplicitVarSizeWithMarker_Values_theBool[q1] <
-           x_ExplicitVarSizeWithMarker_Values_theBool[q1 + 1])
+           x_ExplicitVarSizeWithMarker_Values_theBool[q1] < x_ExplicitVarSizeWithMarker_Values_theBool[q1 + 1])
           /\
           (2 = x_ExplicitVarSizeWithMarker_Values__tag[q1] ->
-           x_ExplicitVarSizeWithMarker_Values_theInt[q1] <
-           x_ExplicitVarSizeWithMarker_Values_theInt[q1 + 1]))
+           x_ExplicitVarSizeWithMarker_Values_theInt[q1] < x_ExplicitVarSizeWithMarker_Values_theInt[q1 + 1]))
              | q1 : int(1..3)]),
     and([q2 > x_ExplicitVarSizeWithMarker_Marker ->
-         and([x_ExplicitVarSizeWithMarker_Values__tag[q2] = 1,
-              x_ExplicitVarSizeWithMarker_Values_theBool[q2] = false,
+         and([x_ExplicitVarSizeWithMarker_Values__tag[q2] = 1, x_ExplicitVarSizeWithMarker_Values_theBool[q2] = false,
               x_ExplicitVarSizeWithMarker_Values_theInt[q2] = 1; int(1..3)])
              | q2 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarker_Marker ->
-         (x_ExplicitVarSizeWithMarker_Values__tag[q3] != 1 ->
-          x_ExplicitVarSizeWithMarker_Values_theBool[q3] = false)
+         (x_ExplicitVarSizeWithMarker_Values__tag[q3] != 1 -> x_ExplicitVarSizeWithMarker_Values_theBool[q3] = false)
              | q3 : int(1..4)]),
     and([q3 <= x_ExplicitVarSizeWithMarker_Marker ->
-         (x_ExplicitVarSizeWithMarker_Values__tag[q3] != 2 ->
-          x_ExplicitVarSizeWithMarker_Values_theInt[q3] = 1)
+         (x_ExplicitVarSizeWithMarker_Values__tag[q3] != 2 -> x_ExplicitVarSizeWithMarker_Values_theInt[q3] = 1)
              | q3 : int(1..4)])
 

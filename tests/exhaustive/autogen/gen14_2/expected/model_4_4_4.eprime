@@ -1,65 +1,47 @@
 language ESSENCE' 1.0
 
 find var1_PartitionOccurrence_NumParts: int(1..2)
-find var1_PartitionOccurrence_WhichPart:
-        matrix indexed by [int(1..2)] of int(1..2)
-find var1_PartitionOccurrence_PartSizes:
-        matrix indexed by [int(1..2)] of int(0..2)
-find var1_PartitionOccurrence_FirstIndex:
-        matrix indexed by [int(1..2)] of int(1..2)
+find var1_PartitionOccurrence_WhichPart: matrix indexed by [int(1..2)] of int(1..2)
+find var1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
+find var1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(1..2)
 such that
     and([q12 <= var1_PartitionOccurrence_NumParts ->
          or([q15 <= var1_PartitionOccurrence_NumParts /\
              (and([var1_PartitionOccurrence_WhichPart[q18] = q15 ->
-                   or([var1_PartitionOccurrence_WhichPart[q20] = q12 /\ q20 = q18
-                           | q20 : int(1..2)])
+                   or([var1_PartitionOccurrence_WhichPart[q20] = q12 /\ q20 = q18 | q20 : int(1..2)])
                        | q18 : int(1..2)])
               /\
               and([var1_PartitionOccurrence_WhichPart[q22] = q12 ->
-                   or([var1_PartitionOccurrence_WhichPart[q24] = q15 /\ q24 = q22
-                           | q24 : int(1..2)])
+                   or([var1_PartitionOccurrence_WhichPart[q24] = q15 /\ q24 = q22 | q24 : int(1..2)])
                        | q22 : int(1..2)]))
                  | q15 : int(1..2)])
              | q12 : int(1..2)]),
     and([q26 <= var1_PartitionOccurrence_NumParts ->
          or([q29 <= var1_PartitionOccurrence_NumParts /\
              (and([var1_PartitionOccurrence_WhichPart[q32] = q29 ->
-                   or([var1_PartitionOccurrence_WhichPart[q34] = q26 /\ q34 = q32
-                           | q34 : int(1..2)])
+                   or([var1_PartitionOccurrence_WhichPart[q34] = q26 /\ q34 = q32 | q34 : int(1..2)])
                        | q32 : int(1..2)])
               /\
               and([var1_PartitionOccurrence_WhichPart[q36] = q26 ->
-                   or([var1_PartitionOccurrence_WhichPart[q38] = q29 /\ q38 = q36
-                           | q38 : int(1..2)])
+                   or([var1_PartitionOccurrence_WhichPart[q38] = q29 /\ q38 = q36 | q38 : int(1..2)])
                        | q36 : int(1..2)]))
                  | q29 : int(1..2)])
              | q26 : int(1..2)]),
-    and([q1 > var1_PartitionOccurrence_NumParts ->
-         var1_PartitionOccurrence_PartSizes[q1] = 0
-             | q1 : int(1..2)]),
-    var1_PartitionOccurrence_NumParts =
-    max([var1_PartitionOccurrence_WhichPart[q4] | q4 : int(1..2)]),
+    and([q1 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
+    var1_PartitionOccurrence_NumParts = max([var1_PartitionOccurrence_WhichPart[q4] | q4 : int(1..2)]),
     and([var1_PartitionOccurrence_PartSizes[q5] =
          sum([toInt(var1_PartitionOccurrence_WhichPart[q6] = q5) | q6 : int(1..2)])
              | q5 : int(1..2)]),
     and([q7 <= var1_PartitionOccurrence_NumParts ->
-         and([var1_PartitionOccurrence_WhichPart[q8] = q7 ->
-              var1_PartitionOccurrence_FirstIndex[q7] <= q8
+         and([var1_PartitionOccurrence_WhichPart[q8] = q7 -> var1_PartitionOccurrence_FirstIndex[q7] <= q8
                   | q8 : int(1..2)])
              | q7 : int(1..2)]),
     and([q7 <= var1_PartitionOccurrence_NumParts ->
-         or([var1_PartitionOccurrence_WhichPart[q8] = q7 /\
-             var1_PartitionOccurrence_FirstIndex[q7] = q8
+         or([var1_PartitionOccurrence_WhichPart[q8] = q7 /\ var1_PartitionOccurrence_FirstIndex[q7] = q8
                  | q8 : int(1..2)])
              | q7 : int(1..2)]),
-    and([var1_PartitionOccurrence_PartSizes[q7] = 0 ->
-         var1_PartitionOccurrence_FirstIndex[q7] = 1
-             | q7 : int(1..2)]),
-    and([q9 <= var1_PartitionOccurrence_NumParts /\
-         q10 <= var1_PartitionOccurrence_NumParts
-         ->
-         (q9 < q10 <->
-          var1_PartitionOccurrence_FirstIndex[q9] <
-          var1_PartitionOccurrence_FirstIndex[q10])
+    and([var1_PartitionOccurrence_PartSizes[q7] = 0 -> var1_PartitionOccurrence_FirstIndex[q7] = 1 | q7 : int(1..2)]),
+    and([q9 <= var1_PartitionOccurrence_NumParts /\ q10 <= var1_PartitionOccurrence_NumParts ->
+         (q9 < q10 <-> var1_PartitionOccurrence_FirstIndex[q9] < var1_PartitionOccurrence_FirstIndex[q10])
              | q9 : int(1..2), q10 : int(1..2)])
 

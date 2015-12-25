@@ -8,36 +8,27 @@ given nums_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
 letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
-find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
-find x_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..let1)] of int(let2..let3)
 such that
     and([x_ExplicitVarSizeWithDummy[q18] != let3 + 1 ->
          or([nums_Explicit[q20] = x_ExplicitVarSizeWithDummy[q18] | q20 : int(1..fin1)])
              | q18 : int(1..let1)]),
     s =
-    sum([toInt(q16 <= x_ExplicitVarSizeWithMarker_Marker) *
-         x_ExplicitVarSizeWithMarker_Values[q16]
+    sum([toInt(q16 <= x_ExplicitVarSizeWithMarker_Marker) * x_ExplicitVarSizeWithMarker_Values[q16]
              | q16 : int(1..let1)]),
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/
          x_ExplicitVarSizeWithDummy[q1] = let3 + 1
              | q1 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q2] = let3 + 1 ->
-         x_ExplicitVarSizeWithDummy[q2 + 1] = let3 + 1
+    and([x_ExplicitVarSizeWithDummy[q2] = let3 + 1 -> x_ExplicitVarSizeWithDummy[q2 + 1] = let3 + 1
              | q2 : int(1..let1 - 1)]),
-    1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]) <=
-    let1,
+    1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]) <= let1,
     and([q5 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q5] <
-         x_ExplicitVarSizeWithMarker_Values[q5 + 1]
+         x_ExplicitVarSizeWithMarker_Values[q5] < x_ExplicitVarSizeWithMarker_Values[q5 + 1]
              | q5 : int(1..let1 - 1)]),
-    and([q6 > x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q6] = let2
-             | q6 : int(1..let1)]),
+    and([q6 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q6] = let2 | q6 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
     and([q9 <= x_ExplicitVarSizeWithMarker_Marker ->

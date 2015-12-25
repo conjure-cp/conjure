@@ -10,8 +10,7 @@ letting let2 be fin2
 letting let3 be fin3
 find x_Occurrence: matrix indexed by [int(let2..let3)] of bool
 such that
-    and([x_Occurrence[q2] -> or([nums_Explicit[q4] = q2 | q4 : int(1..fin1)])
-             | q2 : int(let2..let3)]),
+    and([x_Occurrence[q2] -> or([nums_Explicit[q4] = q2 | q4 : int(1..fin1)]) | q2 : int(let2..let3)]),
     s = sum([toInt(x_Occurrence[i]) * i | i : int(let2..let3)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]),
     sum([toInt(x_Occurrence[q1]) | q1 : int(let2..let3)]) <= let1

@@ -8,24 +8,17 @@ given nums_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
 letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
-find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 such that
     and([x_ExplicitVarSizeWithDummy[q7] != let3 + 1 ->
          or([nums_Explicit[q9] = x_ExplicitVarSizeWithDummy[q7] | q9 : int(1..fin1)])
              | q7 : int(1..let1)]),
-    s =
-    sum([toInt(x_ExplicitVarSizeWithDummy[q5] != let3 + 1) *
-         x_ExplicitVarSizeWithDummy[q5]
-             | q5 : int(1..let1)]),
+    s = sum([toInt(x_ExplicitVarSizeWithDummy[q5] != let3 + 1) * x_ExplicitVarSizeWithDummy[q5] | q5 : int(1..let1)]),
     and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/
          x_ExplicitVarSizeWithDummy[q1] = let3 + 1
              | q1 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q2] = let3 + 1 ->
-         x_ExplicitVarSizeWithDummy[q2 + 1] = let3 + 1
+    and([x_ExplicitVarSizeWithDummy[q2] = let3 + 1 -> x_ExplicitVarSizeWithDummy[q2 + 1] = let3 + 1
              | q2 : int(1..let1 - 1)]),
-    1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]) <=
-    let1
+    1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q3] != let3 + 1) | q3 : int(1..let1)]) <= let1
 

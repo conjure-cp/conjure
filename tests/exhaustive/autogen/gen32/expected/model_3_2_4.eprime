@@ -2,13 +2,10 @@ language ESSENCE' 1.0
 
 letting let1 be -4
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
-find var2_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
-find var2_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
+find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
-find var2_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 such that
     or([q38 <= var2_ExplicitVarSizeWithMarker_Marker /\
         !or([var2_ExplicitVarSizeWithDummy[q40] != 6 /\
@@ -22,18 +19,14 @@ such that
                  | q43 : int(1..11)])
             | q41 : int(1..11)]),
     and([q1 + 1 <= var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q1] <
-         var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
+         var2_ExplicitVarSizeWithMarker_Values[q1] < var2_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..10)]),
-    and([q2 > var2_ExplicitVarSizeWithMarker_Marker ->
-         var2_ExplicitVarSizeWithMarker_Values[q2] = -4
+    and([q2 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q2] = -4
              | q2 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithDummy[q4] < var2_ExplicitVarSizeWithDummy[q4 + 1]
-         \/ var2_ExplicitVarSizeWithDummy[q4] = 6
+    and([var2_ExplicitVarSizeWithDummy[q4] < var2_ExplicitVarSizeWithDummy[q4 + 1] \/
+         var2_ExplicitVarSizeWithDummy[q4] = 6
              | q4 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithDummy[q5] = 6 ->
-         var2_ExplicitVarSizeWithDummy[q5 + 1] = 6
-             | q5 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithDummy[q5] = 6 -> var2_ExplicitVarSizeWithDummy[q5 + 1] = 6 | q5 : int(1..10)]),
     and([var2_ExplicitVarSizeWithDummy[q9] != 6 ->
          or([q11 <= var2_ExplicitVarSizeWithMarker_Marker /\
              var2_ExplicitVarSizeWithMarker_Values[q11] = var2_ExplicitVarSizeWithDummy[q9]
@@ -45,25 +38,19 @@ such that
                  | q15 : int(1..11)])
              | q13 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q16 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Values[q16] <
-         var2_ExplicitVarSizeWithFlags_Values[q16 + 1]
+         var2_ExplicitVarSizeWithFlags_Values[q16] < var2_ExplicitVarSizeWithFlags_Values[q16 + 1]
              | q16 : int(1..10)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q17] = false ->
-         var2_ExplicitVarSizeWithFlags_Values[q17] = -4
+    and([var2_ExplicitVarSizeWithFlags_Flags[q17] = false -> var2_ExplicitVarSizeWithFlags_Values[q17] = -4
              | q17 : int(1..11)]),
-    and([var2_ExplicitVarSizeWithFlags_Flags[q18 + 1] ->
-         var2_ExplicitVarSizeWithFlags_Flags[q18]
-             | q18 : int(1..10)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q18 + 1] -> var2_ExplicitVarSizeWithFlags_Flags[q18] | q18 : int(1..10)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q22] ->
          or([q24 <= var2_ExplicitVarSizeWithMarker_Marker /\
-             var2_ExplicitVarSizeWithMarker_Values[q24] =
-             var2_ExplicitVarSizeWithFlags_Values[q22]
+             var2_ExplicitVarSizeWithMarker_Values[q24] = var2_ExplicitVarSizeWithFlags_Values[q22]
                  | q24 : int(1..11)])
              | q22 : int(1..11)]),
     and([q26 <= var2_ExplicitVarSizeWithMarker_Marker ->
          or([var2_ExplicitVarSizeWithFlags_Flags[q28] /\
-             var2_ExplicitVarSizeWithFlags_Values[q28] =
-             var2_ExplicitVarSizeWithMarker_Values[q26]
+             var2_ExplicitVarSizeWithFlags_Values[q28] = var2_ExplicitVarSizeWithMarker_Values[q26]
                  | q28 : int(1..11)])
              | q26 : int(1..11)]),
     and([var2_ExplicitVarSizeWithFlags_Flags[q30] ->

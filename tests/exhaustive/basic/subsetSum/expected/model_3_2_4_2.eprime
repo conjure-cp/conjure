@@ -9,41 +9,28 @@ letting let1 be fin1
 letting let2 be fin2
 letting let3 be fin3
 find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
-find x_ExplicitVarSizeWithMarker_Values:
-        matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..let1)] of int(let2..let3)
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
-find x_ExplicitVarSizeWithFlags_Values:
-        matrix indexed by [int(1..let1)] of int(let2..let3)
-find x_ExplicitVarSizeWithDummy:
-        matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..let1)] of int(let2..let3)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..let1)] of int(let2..let3 + 1)
 such that
     and([q39 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([nums_Explicit[q41] = x_ExplicitVarSizeWithMarker_Values[q39]
-                 | q41 : int(1..fin1)])
+         or([nums_Explicit[q41] = x_ExplicitVarSizeWithMarker_Values[q39] | q41 : int(1..fin1)])
              | q39 : int(1..let1)]),
     s =
-    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q29]) *
-         x_ExplicitVarSizeWithFlags_Values[q29]
-             | q29 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q29]) * x_ExplicitVarSizeWithFlags_Values[q29] | q29 : int(1..let1)]),
     and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q1] <
-         x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..let1 - 1)]),
-    and([q2 > x_ExplicitVarSizeWithMarker_Marker ->
-         x_ExplicitVarSizeWithMarker_Values[q2] = let2
-             | q2 : int(1..let1)]),
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = let2 | q2 : int(1..let1)]),
     1 <= x_ExplicitVarSizeWithMarker_Marker,
     x_ExplicitVarSizeWithMarker_Marker <= let1,
     and([x_ExplicitVarSizeWithFlags_Flags[q4 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values[q4] <
-         x_ExplicitVarSizeWithFlags_Values[q4 + 1]
+         x_ExplicitVarSizeWithFlags_Values[q4] < x_ExplicitVarSizeWithFlags_Values[q4 + 1]
              | q4 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q5] = false ->
-         x_ExplicitVarSizeWithFlags_Values[q5] = let2
+    and([x_ExplicitVarSizeWithFlags_Flags[q5] = false -> x_ExplicitVarSizeWithFlags_Values[q5] = let2
              | q5 : int(1..let1)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] ->
-         x_ExplicitVarSizeWithFlags_Flags[q6]
-             | q6 : int(1..let1 - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q6 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q6] | q6 : int(1..let1 - 1)]),
     1 <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]),
     sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..let1)]) <= let1,
     and([x_ExplicitVarSizeWithFlags_Flags[q31] ->
@@ -59,13 +46,10 @@ such that
     and([x_ExplicitVarSizeWithDummy[q9] < x_ExplicitVarSizeWithDummy[q9 + 1] \/
          x_ExplicitVarSizeWithDummy[q9] = let3 + 1
              | q9 : int(1..let1 - 1)]),
-    and([x_ExplicitVarSizeWithDummy[q10] = let3 + 1 ->
-         x_ExplicitVarSizeWithDummy[q10 + 1] = let3 + 1
+    and([x_ExplicitVarSizeWithDummy[q10] = let3 + 1 -> x_ExplicitVarSizeWithDummy[q10 + 1] = let3 + 1
              | q10 : int(1..let1 - 1)]),
-    1 <=
-    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) | q11 : int(1..let1)]),
-    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) | q11 : int(1..let1)])
-    <= let1,
+    1 <= sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) | q11 : int(1..let1)]),
+    sum([toInt(x_ExplicitVarSizeWithDummy[q11] != let3 + 1) | q11 : int(1..let1)]) <= let1,
     and([x_ExplicitVarSizeWithDummy[q14] != let3 + 1 ->
          or([q16 <= x_ExplicitVarSizeWithMarker_Marker /\
              x_ExplicitVarSizeWithMarker_Values[q16] = x_ExplicitVarSizeWithDummy[q14]
