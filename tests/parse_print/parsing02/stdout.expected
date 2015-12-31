@@ -13,7 +13,5 @@ minimising |hosts|
 such that
     and([range(p) subsetEq hosts | p <- sched]),
     and([and([p(h) = h | h <- hosts]) | p <- sched]),
-    and([and([sum([crew(b) | b <- preImage(p, h)]) <= capacity(h) | h <- hosts])
-             | p <- sched]),
-    and([sum([toInt(p(b1) = p(b2)) | p <- sched]) <= 1
-             | b1 : Boat, b2 : Boat, b1 != b2])
+    and([and([sum([crew(b) | b <- preImage(p, h)]) <= capacity(h) | h <- hosts]) | p <- sched]),
+    and([sum([toInt(p(b1) = p(b2)) | p <- sched]) <= 1 | b1 : Boat, b2 : Boat, b1 != b2])
