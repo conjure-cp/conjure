@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+letting n be 5
+find s_Function1DPartial_Flags: matrix indexed by [int(1..5)] of bool
+find s_Function1DPartial_Values: matrix indexed by [int(1..5)] of int(1..2)
+such that
+    and([[s_Function1DPartial_Flags[q3]
+              | q2 : int(1..5), q3 : int(1..5), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
+                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+         <=lex [s_Function1DPartial_Flags[q2] | q2 : int(1..5)]
+             | q1 : int(1..4)]),
+    and([s_Function1DPartial_Flags[q1] /\ s_Function1DPartial_Flags[q2] ->
+         s_Function1DPartial_Values[q1] != s_Function1DPartial_Values[q2]
+             | q1 : int(1..5), q2 : int(1..5), q1 < q2]),
+    and([s_Function1DPartial_Flags[q3] = false -> s_Function1DPartial_Values[q3] = 1 | q3 : int(1..5)]),
+    sum([toInt(s_Function1DPartial_Flags[q4]) | q4 : int(1..5)]) <= 3
+
