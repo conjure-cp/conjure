@@ -48,23 +48,32 @@ mkUnnamedStructuralCons
     -> (Name, Domain () Expression)
     -> m (Maybe Expression)
 mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain domain where
+
+    var = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+
+    -- current=i then j
+    -- current=j then i
+    -- otherwise      current
+    swap i j current =
+        -- if current=i then j else (if current=j then i else current)
+        -- (current=i) + 2 * (current=j)    current=i ----> 1    (output is j)
+        --                                  current=j ----> 2    (output is i)
+        --                                  otherwise ----> 0    (output is current)
+        [essence| [ &current, &j, &i ; int(0..2) ] [ toInt(&current=&i) + 2 * toInt(&current=&j) ] |]
+        
+
     onDomain (DomainSet _ _ (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+            let k2Val = swap i j k1
             return $ Just [essence|
-                and([ [ &k1 in &nameExpr          | &k1Pat : int(1..&unnamedSize) ]
+                and([ [ &k1 in &var          | &k1Pat : int(1..&unnamedSize) ]
                           >=lex
-                      [ &k2 in &nameExpr          | &k1Pat : int(1..&unnamedSize)
-                                                  , letting &k2Pat be
-                                                      $ if k1 = i then j else (if k1 = j then i else k1)
-                                                      $ (k1=i) + 2 * (k1=j)          k1=i implies 1    (k2=j)
-                                                      $                              k1=j implies 2    (k2=i)
-                                                      $                              o.w. implies 0    (k2=k1)
-                                                      [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
-                                                  ]
+                      [ &k2 in &var          | &k1Pat : int(1..&unnamedSize)
+                                             , letting &k2Pat be &k2Val
+                                             ]
                     | &iPat : int(1..&unnamedSize - 1)
                     , letting &jPat be &i + 1
                     ])
@@ -74,14 +83,13 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+            let k2Val = swap i j k1
             return $ Just [essence|
-                and([ [ freq(&nameExpr, &k1)      | &k1Pat : int(1..&unnamedSize) ]
+                and([ [ freq(&var, &k1)      | &k1Pat : int(1..&unnamedSize) ]
                           >=lex
-                      [ freq(&nameExpr, &k2)      | &k1Pat : int(1..&unnamedSize)
-                                                  , letting &k2Pat be
-                                                      [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
-                                                  ]
+                      [ freq(&var, &k2)      | &k1Pat : int(1..&unnamedSize)
+                                             , letting &k2Pat be &k2Val
+                                             ]
                     | &iPat : int(1..&unnamedSize - 1)
                     , letting &jPat be &i + 1
                     ])
@@ -91,20 +99,19 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
+            let k2Val = swap i j k1
             (zPat , z ) <- quantifiedVar
-            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
             return $ Just [essence|
-                and([ [ (&k1, &z) in toSet(&nameExpr)
-                                                  | &k1Pat : int(1..&unnamedSize)
-                                                  , &zPat  : &domTo
-                                                  ]
+                and([ [ (&k1, &z) in toSet(&var)
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &zPat  : &domTo
+                                             ]
                           >=lex
-                      [ (&k2, &z) in toSet(&nameExpr)
-                                                  | &k1Pat : int(1..&unnamedSize)
-                                                  , &zPat  : &domTo
-                                                  , letting &k2Pat be
-                                                      [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
-                                                  ]
+                      [ (&k2, &z) in toSet(&var)
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &zPat  : &domTo
+                                             , letting &k2Pat be &k2Val
+                                             ]
                     | &iPat : int(1..&unnamedSize - 1)
                     , letting &jPat be &i + 1
                     ])
@@ -114,20 +121,19 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
+            let k2Val = swap i j k1
             (zPat , z ) <- quantifiedVar
-            let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
             return $ Just [essence|
-                and([ [ (&z, &k1) in toSet(&nameExpr)
-                                                  | &zPat  : &domFr
-                                                  , &k1Pat : int(1..&unnamedSize)
-                                                  ]
+                and([ [ (&z, &k1) in toSet(&var)
+                                             | &zPat  : &domFr
+                                             , &k1Pat : int(1..&unnamedSize)
+                                             ]
                           >=lex
-                      [ (&z, &k2) in toSet(&nameExpr)
-                                                  | &zPat  : &domFr
-                                                  , &k1Pat : int(1..&unnamedSize)
-                                                  , letting &k2Pat be
-                                                      [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
-                                                  ]
+                      [ (&z, &k2) in toSet(&var)
+                                             | &zPat  : &domFr
+                                             , &k1Pat : int(1..&unnamedSize)
+                                             , letting &k2Pat be &k2Val
+                                             ]
                     | &iPat : int(1..&unnamedSize - 1)
                     , letting &jPat be &i + 1
                     ])
