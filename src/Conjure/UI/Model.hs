@@ -1222,6 +1222,7 @@ otherRules =
         ]
 
     ,   [ rule_InlineConditions
+        , rule_InlineConditions_InsideLex
         , rule_InlineConditions_MaxMin
         ]
     ]
@@ -1761,6 +1762,44 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
     opSumSkip b x = [essence| toInt(&b) * &x |]
+
+
+-- this rule doesn't use `namedRule` because it need access to ascendants through the zipper
+rule_InlineConditions_InsideLex :: Rule
+rule_InlineConditions_InsideLex = Rule "inline-conditions-insideLex" theRule where
+    theRule z (Comprehension body gensOrConds) = do
+        let (toInline, toKeep) = mconcat
+                [ case goc of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[goc])
+                | goc <- gensOrConds
+                ]
+        theGuard <- case toInline of
+            []  -> fail "No condition to inline."
+            xs  -> return $ make opAnd $ fromList xs
+        queryQ z
+        let opSkip b x = [essence| toInt(&b) * &x |]
+        return
+            [ RuleResult
+                { ruleResultDescr = "Inlining conditions, inside lex"
+                , ruleResultType  = ExpressionRefinement
+                , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResultHook  = Nothing
+                } ]
+    theRule _ _ = na "rule_InlineConditions_InsideLex"
+
+    -- keep going up, until finding a lex
+    -- when found, return
+    -- if none exists, do not apply the rule.
+    -- (or maybe we should call bug right ahead, it can't be anything else.)
+    queryQ z0 =
+        case Zipper.up z0 of
+            Nothing -> na "rule_InlineConditions_InsideLex (meh-1)"
+            Just z -> do
+                let h = hole z
+                case match opLex h of
+                    Just{} -> return ()
+                    _      -> na "rule_InlineConditions_InsideLex (meh-2)"
 
 
 rule_InlineConditions_MaxMin :: Rule

@@ -1025,6 +1025,26 @@ opSum _ =
     )
 
 
+opLex
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( (x -> x -> x, (x, x)) -> x
+       , x -> m (x -> x -> x, (x, x))
+       )
+opLex _ =
+    ( \ (mk, (x, y)) -> mk x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpLexLeq (OpLexLeq x y) -> return (\ x' y' -> inject (MkOpLexLeq (OpLexLeq x' y')) , (x,y) )
+                MkOpLexLt  (OpLexLt  x y) -> return (\ x' y' -> inject (MkOpLexLt  (OpLexLt  x' y')) , (x,y) )
+                _ -> na ("Lenses.opLex:" <++> pretty p)
+    )
+
+
 opQuantifier
     :: ( Op x :< x
        , Pretty x
