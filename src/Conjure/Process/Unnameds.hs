@@ -86,16 +86,22 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
-    onDomain (DomainFunction _ _ (DomainReference n _) _) | n == unnamedName = do
+    onDomain (DomainFunction _ _ (DomainReference n _) domTo) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
+            (zPat , z ) <- quantifiedVar
             let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
             return $ Just [essence|
-                and([ [ &k1 in defined(&nameExpr) | &k1Pat : int(1..&unnamedSize) ]
+                and([ [ (&k1, &z) in toSet(&nameExpr)
+                                                  | &k1Pat : int(1..&unnamedSize)
+                                                  , &zPat  : &domTo
+                                                  ]
                           >=lex
-                      [ &k2 in defined(&nameExpr) | &k1Pat : int(1..&unnamedSize)
+                      [ (&k2, &z) in toSet(&nameExpr)
+                                                  | &k1Pat : int(1..&unnamedSize)
+                                                  , &zPat  : &domTo
                                                   , letting &k2Pat be
                                                       [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
                                                   ]
@@ -103,16 +109,22 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
-    onDomain (DomainFunction _ _ _ (DomainReference n _)) | n == unnamedName = do
+    onDomain (DomainFunction _ _ domFr (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
+            (zPat , z ) <- quantifiedVar
             let nameExpr = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
             return $ Just [essence|
-                and([ [ &k1 in range(&nameExpr)   | &k1Pat : int(1..&unnamedSize) ]
+                and([ [ (&z, &k1) in toSet(&nameExpr)
+                                                  | &zPat  : &domFr
+                                                  , &k1Pat : int(1..&unnamedSize)
+                                                  ]
                           >=lex
-                      [ &k2 in range(&nameExpr)   | &k1Pat : int(1..&unnamedSize)
+                      [ (&z, &k2) in toSet(&nameExpr)
+                                                  | &zPat  : &domFr
+                                                  , &k1Pat : int(1..&unnamedSize)
                                                   , letting &k2Pat be
                                                       [ &k1, &j, &i ; int(0..2) ] [ toInt(&k1=&i) + 2 * toInt(&k1=&j) ]
                                                   ]
