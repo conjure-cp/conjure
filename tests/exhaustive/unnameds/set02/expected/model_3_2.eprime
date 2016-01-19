@@ -5,13 +5,14 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..1 + (n - 1))
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (n - 1))] of int(1..n)
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (n - 1))] of int(1..n + 1)
 such that
-    and([[or([q17 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q17] = q3
-                  | q17 : int(1..1 + (n - 1))])
-              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+    and([[or([q18 <= s_ExplicitVarSizeWithMarker_Marker /\
+              s_ExplicitVarSizeWithMarker_Values[q18] =
+              [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
+                  | q18 : int(1..1 + (n - 1))])
+              | q2 : int(1..n)]
          <=lex
-         [or([q19 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q19] = q2
-                  | q19 : int(1..1 + (n - 1))])
+         [or([q21 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q21] = q2
+                  | q21 : int(1..1 + (n - 1))])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([q1 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->

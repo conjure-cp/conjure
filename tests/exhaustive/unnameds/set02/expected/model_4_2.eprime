@@ -5,13 +5,14 @@ find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (n - 1))] o
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (n - 1))] of int(1..n)
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (n - 1))] of int(1..n + 1)
 such that
-    and([[or([s_ExplicitVarSizeWithFlags_Flags[q19] /\ s_ExplicitVarSizeWithFlags_Values[q19] = q3
-                  | q19 : int(1..1 + (n - 1))])
-              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+    and([[or([s_ExplicitVarSizeWithFlags_Flags[q20] /\
+              s_ExplicitVarSizeWithFlags_Values[q20] =
+              [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
+                  | q20 : int(1..1 + (n - 1))])
+              | q2 : int(1..n)]
          <=lex
-         [or([s_ExplicitVarSizeWithFlags_Flags[q21] /\ s_ExplicitVarSizeWithFlags_Values[q21] = q2
-                  | q21 : int(1..1 + (n - 1))])
+         [or([s_ExplicitVarSizeWithFlags_Flags[q23] /\ s_ExplicitVarSizeWithFlags_Values[q23] = q2
+                  | q23 : int(1..1 + (n - 1))])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->

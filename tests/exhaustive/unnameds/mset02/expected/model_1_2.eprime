@@ -6,13 +6,14 @@ find s_ExplicitWithFlags_Values: matrix indexed by [int(1..2 * (1 + (n - 1)))] o
 find s_ExplicitWithRepetition_Flag: int(0..2 * (1 + (n - 1)) * 2)
 find s_ExplicitWithRepetition_Values: matrix indexed by [int(1..2 * (1 + (n - 1)) * 2)] of int(1..n)
 such that
-    and([[sum([toInt(s_ExplicitWithFlags_Values[q23] = q3) * s_ExplicitWithFlags_Flags[q23]
+    and([[sum([toInt(s_ExplicitWithFlags_Values[q23] =
+                     [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)])
+               * s_ExplicitWithFlags_Flags[q23]
                    | q23 : int(1..2 * (1 + (n - 1)))])
-              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+              | q2 : int(1..n)]
          <=lex
-         [sum([toInt(s_ExplicitWithFlags_Values[q24] = q2) * s_ExplicitWithFlags_Flags[q24]
-                   | q24 : int(1..2 * (1 + (n - 1)))])
+         [sum([toInt(s_ExplicitWithFlags_Values[q25] = q2) * s_ExplicitWithFlags_Flags[q25]
+                   | q25 : int(1..2 * (1 + (n - 1)))])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_ExplicitWithFlags_Flags[q1 + 1] > 0 -> s_ExplicitWithFlags_Values[q1] < s_ExplicitWithFlags_Values[q1 + 1]

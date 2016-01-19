@@ -4,9 +4,8 @@ given n: int
 find s_Function1DPartial_Flags: matrix indexed by [int(1..n)] of bool
 find s_Function1DPartial_Values: matrix indexed by [int(1..n)] of int(1..3)
 such that
-    and([[s_Function1DPartial_Flags[q3]
-              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+    and([[s_Function1DPartial_Flags[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]]
+              | q2 : int(1..n)]
          <=lex [s_Function1DPartial_Flags[q2] | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_Function1DPartial_Flags[q1] /\ s_Function1DPartial_Flags[q2] ->

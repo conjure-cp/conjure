@@ -4,11 +4,12 @@ letting n be 5
 find s_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
 find s_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..5)
 such that
-    and([[or([s_Function1DPartial_Flags[q8] /\ s_Function1DPartial_Values[q8] = q3 | q8 : int(1..3)])
-              | q2 : int(1..5), q3 : int(1..5), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
+    and([[or([s_Function1DPartial_Flags[q10] /\
+              s_Function1DPartial_Values[q10] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
+                  | q10 : int(1..3)])
+              | q2 : int(1..5)]
          <=lex
-         [or([s_Function1DPartial_Flags[q11] /\ s_Function1DPartial_Values[q11] = q2 | q11 : int(1..3)])
+         [or([s_Function1DPartial_Flags[q14] /\ s_Function1DPartial_Values[q14] = q2 | q14 : int(1..3)])
               | q2 : int(1..5)]
              | q1 : int(1..4)]),
     and([s_Function1DPartial_Flags[q1] /\ s_Function1DPartial_Flags[q2] ->

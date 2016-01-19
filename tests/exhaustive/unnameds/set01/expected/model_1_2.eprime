@@ -4,16 +4,14 @@ letting n be 3
 find s_Occurrence: matrix indexed by [int(1..3)] of bool
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..4)
 such that
-    and([[s_Occurrence[q3]
-              | q2 : int(1..3), q3 : int(1..3), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
-         <=lex [s_Occurrence[q2] | q2 : int(1..3)]
+    and([[s_Occurrence[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]] | q2 : int(1..3)] <=lex
+         [s_Occurrence[q2] | q2 : int(1..3)]
              | q1 : int(1..2)]),
-    and([s_ExplicitVarSizeWithDummy[q2] < s_ExplicitVarSizeWithDummy[q2 + 1] \/ s_ExplicitVarSizeWithDummy[q2] = 4
-             | q2 : int(1..2)]),
-    and([s_ExplicitVarSizeWithDummy[q3] = 4 -> s_ExplicitVarSizeWithDummy[q3 + 1] = 4 | q3 : int(1..2)]),
-    and([s_ExplicitVarSizeWithDummy[q7] != 4 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q7]] | q7 : int(1..3)]),
-    and([s_Occurrence[q8] ->
-         or([s_ExplicitVarSizeWithDummy[q10] != 4 /\ s_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..3)])
-             | q8 : int(1..3)])
+    and([s_ExplicitVarSizeWithDummy[q5] < s_ExplicitVarSizeWithDummy[q5 + 1] \/ s_ExplicitVarSizeWithDummy[q5] = 4
+             | q5 : int(1..2)]),
+    and([s_ExplicitVarSizeWithDummy[q6] = 4 -> s_ExplicitVarSizeWithDummy[q6 + 1] = 4 | q6 : int(1..2)]),
+    and([s_ExplicitVarSizeWithDummy[q10] != 4 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q10]] | q10 : int(1..3)]),
+    and([s_Occurrence[q11] ->
+         or([s_ExplicitVarSizeWithDummy[q13] != 4 /\ s_ExplicitVarSizeWithDummy[q13] = q11 | q13 : int(1..3)])
+             | q11 : int(1..3)])
 

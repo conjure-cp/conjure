@@ -5,10 +5,8 @@ find s_Occurrence: matrix indexed by [int(1..n)] of bool
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (n - 1))] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (n - 1))] of int(1..n)
 such that
-    and([[s_Occurrence[q3]
-              | q2 : int(1..n), q3 : int(1..n), q2 = q1 -> q3 = q1 + 1, q2 = q1 + 1 -> q3 = q1,
-                q2 != q1 /\ q2 != q1 + 1 -> q3 = q2]
-         <=lex [s_Occurrence[q2] | q2 : int(1..n)]
+    and([[s_Occurrence[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]] | q2 : int(1..n)] <=lex
+         [s_Occurrence[q2] | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
          s_ExplicitVarSizeWithFlags_Values[q2] < s_ExplicitVarSizeWithFlags_Values[q2 + 1]
