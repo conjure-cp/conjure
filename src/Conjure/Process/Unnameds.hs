@@ -54,7 +54,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
     -- current=i then j
     -- current=j then i
     -- otherwise      current
-    swap i j current =
+    swapIJ i j current =
         -- if current=i then j else (if current=j then i else current)
         -- (current=i) + 2 * (current=j)    current=i ----> 1    (output is j)
         --                                  current=j ----> 2    (output is i)
@@ -67,7 +67,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let k2Val = swap i j k1
+            let k2Val = swapIJ i j k1
             return $ Just [essence|
                 and([ [ &k1 in &var          | &k1Pat : int(1..&unnamedSize) ]
                           >=lex
@@ -83,7 +83,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let k2Val = swap i j k1
+            let k2Val = swapIJ i j k1
             return $ Just [essence|
                 and([ [ freq(&var, &k1)      | &k1Pat : int(1..&unnamedSize) ]
                           >=lex
@@ -99,7 +99,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let k2Val = swap i j k1
+            let k2Val = swapIJ i j k1
             (zPat , z ) <- quantifiedVar
             return $ Just [essence|
                 and([ [ (&k1, &z) in toSet(&var)
@@ -121,7 +121,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             (jPat , j ) <- lettingVar
             (k1Pat, k1) <- quantifiedVar
             (k2Pat, k2) <- lettingVar
-            let k2Val = swap i j k1
+            let k2Val = swapIJ i j k1
             (zPat , z ) <- quantifiedVar
             return $ Just [essence|
                 and([ [ (&z, &k1) in toSet(&var)
