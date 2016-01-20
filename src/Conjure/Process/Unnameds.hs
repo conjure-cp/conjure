@@ -60,7 +60,6 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
         --                                  current=j ----> 2    (output is i)
         --                                  otherwise ----> 0    (output is current)
         [essence| [ &current, &j, &i ; int(0..2) ] [ toInt(&current=&i) + 2 * toInt(&current=&j) ] |]
-        
 
     onDomain (DomainSet _ _ (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
@@ -78,6 +77,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
+
     onDomain (DomainMSet _ _ (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
@@ -94,6 +94,20 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
+
+    -- this may be better for total functions, doesn't seem so for partial functions
+    -- onDomain (DomainFunction _ _ (DomainReference n _) _) | n == unnamedName = do
+    --         (iPat , i ) <- quantifiedVar
+    --         (jPat , j ) <- lettingVar
+    --         return $ Just [essence|
+    --             and([ imageSet(&var, &i)
+    --                       ~>=
+    --                   imageSet(&var, &j)
+    --                 | &iPat : int(1..&unnamedSize - 1)
+    --                 , letting &jPat be &i + 1
+    --                 ])
+    --                        |]
+
     onDomain (DomainFunction _ _ (DomainReference n _) domTo) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
@@ -116,6 +130,20 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
+
+    -- this may be better for total functions, doesn't seem so for partial functions
+    -- onDomain (DomainFunction _ _ _ (DomainReference n _)) | n == unnamedName = do
+    --         (iPat , i ) <- quantifiedVar
+    --         (jPat , j ) <- lettingVar
+    --         return $ Just [essence|
+    --             and([ preImage(&var, &i)
+    --                       ~>=
+    --                   preImage(&var, &j)
+    --                 | &iPat : int(1..&unnamedSize - 1)
+    --                 , letting &jPat be &i + 1
+    --                 ])
+    --                        |]
+
     onDomain (DomainFunction _ _ domFr (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
@@ -138,5 +166,6 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     , letting &jPat be &i + 1
                     ])
                            |]
+
     onDomain _ = return Nothing
 
