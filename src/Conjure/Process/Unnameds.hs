@@ -116,12 +116,12 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             let k2Val = swapIJ i j k1
             (zPat , z ) <- quantifiedVar
             return $ Just [essence|
-                and([ [ (&k1, &z) in toSet(&var)
+                and([ [ image(&var, &k1) = &z
                                              | &k1Pat : int(1..&unnamedSize)
                                              , &zPat  : &domTo
                                              ]
                           >=lex
-                      [ (&k2, &z) in toSet(&var)
+                      [ image(&var, &k2) = &z
                                              | &k1Pat : int(1..&unnamedSize)
                                              , &zPat  : &domTo
                                              , letting &k2Pat be &k2Val
@@ -152,12 +152,12 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
             let k2Val = swapIJ i j k1
             (zPat , z ) <- quantifiedVar
             return $ Just [essence|
-                and([ [ (&z, &k1) in toSet(&var)
+                and([ [ image(&var, &z) = &k1
                                              | &zPat  : &domFr
                                              , &k1Pat : int(1..&unnamedSize)
                                              ]
                           >=lex
-                      [ (&z, &k2) in toSet(&var)
+                      [ image(&var, &z) = &k2
                                              | &zPat  : &domFr
                                              , &k1Pat : int(1..&unnamedSize)
                                              , letting &k2Pat be &k2Val
