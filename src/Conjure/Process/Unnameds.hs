@@ -61,6 +61,9 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
         --                                  otherwise ----> 0    (output is current)
         [essence| [ &current, &j, &i ; int(0..2) ] [ toInt(&current=&i) + 2 * toInt(&current=&j) ] |]
 
+    onDomain (DomainReference n _) | n == unnamedName =
+        return $ Just [essence| dontCare(&var) |]
+
     onDomain (DomainSet _ _ (DomainReference n _)) | n == unnamedName = do
             (iPat , i ) <- quantifiedVar
             (jPat , j ) <- lettingVar
