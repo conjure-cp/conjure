@@ -167,5 +167,57 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                     ])
                            |]
 
+    onDomain (DomainFunction _ _ (DomainTuple [DomainReference n _, domFr2]) domTo) | n == unnamedName = do
+            (iPat , i ) <- quantifiedVar
+            (jPat , j ) <- lettingVar
+            (k1Pat, k1) <- quantifiedVar
+            (k2Pat, k2) <- lettingVar
+            let k2Val = swapIJ i j k1
+            (z1Pat, z1) <- quantifiedVar
+            (z2Pat, z2) <- quantifiedVar
+            return $ Just [essence|
+                and([ [ image(&var, (&k1, &z1)) = &z2
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &z1Pat : &domFr2
+                                             , &z2Pat : &domTo
+                                             ]
+                          >=lex
+                      [ image(&var, (&k2, &z1)) = &z2
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &z1Pat : &domFr2
+                                             , &z2Pat : &domTo
+                                             , letting &k2Pat be &k2Val
+                                             ]
+                    | &iPat : int(1..&unnamedSize - 1)
+                    , letting &jPat be &i + 1
+                    ])
+                           |]
+
+    onDomain (DomainFunction _ _ (DomainTuple [domFr1, DomainReference n _]) domTo) | n == unnamedName = do
+            (iPat , i ) <- quantifiedVar
+            (jPat , j ) <- lettingVar
+            (k1Pat, k1) <- quantifiedVar
+            (k2Pat, k2) <- lettingVar
+            let k2Val = swapIJ i j k1
+            (z1Pat, z1) <- quantifiedVar
+            (z2Pat, z2) <- quantifiedVar
+            return $ Just [essence|
+                and([ [ image(&var, (&z1, &k1)) = &z2
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &z1Pat : &domFr1
+                                             , &z2Pat : &domTo
+                                             ]
+                          >=lex
+                      [ image(&var, (&z1, &k2)) = &z2
+                                             | &k1Pat : int(1..&unnamedSize)
+                                             , &z1Pat : &domFr1
+                                             , &z2Pat : &domTo
+                                             , letting &k2Pat be &k2Val
+                                             ]
+                    | &iPat : int(1..&unnamedSize - 1)
+                    , letting &jPat be &i + 1
+                    ])
+                           |]
+
     onDomain _ = return Nothing
 
