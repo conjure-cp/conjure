@@ -35,6 +35,10 @@ addUnnamedStructurals model = do
                          [ (unnamed, decVar)
                          | unnamed <- allUnnnameds
                          , decVar  <- allFinds
+                         -- if the domain of the find contains this unnamed in it
+                         , not $ null [ () | DomainReference n _ <- universe (snd decVar)
+                                           , n == fst unnamed
+                                           ]
                          ]
                      ]
     case catMaybes cons of
