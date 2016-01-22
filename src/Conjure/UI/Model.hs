@@ -1728,6 +1728,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 ]
         theGuard <- case toInline of
             []  -> fail "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
         return
@@ -1776,14 +1777,20 @@ rule_InlineConditions_InsideLex = Rule "inline-conditions-insideLex" theRule whe
                 ]
         theGuard <- case toInline of
             []  -> fail "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         queryQ z
-        let opSkip b x = [essence| toInt(&b) * &x |]
+        let opSkip b x = do
+                ty <- typeOf x
+                case ty of
+                    TypeBool -> return [essence| &b /\ &x |]
+                    TypeInt  -> return [essence| toInt(&b) * &x |]
+                    _        -> bug "rule_InlineConditions_InsideLex opSkip"
         return
             [ RuleResult
                 { ruleResultDescr = "Inlining conditions, inside lex"
                 , ruleResultType  = ExpressionRefinement
-                , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResult      = Comprehension <$> opSkip theGuard body <*> pure toKeep
                 , ruleResultHook  = Nothing
                 } ]
     theRule _ _ = na "rule_InlineConditions_InsideLex"
