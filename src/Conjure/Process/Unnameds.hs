@@ -85,6 +85,55 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain dom
                 ])
         |]
 
+    -- onDomain (DomainSet _ _ (DomainSet _ _ (DomainReference n _))) | n == unnamedName = do
+    --     let var = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+    --     (iPat , i ) <- quantifiedVar
+    --     (jPat , j ) <- lettingVar
+    --     (k1Pat, k1) <- quantifiedVar
+    --     (k2Pat, k2) <- lettingVar
+    --     (var2Pat , var2) <- quantifiedVar
+    --     let k2Val = swapIJ i j k1
+    --     return $ Just [essence|
+    --         and([ and([
+    --                       [ &k1 in &var2         | &k1Pat : int(1..&unnamedSize)
+    --                                              ]
+    --                           >=lex
+    --                       [ &k2 in &var2         | &k1Pat : int(1..&unnamedSize)
+    --                                              , letting &k2Pat be &k2Val
+    --                                              ]
+    --                   | &var2Pat <- &var
+    --                   ])
+    --             | &iPat : int(1..&unnamedSize - 1)
+    --             , letting &jPat be &i + 1
+    --             ])
+    --     |]
+        -- return $ Just [essence|
+        --     and([ [ and([ &k1 in &var2 | &var2Pat <- &var ])
+        --           | &k1Pat : int(1..&unnamedSize)
+        --           ]
+        --               >=lex
+        --           [ and([ &k2 in &var2 | &var2Pat <- &var ])
+        --           | &k1Pat : int(1..&unnamedSize)
+        --           , letting &k2Pat be &k2Val
+        --           ]
+        --         | &iPat : int(1..&unnamedSize - 1)
+        --         , letting &jPat be &i + 1
+        --         ])
+        -- |]
+        -- return $ Just [essence|
+        --     and([ [ &k1 in &var2        | &var2Pat <- &var
+        --                                 , &k1Pat : int(1..&unnamedSize)
+        --                                 ]
+        --             >=lex
+        --           [ &k2 in &var2        | &var2Pat <- &var
+        --                                 , &k1Pat : int(1..&unnamedSize)
+        --                                 , letting &k2Pat be &k2Val
+        --                                 ]
+        --         | &iPat : int(1..&unnamedSize - 1)
+        --         , letting &jPat be &i + 1
+        --         ])
+        -- |]
+
     onDomain (DomainMSet _ _ (DomainReference n _)) | n == unnamedName = do
         let var = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
         (iPat , i ) <- quantifiedVar
