@@ -22,7 +22,7 @@ import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.Language.Pretty ( pretty, prettyList, renderNormal )
+import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -92,6 +92,7 @@ mainWithArgs Modelling{..} = do
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames
+            , Config.lineWidth                  = lineWidth
             }
     runNameGen $ outputModels config model
 mainWithArgs RefineParam{..} = do
@@ -271,6 +272,7 @@ savileRowNoParam ui@Solve{..} modelPath = sh $ errExit False $ do
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , eprimeModel, def
+                                    , lineWidth
                                     )
                                     (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
@@ -293,7 +295,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
     eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     essenceParam <- liftIO $ readModelFromFile paramPath
     eprimeParam  <- liftIO $ ignoreLogs $ runNameGen $ refineParam eprimeModel essenceParam
-    liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
+    liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
     let srArgs = "-in-param"
                : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))
                : srMkArgs ui outBase modelPath
@@ -302,6 +304,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
                                     ( outputDirectory, outBase
                                     , modelPath, paramPath
                                     , eprimeModel, essenceParam
+                                    , lineWidth
                                     )
                                     (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
@@ -324,7 +327,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: (FilePath, FilePath, FilePath, FilePath, Model, Model)
+    :: (FilePath, FilePath, FilePath, FilePath, Model, Model, Int)
     -> Int
     -> Handle
     -> IO [Either String (FilePath, FilePath, FilePath)]
@@ -332,6 +335,7 @@ srStdoutHandler
         args@( outputDirectory, outBase
              , modelPath, paramPath
              , eprimeModel, essenceParam
+             , lineWidth
              )
         solutionNumber h = do
     eof <- hIsEOF h
@@ -347,9 +351,9 @@ srStdoutHandler
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
-                    writeFile filenameEprimeSol  (renderNormal eprimeSol)
+                    writeFile filenameEprimeSol  (render lineWidth eprimeSol)
                     essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
-                    writeFile filenameEssenceSol (renderNormal essenceSol)
+                    writeFile filenameEssenceSol (render lineWidth essenceSol)
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
                          (srStdoutHandler args (solutionNumber+1) h)
                 Nothing ->

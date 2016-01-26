@@ -131,6 +131,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
         , limitModels                   = Nothing
         , limitTime                     = Nothing
         , outputBinary                  = False
+        , lineWidth                     = 120
         }
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat

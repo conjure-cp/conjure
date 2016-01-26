@@ -20,6 +20,7 @@ data UI
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
+        , lineWidth                  :: Int            -- 120 by default
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -53,6 +54,7 @@ data UI
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
+        , lineWidth                  :: Int            -- 120 by default
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -180,6 +182,10 @@ ui = modes
                                            \Caution: With this flag, Conjure will use the answers when producing \
                                            \a filename. It will ignore the order of questions. \
                                            \This will become a problem if anything other than 'f' is used for questions."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing. Default: 120"
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -345,6 +351,10 @@ ui = modes
                                            \Caution: With this flag, Conjure will use the answers when producing \
                                            \a filename. It will ignore the order of questions. \
                                            \This will become a problem if anything other than 'f' is used for questions."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing. Default: 120"
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit

@@ -99,6 +99,7 @@ data Config = Config
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
+    , lineWidth                  :: Int
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -125,6 +126,7 @@ instance Default Config where
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False
+        , lineWidth                  = 120
         }
 
 data RuleResult m = RuleResult

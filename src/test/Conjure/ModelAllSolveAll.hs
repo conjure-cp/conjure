@@ -486,4 +486,5 @@ modelAll dir = ignoreLogs . runNameGen . outputModels Config
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True
+    , lineWidth                  = 120
     }
