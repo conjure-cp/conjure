@@ -52,36 +52,46 @@ typeCheckModel
     -> m Model
 typeCheckModel model1 = do
     let model2 = fixRelationProj model1
-    errs <- execWriterT $ forM (mStatements model2) $ \ st ->
+    (statements3, errs) <- runWriterT $ forM (mStatements model2) $ \ st ->
         case st of
-            Declaration{} -> return ()
-            SearchOrder xs -> forM_ xs $ \case
-                BranchingOn{} -> return ()                      -- TODO: check if the name is defined
-                Cut x -> do
+            Declaration{} -> return st
+            SearchOrder xs -> do
+                forM_ xs $ \case
+                    BranchingOn{} -> return ()                          -- TODO: check if the name is defined
+                    Cut x -> do
+                        mty <- runExceptT $ typeOf x
+                        case mty of
+                            Right TypeBool{} -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In a 'branching on' statement:" <++> pretty x
+                                , "Error:" <++> pretty err
+                                ]
+                            Right ty -> tell $ return $ vcat
+                                [ "In a 'branching on' statement:" <++> pretty x
+                                , "Expected type `bool`, but got:" <++> pretty ty
+                                ]
+                return st
+            SearchHeuristic{} -> return st
+            Where xs -> do
+                xs' <- forM xs $ \ x -> do
                     mty <- runExceptT $ typeOf x
                     case mty of
-                        Right TypeBool{} -> return ()
-                        Left err -> tell $ return $ vcat
-                            [ "In a 'branching on' statement:" <++> pretty x
-                            , "Error:" <++> pretty err
-                            ]
-                        Right ty -> tell $ return $ vcat
-                            [ "In a 'branching on' statement:" <++> pretty x
-                            , "Expected type `bool`, but got:" <++> pretty ty
-                            ]
-            SearchHeuristic{} -> return ()
-            Where xs -> forM_ xs $ \ x -> do
-                mty <- runExceptT $ typeOf x
-                case mty of
-                    Right TypeBool{} -> return ()
-                    Left err -> tell $ return $ vcat
-                        [ "In a 'where' statement:" <++> pretty x
-                        , "Error:" <++> pretty err
-                        ]
-                    Right ty -> tell $ return $ vcat
-                        [ "In a 'where' statement:" <++> pretty x
-                        , "Expected type `bool`, but got:" <++> pretty ty
-                        ]
+                        Right TypeBool{} -> return x
+                        Right (TypeList TypeBool) -> return (make opAnd x)
+                        Right (TypeMatrix _ TypeBool) -> return (make opAnd x)
+                        Left err -> do
+                            tell $ return $ vcat
+                                [ "In a 'where' statement:" <++> pretty x
+                                , "Error:" <++> pretty err
+                                ]
+                            return x
+                        Right ty -> do
+                            tell $ return $ vcat
+                                [ "In a 'where' statement:" <++> pretty x
+                                , "Expected type `bool`, but got:" <++> pretty ty
+                                ]
+                            return x
+                return (Where xs')
             Objective _ x -> do
                 mty <- runExceptT $ typeOf x
                 case mty of
@@ -94,19 +104,28 @@ typeCheckModel model1 = do
                         [ "In the objective:" <++> pretty st
                         , "Expected type `int`, but got:" <++> pretty ty
                         ]
-            SuchThat xs -> forM_ xs $ \ x -> do
-                mty <- runExceptT $ typeOf x
-                case mty of
-                    Right TypeBool{} -> return ()
-                    Left err -> tell $ return $ vcat
-                        [ "In a 'such that' statement:" <++> pretty x
-                        , "Error:" <++> pretty err
-                        ]
-                    Right ty -> tell $ return $ vcat
-                        [ "In a 'such that' statement:" <++> pretty x
-                        , "Expected type `bool`, but got:" <++> pretty ty
-                        ]
+                return st
+            SuchThat xs -> do
+                xs' <- forM xs $ \ x -> do
+                    mty <- runExceptT $ typeOf x
+                    case mty of
+                        Right TypeBool{} -> return x
+                        Right (TypeList TypeBool) -> return (make opAnd x)
+                        Right (TypeMatrix _ TypeBool) -> return (make opAnd x)
+                        Left err -> do
+                            tell $ return $ vcat
+                                [ "In a 'such that' statement:" <++> pretty x
+                                , "Error:" <++> pretty err
+                                ]
+                            return x
+                        Right ty -> do
+                            tell $ return $ vcat
+                                [ "In a 'such that' statement:" <++> pretty x
+                                , "Expected type `bool`, but got:" <++> pretty ty
+                                ]
+                            return x
+                return (SuchThat xs')
     unless (null errs) (userErr errs)
 
-    return model2
+    return model2 { mStatements = statements3 }
 
