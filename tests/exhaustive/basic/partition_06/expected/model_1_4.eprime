@@ -7,17 +7,17 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 such that
-    and([q43 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q43, q44]) | q44 : int(1..4)]) = 2
-             | q43 : int(1..16)]),
+    and([q45 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q45, q46]) | q46 : int(1..4)]) = 2
+             | q45 : int(1..16)]),
     and([1 =
          sum([toInt(q41 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
                     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q41, q1])
                   | q41 : int(1..16)])
              | q1 : int(1..4)]),
-    and([q45 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q45, q46]) | q46 : int(1..4)]) >= 1
-             | q45 : int(1..16)]),
+    and([q42 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q42, q43]) | q43 : int(1..4)]) >= 1
+             | q42 : int(1..16)]),
     and([q4 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, ..] <lex
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4 + 1, ..]

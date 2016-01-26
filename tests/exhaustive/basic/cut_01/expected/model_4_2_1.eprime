@@ -11,9 +11,9 @@ branching on
      x_Occurrence]
 such that
     !cut1 <->
-    or([x_ExplicitVarSizeWithFlags_Flags[q22] /\ x_ExplicitVarSizeWithFlags_Values[q22] = 1 | q22 : int(1..3)]) /\
-    or([x_ExplicitVarSizeWithFlags_Flags[q24] /\ x_ExplicitVarSizeWithFlags_Values[q24] = 2 | q24 : int(1..3)]),
-    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q26] != 4 /\ x_ExplicitVarSizeWithDummy[q26] = 1 | q26 : int(1..3)]),
+    or([x_ExplicitVarSizeWithFlags_Flags[q32] /\ x_ExplicitVarSizeWithFlags_Values[q32] = 1 | q32 : int(1..3)]) /\
+    or([x_ExplicitVarSizeWithFlags_Flags[q34] /\ x_ExplicitVarSizeWithFlags_Values[q34] = 2 | q34 : int(1..3)]),
+    !cut2 <-> or([x_ExplicitVarSizeWithDummy[q36] != 4 /\ x_ExplicitVarSizeWithDummy[q36] = 1 | q36 : int(1..3)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..2)]),
@@ -32,13 +32,13 @@ such that
              x_ExplicitVarSizeWithDummy[q17] = x_ExplicitVarSizeWithFlags_Values[q15]
                  | q17 : int(1..3)])
              | q15 : int(1..3)]),
-    and([x_Occurrence[q27] ->
-         or([x_ExplicitVarSizeWithFlags_Flags[q29] /\ x_ExplicitVarSizeWithFlags_Values[q29] = q27 | q29 : int(1..3)])
-             | q27 : int(1..3)]),
-    and([x_ExplicitVarSizeWithFlags_Flags[q31] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q31]]
-             | q31 : int(1..3)]),
-    and([x_Occurrence[q32] ->
-         or([x_ExplicitVarSizeWithDummy[q34] != 4 /\ x_ExplicitVarSizeWithDummy[q34] = q32 | q34 : int(1..3)])
-             | q32 : int(1..3)]),
-    and([x_ExplicitVarSizeWithDummy[q36] != 4 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q36]] | q36 : int(1..3)])
+    and([x_Occurrence[q19] ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q21] /\ x_ExplicitVarSizeWithFlags_Values[q21] = q19 | q21 : int(1..3)])
+             | q19 : int(1..3)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q23] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q23]]
+             | q23 : int(1..3)]),
+    and([x_Occurrence[q24] ->
+         or([x_ExplicitVarSizeWithDummy[q26] != 4 /\ x_ExplicitVarSizeWithDummy[q26] = q24 | q26 : int(1..3)])
+             | q24 : int(1..3)]),
+    and([x_ExplicitVarSizeWithDummy[q28] != 4 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q28]] | q28 : int(1..3)])
 

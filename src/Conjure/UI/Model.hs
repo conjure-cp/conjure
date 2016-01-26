@@ -132,7 +132,7 @@ outputModels config model = do
                                        |> concat
                                 else paddedNum 6 '0' i
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    liftIO $ writeFile filename (renderNormal eprime)
+                    liftIO $ writeFile filename (render (lineWidth config) eprime)
                     return (i+1)
 
     Pipes.foldM each
