@@ -67,7 +67,8 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> pretty d)
 
 
-domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a) => Range a -> m a
+domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a, Eq a) => Range a -> m a
 domainSizeOfRange RangeSingle{} = return 1
+domainSizeOfRange (RangeBounded 1 u) = return u
 domainSizeOfRange (RangeBounded l u) = return $ make opSum $ fromList [1, make opMinus u l]
 domainSizeOfRange r = fail ("domainSizeOf infinite range:" <+> pretty r)
