@@ -1,4 +1,4 @@
-module Conjure.UI.Split ( outputSplittedModels ) where
+module Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls ) where
 
 import Conjure.Prelude
 import Conjure.Language.Definition

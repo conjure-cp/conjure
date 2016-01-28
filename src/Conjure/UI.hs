@@ -108,6 +108,7 @@ data UI
     | Pretty
         { essence          :: FilePath
         , normaliseQuantified :: Bool
+        , removeUnused     :: Bool
         , logLevel         :: LogLevel
         , outputBinary     :: Bool
         , limitTime        :: Maybe Int
@@ -599,6 +600,10 @@ ui = modes
                                    &= name "normalise-quantified"
                                    &= explicit
                                    &= help "Whether to normalise the names of quantified variables or not. Off by default."
+        , removeUnused = False
+                                   &= name "remove-unused"
+                                   &= explicit
+                                   &= help "Whether to remove unused declarations or not. Off by default."
         , limitTime = Nothing      &= name "limit-time"
                                    &= explicit
                                    &= help "Time limit in seconds. (CPU time)."
