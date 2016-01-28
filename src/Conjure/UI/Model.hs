@@ -1185,11 +1185,9 @@ otherRules =
         ]
     ,
         [ BubbleUp.rule_MergeNested
-        -- , BubbleUp.rule_Comprehension
-        -- , BubbleUp.rule_LocalInComprehension
         , BubbleUp.rule_ToAnd
         , BubbleUp.rule_NotBoolYet
-        -- , BubbleUp.rule_VarDecl
+        , BubbleUp.rule_ConditionInsideGeneratorDomain
         , BubbleUp.rule_LiftVars
         ]
     ,

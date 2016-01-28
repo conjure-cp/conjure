@@ -107,6 +107,34 @@ rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
             )
 
 
+rule_ConditionInsideGeneratorDomain :: Rule
+rule_ConditionInsideGeneratorDomain = "bubble-up-ConditionInsideGeneratorDomain" `namedRule` theRule where
+
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (goc', newConditions), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenDomainHasRepr pat domain@DomainInt{}) -> do
+                let
+                    f (WithLocals x (DefinednessConstraints cons)) = do
+                        tell cons
+                        f x
+                    f x = return x
+                (domain', newConditions) <- runWriterT (transformBiM f domain)
+                let goc' = Generator (GenDomainHasRepr pat domain')
+                if null newConditions
+                    then na "rule_ConditionInsideGeneratorDomain"
+                    else return (goc', newConditions)
+            _ -> na "rule_ConditionInsideGeneratorDomain"
+        return
+            ( "Bubbling up definedness constraints inside a generator domain."
+            , return $ Comprehension body
+                        $  gocBefore
+                        ++ [goc']
+                        ++ map Condition newConditions
+                        ++ gocAfter
+            )
+    theRule _ = na "rule_ConditionInsideGeneratorDomain"
+
+
 rule_LiftVars :: Rule
 rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
 
