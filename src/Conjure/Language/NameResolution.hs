@@ -186,10 +186,11 @@ resolveX p@Comprehension{} = scope $ do
                                     Single nm' -> DeclNoRepr Quantified nm' dom' NoRegion
                                     _ -> InComprehension gen''
                                 )
-                        GenDomainHasRepr nm dom ->
+                        GenDomainHasRepr nm dom -> do
+                            dom' <- resolveD dom
                             return
-                                ( GenDomainHasRepr nm dom
-                                , DeclHasRepr Quantified nm dom
+                                ( GenDomainHasRepr nm dom'
+                                , DeclHasRepr Quantified nm dom'
                                 )
                         GenInExpr pat expr -> do
                             expr' <- resolveX expr
@@ -225,15 +226,16 @@ resolveD
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , Data r
        )
-    => Domain () Expression
-    -> m (Domain () Expression)
+    => Domain r Expression
+    -> m (Domain r Expression)
 resolveD (DomainReference _ (Just d)) = resolveD d
 resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
-        Just (Alias (Domain r)) -> resolveD r
+        Just (Alias (Domain r)) -> resolveD (changeRepr (bug "resolveD Alias Domain") r)
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
