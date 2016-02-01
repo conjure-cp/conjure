@@ -84,16 +84,14 @@ rDownToX
     -> FindOrGiven                                      -- and a declaration: forg
     -> Name                                             --                  : name
     -> Domain HasRepresentation Expression              --                  : domain
-    -> m [Expression]                                   -- expressions referring to the referring
+    -> m [Expression]                                   -- expressions referring to the representation
 rDownToX repr forg name domain = do
-    mpairs <- rDownD repr (name, domain)
-    return $ case mpairs of
-        Nothing    -> []
-        Just pairs -> [ case singletonDomainInt d of
-                            Just x  -> x            -- special case: if the domain is a singleton int, use the value
-                            Nothing -> Reference n (Just (DeclHasRepr forg n d))
-                      | (n,d) <- pairs
-                      ]
+    pairs <- rDownD repr (name, domain)
+    return [ case singletonDomainInt d of
+               Just x  -> x            -- special case: if the domain is a singleton int, use the value
+               Nothing -> Reference n (Just (DeclHasRepr forg n d))
+           | (n,d) <- concat pairs
+           ]
 
 mkOutName :: Maybe Name -> Domain HasRepresentation x -> Name -> Name
 mkOutName Nothing       domain origName = mconcat [origName, "_", Name (reprTreeEncoded domain)]
