@@ -101,7 +101,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , stripPrefix
                               , subsequences, transpose, elemIndex
                               , replicate, length
-                              , (++), map, concat, null, reverse, lookup, elem, unlines, words
+                              , (++), map, null, reverse, lookup, elem, unlines, words
                               , zipWith, concatMap, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, dropWhile, unwords, intersect
@@ -119,6 +119,7 @@ import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
                               , and, or, all, any
+                              , concat
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
