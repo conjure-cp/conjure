@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Conjure.Rules.BubbleUp where
 
 import Conjure.Rules.Import

@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE BangPatterns #-}
 
 module Conjure.Process.DealWithCuts ( dealWithCuts ) where
 

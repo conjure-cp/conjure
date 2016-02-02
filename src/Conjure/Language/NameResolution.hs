@@ -266,7 +266,7 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
     let
         isTheVariant (Alias (Domain d@(DomainVariant nms))) | Just{} <- lookup n nms = Just d
         isTheVariant _ = Nothing
-    case mapMaybe isTheVariant (map snd mval) of
+    case mapMaybe (isTheVariant . snd) mval of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
         _ -> userErr1 ("Not a member of a variant type:" <+> pretty p)
 resolveAbsLit lit = descendBiM resolveX lit

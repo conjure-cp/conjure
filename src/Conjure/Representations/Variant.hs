@@ -1,5 +1,4 @@
 {-# LANGUAGE QuasiQuotes #-}
-{-# LANGUAGE ParallelListComp #-}
 
 module Conjure.Representations.Variant
     ( variant

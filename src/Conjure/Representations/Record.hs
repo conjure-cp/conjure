@@ -1,5 +1,3 @@
-{-# LANGUAGE ParallelListComp #-}
-
 module Conjure.Representations.Record
     ( record
     ) where
@@ -59,7 +57,7 @@ record = Representation chck downD structuralCons downC up
 
         up :: TypeOf_Up m
         up ctxt (name, DomainRecord ds) = do
-            let names = map (mkName name) (map fst ds)
+            let names = map (mkName name . fst) ds
             vals <- forM names $ \ n ->
                 case lookup n ctxt of
                     Nothing -> fail $ vcat $

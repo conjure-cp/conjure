@@ -118,7 +118,7 @@ rule_Tuple_TildeLeq = "tuple-TildeLeq" `namedRule` theRule where
 
 
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexLt p xs ys = unroll xs ys
+decomposeLexLt p = unroll
     where
         unroll [a]    [b]    = [essence| &a < &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
@@ -126,7 +126,7 @@ decomposeLexLt p xs ys = unroll xs ys
         unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
 
 decomposeLexLeq :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexLeq p xs ys = unroll xs ys
+decomposeLexLeq p = unroll
     where
         unroll [a]    [b]    = [essence| &a <= &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
@@ -135,7 +135,7 @@ decomposeLexLeq p xs ys = unroll xs ys
 
 
 decomposeLexDotLt :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexDotLt p xs ys = unroll xs ys
+decomposeLexDotLt p = unroll
     where
         unroll [a]    [b]    = [essence| &a .< &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
@@ -143,7 +143,7 @@ decomposeLexDotLt p xs ys = unroll xs ys
         unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
 
 decomposeLexDotLeq :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexDotLeq p xs ys = unroll xs ys
+decomposeLexDotLeq p = unroll
     where
         unroll [a]    [b]    = [essence| &a .<= &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
@@ -152,7 +152,7 @@ decomposeLexDotLeq p xs ys = unroll xs ys
 
 
 decomposeLexTildeLt :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexTildeLt p xs ys = unroll xs ys
+decomposeLexTildeLt p = unroll
     where
         unroll [a]    [b]    = [essence| &a ~< &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
@@ -160,7 +160,7 @@ decomposeLexTildeLt p xs ys = unroll xs ys
         unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
 
 decomposeLexTildeLeq :: Expression -> [Expression] -> [Expression] -> Expression
-decomposeLexTildeLeq p xs ys = unroll xs ys
+decomposeLexTildeLeq p = unroll
     where
         unroll [a]    [b]    = [essence| &a ~<= &b |]
         unroll (a:as) (b:bs) = let rest = unroll as bs

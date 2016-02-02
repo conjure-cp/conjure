@@ -41,7 +41,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
         -- downD :: TypeOf_DownD m
-        downD (name, domain@(DomainPartition Partition_Occurrence (PartitionAttr{..}) innerDomain))
+        downD (name, domain@(DomainPartition Partition_Occurrence PartitionAttr{..} innerDomain))
             | domainCanIndexMatrix innerDomain = do
             maxNumParts <- domainSizeOf innerDomain
             return $ Just
@@ -227,7 +227,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                                      (ConstantInt 0)))
                 firstIndexVal = ConstantAbstract (AbsLitMatrix
                                     (DomainInt [RangeBounded 1 maxNumParts'])
-                                    ([ case findIndex (p==) whichPartValInside of
+                                    ([ case elemIndex p whichPartValInside of
                                         Nothing -> bug $ vcat [ "Not found:" <+> pretty p
                                                               , "Inside:" <+> prettyList id "," whichPartValInside
                                                               ]

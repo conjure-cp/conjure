@@ -120,11 +120,11 @@ instance DomainSizeOf Constant Integer where
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
             _ -> fail "domainSizeOf"
-    domainSizeOf (DomainMSet      {}) = bug "not implemented: domainSizeOf DomainMSet"
-    domainSizeOf (DomainFunction  {}) = bug "not implemented: domainSizeOf DomainFunction"
-    domainSizeOf (DomainRelation  {}) = bug "not implemented: domainSizeOf DomainRelation"
-    domainSizeOf (DomainPartition {}) = bug "not implemented: domainSizeOf DomainPartition"
-    domainSizeOf _                    = bug "not implemented: domainSizeOf"
+    domainSizeOf DomainMSet      {} = bug "not implemented: domainSizeOf DomainMSet"
+    domainSizeOf DomainFunction  {} = bug "not implemented: domainSizeOf DomainFunction"
+    domainSizeOf DomainRelation  {} = bug "not implemented: domainSizeOf DomainRelation"
+    domainSizeOf DomainPartition {} = bug "not implemented: domainSizeOf DomainPartition"
+    domainSizeOf _                  = bug "not implemented: domainSizeOf"
 
 emptyCollection :: Constant -> Bool
 emptyCollection ConstantBool{} = False

@@ -170,7 +170,7 @@ mainWithArgs config@Solve{..} = do
             Just file -> return (lines file)
 
     -- start the show!
-    (eprimes, newHashes) <- runWriterT $ do
+    (eprimes, newHashes) <- runWriterT $
         doIfNotCached
             ( sort (mStatements essenceM)
             -- when the following flags change, invalidate hash
@@ -203,7 +203,7 @@ mainWithArgs config@Solve{..} = do
     case msolutions of
         Left msg        -> userErr1 msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
-    liftIO $ stopGlobalPool
+    liftIO stopGlobalPool
 
     where
         conjuring :: m [FilePath]

@@ -63,6 +63,6 @@ goldenVsFile
 goldenVsFile name ref new cmp act = goldenTest name
     (T.readFile ref)
     (liftIO act >> T.readFile new)
-    (cmp)
+    cmp
     upd
     where upd = T.writeFile ref

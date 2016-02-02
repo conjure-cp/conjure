@@ -133,7 +133,7 @@ refineParam eprimeModel essenceParam0 = do
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
-        <- fmap concat $ mapM downC essenceGivensAndLettings'
+        <- concatMapM downC essenceGivensAndLettings'
 
     return $ languageEprime def
         { mStatements =

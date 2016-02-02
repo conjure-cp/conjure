@@ -85,7 +85,7 @@ mkDomainIntB :: x -> x -> Domain () x
 mkDomainIntB l u = DomainInt [RangeBounded l u]
 
 mkDomainAny :: Doc -> Type -> Domain r x
-mkDomainAny reason ty = DomainAny (stringToText $ show reason) ty
+mkDomainAny reason = DomainAny (stringToText $ show reason)
 
 instance (Serialize r, Serialize x) => Serialize (Domain r x)
 instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
@@ -188,13 +188,13 @@ reprTreeEncoded :: Domain HasRepresentation x -> Text
 reprTreeEncoded = mconcat . enc1 . reprTree
     where
         enc1 (Tree lbl sub) =
-            (maybe
+            maybe
                 (bug "reprTreeEncoded: top-most representation is Nothing")
                 representationToShortText
-                lbl)
+                lbl
             : concatMap enc sub
         enc (Tree lbl sub) =
-            (maybe [] representationConstrIndex lbl)
+            maybe [] representationConstrIndex lbl
             ++ concatMap enc sub
 
 reprTree :: Domain r x -> Tree (Maybe r)
@@ -792,7 +792,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty (DomainPartition r attrs inner)
         = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
 
-    pretty d@(DomainOp{}) = pretty (show d)
+    pretty d@DomainOp{} = pretty (show d)
 
     pretty (DomainReference x _) = pretty x
 

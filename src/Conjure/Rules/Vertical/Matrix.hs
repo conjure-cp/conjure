@@ -455,8 +455,8 @@ rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
 rule_IndexingIdentical :: Rule
 rule_IndexingIdentical = "matrix-indexing-identical" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)                       <- match opIndexing p
-        (_, indexDomain, (firstElem:restElems)) <- match matrixLiteral matrix
+        (matrix, indexer)                     <- match opIndexing p
+        (_, indexDomain, firstElem:restElems) <- match matrixLiteral matrix
         indexerDomain <- domainOf indexer
         if indexDomain == forgetRepr indexerDomain && all (firstElem==) restElems
             then return

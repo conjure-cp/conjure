@@ -3,7 +3,6 @@
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
-{-# LANGUAGE KindSignatures #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Conjure.UI.Model
@@ -217,9 +216,8 @@ remaining config modelZipper minfo = do
             let mtyAfter  = typeOf ruleResultExpr
             case (mtyBefore, mtyAfter) of
                 (Right tyBefore, Right tyAfter) ->
-                    if typesUnify [tyBefore, tyAfter]
-                        then return ()
-                        else bug $ vcat
+                    unless (typesUnify [tyBefore, tyAfter]) $
+                        bug $ vcat
                                 [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
@@ -541,7 +539,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
                                 , [Statement]                   -- other statements
                                 )
         collect (SuchThat s) = (s, [], [])
-        collect s@(Objective{}) = ([], [s], [])
+        collect s@Objective{} = ([], [s], [])
         collect s = ([], [], [s])
 
         combine :: [Expression] -> [Expression]
@@ -611,7 +609,7 @@ updateDeclarations model = do
                     orders' <- forM orders $ \case
                         BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            fmap nub $ concatMapM (onEachDomainSearch nm) domains
+                            nub <$> concatMapM (onEachDomainSearch nm) domains
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
                 _ -> return [inStatement]
@@ -1846,9 +1844,8 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
     theRule Domain{} = na "rule_FullEvaluate"
     theRule p = do
         constant <- instantiateExpression [] p
-        if null [() | ConstantUndefined{} <- universe constant]
-            then return ()
-            else na "rule_PartialEvaluate, undefined"
+        unless (null [() | ConstantUndefined{} <- universe constant]) $
+            na "rule_PartialEvaluate, undefined"
         return
             ( "Full evaluator"
             , return $ Constant constant

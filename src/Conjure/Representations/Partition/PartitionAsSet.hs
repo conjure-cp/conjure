@@ -48,14 +48,14 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         outName = mkOutName Nothing
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
-        outDomain_ (DomainPartition () (PartitionAttr{..}) innerDomain) =
+        outDomain_ (DomainPartition () PartitionAttr{..} innerDomain) =
             return (DomainSet () (SetAttr partsNum) (DomainSet () (SetAttr partsSize) innerDomain))
         outDomain_ domain = na $ vcat [ "{outDomain_} PartitionAsSet"
                                       , "domain:" <+> pretty domain
                                       ]
 
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
-        outDomain (DomainPartition (Partition_AsSet repr1 repr2) (PartitionAttr{..}) innerDomain) =
+        outDomain (DomainPartition (Partition_AsSet repr1 repr2) PartitionAttr{..} innerDomain) =
             return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionAsSet"
                                      , "domain:" <+> pretty domain

@@ -15,7 +15,7 @@ setOccurrence = Representation chck downD structuralCons downC up
     where
 
         chck :: TypeOf_ReprCheck m
-        chck f (DomainSet _ attrs innerDomain@(DomainInt{})) = map (DomainSet Set_Occurrence attrs) <$> f innerDomain
+        chck f (DomainSet _ attrs innerDomain@DomainInt{}) = map (DomainSet Set_Occurrence attrs) <$> f innerDomain
         chck _ _ = return []
 
         outName :: Domain HasRepresentation x -> Name -> Name
