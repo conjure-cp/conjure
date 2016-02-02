@@ -2,7 +2,6 @@
 {-# LANGUAGE TypeFamilies #-}
 {-# LANGUAGE PolyKinds #-}
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE DeriveDataTypeable #-}
 
 module Conjure.Prelude
@@ -101,7 +100,7 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , stripPrefix
                               , subsequences, transpose, elemIndex
                               , replicate, length
-                              , (++), map, concat, null, reverse, lookup, elem, unlines, words
+                              , (++), map, null, reverse, lookup, elem, unlines, words
                               , zipWith, concatMap, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, foldr1, foldl
                               , unzip3, repeat, dropWhile, unwords, intersect
@@ -113,12 +112,14 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , filter, partition
                               )
 import Data.List.Split   as X ( splitOn, chunksOf )
-import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe, isJust )
+import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe
+                              , isNothing, isJust )
 import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
                               , and, or, all, any
+                              , concat
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
@@ -264,12 +265,12 @@ timedIO io = do
     return (a, diff)
 
 isLeft :: Either a b -> Bool
-isLeft (Left {}) = True
-isLeft _         = False
+isLeft Left{} = True
+isLeft _      = False
 
 isRight :: Either a b -> Bool
-isRight (Right {}) = True
-isRight _          = False
+isRight Right{} = True
+isRight _       = False
 
 allCombinations :: [(a,[b])] -> [[(a,b)]]
 allCombinations [] = [[]]
@@ -549,4 +550,4 @@ type JSONValue = JSON.Value
 -- | return true if this is a top-most zipper.
 --   i.e. we cannot go any more up.
 isTopMostZ :: Zipper a b -> Bool
-isTopMostZ = maybe True (const False) . up
+isTopMostZ = isNothing . up

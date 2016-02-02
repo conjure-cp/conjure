@@ -1,5 +1,3 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
-
 module Conjure.UI.VarSymBreaking ( outputVarSymBreaking ) where
 
 import Conjure.Prelude

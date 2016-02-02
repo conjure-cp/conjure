@@ -120,11 +120,11 @@ instance DomainSizeOf Constant Integer where
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
             _ -> fail "domainSizeOf"
-    domainSizeOf (DomainMSet      {}) = bug "not implemented: domainSizeOf DomainMSet"
-    domainSizeOf (DomainFunction  {}) = bug "not implemented: domainSizeOf DomainFunction"
-    domainSizeOf (DomainRelation  {}) = bug "not implemented: domainSizeOf DomainRelation"
-    domainSizeOf (DomainPartition {}) = bug "not implemented: domainSizeOf DomainPartition"
-    domainSizeOf _                    = bug "not implemented: domainSizeOf"
+    domainSizeOf DomainMSet      {} = bug "not implemented: domainSizeOf DomainMSet"
+    domainSizeOf DomainFunction  {} = bug "not implemented: domainSizeOf DomainFunction"
+    domainSizeOf DomainRelation  {} = bug "not implemented: domainSizeOf DomainRelation"
+    domainSizeOf DomainPartition {} = bug "not implemented: domainSizeOf DomainPartition"
+    domainSizeOf _                  = bug "not implemented: domainSizeOf"
 
 emptyCollection :: Constant -> Bool
 emptyCollection ConstantBool{} = False
@@ -396,50 +396,50 @@ viewConstantInt       constant = fail ("Expecting an integer, but got:" <+> pret
 viewConstantTuple     :: MonadFail m => Constant -> m [Constant]
 viewConstantTuple     (ConstantAbstract (AbsLitTuple xs)) = return xs
 viewConstantTuple     (TypedConstant c _) = viewConstantTuple c
-viewConstantTuple     _ = fail "viewConstantTuple"
+viewConstantTuple    constant = fail ("Expecting a tuple, but got:" <+> pretty constant)
 
 viewConstantRecord    :: MonadFail m => Constant -> m [(Name, Constant)]
 viewConstantRecord    (ConstantAbstract (AbsLitRecord xs)) = return xs
 viewConstantRecord    (TypedConstant c _) = viewConstantRecord c
-viewConstantRecord    _ = fail "viewConstantRecord"
+viewConstantRecord    constant = fail ("Expecting a record, but got:" <+> pretty constant)
 
 viewConstantVariant   :: MonadFail m => Constant -> m (Maybe [(Name, Domain () Constant)], Name, Constant)
 viewConstantVariant   (ConstantAbstract (AbsLitVariant lu nm x)) = return (lu, nm, x)
 viewConstantVariant   (TypedConstant c _) = viewConstantVariant c
-viewConstantVariant   _ = fail "viewConstantVariant"
+viewConstantVariant   constant = fail ("Expecting a variant, but got:" <+> pretty constant)
 
 viewConstantMatrix    :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
 viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (ind, xs)
 viewConstantMatrix    (TypedConstant c _) = viewConstantMatrix c
-viewConstantMatrix    _ = fail "viewConstantMatrix"
+viewConstantMatrix    constant = fail ("Expecting a matrix, but got:" <+> pretty constant)
 
 viewConstantSet       :: MonadFail m => Constant -> m [Constant]
 viewConstantSet       (ConstantAbstract (AbsLitSet xs)) = return xs
 viewConstantSet       (TypedConstant c _) = viewConstantSet c
-viewConstantSet       _ = fail "viewConstantSet"
+viewConstantSet       constant = fail ("Expecting a set, but got:" <+> pretty constant)
 
 viewConstantMSet      :: MonadFail m => Constant -> m [Constant]
 viewConstantMSet      (ConstantAbstract (AbsLitMSet xs)) = return xs
 viewConstantMSet      (TypedConstant c _) = viewConstantMSet c
-viewConstantMSet      _ = fail "viewConstantMSet"
+viewConstantMSet      constant = fail ("Expecting an mset, but got:" <+> pretty constant)
 
 viewConstantFunction  :: MonadFail m => Constant -> m [(Constant, Constant)]
 viewConstantFunction  (ConstantAbstract (AbsLitFunction xs)) = return xs
 viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
-viewConstantFunction  _ = fail "viewConstantFunction"
+viewConstantFunction  constant = fail ("Expecting a function, but got:" <+> pretty constant)
 
 viewConstantSequence  :: MonadFail m => Constant -> m [Constant]
 viewConstantSequence  (ConstantAbstract (AbsLitSequence xs)) = return xs
 viewConstantSequence  (TypedConstant c _) = viewConstantSequence c
-viewConstantSequence  _ = fail "viewConstantSequence"
+viewConstantSequence  constant = fail ("Expecting a sequence, but got:" <+> pretty constant)
 
 viewConstantRelation  :: MonadFail m => Constant -> m [[Constant]]
 viewConstantRelation  (ConstantAbstract (AbsLitRelation xs)) = return xs
 viewConstantRelation  (TypedConstant c _) = viewConstantRelation c
-viewConstantRelation  _ = fail "viewConstantRelation"
+viewConstantRelation  constant = fail ("Expecting a relation, but got:" <+> pretty constant)
 
 viewConstantPartition :: MonadFail m => Constant -> m [[Constant]]
 viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
-viewConstantPartition _ = fail "viewConstantPartition"
+viewConstantPartition constant = fail ("Expecting a partition, but got:" <+> pretty constant)
 

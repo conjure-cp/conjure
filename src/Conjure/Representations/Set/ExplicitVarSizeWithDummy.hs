@@ -19,7 +19,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
 
         chck :: TypeOf_ReprCheck m
         chck _ (DomainSet _ (SetAttr SizeAttr_Size{}) _) = return []
-        chck f (DomainSet _ attrs innerDomain@(DomainInt{})) =
+        chck f (DomainSet _ attrs innerDomain@DomainInt{}) =
             map (DomainSet Set_ExplicitVarSizeWithDummy attrs) <$> f innerDomain
         chck _ _ = return []
 

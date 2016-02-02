@@ -26,7 +26,7 @@ sanityChecks model = do
 
         -- check for mset attributes
         -- check for binary relation attrobutes
-        checkDomain :: MonadWriter [Doc] m => (Maybe Statement) -> Domain () Expression -> m ()
+        checkDomain :: MonadWriter [Doc] m => Maybe Statement -> Domain () Expression -> m ()
         checkDomain mstmt domain = case domain of
             DomainInt rs | isInfinite rs -> recordErr
                         [ "Infinite integer domain."

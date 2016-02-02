@@ -1,4 +1,4 @@
-{-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
 
 module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
@@ -130,7 +130,7 @@ isTestDir baseDir dir = do
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: String -> TestDirFiles -> QuickOrSlow -> TestTree
-testSingleDir srExtraOptions t@(TestDirFiles{..}) quickOrSlow =
+testSingleDir srExtraOptions t@TestDirFiles{..} quickOrSlow =
     if shouldRun
         then
             testGroup name $ concat
@@ -332,9 +332,8 @@ checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step 
                     diffs = filter (not . isBoth) $ getGroupedDiff e g
                     diffsString = fmap (fmapDiff (fmap textToString)) diffs
 
-                if null diffs
-                    then return ()
-                    else assertFailure $ renderNormal $ vcat ["files differ.", pretty (ppDiff diffsString)]
+                unless (null diffs) $
+                    assertFailure $ renderNormal $ vcat ["files differ.", pretty (ppDiff diffsString)]
             else assertFailure $ "file doesn't exist: " ++ generatedPath
 
 

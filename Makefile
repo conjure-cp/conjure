@@ -1,4 +1,4 @@
-.PHONY: install preinstall freeze refreeze ghci clean runtests_quick runtests_slow runtests_all
+.PHONY: install preinstall freeze refreeze ghci hlint clean runtests_quick runtests_slow runtests_all
 
 SHELL := /bin/bash
 
@@ -43,6 +43,15 @@ ghci:
 	    -Wall                                      \
 	    -Werror                                    \
 	    `find src -name *.hs | grep -v Main.hs | grep -v '\.#'`
+
+hlint:
+	-@hlint -r `find src -name '*.hs' | grep -v LogFollow` \
+	    -i "Use camelCase" \
+	    -i "Reduce duplication" \
+	    -i "Use &&" \
+	    -i "Use ++" \
+	    -i "Redundant return" \
+	    -i "Monad law, left identity"
 
 clean:
 	@bash etc/build/clean.sh

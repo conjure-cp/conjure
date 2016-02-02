@@ -30,6 +30,8 @@ Logging & Output:
                                              This will become a problem if
                                              anything other than 'f' is used
                                              for questions.
+     --line-width=INT                        Line width to use during pretty
+                                             printing. Default: 120
      --log-level=LOGLEVEL                    Log level.
      --verbose-trail                         Whether to generate verbose
                                              trails or not.
@@ -134,6 +136,8 @@ Logging & Output:
                                              This will become a problem if
                                              anything other than 'f' is used
                                              for questions.
+     --line-width=INT                        Line width to use during pretty
+                                             printing. Default: 120
      --log-level=LOGLEVEL                    Log level.
      --verbose-trail                         Whether to generate verbose
                                              trails or not.
@@ -297,6 +301,9 @@ Flags:
      --normalise-quantified                  Whether to normalise the names
                                              of quantified variables or not.
                                              Off by default.
+     --remove-unused                         Whether to remove unused
+                                             declarations or not. Off by
+                                             default.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of

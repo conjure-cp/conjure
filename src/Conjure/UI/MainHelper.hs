@@ -15,7 +15,7 @@ import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( refAnswers )
-import Conjure.UI.Split ( outputSplittedModels )
+import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
@@ -125,8 +125,9 @@ mainWithArgs ValidateSolution{..} = do
     runNameGen $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
     model0 <- readModelFromFile essence
-    let norm = if normaliseQuantified then normaliseQuantifiedVariables else id
-    let model1 = norm model0
+    let model1 = model0
+                    |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
+                    |> (if removeUnused then removeUnusedDecls else id)
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
                Nothing model1
 mainWithArgs Diff{..} =
@@ -169,7 +170,7 @@ mainWithArgs config@Solve{..} = do
             Just file -> return (lines file)
 
     -- start the show!
-    (eprimes, newHashes) <- runWriterT $ do
+    (eprimes, newHashes) <- runWriterT $
         doIfNotCached
             ( sort (mStatements essenceM)
             -- when the following flags change, invalidate hash
@@ -202,7 +203,7 @@ mainWithArgs config@Solve{..} = do
     case msolutions of
         Left msg        -> userErr1 msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
-    liftIO $ stopGlobalPool
+    liftIO stopGlobalPool
 
     where
         conjuring :: m [FilePath]

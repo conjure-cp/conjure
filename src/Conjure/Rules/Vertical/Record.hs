@@ -1,5 +1,3 @@
-{-# LANGUAGE QuasiQuotes #-}
-
 module Conjure.Rules.Vertical.Record where
 
 import Conjure.Rules.Import
@@ -96,7 +94,7 @@ rule_Record_Index = "record-index" `namedRule` theRule where
         (t,i)         <- match opIndexing p
         TypeRecord ds <- typeOf t
         name          <- nameOut i
-        iInt          <- case findIndex (name==) (map fst ds) of
+        iInt          <- case elemIndex name (map fst ds) of
                             Nothing   -> fail "Record indexing, not a member of the type."
                             Just iInt -> return iInt
         ts            <- downX1 t

@@ -81,8 +81,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                 case refs of
                     [_marker,values] -> do
                         isc <- innerStructuralCons values
-                        return $ concat [ isc
-                                        ]
+                        return isc
                     _ -> na "{structuralCons} ExplicitBounded"
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr _) innerDomain) = do
             maxSize <- getMaxSize sizeAttr

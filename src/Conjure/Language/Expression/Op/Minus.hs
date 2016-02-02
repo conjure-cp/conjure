@@ -57,6 +57,13 @@ instance EvaluateOp OpMinus where
                 , a `notElem` bs
                 ]
         return $ ConstantAbstract $ AbsLitFunction outs
+    evaluateOp (OpMinus (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
+        let outs =
+                [ a
+                | a <- as
+                , a `notElem` bs
+                ]
+        return $ ConstantAbstract $ AbsLitRelation outs
     evaluateOp op = na $ "evaluateOp{OpMinus}:" <++> pretty (show op)
 
 instance SimplifyOp OpMinus x where
