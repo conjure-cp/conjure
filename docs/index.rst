@@ -3,18 +3,22 @@
 Conjure: An Automated Modelling Tool
 ####################################
 
-Welcome to the documentation for Conjure!
+Welcome to the documentation of Conjure!
 
 Conjure is an automated modelling tool for Constraint Programming.
 
 In this documentation, you will find the following.
 
-* a brief introduction to Conjure,
+* A brief introduction to Conjure,
 * installation instructions,
 * a description of how to use Conjure through its command line user interface,
 * a list of Conjure's features,
 * a description of Conjure's input language Essence, and
 * a collection of simple demonstrations of Conjure's use.
+
+
+Contact
+=======
 
 Conjure's main developer is
 `Özgür Akgün <http://ozgur.host.cs.st-andrews.ac.uk>`_.
@@ -31,19 +35,19 @@ You can also use the `issue tracker <http://bitbucket.org/stacs_cp/conjure>`_
 to report bugs.
 
 
-
-Contents:
+Table of Contents
+=================
 
 .. toctree::
     :maxdepth: 3
 
     introduction
     installation
-    cmd-ui
+    cli
     features
-    features/problem-classes
     essence
     demonstrations
+    contact
 
 
 
