@@ -26,6 +26,10 @@ Please get in touch via `email <ozgur.akgun@st-andrews.ac.uk>`_ if you have comm
 We are particularly interested in hearing specific comments (complaints, really) about the documentation.
 Please let us know if something is hard to understand, not easy to follow, or if the documentation is too sparse at a certain place.
 
+.. todo::
+
+    Is the above paragraph too apologetic?
+
 You can also use the `issue tracker <http://bitbucket.org/stacs_cp/conjure>`_ to report bugs.
 
 

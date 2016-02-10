@@ -27,15 +27,29 @@ Once the models are generated, they can be used to solve many instances of the s
 Glossary
 --------
 
-Here is a list of some of the terms we use in this document.
+Here is a list of some terms used in this document.
 
 .. todo::
+    Explain the things in the glossary.
 
-    We should probably expalin what these are as well, instead of just listing. Later.
+.. glossary::
 
-* Constraint Programming
-* Constraint Modelling
-* CP Model
-* Problem specification
-* Parameter
-* Solution
+    Constraint Programming
+        Explain!
+
+    Constraint Modelling
+        Explain!
+
+    Problem specification
+        Explain!
+
+    Model
+        Explain!
+
+    Parameter
+        Explain!
+
+    Solution
+        Explain!
+
+
