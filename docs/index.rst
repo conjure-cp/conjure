@@ -27,7 +27,6 @@ We are particularly interested in hearing specific comments (complaints, really)
 Please let us know if something is hard to understand, not easy to follow, or if the documentation is too sparse at a certain place.
 
 .. todo::
-
     Is the above paragraph too apologetic?
 
 You can also use the `issue tracker <http://bitbucket.org/stacs_cp/conjure>`_ to report bugs.
