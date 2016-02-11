@@ -75,6 +75,9 @@ enumerateDomainMax :: Int
 enumerateDomainMax = 10000
 
 enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
+
+enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) = return []
+
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -88,8 +91,6 @@ enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
         [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
-
-enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) = return []
 
 -- the sledgehammer approach
 enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-" ++ show (hash d)) $ \ tmpDir -> do
