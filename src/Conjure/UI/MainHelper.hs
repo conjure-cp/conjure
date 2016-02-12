@@ -10,7 +10,7 @@ import Conjure.UI ( UI(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
-import Conjure.UI.RefineParam ( refineParam )
+import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
@@ -95,11 +95,11 @@ mainWithArgs Modelling{..} = do
             , Config.lineWidth                  = lineWidth
             }
     runNameGen $ outputModels config model
-mainWithArgs RefineParam{..} = do
+mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
-    output <- runNameGen $ join $ refineParam
+    output <- runNameGen $ join $ translateParameter
                     <$> readModelPreambleFromFile eprime
                     <*> readModelFromFile essenceParam
     writeModel (if outputBinary then BinaryEssence else PlainEssence)
@@ -295,7 +295,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     essenceParam <- liftIO $ readModelFromFile paramPath
-    eprimeParam  <- liftIO $ ignoreLogs $ runNameGen $ refineParam eprimeModel essenceParam
+    eprimeParam  <- liftIO $ ignoreLogs $ runNameGen $ translateParameter eprimeModel essenceParam
     liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
     let srArgs = "-in-param"
                : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))

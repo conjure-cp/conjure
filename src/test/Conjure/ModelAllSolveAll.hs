@@ -9,7 +9,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.UI.IO
 import Conjure.UI.Model
-import Conjure.UI.RefineParam
+import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
 
@@ -222,7 +222,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
         fileShouldExist (tBaseDir   </> paramPath)
         eprimeModel <- readModelPreambleFromFile (outputsDir </> modelPath)
         param       <- readModelFromFile (tBaseDir   </> paramPath)
-        eprimeParam <- ignoreLogs $ runNameGen $ refineParam eprimeModel param
+        eprimeParam <- ignoreLogs $ runNameGen $ translateParameter eprimeModel param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
         writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
         (stdoutSR, stderrSR, exitCodeSR) <-

@@ -1,6 +1,6 @@
 {-# LANGUAGE TupleSections #-}
 
-module Conjure.UI.RefineParam ( refineParam ) where
+module Conjure.UI.TranslateParameter ( translateParameter ) where
 
 -- conjure
 import Conjure.Prelude
@@ -19,7 +19,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Representations ( downC )
 
 
-refineParam
+translateParameter
     :: ( MonadFail m
        , MonadUserError m
        , MonadLog m
@@ -30,7 +30,7 @@ refineParam
     -> Model      -- essence param
     -> m Model    -- eprime param
 
-refineParam eprimeModel essenceParam0 = do
+translateParameter eprimeModel essenceParam0 = do
 
     essenceParam1 <- removeEnumsFromParam eprimeModel essenceParam0
     (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
@@ -115,9 +115,9 @@ refineParam eprimeModel essenceParam0 = do
 
     let f (Reference nm Nothing) =
             case [ val | (nm2, val) <- eprimeLettingsForEnums, nm == nm2 ] of
-                []    -> bug ("refineParam: No value for" <+> pretty nm)
+                []    -> bug ("translateParameter: No value for" <+> pretty nm)
                 [val] -> Constant val
-                _     -> bug ("refineParam: Multiple values for" <+> pretty nm)
+                _     -> bug ("translateParameter: Multiple values for" <+> pretty nm)
         f p = p
 
     let

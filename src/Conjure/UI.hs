@@ -80,7 +80,7 @@ data UI
         , savedChoices               :: Maybe FilePath
         , outputBinary               :: Bool
         }
-    | RefineParam
+    | TranslateParameter
         { eprime           :: FilePath       -- eprime, mandatory
         , essenceParam     :: FilePath       -- essence-param, mandatory
         , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
@@ -325,7 +325,7 @@ ui = modes
                                    &= explicit
                                    &= help "This is a combined mode, and it is available for convenience.\n\
                                            \It runs conjure in the modelling mode followed by \
-                                           \parameter refinement if required, \
+                                           \parameter translation if required, \
                                            \then Savile Row + Minion to solve, and \
                                            \then solution translation."
     , Modelling
@@ -491,7 +491,7 @@ ui = modes
                                    &= help "The main act. Given a problem specification in Essence, \
                                            \produce constraint programming models in Essence'."
                                    &= auto
-    , RefineParam
+    , TranslateParameter
         { eprime           = def   &= typFile
                                    &= name "eprime"
                                    &= explicit
@@ -519,7 +519,7 @@ ui = modes
                                    &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
-        }                          &= name "refine-param"
+        }                          &= name "translate-parameter"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
                                            \particular Essence' model.\n\
