@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
@@ -57,6 +59,9 @@ instantiateDomain
 instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (instantiateD x) ctxt
 
 
+newtype HasUndef = HasUndef Any
+    deriving (Monoid)
+
 instantiateE
     :: ( MonadFail m
        , MonadUserError m
@@ -72,7 +77,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 , MonadUserError m
                 , MonadState [(Name, Expression)] m
                 , EnumerateDomain m
-                ) => [GeneratorOrCondition] -> WriterT Any m [Constant]
+                ) => [GeneratorOrCondition] -> WriterT HasUndef m [Constant]
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
@@ -91,7 +96,7 @@ instantiateE (Comprehension body gensOrConds) = do
                                 else return [] )
                         enumeration
                 else do
-                    tell (Any True)
+                    tell (HasUndef (Any True))
                     return []
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
@@ -110,7 +115,7 @@ instantiateE (Comprehension body gensOrConds) = do
                                 else return [] )
                         enumeration
                 else do
-                    tell (Any True)
+                    tell (HasUndef (Any True))
                     return []
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
@@ -134,7 +139,7 @@ instantiateE (Comprehension body gensOrConds) = do
             loop rest
 
 
-    (constants, Any undefinedsInsideGeneratorDomains) <- runWriterT (loop gensOrConds)
+    (constants, HasUndef (Any undefinedsInsideGeneratorDomains)) <- runWriterT (loop gensOrConds)
     if undefinedsInsideGeneratorDomains
         then do
             ty <- typeOf (Comprehension body gensOrConds)
