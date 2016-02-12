@@ -6,6 +6,7 @@ module Conjure.Process.Enumerate
     ) where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.AdHoc
 import Conjure.UserError
 import Conjure.Language.AbstractLiteral
@@ -76,7 +77,10 @@ enumerateDomainMax = 10000
 
 enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 
-enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) = return []
+enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
+    bug $ vcat [ "called enumerateDomain with a domain that has undefinedness values in it."
+               , pretty d
+               ]
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
