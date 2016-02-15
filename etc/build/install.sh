@@ -33,6 +33,7 @@ export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
 export PROFILING=${PROFILING:-no}
+export DYNAMIC=${DYNAMIC:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
@@ -91,6 +92,7 @@ echo "BUILD_TESTS     : ${BUILD_TESTS}"
 echo "RUN_TESTS       : ${RUN_TESTS}"
 echo "COVERAGE        : ${COVERAGE}"
 echo "PROFILING       : ${PROFILING}"
+echo "DYNAMIC         : ${DYNAMIC}"
 echo "DEVELOPMENT_MODE: ${DEVELOPMENT_MODE}"
 
 
@@ -248,15 +250,23 @@ else
     PROFILING="--disable-library-profiling --disable-executable-profiling"
 fi
 
+if [ ${DYNAMIC} = "yes" ]; then
+    DYNAMIC="--ghc-options \"-dynamic\""
+else
+    DYNAMIC=""
+fi
+
 # install conjure, finally
 
-cabal install                                                       \
-    --only-dependencies                                             \
-    --force-reinstalls                                              \
-    ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
+cabal install                                                           \
+    --only-dependencies                                                 \
+    --force-reinstalls                                                  \
+    ${DYNAMIC} ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION}    \
+    --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
-cabal configure                                                     \
-    ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+cabal configure                                                         \
+    ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
+    --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
 
