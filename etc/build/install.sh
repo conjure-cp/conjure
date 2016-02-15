@@ -116,7 +116,8 @@ fi
 
 # in case we are using a local gmp installation
 if [ -d "${HOME}/.tools/libs/gmp-6.1.0/lib" ]; then
-    export LIBRARY_PATH="${HOME}/.tools/libs/gmp-6.1.0/lib"
+    export LIBRARY_PATH=${LIBRARY_PATH:-""}
+    export LIBRARY_PATH="${HOME}/.tools/libs/gmp-6.1.0/lib":$LIBRARY_PATH
 fi
 
 # installing ghc
