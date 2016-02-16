@@ -195,7 +195,7 @@ ui = modes
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule failures. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
         , logRuleSuccesses = False &= name "log-rule-successes"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -203,7 +203,7 @@ ui = modes
         , logRuleAttempts  = False &= name "log-rule-attempts"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
         , logChoices       = False &= name "log-choices"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -420,7 +420,7 @@ ui = modes
                                    &= args
         , validateSolutionsOpt = False
                                    &= name "validate-solutions"
-                                   &= groupname "Flags"
+                                   &= groupname "General"
                                    &= explicit
                                    &= help "Enable/disable solution validation. Off by default."
         , outputDirectory  = "conjure-output"
@@ -463,7 +463,7 @@ ui = modes
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule failures. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
         , logRuleSuccesses = False &= name "log-rule-successes"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -471,7 +471,7 @@ ui = modes
         , logRuleAttempts  = False &= name "log-rule-attempts"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
         , logChoices       = False &= name "log-choices"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -679,7 +679,7 @@ ui = modes
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "split"
                                    &= explicit
-                                   &= help "Split an Essence files to various smaller files. Useful for testing."
+                                   &= help "Split an Essence file to various smaller files. Useful for testing."
     , SymmetryDetection
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
