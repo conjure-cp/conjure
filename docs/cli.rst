@@ -61,8 +61,8 @@ Commands typically take additional arguments.
 Each command provides a separate help message.
 To see the command specific help message, run: ``conjure COMMAND --help``.
 
-Appendix
---------
+Help output
+-----------
 
 Following is Conjure's full help message, provided for reference.
 

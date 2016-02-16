@@ -23,9 +23,9 @@ Caution: With this flag, Conjure will use the answers when producing a filename.
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Whether to generate verbose trails or not.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Whether to generate trails about the applied rewritings or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: these can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: these can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused be by -al</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-binary</td><td style='padding-left:2ex;'>Output binary files instead of text files.
 Conjure can read in these binary files for further processing.</td></tr>
@@ -113,7 +113,7 @@ Conjure can read in these binary files for further processing.</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>This is a combined mode, and it is available for convenience.
 It runs conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and then solution translation.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
-<tr><td colspan='3'>Flags:</td></tr>
+<tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--validate-solutions</td><td style='padding-left:2ex;'>Enable/disable solution validation. Off by default.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Output directory. Generated models will be saved here.
@@ -127,9 +127,9 @@ Caution: With this flag, Conjure will use the answers when producing a filename.
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Whether to generate verbose trails or not.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Whether to generate trails about the applied rewritings or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: these can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: these can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused be by -al</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-binary</td><td style='padding-left:2ex;'>Output binary files instead of text files.
 Conjure can read in these binary files for further processing.</td></tr>
@@ -200,7 +200,7 @@ Conjure can read in these binary files for further processing.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds. (CPU time).</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure split [OPTIONS] ESSENCE_FILE</td></tr>
-<tr><td colspan='3' style='padding-left:2ex;'>Split an Essence files to various smaller files. Useful for testing.</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>Split an Essence file to various smaller files. Useful for testing.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Output directory. Generated models will be saved here.
