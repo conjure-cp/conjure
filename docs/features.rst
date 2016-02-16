@@ -11,11 +11,51 @@ Some of these are due to features of Conjure's input language Essence, and the n
 Problem classes
 ---------------
 
-Conjure works on parameterised problem specifications -- once a concrete model is generated using it, the model can be instantiated to solve many instances from the same class of problems.
+Often, when we think of problems we think of a *class* of problems rather than a single problem.
+For example, Sudoku is a class of puzzles.
+There are many different Sudoku *instances*, with different clues.
+However, all Sudoku instances share the same set of rules.
+Describing the puzzle of Sudoku to somebody who doesn't know the rules of the game generally does not depend on a given set of clues.
+
+Similarly, problem specifications in Essence are written for a class of problems instead of a single problem instance.
+For Sudoku, the rules (everything on a row/column/sub-grid has to be distinct) are encoded once.
+The clues are specified as *parameters* to the problem specification, together with appropriate assignment statements to incorporate the clues into the problem.
+
+Many tools (solvers and/or modelling assistants) support this separation by having a parameterised problem specification in a file and separate data/parameter file specifying an instance of the problem.
+Conjure uses ``*.essence`` files for the problem specification, and ``*.param`` files for the parameter file.
+
+Although a lot of tools support this kind of a separation, they generally work by instantiating a problem specification before operating on it.
+Conjure is different in this regard: it operates on parameterised problem specifications directly.
+It reads in a parameterised Essence file, and outputs one or more parameterised Essence' files.
+In order to solve an Essence' model provided by Conjure, Essence-level parameter files need to be translated to Essence'-level parameter files by running Conjure once per parameter file.
+
+Savile Row accepts a parameterised model and a separate parameter file, and performs the instantiation.
+The output model and the translated parameter file from Conjure can be directly used when running Savile Row.
 
 
 High level of abstraction
 -------------------------
+
+Conjure's input language is Essence.
+Essence provides abstract domain types like matrices, sets, multi-sets, functions, sequences, relations, partitions, records, and variants.
+These abstract domain types also support domain attributes like cardinality for set-like domains, injectivity/surjectivity for functions, and etc to enable concise specification of a problem.
+Essence also provides more primitive domain types, like booleans, integers and enumerated types, that are supported by most CP solvers and modelling assistants.
+
+In addition to abstract domain types, Essence also provides operators that operate on parameters or decision variables with abstract domains.
+For example, set membership, subset, function inverse, and relation projection are provided to enable specification of problem constraints abstractly
+
+The high level of abstraction offered by Essence allows its users to specify problems without having to make a lot of low level *modelling decisions*.
+
+
+Arbitrarily nested types
+------------------------
+
+The abstract domain types provided by Essence are domain constructors: they take another domain as an argument to construct a new domain.
+For example the domain ``set of D`` represents a set of values from the domain ``D``, and a ``relation of (D1 * D2 * D3)`` represents a relation between values of domains ``D1``, ``D2``, and ``D3``.
+
+Using these domain constructors, domains of arbitrary nesting can be created.
+Conjure does not have a limit on the level of nesting in the domains.
+But keep in mind: a several levels nested domain might look tiny whereas the combinatorial object it represents may be huge.
 
 
 Multiple models
@@ -36,7 +76,7 @@ Lastly, instead of trying to pick a single good model a portfolio of models may 
 Conjure is able to produce multiple models mainly
 
 - by having choices between multiple representations of decision variable domains, and
-- by having choices between translating constraints in multiple ways.
+- by having choices between translating constraint expressions in multiple ways.
 
 Both domain representation and constraint translation mechanisms are implemented using a rule based system inside Conjure to ease the addition of new modelling idioms.
 
@@ -47,10 +87,6 @@ Automatic symmetry breaking
 
 Automated channelling
 ---------------------
-
-
-Arbitrarily nested types
-------------------------
 
 
 Extensibility
