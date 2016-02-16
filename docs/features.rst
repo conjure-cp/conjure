@@ -34,6 +34,7 @@ The choice of the model may depend on the instances we are interested to solve.
 Lastly, instead of trying to pick a single good model a portfolio of models may be chosen with complementary strengths to exploit parallelism.
 
 Conjure is able to produce multiple models mainly
+
 - by having choices between multiple representations of decision variable domains, and
 - by having choices between translating constraints in multiple ways.
 
