@@ -33,8 +33,9 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
 
 rule_Eq :: Rule
 rule_Eq = "function-eq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opEq p
+    theRule [essence| &x = &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return
@@ -47,11 +48,14 @@ rule_Eq = "function-eq" `namedRule` theRule where
                             (forAll &iPat in &y . &x(&i[1]) = &i[2])
                        |]
             )
+    theRule _ = na "rule_Eq"
 
 
 rule_Neq :: Rule
 rule_Neq = "function-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return
@@ -69,8 +73,9 @@ rule_Neq = "function-neq" `namedRule` theRule where
 
 rule_SubsetEq :: Rule
 rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
-    theRule p = do
-        (x,y)          <- match opSubsetEq p
+    theRule [essence| &x subsetEq &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
         TypeFunction{} <- typeOf x
         TypeFunction{} <- typeOf y
         return
@@ -81,40 +86,47 @@ rule_SubsetEq = "function-subsetEq" `namedRule` theRule where
                             (forAll &iPat in &x . &y(&i[1]) = &i[2])
                        |]
             )
+    theRule _ = na "rule_SubsetEq"
 
 
 rule_Subset :: Rule
 rule_Subset = "function-subset" `namedRule` theRule where
-    theRule [essence| &a subset &b |] = do
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
+    theRule [essence| &x subset &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        TypeFunction{} <- typeOf x
+        TypeFunction{} <- typeOf y
         return
             ( "Horizontal rule for function subset"
-            , return [essence| &a subsetEq &b /\ &a != &b |]
+            , return [essence| &x subsetEq &y /\ &x != &y |]
             )
     theRule _ = na "rule_Subset"
 
 
 rule_Supset :: Rule
 rule_Supset = "function-supset" `namedRule` theRule where
-    theRule [essence| &a supset &b |] = do
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
+    theRule [essence| &x supset &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        TypeFunction{} <- typeOf x
+        TypeFunction{} <- typeOf y
         return
             ( "Horizontal rule for function supset"
-            , return [essence| &b subset &a |]
+            , return [essence| &y subset &x |]
             )
     theRule _ = na "rule_Supset"
 
 
 rule_SupsetEq :: Rule
 rule_SupsetEq = "function-subsetEq" `namedRule` theRule where
-    theRule [essence| &a supsetEq &b |] = do
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
+    theRule [essence| &x supsetEq &y |] = do
+        case x of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        TypeFunction{} <- typeOf x
+        TypeFunction{} <- typeOf y
         return
             ( "Horizontal rule for function supsetEq"
-            , return [essence| &b subsetEq &a |]
+            , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
 
@@ -152,8 +164,8 @@ rule_DotLeq = "function-DotLeq" `namedRule` theRule where
 rule_Inverse :: Rule
 rule_Inverse = "function-inverse" `namedRule` theRule where
     theRule [essence| inverse(&a, &b) |] = do
-        case a of WithLocals{} -> na "rule_Inverse" ; _ -> return ()
-        case b of WithLocals{} -> na "rule_Inverse" ; _ -> return ()
+        case a of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case b of WithLocals{} -> na "bubble-delay" ; _ -> return ()
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
         return
