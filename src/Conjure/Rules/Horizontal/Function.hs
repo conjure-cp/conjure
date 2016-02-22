@@ -152,6 +152,8 @@ rule_DotLeq = "function-DotLeq" `namedRule` theRule where
 rule_Inverse :: Rule
 rule_Inverse = "function-inverse" `namedRule` theRule where
     theRule [essence| inverse(&a, &b) |] = do
+        case a of WithLocals{} -> na "rule_Inverse" ; _ -> return ()
+        case b of WithLocals{} -> na "rule_Inverse" ; _ -> return ()
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
         return
