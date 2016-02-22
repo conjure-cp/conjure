@@ -75,12 +75,13 @@ mkFinite
          , Constant -> m [(Name, Constant)]     -- value calculator for the extra givens
                                                 -- input is a list of values for the domain
          )
-mkFinite d@DomainTuple{}    = mkFiniteOutermost d
-mkFinite d@DomainMatrix{}   = mkFiniteOutermost d
-mkFinite d@DomainSet{}      = mkFiniteOutermost d
-mkFinite d@DomainSequence{} = mkFiniteOutermost d
-mkFinite d@DomainFunction{} = mkFiniteOutermost d
-mkFinite d@DomainRelation{} = mkFiniteOutermost d
+mkFinite d@DomainTuple{}     = mkFiniteOutermost d
+mkFinite d@DomainMatrix{}    = mkFiniteOutermost d
+mkFinite d@DomainSet{}       = mkFiniteOutermost d
+mkFinite d@DomainSequence{}  = mkFiniteOutermost d
+mkFinite d@DomainFunction{}  = mkFiniteOutermost d
+mkFinite d@DomainRelation{}  = mkFiniteOutermost d
+mkFinite d@DomainPartition{} = mkFiniteOutermost d
 mkFinite d = return (d, [], const (return []))
 
 
