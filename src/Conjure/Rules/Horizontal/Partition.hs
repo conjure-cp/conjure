@@ -107,6 +107,11 @@ rule_Together = "partition-together" `namedRule` theRule where
 rule_Apart :: Rule
 rule_Apart = "partition-apart" `namedRule` theRule where
     theRule [essence| apart(&x,&p) |] = do
+        case p of
+            -- this is because this rule would change the parity of the DefinednessConstraints
+            -- they should be bubbled up first.
+            WithLocals{} -> na "rule_Apart"
+            _ -> return ()
         TypePartition{} <- typeOf p
         return
             ( "Horizontal rule for partition-apart"
