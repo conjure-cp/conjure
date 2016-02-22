@@ -105,7 +105,7 @@ instance DomainSizeOf Constant Integer where
     domainSizeOf DomainEnum{} = fail "domainSizeOf: Unknown for given enum."
     domainSizeOf (DomainTuple ds) = product <$> mapM domainSizeOf ds
     domainSizeOf (DomainMatrix index inner) = intPow <$> domainSizeOf inner <*> domainSizeOf index
-    domainSizeOf (DomainSet _ (SetAttr attrs) inner) =
+    domainSizeOf d@(DomainSet _ (SetAttr attrs) inner) =
         case attrs of
             SizeAttr_None -> do
                 innerSize <- domainSizeOf inner
@@ -113,13 +113,17 @@ instance DomainSizeOf Constant Integer where
             SizeAttr_Size (ConstantInt size) -> do
                 innerSize <- domainSizeOf inner
                 return (nchoosek (product . enumFromTo 1) innerSize size)
+            SizeAttr_MinSize{} -> do
+                -- TODO: we can do better here
+                innerSize <- domainSizeOf inner
+                return (2 `intPow` innerSize)
             SizeAttr_MaxSize (ConstantInt maxSize) -> do
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [0 .. maxSize] ]
             SizeAttr_MinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
-            _ -> fail "domainSizeOf"
+            _ -> fail ("domainSizeOf{Constant}" <+> pretty d)
     domainSizeOf DomainMSet      {} = bug "not implemented: domainSizeOf DomainMSet"
     domainSizeOf DomainFunction  {} = bug "not implemented: domainSizeOf DomainFunction"
     domainSizeOf DomainRelation  {} = bug "not implemented: domainSizeOf DomainRelation"
