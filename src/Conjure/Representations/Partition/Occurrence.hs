@@ -40,10 +40,25 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         namePartSizes  = mkOutName (Just "PartSizes")
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
+        getMaxNumParts attrs d = 
+            case partsNum attrs of
+                SizeAttr_Size       x   -> return x
+                SizeAttr_MaxSize    x   -> return x
+                SizeAttr_MinMaxSize _ x -> return x
+                _ -> domainSizeOf d
+
+        getMaxPartSizes attrs d =
+            case partsSize attrs of
+                SizeAttr_Size       x   -> return x
+                SizeAttr_MaxSize    x   -> return x
+                SizeAttr_MinMaxSize _ x -> return x
+                _ -> domainSizeOf d
+
         -- downD :: TypeOf_DownD m
-        downD (name, domain@(DomainPartition Partition_Occurrence PartitionAttr{..} innerDomain))
+        downD (name, domain@(DomainPartition Partition_Occurrence attrs innerDomain))
             | domainCanIndexMatrix innerDomain = do
-            maxNumParts <- domainSizeOf innerDomain
+            maxNumParts <- getMaxNumParts attrs innerDomain
+            maxPartSizes <- getMaxPartSizes attrs innerDomain
             return $ Just
                 [ ( nameNumParts domain name
                   , DomainInt [RangeBounded 1 maxNumParts]
@@ -56,12 +71,12 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 , ( namePartSizes domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      (DomainInt [RangeBounded 0 maxNumParts])
+                      (DomainInt [RangeBounded 0 maxPartSizes])
                   )
                 , ( nameFirstIndex domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      innerDomain                                   -- dontCare if not used
+                      (DomainInt [RangeBounded 0 maxNumParts])              -- dontCare if not used
                   )
                 ]
         downD _ = na "{downD} Occurrence"
@@ -69,7 +84,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainPartition _ attrs innerDomain)
                 | domainCanIndexMatrix innerDomain = do
-            maxNumParts <- domainSizeOf innerDomain
+            maxNumParts <- getMaxNumParts attrs innerDomain
             let
                 numPartsChannelling whichPart numPartsVar = do
                     (iPat, i) <- quantifiedVar
@@ -185,7 +200,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , inDom@(DomainPartition Partition_Occurrence _ innerDomain)
+              , inDom@(DomainPartition Partition_Occurrence attrs innerDomain)
               , inConstant@(ConstantAbstract (AbsLitPartition vals))
               ) = do
             Just [ ( numPartsVar   , numPartsDom   )
@@ -194,7 +209,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                  , ( firstIndexVar , firstIndexDom )
                  ] <- downD (name, inDom)
             members      <- domainValues innerDomain
-            maxNumParts' <- domainSizeOf innerDomain
+            maxNumParts' <- getMaxNumParts attrs innerDomain
             maxNumParts  <- case viewConstantInt maxNumParts' of
                 Just i -> return i
                 Nothing -> bug ("expecting an integer literal, but got:" <+> pretty maxNumParts')
@@ -218,7 +233,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                         ]
                 numPartsVal   = ConstantInt (genericLength vals)
                 whichPartVal  = ConstantAbstract (AbsLitMatrix
-                                    (DomainInt [RangeBounded 1 maxNumParts'])
+                                    (forgetRepr innerDomain)
                                     (map ConstantInt whichPartValInside))
                 partSizesVal  = ConstantAbstract (AbsLitMatrix
                                     (DomainInt [RangeBounded 1 maxNumParts'])
