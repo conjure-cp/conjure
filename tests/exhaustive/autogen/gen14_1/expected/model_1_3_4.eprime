@@ -255,8 +255,7 @@ such that
          or([var1_PartitionOccurrence_WhichPart[q48] = q47 /\ var1_PartitionOccurrence_FirstIndex[q47] = q48
                  | q48 : int(1..2)])
              | q47 : int(1..2)]),
-    and([var1_PartitionOccurrence_PartSizes[q47] = 0 -> var1_PartitionOccurrence_FirstIndex[q47] = 1
-             | q47 : int(1..2)]),
+    and([q47 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_FirstIndex[q47] = 1 | q47 : int(1..2)]),
     and([q49 <= var1_PartitionOccurrence_NumParts /\ q50 <= var1_PartitionOccurrence_NumParts ->
          (q49 < q50 <-> var1_PartitionOccurrence_FirstIndex[q49] < var1_PartitionOccurrence_FirstIndex[q50])
              | q49 : int(1..2), q50 : int(1..2)]),

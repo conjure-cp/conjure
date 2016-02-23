@@ -48,7 +48,7 @@ such that
          or([p_PartitionOccurrence_WhichPart[q15] = q14 /\ p_PartitionOccurrence_FirstIndex[q14] = q15
                  | q15 : int(1..b)])
              | q14 : int(1..b)]),
-    and([p_PartitionOccurrence_PartSizes[q14] = 0 -> p_PartitionOccurrence_FirstIndex[q14] = 1 | q14 : int(1..b)]),
+    and([q14 > p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_FirstIndex[q14] = 1 | q14 : int(1..b)]),
     and([q16 <= p_PartitionOccurrence_NumParts /\ q17 <= p_PartitionOccurrence_NumParts ->
          (q16 < q17 <-> p_PartitionOccurrence_FirstIndex[q16] < p_PartitionOccurrence_FirstIndex[q17])
              | q16 : int(1..b), q17 : int(1..b)]),
