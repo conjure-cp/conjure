@@ -32,7 +32,7 @@ instance EvaluateOp OpRestrict where
         return $ ConstantAbstract $ AbsLitFunction $ sortNub
             [ x
             | x@(a,_) <- xs
-            , case validateConstantForDomain a (dom :: Domain () Constant) of
+            , case validateConstantForDomain "<in memory>" a (dom :: Domain () Constant) of
                 Nothing -> False
                 Just{}  -> True
             ]

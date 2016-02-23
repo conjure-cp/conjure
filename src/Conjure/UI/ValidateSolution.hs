@@ -31,7 +31,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    validateConstantForDomain valC domC
+                    validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC) :)
                 []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                      , "Its domain:" <++> pretty dom
@@ -45,7 +45,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    validateConstantForDomain valC domC
+                    validateConstantForDomain nm valC domC
                     modify ((nm, Constant valC) :)
                 []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                      , "Its domain:" <++> pretty dom

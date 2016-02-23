@@ -6,7 +6,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Constant ( emptyCollection )
+import Conjure.Language.Constant
 import Conjure.Language.Type ( Type(..), mostDefined )
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Pretty
@@ -139,6 +139,12 @@ translateParameter eprimeModel essenceParam0 = do
                                                              ]
                                                       | (n,d,c) <- essenceGivensAndLettings'
                                                       ]
+
+    errs <- execWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) ->
+        case validateConstantForDomain nm val dom of
+            Left err -> tell [err]
+            Right () -> return ()
+    unless (null errs) (userErr errs)
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
