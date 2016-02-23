@@ -41,7 +41,7 @@ main = do
                         -- do the last 10^3 division via double to get 3 significant digits after the integer part.
                         cputimeInSeconds :: Double
                         cputimeInSeconds = fromInteger (cputime `div` 1000000000) / 1000
-                    putStrLn $ printf "Timed out. Total CPU time used is %.3f seconds." cputimeInSeconds
+                    putStrLn $ printf "Timed out. Total CPU time used by Conjure is %.3f seconds." cputimeInSeconds
                 Just () -> return ()
         _ -> workload
 

@@ -68,9 +68,10 @@ Model generation:
                                              Can be true or false. (true by default)
      --seed=INT                              The seed for the random number generator.
      --limit-models=INT                      Maximum number of models to generate.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
      --choices=FILE                          Choices to use if possible for -al can either be a eprime file (created
                                              by --logChoices), or a json file
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure translate-parameter [OPTIONS]
   Refinement of parameter files written in Essence for a particular Essence' model.
@@ -87,7 +88,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure translate-solution [OPTIONS]
   Translation of solutions back to Essence.
@@ -105,7 +107,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure validate-solution [OPTIONS]
   Validating a solution.
@@ -119,7 +122,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
   This is a combined mode, and it is available for convenience.
@@ -128,6 +132,7 @@ conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
 
 General:
      --validate-solutions                    Enable/disable solution validation. Off by default.
+     --limit-time=INT                        Time limit in seconds (real time).
 Logging & Output:
   -o --output-directory=DIR                  Output directory. Generated models will be saved here.
                                              Default value: 'conjure-output'
@@ -186,7 +191,6 @@ Model generation:
                                              Can be true or false. (true by default)
      --seed=INT                              The seed for the random number generator.
      --limit-models=INT                      Maximum number of models to generate.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
 Options for other tools:
      --savilerow-options=ITEM                Options to be passed to Savile Row.
                                              By default: '-O2'
@@ -204,7 +208,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure diff [OPTIONS] FILE FILE
   Diff on two Essence files. Works on models, parameters, and solutions.
@@ -213,7 +218,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure type-check [OPTIONS] ESSENCE_FILE
   Type-checking a single Essence file.
@@ -222,7 +228,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure split [OPTIONS] ESSENCE_FILE
   Split an Essence file to various smaller files. Useful for testing.
@@ -233,7 +240,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure symmetry-detection [OPTIONS] ESSENCE_FILE
   Dump some JSON to be used as input to ferret for symmetry detection.
@@ -245,7 +253,8 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).
 
 conjure parameter-generator [OPTIONS] ESSENCE_FILE
   Generate an Essence model describing the instances of the problem class defined in the input Essence model.
@@ -256,4 +265,5 @@ Logging & Output:
      --log-level=LOGLEVEL                    Log level.
      --output-binary                         Output binary files instead of text files.
                                              Conjure can read in these binary files for further processing.
-     --limit-time=INT                        Time limit in seconds. (CPU time).
+General:
+     --limit-time=INT                        Time limit in seconds (real time).

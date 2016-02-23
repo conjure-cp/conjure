@@ -296,9 +296,9 @@ ui = modes
                                    &= explicit
                                    &= help "Maximum number of models to generate."
         , limitTime = Nothing      &= name "limit-time"
-                                   &= groupname "Model generation"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , savedChoices     = def   &= typFile
                                    &= name "choices"
                                    &= groupname "Model generation"
@@ -336,8 +336,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -374,8 +375,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -403,8 +405,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -564,9 +567,9 @@ ui = modes
                                    &= explicit
                                    &= help "Maximum number of models to generate."
         , limitTime = Nothing      &= name "limit-time"
-                                   &= groupname "Model generation"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -605,8 +608,9 @@ ui = modes
                                    &= explicit
                                    &= help "Whether to remove unused declarations or not. Off by default."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -626,8 +630,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -644,8 +649,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -670,8 +676,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -695,8 +702,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -719,8 +727,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
