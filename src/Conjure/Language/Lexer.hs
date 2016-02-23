@@ -501,11 +501,10 @@ tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
 tryLex running (face,lexeme) = do
     rest <- T.stripPrefix face running
     if T.all isIdentifierLetter face
-        then do
-            (ch, _) <- T.uncons rest
-            if isIdentifierLetter ch
-                then Nothing
-                else Just (rest, lexeme)
+        then
+            case T.uncons rest of
+                Just (ch, _) | isIdentifierLetter ch -> Nothing
+                _                                    -> Just (rest, lexeme)
         else Just (rest, lexeme)
 
 tryLexIntLiteral :: T.Text -> Maybe (T.Text, Lexeme)
