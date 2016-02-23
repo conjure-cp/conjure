@@ -76,7 +76,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 , ( nameFirstIndex domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      (DomainInt [RangeBounded 0 maxNumParts])              -- dontCare if not used
+                      innerDomain                                           -- dontCare if not used
                   )
                 ]
         downD _ = na "{downD} Occurrence"
