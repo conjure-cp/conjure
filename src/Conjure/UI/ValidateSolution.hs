@@ -31,43 +31,43 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    validateConstantForDomain nm valC domC
+                    either userErr1 return (validateConstantForDomain nm valC domC)
                     modify ((nm, Constant valC) :)
-                []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
-                                     , "Its domain:" <++> pretty dom
-                                     ]
-                vals  -> fail $ vcat [ "Multiple values for" <+> pretty nm <+> "in the parameter file."
-                                     , "Its domain:" <++> pretty dom
-                                     , "Values:" <++> vcat (map pretty vals)
-                                     ]
+                []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
+                                         , "Its domain:" <++> pretty dom
+                                         ]
+                vals  -> userErr1 $ vcat [ "Multiple values for" <+> pretty nm <+> "in the parameter file."
+                                         , "Its domain:" <++> pretty dom
+                                         , "Values:" <++> vcat (map pretty vals)
+                                         ]
         Declaration (FindOrGiven Find nm dom) ->
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceSolution, nm == nm2 ] of
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
-                    validateConstantForDomain nm valC domC
+                    either userErr1 return (validateConstantForDomain nm valC domC)
                     modify ((nm, Constant valC) :)
-                []    -> fail $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
-                                     , "Its domain:" <++> pretty dom
-                                     ]
-                vals  -> fail $ vcat [ "Multiple values for" <+> pretty nm <+> "in the solution file."
-                                     , "Its domain:" <++> pretty dom
-                                     , "Values:" <++> vcat (map pretty vals)
-                                     ]
+                []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
+                                         , "Its domain:" <++> pretty dom
+                                         ]
+                vals  -> userErr1 $ vcat [ "Multiple values for" <+> pretty nm <+> "in the solution file."
+                                         , "Its domain:" <++> pretty dom
+                                         , "Values:" <++> vcat (map pretty vals)
+                                         ]
         Declaration (FindOrGiven Quantified _ _) ->
-            fail $ vcat
+            userErr1 $ vcat
                 [ "A quantified declaration at the top level."
                 , "This should never happen."
                 , "Statement:" <+> pretty st
                 ]
         Declaration (FindOrGiven LocalFind _ _) ->
-            fail $ vcat
+            userErr1 $ vcat
                 [ "A local decision variable at the top level."
                 , "This should never happen."
                 , "Statement:" <+> pretty st
                 ]
         Declaration (FindOrGiven CutFind _ _) ->
-            fail $ vcat
+            userErr1 $ vcat
                 [ "A 'cut' decision variable at the top level."
                 , "This should never happen."
                 , "Statement:" <+> pretty st
@@ -81,11 +81,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
-                []    -> fail $ vcat [ "No value for enum domain" <+> pretty nm <+> "in the parameter file."
-                                     ]
-                vals  -> fail $ vcat [ "Multiple values for enum domain" <+> pretty nm <+> "in the parameter file."
-                                     , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
-                                     ]
+                []    -> userErr1 $ vcat [ "No value for enum domain" <+> pretty nm <+> "in the parameter file."
+                                         ]
+                vals  -> userErr1 $ vcat [ "Multiple values for enum domain" <+> pretty nm <+> "in the parameter file."
+                                         , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
+                                         ]
         Declaration (LettingDomainDefnEnum nm val) -> do
                     let domain = mkDomainIntB 1 (fromInt (genericLength val))
                     let values = [ (n, Constant (ConstantInt i))
@@ -100,11 +100,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                  | (i,n) <- zip allNats nms
                                  ]
                     modify (((nm, Domain domain) : values) ++)
-                []    -> fail $ vcat [ "No value for unnamed domain" <+> pretty nm <+> "in the solution file."
-                                     ]
-                vals  -> fail $ vcat [ "Multiple values for unnamed domain" <+> pretty nm <+> "in the solution file."
-                                     , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
-                                     ]
+                []    -> userErr1 $ vcat [ "No value for unnamed domain" <+> pretty nm <+> "in the solution file."
+                                         ]
+                vals  -> userErr1 $ vcat [ "Multiple values for unnamed domain" <+> pretty nm <+> "in the solution file."
+                                         , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
+                                         ]
         SearchOrder{} -> return ()
         SearchHeuristic{} -> return ()
         Where xs -> do
@@ -113,14 +113,14 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 constant <- instantiateExpression vals x
                 case constant of
                     ConstantBool True -> return ()
-                    _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
-                                                     , "Original statement was:" <+> pretty x
-                                                     , "Relevant values:" <++> vcat
-                                                         [ "letting" <+> pretty nm <+> "be" <+> pretty val
-                                                         | (nm, val) <- vals
-                                                         , nm `elem` (universeBi x :: [Name])
+                    _ -> userErr1 $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
+                                                         , "Original statement was:" <+> pretty x
+                                                         , "Relevant values:" <++> vcat
+                                                             [ "letting" <+> pretty nm <+> "be" <+> pretty val
+                                                             | (nm, val) <- vals
+                                                             , nm `elem` (universeBi x :: [Name])
+                                                             ]
                                                          ]
-                                                     ]
         Objective{} -> return ()
         SuchThat xs -> do
             vals     <- gets id
@@ -128,14 +128,14 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 constant <- instantiateExpression vals x
                 case constant of
                     ConstantBool True -> return ()
-                    _ -> fail $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
-                                                     , "Original statement was:" <+> pretty x
-                                                     , "Relevant values:" <++> vcat
-                                                         [ "letting" <+> pretty nm <+> "be" <+> pretty val
-                                                         | (nm, val) <- vals
-                                                         , nm `elem` (universeBi x :: [Name])
+                    _ -> userErr1 $ "Invalid." <++> vcat [ "Statement evaluates to:" <+> pretty constant
+                                                         , "Original statement was:" <+> pretty x
+                                                         , "Relevant values:" <++> vcat
+                                                             [ "letting" <+> pretty nm <+> "be" <+> pretty val
+                                                             | (nm, val) <- vals
+                                                             , nm `elem` (universeBi x :: [Name])
+                                                             ]
                                                          ]
-                                                     ]
 
 
 introduceRecordFields
