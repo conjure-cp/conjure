@@ -1,6 +1,13 @@
 {-# LANGUAGE DeriveGeneric #-}
 
-module Conjure.Language.Lexer where
+module Conjure.Language.Lexer
+    ( Lexeme(..)
+    , LexemePos
+    , runLexer
+    , textToLexeme
+    , lexemeText
+    , lexemeFace
+    ) where
 
 import Conjure.Prelude
 
@@ -463,6 +470,7 @@ runLexer text = do
                                     :  map (tryLex t) lexemes
                                     ++ [ tryLexIntLiteral t
                                        , tryLexIden t
+                                       , tryLexQuotedIden t
                                        , tryLexComment t
                                        ]
             if T.null t
@@ -527,6 +535,34 @@ tryLexIden running =
                     then Nothing
                     else Just (rest, LIdentifier iden)
             _ -> Nothing
+
+tryLexQuotedIden :: T.Text -> Maybe (T.Text, Lexeme)
+tryLexQuotedIden running =
+    let
+        go inp =
+            case T.uncons inp of
+                Just ('\"', rest) -> go2 "\"" rest
+                _ -> Nothing
+
+        -- after the first "
+        go2 sofar inp =
+            case T.uncons inp of
+                -- end
+                Just ('\"', rest)
+                    | sofar /= "\""         -- so we don't allow empty strings
+                    -> Just (rest, LIdentifier (T.pack (reverse ('\"' : sofar))))
+                -- escaped
+                Just ('\\', rest) ->
+                    case T.uncons rest of
+                        Just ('\"', rest2) -> go2 ('\"':sofar) rest2
+                        Just ('\\', rest2) -> go2 ('\\':sofar) rest2
+                        _ -> Nothing
+                Just (ch,   rest) -> go2 (ch:sofar) rest
+                Nothing -> Nothing
+    in
+        case go running of
+            Just (rest, iden) -> Just (rest, iden)
+            Nothing -> Nothing
 
 tryLexComment :: T.Text -> Maybe (T.Text, Lexeme)
 tryLexComment running = let (dollar,rest1) = T.span (=='$') running
