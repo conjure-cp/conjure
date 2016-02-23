@@ -64,9 +64,9 @@ instance MonadUserError m => MonadUserError (Pipes.Proxy a b c d m) where
 
 
 -- | This is to run a MonadUserError. Everything else should lift.
-newtype UserErrorT m a = UserErrorT { runUserErrorT :: m (Either Doc a) }
+newtype UserErrorT m a = UserErrorT { runUserErrorT :: m (Either [Doc] a) }
 
-runUserError :: UserErrorT Identity a -> Either Doc a
+runUserError :: UserErrorT Identity a -> Either [Doc] a
 runUserError ma = runIdentity (runUserErrorT ma)
 
 instance (Functor m) => Functor (UserErrorT m) where
@@ -99,4 +99,4 @@ instance MonadFail m => MonadFail (UserErrorT m) where
     fail = lift . Prelude.fail
 
 instance MonadFail m => MonadUserError (UserErrorT m) where
-    userErr msgs = UserErrorT $ return $ userErr msgs
+    userErr msgs = UserErrorT $ return $ Left msgs

@@ -5,7 +5,7 @@ module Conjure.UI.MainHelper ( mainWithArgs ) where
 
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.UserError ( MonadUserError(..), userErr1 )
+import Conjure.UserError
 import Conjure.UI ( UI(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
 import Conjure.UI.Model ( parseStrategy, outputModels )
@@ -201,7 +201,7 @@ mainWithArgs config@Solve{..} = do
     liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
     msolutions <- liftIO $ savileRows eprimes
     case msolutions of
-        Left msg        -> userErr1 msg
+        Left msg        -> userErr msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
     liftIO stopGlobalPool
 
@@ -229,7 +229,7 @@ mainWithArgs config@Solve{..} = do
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
 
-        savileRows :: [FilePath] -> IO (Either Doc [(FilePath, FilePath, FilePath)])
+        savileRows :: [FilePath] -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
         savileRows eprimes = fmap combineResults $
             if null essenceParams
                 then parallel [ savileRowNoParam config m
@@ -258,7 +258,7 @@ savileRowNoParam
     :: UI
     -> FilePath
     -> IO (Either
-        Doc                 -- user error
+        [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
@@ -285,7 +285,7 @@ savileRowWithParams
     -> FilePath
     -> FilePath
     -> IO (Either
-        Doc                 -- user error
+        [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
@@ -295,20 +295,28 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     essenceParam <- liftIO $ readModelFromFile paramPath
-    eprimeParam  <- liftIO $ ignoreLogs $ runNameGen $ translateParameter eprimeModel essenceParam
-    liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
-    let srArgs = "-in-param"
-               : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))
-               : srMkArgs ui outBase modelPath
-    (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
-                                (liftIO . srStdoutHandler
-                                    ( outputDirectory, outBase
-                                    , modelPath, paramPath
-                                    , eprimeModel, essenceParam
-                                    , lineWidth
-                                    )
-                                    (1::Int))
-    srCleanUp (stringToText $ unlines stdoutSR) solutions
+    let
+        -- this is a bit tricky.
+        -- we want to preserve user-erors, and not raise them as errors using IO.fail
+        runTranslateParameter :: IO (Either [Doc] Model)
+        runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen $ translateParameter eprimeModel essenceParam
+    eprimeParam' <- liftIO runTranslateParameter
+    case eprimeParam' of
+        Left err -> return (Left err)
+        Right eprimeParam -> do
+            liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
+            let srArgs = "-in-param"
+                       : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))
+                       : srMkArgs ui outBase modelPath
+            (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
+                                        (liftIO . srStdoutHandler
+                                            ( outputDirectory, outBase
+                                            , modelPath, paramPath
+                                            , eprimeModel, essenceParam
+                                            , lineWidth
+                                            )
+                                            (1::Int))
+            srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
 
 
@@ -362,16 +370,16 @@ srStdoutHandler
                          (srStdoutHandler args solutionNumber h)
 
 
-srCleanUp :: Text -> sols -> Sh (Either Doc sols)
+srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
 srCleanUp stdoutSR solutions = do
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
     if
         | exitCodeSR == 0 -> return (Right solutions)
         | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) ->
-            return (Left (vcat [ "Invalid instance, a where statement evaluated to false."
+            return (Left [vcat [ "Invalid instance, a where statement evaluated to false."
                                , "(It can be an implicit where statement added by Conjure.)"
-                               ]))
+                               ]])
         | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                   , "Savile Row stderr:"    <+> pretty stderrSR
                                   , "Savile Row exit-code:" <+> pretty exitCodeSR
