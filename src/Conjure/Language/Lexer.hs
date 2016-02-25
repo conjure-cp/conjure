@@ -494,7 +494,11 @@ runLexer text = do
         calcPos  pos (this:rest) =
             let (restSpaces, restNonSpace) = span isLexemeSpace rest    -- eat up all the whitespace after "this"
                 pos' = foldl nextPos pos (this:restSpaces)
-            in  LexemePos this pos pos' : calcPos pos' restNonSpace
+            in
+                if null restNonSpace
+                    then [LexemePos this pos (nextPos pos this)]        -- if this is the last non-whitespace lexeme
+                                                                        -- do not include the whitespace after it
+                    else LexemePos this pos pos' : calcPos pos' restNonSpace
 
         nextPos :: SourcePos -> Lexeme -> SourcePos
         nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
