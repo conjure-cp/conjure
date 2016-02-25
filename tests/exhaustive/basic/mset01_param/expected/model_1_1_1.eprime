@@ -1,19 +1,20 @@
 language ESSENCE' 1.0
 
-given g_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
-given g_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
+given fin1: int
+given g_ExplicitWithFlags_Flags: matrix indexed by [int(1..fin1)] of int(0..2)
+given g_ExplicitWithFlags_Values: matrix indexed by [int(1..fin1)] of int(1..2)
 find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
 such that
     and([sum([g_ExplicitWithFlags_Flags[q9]
-                  | q9 : int(1..4), g_ExplicitWithFlags_Values[q9] = g_ExplicitWithFlags_Values[q8]])
+                  | q9 : int(1..fin1), g_ExplicitWithFlags_Values[q9] = g_ExplicitWithFlags_Values[q8]])
          =
          sum([toInt(x_ExplicitWithFlags_Values[q10] = g_ExplicitWithFlags_Values[q8]) * x_ExplicitWithFlags_Flags[q10]
                   | q10 : int(1..4)])
-             | q8 : int(1..4), g_ExplicitWithFlags_Flags[q8] > 0]),
+             | q8 : int(1..fin1), g_ExplicitWithFlags_Flags[q8] > 0]),
     and([x_ExplicitWithFlags_Flags[q11] > 0 ->
          sum([toInt(g_ExplicitWithFlags_Values[q12] = x_ExplicitWithFlags_Values[q11]) * g_ExplicitWithFlags_Flags[q12]
-                  | q12 : int(1..4)])
+                  | q12 : int(1..fin1)])
          =
          sum([toInt(x_ExplicitWithFlags_Values[q13] = x_ExplicitWithFlags_Values[q11]) * x_ExplicitWithFlags_Flags[q13]
                   | q13 : int(1..4)])
