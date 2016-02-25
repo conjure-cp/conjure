@@ -103,9 +103,9 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
                               , (++), map, null, reverse, lookup, elem, unlines, words
                               , zipWith, concatMap, lines, notElem, foldr
                               , sum, product, unzip, zip, zip3, foldr1, foldl
-                              , unzip3, repeat, dropWhile, unwords, intersect
+                              , unzip3, repeat, unwords, intersect
                               , take, drop
-                              , takeWhile
+                              , takeWhile, dropWhile, span
                               , head, init, tail, last
                               , inits, tails
                               , findIndex

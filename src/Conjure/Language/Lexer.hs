@@ -2,7 +2,7 @@
 
 module Conjure.Language.Lexer
     ( Lexeme(..)
-    , LexemePos
+    , LexemePos(..)
     , runLexer
     , textToLexeme
     , lexemeText
@@ -21,7 +21,11 @@ import Text.Megaparsec.Pos ( SourcePos, initialPos, incSourceLine, incSourceColu
 import Text.Megaparsec.ShowToken ( ShowToken(..) )
 
 
-type LexemePos = (Lexeme, SourcePos)
+data LexemePos = LexemePos
+                    Lexeme          -- the lexeme
+                    SourcePos       -- source position, the beginning of this lexeme
+                    SourcePos       -- source position, just after this lexeme, including whitespace after the lexeme
+    deriving Show
 
 data Lexeme
     = LIntLiteral Integer
@@ -465,7 +469,7 @@ runLexer :: MonadFail m => T.Text -> m [LexemePos]
 runLexer text = do
     ls <- go text
     let lsPaired = calcPos (initialPos "") ls
-    return $ removeSpaces lsPaired
+    return lsPaired
     where
         go t = do
             let results = catMaybes $  tryLexMetaVar t
@@ -481,21 +485,29 @@ runLexer text = do
                         [] -> fail ("Lexing error:" Pr.<+> Pr.text (T.unpack t))
                         ((rest,lexeme):_) -> (lexeme:) <$> go rest
 
-        calcPos _   []     = []
-        calcPos pos (x:xs) = (x, pos) : calcPos (nextPos pos x) xs
+        -- attach source positions to lexemes
+        -- discard whitespace, but calculate their contribution to source positions
+        calcPos :: SourcePos -> [Lexeme] -> [LexemePos]
+        calcPos _pos [] = []
+        calcPos  pos (this:rest) | isLexemeSpace this                   -- skip if this one is whitespace
+                                 = calcPos (nextPos pos this) rest      -- can only happen at the beginning
+        calcPos  pos (this:rest) =
+            let (restSpaces, restNonSpace) = span isLexemeSpace rest    -- eat up all the whitespace after "this"
+                pos' = foldl nextPos pos (this:restSpaces)
+            in  LexemePos this pos pos' : calcPos pos' restNonSpace
 
+        nextPos :: SourcePos -> Lexeme -> SourcePos
         nextPos pos L_Newline  = incSourceLine (setSourceColumn pos 1) 1
+        nextPos pos L_Carriage = pos -- just ignore '\r's
         nextPos pos l          = incSourceColumn pos (lexemeWidth l)
 
-removeSpaces :: [LexemePos] -> [LexemePos]
-removeSpaces = filter (not . space . fst)
-    where
-        space L_Newline {} = True
-        space L_Carriage{} = True
-        space L_Tab     {} = True
-        space L_Space   {} = True
-        space LComment  {} = True
-        space _            = False
+isLexemeSpace :: Lexeme -> Bool
+isLexemeSpace L_Newline {} = True
+isLexemeSpace L_Carriage{} = True
+isLexemeSpace L_Tab     {} = True
+isLexemeSpace L_Space   {} = True
+isLexemeSpace LComment  {} = True
+isLexemeSpace _            = False
 
 tryLex :: T.Text -> (T.Text, Lexeme) -> Maybe (T.Text, Lexeme)
 tryLex running (face,lexeme) = do
@@ -569,11 +581,11 @@ tryLexComment running = let (dollar,rest1) = T.span (=='$') running
                                      in  Just (rest2, LComment commentLine)
 
 
-instance ShowToken [(Lexeme, Text.Megaparsec.Pos.SourcePos)] where
+instance ShowToken [LexemePos] where
     showToken = intercalate ", " . map showToken
 
-instance ShowToken (Lexeme, Text.Megaparsec.Pos.SourcePos) where
-    showToken = showToken . fst
+instance ShowToken LexemePos where
+    showToken (LexemePos tok _ _) = showToken tok
 
 instance ShowToken Lexeme where
     showToken = show . lexemeFace
