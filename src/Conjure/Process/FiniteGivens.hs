@@ -78,6 +78,7 @@ mkFinite
 mkFinite d@DomainTuple{}     = mkFiniteOutermost d
 mkFinite d@DomainMatrix{}    = mkFiniteOutermost d
 mkFinite d@DomainSet{}       = mkFiniteOutermost d
+mkFinite d@DomainMSet{}      = mkFiniteOutermost d
 mkFinite d@DomainSequence{}  = mkFiniteOutermost d
 mkFinite d@DomainFunction{}  = mkFiniteOutermost d
 mkFinite d@DomainRelation{}  = mkFiniteOutermost d
@@ -135,6 +136,30 @@ mkFiniteOutermost (DomainSet () _ inner) = do
         , \ constant -> do
                 logDebug $ "mkFiniteOutermost DomainSet" <+> pretty constant
                 set <- viewConstantSet constant
+                let setSize = genericLength set
+                innerValues <- innerF set
+                return $ innerValues ++ [(s, ConstantInt setSize)]
+        )
+mkFiniteOutermost (DomainMSet () attr@(MSetAttr SizeAttr_Size{} _) inner) = do
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainMSet () attr inner'
+        , innerExtras
+        , \ constant -> do
+                logDebug $ "mkFiniteOutermost DomainMSet" <+> pretty constant
+                set <- viewConstantMSet constant
+                innerValues <- innerF set
+                return innerValues
+        )
+mkFiniteOutermost (DomainMSet () (MSetAttr _ occurAttr) inner) = do
+    s <- nextName "fin"
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainMSet () (MSetAttr (SizeAttr_Size (fromName s)) occurAttr) inner'
+        , s:innerExtras
+        , \ constant -> do
+                logDebug $ "mkFiniteOutermost DomainMSet" <+> pretty constant
+                set <- viewConstantMSet constant
                 let setSize = genericLength set
                 innerValues <- innerF set
                 return $ innerValues ++ [(s, ConstantInt setSize)]
@@ -335,6 +360,29 @@ mkFiniteInner (DomainSet () _ inner) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainSet" <+> vcat (map pretty constants)
                 sets <- mapM viewConstantSet constants
+                let setMaxSize = maximum $ map genericLength sets
+                innerValues <- innerF (concat sets)
+                return $ innerValues ++ [(s, ConstantInt setMaxSize)]
+        )
+mkFiniteInner (DomainMSet () attr@(MSetAttr SizeAttr_Size{} _) inner) = do
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainMSet () attr inner'
+        , innerExtras
+        , \ constants -> do
+                logDebug $ "mkFiniteInner DomainMSet" <+> vcat (map pretty constants)
+                sets <- mapM viewConstantMSet constants
+                innerF (concat sets)
+        )
+mkFiniteInner (DomainMSet () (MSetAttr _ occurAttr) inner) = do
+    s <- nextName "fin"
+    (inner', innerExtras, innerF) <- mkFiniteInner inner
+    return
+        ( DomainMSet () (MSetAttr (SizeAttr_MaxSize (fromName s)) occurAttr) inner'
+        , s:innerExtras
+        , \ constants -> do
+                logDebug $ "mkFiniteInner DomainMSet" <+> vcat (map pretty constants)
+                sets <- mapM viewConstantMSet constants
                 let setMaxSize = maximum $ map genericLength sets
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setMaxSize)]
