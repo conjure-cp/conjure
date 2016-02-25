@@ -37,11 +37,20 @@ zeroVal d@(DomainFunction _ (FunctionAttr sizeAttr partialityAttr _) innerFr inn
             froms   <- enumerateDomain (forgetRepr innerFr)
             zTo     <- zeroVal innerTo
             return $ ConstantAbstract $ AbsLitFunction [ (fr, zTo) | fr <- froms ]
--- zeroVal (DomainMSet      _ attr d) = DomainMSet () attr (forgetRepr d)
--- zeroVal (DomainRelation  _ attr ds) = DomainRelation () attr (map forgetRepr ds)
--- zeroVal (DomainPartition _ attr d) = DomainPartition () attr (forgetRepr d)
--- zeroVal (DomainOp op ds) = DomainOp op (map forgetRepr ds)
--- zeroVal (DomainHack a) = DomainHack a
+zeroVal d@(DomainMSet _ (MSetAttr sizeAttr _) inner) = do
+    z       <- zeroVal inner
+    minSize <- getMin d sizeAttr
+    return $ ConstantAbstract $ AbsLitMSet $ replicate (fromInteger minSize) z
+zeroVal d@(DomainRelation _ (RelationAttr sizeAttr _) inners) = do
+    zs      <- mapM zeroVal inners
+    minSize <- getMin d sizeAttr
+    return $ ConstantAbstract $ AbsLitRelation $ replicate (fromInteger minSize) zs
+zeroVal d@(DomainPartition _ (PartitionAttr numPartsAttr partSizeAttr _) inner) = do
+    z        <- zeroVal inner
+    minSize1 <- getMin d numPartsAttr
+    minSize2 <- getMin d partSizeAttr
+    return $ ConstantAbstract $ AbsLitPartition $ replicate (fromInteger minSize1)
+                                                            (replicate (fromInteger minSize2) z)
 zeroVal d = bug $ "No 'zero' value for domain:" <+> pretty d
 
 
