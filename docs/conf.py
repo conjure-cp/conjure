@@ -184,24 +184,24 @@ html_show_sourcelink = False
 #html_use_opensearch = ''
 
 # This is the file name suffix for HTML files (e.g. ".xhtml").
-#html_file_suffix = None
+html_file_suffix = "" # let's see if this'll work
 
 # Language to be used for generating the HTML full-text search index.
 # Sphinx supports the following languages:
 #   'da', 'de', 'en', 'es', 'fi', 'fr', 'hu', 'it', 'ja'
 #   'nl', 'no', 'pt', 'ro', 'ru', 'sv', 'tr'
-#html_search_language = 'en'
+html_search_language = 'en'
 
 # A dictionary with options for the search language support, empty by default.
 # Now only 'ja' uses this config value
-#html_search_options = {'type': 'default'}
+# html_search_options = {'type': 'default'}
 
 # The name of a javascript file (relative to the configuration directory) that
 # implements a search results scorer. If empty, the default will be used.
 #html_search_scorer = 'scorer.js'
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'Conjuredoc'
+# htmlhelp_basename = 'Conjuredoc'
 
 # -- Options for LaTeX output ---------------------------------------------
 
@@ -353,3 +353,12 @@ epub_exclude_files = ['search.html']
 
 # If false, no index is generated.
 #epub_use_index = True
+
+
+
+
+def setup(sphinx):
+    from BNFLexer import BNFLexer
+    sphinx.add_lexer("bnf", BNFLexer())
+    # from EssenceLexer import EssenceLexer
+    # sphinx.add_lexer("essence", EssenceLexer())
