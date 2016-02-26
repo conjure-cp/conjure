@@ -76,6 +76,12 @@ instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 enumerateDomainMax :: Int
 enumerateDomainMax = 10000
 
+minionTimelimit :: Int
+minionTimelimit = 60
+
+savilerowTimelimit :: Int
+savilerowTimelimit = 60 * 1000
+
 enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 
 enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
@@ -112,8 +118,15 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             { UI.essence                    = essenceFile
             , validateSolutionsOpt          = False
             , outputDirectory               = outDir
-            , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
-            , minionOptions                 = "-cpulimit 60"
+            , savilerowOptions              = unwords
+                [ "-O0"
+                , "-preprocess"    , "None"
+                , "-timelimit"     , show savilerowTimelimit
+                , "-num-solutions" , show enumerateDomainMax
+                ]
+            , minionOptions                 = unwords
+                [ "-cpulimit"      , show minionTimelimit
+                ]
             , logLevel                      = LogNone
             -- default values for the rest
             , essenceParams                 = []
