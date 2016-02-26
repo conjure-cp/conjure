@@ -19,20 +19,20 @@ Statement
 .. code-block:: bnf
 
     Statement := DeclarationStatement
-              := BranchingStatement
-              := WhereStatement
-              := SuchThatStatement
-              := ObjectiveStatement
+               | BranchingStatement
+               | WhereStatement
+               | SuchThatStatement
+               | ObjectiveStatement
 
 
 .. code-block:: bnf
 
     DeclarationStatement := FindStatement
-                         := GivenStatement
-                         := LettingStatement
-                         := GivenEnum
-                         := LettingEnum
-                         := LettingUnnamed
+                          | GivenStatement
+                          | LettingStatement
+                          | GivenEnum
+                          | LettingEnum
+                          | LettingUnnamed
 
 
 .. code-block:: bnf
@@ -48,7 +48,7 @@ Statement
 .. code-block:: bnf
 
     LettingStatement := "letting" Name "be" Expression
-                     := "letting" Name "be" "domain" Domain
+                      | "letting" Name "be" "domain" Domain
 
 
 .. code-block:: bnf
@@ -74,7 +74,7 @@ Statement
 .. code-block:: bnf
 
     BranchingOn := Name
-                := Expression
+                 | Expression
 
 
 .. code-block:: bnf
@@ -90,7 +90,7 @@ Statement
 .. code-block:: bnf
 
     ObjectiveStatement := "minimising" Expression
-                       := "maximising" Expression
+                        | "maximising" Expression
 
 
 .. todo::

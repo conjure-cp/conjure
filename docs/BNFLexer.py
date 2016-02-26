@@ -32,13 +32,13 @@ class BNFLexer(RegexLexer):
                 , 'Expression'
                 )
 
-
     tokens = {
         'root': [
             (r'\b(%s)(?!\')\b' % '|'.join(reserved), Keyword.Type),
-            (r'list', Keyword.Type),
+            (r'list', Keyword),
 
-            (r'(:=|\*|\(|\))', Operator),
+            (r'(:=|\||\*|\(|\))', Operator),
+
             # Strings
             (r"'", String.Char, 'character'),
             (r'"', String, 'string'),
@@ -73,82 +73,71 @@ class BNFLexer(RegexLexer):
 
 
 
-
-Keyword
-Keyword.Constant
-Keyword.Declaration
-Keyword.Namespace
-Keyword.Pseudo
-Keyword.Reserved
-Keyword.Type
-
-Name
-Name.Attribute
-Name.Builtin
-Name.Builtin.Pseudo
-Name.Class
-Name.Constant
-Name.Decorator
-Name.Entity
-Name.Exception
-Name.Function
-Name.Label
-Name.Namespace
-Name.Other
-Name.Tag
-Name.Variable
-Name.Variable.Class
-Name.Variable.Global
-Name.Variable.Instance
-
-
-
-Literal
-Literal.Date
-String
-String.Backtick
-String.Char
-String.Doc
-String.Double
-String.Escape
-String.Heredoc
-String.Interpol
-String.Other
-String.Regex
-String.Single
-String.Symbol
-Number
-Number.Bin
-Number.Float
-Number.Hex
-Number.Integer
-Number.Integer.Long
-Number.Oct
-
-Operator
-Operator.Word
-
-Punctuation
-
-Comment
-Comment.Hashbang
-Comment.Multiline
-Comment.Preproc
-Comment.Single
-Comment.Special
-
-Generic
-Generic.Deleted
-Generic.Emph
-Generic.Error
-Generic.Heading
-Generic.Inserted
-Generic.Output
-Generic.Prompt
-Generic.Strong
-Generic.Subheading
-Generic.Traceback
-
-
-
-
+# ALL TOKEN TYPES
+#
+# Keyword
+# Keyword.Constant
+# Keyword.Declaration
+# Keyword.Namespace
+# Keyword.Pseudo
+# Keyword.Reserved
+# Keyword.Type
+# Name
+# Name.Attribute
+# Name.Builtin
+# Name.Builtin.Pseudo
+# Name.Class
+# Name.Constant
+# Name.Decorator
+# Name.Entity
+# Name.Exception
+# Name.Function
+# Name.Label
+# Name.Namespace
+# Name.Other
+# Name.Tag
+# Name.Variable
+# Name.Variable.Class
+# Name.Variable.Global
+# Name.Variable.Instance
+# Literal
+# Literal.Date
+# String
+# String.Backtick
+# String.Char
+# String.Doc
+# String.Double
+# String.Escape
+# String.Heredoc
+# String.Interpol
+# String.Other
+# String.Regex
+# String.Single
+# String.Symbol
+# Number
+# Number.Bin
+# Number.Float
+# Number.Hex
+# Number.Integer
+# Number.Integer.Long
+# Number.Oct
+# Operator
+# Operator.Word
+# Punctuation
+# Comment
+# Comment.Hashbang
+# Comment.Multiline
+# Comment.Preproc
+# Comment.Single
+# Comment.Special
+# Generic
+# Generic.Deleted
+# Generic.Emph
+# Generic.Error
+# Generic.Heading
+# Generic.Inserted
+# Generic.Output
+# Generic.Prompt
+# Generic.Strong
+# Generic.Subheading
+# Generic.Traceback
