@@ -24,6 +24,7 @@ set -o nounset
 export CORES=${CORES:-0}
 export GHC_VERSION=${GHC_VERSION:-"7.10.3"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
+export INSTALL_GMP=${INSTALL_GMP:-no}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
@@ -32,6 +33,7 @@ export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
 export PROFILING=${PROFILING:-no}
+export DYNAMIC=${DYNAMIC:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
@@ -79,6 +81,7 @@ echo "CORES           : ${CORES}"
 echo "AVAILABLE_CORES : ${AVAILABLE_CORES}"
 echo "USE_CORES       : ${USE_CORES}"
 echo "GMP_VERSION     : ${GMP_VERSION}"
+echo "INSTALL_GMP     : ${INSTALL_GMP}"
 echo "GHC_VERSION     : ${GHC_VERSION}"
 echo "OPTIMISATION    : ${OPTIMISATION}"
 echo "LLVM            : ${LLVM}"
@@ -89,12 +92,35 @@ echo "BUILD_TESTS     : ${BUILD_TESTS}"
 echo "RUN_TESTS       : ${RUN_TESTS}"
 echo "COVERAGE        : ${COVERAGE}"
 echo "PROFILING       : ${PROFILING}"
+echo "DYNAMIC         : ${DYNAMIC}"
 echo "DEVELOPMENT_MODE: ${DEVELOPMENT_MODE}"
 
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
 export PATH="${HOME}/.cabal/bin":$PATH
 export PATH="${BIN_DIR}":$PATH
+
+# installing gmp
+if [ $INSTALL_GMP = "yes" ]; then
+    mkdir tmp
+    pushd tmp
+    wget --no-check-certificate -c https://gmplib.org/download/gmp/gmp-6.1.0.tar.bz2
+    tar jxf gmp-6.1.0.tar.bz2
+    pushd gmp-6.1.0
+    ./configure --prefix=$HOME/.tools/libs/gmp-6.1.0
+    make
+    make check
+    make install
+    popd
+    popd
+    rm -rf tmp
+fi
+
+# in case we are using a local gmp installation
+if [ -d "${HOME}/.tools/libs/gmp-6.1.0/lib" ]; then
+    export LIBRARY_PATH=${LIBRARY_PATH:-""}
+    export LIBRARY_PATH="${HOME}/.tools/libs/gmp-6.1.0/lib":$LIBRARY_PATH
+fi
 
 # installing ghc
 if [ "$(ghc --version | grep $GHC_VERSION)" ]; then
@@ -224,15 +250,23 @@ else
     PROFILING="--disable-library-profiling --disable-executable-profiling"
 fi
 
+if [ ${DYNAMIC} = "yes" ]; then
+    DYNAMIC="--ghc-options \"-dynamic\""
+else
+    DYNAMIC=""
+fi
+
 # install conjure, finally
 
-cabal install                                                       \
-    --only-dependencies                                             \
-    --force-reinstalls                                              \
-    ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}" -j"${USE_CORES}"
+cabal install                                                           \
+    --only-dependencies                                                 \
+    --force-reinstalls                                                  \
+    ${DYNAMIC} ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION}    \
+    --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
-cabal configure                                                     \
-    ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION} --bindir="${BIN_DIR}"
+cabal configure                                                         \
+    ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
+    --bindir="${BIN_DIR}"
 
 cabal build -j"${USE_CORES}"
 

@@ -12,7 +12,64 @@ import System.Console.CmdArgs hiding ( Default(..) )
 
 
 data UI
-    = Solve
+    = Modelling
+        { essence                    :: FilePath       -- essence, mandatory
+        -- flags related to output
+        , outputDirectory            :: FilePath
+        , numberingStart             :: Int
+        , smartFilenames             :: Bool
+        , lineWidth                  :: Int            -- 120 by default
+        -- flags related to logging
+        , logLevel                   :: LogLevel
+        , verboseTrail               :: Bool
+        , rewritesTrail              :: Bool
+        , logRuleFails               :: Bool
+        , logRuleSuccesses           :: Bool
+        , logRuleAttempts            :: Bool
+        , logChoices                 :: Bool
+        -- flags related to modelling decisions
+        , strategyQ                  :: String
+        , strategyA                  :: String
+        , representations            :: Maybe String        -- (def: strategyA)
+        , representationsFinds       :: Maybe String        -- (def: representations)
+        , representationsGivens      :: Maybe String        -- (def: c)
+        , representationsAuxiliaries :: Maybe String        -- (def: representations)
+        , representationsQuantifieds :: Maybe String        -- (def: representations)
+        , representationsCuts        :: Maybe String        -- (def: representations)
+        , channelling                :: Bool
+        , representationLevels       :: Bool                -- (def: True)
+        , seed                       :: Maybe Int
+        , limitModels                :: Maybe Int
+        , limitTime                  :: Maybe Int
+        , savedChoices               :: Maybe FilePath
+        , outputBinary               :: Bool
+        }
+    | TranslateParameter
+        { eprime           :: FilePath       -- eprime, mandatory
+        , essenceParam     :: FilePath       -- essence-param, mandatory
+        , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
+        , logLevel         :: LogLevel
+        , outputBinary     :: Bool
+        , limitTime        :: Maybe Int
+        }
+    | TranslateSolution
+        { eprime           :: FilePath       -- eprime, mandatory
+        , essenceParamO    :: Maybe FilePath -- essence-param, optional
+        , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
+        , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
+        , logLevel         :: LogLevel
+        , outputBinary     :: Bool
+        , limitTime        :: Maybe Int
+        }
+    | ValidateSolution
+        { essence          :: FilePath       -- essence, mandatory
+        , essenceParamO    :: Maybe FilePath -- essence-param, optional
+        , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
+        , logLevel         :: LogLevel
+        , outputBinary     :: Bool
+        , limitTime        :: Maybe Int
+        }
+    | Solve
         { essence                    :: FilePath       -- essence, mandatory
         , essenceParams              :: [FilePath]
         , validateSolutionsOpt       :: Bool
@@ -47,63 +104,6 @@ data UI
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
-        }
-    | Modelling
-        { essence                    :: FilePath       -- essence, mandatory
-        -- flags related to output
-        , outputDirectory            :: FilePath
-        , numberingStart             :: Int
-        , smartFilenames             :: Bool
-        , lineWidth                  :: Int            -- 120 by default
-        -- flags related to logging
-        , logLevel                   :: LogLevel
-        , verboseTrail               :: Bool
-        , rewritesTrail              :: Bool
-        , logRuleFails               :: Bool
-        , logRuleSuccesses           :: Bool
-        , logRuleAttempts            :: Bool
-        , logChoices                 :: Bool
-        -- flags related to modelling decisions
-        , strategyQ                  :: String
-        , strategyA                  :: String
-        , representations            :: Maybe String        -- (def: strategyA)
-        , representationsFinds       :: Maybe String        -- (def: representations)
-        , representationsGivens      :: Maybe String        -- (def: c)
-        , representationsAuxiliaries :: Maybe String        -- (def: representations)
-        , representationsQuantifieds :: Maybe String        -- (def: representations)
-        , representationsCuts        :: Maybe String        -- (def: representations)
-        , channelling                :: Bool
-        , representationLevels       :: Bool                -- (def: True)
-        , seed                       :: Maybe Int
-        , limitModels                :: Maybe Int
-        , limitTime                  :: Maybe Int
-        , savedChoices               :: Maybe FilePath
-        , outputBinary               :: Bool
-        }
-    | RefineParam
-        { eprime           :: FilePath       -- eprime, mandatory
-        , essenceParam     :: FilePath       -- essence-param, mandatory
-        , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
-        }
-    | TranslateSolution
-        { eprime           :: FilePath       -- eprime, mandatory
-        , essenceParamO    :: Maybe FilePath -- essence-param, optional
-        , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
-        , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
-        }
-    | ValidateSolution
-        { essence          :: FilePath       -- essence, mandatory
-        , essenceParamO    :: Maybe FilePath -- essence-param, optional
-        , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
         }
     | Pretty
         { essence          :: FilePath
@@ -152,183 +152,7 @@ data UI
 
 ui :: UI
 ui = modes
-    [ Solve
-        { essence          = def   &= typ "ESSENCE_FILE"
-                                   &= argPos 0
-        , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
-                                   &= args                  -- TODO: make sure these are *.param files
-        , validateSolutionsOpt = False
-                                   &= name "validate-solutions"
-                                   &= groupname "Flags"
-                                   &= explicit
-                                   &= help "Enable/disable solution validation. Off by default."
-        , outputDirectory  = "conjure-output"
-                                   &= typDir
-                                   &= name "output-directory"
-                                   &= name "o"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Output directory. Generated models will be saved here.\n\
-                                           \Default value: 'conjure-output'"
-        , numberingStart   = 1     &= name "numbering-start"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Starting value to output files.\n\
-                                           \Default value: 1"
-        , smartFilenames   = False &= name "smart-filenames"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Use \"smart names\" for the models.\n\
-                                           \Turned off by default.\n\
-                                           \Caution: With this flag, Conjure will use the answers when producing \
-                                           \a filename. It will ignore the order of questions. \
-                                           \This will become a problem if anything other than 'f' is used for questions."
-        , lineWidth        = 120   &= name "line-width"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Line width to use during pretty printing. Default: 120"
-        , logLevel         = def   &= name "log-level"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Log level."
-        , verboseTrail     = False &= name "verbose-trail"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Whether to generate verbose trails or not."
-        , rewritesTrail    = False &= name "rewrites-trail"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Whether to generate trails about the applied rewritings or not."
-        , logRuleFails     = False &= name "log-rule-fails"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Generate logs for rule failures. (Caution: can be a lot!)"
-        , logRuleSuccesses = False &= name "log-rule-successes"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Generate logs for rule applications."
-        , logRuleAttempts  = False &= name "log-rule-attempts"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
-        , logChoices       = False &= name "log-choices"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Store the choices in a way that can be reused be by -al"
-        , strategyQ        = "f"   &= typ "STRATEGY"
-                                   &= name "strategy-q"
-                                   &= name "q"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when selecting the next question to answer. \
-                                           \Options: f (for first), i (for interactive), r (for random), x (for all). \
-                                           \The letter a (for auto) can be prepended to automatically skip \
-                                           \when there is only one option at any point.\n\
-                                           \Default value: f"
-        , strategyA        = "c"   &= typ "STRATEGY"
-                                   &= name "strategy-a"
-                                   &= name "a"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
-                                           \Moreover, c (for compact) can be used to pick the most 'compact' option \
-                                           \at every decision point.\n\
-                                           \And, s (for sparse) can be used to pick the most 'sparse' option \
-                                           \at every decision point. \
-                                           \This can be particularly useful for --representations-givens\n\
-                                           \ l (for follow log) tries to pick the given choices as far as possible\n\
-                                           \Default value: c"
-        , representations = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation.\n\
-                                           \Default value: same as --strategy-a"
-        , representationsFinds = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations-finds"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation for a decision variable.\n\
-                                           \Default value: same as --representations"
-        , representationsGivens = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations-givens"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation for a parameter.\n\
-                                           \Default value: c (for compact)"
-        , representationsAuxiliaries = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations-auxiliaries"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
-                                           \Default value: same as --representations"
-        , representationsQuantifieds = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations-quantifieds"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation for a quantified variable.\n\
-                                           \Default value: same as --representations"
-        , representationsCuts = Nothing
-                                   &= typ "STRATEGY"
-                                   &= name "representations-cuts"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
-                                           \Default value: same as --representations-cuts"
-        , channelling = True       &= name "channelling"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Whether to produce channelled models or not.\n\
-                                           \Can be true or false. (true by default)\n\
-                                           \    false: Do not produce channelled models.\n\
-                                           \    true : Produce channelled models."
-        , representationLevels = True
-                                   &= name "representation-levels"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
-                                           \These levels are used to cut down the number of generated models.\n\
-                                           \Can be true or false. (true by default)"
-        , seed = Nothing           &= name "seed"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "The seed for the random number generator."
-        , limitModels = Nothing    &= name "limit-models"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Maximum number of models to generate."
-        , limitTime = Nothing      &= name "limit-time"
-                                   &= groupname "Model generation"
-                                   &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
-        , outputBinary = False     &= name "output-binary"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
-        , savilerowOptions = "-O2"
-                                   &= name "savilerow-options"
-                                   &= groupname "Options for other tools"
-                                   &= explicit
-                                   &= help "Options to be passed to Savile Row.\n\
-                                           \By default: '-O2'"
-        , minionOptions = def      &= name "minion-options"
-                                   &= groupname "Options for other tools"
-                                   &= explicit
-                                   &= help "Options to be passed to Minion."
-        }                          &= name "solve"
-                                   &= explicit
-                                   &= help "This is a combined mode, and it is available for convenience.\n\
-                                           \It runs conjure in the modelling mode followed by \
-                                           \parameter refinement if required, \
-                                           \then Savile Row + Minion to solve, and \
-                                           \then solution translation."
-    , Modelling
+    [ Modelling
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
         , outputDirectory  = "conjure-output"
@@ -371,7 +195,7 @@ ui = modes
         , logRuleFails     = False &= name "log-rule-fails"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule failures. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
         , logRuleSuccesses = False &= name "log-rule-successes"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -379,7 +203,7 @@ ui = modes
         , logRuleAttempts  = False &= name "log-rule-attempts"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
+                                   &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
         , logChoices       = False &= name "log-choices"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -472,9 +296,9 @@ ui = modes
                                    &= explicit
                                    &= help "Maximum number of models to generate."
         , limitTime = Nothing      &= name "limit-time"
-                                   &= groupname "Model generation"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , savedChoices     = def   &= typFile
                                    &= name "choices"
                                    &= groupname "Model generation"
@@ -491,7 +315,7 @@ ui = modes
                                    &= help "The main act. Given a problem specification in Essence, \
                                            \produce constraint programming models in Essence'."
                                    &= auto
-    , RefineParam
+    , TranslateParameter
         { eprime           = def   &= typFile
                                    &= name "eprime"
                                    &= explicit
@@ -512,14 +336,15 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
                                    &= help "Output binary files instead of text files.\n\
                                            \Conjure can read in these binary files for further processing."
-        }                          &= name "refine-param"
+        }                          &= name "translate-parameter"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
                                            \particular Essence' model.\n\
@@ -550,8 +375,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -579,8 +405,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -589,6 +416,182 @@ ui = modes
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
+    , Solve
+        { essence          = def   &= typ "ESSENCE_FILE"
+                                   &= argPos 0
+        , essenceParams    = []    &= typ "PARAMETER_FILE(s)"
+                                   &= args                  -- TODO: make sure these are *.param files
+        , validateSolutionsOpt = False
+                                   &= name "validate-solutions"
+                                   &= groupname "General"
+                                   &= explicit
+                                   &= help "Enable/disable solution validation. Off by default."
+        , outputDirectory  = "conjure-output"
+                                   &= typDir
+                                   &= name "output-directory"
+                                   &= name "o"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output directory. Generated models will be saved here.\n\
+                                           \Default value: 'conjure-output'"
+        , numberingStart   = 1     &= name "numbering-start"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Starting value to output files.\n\
+                                           \Default value: 1"
+        , smartFilenames   = False &= name "smart-filenames"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Use \"smart names\" for the models.\n\
+                                           \Turned off by default.\n\
+                                           \Caution: With this flag, Conjure will use the answers when producing \
+                                           \a filename. It will ignore the order of questions. \
+                                           \This will become a problem if anything other than 'f' is used for questions."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing. Default: 120"
+        , logLevel         = def   &= name "log-level"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Log level."
+        , verboseTrail     = False &= name "verbose-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate verbose trails or not."
+        , rewritesTrail    = False &= name "rewrites-trail"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Whether to generate trails about the applied rewritings or not."
+        , logRuleFails     = False &= name "log-rule-fails"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
+        , logRuleSuccesses = False &= name "log-rule-successes"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule applications."
+        , logRuleAttempts  = False &= name "log-rule-attempts"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
+        , logChoices       = False &= name "log-choices"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Store the choices in a way that can be reused be by -al"
+        , strategyQ        = "f"   &= typ "STRATEGY"
+                                   &= name "strategy-q"
+                                   &= name "q"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when selecting the next question to answer. \
+                                           \Options: f (for first), i (for interactive), r (for random), x (for all). \
+                                           \The letter a (for auto) can be prepended to automatically skip \
+                                           \when there is only one option at any point.\n\
+                                           \Default value: f"
+        , strategyA        = "c"   &= typ "STRATEGY"
+                                   &= name "strategy-a"
+                                   &= name "a"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
+                                           \Moreover, c (for compact) can be used to pick the most 'compact' option \
+                                           \at every decision point.\n\
+                                           \And, s (for sparse) can be used to pick the most 'sparse' option \
+                                           \at every decision point. \
+                                           \This can be particularly useful for --representations-givens\n\
+                                           \ l (for follow log) tries to pick the given choices as far as possible\n\
+                                           \Default value: c"
+        , representations = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation.\n\
+                                           \Default value: same as --strategy-a"
+        , representationsFinds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-finds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a decision variable.\n\
+                                           \Default value: same as --representations"
+        , representationsGivens = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-givens"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a parameter.\n\
+                                           \Default value: c (for compact)"
+        , representationsAuxiliaries = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-auxiliaries"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
+                                           \Default value: same as --representations"
+        , representationsQuantifieds = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-quantifieds"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for a quantified variable.\n\
+                                           \Default value: same as --representations"
+        , representationsCuts = Nothing
+                                   &= typ "STRATEGY"
+                                   &= name "representations-cuts"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
+                                           \Default value: same as --representations-cuts"
+        , channelling = True       &= name "channelling"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to produce channelled models or not.\n\
+                                           \Can be true or false. (true by default)\n\
+                                           \    false: Do not produce channelled models.\n\
+                                           \    true : Produce channelled models."
+        , representationLevels = True
+                                   &= name "representation-levels"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Whether to use built-in precedence levels when choosing representations.\n\
+                                           \These levels are used to cut down the number of generated models.\n\
+                                           \Can be true or false. (true by default)"
+        , seed = Nothing           &= name "seed"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "The seed for the random number generator."
+        , limitModels = Nothing    &= name "limit-models"
+                                   &= groupname "Model generation"
+                                   &= explicit
+                                   &= help "Maximum number of models to generate."
+        , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
+                                   &= explicit
+                                   &= help "Time limit in seconds (real time)."
+        , outputBinary = False     &= name "output-binary"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Output binary files instead of text files.\n\
+                                           \Conjure can read in these binary files for further processing."
+        , savilerowOptions = "-O2"
+                                   &= name "savilerow-options"
+                                   &= groupname "Options for other tools"
+                                   &= explicit
+                                   &= help "Options to be passed to Savile Row.\n\
+                                           \By default: '-O2'"
+        , minionOptions = def      &= name "minion-options"
+                                   &= groupname "Options for other tools"
+                                   &= explicit
+                                   &= help "Options to be passed to Minion."
+        }                          &= name "solve"
+                                   &= explicit
+                                   &= help "This is a combined mode, and it is available for convenience.\n\
+                                           \It runs conjure in the modelling mode followed by \
+                                           \parameter translation if required, \
+                                           \then Savile Row + Minion to solve, and \
+                                           \then solution translation."
     , Pretty
         { essence = def            &= typFile
                                    &= argPos 0
@@ -605,8 +608,9 @@ ui = modes
                                    &= explicit
                                    &= help "Whether to remove unused declarations or not. Off by default."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -626,8 +630,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -644,8 +649,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -670,8 +676,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -679,7 +686,7 @@ ui = modes
                                            \Conjure can read in these binary files for further processing."
         }                          &= name "split"
                                    &= explicit
-                                   &= help "Split an Essence files to various smaller files. Useful for testing."
+                                   &= help "Split an Essence file to various smaller files. Useful for testing."
     , SymmetryDetection
         { essence          = def   &= typ "ESSENCE_FILE"
                                    &= argPos 0
@@ -695,8 +702,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -719,8 +727,9 @@ ui = modes
                                    &= explicit
                                    &= help "Log level."
         , limitTime = Nothing      &= name "limit-time"
+                                   &= groupname "General"
                                    &= explicit
-                                   &= help "Time limit in seconds. (CPU time)."
+                                   &= help "Time limit in seconds (real time)."
         , outputBinary = False     &= name "output-binary"
                                    &= groupname "Logging & Output"
                                    &= explicit

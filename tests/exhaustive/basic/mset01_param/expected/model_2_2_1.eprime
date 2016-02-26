@@ -1,22 +1,23 @@
 language ESSENCE' 1.0
 
-given g_ExplicitWithRepetition_Flag: int(0..8)
-given g_ExplicitWithRepetition_Values: matrix indexed by [int(1..8)] of int(1..2)
+given fin1: int
+given g_ExplicitWithRepetition_Flag: int(0..fin1 * 2)
+given g_ExplicitWithRepetition_Values: matrix indexed by [int(1..fin1 * 2)] of int(1..2)
 find x_ExplicitWithRepetition_Flag: int(0..8)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..8)] of int(1..2)
 find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
 such that
     and([sum([toInt(g_ExplicitWithRepetition_Values[q26] = g_ExplicitWithRepetition_Values[q24])
-                  | q26 : int(1..8), q26 <= g_ExplicitWithRepetition_Flag])
+                  | q26 : int(1..fin1 * 2), q26 <= g_ExplicitWithRepetition_Flag])
          =
          sum([toInt(q28 <= x_ExplicitWithRepetition_Flag) *
               toInt(x_ExplicitWithRepetition_Values[q28] = g_ExplicitWithRepetition_Values[q24])
                   | q28 : int(1..8)])
-             | q24 : int(1..8), q24 <= g_ExplicitWithRepetition_Flag]),
+             | q24 : int(1..fin1 * 2), q24 <= g_ExplicitWithRepetition_Flag]),
     and([q29 <= x_ExplicitWithRepetition_Flag ->
          sum([toInt(g_ExplicitWithRepetition_Values[q31] = x_ExplicitWithRepetition_Values[q29])
-                  | q31 : int(1..8), q31 <= g_ExplicitWithRepetition_Flag])
+                  | q31 : int(1..fin1 * 2), q31 <= g_ExplicitWithRepetition_Flag])
          =
          sum([toInt(q33 <= x_ExplicitWithRepetition_Flag) *
               toInt(x_ExplicitWithRepetition_Values[q33] = x_ExplicitWithRepetition_Values[q29])

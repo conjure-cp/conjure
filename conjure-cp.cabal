@@ -212,7 +212,7 @@ Library
                      , Conjure.UI.IO
                      , Conjure.UI.MainHelper
                      , Conjure.UI.Model
-                     , Conjure.UI.RefineParam
+                     , Conjure.UI.TranslateParameter
                      , Conjure.UI.TranslateSolution
                      , Conjure.UI.ValidateSolution
                      , Conjure.UI.TypeCheck
@@ -223,16 +223,18 @@ Library
                      , Conjure.UI.LogFollow
 
     build-depends    : base
-                     , aeson < 0.10
+                     , aeson >= 0.11
                      , bytestring
                      , cereal >= 0.5.1.0
-                     , cmdargs
+                     -- changes in newline handling
+                     , cmdargs >= 0.10.14
                      , containers
                      , data-default
                      , directory
                      , filepath
                      , hashable
                      , integer-gmp
+                     -- sepEndBy bugfixes
                      , megaparsec >= 4.1.1
                      , mtl
                      , parallel-io

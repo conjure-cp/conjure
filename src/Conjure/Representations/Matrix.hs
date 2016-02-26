@@ -13,7 +13,7 @@ import Conjure.Representations.Internal
 -- | The matrix "representation rule".
 --   This rule handles the plumbing for matrices.
 matrix
-    :: forall m . (MonadFail m, NameGen m)
+    :: forall m . (MonadFail m, NameGen m, MonadUserError m)
     => ((Name, DomainX Expression) -> m (Maybe [(Name, DomainX Expression)]))
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))
@@ -53,11 +53,10 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
 
         structuralCons _ _ _ = na "{structuralCons} matrix 2"
 
-        -- TODO: check if indices are the same
         matrixDownC :: TypeOf_DownC m
         matrixDownC ( name                                                  -- special-case for empty matrix literals
                     , domain@(DomainMatrix indexDomain _)
-                    , ConstantAbstract (AbsLitMatrix _ [])
+                    , ConstantAbstract (AbsLitMatrix _indexDomain2 [])
                     ) = do
             mids1
                 :: Maybe [(Name, DomainX Expression)]
@@ -69,9 +68,17 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     return (nm, dom', ConstantAbstract (AbsLitMatrix indexDomain []))
             mapM (mapM addEmptyLiteral) mids1
         matrixDownC ( name
-                    , DomainMatrix indexDomain innerDomain
-                    , ConstantAbstract (AbsLitMatrix _indexDomain2 constants)
+                    , domain@(DomainMatrix indexDomain innerDomain)
+                    , constant@(ConstantAbstract (AbsLitMatrix indexDomain2 constants))
                     ) = do
+            -- TODO: this may be too strict
+            unless (indexDomain == indexDomain2) $
+                userErr1 $ vcat
+                    [ "Index mismatch."
+                    , "When working on:" <+> pretty name
+                    , "With domain:" <+> pretty domain
+                    , "With value :" <+> pretty constant
+                    ]
             mids1
                 :: [Maybe [(Name, DomainC, Constant)]]
                 <- sequence [ downC1 (name, innerDomain, c) | c <- constants ]

@@ -6,8 +6,9 @@ module Conjure.Process.Enumerate
     ) where
 
 import Conjure.Prelude
-import Conjure.Language.AdHoc
+import Conjure.Bug
 import Conjure.UserError
+import Conjure.Language.AdHoc
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
 import Conjure.Language.Domain
@@ -38,6 +39,7 @@ instance (EnumerateDomain m, Monoid w) => EnumerateDomain (WriterT w m) where li
 instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
+instance (EnumerateDomain m, MonadFail m) => EnumerateDomain (UserErrorT m) where liftIO' = lift . liftIO'
 
 -- | Use this if you don't want to allow a (EnumerateDomain m => m a) computation actually do IO.
 data EnumerateDomainNoIO a = Done a | TriedIO | Failed Doc
@@ -74,7 +76,19 @@ instance EnumerateDomain EnumerateDomainNoIO where liftIO' _ = TriedIO
 enumerateDomainMax :: Int
 enumerateDomainMax = 10000
 
+minionTimelimit :: Int
+minionTimelimit = 60
+
+savilerowTimelimit :: Int
+savilerowTimelimit = 60 * 1000
+
 enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
+
+enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
+    bug $ vcat [ "called enumerateDomain with a domain that has undefinedness values in it."
+               , pretty d
+               ]
+
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -89,8 +103,6 @@ enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
         | vals <- replicateM (length indexInts) inners
         ]
 
-enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) = return []
-
 -- the sledgehammer approach
 enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-" ++ show (hash d)) $ \ tmpDir -> do
     let model = Model { mLanguage = LanguageVersion "Essence" [1,0]
@@ -100,39 +112,53 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     let essenceFile = tmpDir </> "out.essence"
     let outDir = tmpDir </> "outDir"
     writeModel PlainEssence (Just essenceFile) model
-    ignoreLogs $ mainWithArgs Solve
-        { UI.essence                    = essenceFile
-        , validateSolutionsOpt          = False
-        , outputDirectory               = outDir
-        , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
-        , minionOptions                 = "-cpulimit 60"
-        , logLevel                      = LogNone
-        -- default values for the rest
-        , essenceParams                 = []
-        , numberingStart                = 1
-        , smartFilenames                = False
-        , verboseTrail                  = False
-        , rewritesTrail                 = False
-        , logRuleFails                  = False
-        , logRuleSuccesses              = False
-        , logRuleAttempts               = False
-        , logChoices                    = False
-        , strategyQ                     = "f"
-        , strategyA                     = "c"
-        , representations               = Nothing
-        , representationsFinds          = Nothing
-        , representationsGivens         = Nothing
-        , representationsAuxiliaries    = Nothing
-        , representationsQuantifieds    = Nothing
-        , representationsCuts           = Nothing
-        , channelling                   = False
-        , representationLevels          = True
-        , seed                          = Nothing
-        , limitModels                   = Nothing
-        , limitTime                     = Nothing
-        , outputBinary                  = False
-        , lineWidth                     = 120
-        }
+    let
+        solve :: IO ()
+        solve = ignoreLogs $ mainWithArgs Solve
+            { UI.essence                    = essenceFile
+            , validateSolutionsOpt          = False
+            , outputDirectory               = outDir
+            , savilerowOptions              = unwords
+                [ "-O0"
+                , "-preprocess"    , "None"
+                , "-timelimit"     , show savilerowTimelimit
+                , "-num-solutions" , show enumerateDomainMax
+                ]
+            , minionOptions                 = unwords
+                [ "-cpulimit"      , show minionTimelimit
+                ]
+            , logLevel                      = LogNone
+            -- default values for the rest
+            , essenceParams                 = []
+            , numberingStart                = 1
+            , smartFilenames                = False
+            , verboseTrail                  = False
+            , rewritesTrail                 = False
+            , logRuleFails                  = False
+            , logRuleSuccesses              = False
+            , logRuleAttempts               = False
+            , logChoices                    = False
+            , strategyQ                     = "f"
+            , strategyA                     = "c"
+            , representations               = Nothing
+            , representationsFinds          = Nothing
+            , representationsGivens         = Nothing
+            , representationsAuxiliaries    = Nothing
+            , representationsQuantifieds    = Nothing
+            , representationsCuts           = Nothing
+            , channelling                   = False
+            , representationLevels          = True
+            , seed                          = Nothing
+            , limitModels                   = Nothing
+            , limitTime                     = Nothing
+            , outputBinary                  = False
+            , lineWidth                     = 120
+            }
+    -- catching the (SR timeout) error, and raising a user error
+    catch solve $ \ (_ :: SomeException) -> userErr1 $ vcat
+        [ "Enumerate domain: too many."
+        , "When working on domain:" <++> pretty d
+        ]
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat
         [ "Enumerate domain: too many."

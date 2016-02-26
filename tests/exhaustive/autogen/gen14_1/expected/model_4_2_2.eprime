@@ -140,7 +140,7 @@ such that
          or([var1_PartitionOccurrence_WhichPart[q8] = q7 /\ var1_PartitionOccurrence_FirstIndex[q7] = q8
                  | q8 : int(1..2)])
              | q7 : int(1..2)]),
-    and([var1_PartitionOccurrence_PartSizes[q7] = 0 -> var1_PartitionOccurrence_FirstIndex[q7] = 1 | q7 : int(1..2)]),
+    and([q7 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_FirstIndex[q7] = 1 | q7 : int(1..2)]),
     and([q9 <= var1_PartitionOccurrence_NumParts /\ q10 <= var1_PartitionOccurrence_NumParts ->
          (q9 < q10 <-> var1_PartitionOccurrence_FirstIndex[q9] < var1_PartitionOccurrence_FirstIndex[q10])
              | q9 : int(1..2), q10 : int(1..2)]),

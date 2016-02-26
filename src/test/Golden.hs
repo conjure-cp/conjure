@@ -48,7 +48,7 @@ tests = testGroup "golden"
                         if null diffs
                             then Nothing
                             else Just (unlines ["files differ.", ppDiff diffsString]) )
-                (do stdout <- sh $ run "conjure" ["--help=all"]
+                (do stdout <- sh $ run "conjure" ["--help=all,120"]
                     T.writeFile generatedFile stdout)
     ]
 

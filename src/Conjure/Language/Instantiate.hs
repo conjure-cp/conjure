@@ -1,3 +1,5 @@
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
+
 module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
@@ -57,6 +59,9 @@ instantiateDomain
 instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (instantiateD x) ctxt
 
 
+newtype HasUndef = HasUndef Any
+    deriving (Monoid)
+
 instantiateE
     :: ( MonadFail m
        , MonadUserError m
@@ -72,28 +77,46 @@ instantiateE (Comprehension body gensOrConds) = do
                 , MonadUserError m
                 , MonadState [(Name, Expression)] m
                 , EnumerateDomain m
-                ) => [GeneratorOrCondition] -> m [Constant]
+                ) => [GeneratorOrCondition] -> WriterT HasUndef m [Constant]
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
-            enumeration <- enumerateDomain domainConstant
-            concatMapM
-                (\ val -> scope $ do
-                    valid <- bind pat val
-                    if valid
-                        then loop rest
-                        else return [] )
-                enumeration
+            let undefinedsInsideTheDomain =
+                    [ und
+                    | und@ConstantUndefined{} <- universeBi domainConstant
+                    ]
+            if null undefinedsInsideTheDomain
+                then do
+                    enumeration <- enumerateDomain domainConstant
+                    concatMapM
+                        (\ val -> scope $ do
+                            valid <- bind pat val
+                            if valid
+                                then loop rest
+                                else return [] )
+                        enumeration
+                else do
+                    tell (HasUndef (Any True))
+                    return []
         loop (Generator (GenDomainHasRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
-            enumeration <- enumerateDomain domainConstant
-            concatMapM
-                (\ val -> scope $ do
-                    valid <- bind (Single pat) val
-                    if valid
-                        then loop rest
-                        else return [] )
-                enumeration
+            let undefinedsInsideTheDomain =
+                    [ und
+                    | und@ConstantUndefined{} <- universeBi domainConstant
+                    ]
+            if null undefinedsInsideTheDomain
+                then do
+                    enumeration <- enumerateDomain domainConstant
+                    concatMapM
+                        (\ val -> scope $ do
+                            valid <- bind (Single pat) val
+                            if valid
+                                then loop rest
+                                else return [] )
+                        enumeration
+                else do
+                    tell (HasUndef (Any True))
+                    return []
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
             enumeration <- enumerateInConstant exprConstant
@@ -115,10 +138,18 @@ instantiateE (Comprehension body gensOrConds) = do
             unless valid (bug "ComprehensionLetting.bind expected to be valid")
             loop rest
 
-    constants <- loop gensOrConds
-    return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
-        constants
+
+    (constants, HasUndef (Any undefinedsInsideGeneratorDomains)) <- runWriterT (loop gensOrConds)
+    if undefinedsInsideGeneratorDomains
+        then do
+            ty <- typeOf (Comprehension body gensOrConds)
+            return $ ConstantUndefined
+                "Comprehension contains undefined values inside generator domains."
+                ty
+        else
+            return $ ConstantAbstract $ AbsLitMatrix
+                (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
+                constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
 instantiateE (Reference name (Just (VariantField _ ty))) = return $ ConstantField name ty

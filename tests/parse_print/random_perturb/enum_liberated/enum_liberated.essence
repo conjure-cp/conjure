@@ -1,0 +1,14 @@
+language Essence 1.3
+
+given E1 new type enum
+find x : E1
+
+letting E2 be new type enum {a, b, c, d, "hoh hoh hooo"}
+find y : E2
+find z : E2(a..c)
+find t : E2(b,d)
+
+such that y = z, z = t
+
+find k : E2
+such that k = max(`E2`)

@@ -45,30 +45,26 @@ removeEnumsFromModel =
                         _ -> return st
 
             let
-                onX :: Expression -> Expression
+                onX :: Monad m => Expression -> m Expression
                 onX (Reference nm Nothing)
                     | Just i <- lookup nm nameToIntMapping
-                    = fromInt i
-                onX p = p
+                    = return (fromInt i)
+                onX p = return p
 
-                onD :: Domain () Expression -> Domain () Expression
+                onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
+                    = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
-                    = DomainReference nm (Just d)
+                    = return (DomainReference nm (Just d))
                 onD (DomainReference nm Nothing)
                     | Just d <- lookup nm enumDomainNames
-                    = DomainReference nm (Just d)
-                onD p = p
+                    = return (DomainReference nm (Just d))
+                onD p = return p
 
-            let model' = model { mStatements = statements'
-                                    |> transformBi onD
-                                    |> transformBi onX
-                               }
-
-            return model'
+            statements'' <- (transformBiM onD >=> transformBiM onX) statements'
+            return model { mStatements = statements'' }
 
         removeEnumsFromModel_GivenEnums model = do
             (statements', enumDomainNames) <-
@@ -141,29 +137,26 @@ removeEnumsFromParam model param = do
                 _ -> return (if keep then Just st else Nothing)
 
     let
-        onX :: Expression -> Expression
+        onX :: Monad m => Expression -> m Expression
         onX (Reference nm Nothing)
             | Just i <- lookup nm nameToIntMapping
-            = fromInt i
-        onX p = p
+            = return (fromInt i)
+        onX p = return p
 
-        onD :: Domain () Expression -> Domain () Expression
+        onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
-            = DomainInt (map (fmap (nameToX nameToIntMapping)) ranges)
+            = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
         onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
-            = DomainReference nm (Just d)
+            = return (DomainReference nm (Just d))
         onD (DomainReference nm Nothing)
             | Just d <- lookup nm enumDomainNames
-            = DomainReference nm (Just d)
-        onD p = p
+            = return (DomainReference nm (Just d))
+        onD p = return p
 
-    let param' = param { mStatements = catMaybes statements'
-                            |> transformBi onX
-                            |> transformBi onD
-                       }
-    return param'
+    statements'' <- (transformBiM onD >=> transformBiM onX) (catMaybes statements')
+    return param { mStatements = statements'' }
 
 
 -- | Using the original domains from the Essence file.
@@ -247,8 +240,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                                                              , "constant:" <+> pretty constant
                                                              ])
 
-nameToX :: [(Name, Integer)] -> Expression -> Expression
+nameToX :: MonadFail m => [(Name, Integer)] -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
-    Nothing -> bug (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-    Just i  -> fromInt i
-nameToX _ x = x
+    Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
+    Just i  -> return (fromInt i)
+nameToX _ x = return x

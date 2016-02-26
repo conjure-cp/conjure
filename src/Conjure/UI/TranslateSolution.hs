@@ -10,7 +10,7 @@ import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam, addEnumsAndUnnamedsBack )
 import Conjure.Process.Enumerate ( EnumerateDomain )
-import Conjure.UI.RefineParam ( refineParam )
+import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.Representations ( up )
 
 -- text
@@ -30,7 +30,7 @@ translateSolution
     -> m Model    -- essence solution
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
-    eprimeParam  <- refineParam eprimeModel essenceParam'
+    eprimeParam  <- translateParameter eprimeModel essenceParam'
     essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =

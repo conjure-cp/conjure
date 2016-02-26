@@ -4,7 +4,7 @@ module Conjure.ParsePrint ( tests ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.UserError ( runUserErrorT )
+import Conjure.UserError
 import Conjure.Language.Definition ( Model )
 import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
 import Conjure.Language.NameGen ( runNameGen )
@@ -57,7 +57,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
         tyCheck m = runNameGen $ ignoreLogs $ void $ typeCheckModel_StandAlone m
     result <-
         case model_ of
-            Left err    -> return (Left err)
+            Left err    -> return (userErr err)
             Right model ->
                 case tyCheck model of
                     Left err -> return (Left err)

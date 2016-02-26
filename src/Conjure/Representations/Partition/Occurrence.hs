@@ -40,28 +40,48 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         namePartSizes  = mkOutName (Just "PartSizes")
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
+        getMaxNumParts attrs d = 
+            case partsNum attrs of
+                SizeAttr_Size       x   -> return x
+                SizeAttr_MaxSize    x   -> return x
+                SizeAttr_MinMaxSize _ x -> return x
+                _ -> domainSizeOf d
+
+        getMaxPartSizes attrs d =
+            case partsSize attrs of
+                SizeAttr_Size       x   -> return x
+                SizeAttr_MaxSize    x   -> return x
+                SizeAttr_MinMaxSize _ x -> return x
+                _ -> domainSizeOf d
+
         -- downD :: TypeOf_DownD m
-        downD (name, domain@(DomainPartition Partition_Occurrence PartitionAttr{..} innerDomain))
+        downD (name, domain@(DomainPartition Partition_Occurrence attrs innerDomain))
             | domainCanIndexMatrix innerDomain = do
-            maxNumParts <- domainSizeOf innerDomain
+            maxNumParts <- getMaxNumParts attrs innerDomain
+            maxPartSizes <- getMaxPartSizes attrs innerDomain
             return $ Just
-                [ ( nameNumParts domain name
+                [
+                -- number of active parts
+                  ( nameNumParts domain name
                   , DomainInt [RangeBounded 1 maxNumParts]
                   )
+                -- for each element, the part it belongs to
                 , ( nameWhichPart domain name
                   , DomainMatrix
                       (forgetRepr innerDomain)
                       (DomainInt [RangeBounded 1 maxNumParts])
                   )
+                -- for each part, number of elements in the part
                 , ( namePartSizes domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      (DomainInt [RangeBounded 0 maxNumParts])
+                      (DomainInt [RangeBounded 0 maxPartSizes])
                   )
+                -- wtf was this?
                 , ( nameFirstIndex domain name
                   , DomainMatrix
                       (DomainInt [RangeBounded 1 maxNumParts])
-                      innerDomain                                   -- dontCare if not used
+                      innerDomain                                           -- dontCare if not used
                   )
                 ]
         downD _ = na "{downD} Occurrence"
@@ -69,7 +89,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons _ downX1 (DomainPartition _ attrs innerDomain)
                 | domainCanIndexMatrix innerDomain = do
-            maxNumParts <- domainSizeOf innerDomain
+            maxNumParts <- getMaxNumParts attrs innerDomain
             let
                 numPartsChannelling whichPart numPartsVar = do
                     (iPat, i) <- quantifiedVar
@@ -89,7 +109,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-                firstIndexChannelling whichPart numPartsVar partSizesVar firstIndexVar = do
+                firstIndexChannelling whichPart numPartsVar firstIndexVar = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return
@@ -105,10 +125,10 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 exists &jPat : &innerDomain .
                                     &whichPart[&j] = &i /\ &firstIndexVar[&i] = &j
                           |]
-                        , -- firstIndexVar[i] is 0, if nothing is in part i
+                        , -- firstIndexVar[i] is dontCare, if nothing is in part i
                           [essence|
-                            forAll &iPat : int(1..&maxNumParts) .
-                                &partSizesVar[&i] = 0 -> dontCare(&firstIndexVar[&i])
+                            forAll &iPat : int(1..&maxNumParts) , &i > &numPartsVar .
+                                dontCare(&firstIndexVar[&i])
                           |]
                         ]
 
@@ -176,7 +196,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                     , regular                         numPartsVar partSizesVar
                     , numPartsChannelling   whichPart numPartsVar
                     , partSizesChannelling  whichPart             partSizesVar
-                    , firstIndexChannelling whichPart numPartsVar partSizesVar firstIndexVar
+                    , firstIndexChannelling whichPart numPartsVar              firstIndexVar
                     , symmetryBreaking                numPartsVar              firstIndexVar
                     ]
         structuralCons _ _ domain = na $ vcat [ "{structuralCons} Occurrence"
@@ -185,7 +205,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , inDom@(DomainPartition Partition_Occurrence _ innerDomain)
+              , inDom@(DomainPartition Partition_Occurrence attrs innerDomain)
               , inConstant@(ConstantAbstract (AbsLitPartition vals))
               ) = do
             Just [ ( numPartsVar   , numPartsDom   )
@@ -194,13 +214,13 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                  , ( firstIndexVar , firstIndexDom )
                  ] <- downD (name, inDom)
             members      <- domainValues innerDomain
-            maxNumParts' <- domainSizeOf innerDomain
+            maxNumParts' <- getMaxNumParts attrs innerDomain
             maxNumParts  <- case viewConstantInt maxNumParts' of
                 Just i -> return i
                 Nothing -> bug ("expecting an integer literal, but got:" <+> pretty maxNumParts')
             z <- zeroVal innerDomain
             let
-                whichPartValInside :: [Integer]
+                whichPartValInside :: [(Integer, Constant)]
                 whichPartValInside =
                         [ case whichPartIsIt of
                             [p] -> p
@@ -211,15 +231,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                               , "Inside:" <+> pretty inConstant
                                               ]
                         | mem <- members
-                        , let whichPartIsIt = [ p
+                        , let whichPartIsIt = [ (p, mem)
                                               | (p, pVals) <- zip [1..] vals
                                               , mem `elem` pVals
                                               ]
                         ]
                 numPartsVal   = ConstantInt (genericLength vals)
                 whichPartVal  = ConstantAbstract (AbsLitMatrix
-                                    (DomainInt [RangeBounded 1 maxNumParts'])
-                                    (map ConstantInt whichPartValInside))
+                                    (forgetRepr innerDomain)
+                                    (map (ConstantInt . fst) whichPartValInside))
                 partSizesVal  = ConstantAbstract (AbsLitMatrix
                                     (DomainInt [RangeBounded 1 maxNumParts'])
                                     (map (ConstantInt . genericLength) vals
@@ -227,11 +247,11 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                                      (ConstantInt 0)))
                 firstIndexVal = ConstantAbstract (AbsLitMatrix
                                     (DomainInt [RangeBounded 1 maxNumParts'])
-                                    ([ case elemIndex p whichPartValInside of
+                                    ([ case lookup p whichPartValInside of
                                         Nothing -> bug $ vcat [ "Not found:" <+> pretty p
                                                               , "Inside:" <+> prettyList id "," whichPartValInside
                                                               ]
-                                        Just i  -> ConstantInt (fromIntegral i)
+                                        Just i  -> i
                                      | p <- [1..genericLength vals] ]
                                         ++ replicate (fromInteger (maxNumParts - genericLength vals))
                                                      z))

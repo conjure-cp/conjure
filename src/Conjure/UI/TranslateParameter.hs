@@ -1,6 +1,4 @@
-{-# LANGUAGE TupleSections #-}
-
-module Conjure.UI.RefineParam ( refineParam ) where
+module Conjure.UI.TranslateParameter ( translateParameter ) where
 
 -- conjure
 import Conjure.Prelude
@@ -8,7 +6,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Constant ( emptyCollection )
+import Conjure.Language.Constant
 import Conjure.Language.Type ( Type(..), mostDefined )
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Pretty
@@ -19,7 +17,7 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Representations ( downC )
 
 
-refineParam
+translateParameter
     :: ( MonadFail m
        , MonadUserError m
        , MonadLog m
@@ -30,7 +28,7 @@ refineParam
     -> Model      -- essence param
     -> m Model    -- eprime param
 
-refineParam eprimeModel essenceParam0 = do
+translateParameter eprimeModel essenceParam0 = do
 
     essenceParam1 <- removeEnumsFromParam eprimeModel essenceParam0
     (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
@@ -44,6 +42,9 @@ refineParam eprimeModel essenceParam0 = do
     let essenceGivens     = eprimeModel |> mInfo |> miRepresentations
                                         |> filter (\ (n,_) -> n `elem` essenceGivenNames )
 
+    logDebug $ "[essenceLettings  ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings ]
+    logDebug $ "[essenceGivenNames]" <+> vcat (map pretty essenceGivenNames)
+    logDebug $ "[essenceGivens    ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens ]
 
     -- some sanity checks here
     -- TODO: check if for every given there is a letting (there can be more)
@@ -72,10 +73,12 @@ refineParam eprimeModel essenceParam0 = do
     essenceLettings' <- forM essenceLettings $ \ (name, val) -> do
         constant <- instantiateExpression (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) val
         return (name, constant)
+    logDebug $ "[essenceLettings' ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings' ]
 
     essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
         constant <- instantiateDomain (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) dom
         return (name, constant)
+    logDebug $ "[essenceGivens'   ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens' ]
 
     essenceGivensAndLettings <- sequence
             [ case lookup n essenceLettings' of
@@ -110,30 +113,48 @@ refineParam eprimeModel essenceParam0 = do
                                             ]
                                         else return $ Just (n, d, TypedConstant c cTy)
                         else return $ Just (n, d, v)
-            | (n, d) <- essenceGivens' ++ map (,DomainInt []) generatedLettingNames
+            | (n, d) <- essenceGivens' ++ [ (n, DomainInt []) | n <- generatedLettingNames ]
             ]
+    logDebug $ "[essenceGivensAndLettings ]" <+> vcat [ vcat [ "name    :" <+> pretty n
+                                                             , "domain  :" <+> pretty d
+                                                             , "constant:" <+> pretty c
+                                                             ]
+                                                      | Just (n,d,c) <- essenceGivensAndLettings
+                                                      ]
 
     let f (Reference nm Nothing) =
             case [ val | (nm2, val) <- eprimeLettingsForEnums, nm == nm2 ] of
-                []    -> bug ("refineParam: No value for" <+> pretty nm)
+                []    -> bug ("translateParameter: No value for" <+> pretty nm)
                 [val] -> Constant val
-                _     -> bug ("refineParam: Multiple values for" <+> pretty nm)
+                _     -> bug ("translateParameter: Multiple values for" <+> pretty nm)
         f p = p
 
     let
         essenceGivensAndLettings' :: [(Name, Domain HasRepresentation Constant, Constant)]
         essenceGivensAndLettings' = transformBi f (catMaybes essenceGivensAndLettings)
 
-    logDebug $ "[essenceGivensAndLettings]" <+> vcat [ vcat [ "name    :" <+> pretty n
-                                                            , "domain  :" <+> pretty d
-                                                            , "constant:" <+> pretty c
-                                                            ]
-                                                     | (n,d,c) <- essenceGivensAndLettings'
-                                                     ]
+    logDebug $ "[essenceGivensAndLettings']" <+> vcat [ vcat [ "name    :" <+> pretty n
+                                                             , "domain  :" <+> pretty d
+                                                             , "constant:" <+> pretty c
+                                                             ]
+                                                      | (n,d,c) <- essenceGivensAndLettings'
+                                                      ]
+
+    errs <- execWriterT $ forM_ essenceGivensAndLettings' $ \ (nm, dom, val) ->
+        case validateConstantForDomain nm val dom of
+            Left err -> tell [err]
+            Right () -> return ()
+    unless (null errs) (userErr errs)
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
         <- concatMapM downC essenceGivensAndLettings'
+    logDebug $ "[eprimeLettings           ]" <+> vcat [ vcat [ "name    :" <+> pretty n
+                                                             , "domain  :" <+> pretty d
+                                                             , "constant:" <+> pretty c
+                                                             ]
+                                                      | (n,d,c) <- eprimeLettings
+                                                      ]
 
     return $ languageEprime def
         { mStatements =
