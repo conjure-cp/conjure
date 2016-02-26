@@ -77,7 +77,6 @@ import Control.Monad                as X ( Monad(return, (>>), (>>=))
                                          , MonadPlus(..), mzero, msum )
 import Control.Monad.Trans.Class    as X ( MonadTrans(lift) )
 import Control.Monad.Identity       as X ( Identity, runIdentity )
-import Control.Monad.Except         as X ( catchError )
 import Control.Monad.IO.Class       as X ( MonadIO, liftIO )
 import Control.Monad.State.Strict   as X ( MonadState, StateT(..), get, gets, modify
                                          , evalStateT, runStateT, evalState, runState )
@@ -125,7 +124,7 @@ import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
 import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getLine )
 import System.IO.Error ( isDoesNotExistError )
-import Control.Exception ( catch, throwIO )
+import Control.Exception as X ( catch, throwIO, SomeException )
 
 import Data.Proxy as X ( Proxy(..) )
 
@@ -510,14 +509,14 @@ getAllDirs :: FilePath -> IO [FilePath]
 getAllDirs x = do
     let dots i = not ( i == "." || i == ".." )
     isDir <- doesDirectoryExist x
-    ys' <- getDirectoryContents x `catchError` const (return [])
+    ys' <- getDirectoryContents x `catch` (\ (_ :: SomeException) -> return [] )
     let ys = filter dots ys'
     ([x | isDir] ++) <$> concatMapM getAllDirs (map (x </>) ys)
 
 getAllFiles :: FilePath -> IO [FilePath]
 getAllFiles x = do
     let dots i = not ( i == "." || i == ".." )
-    ys' <- getDirectoryContents x `catchError` const (return [])
+    ys' <- getDirectoryContents x `catch` (\ (_ :: SomeException) -> return [] )
     let ys = filter dots ys'
     (x :) <$> concatMapM getAllFiles (map (x </>) ys)
 

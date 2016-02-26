@@ -106,39 +106,46 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     let essenceFile = tmpDir </> "out.essence"
     let outDir = tmpDir </> "outDir"
     writeModel PlainEssence (Just essenceFile) model
-    ignoreLogs $ mainWithArgs Solve
-        { UI.essence                    = essenceFile
-        , validateSolutionsOpt          = False
-        , outputDirectory               = outDir
-        , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
-        , minionOptions                 = "-cpulimit 60"
-        , logLevel                      = LogNone
-        -- default values for the rest
-        , essenceParams                 = []
-        , numberingStart                = 1
-        , smartFilenames                = False
-        , verboseTrail                  = False
-        , rewritesTrail                 = False
-        , logRuleFails                  = False
-        , logRuleSuccesses              = False
-        , logRuleAttempts               = False
-        , logChoices                    = False
-        , strategyQ                     = "f"
-        , strategyA                     = "c"
-        , representations               = Nothing
-        , representationsFinds          = Nothing
-        , representationsGivens         = Nothing
-        , representationsAuxiliaries    = Nothing
-        , representationsQuantifieds    = Nothing
-        , representationsCuts           = Nothing
-        , channelling                   = False
-        , representationLevels          = True
-        , seed                          = Nothing
-        , limitModels                   = Nothing
-        , limitTime                     = Nothing
-        , outputBinary                  = False
-        , lineWidth                     = 120
-        }
+    let
+        solve :: IO ()
+        solve = ignoreLogs $ mainWithArgs Solve
+            { UI.essence                    = essenceFile
+            , validateSolutionsOpt          = False
+            , outputDirectory               = outDir
+            , savilerowOptions              = "-O0 -preprocess None -timelimit 60000 -num-solutions " ++ show enumerateDomainMax
+            , minionOptions                 = "-cpulimit 60"
+            , logLevel                      = LogNone
+            -- default values for the rest
+            , essenceParams                 = []
+            , numberingStart                = 1
+            , smartFilenames                = False
+            , verboseTrail                  = False
+            , rewritesTrail                 = False
+            , logRuleFails                  = False
+            , logRuleSuccesses              = False
+            , logRuleAttempts               = False
+            , logChoices                    = False
+            , strategyQ                     = "f"
+            , strategyA                     = "c"
+            , representations               = Nothing
+            , representationsFinds          = Nothing
+            , representationsGivens         = Nothing
+            , representationsAuxiliaries    = Nothing
+            , representationsQuantifieds    = Nothing
+            , representationsCuts           = Nothing
+            , channelling                   = False
+            , representationLevels          = True
+            , seed                          = Nothing
+            , limitModels                   = Nothing
+            , limitTime                     = Nothing
+            , outputBinary                  = False
+            , lineWidth                     = 120
+            }
+    -- catching the (SR timeout) error, and raising a user error
+    catch solve $ \ (_ :: SomeException) -> userErr1 $ vcat
+        [ "Enumerate domain: too many."
+        , "When working on domain:" <++> pretty d
+        ]
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat
         [ "Enumerate domain: too many."
