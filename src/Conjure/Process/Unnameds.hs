@@ -11,6 +11,9 @@ import Conjure.Language
 import qualified Conjure.Language.ModelStats as ModelStats ( finds )
 
 
+type Unnamed = (Name, Expression)
+type FindDecl = (Name, Domain () Expression)
+
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
 --   Replaces unnamed types with integers.
@@ -26,20 +29,41 @@ removeUnnamedsFromModel model = do
 
 addUnnamedStructurals :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
 addUnnamedStructurals model = do
-    -- assuming the info is ready by this point
-    let allUnnnameds = model |> mInfo |> miUnnameds
-    let allFinds = model |> ModelStats.finds
-    -- TODO: the following is too much, a subset of allUnnnameds and allFinds will have to be selected
+    let
+        -- assuming the info is ready by this point
+        allUnnnameds :: [Unnamed]
+        allUnnnameds = model |> mInfo |> miUnnameds
+
+        allFinds :: [FindDecl]
+        allFinds = model |> ModelStats.finds
+
+        -- a subset of allThatCanBeBroken will have to be selected for symmetry breaking
+        allThatCanBeBroken :: [(Unnamed, [FindDecl])]
+        allThatCanBeBroken =
+            [ (unnamed, decVars)
+            | unnamed <- allUnnnameds
+            , let decVars =
+                    [ decVar
+                    | decVar  <- allFinds
+                    -- if the domain of the find contains this unnamed in it
+                    , not $ null [ () | DomainReference n _ <- universe (snd decVar)
+                                      , n == fst unnamed
+                                      ]
+                    ]
+            ]
+
+        -- TODO: the following is fairly arbitrary
+        -- it choses one (the first) find for each unnamed type
+        subsetToBeBroken :: [(Unnamed, [FindDecl])]
+        subsetToBeBroken =
+            [ (unnamed, take 1 decVars)
+            | (unnamed, decVars) <- allThatCanBeBroken
+            , not (null decVars)
+            ]
+
     cons <- sequence [ mkUnnamedStructuralCons unnamed decVar
-                     | (unnamed, decVar) <-
-                         [ (unnamed, decVar)
-                         | unnamed <- allUnnnameds
-                         , decVar  <- allFinds
-                         -- if the domain of the find contains this unnamed in it
-                         , not $ null [ () | DomainReference n _ <- universe (snd decVar)
-                                           , n == fst unnamed
-                                           ]
-                         ]
+                     | (unnamed, decVars) <- subsetToBeBroken
+                     , decVar <- decVars
                      ]
     case catMaybes cons of
         []         -> return model
@@ -48,8 +72,8 @@ addUnnamedStructurals model = do
 
 mkUnnamedStructuralCons
     :: (MonadFail m, NameGen m)
-    => (Name, Expression)
-    -> (Name, Domain () Expression)
+    => Unnamed
+    -> FindDecl
     -> m (Maybe Expression)
 mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = onDomain domain where
 
