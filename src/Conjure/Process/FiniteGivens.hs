@@ -500,5 +500,8 @@ mkFiniteInner (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) = do
         )
 mkFiniteInner d = return (d, [], const (return []))
 
-maximum0 :: (Ord a, Num a) => [a] -> a
+
+-- specialised the type for maximum0, to avoid possible bugs
+-- this function is always intended to be used with Integers
+maximum0 :: [Integer] -> Integer
 maximum0 xs = maximum (0:xs)
