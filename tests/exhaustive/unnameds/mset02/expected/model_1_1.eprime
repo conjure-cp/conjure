@@ -1,22 +1,20 @@
 language ESSENCE' 1.0
 
 given n: int
-find s_ExplicitWithFlags_Flags: matrix indexed by [int(1..2 * (1 + (n - 1)))] of int(0..2)
-find s_ExplicitWithFlags_Values: matrix indexed by [int(1..2 * (1 + (n - 1)))] of int(1..n)
+find s_ExplicitWithFlags_Flags: matrix indexed by [int(1..2 * n)] of int(0..2)
+find s_ExplicitWithFlags_Values: matrix indexed by [int(1..2 * n)] of int(1..n)
 such that
     and([[sum([toInt(s_ExplicitWithFlags_Values[q7] =
                      [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)])
                * s_ExplicitWithFlags_Flags[q7]
-                   | q7 : int(1..2 * (1 + (n - 1)))])
+                   | q7 : int(1..2 * n)])
               | q2 : int(1..n)]
          <=lex
-         [sum([toInt(s_ExplicitWithFlags_Values[q9] = q2) * s_ExplicitWithFlags_Flags[q9]
-                   | q9 : int(1..2 * (1 + (n - 1)))])
+         [sum([toInt(s_ExplicitWithFlags_Values[q9] = q2) * s_ExplicitWithFlags_Flags[q9] | q9 : int(1..2 * n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_ExplicitWithFlags_Flags[q1 + 1] > 0 -> s_ExplicitWithFlags_Values[q1] < s_ExplicitWithFlags_Values[q1 + 1]
-             | q1 : int(1..2 * (1 + (n - 1)) - 1)]),
-    and([s_ExplicitWithFlags_Flags[q2] = 0 -> s_ExplicitWithFlags_Values[q2] = 1 | q2 : int(1..2 * (1 + (n - 1)))]),
-    and([s_ExplicitWithFlags_Flags[q3 + 1] > 0 -> s_ExplicitWithFlags_Flags[q3] > 0
-             | q3 : int(1..2 * (1 + (n - 1)) - 1)])
+             | q1 : int(1..2 * n - 1)]),
+    and([s_ExplicitWithFlags_Flags[q2] = 0 -> s_ExplicitWithFlags_Values[q2] = 1 | q2 : int(1..2 * n)]),
+    and([s_ExplicitWithFlags_Flags[q3 + 1] > 0 -> s_ExplicitWithFlags_Flags[q3] > 0 | q3 : int(1..2 * n - 1)])
 

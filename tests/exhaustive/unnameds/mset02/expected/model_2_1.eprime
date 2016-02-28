@@ -1,52 +1,50 @@
 language ESSENCE' 1.0
 
 given n: int
-find s_ExplicitWithRepetition_Flag: int(0..2 * (1 + (n - 1)) * 2)
-find s_ExplicitWithRepetition_Values: matrix indexed by [int(1..2 * (1 + (n - 1)) * 2)] of int(1..n)
-find s_ExplicitWithFlags_Flags: matrix indexed by [int(1..2 * (1 + (n - 1)))] of int(0..2)
-find s_ExplicitWithFlags_Values: matrix indexed by [int(1..2 * (1 + (n - 1)))] of int(1..n)
+find s_ExplicitWithRepetition_Flag: int(0..2 * n * 2)
+find s_ExplicitWithRepetition_Values: matrix indexed by [int(1..2 * n * 2)] of int(1..n)
+find s_ExplicitWithFlags_Flags: matrix indexed by [int(1..2 * n)] of int(0..2)
+find s_ExplicitWithFlags_Values: matrix indexed by [int(1..2 * n)] of int(1..n)
 such that
     and([[sum([toInt(q25 <= s_ExplicitWithRepetition_Flag) *
                toInt(s_ExplicitWithRepetition_Values[q25] =
                      [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)])
-                   | q25 : int(1..2 * (1 + (n - 1)) * 2)])
+                   | q25 : int(1..2 * n * 2)])
               | q2 : int(1..n)]
          <=lex
          [sum([toInt(q28 <= s_ExplicitWithRepetition_Flag) * toInt(s_ExplicitWithRepetition_Values[q28] = q2)
-                   | q28 : int(1..2 * (1 + (n - 1)) * 2)])
+                   | q28 : int(1..2 * n * 2)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([q1 + 1 <= s_ExplicitWithRepetition_Flag ->
          s_ExplicitWithRepetition_Values[q1] <= s_ExplicitWithRepetition_Values[q1 + 1]
-             | q1 : int(1..2 * (1 + (n - 1)) * 2 - 1)]),
-    and([q2 > s_ExplicitWithRepetition_Flag -> s_ExplicitWithRepetition_Values[q2] = 1
-             | q2 : int(1..2 * (1 + (n - 1)) * 2)]),
+             | q1 : int(1..2 * n * 2 - 1)]),
+    and([q2 > s_ExplicitWithRepetition_Flag -> s_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..2 * n * 2)]),
     and([q4 <= s_ExplicitWithRepetition_Flag ->
          sum([toInt(q13 <= s_ExplicitWithRepetition_Flag) *
               toInt(s_ExplicitWithRepetition_Values[q13] = s_ExplicitWithRepetition_Values[q4])
-                  | q13 : int(1..2 * (1 + (n - 1)) * 2)])
+                  | q13 : int(1..2 * n * 2)])
          <= 2
-             | q4 : int(1..2 * (1 + (n - 1)) * 2)]),
+             | q4 : int(1..2 * n * 2)]),
     and([s_ExplicitWithFlags_Flags[q6 + 1] > 0 -> s_ExplicitWithFlags_Values[q6] < s_ExplicitWithFlags_Values[q6 + 1]
-             | q6 : int(1..2 * (1 + (n - 1)) - 1)]),
-    and([s_ExplicitWithFlags_Flags[q7] = 0 -> s_ExplicitWithFlags_Values[q7] = 1 | q7 : int(1..2 * (1 + (n - 1)))]),
-    and([s_ExplicitWithFlags_Flags[q8 + 1] > 0 -> s_ExplicitWithFlags_Flags[q8] > 0
-             | q8 : int(1..2 * (1 + (n - 1)) - 1)]),
+             | q6 : int(1..2 * n - 1)]),
+    and([s_ExplicitWithFlags_Flags[q7] = 0 -> s_ExplicitWithFlags_Values[q7] = 1 | q7 : int(1..2 * n)]),
+    and([s_ExplicitWithFlags_Flags[q8 + 1] > 0 -> s_ExplicitWithFlags_Flags[q8] > 0 | q8 : int(1..2 * n - 1)]),
     and([s_ExplicitWithFlags_Flags[q15] > 0 ->
          sum([toInt(s_ExplicitWithFlags_Values[q16] = s_ExplicitWithFlags_Values[q15]) * s_ExplicitWithFlags_Flags[q16]
-                  | q16 : int(1..2 * (1 + (n - 1)))])
+                  | q16 : int(1..2 * n)])
          =
          sum([toInt(q18 <= s_ExplicitWithRepetition_Flag) *
               toInt(s_ExplicitWithRepetition_Values[q18] = s_ExplicitWithFlags_Values[q15])
-                  | q18 : int(1..2 * (1 + (n - 1)) * 2)])
-             | q15 : int(1..2 * (1 + (n - 1)))]),
+                  | q18 : int(1..2 * n * 2)])
+             | q15 : int(1..2 * n)]),
     and([q19 <= s_ExplicitWithRepetition_Flag ->
          sum([toInt(s_ExplicitWithFlags_Values[q20] = s_ExplicitWithRepetition_Values[q19]) *
               s_ExplicitWithFlags_Flags[q20]
-                  | q20 : int(1..2 * (1 + (n - 1)))])
+                  | q20 : int(1..2 * n)])
          =
          sum([toInt(q22 <= s_ExplicitWithRepetition_Flag) *
               toInt(s_ExplicitWithRepetition_Values[q22] = s_ExplicitWithRepetition_Values[q19])
-                  | q22 : int(1..2 * (1 + (n - 1)) * 2)])
-             | q19 : int(1..2 * (1 + (n - 1)) * 2)])
+                  | q22 : int(1..2 * n * 2)])
+             | q19 : int(1..2 * n * 2)])
 

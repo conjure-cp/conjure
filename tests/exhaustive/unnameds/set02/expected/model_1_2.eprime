@@ -2,19 +2,16 @@ language ESSENCE' 1.0
 
 given n: int
 find s_Occurrence: matrix indexed by [int(1..n)] of bool
-find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (n - 1))] of int(1..n + 1)
+find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..n)] of int(1..n + 1)
 such that
     and([[s_Occurrence[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]] | q2 : int(1..n)] <=lex
          [s_Occurrence[q2] | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
     and([s_ExplicitVarSizeWithDummy[q2] < s_ExplicitVarSizeWithDummy[q2 + 1] \/ s_ExplicitVarSizeWithDummy[q2] = n + 1
-             | q2 : int(1..1 + (n - 1) - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q3] = n + 1 -> s_ExplicitVarSizeWithDummy[q3 + 1] = n + 1
-             | q3 : int(1..1 + (n - 1) - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q7] != n + 1 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q7]]
-             | q7 : int(1..1 + (n - 1))]),
+             | q2 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q3] = n + 1 -> s_ExplicitVarSizeWithDummy[q3 + 1] = n + 1 | q3 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q7] != n + 1 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q7]] | q7 : int(1..n)]),
     and([s_Occurrence[q8] ->
-         or([s_ExplicitVarSizeWithDummy[q10] != n + 1 /\ s_ExplicitVarSizeWithDummy[q10] = q8
-                 | q10 : int(1..1 + (n - 1))])
+         or([s_ExplicitVarSizeWithDummy[q10] != n + 1 /\ s_ExplicitVarSizeWithDummy[q10] = q8 | q10 : int(1..n)])
              | q8 : int(1..n)])
 
