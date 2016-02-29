@@ -61,7 +61,7 @@ addUnnamedStructurals model = do
             , not (null decVars)
             ]
 
-    cons <- sequence [ mkUnnamedStructuralCons unnamed decVar
+    cons <- sequence [ mkUnnamedStructuralCons unnamed [decVar]
                      | (unnamed, decVars) <- subsetToBeBroken
                      , decVar <- decVars
                      ]
@@ -73,21 +73,32 @@ addUnnamedStructurals model = do
 mkUnnamedStructuralCons
     :: (MonadFail m, NameGen m)
     => Unnamed
-    -> FindDecl
+    -> [FindDecl]
     -> m (Maybe Expression)
-mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = do
-    let var = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+mkUnnamedStructuralCons (unnamedName, unnamedSize) finds = do
     (iPat, i) <- quantifiedVar
     (jPat, j) <- lettingVar
-    let wrap body =
-            [essence|
-                and([ &body
-                    | &iPat : int(1..&unnamedSize - 1)
-                    , letting &jPat be &i + 1
-                    ])
-            |]
-    body <- onDomain i j var domain
-    return (wrap <$> body)
+    let
+        toCons :: [(Expression, Expression)] -> Expression
+        toCons pairs =
+            let
+                lhs = fromList (map fst pairs)
+                rhs = fromList (map snd pairs)
+            in
+                [essence|
+                    and([ flatten(&lhs) >=lex flatten(&rhs)
+                        | &iPat : int(1..&unnamedSize - 1)
+                        , letting &jPat be &i + 1
+                        ])
+                |]
+    pairs <- concat <$> sequence
+        [ onDomain i j var domain
+        | (name, domain) <- finds
+        , let var = Reference name (Just (DeclNoRepr Find name domain Region_UnnamedSymBreaking))
+        ]
+    if null pairs
+        then return Nothing
+        else return (Just (toCons pairs))
 
     where
 
@@ -101,76 +112,95 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = do
         --                                  otherwise ----> 0    (output is current)
         [essence| [ &current, &j, &i ; int(0..2) ] [ toInt(&current=&i) + 2 * toInt(&current=&j) ] |]
 
+    returnPair a b = return (return (a, b))
+
+    onDomain
+        :: (NameGen m)
+        => Expression
+        -> Expression
+        -> Expression
+        -> Domain () Expression
+        -> m [(Expression, Expression)]
     onDomain i j var (DomainReference n _) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
         (k2Pat, k2) <- lettingVar
         let k2Val = swapIJ i j k1
-        return $ Just [essence|
-            [ &k1 = &var                            | &k1Pat : int(1..&unnamedSize)
-                                                    ]
-                >=lex
-            [ &k2 = &var                            | &k1Pat : int(1..&unnamedSize)
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ &k1 = &var                            | &k1Pat : int(1..&unnamedSize)
+                                                        ]
+            |]
+            [essence|
+                [ &k2 = &var                            | &k1Pat : int(1..&unnamedSize)
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainSet _ _ (DomainReference n _)) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
         (k2Pat, k2) <- lettingVar
         let k2Val = swapIJ i j k1
-        return $ Just [essence|
-            [ &k1 in &var                           | &k1Pat : int(1..&unnamedSize)
-                                                    ]
-                >=lex
-            [ &k2 in &var                           | &k1Pat : int(1..&unnamedSize)
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ &k1 in &var                           | &k1Pat : int(1..&unnamedSize)
+                                                        ]
+            |]
+            [essence|
+                [ &k2 in &var                           | &k1Pat : int(1..&unnamedSize)
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainMSet _ _ (DomainReference n _)) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
         (k2Pat, k2) <- lettingVar
         let k2Val = swapIJ i j k1
-        return $ Just [essence|
-            [ freq(&var, &k1)                       | &k1Pat : int(1..&unnamedSize)
-                                                    ]
-                >=lex
-            [ freq(&var, &k2)                       | &k1Pat : int(1..&unnamedSize)
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ freq(&var, &k1)                       | &k1Pat : int(1..&unnamedSize)
+                                                        ]
+            |]
+            [essence|
+                [ freq(&var, &k2)                       | &k1Pat : int(1..&unnamedSize)
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainFunction _ _ (DomainReference n _) domTo) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
         (k2Pat, k2) <- lettingVar
         let k2Val = swapIJ i j k1
         (zPat , z ) <- quantifiedVar
-        return $ Just [essence|
-            [ image(&var, &k1) = &z                 | &k1Pat : int(1..&unnamedSize)
-                                                    , &zPat  : &domTo
-                                                    ]
-                >=lex
-            [ image(&var, &k2) = &z                 | &k1Pat : int(1..&unnamedSize)
-                                                    , &zPat  : &domTo
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ image(&var, &k1) = &z                 | &k1Pat : int(1..&unnamedSize)
+                                                        , &zPat  : &domTo
+                                                        ]
+            |]
+            [essence|
+                [ image(&var, &k2) = &z                 | &k1Pat : int(1..&unnamedSize)
+                                                        , &zPat  : &domTo
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainFunction _ _ domFr (DomainReference n _)) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
         (k2Pat, k2) <- lettingVar
         let k2Val = swapIJ i j k1
         (zPat , z ) <- quantifiedVar
-        return $ Just [essence|
-            [ image(&var, &z) = &k1                 | &zPat  : &domFr
-                                                    , &k1Pat : int(1..&unnamedSize)
-                                                    ]
-                >=lex
-            [ image(&var, &z) = &k2                 | &zPat  : &domFr
-                                                    , &k1Pat : int(1..&unnamedSize)
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ image(&var, &z) = &k1                 | &zPat  : &domFr
+                                                        , &k1Pat : int(1..&unnamedSize)
+                                                        ]
+            |]
+            [essence|
+                [ image(&var, &z) = &k2                 | &zPat  : &domFr
+                                                        , &k1Pat : int(1..&unnamedSize)
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainFunction _ _ (DomainTuple [DomainReference n _, domFr2]) domTo) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
@@ -178,18 +208,20 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = do
         let k2Val = swapIJ i j k1
         (z1Pat, z1) <- quantifiedVar
         (z2Pat, z2) <- quantifiedVar
-        return $ Just [essence|
-            [ image(&var, (&k1, &z1)) = &z2         | &k1Pat : int(1..&unnamedSize)
-                                                    , &z1Pat : &domFr2
-                                                    , &z2Pat : &domTo
-                                                    ]
-                >=lex
-            [ image(&var, (&k2, &z1)) = &z2         | &k1Pat : int(1..&unnamedSize)
-                                                    , &z1Pat : &domFr2
-                                                    , &z2Pat : &domTo
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ image(&var, (&k1, &z1)) = &z2         | &k1Pat : int(1..&unnamedSize)
+                                                        , &z1Pat : &domFr2
+                                                        , &z2Pat : &domTo
+                                                        ]
+            |]
+            [essence|
+                [ image(&var, (&k2, &z1)) = &z2         | &k1Pat : int(1..&unnamedSize)
+                                                        , &z1Pat : &domFr2
+                                                        , &z2Pat : &domTo
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
     onDomain i j var (DomainFunction _ _ (DomainTuple [domFr1, DomainReference n _]) domTo) | n == unnamedName = do
         (k1Pat, k1) <- quantifiedVar
@@ -197,18 +229,20 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) (name, domain) = do
         let k2Val = swapIJ i j k1
         (z1Pat, z1) <- quantifiedVar
         (z2Pat, z2) <- quantifiedVar
-        return $ Just [essence|
-            [ image(&var, (&z1, &k1)) = &z2         | &k1Pat : int(1..&unnamedSize)
-                                                    , &z1Pat : &domFr1
-                                                    , &z2Pat : &domTo
-                                                    ]
-                >=lex
-            [ image(&var, (&z1, &k2)) = &z2         | &k1Pat : int(1..&unnamedSize)
-                                                    , &z1Pat : &domFr1
-                                                    , &z2Pat : &domTo
-                                                    , letting &k2Pat be &k2Val
-                                                    ]
-        |]
+        returnPair
+            [essence|
+                [ image(&var, (&z1, &k1)) = &z2         | &k1Pat : int(1..&unnamedSize)
+                                                        , &z1Pat : &domFr1
+                                                        , &z2Pat : &domTo
+                                                        ]
+            |]
+            [essence|
+                [ image(&var, (&z1, &k2)) = &z2         | &k1Pat : int(1..&unnamedSize)
+                                                        , &z1Pat : &domFr1
+                                                        , &z2Pat : &domTo
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
 
-    onDomain _ _ _ _ = return Nothing
+    onDomain _ _ _ _ = return []
 
