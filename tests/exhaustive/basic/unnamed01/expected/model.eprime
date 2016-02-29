@@ -5,7 +5,9 @@ find x: int(1..n)
 find y: int(1..n)
 such that
     x = y,
-    and([[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)] = x | q2 : int(1..n)] <=lex
-         [q2 = x | q2 : int(1..n)]
+    and([flatten([[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)] = x | q2 : int(1..n)],
+                  [[q3, q1 + 1, q1; int(0..2)][toInt(q3 = q1) + 2 * toInt(q3 = q1 + 1)] = y
+                       | q3 : int(1..n)]; int(1..2)])
+         <=lex flatten([[q2 = x | q2 : int(1..n)], [q3 = y | q3 : int(1..n)]; int(1..2)])
              | q1 : int(1..n - 1)])
 

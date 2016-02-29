@@ -53,17 +53,16 @@ addUnnamedStructurals model = do
             ]
 
         -- TODO: the following is fairly arbitrary
-        -- it choses one (the first) find for each unnamed type
+        -- it keeps all finds for all unnamed types
         subsetToBeBroken :: [(Unnamed, [FindDecl])]
         subsetToBeBroken =
-            [ (unnamed, take 1 decVars)
+            [ (unnamed, decVars)
             | (unnamed, decVars) <- allThatCanBeBroken
             , not (null decVars)
             ]
 
-    cons <- sequence [ mkUnnamedStructuralCons unnamed [decVar]
+    cons <- sequence [ mkUnnamedStructuralCons unnamed decVars
                      | (unnamed, decVars) <- subsetToBeBroken
-                     , decVar <- decVars
                      ]
     case catMaybes cons of
         []         -> return model
