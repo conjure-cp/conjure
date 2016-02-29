@@ -3,5 +3,8 @@ language ESSENCE' 1.0
 given n: int
 find x: int(1..n)
 find y: int(1..n)
-such that x = 1
+such that
+    and([[[q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)] = x | q2 : int(1..n)] <=lex
+         [q2 = x | q2 : int(1..n)]
+             | q1 : int(1..n - 1)])
 
