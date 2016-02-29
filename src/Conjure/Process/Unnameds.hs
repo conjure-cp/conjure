@@ -80,6 +80,13 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) finds = do
     (jPat, j) <- lettingVar
     let
         toCons :: [(Expression, Expression)] -> Expression
+        toCons [(lhs, rhs)] =
+                [essence|
+                    and([ &lhs >=lex &rhs
+                        | &iPat : int(1..&unnamedSize - 1)
+                        , letting &jPat be &i + 1
+                        ])
+                |]
         toCons pairs =
             let
                 lhs = fromList (map fst pairs)
