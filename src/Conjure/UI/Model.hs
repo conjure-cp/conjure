@@ -505,6 +505,15 @@ addTrueConstraints m =
         m { mStatements = mStatements m ++ [SuchThat trueConstraints] }
 
 
+recordNameGenState :: (NameGen m) => Model -> m Model
+recordNameGenState m = do
+    st <- exportNameGenState
+    let
+        oldInfo = mInfo m
+        newInfo = oldInfo { miNameGenState = st }
+    return m { mInfo = newInfo }
+
+
 reverseTrails :: Model -> Model
 reverseTrails m =
     let
@@ -836,6 +845,7 @@ prologue model = return model
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
+    >>= recordNameGenState            >>= logDebugId "[recordNameGenState]"
 
 
 epilogue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
