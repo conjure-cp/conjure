@@ -84,15 +84,15 @@ patE (ExpressionMetaVar x) = toPat x
 patE _ = Nothing
 
 patD :: Domain () Expression -> Maybe PatQ
-patD (DomainMetaVar x) = Just (varP (mkName x))
+patD (DomainMetaVar x) = toPat x
 patD _ = Nothing
 
 patAP :: AbstractPattern -> Maybe PatQ
-patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
+patAP (AbstractPatternMetaVar x) = toPat x
 patAP _ = Nothing
 
 patN :: Name -> Maybe PatQ
-patN (NameMetaVar x) = Just (varP (mkName x))
+patN (NameMetaVar x) = toPat x
 patN _ = Nothing
 
 
