@@ -6,44 +6,44 @@ find s_ExplicitWithFlags_Values: matrix indexed by [int(1..6)] of int(1..3)
 find s_ExplicitWithRepetition_Flag: int(0..12)
 find s_ExplicitWithRepetition_Values: matrix indexed by [int(1..12)] of int(1..3)
 such that
-    and([[sum([toInt(s_ExplicitWithFlags_Values[q7] =
+    and([[sum([toInt(s_ExplicitWithFlags_Values[q9] =
                      [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)])
-               * s_ExplicitWithFlags_Flags[q7]
-                   | q7 : int(1..6)])
+               * s_ExplicitWithFlags_Flags[q9]
+                   | q9 : int(1..6)])
               | q2 : int(1..3)]
          <=lex
-         [sum([toInt(s_ExplicitWithFlags_Values[q9] = q2) * s_ExplicitWithFlags_Flags[q9] | q9 : int(1..6)])
+         [sum([toInt(s_ExplicitWithFlags_Values[q11] = q2) * s_ExplicitWithFlags_Flags[q11] | q11 : int(1..6)])
               | q2 : int(1..3)]
              | q1 : int(1..2)]),
-    and([s_ExplicitWithFlags_Flags[q1 + 1] > 0 -> s_ExplicitWithFlags_Values[q1] < s_ExplicitWithFlags_Values[q1 + 1]
-             | q1 : int(1..5)]),
-    and([s_ExplicitWithFlags_Flags[q2] = 0 -> s_ExplicitWithFlags_Values[q2] = 1 | q2 : int(1..6)]),
-    and([s_ExplicitWithFlags_Flags[q3 + 1] > 0 -> s_ExplicitWithFlags_Flags[q3] > 0 | q3 : int(1..5)]),
-    and([q12 + 1 <= s_ExplicitWithRepetition_Flag ->
-         s_ExplicitWithRepetition_Values[q12] <= s_ExplicitWithRepetition_Values[q12 + 1]
-             | q12 : int(1..11)]),
-    and([q13 > s_ExplicitWithRepetition_Flag -> s_ExplicitWithRepetition_Values[q13] = 1 | q13 : int(1..12)]),
-    and([q15 <= s_ExplicitWithRepetition_Flag ->
-         sum([toInt(q18 <= s_ExplicitWithRepetition_Flag) *
-              toInt(s_ExplicitWithRepetition_Values[q18] = s_ExplicitWithRepetition_Values[q15])
-                  | q18 : int(1..12)])
+    and([s_ExplicitWithFlags_Flags[q3 + 1] > 0 -> s_ExplicitWithFlags_Values[q3] < s_ExplicitWithFlags_Values[q3 + 1]
+             | q3 : int(1..5)]),
+    and([s_ExplicitWithFlags_Flags[q4] = 0 -> s_ExplicitWithFlags_Values[q4] = 1 | q4 : int(1..6)]),
+    and([s_ExplicitWithFlags_Flags[q5 + 1] > 0 -> s_ExplicitWithFlags_Flags[q5] > 0 | q5 : int(1..5)]),
+    and([q14 + 1 <= s_ExplicitWithRepetition_Flag ->
+         s_ExplicitWithRepetition_Values[q14] <= s_ExplicitWithRepetition_Values[q14 + 1]
+             | q14 : int(1..11)]),
+    and([q15 > s_ExplicitWithRepetition_Flag -> s_ExplicitWithRepetition_Values[q15] = 1 | q15 : int(1..12)]),
+    and([q17 <= s_ExplicitWithRepetition_Flag ->
+         sum([toInt(q20 <= s_ExplicitWithRepetition_Flag) *
+              toInt(s_ExplicitWithRepetition_Values[q20] = s_ExplicitWithRepetition_Values[q17])
+                  | q20 : int(1..12)])
          <= 2
-             | q15 : int(1..12)]),
-    and([q20 <= s_ExplicitWithRepetition_Flag ->
-         sum([toInt(q23 <= s_ExplicitWithRepetition_Flag) *
-              toInt(s_ExplicitWithRepetition_Values[q23] = s_ExplicitWithRepetition_Values[q20])
-                  | q23 : int(1..12)])
+             | q17 : int(1..12)]),
+    and([q22 <= s_ExplicitWithRepetition_Flag ->
+         sum([toInt(q25 <= s_ExplicitWithRepetition_Flag) *
+              toInt(s_ExplicitWithRepetition_Values[q25] = s_ExplicitWithRepetition_Values[q22])
+                  | q25 : int(1..12)])
          =
-         sum([toInt(s_ExplicitWithFlags_Values[q21] = s_ExplicitWithRepetition_Values[q20]) *
-              s_ExplicitWithFlags_Flags[q21]
-                  | q21 : int(1..6)])
-             | q20 : int(1..12)]),
-    and([s_ExplicitWithFlags_Flags[q24] > 0 ->
-         sum([toInt(q27 <= s_ExplicitWithRepetition_Flag) *
-              toInt(s_ExplicitWithRepetition_Values[q27] = s_ExplicitWithFlags_Values[q24])
-                  | q27 : int(1..12)])
+         sum([toInt(s_ExplicitWithFlags_Values[q23] = s_ExplicitWithRepetition_Values[q22]) *
+              s_ExplicitWithFlags_Flags[q23]
+                  | q23 : int(1..6)])
+             | q22 : int(1..12)]),
+    and([s_ExplicitWithFlags_Flags[q26] > 0 ->
+         sum([toInt(q29 <= s_ExplicitWithRepetition_Flag) *
+              toInt(s_ExplicitWithRepetition_Values[q29] = s_ExplicitWithFlags_Values[q26])
+                  | q29 : int(1..12)])
          =
-         sum([toInt(s_ExplicitWithFlags_Values[q25] = s_ExplicitWithFlags_Values[q24]) * s_ExplicitWithFlags_Flags[q25]
-                  | q25 : int(1..6)])
-             | q24 : int(1..6)])
+         sum([toInt(s_ExplicitWithFlags_Values[q27] = s_ExplicitWithFlags_Values[q26]) * s_ExplicitWithFlags_Flags[q27]
+                  | q27 : int(1..6)])
+             | q26 : int(1..6)])
 

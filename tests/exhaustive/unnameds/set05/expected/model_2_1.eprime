@@ -4,12 +4,12 @@ letting n be 3
 find s_Explicit: matrix indexed by [int(1..2)] of int(1..3)
 find s_Occurrence: matrix indexed by [int(1..3)] of bool
 such that
-    and([[or([s_Explicit[q5] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)] | q5 : int(1..2)])
+    and([[or([s_Explicit[q7] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)] | q7 : int(1..2)])
               | q2 : int(1..3)]
-         <=lex [or([s_Explicit[q8] = q2 | q8 : int(1..2)]) | q2 : int(1..3)]
+         <=lex [or([s_Explicit[q10] = q2 | q10 : int(1..2)]) | q2 : int(1..3)]
              | q1 : int(1..2)]),
     s_Explicit[1] < s_Explicit[2],
-    2 = sum([toInt(s_Occurrence[q11]) | q11 : int(1..3)]),
-    and([s_Occurrence[q12] -> or([s_Explicit[q14] = q12 | q14 : int(1..2)]) | q12 : int(1..3)]),
-    and([s_Occurrence[s_Explicit[q16]] | q16 : int(1..2)])
+    2 = sum([toInt(s_Occurrence[q13]) | q13 : int(1..3)]),
+    and([s_Occurrence[q14] -> or([s_Explicit[q16] = q14 | q16 : int(1..2)]) | q14 : int(1..3)]),
+    and([s_Occurrence[s_Explicit[q18]] | q18 : int(1..2)])
 

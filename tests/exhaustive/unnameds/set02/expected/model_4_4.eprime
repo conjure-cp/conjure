@@ -4,18 +4,18 @@ given n: int
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..n)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..n)] of int(1..n)
 such that
-    and([[or([s_ExplicitVarSizeWithFlags_Flags[q8] /\
-              s_ExplicitVarSizeWithFlags_Values[q8] =
+    and([[or([s_ExplicitVarSizeWithFlags_Flags[q10] /\
+              s_ExplicitVarSizeWithFlags_Values[q10] =
               [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
-                  | q8 : int(1..n)])
+                  | q10 : int(1..n)])
               | q2 : int(1..n)]
          <=lex
-         [or([s_ExplicitVarSizeWithFlags_Flags[q11] /\ s_ExplicitVarSizeWithFlags_Values[q11] = q2 | q11 : int(1..n)])
+         [or([s_ExplicitVarSizeWithFlags_Flags[q13] /\ s_ExplicitVarSizeWithFlags_Values[q13] = q2 | q13 : int(1..n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
-             | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q2] = false -> s_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..n)]),
-    and([s_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> s_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..n - 1)])
+    and([s_ExplicitVarSizeWithFlags_Flags[q3 + 1] ->
+         s_ExplicitVarSizeWithFlags_Values[q3] < s_ExplicitVarSizeWithFlags_Values[q3 + 1]
+             | q3 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q4] = false -> s_ExplicitVarSizeWithFlags_Values[q4] = 1 | q4 : int(1..n)]),
+    and([s_ExplicitVarSizeWithFlags_Flags[q5 + 1] -> s_ExplicitVarSizeWithFlags_Flags[q5] | q5 : int(1..n - 1)])
 

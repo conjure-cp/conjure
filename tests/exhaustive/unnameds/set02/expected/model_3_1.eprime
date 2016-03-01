@@ -5,23 +5,23 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..n)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..n)] of int(1..n)
 find s_Occurrence: matrix indexed by [int(1..n)] of bool
 such that
-    and([[or([q12 <= s_ExplicitVarSizeWithMarker_Marker /\
-              s_ExplicitVarSizeWithMarker_Values[q12] =
+    and([[or([q14 <= s_ExplicitVarSizeWithMarker_Marker /\
+              s_ExplicitVarSizeWithMarker_Values[q14] =
               [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
-                  | q12 : int(1..n)])
+                  | q14 : int(1..n)])
               | q2 : int(1..n)]
          <=lex
-         [or([q15 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q15] = q2
-                  | q15 : int(1..n)])
+         [or([q17 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q17] = q2
+                  | q17 : int(1..n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
-    and([q1 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q1] < s_ExplicitVarSizeWithMarker_Values[q1 + 1]
-             | q1 : int(1..n - 1)]),
-    and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..n)]),
-    and([s_Occurrence[q5] ->
-         or([q7 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q7] = q5 | q7 : int(1..n)])
-             | q5 : int(1..n)]),
-    and([q9 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q9]]
-             | q9 : int(1..n)])
+    and([q3 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q3] < s_ExplicitVarSizeWithMarker_Values[q3 + 1]
+             | q3 : int(1..n - 1)]),
+    and([q4 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q4] = 1 | q4 : int(1..n)]),
+    and([s_Occurrence[q7] ->
+         or([q9 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q9] = q7 | q9 : int(1..n)])
+             | q7 : int(1..n)]),
+    and([q11 <= s_ExplicitVarSizeWithMarker_Marker -> s_Occurrence[s_ExplicitVarSizeWithMarker_Values[q11]]
+             | q11 : int(1..n)])
 

@@ -4,17 +4,18 @@ given n: int
 find s_ExplicitVarSizeWithMarker_Marker: int(0..n)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..n)] of int(1..n)
 such that
-    and([[or([q6 <= s_ExplicitVarSizeWithMarker_Marker /\
-              s_ExplicitVarSizeWithMarker_Values[q6] =
+    and([[or([q8 <= s_ExplicitVarSizeWithMarker_Marker /\
+              s_ExplicitVarSizeWithMarker_Values[q8] =
               [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
-                  | q6 : int(1..n)])
+                  | q8 : int(1..n)])
               | q2 : int(1..n)]
          <=lex
-         [or([q9 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q9] = q2 | q9 : int(1..n)])
+         [or([q11 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q11] = q2
+                  | q11 : int(1..n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
-    and([q1 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q1] < s_ExplicitVarSizeWithMarker_Values[q1 + 1]
-             | q1 : int(1..n - 1)]),
-    and([q2 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q2] = 1 | q2 : int(1..n)])
+    and([q3 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q3] < s_ExplicitVarSizeWithMarker_Values[q3 + 1]
+             | q3 : int(1..n - 1)]),
+    and([q4 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q4] = 1 | q4 : int(1..n)])
 

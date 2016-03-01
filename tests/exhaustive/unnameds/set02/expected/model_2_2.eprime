@@ -3,15 +3,15 @@ language ESSENCE' 1.0
 given n: int
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..n)] of int(1..n + 1)
 such that
-    and([[or([s_ExplicitVarSizeWithDummy[q7] != n + 1 /\
-              s_ExplicitVarSizeWithDummy[q7] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
-                  | q7 : int(1..n)])
+    and([[or([s_ExplicitVarSizeWithDummy[q9] != n + 1 /\
+              s_ExplicitVarSizeWithDummy[q9] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
+                  | q9 : int(1..n)])
               | q2 : int(1..n)]
          <=lex
-         [or([s_ExplicitVarSizeWithDummy[q10] != n + 1 /\ s_ExplicitVarSizeWithDummy[q10] = q2 | q10 : int(1..n)])
+         [or([s_ExplicitVarSizeWithDummy[q12] != n + 1 /\ s_ExplicitVarSizeWithDummy[q12] = q2 | q12 : int(1..n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/ s_ExplicitVarSizeWithDummy[q1] = n + 1
-             | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q2] = n + 1 -> s_ExplicitVarSizeWithDummy[q2 + 1] = n + 1 | q2 : int(1..n - 1)])
+    and([s_ExplicitVarSizeWithDummy[q3] < s_ExplicitVarSizeWithDummy[q3 + 1] \/ s_ExplicitVarSizeWithDummy[q3] = n + 1
+             | q3 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q4] = n + 1 -> s_ExplicitVarSizeWithDummy[q4 + 1] = n + 1 | q4 : int(1..n - 1)])
 

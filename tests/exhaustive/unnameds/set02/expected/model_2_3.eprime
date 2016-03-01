@@ -5,29 +5,29 @@ find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..n)] of int(1..n + 1)
 find s_ExplicitVarSizeWithMarker_Marker: int(0..n)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..n)] of int(1..n)
 such that
-    and([[or([s_ExplicitVarSizeWithDummy[q18] != n + 1 /\
-              s_ExplicitVarSizeWithDummy[q18] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
-                  | q18 : int(1..n)])
+    and([[or([s_ExplicitVarSizeWithDummy[q20] != n + 1 /\
+              s_ExplicitVarSizeWithDummy[q20] = [q2, q1 + 1, q1; int(0..2)][toInt(q2 = q1) + 2 * toInt(q2 = q1 + 1)]
+                  | q20 : int(1..n)])
               | q2 : int(1..n)]
          <=lex
-         [or([s_ExplicitVarSizeWithDummy[q21] != n + 1 /\ s_ExplicitVarSizeWithDummy[q21] = q2 | q21 : int(1..n)])
+         [or([s_ExplicitVarSizeWithDummy[q23] != n + 1 /\ s_ExplicitVarSizeWithDummy[q23] = q2 | q23 : int(1..n)])
               | q2 : int(1..n)]
              | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/ s_ExplicitVarSizeWithDummy[q1] = n + 1
-             | q1 : int(1..n - 1)]),
-    and([s_ExplicitVarSizeWithDummy[q2] = n + 1 -> s_ExplicitVarSizeWithDummy[q2 + 1] = n + 1 | q2 : int(1..n - 1)]),
-    and([q5 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
-         s_ExplicitVarSizeWithMarker_Values[q5] < s_ExplicitVarSizeWithMarker_Values[q5 + 1]
-             | q5 : int(1..n - 1)]),
-    and([q6 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q6] = 1 | q6 : int(1..n)]),
-    and([q9 <= s_ExplicitVarSizeWithMarker_Marker ->
-         or([s_ExplicitVarSizeWithDummy[q11] != n + 1 /\
-             s_ExplicitVarSizeWithDummy[q11] = s_ExplicitVarSizeWithMarker_Values[q9]
-                 | q11 : int(1..n)])
-             | q9 : int(1..n)]),
-    and([s_ExplicitVarSizeWithDummy[q13] != n + 1 ->
-         or([q15 <= s_ExplicitVarSizeWithMarker_Marker /\
-             s_ExplicitVarSizeWithMarker_Values[q15] = s_ExplicitVarSizeWithDummy[q13]
-                 | q15 : int(1..n)])
-             | q13 : int(1..n)])
+    and([s_ExplicitVarSizeWithDummy[q3] < s_ExplicitVarSizeWithDummy[q3 + 1] \/ s_ExplicitVarSizeWithDummy[q3] = n + 1
+             | q3 : int(1..n - 1)]),
+    and([s_ExplicitVarSizeWithDummy[q4] = n + 1 -> s_ExplicitVarSizeWithDummy[q4 + 1] = n + 1 | q4 : int(1..n - 1)]),
+    and([q7 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
+         s_ExplicitVarSizeWithMarker_Values[q7] < s_ExplicitVarSizeWithMarker_Values[q7 + 1]
+             | q7 : int(1..n - 1)]),
+    and([q8 > s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q8] = 1 | q8 : int(1..n)]),
+    and([q11 <= s_ExplicitVarSizeWithMarker_Marker ->
+         or([s_ExplicitVarSizeWithDummy[q13] != n + 1 /\
+             s_ExplicitVarSizeWithDummy[q13] = s_ExplicitVarSizeWithMarker_Values[q11]
+                 | q13 : int(1..n)])
+             | q11 : int(1..n)]),
+    and([s_ExplicitVarSizeWithDummy[q15] != n + 1 ->
+         or([q17 <= s_ExplicitVarSizeWithMarker_Marker /\
+             s_ExplicitVarSizeWithMarker_Values[q17] = s_ExplicitVarSizeWithDummy[q15]
+                 | q17 : int(1..n)])
+             | q15 : int(1..n)])
 
