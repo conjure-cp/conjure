@@ -250,5 +250,59 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) finds = do
                                                         ]
             |]
 
-    onDomain _ _ _ _ = return []
+    -- partial
+    onDomain i j var domain = do
+        (k1Pat, k1) <- quantifiedVar
+        (k2Pat, k2) <- lettingVar
+        let k2Val = swapIJ i j k1
+        k1Count <- count var k1 domain
+        k2Count <- count var k2 domain
+        returnPair
+            [essence|
+                [ &k1Count                              | &k1Pat : int(1..&unnamedSize)
+                                                        ]
+            |]
+            [essence|
+                [ &k2Count                              | &k1Pat : int(1..&unnamedSize)
+                                                        , letting &k2Pat be &k2Val
+                                                        ]
+            |]
+
+    -- onDomain _ _ _ _ = return []
+
+
+    isReferenced dom =
+        0 < length [ () | DomainReference n _ <- universe dom, n == unnamedName ]
+
+
+    count
+        :: (NameGen m)
+        => Expression
+        -> Expression
+        -> Domain () Expression
+        -> m Expression
+    count var val (DomainReference n _) | n == unnamedName =
+        return [essence| toInt(&var = &val) |]
+
+    count var val (DomainSet _ _ inner) | isReferenced inner = do
+        (iPat, i) <- quantifiedVar
+        iCount <- count i val inner
+        return [essence| sum([ &iCount | &iPat <- &var ]) |]
+
+    count var val (DomainMSet _ _ inner) | isReferenced inner = do
+        (iPat, i) <- quantifiedVar
+        iCount <- count i val inner
+        return [essence| sum([ &iCount | &iPat <- &var ]) |]
+
+    count var val (DomainFunction _ _ innerFr _) | isReferenced innerFr = do
+        (iPat, i) <- quantifiedVar
+        iCount <- count i val innerFr
+        return [essence| sum([ &iCount | &iPat <- defined(&var) ]) |]
+
+    count var val (DomainFunction _ _ _ innerTo) | isReferenced innerTo = do
+        (iPat, i) <- quantifiedVar
+        iCount <- count i val innerTo
+        return [essence| sum([ &iCount | &iPat <- range(&var) ]) |]
+
+    count _ _ _ = return [essence| 0 |]
 
