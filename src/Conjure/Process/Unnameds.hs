@@ -118,7 +118,7 @@ mkUnnamedStructuralCons (unnamedName, unnamedSize) finds = do
         --                                  otherwise ----> 0    (output is current)
         [essence| [ &current, &j, &i ; int(0..2) ] [ toInt(&current=&i) + 2 * toInt(&current=&j) ] |]
 
-    returnPair a b = return (return (a, b))
+    returnPair a b = return [(a, b)]
 
     onDomain
         :: (NameGen m)
