@@ -172,6 +172,7 @@ data ModelInfo = ModelInfo
     , miTrailRewrites :: [TrailRewrites]
     , miQuestionAnswered :: [QuestionAnswered]
     , miNameGenState :: [(Text, Int)]
+    , miNbExtraGivens :: Int -- number of extra givens Conjure added to make the domains of original givens finite
     }
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -186,7 +187,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON

@@ -29,7 +29,10 @@ finiteGivens m = flip evalStateT 1 $ do
                 return $ [ Declaration $ FindOrGiven Given e (DomainInt []) | e <- extras ]
                       ++ [ Declaration $ FindOrGiven Given name domain'                   ]
             _ -> return [st]
-    return m { mStatements = concat statements }
+    namegenst <- exportNameGenState
+    return m { mStatements = concat statements
+             , mInfo = (mInfo m) { miNbExtraGivens = maybe 0 (\ n -> n - 1 ) (lookup "fin" namegenst) }
+             }
 
 
 finiteGivensParam
@@ -41,7 +44,11 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
     let essenceLettings   = extractLettings essenceParam
-    extras <- forM essenceGivenNames $ \ name -> do
+    let nbExtraGivens     = eprimeModel |> mInfo |> miNbExtraGivens
+    let expectedExtras    = [ MachineName "fin" extraGiven []
+                            | extraGiven <- [1..nbExtraGivens]
+                            ]
+    extras <- fmap concat $ forM essenceGivenNames $ \ name -> do
         logDebugVerbose $ "finiteGivensParam name" <+> pretty name
         case (lookup name essenceGivens, lookup name essenceLettings) of
             (Nothing, _) -> bug $ "Not found:" <+> pretty name
@@ -55,12 +62,21 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
                 outs <- f constant
                 logDebugVerbose $ "finiteGivensParam outs    " <+> vcat (map pretty outs)
                 return outs
+    logDebugVerbose $ "finiteGivensParam extras  " <+> vcat (map (pretty . show) extras)
     return
         ( essenceParam
-            { mStatements = [ Declaration (Letting n (Constant c)) | (n,c) <- concat extras ]
+            { mStatements = [ Declaration (Letting name (Constant value))
+                            | name <- expectedExtras
+                            -- we are storing the number of "extra givens" in the model info.
+                            -- also, defaulting their values to 0 if they do not come out of
+                            -- the usual finiteGivens process.
+                            -- the idea is: if they don't come out from that,
+                            -- they must be a part of an emply collection, hence 0.
+                            , let value = fromMaybe 0 (lookup name extras)
+                            ]
                          ++ mStatements essenceParam
             }
-        , map fst (concat extras)
+        , expectedExtras
         )
 
 
