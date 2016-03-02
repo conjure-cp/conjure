@@ -7,13 +7,15 @@ module Conjure.Representations.Matrix
 -- conjure
 import Conjure.Prelude
 import Conjure.Language
+import Conjure.Language.Instantiate
+import Conjure.Process.Enumerate
 import Conjure.Representations.Internal
 
 
 -- | The matrix "representation rule".
 --   This rule handles the plumbing for matrices.
 matrix
-    :: forall m . (MonadFail m, NameGen m, MonadUserError m)
+    :: forall m . (MonadFail m, NameGen m, MonadUserError m, EnumerateDomain m)
     => ((Name, DomainX Expression) -> m (Maybe [(Name, DomainX Expression)]))
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))
@@ -64,7 +66,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
             let
                 addEmptyLiteral :: (Name, DomainX Expression) -> m (Name, DomainC, Constant)
                 addEmptyLiteral (nm, dom) = do
-                    dom' <- mapM e2c dom
+                    dom' <- mapM (instantiateExpression []) dom
                     return (nm, dom', ConstantAbstract (AbsLitMatrix indexDomain []))
             mapM (mapM addEmptyLiteral) mids1
         matrixDownC ( name
