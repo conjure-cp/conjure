@@ -1,7 +1,7 @@
-{-# LANGUAGE DeriveDataTypeable #-}
+{-# LANGUAGE DeriveDataTypeable, DeriveGeneric #-}
 {-# OPTIONS_GHC -fno-cse #-} -- stupid cmdargs
 
-module Conjure.UI ( UI(..), ui ) where
+module Conjure.UI ( UI(..), OutputFormat(..), ui ) where
 
 -- conjure
 import Conjure.Prelude
@@ -13,12 +13,11 @@ import System.Console.CmdArgs hiding ( Default(..) )
 
 data UI
     = Modelling
-        { essence                    :: FilePath       -- essence, mandatory
+        { essence                    :: FilePath            -- essence, mandatory
         -- flags related to output
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
-        , lineWidth                  :: Int            -- 120 by default
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -42,42 +41,48 @@ data UI
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , savedChoices               :: Maybe FilePath
-        , outputBinary               :: Bool
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | TranslateParameter
-        { eprime           :: FilePath       -- eprime, mandatory
-        , essenceParam     :: FilePath       -- essence-param, mandatory
-        , eprimeParam      :: Maybe FilePath -- eprime-param, optional, by default (essenceParam <-.> "eprime-param")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { eprime                     :: FilePath            -- eprime, mandatory
+        , essenceParam               :: FilePath            -- essence-param, mandatory
+        , eprimeParam                :: Maybe FilePath      -- eprime-param, optional
+                                                            -- by default (essenceParam <-.> "eprime-param")
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | TranslateSolution
-        { eprime           :: FilePath       -- eprime, mandatory
-        , essenceParamO    :: Maybe FilePath -- essence-param, optional
-        , eprimeSolution   :: FilePath       -- eprime-solution, mandatory
-        , essenceSolutionO :: Maybe FilePath -- essence-solution, optional, by default (eprimeSolution <-.> "solution")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { eprime                     :: FilePath            -- eprime, mandatory
+        , essenceParamO              :: Maybe FilePath      -- essence-param, optional
+        , eprimeSolution             :: FilePath            -- eprime-solution, mandatory
+        , essenceSolutionO           :: Maybe FilePath      -- essence-solution, optional
+                                                            -- by default (eprimeSolution <-.> "solution")
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | ValidateSolution
-        { essence          :: FilePath       -- essence, mandatory
-        , essenceParamO    :: Maybe FilePath -- essence-param, optional
-        , essenceSolution  :: FilePath       -- essence-solution, mandatory, by default (eprimeSolution <-.> "solution")
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath            -- essence, mandatory
+        , essenceParamO              :: Maybe FilePath      -- essence-param, optional
+        , essenceSolution            :: FilePath            -- essence-solution, mandatory
+                                                            -- by default (eprimeSolution <-.> "solution")
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | Solve
-        { essence                    :: FilePath       -- essence, mandatory
+        { essence                    :: FilePath            -- essence, mandatory
         , essenceParams              :: [FilePath]
         , validateSolutionsOpt       :: Bool
         -- flags related to output
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
-        , lineWidth                  :: Int            -- 120 by default
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -100,54 +105,71 @@ data UI
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
-        , outputBinary               :: Bool
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
+        -- output
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | Pretty
-        { essence          :: FilePath
-        , normaliseQuantified :: Bool
-        , removeUnused     :: Bool
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath
+        , normaliseQuantified        :: Bool
+        , removeUnused               :: Bool
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | Diff
-        { file1            :: FilePath
-        , file2            :: FilePath
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { file1                      :: FilePath
+        , file2                      :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | TypeCheck
-        { essence          :: FilePath
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
         }
     | Split
-        { essence          :: FilePath
-        , outputDirectory  :: FilePath
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath
+        , outputDirectory            :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | SymmetryDetection
-        { essence          :: FilePath
-        , json             :: FilePath
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath
+        , json                       :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     | ParameterGenerator
-        { essence          :: FilePath
-        , essenceOut       :: FilePath
-        , logLevel         :: LogLevel
-        , outputBinary     :: Bool
-        , limitTime        :: Maybe Int
+        { essence                    :: FilePath
+        , essenceOut                 :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
         }
     deriving (Eq, Ord, Show, Data, Typeable)
+
+
+data OutputFormat = Plain | Binary | JSON
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize OutputFormat
+instance Hashable  OutputFormat
+instance ToJSON    OutputFormat where toJSON = genericToJSON jsonOptions
+instance FromJSON  OutputFormat where parseJSON = genericParseJSON jsonOptions
+
+instance Default OutputFormat where def = Plain
 
 
 ui :: UI
@@ -176,10 +198,6 @@ ui = modes
                                            \Caution: With this flag, Conjure will use the answers when producing \
                                            \a filename. It will ignore the order of questions. \
                                            \This will become a problem if anything other than 'f' is used for questions."
-        , lineWidth        = 120   &= name "line-width"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Line width to use during pretty printing. Default: 120"
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -305,11 +323,20 @@ ui = modes
                                    &= explicit
                                    &= help "Choices to use if possible for -al \
                                             \can either be a eprime file (created by --logChoices), or a json file "
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "modelling"
                                    &= explicit
                                    &= help "The main act. Given a problem specification in Essence, \
@@ -339,11 +366,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "translate-parameter"
                                    &= explicit
                                    &= help "Refinement of parameter files written in Essence for a \
@@ -378,11 +414,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "translate-solution"
                                    &= explicit
                                    &= help "Translation of solutions back to Essence."
@@ -408,11 +453,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "validate-solution"
                                    &= explicit
                                    &= help "Validating a solution."
@@ -447,10 +501,6 @@ ui = modes
                                            \Caution: With this flag, Conjure will use the answers when producing \
                                            \a filename. It will ignore the order of questions. \
                                            \This will become a problem if anything other than 'f' is used for questions."
-        , lineWidth        = 120   &= name "line-width"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Line width to use during pretty printing. Default: 120"
         , logLevel         = def   &= name "log-level"
                                    &= groupname "Logging & Output"
                                    &= explicit
@@ -570,11 +620,6 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
         , savilerowOptions = "-O2"
                                    &= name "savilerow-options"
                                    &= groupname "Options for other tools"
@@ -585,6 +630,20 @@ ui = modes
                                    &= groupname "Options for other tools"
                                    &= explicit
                                    &= help "Options to be passed to Minion."
+        , outputFormat = def       &= name "output-format"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "solve"
                                    &= explicit
                                    &= help "This is a combined mode, and it is available for convenience.\n\
@@ -611,11 +670,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "pretty"
                                    &= explicit
                                    &= help "Pretty print as Essence file to stdout.\n\
@@ -633,11 +701,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "diff"
                                    &= explicit
                                    &= help "Diff on two Essence files. Works on models, parameters, and solutions."
@@ -652,11 +729,6 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
-                                   &= groupname "Logging & Output"
-                                   &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
         }                          &= name "type-check"
                                    &= explicit
                                    &= help "Type-checking a single Essence file."
@@ -679,11 +751,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "split"
                                    &= explicit
                                    &= help "Split an Essence file to various smaller files. Useful for testing."
@@ -705,11 +786,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "symmetry-detection"
                                    &= explicit
                                    &= help "Dump some JSON to be used as input to ferret for symmetry detection."
@@ -730,11 +820,20 @@ ui = modes
                                    &= groupname "General"
                                    &= explicit
                                    &= help "Time limit in seconds (real time)."
-        , outputBinary = False     &= name "output-binary"
+        , outputFormat = def       &= name "output-format"
                                    &= groupname "Logging & Output"
                                    &= explicit
-                                   &= help "Output binary files instead of text files.\n\
-                                           \Conjure can read in these binary files for further processing."
+                                   &= help "Conjure's output can be in multiple formats.\n\
+                                           \    plain : The default\n\
+                                           \    binary: A binary encoding of the Essence output.\n\
+                                           \            It can be read back in by Conjure.\n\
+                                           \    json  : A json encoding of the Essence output.\n\
+                                           \            It can be used by other tools integrating with Conjure\n\
+                                           \            in order to avoid having to parse textual Essence."
+        , lineWidth        = 120   &= name "line-width"
+                                   &= groupname "Logging & Output"
+                                   &= explicit
+                                   &= help "Line width to use during pretty printing.\nDefault: 120"
         }                          &= name "parameter-generator"
                                    &= explicit
                                    &= help "Generate an Essence model describing the instances of the problem class \

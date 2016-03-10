@@ -8,7 +8,8 @@ import Conjure.UserError
 import Conjure.Language.Definition ( Model )
 import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
 import Conjure.Language.NameGen ( runNameGen )
-import Conjure.UI.IO ( readModelFromFile, writeModel, EssenceFileMode(..) )
+import Conjure.UI ( OutputFormat(..) )
+import Conjure.UI.IO ( readModelFromFile, writeModel )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 
 -- tasty
@@ -70,7 +71,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
             writeFile (tBaseDir </> "stderr") (renderNormal err)
             removeFileIfExists (tBaseDir </> "stdout")
         Right model -> do
-            writeModel PlainEssence (Just (tBaseDir </> "stdout")) model
+            writeModel 120 Plain (Just (tBaseDir </> "stdout")) model
             removeFileIfExists (tBaseDir </> "stderr")
 
     let

@@ -6,8 +6,8 @@ module Conjure.UI.MainHelper ( mainWithArgs ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel, EssenceFileMode(..) )
+import Conjure.UI ( UI(..), OutputFormat(..) )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -102,9 +102,7 @@ mainWithArgs TranslateParameter{..} = do
     output <- runNameGen $ join $ translateParameter
                     <$> readModelPreambleFromFile eprime
                     <*> readModelFromFile essenceParam
-    writeModel (if outputBinary then BinaryEssence else PlainEssence)
-               (Just outputFilename)
-               output
+    writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
@@ -113,8 +111,7 @@ mainWithArgs TranslateSolution{..} = do
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
-    writeModel (if outputBinary then BinaryEssence else PlainEssence)
-               (Just outputFilename) output
+    writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
@@ -128,8 +125,7 @@ mainWithArgs Pretty{..} = do
     let model1 = model0
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
-    writeModel (if outputBinary then BinaryEssence else PlainEssence)
-               Nothing model1
+    writeModel lineWidth outputFormat Nothing model1
 mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
@@ -147,9 +143,7 @@ mainWithArgs ParameterGenerator{..} = do
     when (null essenceOut) $ userErr1 "Mandatory field --essence-out"
     model  <- readModelFromFile essence
     output <- parameterGenerator model
-    writeModel (if outputBinary then BinaryEssence else PlainEssence)
-               (Just essenceOut)
-               output
+    writeModel lineWidth outputFormat (Just essenceOut) output
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     essenceM <- readModelFromFile essence
@@ -192,7 +186,7 @@ mainWithArgs config@Solve{..} = do
               , seed
               , limitModels
               , limitTime
-              , outputBinary
+              , outputFormat
               )
             )
             savedHashes
@@ -273,7 +267,7 @@ savileRowNoParam ui@Solve{..} modelPath = sh $ errExit False $ do
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , eprimeModel, def
-                                    , lineWidth
+                                    , lineWidth, outputFormat
                                     )
                                     (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
@@ -313,7 +307,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
                                             , eprimeModel, essenceParam
-                                            , lineWidth
+                                            , lineWidth, outputFormat
                                             )
                                             (1::Int))
             srCleanUp (stringToText $ unlines stdoutSR) solutions
@@ -336,7 +330,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: (FilePath, FilePath, FilePath, FilePath, Model, Model, Int)
+    :: (FilePath, FilePath, FilePath, FilePath, Model, Model, Int, OutputFormat)
     -> Int
     -> Handle
     -> IO [Either String (FilePath, FilePath, FilePath)]
@@ -344,7 +338,7 @@ srStdoutHandler
         args@( outputDirectory, outBase
              , modelPath, paramPath
              , eprimeModel, essenceParam
-             , lineWidth
+             , lineWidth, outputFormat
              )
         solutionNumber h = do
     eof <- hIsEOF h
@@ -362,7 +356,7 @@ srStdoutHandler
                     eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
                     writeFile filenameEprimeSol  (render lineWidth eprimeSol)
                     essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
-                    writeFile filenameEssenceSol (render lineWidth essenceSol)
+                    writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
                          (srStdoutHandler args (solutionNumber+1) h)
                 Nothing ->

@@ -38,6 +38,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
+import Conjure.UI ( OutputFormat(..) )
+import Conjure.UI.IO ( writeModel )
 
 import Conjure.Representations
     ( downX1, downD, reprOptions, getStructurals
@@ -131,7 +133,7 @@ outputModels config model = do
                                        |> concat
                                 else paddedNum 6 '0' i
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    liftIO $ writeFile filename (render (lineWidth config) eprime)
+                    writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
     Pipes.foldM each

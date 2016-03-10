@@ -17,7 +17,7 @@ import Conjure.Language.Definition
 import Conjure.Language.NameGen
 
 import Conjure.UI.IO
-import Conjure.UI as UI ( UI(..) )
+import Conjure.UI as UI ( UI(..), OutputFormat(..) )
 import {-# SOURCE #-} Conjure.UI.MainHelper
 
 -- temporary
@@ -111,7 +111,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                       }
     let essenceFile = tmpDir </> "out.essence"
     let outDir = tmpDir </> "outDir"
-    writeModel PlainEssence (Just essenceFile) model
+    writeModel 120 Plain (Just essenceFile) model
     let
         solve :: IO ()
         solve = ignoreLogs $ mainWithArgs Solve
@@ -151,7 +151,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , seed                          = Nothing
             , limitModels                   = Nothing
             , limitTime                     = Nothing
-            , outputBinary                  = False
+            , outputFormat                  = UI.Plain
             , lineWidth                     = 120
             }
     -- catching the (SR timeout) error, and raising a user error
