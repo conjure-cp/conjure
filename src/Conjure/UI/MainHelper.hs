@@ -147,6 +147,9 @@ mainWithArgs ParameterGenerator{..} = do
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     essenceM <- readModelFromFile essence
+    essenceParamsParsed <- forM essenceParams $ \ f -> do
+        p <- readModelFromFile f
+        return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
     when (not (null givens) && null essenceParams) $
@@ -154,7 +157,12 @@ mainWithArgs config@Solve{..} = do
             [ "The problem specification is parameterised, but no *.param files are given."
             , "Parameters:" <+> prettyList id "," givens
             ]
-    when (null givens && not (null essenceParams)) $
+    let isEmptyParam Model{mStatements=[]} = True
+        isEmptyParam _ = False
+        hasNonEmptyParams =
+            null essenceParams ||                               -- either no params were given
+            all (isEmptyParam . snd) essenceParamsParsed        -- or all those given were empty
+    when (null givens && not hasNonEmptyParams) $
         userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
 
     savedHashes <- do
@@ -193,7 +201,7 @@ mainWithArgs config@Solve{..} = do
             (pp logLevel "Using cached models." >> getEprimes)
             conjuring
     liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
-    msolutions <- liftIO $ savileRows eprimes
+    msolutions <- liftIO $ savileRows eprimes essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
@@ -223,15 +231,15 @@ mainWithArgs config@Solve{..} = do
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
 
-        savileRows :: [FilePath] -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
-        savileRows eprimes = fmap combineResults $
-            if null essenceParams
+        savileRows :: [FilePath] -> [(FilePath, Model)] -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
+        savileRows eprimes params = fmap combineResults $
+            if null params
                 then parallel [ savileRowNoParam config m
                               | m <- eprimes
                               ]
                 else parallel [ savileRowWithParams config m p
                               | m <- eprimes
-                              , p <- essenceParams
+                              , p <- params
                               ]
 
         validating :: [(FilePath, FilePath, FilePath)] -> IO ()
@@ -277,18 +285,17 @@ savileRowNoParam _ _ = bug "savileRowNoParam"
 savileRowWithParams
     :: UI
     -> FilePath
-    -> FilePath
+    -> (FilePath, Model)
     -> IO (Either
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
           ) ])
-savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
+savileRowWithParams ui@Solve{..} modelPath (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
     eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
-    essenceParam <- liftIO $ readModelFromFile paramPath
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
@@ -300,7 +307,7 @@ savileRowWithParams ui@Solve{..} modelPath paramPath = sh $ errExit False $ do
         Right eprimeParam -> do
             liftIO $ writeFile (outputDirectory </> outBase ++ ".eprime-param") (render lineWidth eprimeParam)
             let srArgs = "-in-param"
-                       : (stringToText (outputDirectory </> outBase ++ ".eprime-param"))
+                       : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
             (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
                                         (liftIO . srStdoutHandler
