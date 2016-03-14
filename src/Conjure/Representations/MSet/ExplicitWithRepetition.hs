@@ -108,7 +108,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         ]
 
                 innerStructuralCons flag values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxIndex) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) . &i <= &flag -> &b |]
 
                     -- preparing structural constraints for the inner guys

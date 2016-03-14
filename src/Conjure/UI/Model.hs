@@ -1295,8 +1295,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
                           => m [Expression]
             mkStructurals = do
-                logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
+                logDebugVerbose $ "Generating structural constraints for:" <+> vcat [pretty ref, pretty domain]
                 structurals <- getStructurals downX1 domain >>= \ gen -> gen ref
                 logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
                 resolved    <- mapM resolveNamesX structurals     -- re-resolving names

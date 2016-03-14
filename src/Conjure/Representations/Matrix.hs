@@ -41,7 +41,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
         structuralCons f _ (DomainMatrix indexDomain innerDomain) = do
             let
                 innerStructuralCons inpMatrix = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain indexDomain
                     let activeZone b = [essence| forAll &iPat : &indexDomain . &b |]
 
                     -- preparing structural constraints for the inner guys

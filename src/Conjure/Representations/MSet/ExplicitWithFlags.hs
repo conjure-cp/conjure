@@ -100,7 +100,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                         ]
 
                 innerStructuralCons flags values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &flags[&i] > 0 -> &b |]
 
                     -- preparing structural constraints for the inner guys

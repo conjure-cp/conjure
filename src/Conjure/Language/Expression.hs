@@ -10,7 +10,7 @@ module Conjure.Language.Expression
     , AbstractPattern(..)
     , GeneratorOrCondition(..), Generator(..), generatorPat
     , e2c
-    , quantifiedVar, auxiliaryVar
+    , quantifiedVar, quantifiedVarOverDomain, auxiliaryVar
     , lambdaToFunction
     , tupleLitIfNeeded
     , patternToExpr
@@ -517,13 +517,16 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 -- | This is only for when you know the Expression you have is actually a Constant, but
 --   is refusing to believe that it is one.
 --   Remind it where it comes from!
---   (Srsly: Can be useful after parsing a solutuon file, for example.)
+--   (Srsly: Can be useful after parsing a solution file, for example.)
 e2c :: MonadFail m => Expression -> m Constant
 e2c (Constant c) = return c
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
 e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt x))))) = return $ ConstantInt $ negate x
 e2c x = fail ("e2c, not a constant:" <+> pretty x)
 
+-- | generate a fresh name for a quantified variable.
+--   fst: the pattern to be used inside a generator
+--   snd: the expression to be used everywhere else
 quantifiedVar :: NameGen m => m (AbstractPattern, Expression)
 quantifiedVar = do
     nm <- nextName "q"
@@ -531,6 +534,17 @@ quantifiedVar = do
         ref = Reference nm Nothing
     return (pat, ref)
 
+-- | like `quantifiedVar`, but already name-resolved as a quantified variable over the given domain
+quantifiedVarOverDomain :: NameGen m => Domain () Expression -> m (AbstractPattern, Expression)
+quantifiedVarOverDomain domain = do
+    nm <- nextName "q"
+    let pat = Single nm
+        ref = Reference nm (Just (InComprehension (GenDomainNoRepr (Single nm) domain)))
+    return (pat, ref)
+
+-- | generate a fresh name for an auxiliary variable.
+--   fst: the name to be used when declaring the variable
+--   snd: the expression to be used everywhere else
 auxiliaryVar :: NameGen m => m (Name, Expression)
 auxiliaryVar = do
     nm <- nextName "aux"

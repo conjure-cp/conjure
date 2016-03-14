@@ -66,7 +66,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) _) innerDomain) = do
             let
                 innerStructuralCons values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&size) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
                     -- preparing structural constraints for the inner guys
@@ -95,7 +95,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         |]
 
                 innerStructuralCons marker values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
                     -- preparing structural constraints for the inner guys
