@@ -442,7 +442,7 @@ noDuplicateSolutions TestDirFiles{..} =
             assertFailure $ show $ vcat
                 [ case param of
                     Nothing -> "For model" <+> pretty model <++> rest
-                    Just p  -> "For parameter" <+> pretty p <+> ", for model" <+> pretty model <++> rest
+                    Just p  -> "For parameter" <+> pretty p <> ", for model" <+> pretty model <++> rest
                 | (param, duplicateSols) <- grouped
                 , (model, sols) <- duplicateSols
                 , let rest = "Duplicate solutions:" <++> prettyList id "," sols
