@@ -96,7 +96,8 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_LiteralIndexed"
-        (matrix, indices) <- match opMatrixIndexing expr
+        tyExpr             <- typeOf expr
+        (matrix, indices)  <- match opMatrixIndexing expr
         (_, _index, elems) <- match matrixLiteral matrix
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
@@ -111,8 +112,13 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                                , Condition [essence| &num = &index |]
                                ]
                             ++ gocAfter
-                        | (num', el) <- zip [1..] elems
+                        | (num', el') <- zip [1..] elems
                         , let num = fromInt num'
+                        -- let's not lose the type information for empty collections
+                        , let el = if emptyCollectionX el'
+                                    then case el' of Typed{} -> el'
+                                                     _       -> Typed el' tyExpr
+                                    else el'
                         ]
                 (index:rest) ->
                     return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
@@ -123,8 +129,13 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
                                , Condition [essence| &num = &index |]
                                ]
                             ++ gocAfter
-                        | (num', el) <- zip [1..] elems
+                        | (num', el') <- zip [1..] elems
                         , let num = fromInt num'
+                        -- let's not lose the type information for empty collections
+                        , let el = if emptyCollectionX el'
+                                    then case el' of Typed{} -> el'
+                                                     _       -> Typed el' tyExpr
+                                    else el'
                         ]
             )
     theRule _ = na "rule_Comprehension_LiteralIndexed"
