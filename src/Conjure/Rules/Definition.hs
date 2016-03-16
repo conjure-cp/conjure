@@ -95,6 +95,7 @@ data Config = Config
     , representationsCuts        :: Strategy
     , outputDirectory            :: FilePath
     , channelling                :: Bool
+    , breakUnnamedSymmetry       :: Bool
     , representationLevels       :: Bool
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
@@ -122,6 +123,7 @@ instance Default Config where
         , representationsCuts        = Interactive
         , outputDirectory            = "conjure-output"
         , channelling                = True
+        , breakUnnamedSymmetry       = False
         , representationLevels       = True
         , limitModels                = Nothing
         , numberingStart             = 1

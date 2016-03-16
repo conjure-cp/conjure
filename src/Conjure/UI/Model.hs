@@ -149,7 +149,7 @@ toCompletion
     -> Model
     -> Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- prologue m
+    m2 <- prologue config m
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
@@ -829,15 +829,15 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Model -> m Model
-prologue model = return model
+prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Config -> Model -> m Model
+prologue config model = return model
                                       >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
     >>= return . initInfo             >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
-    >>= addUnnamedStructurals         >>= logDebugId "[addUnnamedStructurals]"
+    >>= addUnnamedStructurals config  >>= logDebugId "[addUnnamedStructurals]"
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"

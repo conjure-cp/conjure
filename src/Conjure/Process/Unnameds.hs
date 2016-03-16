@@ -8,6 +8,7 @@ module Conjure.Process.Unnameds
 
 import Conjure.Prelude
 import Conjure.Language
+import Conjure.Rules.Definition
 import qualified Conjure.Language.ModelStats as ModelStats ( finds )
 
 
@@ -27,8 +28,9 @@ removeUnnamedsFromModel model = do
                 _ -> return st
     return model { mStatements = statements' }
 
-addUnnamedStructurals :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
-addUnnamedStructurals model = do
+addUnnamedStructurals :: (MonadFail m, MonadLog m, NameGen m) => Config -> Model -> m Model
+addUnnamedStructurals Config{breakUnnamedSymmetry=False} model = return model
+addUnnamedStructurals _ model = do
     let
         -- assuming the info is ready by this point
         allUnnnameds :: [Unnamed]

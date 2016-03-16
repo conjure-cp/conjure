@@ -481,6 +481,7 @@ modelAll dir = ignoreLogs . runNameGen . outputModels Config
     , representationsCuts        = PickAll
     , outputDirectory            = dir
     , channelling                = True
+    , breakUnnamedSymmetry       = True
     , representationLevels       = True
     , limitModels                = Nothing
     , numberingStart             = 1

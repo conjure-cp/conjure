@@ -36,6 +36,7 @@ data UI
         , representationsQuantifieds :: Maybe String        -- (def: representations)
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
+        , breakUnnamedSymmetry       :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
@@ -101,6 +102,7 @@ data UI
         , representationsQuantifieds :: Maybe String
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
+        , breakUnnamedSymmetry       :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
@@ -331,6 +333,13 @@ ui = modes
                     \Can be true or false. (true by default)\n\
                     \    false: Do not produce channelled models.\n\
                     \    true : Produce channelled models."
+        , breakUnnamedSymmetry
+            = False
+            &= name "break-unnamed-symmetry"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Whether to produce symmetry breaking constraints for unnamed types or not.\n\
+                    \Can be true or false. (false by default)"
         , representationLevels
             = True
             &= name "representation-levels"
@@ -727,6 +736,13 @@ ui = modes
                     \Can be true or false. (true by default)\n\
                     \    false: Do not produce channelled models.\n\
                     \    true : Produce channelled models."
+        , breakUnnamedSymmetry
+            = False
+            &= name "break-unnamed-symmetry"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Whether to produce symmetry breaking constraints for unnamed types or not.\n\
+                    \Can be true or false. (false by default)"
         , representationLevels
             = True
             &= name "representation-levels"

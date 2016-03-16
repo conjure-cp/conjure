@@ -88,6 +88,7 @@ mainWithArgs Modelling{..} = do
             , Config.representationsQuantifieds = representationsQuantifieds'
             , Config.representationsCuts        = representationsCuts'
             , Config.channelling                = channelling
+            , Config.breakUnnamedSymmetry       = breakUnnamedSymmetry
             , Config.representationLevels       = representationLevels
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
