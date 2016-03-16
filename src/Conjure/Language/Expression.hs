@@ -542,6 +542,9 @@ quantifiedVarOverDomain domain = do
         ref = Reference nm (Just (InComprehension (GenDomainNoRepr (Single nm) domain)))
     return (pat, ref)
 
+-- | generate a fresh name for a letting.
+--   fst: the name to be used when declaring the letting
+--   snd: the expression to be used everywhere else
 lettingVar :: NameGen m => m (Name, Expression)
 lettingVar = do
     nm <- nextName "l"
