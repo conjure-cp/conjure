@@ -42,7 +42,7 @@ setExplicit = Representation chck downD structuralCons downC up
                         |]
 
                 innerStructuralCons m = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&size) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
                     -- preparing structural constraints for the inner guys

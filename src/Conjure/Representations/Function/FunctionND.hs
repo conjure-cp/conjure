@@ -115,7 +115,7 @@ functionND = Representation chck downD structuralCons downC up
                     return [essence| sum &iPat : &innerDomainFr . 1 |]
 
             let innerStructuralCons values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let valuesIndexedI = index i values
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
 

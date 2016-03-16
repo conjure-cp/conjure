@@ -20,7 +20,6 @@ Logging & Output:
                                              Caution: With this flag, Conjure will use the answers when producing a
                                              filename. It will ignore the order of questions. This will become a
                                              problem if anything other than 'f' is used for questions.
-     --line-width=INT                        Line width to use during pretty printing. Default: 120
      --log-level=LOGLEVEL                    Log level.
      --verbose-trail                         Whether to generate verbose trails or not.
      --rewrites-trail                        Whether to generate trails about the applied rewritings or not.
@@ -28,8 +27,15 @@ Logging & Output:
      --log-rule-successes                    Generate logs for rule applications.
      --log-rule-attempts                     Generate logs for rule attempts. (Caution: these can be a lot!)
      --log-choices                           Store the choices in a way that can be reused be by -al
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 Model generation:
   -q --strategy-q=STRATEGY                   Strategy to use when selecting the next question to answer. Options: f
                                              (for first), i (for interactive), r (for random), x (for all). The letter
@@ -86,8 +92,15 @@ Flags:
                                              if the Essence parameter file is named 'foo.param'
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -105,8 +118,15 @@ Flags:
                                              extensions dropped the extension '.solution' is added instead.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -120,8 +140,15 @@ Flags:
      --solution=FILE                         An Essence solution.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -143,7 +170,6 @@ Logging & Output:
                                              Caution: With this flag, Conjure will use the answers when producing a
                                              filename. It will ignore the order of questions. This will become a
                                              problem if anything other than 'f' is used for questions.
-     --line-width=INT                        Line width to use during pretty printing. Default: 120
      --log-level=LOGLEVEL                    Log level.
      --verbose-trail                         Whether to generate verbose trails or not.
      --rewrites-trail                        Whether to generate trails about the applied rewritings or not.
@@ -151,8 +177,15 @@ Logging & Output:
      --log-rule-successes                    Generate logs for rule applications.
      --log-rule-attempts                     Generate logs for rule attempts. (Caution: these can be a lot!)
      --log-choices                           Store the choices in a way that can be reused be by -al
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 Model generation:
   -q --strategy-q=STRATEGY                   Strategy to use when selecting the next question to answer. Options: f
                                              (for first), i (for interactive), r (for random), x (for all). The letter
@@ -206,8 +239,15 @@ Flags:
      --remove-unused                         Whether to remove unused declarations or not. Off by default.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -216,8 +256,15 @@ conjure diff [OPTIONS] FILE FILE
 
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -226,8 +273,6 @@ conjure type-check [OPTIONS] ESSENCE_FILE
 
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -238,8 +283,15 @@ Logging & Output:
   -o --output-directory=DIR                  Output directory. Generated models will be saved here.
                                              Default value: 'conjure-output'
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -251,8 +303,15 @@ Logging & Output:
                                              By default, its value will be 'foo.essence-json'
                                              if the Essence file is named 'foo.essence'
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).
 
@@ -263,7 +322,14 @@ conjure parameter-generator [OPTIONS] ESSENCE_FILE
 Logging & Output:
      --essence-out=FILE                      Output file path.
      --log-level=LOGLEVEL                    Log level.
-     --output-binary                         Output binary files instead of text files.
-                                             Conjure can read in these binary files for further processing.
+     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+                                                 plain : The default
+                                                 binary: A binary encoding of the Essence output.
+                                                         It can be read back in by Conjure.
+                                                 json  : A json encoding of the Essence output.
+                                                         It can be used by other tools integrating with Conjure
+                                                         in order to avoid having to parse textual Essence.
+     --line-width=INT                        Line width to use during pretty printing.
+                                             Default: 120
 General:
      --limit-time=INT                        Time limit in seconds (real time).

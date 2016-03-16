@@ -95,7 +95,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
                     return [essence| sum &iPat : int(1..&maxSize) . toInt(&m[&i] != &dummyElem) |]
 
                 innerStructuralCons m = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &m[&i] != &dummyElem -> &b |]
 
                     -- preparing structural constraints for the inner guys

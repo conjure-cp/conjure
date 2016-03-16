@@ -65,8 +65,9 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                         |]
 
                 innerStructuralCons marker values = do
-                    (iPat, i) <- quantifiedVar
-                    let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
+                    let overDomain = [essenceDomain| int(1..&maxSize) |]
+                    (iPat, i) <- quantifiedVarOverDomain overDomain
+                    let activeZone b = [essence| forAll &iPat : &overDomain . &i <= &marker -> &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain

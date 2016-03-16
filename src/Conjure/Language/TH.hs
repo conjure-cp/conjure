@@ -2,6 +2,7 @@
 
 module Conjure.Language.TH
     ( essence
+    , essenceDomain
     , essenceStmts
     , module X
     , locationTH            -- unused, exporting only to silence the warning
@@ -50,6 +51,21 @@ essence = QuasiQuoter
     , quotePat  = \ str -> do
         e <- parseIO parseExpr str
         dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patN) e
+    , quoteType = bug "quoteType"
+    , quoteDec  = bug "quoteDec"
+    }
+
+essenceDomain :: QuasiQuoter
+essenceDomain = QuasiQuoter
+    { quoteExp = \ str -> do
+        l <- locationTH
+        e <- parseIO (setPosition l *> parseDomain) str
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        appE [| $(varE (mkName "fixRelationProj")) |] e'
+    , quotePat  = \ str -> do
+        l <- locationTH
+        e <- parseIO (setPosition l *> parseDomain) str
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }

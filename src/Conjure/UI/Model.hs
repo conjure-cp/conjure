@@ -38,6 +38,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
+import Conjure.UI ( OutputFormat(..) )
+import Conjure.UI.IO ( writeModel )
 
 import Conjure.Representations
     ( downX1, downD, reprOptions, getStructurals
@@ -131,7 +133,7 @@ outputModels config model = do
                                        |> concat
                                 else paddedNum 6 '0' i
                     let filename = dir </> "model" ++ gen ++ ".eprime"
-                    liftIO $ writeFile filename (render (lineWidth config) eprime)
+                    writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
     Pipes.foldM each
@@ -1305,8 +1307,8 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
             mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
                           => m [Expression]
             mkStructurals = do
-                logDebugVerbose "Generating structural constraints."
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
+                logDebugVerbose $ "Generating structural constraints for:" <+> vcat [pretty ref, pretty domain]
                 structurals <- getStructurals downX1 domain >>= \ gen -> gen ref
                 logDebugVerbose $ "Before name resolution:" <+> vcat (map pretty structurals)
                 resolved    <- mapM resolveNamesX structurals     -- re-resolving names
@@ -1593,7 +1595,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
             TypeMatrix _ TypeInt  -> fail "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> fail "allDiff on something other than a matrix."
-        DomainMatrix index _ <- domainOf m
+        index:_ <- indexDomainsOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty
             , do

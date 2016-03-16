@@ -98,7 +98,7 @@ function1D = Representation chck downD structuralCons downC up
             cardinality <- domainSizeOf innerDomainFr
 
             let innerStructuralCons m = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &b |]
 
                     -- preparing structural constraints for the inner guys

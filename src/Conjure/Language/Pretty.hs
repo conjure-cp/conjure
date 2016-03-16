@@ -129,7 +129,7 @@ instance Pretty JSON.Object where
             keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                        , "strategyQ", "strategyA"
                        , "trailCompact", "trailVerbose", "trailRewrites"
-                       , "nameGenState"
+                       , "nameGenState", "nbExtraGivens"
                        , "representations", "representationsTree"
                        , "originalDomains"
                        , "questionAnswered"

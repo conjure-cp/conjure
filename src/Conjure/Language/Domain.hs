@@ -616,13 +616,13 @@ instance Pretty a => Pretty (PartitionAttr a) where
             prettyNum (SizeAttr_Size       x  ) = "numParts"    <+> pretty x
             prettyNum (SizeAttr_MinSize    x  ) = "minNumParts" <+> pretty x
             prettyNum (SizeAttr_MaxSize    x  ) = "maxNumParts" <+> pretty x
-            prettyNum (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <+> ", maxNumParts" <+> pretty y
+            prettyNum (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <> ", maxNumParts" <+> pretty y
 
             prettySize SizeAttr_None = prEmpty
             prettySize (SizeAttr_Size       x  ) = "partSize"    <+> pretty x
             prettySize (SizeAttr_MinSize    x  ) = "minPartSize" <+> pretty x
             prettySize (SizeAttr_MaxSize    x  ) = "maxPartSize" <+> pretty x
-            prettySize (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <+> ", maxPartSize" <+> pretty y
+            prettySize (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <> ", maxPartSize" <+> pretty y
 
             prettyReg False = prEmpty
             prettyReg True  = "regular"

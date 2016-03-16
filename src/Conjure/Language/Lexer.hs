@@ -166,7 +166,7 @@ data Lexeme
     | L_Minus               --    -           -- (subtraction, infix : (int,int) -> int) OR (unary minus : int -> int)
     | L_Times               --    *           -- multiplication, infix : (int,int) -> int
     | L_Div                 --    /           -- integer division, infix
-    | L_Mod                 --    %           -- module, infix
+    | L_Mod                 --    %           -- modulo, infix
     | L_Pow                 --    **          -- exponentiation, infix : (int,int) -> int
     | L_factorial
 

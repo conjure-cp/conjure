@@ -121,7 +121,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                         |]
 
             let innerStructuralCons flags values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let flagsIndexed  = index i flags
                     let valuesIndexed = index i values
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &flagsIndexed -> &b |]

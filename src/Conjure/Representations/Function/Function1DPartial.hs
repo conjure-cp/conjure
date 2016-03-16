@@ -101,7 +101,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                         |]
 
             let innerStructuralCons flags values = do
-                    (iPat, i) <- quantifiedVar
+                    (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDomainFr)
                     let activeZone b = [essence| forAll &iPat : &innerDomainFr . &flags[&i] -> &b |]
 
                     -- preparing structural constraints for the inner guys

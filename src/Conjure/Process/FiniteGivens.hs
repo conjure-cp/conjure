@@ -29,7 +29,10 @@ finiteGivens m = flip evalStateT 1 $ do
                 return $ [ Declaration $ FindOrGiven Given e (DomainInt []) | e <- extras ]
                       ++ [ Declaration $ FindOrGiven Given name domain'                   ]
             _ -> return [st]
-    return m { mStatements = concat statements }
+    namegenst <- exportNameGenState
+    return m { mStatements = concat statements
+             , mInfo = (mInfo m) { miNbExtraGivens = maybe 0 (\ n -> n - 1 ) (lookup "fin" namegenst) }
+             }
 
 
 finiteGivensParam
@@ -41,7 +44,11 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
     let essenceLettings   = extractLettings essenceParam
-    extras <- forM essenceGivenNames $ \ name -> do
+    let nbExtraGivens     = eprimeModel |> mInfo |> miNbExtraGivens
+    let expectedExtras    = [ MachineName "fin" extraGiven []
+                            | extraGiven <- [1..nbExtraGivens]
+                            ]
+    extras <- fmap concat $ forM essenceGivenNames $ \ name -> do
         logDebugVerbose $ "finiteGivensParam name" <+> pretty name
         case (lookup name essenceGivens, lookup name essenceLettings) of
             (Nothing, _) -> bug $ "Not found:" <+> pretty name
@@ -55,12 +62,21 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
                 outs <- f constant
                 logDebugVerbose $ "finiteGivensParam outs    " <+> vcat (map pretty outs)
                 return outs
+    logDebugVerbose $ "finiteGivensParam extras  " <+> vcat (map (pretty . show) extras)
     return
         ( essenceParam
-            { mStatements = [ Declaration (Letting n (Constant c)) | (n,c) <- concat extras ]
+            { mStatements = [ Declaration (Letting name (Constant value))
+                            | name <- expectedExtras
+                            -- we are storing the number of "extra givens" in the model info.
+                            -- also, defaulting their values to 0 if they do not come out of
+                            -- the usual finiteGivens process.
+                            -- the idea is: if they don't come out from that,
+                            -- they must be a part of an emply collection, hence 0.
+                            , let value = fromMaybe 0 (lookup name extras)
+                            ]
                          ++ mStatements essenceParam
             }
-        , map fst (concat extras)
+        , expectedExtras
         )
 
 
@@ -270,7 +286,7 @@ mkFiniteOutermost (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) =
                 logDebug $ "mkFiniteOutermost DomainPartition" <+> pretty constant
                 parts <- viewConstantPartition constant
                 let numPartsVal = genericLength parts
-                let partsSizeVal = maximum $ map genericLength parts
+                let partsSizeVal = maximum0 $ map genericLength parts
                 innerValues <- mapM innerF parts
                 return $ concat innerValues ++ [ (numPartsFin, ConstantInt numPartsVal)
                                                , (partsSizeFin, ConstantInt partsSizeVal)
@@ -296,7 +312,7 @@ mkFiniteInner (DomainInt []) = do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- mapM viewConstantInt constants
                 return [ (fr, ConstantInt (minimum ints))
-                       , (to, ConstantInt (maximum ints))
+                       , (to, ConstantInt (maximum0 ints))
                        ]
         )
 mkFiniteInner (DomainInt [RangeLowerBounded low]) = do
@@ -307,7 +323,7 @@ mkFiniteInner (DomainInt [RangeLowerBounded low]) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- mapM viewConstantInt constants
-                return [ (new, ConstantInt (maximum ints)) ]
+                return [ (new, ConstantInt (maximum0 ints)) ]
         )
 mkFiniteInner (DomainInt [RangeUpperBounded upp]) = do
     new <- nextName "fin"
@@ -360,7 +376,7 @@ mkFiniteInner (DomainSet () _ inner) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainSet" <+> vcat (map pretty constants)
                 sets <- mapM viewConstantSet constants
-                let setMaxSize = maximum $ map genericLength sets
+                let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setMaxSize)]
         )
@@ -383,7 +399,7 @@ mkFiniteInner (DomainMSet () (MSetAttr _ occurAttr) inner) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainMSet" <+> vcat (map pretty constants)
                 sets <- mapM viewConstantMSet constants
-                let setMaxSize = maximum $ map genericLength sets
+                let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
                 return $ innerValues ++ [(s, ConstantInt setMaxSize)]
         )
@@ -406,7 +422,7 @@ mkFiniteInner (DomainSequence () (SequenceAttr _ jectivityAttr) inner) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainSequence" <+> vcat (map pretty constants)
                 seqs <- mapM viewConstantSequence constants
-                let seqMaxSize = maximum $ map genericLength seqs
+                let seqMaxSize = maximum0 $ map genericLength seqs
                 innerValues <- innerF (concat seqs)
                 return $ innerValues ++ [(s, ConstantInt seqMaxSize)]
         )
@@ -435,7 +451,7 @@ mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) i
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainFunction" <+> vcat (map pretty constants)
                 functions <- mapM viewConstantFunction constants
-                let functionMaxSize = maximum $ map genericLength functions
+                let functionMaxSize = maximum0 $ map genericLength functions
                 innerFrValues <- innerFrF (map fst (concat functions))
                 innerToValues <- innerToF (map snd (concat functions))
                 return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionMaxSize)]
@@ -462,7 +478,7 @@ mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainRelation" <+> vcat (map pretty constants)
                 relations <- mapM viewConstantRelation constants
-                let relationMaxSize = maximum $ map genericLength relations
+                let relationMaxSize = maximum0 $ map genericLength relations
                 innersValues <- zipWithM ($) innersF (transpose $ concat relations)
                 return $ concat innersValues ++ [(s, ConstantInt relationMaxSize)]
         )
@@ -491,11 +507,17 @@ mkFiniteInner (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainPartition" <+> vcat (map pretty constants)
                 parts <- mapM viewConstantPartition constants
-                let numPartsVal = maximum $ map genericLength parts
-                let partsSizeVal = maximum $ map genericLength parts
+                let numPartsVal = maximum0 $ map genericLength parts
+                let partsSizeVal = maximum0 $ map genericLength parts
                 innerValues <- mapM innerF (concat parts)
                 return $ concat innerValues ++ [ (numPartsFin, ConstantInt numPartsVal)
                                                , (partsSizeFin, ConstantInt partsSizeVal)
                                                ]
         )
 mkFiniteInner d = return (d, [], const (return []))
+
+
+-- specialised the type for maximum0, to avoid possible bugs
+-- this function is always intended to be used with Integers
+maximum0 :: [Integer] -> Integer
+maximum0 xs = maximum (0:xs)

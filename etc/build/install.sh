@@ -261,10 +261,12 @@ fi
 cabal install                                                           \
     --only-dependencies                                                 \
     --force-reinstalls                                                  \
+    --enable-split-objs                                                 \
     ${DYNAMIC} ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION}    \
     --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                         \
+    --enable-split-objs                                                 \
     ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
     --bindir="${BIN_DIR}"
 

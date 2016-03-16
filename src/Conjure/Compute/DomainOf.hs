@@ -290,7 +290,7 @@ instance DomainOf (AbstractLiteral Expression) where
                                    False
 
     indexDomainsOf (AbsLitMatrix ind inn) = (ind :) <$> (mapM domainUnions =<< mapM indexDomainsOf inn)
-    indexDomainsOf dom = defIndexDomainsOf dom
+    indexDomainsOf _ = return []
 
 
 
