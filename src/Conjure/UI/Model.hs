@@ -689,7 +689,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                                    | c <- tail (ascendants x)
                                                    ]
                     _ -> return []
-    unless (null fails) (fail (vcat fails))
+    unless (null fails) (bug (vcat fails))
     return m
 checkIfAllRefined m = return m
 
