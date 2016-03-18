@@ -439,13 +439,15 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
     theRule _ = na "rule_Restrict_Comprehension"
 
 
--- | image(f,x) can be nasty for non-total functions.
+--   image(f,x) can be nasty for non-total functions.
 --   1.   if f is a total function, it can readily be replaced by a set expression.
 --   2.1. if f isn't total, and if the return type is right, it will always end up as a generator for a comprehension.
 --      a vertical rule is needed for such cases.
 --   2.2. if the return type is not "right", i.e. it is a bool or an int, i.e. sth we cannot quantify over,
 --        the vertical rule is harder.
 
+
+-- | f(x) : bool ~~> or([ b | (a,b) <- f, a = x])
 rule_Image_Bool :: Rule
 rule_Image_Bool = "function-image-bool" `namedRule` theRule where
     theRule p = do
@@ -465,6 +467,7 @@ rule_Image_Bool = "function-image-bool" `namedRule` theRule where
             )
 
 
+-- | f(x)[i] : bool ~~> or([ b[i] | (a,b) <- f, a = x])             "matrix indexing"
 rule_Image_BoolMatrixIndexed :: Rule
 rule_Image_BoolMatrixIndexed = "function-image-BoolMatrixIndexed" `namedRule` theRule where
     theRule p = do
@@ -483,6 +486,7 @@ rule_Image_BoolMatrixIndexed = "function-image-BoolMatrixIndexed" `namedRule` th
             )
 
 
+-- | f(x)[i] : bool ~~> or([ b[i] | (a,b) <- f, a = x])             "tuple indexing"
 rule_Image_BoolTupleIndexed :: Rule
 rule_Image_BoolTupleIndexed = "function-image-BoolTupleIndexed" `namedRule` theRule where
     theRule p = do
@@ -505,6 +509,7 @@ rule_Image_BoolTupleIndexed = "function-image-BoolTupleIndexed" `namedRule` theR
             )
 
 
+-- | f(x) : int ~~> or([ b | (a,b) <- f, a = x])
 rule_Image_Int :: Rule
 rule_Image_Int = "function-image-int" `namedRule` theRule where
     theRule p = do
@@ -526,6 +531,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             )
 
 
+-- | f(x)[i] : int ~~> or([ b[i] | (a,b) <- f, a = x])              "matrix indexing"
 rule_Image_IntMatrixIndexed :: Rule
 rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theRule where
     theRule p = do
@@ -546,6 +552,7 @@ rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theR
             )
 
 
+-- | f(x)[i] : int ~~> or([ b[i] | (a,b) <- f, a = x])              "tuple indexing"
 rule_Image_IntTupleIndexed :: Rule
 rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRule where
     theRule p = do
@@ -570,6 +577,8 @@ rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRul
             )
 
 
+-- | [ ..i.. | i <- f(x), ..i.. ] ~~>
+--   [ ..j.. | (a,b) <- f, a = i, j <- b, ..j.. ]
 rule_Comprehension_Image :: Rule
 rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -600,6 +609,8 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Image"
 
 
+-- | [ ..i.. | i <- imageSet(f,x), ..i.. ] ~~>
+--   [ ..b.. | (a,b) <- f, a = i, ..b.. ]
 rule_Comprehension_ImageSet :: Rule
 rule_Comprehension_ImageSet = "function-imageSet-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
