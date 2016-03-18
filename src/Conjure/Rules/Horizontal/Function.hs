@@ -509,7 +509,7 @@ rule_Image_BoolTupleIndexed = "function-image-BoolTupleIndexed" `namedRule` theR
             )
 
 
--- | f(x) : int ~~> or([ b | (a,b) <- f, a = x])
+-- | f(x) : int ~~> sum([ b | (a,b) <- f, a = x])
 rule_Image_Int :: Rule
 rule_Image_Int = "function-image-int" `namedRule` theRule where
     theRule p = do
@@ -531,7 +531,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             )
 
 
--- | f(x)[i] : int ~~> or([ b[i] | (a,b) <- f, a = x])              "matrix indexing"
+-- | f(x)[i] : int ~~> sum([ b[i] | (a,b) <- f, a = x])             "matrix indexing"
 rule_Image_IntMatrixIndexed :: Rule
 rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theRule where
     theRule p = do
@@ -552,7 +552,7 @@ rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theR
             )
 
 
--- | f(x)[i] : int ~~> or([ b[i] | (a,b) <- f, a = x])              "tuple indexing"
+-- | f(x)[i] : int ~~> sum([ b[i] | (a,b) <- f, a = x])             "tuple indexing"
 rule_Image_IntTupleIndexed :: Rule
 rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRule where
     theRule p = do
@@ -590,7 +590,7 @@ rule_Comprehension_Image = "function-image-comprehension" `namedRule` theRule wh
         TypeFunction{} <- typeOf func
         case match opRestrict func of
             Nothing -> return ()
-            Just{}  -> na "rule_Image_Bool"         -- do not use this rule for restricted functions
+            Just{}  -> na "rule_Comprehension_Image"         -- do not use this rule for restricted functions
         let upd val old = lambdaToFunction pat old val
         return
             ( "Mapping over the image of a function"
