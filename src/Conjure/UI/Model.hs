@@ -709,7 +709,7 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
                 case hole x of
                     Constant ConstantUndefined{} -> returnMsg x
                     _ -> return []
-    unless (null fails) (fail (vcat fails))
+    unless (null fails) (bug (vcat fails))
     return m
 checkIfHasUndefined m = return m
 
@@ -1459,7 +1459,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
             isReferencedWithoutRepr _ = False
 
         unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
-            fail $ "This local variable seems to be handled before:" <+> pretty nm
+            na $ "This local variable seems to be handled before:" <+> pretty nm
 
         let reprsWhichOrder
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
@@ -1557,7 +1557,7 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
                 return ( "Remove the argument from true."
                        , return $ Constant $ ConstantBool True
                        )
-            _ -> fail "The argument of true doesn't have a representation."
+            _ -> na "The argument of true doesn't have a representation."
     theRule _ = na "rule_TrueIsNoOp"
 
 
@@ -1582,10 +1582,10 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
     theRule [essence| allDiff(&m) |] = do
         ty <- typeOf m
         case ty of
-            TypeMatrix _ TypeBool -> fail "allDiff can stay"
-            TypeMatrix _ TypeInt  -> fail "allDiff can stay"
+            TypeMatrix _ TypeBool -> na "allDiff can stay"
+            TypeMatrix _ TypeInt  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
-            _                     -> fail "allDiff on something other than a matrix."
+            _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty
@@ -1726,7 +1726,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 | goc <- gensOrConds
                 ]
         theGuard <- case toInline of
-            []  -> fail "No condition to inline."
+            []  -> na "No condition to inline."
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
         return
@@ -1755,7 +1755,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                     (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
                     _                    -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
-                                            --     Nothing -> fail "queryQ"
+                                            --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
     opAndSkip b x = [essence| &b -> &x |]
