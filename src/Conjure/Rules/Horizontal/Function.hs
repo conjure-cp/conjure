@@ -639,6 +639,44 @@ rule_Comprehension_ImageSet = "function-imageSet-comprehension" `namedRule` theR
     theRule _ = na "rule_Comprehension_ImageSet"
 
 
+-- | f(x) <=lex m ~~> and([ b <=lex m | (a,b) <- f, a = x])
+rule_Image_Matrix_LexLhs :: Rule
+rule_Image_Matrix_LexLhs = "function-image-matrix-lexlhs" `namedRule` theRule where
+    theRule p = do
+        (mkLex, (lhs,rhs)) <- match opLex p
+        (func, arg) <- match opImage lhs
+        return
+            ( "Function image, matrix as an argument to a lex operator."
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = make opAnd $ Comprehension (mkLex [essence| &i[2] |] rhs)
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                let isDefined = [essence| &arg in defined(&func) |]
+                return $ WithLocals val (DefinednessConstraints [isDefined])
+            )
+
+
+-- | f(x) <=lex m ~~> and([ b <=lex m | (a,b) <- f, a = x])
+rule_Image_Matrix_LexRhs :: Rule
+rule_Image_Matrix_LexRhs = "function-image-matrix-lexrhs" `namedRule` theRule where
+    theRule p = do
+        (mkLex, (lhs,rhs)) <- match opLex p
+        (func, arg) <- match opImage rhs
+        return
+            ( "Function image, matrix as an argument to a lex operator."
+            , do
+                (iPat, i) <- quantifiedVar
+                let val = make opAnd $ Comprehension (mkLex lhs [essence| &i[2] |])
+                        [ Generator (GenInExpr iPat func)
+                        , Condition [essence| &i[1] = &arg |]
+                        ]
+                let isDefined = [essence| &arg in defined(&func) |]
+                return $ WithLocals val (DefinednessConstraints [isDefined])
+            )
+
+
 rule_Defined_Intersect :: Rule
 rule_Defined_Intersect = "function-Defined-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
