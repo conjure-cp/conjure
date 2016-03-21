@@ -165,42 +165,47 @@ mainWithArgs config@Solve{..} = do
     when (null givens && not hasNonEmptyParams) $
         userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
 
-    savedHashes <- do
-        mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
-        case mfile of
-            Nothing -> return []
-            Just file -> return (lines file)
+    eprimes <-
+        if useExistingModels
+            then pp logLevel "Using existing models." >> getEprimes
+            else do
+                savedHashes <- do
+                    mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
+                    case mfile of
+                        Nothing -> return []
+                        Just file -> return (lines file)
+                -- start the show!
+                (eprimes, newHashes) <- runWriterT $
+                    doIfNotCached
+                        ( sort (mStatements essenceM)
+                        -- when the following flags change, invalidate hash
+                        -- nested tuples, because :(
+                        , ( numberingStart
+                          , smartFilenames
+                          , strategyQ
+                          , strategyA
+                          )
+                        , ( representations
+                          , representationsFinds
+                          , representationsGivens
+                          , representationsAuxiliaries
+                          , representationsQuantifieds
+                          , representationsCuts
+                          )
+                        , ( channelling
+                          , representationLevels
+                          , seed
+                          , limitModels
+                          , limitTime
+                          , outputFormat
+                          )
+                        )
+                        savedHashes
+                        (pp logLevel "Using cached models." >> getEprimes)
+                        conjuring
+                liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
+                return eprimes
 
-    -- start the show!
-    (eprimes, newHashes) <- runWriterT $
-        doIfNotCached
-            ( sort (mStatements essenceM)
-            -- when the following flags change, invalidate hash
-            -- nested tuples, because :(
-            , ( numberingStart
-              , smartFilenames
-              , strategyQ
-              , strategyA
-              )
-            , ( representations
-              , representationsFinds
-              , representationsGivens
-              , representationsAuxiliaries
-              , representationsQuantifieds
-              , representationsCuts
-              )
-            , ( channelling
-              , representationLevels
-              , seed
-              , limitModels
-              , limitTime
-              , outputFormat
-              )
-            )
-            savedHashes
-            (pp logLevel "Using cached models." >> getEprimes)
-            conjuring
-    liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
     msolutions <- liftIO $ savileRows eprimes essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg

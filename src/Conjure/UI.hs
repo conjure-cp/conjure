@@ -105,6 +105,7 @@ data UI
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
+        , useExistingModels          :: Bool                -- False by default
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
@@ -753,6 +754,13 @@ ui = modes
             &= groupname "General"
             &= explicit
             &= help "Time limit in seconds (real time)."
+        , useExistingModels
+            = False
+            &= name "use-existing-models"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "If set, conjure will skip the modelling phase and use the existing models for solving.\n\
+                    \Can be true or false. (false by default)"
         , savilerowOptions
             = "-O2"
             &= name "savilerow-options"

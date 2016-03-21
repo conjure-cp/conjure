@@ -224,6 +224,9 @@ Model generation:
                                              Can be true or false. (true by default)
      --seed=INT                              The seed for the random number generator.
      --limit-models=INT                      Maximum number of models to generate.
+     --use-existing-models                   If set, conjure will skip the modelling phase and use the existing
+                                             models for solving.
+                                             Can be true or false. (false by default)
 Options for other tools:
      --savilerow-options=ITEM                Options to be passed to Savile Row.
                                              By default: '-O2'
