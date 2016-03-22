@@ -124,9 +124,10 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                 , "-timelimit"     , show savilerowTimelimit
                 , "-num-solutions" , show enumerateDomainMax
                 ]
-            , minionOptions                 = unwords
+            , solverOptions                 = unwords
                 [ "-cpulimit"      , show minionTimelimit
                 ]
+            , solver                        = "minion"
             , logLevel                      = LogNone
             -- default values for the rest
             , essenceParams                 = []

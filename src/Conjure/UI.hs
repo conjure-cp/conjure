@@ -106,9 +106,10 @@ data UI
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
         , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
-        -- flags for SR and Minion
+        -- flags for SR and Minion/Lingeling
         , savilerowOptions           :: String
-        , minionOptions              :: String
+        , solverOptions              :: String
+        , solver                     :: String
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
@@ -769,12 +770,20 @@ ui = modes
             &= explicit
             &= help "Options to be passed to Savile Row.\n\
                     \By default: '-O2'"
-        , minionOptions
+        , solverOptions
             = def
-            &= name "minion-options"
+            &= name "solver-options"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Options to be passed to Minion."
+            &= help "Options to be passed to the backend solver."
+        , solver
+            = "minion"
+            &= name "solver"
+            &= groupname "Options for other tools"
+            &= explicit
+            &= help "Backend solver to use.\n\
+                    \Possible values: minion/lingeling/minisat\n\
+                    \Default: minion"
         , outputFormat
             = def
             &= name "output-format"

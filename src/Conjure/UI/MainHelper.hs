@@ -146,6 +146,8 @@ mainWithArgs ParameterGenerator{..} = do
     writeModel lineWidth outputFormat (Just essenceOut) output
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
+    unless (solver `elem` ["minion", "lingeling", "minisat"]) $
+        userErr1 ("Unsupported solver:" <+> pretty solver)
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readModelFromFile f
@@ -339,11 +341,20 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
-    , "-minion"
     , "-num-solutions"  , "1"
     , "-solutions-to-stdout-one-line"
-    ] ++ map stringToText (words savilerowOptions)
-      ++ if null minionOptions then [] else [ "-solver-options", stringToText minionOptions ]
+    ] ++
+    ( case solver of
+        "minion"    -> [ "-minion" ]
+        "lingeling" -> [ "-sat"
+                       , "-sat-family", "lingeling"
+                       ]
+        "minisat"   -> [ "-sat"
+                       , "-sat-family", "minisat"
+                       ]
+        _ -> bug ("Unknown solver:" <+> pretty solver)
+    ) ++ map stringToText (words savilerowOptions)
+      ++ if null solverOptions then [] else [ "-solver-options", stringToText solverOptions ]
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
