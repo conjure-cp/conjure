@@ -230,7 +230,10 @@ Model generation:
 Options for other tools:
      --savilerow-options=ITEM                Options to be passed to Savile Row.
                                              By default: '-O2'
-     --minion-options=ITEM                   Options to be passed to Minion.
+     --solver-options=ITEM                   Options to be passed to the backend solver.
+     --solver=ITEM                           Backend solver to use.
+                                             Possible values: minion/lingeling/minisat
+                                             Default: minion
 
 conjure pretty [OPTIONS] FILE
   Pretty print as Essence file to stdout.
