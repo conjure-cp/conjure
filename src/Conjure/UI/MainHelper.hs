@@ -403,6 +403,8 @@ srCleanUp stdoutSR solutions = do
             return (Left [vcat [ "Invalid instance, a where statement evaluated to false."
                                , "(It can be an implicit where statement added by Conjure.)"
                                ]])
+        | T.isInfixOf "Savile Row timed out." (T.unlines [stdoutSR, stderrSR]) ->
+            return (Left ["Savile Row timed out."])
         | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                   , "Savile Row stderr:"    <+> pretty stderrSR
                                   , "Savile Row exit-code:" <+> pretty exitCodeSR
