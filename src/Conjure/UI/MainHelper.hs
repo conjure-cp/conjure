@@ -166,8 +166,14 @@ mainWithArgs config@Solve{..} = do
         userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
 
     eprimes <-
-        if useExistingModels
-            then pp logLevel "Using existing models." >> getEprimes
+        if not (null useExistingModels)
+            then do
+                pp logLevel "Using existing models."
+                allEprimes <- getEprimes
+                let missingModels = useExistingModels \\ allEprimes
+                if null missingModels
+                    then return useExistingModels
+                    else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else do
                 savedHashes <- do
                     mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")

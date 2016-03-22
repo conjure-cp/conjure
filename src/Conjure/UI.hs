@@ -105,7 +105,7 @@ data UI
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
-        , useExistingModels          :: Bool                -- False by default
+        , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
         -- flags for SR and Minion
         , savilerowOptions           :: String
         , minionOptions              :: String
@@ -755,12 +755,13 @@ ui = modes
             &= explicit
             &= help "Time limit in seconds (real time)."
         , useExistingModels
-            = False
+            = []
             &= name "use-existing-models"
             &= groupname "Model generation"
             &= explicit
-            &= help "If set, conjure will skip the modelling phase and use the existing models for solving.\n\
-                    \Can be true or false. (false by default)"
+            &= typFile
+            &= help "Takes paths of Essence' models generated beforehand.\n\
+                    \If given, Conjure will skip the modelling phase and use the existing models for solving."
         , savilerowOptions
             = "-O2"
             &= name "savilerow-options"
@@ -795,7 +796,7 @@ ui = modes
         }   &= name "solve"
             &= explicit
             &= help "This is a combined mode, and it is available for convenience.\n\
-                    \It runs conjure in the modelling mode followed by \
+                    \It runs Conjure in the modelling mode followed by \
                     \parameter translation if required, \
                     \then Savile Row + Minion to solve, and \
                     \then solution translation."
