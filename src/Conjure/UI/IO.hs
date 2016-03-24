@@ -97,11 +97,10 @@ writeModel  lnWidth JSON   (Just fp) spec = liftIO $    writeFile fp (render lnW
 writeModels :: MonadIO m => Int -> OutputFormat -> FilePath -> String -> [Model] -> m ()
 writeModels lnWidth mode base tag specs = do
     let numbers = map (padShowInt 4) [ (1 :: Int) .. ]
+    let outDirname  = base ++ "-" ++ tag
+    liftIO $ createDirectoryIfMissing True outDirname
     forM_ (zip numbers specs) $ \ (i, spec) -> do
-        let outDirname  = base ++ "-" ++ tag
         let outFilename = base ++ "-" ++ tag ++ "/" ++ i ++ ".essence"
-        liftIO $ do
-            createDirectoryIfMissing True outDirname
-            writeModel lnWidth mode (Just outFilename) spec
-            putStrLn $ "[created file] " ++ outFilename
+        writeModel lnWidth mode (Just outFilename) spec
+        liftIO $ putStrLn $ "[created file] " ++ outFilename
 
