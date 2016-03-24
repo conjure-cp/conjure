@@ -180,8 +180,8 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
                              : ("When working on domain:" <++> pretty d)
                              :  map pretty errs
                              ++ map (pretty . show) errs
-    removeDirectoryRecursive outDir
-    removeDirectoryRecursive tmpDir
+    removeDirectoryIfExists outDir
+    removeDirectoryIfExists tmpDir
     return enumeration
 
 

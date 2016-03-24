@@ -38,7 +38,7 @@ module Conjure.Prelude
     , sh
     , scope
     , getAllDirs, getAllFiles, getAllFilesWithSuffix
-    , removeFileIfExists, readFileIfExists
+    , removeFileIfExists, readFileIfExists, removeDirectoryIfExists
     , setRandomSeed, randomRIO
     , nchoosek
     , JSONValue
@@ -192,9 +192,9 @@ import System.IO.Strict ( readFile )
 
 import System.Directory as X
     ( getDirectoryContents, doesDirectoryExist, doesFileExist
-    , createDirectoryIfMissing, removeDirectoryRecursive
-    , removeFile
+    , createDirectoryIfMissing
     )
+import System.Directory ( removeDirectoryRecursive , removeFile )
 import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )
 import System.CPUTime ( getCPUTime )
@@ -537,6 +537,14 @@ readFileIfExists f = (Just <$> readFile f) `catch` handleExists
         handleExists e
             | isDoesNotExistError e = return Nothing
             | otherwise = throwIO e
+
+removeDirectoryIfExists :: FilePath -> IO ()
+removeDirectoryIfExists f = removeDirectoryRecursive f `catch` handleExists
+    where
+        handleExists e
+            | isDoesNotExistError e = return ()
+            | otherwise = throwIO e
+
 
 setRandomSeed :: Int -> IO ()
 setRandomSeed = setStdGen . mkStdGen

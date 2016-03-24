@@ -224,10 +224,7 @@ mainWithArgs config@Solve{..} = do
         conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
-            -- tl;dr: rm -rf outputDirectory
-            -- removeDirectoryRecursive gets upset if the dir doesn't exist.
-            -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
-            liftIO $ createDirectoryIfMissing True outputDirectory >> removeDirectoryRecursive outputDirectory
+            liftIO $ removeDirectoryIfExists outputDirectory
             let modelling = let savedChoices = def
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI

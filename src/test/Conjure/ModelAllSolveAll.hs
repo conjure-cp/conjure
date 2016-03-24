@@ -153,11 +153,7 @@ testSingleDir srExtraOptions t@TestDirFiles{..} quickOrSlow =
 
         conjuring =
             testCase "Conjuring" $ do
-                -- tl;dr: rm -rf outputsDir
-                -- removeDirectoryRecursive gets upset if the dir doesn't exist.
-                -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
-                createDirectoryIfMissing True outputsDir >> removeDirectoryRecursive outputsDir
-
+                removeDirectoryIfExists outputsDir
                 -- read in the essence, generate the eprimes
                 essence <- ignoreLogs $ readModelFromFile essenceFile
                 modelAll outputsDir essence
