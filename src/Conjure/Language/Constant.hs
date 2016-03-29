@@ -69,7 +69,7 @@ instance Ord Constant where
     -- the "usual" comparisons
     compare (ConstantBool a) (ConstantBool b) = compare a b
     compare (ConstantInt a) (ConstantInt b) = compare a b
-    compare a@(ConstantEnum _ aVals aVal) b@(ConstantEnum _ bVals bVal) =
+    compare (ConstantEnum _ aVals aVal) (ConstantEnum _ bVals bVal) =
         compare (elemIndex aVal aVals, aVal) (elemIndex bVal bVals, bVal)
     compare (ConstantField a1 a2) (ConstantField b1 b2) = compare (a1,a2) (b1,b2)
     compare (ConstantAbstract a) (ConstantAbstract b) = compare a b
