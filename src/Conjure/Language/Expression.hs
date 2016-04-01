@@ -175,7 +175,7 @@ instance Pretty Declaration where
 
             comment2D width primTable =
                 unlines
-                    $ "$ Here is a simple \"visualisation\" for the value above."
+                    $ ( "$ Visualisation for " ++ show (pretty nm))
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
