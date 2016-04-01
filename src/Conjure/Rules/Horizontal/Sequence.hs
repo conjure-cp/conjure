@@ -99,6 +99,30 @@ rule_Eq = "sequence-eq" `namedRule` theRule where
             )
 
 
+rule_Eq_Comprehension :: Rule
+rule_Eq_Comprehension = "sequence-eq-comprehension" `namedRule` theRule where
+    theRule p = do
+        (x, y@(Comprehension _ goc)) <- do
+            (x,y) <- match opEq p
+            case x of
+                Comprehension{} -> return (y, x)       -- swap if x is a Comprehension
+                _               -> return (x, y)
+        TypeSequence{} <- typeOf x
+        return
+            ( "Horizontal rule for sequence equality, with a comprehension on the rhs"
+            , do
+                (iPat, i) <- quantifiedVar
+                let cardinality = Comprehension 1 goc
+                return
+                    [essence|
+                        |&x| = sum (&cardinality) /\
+                        and([ &y[&i[1]] = &i[2]
+                            | &iPat <- &x
+                            ])
+                    |]
+            )
+
+
 rule_Neq :: Rule
 rule_Neq = "sequence-neq" `namedRule` theRule where
     theRule [essence| &x != &y |] = do
