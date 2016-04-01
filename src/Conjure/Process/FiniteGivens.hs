@@ -344,7 +344,7 @@ mkFiniteInner (DomainTuple inners) = do
                 logDebug $ "mkFiniteInner DomainTuple" <+> vcat (map pretty constants)
                 xss <- mapM viewConstantTuple constants
                 let innerFs = map thd3 mids
-                innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs xss ]
+                innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
         )
 mkFiniteInner (DomainMatrix index inner) = do
