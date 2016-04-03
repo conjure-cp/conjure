@@ -1,6 +1,7 @@
 module Conjure.Process.LettingsForComplexInDoms
     ( lettingsForComplexInDoms
     , inlineLettingDomainsForDecls
+    , removeDomainLettings
     ) where
 
 import Conjure.Prelude
@@ -39,6 +40,7 @@ lettingsForComplexInDoms m = do
             _ -> return [st]
     return m { mStatements = concat statements }
 
+
 -- | inline letting domains for declarations, before saving the original domain in the logs
 inlineLettingDomainsForDecls :: MonadFail m => Model -> m Model
 inlineLettingDomainsForDecls m = do
@@ -62,12 +64,21 @@ inlineLettingDomainsForDecls m = do
             case st of
                 Declaration (Letting name (Domain domain)) -> do
                     modify (([(name, domain)], []) `mappend`)
-                    return []
+                    return st
                 Declaration (LettingDomainDefnUnnamed name _) -> do
                     modify (([], [name]) `mappend`)
-                    return [st]
+                    return st
                 Declaration (FindOrGiven forg name domain) -> do
                     domain' <- transformM f domain
-                    return [Declaration (FindOrGiven forg name domain')]
-                _ -> return [st]
-        return m { mStatements = concat statements }
+                    return (Declaration (FindOrGiven forg name domain'))
+                _ -> return st
+        return m { mStatements = statements }
+
+-- | remove domain lettings, only after name resolution
+removeDomainLettings :: Monad m => Model -> m Model
+removeDomainLettings m =
+    return m { mStatements = concat [ case st of
+                                        Declaration (Letting _ (Domain _)) -> []
+                                        _ -> [st]
+                                    | st <- mStatements m
+                                    ] }
