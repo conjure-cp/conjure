@@ -31,7 +31,10 @@ import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
 import Conjure.Process.FiniteGivens ( finiteGivens )
-import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
+import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms
+                                                , inlineLettingDomainsForDecls
+                                                , removeDomainLettings
+                                                )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -831,6 +834,7 @@ prologue model = return model
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= removeDomainLettings          >>= logDebugId "[removeDomainLettings]"
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
