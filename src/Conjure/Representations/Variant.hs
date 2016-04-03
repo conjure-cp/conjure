@@ -6,14 +6,16 @@ module Conjure.Representations.Variant
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.TH
+import Conjure.Language.ZeroVal
 import Conjure.Representations.Internal
 
 
-variant :: forall m . (MonadFail m, NameGen m) => Representation m
+variant :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
 variant = Representation chck downD structuralCons downC up
 
     where
@@ -61,9 +63,22 @@ variant = Representation chck downD structuralCons downC up
 
         -- TODO: check if (length ds == length cs)
         downC :: TypeOf_DownC m
-        downC (name, DomainVariant ds, ConstantAbstract (AbsLitVariant _ n c))
-            | Just d <- lookup n ds = return $ Just
-                [(mkName name n, d, c)]
+        downC (name, DomainVariant ds, ConstantAbstract (AbsLitVariant _ n c)) = do
+            let theTag =
+                    ( mkName name "_tag"
+                    , defRepr $ mkDomainIntB 1 (fromInt (genericLength ds))
+                    , case [ fromInt i
+                           | (i, (n', _)) <- zip [1..] ds
+                           , n == n' ] of
+                          [v] -> v
+                          _   -> bug "downC variant tag"
+                    )
+            outs <- forM ds $ \ (n', d) -> do
+                        c' <- if n == n'
+                                then return c
+                                else zeroVal d
+                        return (mkName name n', d, c')
+            return $ Just (theTag : outs)
         downC (n, d, c) =
             na $ "{downC} variant" <+> vcat
                 [ "name  :" <+> pretty n
