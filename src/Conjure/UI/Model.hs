@@ -823,7 +823,7 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Model -> m Model
+prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 prologue model = return model
                                       >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"

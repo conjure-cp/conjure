@@ -10,7 +10,8 @@ import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
-import Conjure.Language.Instantiate ( instantiateExpression )
+import Conjure.Language.Instantiate ( instantiateExpression, instantiateDomain )
+import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
@@ -18,7 +19,12 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
 finiteGivens
-    :: (MonadFail m, MonadLog m, NameGen m, MonadUserError m)
+    :: ( MonadFail m
+       , MonadLog m
+       , NameGen m
+       , MonadUserError m
+       , EnumerateDomain m
+       )
     => Model
     -> m Model
 finiteGivens m = flip evalStateT 1 $ do
@@ -84,7 +90,13 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 --   for example, this means adding a size attribute at the outer-most level
 --   and adding a maxSize attribute at the inner levels.
 mkFinite
-    :: (MonadState Int m, MonadFail m, NameGen m, MonadLog m, MonadUserError m)
+    :: ( MonadState Int m
+       , MonadFail m
+       , NameGen m
+       , MonadLog m
+       , MonadUserError m
+       , EnumerateDomain m
+       )
     => Domain () Expression
     -> m ( Domain () Expression                 -- "finite" domain
          , [Name]                               -- extra givens
@@ -93,6 +105,7 @@ mkFinite
          )
 mkFinite d@DomainTuple{}     = mkFiniteOutermost d
 mkFinite d@DomainRecord{}    = mkFiniteOutermost d
+mkFinite d@DomainVariant{}   = mkFiniteOutermost d
 mkFinite d@DomainMatrix{}    = mkFiniteOutermost d
 mkFinite d@DomainSet{}       = mkFiniteOutermost d
 mkFinite d@DomainMSet{}      = mkFiniteOutermost d
@@ -104,7 +117,13 @@ mkFinite d = return (d, [], const (return []))
 
 
 mkFiniteOutermost
-    :: (MonadState Int m, MonadFail m, NameGen m, MonadLog m, MonadUserError m)
+    :: ( MonadState Int m
+       , MonadFail m
+       , NameGen m
+       , MonadLog m
+       , MonadUserError m
+       , EnumerateDomain m
+       )
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
@@ -133,6 +152,23 @@ mkFiniteOutermost (DomainRecord inners) = do
                 let
                     xs :: [Constant]
                     xs = map snd xs'
+                let innerFs = map thd3 mids
+                innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
+                return (concat innerValues)
+        )
+mkFiniteOutermost (DomainVariant inners) = do
+    mids <- mapM (mkFiniteInner . snd) inners
+    return
+        ( DomainVariant (zip (map fst inners) (map fst3 mids))
+        , concatMap snd3 mids
+        , \ constant -> do
+                logDebug $ "mkFiniteOutermost DomainVariant" <+> pretty constant
+                xs' <- failToUserError $ viewConstantVariant constant
+                xs :: [Constant] <- sequence
+                    [ case xs' of
+                        (_, nm', c') | nm == nm' -> return c'
+                        _ -> instantiateDomain [] d >>= zeroVal
+                    | (nm, d) <- inners ]
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
@@ -312,7 +348,13 @@ mkFiniteOutermost d = return (d, [], const (return []))
 
 
 mkFiniteInner
-    :: (MonadState Int m, MonadFail m, NameGen m, MonadLog m, MonadUserError m)
+    :: ( MonadState Int m
+       , MonadFail m
+       , NameGen m
+       , MonadLog m
+       , MonadUserError m
+       , EnumerateDomain m
+       )
     => Domain () Expression
     -> m ( Domain () Expression
          , [Name]
@@ -374,6 +416,26 @@ mkFiniteInner (DomainRecord inners) = do
                 let
                     xss :: [[Constant]]
                     xss = map (map snd) xss'
+                let innerFs = map thd3 mids
+                innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
+                return (concat innerValues)
+        )
+mkFiniteInner (DomainVariant inners) = do
+    mids <- mapM (mkFiniteInner . snd) inners
+    return
+        ( DomainVariant (zip (map fst inners) (map fst3 mids))
+        , concatMap snd3 mids
+        , \ constants -> do
+                logDebug $ "mkFiniteInner DomainVariant" <+> vcat (map pretty constants)
+                xss' <- failToUserError $ mapM viewConstantVariant constants
+                xss :: [[Constant]]
+                    <- sequence
+                            [ sequence
+                                [ case xs' of
+                                    (_, nm', c') | nm == nm' -> return c'
+                                    _ -> instantiateDomain [] d >>= zeroVal
+                                | (nm, d) <- inners ]
+                            | xs' <- xss' ]
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
