@@ -62,12 +62,12 @@ inlineLettingDomainsForDecls m = do
             case st of
                 Declaration (Letting name (Domain domain)) -> do
                     modify (([(name, domain)], []) `mappend`)
-                    return st
+                    return []
                 Declaration (LettingDomainDefnUnnamed name _) -> do
                     modify (([], [name]) `mappend`)
-                    return st
+                    return [st]
                 Declaration (FindOrGiven forg name domain) -> do
                     domain' <- transformM f domain
-                    return (Declaration (FindOrGiven forg name domain'))
-                _ -> return st
-        return m { mStatements = statements }
+                    return [Declaration (FindOrGiven forg name domain')]
+                _ -> return [st]
+        return m { mStatements = concat statements }
