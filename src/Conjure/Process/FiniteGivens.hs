@@ -92,6 +92,7 @@ mkFinite
                                                 -- input is a list of values for the domain
          )
 mkFinite d@DomainTuple{}     = mkFiniteOutermost d
+mkFinite d@DomainRecord{}    = mkFiniteOutermost d
 mkFinite d@DomainMatrix{}    = mkFiniteOutermost d
 mkFinite d@DomainSet{}       = mkFiniteOutermost d
 mkFinite d@DomainMSet{}      = mkFiniteOutermost d
@@ -117,6 +118,21 @@ mkFiniteOutermost (DomainTuple inners) = do
         , \ constant -> do
                 logDebug $ "mkFiniteOutermost DomainTuple" <+> pretty constant
                 xs <- failToUserError $ viewConstantTuple constant
+                let innerFs = map thd3 mids
+                innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
+                return (concat innerValues)
+        )
+mkFiniteOutermost (DomainRecord inners) = do
+    mids <- mapM (mkFiniteInner . snd) inners
+    return
+        ( DomainRecord (zip (map fst inners) (map fst3 mids))
+        , concatMap snd3 mids
+        , \ constant -> do
+                logDebug $ "mkFiniteOutermost DomainRecord" <+> pretty constant
+                xs' <- failToUserError $ viewConstantRecord constant
+                let
+                    xs :: [Constant]
+                    xs = map snd xs'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF [x] | (innerF, x) <- zip innerFs xs ]
                 return (concat innerValues)
@@ -343,6 +359,21 @@ mkFiniteInner (DomainTuple inners) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainTuple" <+> vcat (map pretty constants)
                 xss <- failToUserError $ mapM viewConstantTuple constants
+                let innerFs = map thd3 mids
+                innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
+                return (concat innerValues)
+        )
+mkFiniteInner (DomainRecord inners) = do
+    mids <- mapM (mkFiniteInner . snd) inners
+    return
+        ( DomainRecord (zip (map fst inners) (map fst3 mids))
+        , concatMap snd3 mids
+        , \ constants -> do
+                logDebug $ "mkFiniteInner DomainRecord" <+> vcat (map pretty constants)
+                xss' :: [[(Name, Constant)]] <- failToUserError $ mapM viewConstantRecord constants
+                let
+                    xss :: [[Constant]]
+                    xss = map (map snd) xss'
                 let innerFs = map thd3 mids
                 innerValues <- sequence [ innerF xs | (innerF, xs) <- zip innerFs (transpose xss) ]
                 return (concat innerValues)
