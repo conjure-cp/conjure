@@ -148,7 +148,7 @@ translateParameter eprimeModel essenceParam0 = do
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
-        <- concatMapM downC essenceGivensAndLettings'
+        <- failToUserError $ concatMapM downC essenceGivensAndLettings'
     logDebug $ "[eprimeLettings           ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
                                                              , "constant:" <+> pretty c
