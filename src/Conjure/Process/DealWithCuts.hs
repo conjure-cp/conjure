@@ -43,7 +43,6 @@ dealWithCuts m = flip evalStateT (St False []) $ do
                     ]
             Declaration (FindOrGiven Find nm _) -> do
                 seen <- gets seenSearchOrder
-                when seen $ fail "A 'find' statement cannot occur after the 'branching on' statement."
                 modify $ \ st -> st { finds = finds st ++ [nm] }
                 return [statement]
             _ -> return [statement]
