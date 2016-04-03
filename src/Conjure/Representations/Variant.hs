@@ -64,7 +64,12 @@ variant = Representation chck downD structuralCons downC up
         downC (name, DomainVariant ds, ConstantAbstract (AbsLitVariant _ n c))
             | Just d <- lookup n ds = return $ Just
                 [(mkName name n, d, c)]
-        downC _ = na "{downC}"
+        downC (n, d, c) =
+            na $ "{downC} variant" <+> vcat
+                [ "name  :" <+> pretty n
+                , "domain:" <+> pretty d
+                , "value :" <+> pretty c
+                ]
 
         up :: TypeOf_Up m
         up ctxt (name, DomainVariant ds) = do
