@@ -6,15 +6,16 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.TH
+import Conjure.Language.ModelStats ( finds )
 
 
-data St = St { seenSearchOrder :: Bool, finds :: [Name] }
+data St = St { seenSearchOrder :: Bool }
 
 dealWithCuts
     :: (MonadFail m, MonadLog m, NameGen m)
     => Model
     -> m Model
-dealWithCuts m = flip evalStateT (St False []) $ do
+dealWithCuts m = flip evalStateT (St False) $ do
     statements <- forM (mStatements m) $ \ statement ->
         case statement of
             SearchOrder orders0 -> do
@@ -34,16 +35,12 @@ dealWithCuts m = flip evalStateT (St False []) $ do
                         _ -> return order
                 orders2 <-
                         if null [ () | BranchingOn{} <- orders0 ]     -- no variables were given, all assumed non-aux
-                            then map BranchingOn <$> gets finds
+                            then return [ BranchingOn nm | (nm, _) <- finds m ]
                             else return []
                 return $ concat
                     [ newVars
                     , [SearchOrder (orders1++orders2)]
                     , [SuchThat newCons]
                     ]
-            Declaration (FindOrGiven Find nm _) -> do
-                seen <- gets seenSearchOrder
-                modify $ \ st -> st { finds = finds st ++ [nm] }
-                return [statement]
             _ -> return [statement]
     return m { mStatements = concat statements }
