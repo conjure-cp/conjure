@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given p_Explicit_a: matrix indexed by [int(1..fin1)] of int
+given p_Explicit_b: matrix indexed by [int(1..fin1)] of int
+find x: int(0..100)
+given r_a: int
+given r_b: int
+find r_in_p: bool
+such that
+    x = sum([p_Explicit_a[q1] + p_Explicit_b[q1] | q1 : int(1..fin1)]),
+    r_in_p = or([p_Explicit_a[q3] = r_a /\ p_Explicit_b[q3] = r_b | q3 : int(1..fin1)])
+
