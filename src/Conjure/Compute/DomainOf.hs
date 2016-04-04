@@ -121,8 +121,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpParty x) = domainOf x
     domainOf (MkOpPow x) = domainOf x
     domainOf (MkOpPowerSet x) = domainOf x
-    domainOf (MkOpPreImage x) = domainOf x
     domainOf (MkOpPred x) = domainOf x
+    domainOf (MkOpPreImage x) = domainOf x
     domainOf (MkOpProduct x) = domainOf x
     domainOf (MkOpRange x) = domainOf x
     domainOf (MkOpRelationProj x) = domainOf x
@@ -138,14 +138,15 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpSupsetEq x) = domainOf x
     domainOf (MkOpTildeLeq x) = domainOf x
     domainOf (MkOpTildeLt x) = domainOf x
+    domainOf (MkOpTogether x) = domainOf x
     domainOf (MkOpToInt x) = domainOf x
     domainOf (MkOpToMSet x) = domainOf x
     domainOf (MkOpToRelation x) = domainOf x
     domainOf (MkOpToSet x) = domainOf x
-    domainOf (MkOpTogether x) = domainOf x
     domainOf (MkOpTrue x) = domainOf x
     domainOf (MkOpTwoBars x) = domainOf x
     domainOf (MkOpUnion x) = domainOf x
+    domainOf (MkOpXor x) = domainOf x
 
     indexDomainsOf (MkOpActive x) = indexDomainsOf x
     indexDomainsOf (MkOpAllDiff x) = indexDomainsOf x
@@ -189,8 +190,8 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpParty x) = indexDomainsOf x
     indexDomainsOf (MkOpPow x) = indexDomainsOf x
     indexDomainsOf (MkOpPowerSet x) = indexDomainsOf x
-    indexDomainsOf (MkOpPreImage x) = indexDomainsOf x
     indexDomainsOf (MkOpPred x) = indexDomainsOf x
+    indexDomainsOf (MkOpPreImage x) = indexDomainsOf x
     indexDomainsOf (MkOpProduct x) = indexDomainsOf x
     indexDomainsOf (MkOpRange x) = indexDomainsOf x
     indexDomainsOf (MkOpRelationProj x) = indexDomainsOf x
@@ -206,14 +207,15 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpSupsetEq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLeq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLt x) = indexDomainsOf x
+    indexDomainsOf (MkOpTogether x) = indexDomainsOf x
     indexDomainsOf (MkOpToInt x) = indexDomainsOf x
     indexDomainsOf (MkOpToMSet x) = indexDomainsOf x
     indexDomainsOf (MkOpToRelation x) = indexDomainsOf x
     indexDomainsOf (MkOpToSet x) = indexDomainsOf x
-    indexDomainsOf (MkOpTogether x) = indexDomainsOf x
     indexDomainsOf (MkOpTrue x) = indexDomainsOf x
     indexDomainsOf (MkOpTwoBars x) = indexDomainsOf x
     indexDomainsOf (MkOpUnion x) = indexDomainsOf x
+    indexDomainsOf (MkOpXor x) = indexDomainsOf x
 
 instance DomainOf Constant where
     domainOf ConstantBool{}             = return DomainBool
@@ -296,19 +298,19 @@ instance DomainOf (AbstractLiteral Expression) where
 
 -- all the `Op`s
 
-instance (Pretty x, TypeOf x) => DomainOf (OpActive x) where
+instance DomainOf (OpActive x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpAllDiff x) where
+instance DomainOf (OpAllDiff x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpAnd x) where
+instance DomainOf (OpAnd x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpApart x) where
+instance DomainOf (OpApart x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpAttributeAsConstraint x) where
+instance DomainOf (OpAttributeAsConstraint x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, DomainOf x) => DomainOf (OpDefined x) where
@@ -332,16 +334,16 @@ instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpDiv x) where
         let upp  = [essence| max(&vals) |]
         return (DomainInt [RangeBounded low upp] :: Dom)
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDontCare x) where
+instance DomainOf (OpDontCare x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDotLeq x) where
+instance DomainOf (OpDotLeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpDotLt x) where
+instance DomainOf (OpDotLt x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpEq x) where
+instance DomainOf (OpEq x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFactorial x) where
@@ -353,16 +355,16 @@ instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
     domainOf op = mkDomainAny ("OpFreq:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpGeq x) where
+instance DomainOf (OpGeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpGt x) where
+instance DomainOf (OpGt x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
     domainOf op = mkDomainAny ("OpHist:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpIff x) where
+instance DomainOf (OpIff x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
@@ -371,10 +373,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImply x) where
+instance DomainOf (OpImply x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpIn x) where
+instance DomainOf (OpIn x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpIndexing x) where
@@ -409,16 +411,16 @@ instance (Pretty x, TypeOf x) => DomainOf (OpIntersect x) where
 instance DomainOf (OpInverse x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpLeq x) where
+instance DomainOf (OpLeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpLexLeq x) where
+instance DomainOf (OpLexLeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpLexLt x) where
+instance DomainOf (OpLexLt x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpLt x) where
+instance DomainOf (OpLt x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) => DomainOf (OpMax x) where
@@ -459,13 +461,16 @@ instance (Pretty x, TypeOf x) => DomainOf (OpMod x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpNegate x) where
     domainOf op = mkDomainAny ("OpNegate:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpNeq x) where
+instance DomainOf (OpNeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpNot x) where
+instance DomainOf (OpNot x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x, ExpressionLike x) => DomainOf (OpOr x) where
+instance DomainOf (OpOr x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf (OpXor x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpParticipants x) where
@@ -558,16 +563,16 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpSum x
         return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf _ = return $ DomainInt [RangeBounded 0 0]
 
-instance (Pretty x, TypeOf x) => DomainOf (OpSupset x) where
+instance DomainOf (OpSupset x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpSupsetEq x) where
+instance DomainOf (OpSupsetEq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTildeLeq x) where
+instance DomainOf (OpTildeLeq x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTildeLt x) where
+instance DomainOf (OpTildeLt x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpToInt x) where
@@ -582,10 +587,10 @@ instance (Pretty x, TypeOf x) => DomainOf (OpToRelation x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpToSet x) where
     domainOf op = mkDomainAny ("OpToSet:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTogether x) where
+instance DomainOf (OpTogether x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpTrue x) where
+instance DomainOf (OpTrue x) where
     domainOf _ = return DomainBool
 
 instance (Pretty x, TypeOf x) => DomainOf (OpTwoBars x) where

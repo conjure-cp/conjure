@@ -930,6 +930,8 @@ allRules config =
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
+    , [ rule_Xor_To_Sum
+      ]
     , verticalRules
     , horizontalRules
     ] ++ otherRules
@@ -1955,3 +1957,22 @@ rule_Comprehension_Simplify = "comprehension-simplify" `namedRule` theRule where
             , return $ Comprehension x gocs'
             )
     theRule _ = na "rule_Comprehension_Simplify"
+
+
+rule_Xor_To_Sum :: Rule
+rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
+    theRule [essence| xor(&arg) |] =
+        case arg of
+            Comprehension body goc -> do
+                let argOut = Comprehension [essence| toInt(&body) |] goc
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum(&argOut) |]
+                    )
+            _ -> do
+                (iPat, i) <- quantifiedVar
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
+                    )
+    theRule _ = na "rule_Xor_To_Sum"

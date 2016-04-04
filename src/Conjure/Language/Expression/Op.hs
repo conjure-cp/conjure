@@ -70,6 +70,7 @@ mkOp op xs =
         Nothing -> case op of
             "and"       -> inject $ MkOpAnd       $ OpAnd     (arg xs 0 "and")
             "or"        -> inject $ MkOpOr        $ OpOr      (arg xs 0 "or")
+            "xor"       -> inject $ MkOpXor       $ OpXor     (arg xs 0 "xor")
             "sum"       -> inject $ MkOpSum       $ OpSum     (arg xs 0 "sum")
             "product"   -> inject $ MkOpProduct   $ OpProduct (arg xs 0 "product")
             "not"       -> inject $ MkOpNot       $ OpNot     (arg xs 0 "not")
