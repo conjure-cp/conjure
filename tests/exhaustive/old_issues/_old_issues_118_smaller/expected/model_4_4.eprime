@@ -11,7 +11,8 @@ such that
              or([p_PartitionOccurrence_WhichPart[q27] = q12 /\ q27 = 2 | q27 : int(1..3)]) /\
              and([p_PartitionOccurrence_WhichPart[q29] = q12 -> 2 = q29 | q29 : int(1..3)]),
              or([p_PartitionOccurrence_WhichPart[q35] = q12 /\ q35 = 3 | q35 : int(1..3)]) /\
-             and([p_PartitionOccurrence_WhichPart[q37] = q12 -> 3 = q37 | q37 : int(1..3)]); int(1..3)])
+             and([p_PartitionOccurrence_WhichPart[q37] = q12 -> 3 = q37 | q37 : int(1..3)]);
+                 int(1..3)])
              | q12 : int(1..3)]),
     or([q43 <= p_PartitionOccurrence_NumParts /\
         (and([p_PartitionOccurrence_WhichPart[q46] = q43 -> 1 = q46 | q46 : int(1..3)]) /\
