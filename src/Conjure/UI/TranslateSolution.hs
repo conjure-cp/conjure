@@ -28,10 +28,10 @@ translateSolution
     -> Model      -- essence param
     -> Model      -- eprime solution
     -> m Model    -- essence solution
-translateSolution eprimeModel essenceParam' eprimeSolution = do
+translateSolution eprimeModel' essenceParam' eprimeSolution = do
 
-    eprimeParam  <- translateParameter eprimeModel essenceParam'
-    essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
+    eprimeParam  <- translateParameter eprimeModel' essenceParam'
+    (eprimeModel, essenceParam) <- removeEnumsFromParam eprimeModel' essenceParam'
 
     let eprimeLettingsForEnums =
             [ (nm, fromInt (genericLength vals))

@@ -114,7 +114,7 @@ removeEnumsFromModel =
 
 removeEnumsFromParam
     :: (MonadFail m, MonadLog m)
-    => Model -> Model -> m Model
+    => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
                      ++ map (True,)  (mStatements param)
@@ -155,8 +155,9 @@ removeEnumsFromParam model param = do
             = return (DomainReference nm (Just d))
         onD p = return p
 
-    statements'' <- (transformBiM onD >=> transformBiM onX) (catMaybes statements')
-    return param { mStatements = statements'' }
+    let param' = param { mStatements = catMaybes statements' }
+    let f = transformBiM onD >=> transformBiM onX
+    (,) <$> f model <*> f param'
 
 
 -- | Using the original domains from the Essence file.
