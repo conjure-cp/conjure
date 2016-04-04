@@ -4,8 +4,9 @@ letting a_ExplicitR4_ExplicitVarSizeWithFlags_Flags be
         [[true, true, false, false, false, false, false, false, false; int(1..9)],
          [true, false, false, false, false, false, false, false, false; int(1..9)],
          [true, true, true, true, true, true, true, true, true; int(1..9)],
-         [true, true, true, false, false, false, false, false, false; int(1..9)]; int(1..4)]
-$ Here is a simple "visualisation" for the value above.
+         [true, true, true, false, false, false, false, false, false; int(1..9)];
+             int(1..4)]
+$ Visualisation for a_ExplicitR4_ExplicitVarSizeWithFlags_Flags
 $ T T _ _ _ _ _ _ _
 $ T _ _ _ _ _ _ _ _
 $ T T T T T T T T T
@@ -13,8 +14,9 @@ $ T T T _ _ _ _ _ _
 
 letting a_ExplicitR4_ExplicitVarSizeWithFlags_Values be
         [[-3, 17, -3, -3, -3, -3, -3, -3, -3; int(1..9)], [1, -3, -3, -3, -3, -3, -3, -3, -3; int(1..9)],
-         [1, 2, 3, 4, 5, 6, 7, 8, 9; int(1..9)], [2, 4, 7, -3, -3, -3, -3, -3, -3; int(1..9)]; int(1..4)]
-$ Here is a simple "visualisation" for the value above.
+         [1, 2, 3, 4, 5, 6, 7, 8, 9; int(1..9)], [2, 4, 7, -3, -3, -3, -3, -3, -3; int(1..9)];
+             int(1..4)]
+$ Visualisation for a_ExplicitR4_ExplicitVarSizeWithFlags_Values
 $ -3 17 -3 -3 -3 -3 -3 -3 -3
 $  1 -3 -3 -3 -3 -3 -3 -3 -3
 $  1  2  3  4  5  6  7  8  9

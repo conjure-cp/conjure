@@ -4,12 +4,14 @@ find x_ExplicitR3_Explicit: matrix indexed by [int(1..2), int(1..3)] of int(1..4
 find x_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..4)] of bool
 such that
     or([and([or([1 = x_ExplicitR3_Explicit[q27, q29], 2 = x_ExplicitR3_Explicit[q27, q29],
-                 3 = x_ExplicitR3_Explicit[q27, q29]; int(1..3)])
+                 3 = x_ExplicitR3_Explicit[q27, q29];
+                     int(1..3)])
                  | q29 : int(1..3)])
         /\
         and([or([x_ExplicitR3_Explicit[q27, q35] = 1 | q35 : int(1..3)]),
              or([x_ExplicitR3_Explicit[q27, q37] = 2 | q37 : int(1..3)]),
-             or([x_ExplicitR3_Explicit[q27, q39] = 3 | q39 : int(1..3)]); int(1..3)])
+             or([x_ExplicitR3_Explicit[q27, q39] = 3 | q39 : int(1..3)]);
+                 int(1..3)])
             | q27 : int(1..2)]),
     x_ExplicitR3_Explicit[1, ..] <lex x_ExplicitR3_Explicit[2, ..],
     and([and([x_ExplicitR3_Explicit[q2, q3] < x_ExplicitR3_Explicit[q2, q3 + 1] | q3 : int(1..2)]) | q2 : int(1..2)]),

@@ -2,56 +2,82 @@ language Essence 1.3
 
 letting bitmap be
         [[true, true, true, true, true, true, true, false, true, true, true, false, false, false, true, false, true,
-          false, true, true, true, true, true, true, true; int(1..25)],
+          false, true, true, true, true, true, true, true;
+              int(1..25)],
          [true, false, false, false, false, false, true, false, true, true, false, true, true, false, false, false,
-          false, false, true, false, false, false, false, false, true; int(1..25)],
+          false, false, true, false, false, false, false, false, true;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, false, false, false, false, true, true, true, false, true,
-          false, true, false, true, true, true, false, true; int(1..25)],
+          false, true, false, true, true, true, false, true;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, true, false, false, true, true, true, true, true, true,
-          false, true, false, true, true, true, false, true; int(1..25)],
+          false, true, false, true, true, true, false, true;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, false, true, true, true, true, true, false, true, true,
-          false, true, false, true, true, true, false, true; int(1..25)],
+          false, true, false, true, true, true, false, true;
+              int(1..25)],
          [true, false, false, false, false, false, true, false, false, true, true, false, false, false, false, false,
-          false, false, true, false, false, false, false, false, true; int(1..25)],
+          false, false, true, false, false, false, false, false, true;
+              int(1..25)],
          [true, true, true, true, true, true, true, false, true, false, true, false, true, false, true, false, true,
-          false, true, true, true, true, true, true, true; int(1..25)],
+          false, true, true, true, true, true, true, true;
+              int(1..25)],
          [false, false, false, false, false, false, false, false, true, true, true, false, false, false, true, true,
-          true, false, false, false, false, false, false, false, false; int(1..25)],
+          true, false, false, false, false, false, false, false, false;
+              int(1..25)],
          [true, false, true, true, false, true, true, true, false, false, true, false, true, false, true, true, true,
-          false, true, false, false, true, false, true, true; int(1..25)],
+          false, true, false, false, true, false, true, true;
+              int(1..25)],
          [true, false, true, false, false, false, false, false, false, true, true, true, false, true, true, false,
-          false, false, false, true, false, false, false, true, false; int(1..25)],
+          false, false, false, true, false, false, false, true, false;
+              int(1..25)],
          [false, true, true, true, true, false, true, false, true, true, true, true, false, true, true, false, true,
-          false, false, false, false, true, true, false, false; int(1..25)],
+          false, false, false, false, true, true, false, false;
+              int(1..25)],
          [false, true, false, true, false, false, false, true, false, false, false, true, false, true, false, true,
-          true, true, true, false, true, false, true, true, true; int(1..25)],
+          true, true, true, false, true, false, true, true, true;
+              int(1..25)],
          [false, false, true, true, false, false, true, false, true, false, true, false, false, false, false, false,
-          false, true, true, false, true, true, true, true, true; int(1..25)],
+          false, true, true, false, true, true, true, true, true;
+              int(1..25)],
          [false, false, false, true, true, true, false, true, true, false, true, true, false, true, true, true, true,
-          true, true, false, true, true, true, false, true; int(1..25)],
+          true, true, false, true, true, true, false, true;
+              int(1..25)],
          [true, false, true, true, true, true, true, true, true, true, true, false, true, false, true, false, false,
-          true, true, false, false, false, false, true, false; int(1..25)],
+          true, true, false, false, false, false, true, false;
+              int(1..25)],
          [false, true, true, false, true, false, false, true, true, false, false, false, true, true, false, true, true,
-          true, false, false, false, false, false, true, false; int(1..25)],
+          true, false, false, false, false, false, true, false;
+              int(1..25)],
          [true, true, true, false, true, false, true, false, true, false, false, true, false, false, false, false, true,
-          true, true, true, true, false, true, false, false; int(1..25)],
+          true, true, true, true, false, true, false, false;
+              int(1..25)],
          [false, false, false, false, false, false, false, false, true, false, false, false, true, true, false, true,
-          true, false, false, false, true, true, true, true, true; int(1..25)],
+          true, false, false, false, true, true, true, true, true;
+              int(1..25)],
          [true, true, true, true, true, true, true, false, true, false, false, true, true, false, false, false, true,
-          false, true, false, true, false, true, true, true; int(1..25)],
+          false, true, false, true, false, true, true, true;
+              int(1..25)],
          [true, false, false, false, false, false, true, false, true, true, false, false, true, false, false, true,
-          true, false, false, false, true, true, false, true, false; int(1..25)],
+          true, false, false, false, true, true, false, true, false;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, false, false, true, true, true, true, false, false, true,
-          true, true, true, true, false, false, true, false; int(1..25)],
+          true, true, true, true, false, false, true, false;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, true, true, true, false, true, true, true, true, true,
-          true, true, true, true, true, false, true, true; int(1..25)],
+          true, true, true, true, true, false, true, true;
+              int(1..25)],
          [true, false, true, true, true, false, true, false, true, false, false, true, true, true, true, true, true,
-          false, true, true, true, true, true, true, false; int(1..25)],
+          false, true, true, true, true, true, true, false;
+              int(1..25)],
          [true, false, false, false, false, false, true, false, false, true, true, false, false, false, false, false,
-          false, true, false, true, false, true, true, false, false; int(1..25)],
+          false, true, false, true, false, true, true, false, false;
+              int(1..25)],
          [true, true, true, true, true, true, true, false, true, true, false, false, false, true, false, true, true,
-          false, false, false, true, true, true, true, true; int(1..25)]; int(1..25)]
-$ Here is a simple "visualisation" for the value above.
+          false, false, false, true, true, true, true, true;
+              int(1..25)];
+             int(1..25)]
+$ Visualisation for bitmap
 $ T T T T T T T _ T T T _ _ _ T _ T _ T T T T T T T
 $ T _ _ _ _ _ T _ T T _ T T _ _ _ _ _ T _ _ _ _ _ T
 $ T _ T T T _ T _ _ _ _ _ T T T _ T _ T _ T T T _ T
@@ -87,8 +113,9 @@ letting horizontalLocs be
          sequence(2, 5, 8, 13, 16, 24), sequence(1, 5, 7, 9, 12, 17, 23), sequence(9, 13, 16, 21),
          sequence(1, 9, 12, 17, 19, 21, 23), sequence(1, 7, 9, 13, 16, 21, 24), sequence(1, 3, 7, 11, 17, 24),
          sequence(1, 3, 7, 9, 13, 24), sequence(1, 3, 7, 9, 12, 19), sequence(1, 7, 10, 18, 20, 22),
-         sequence(1, 9, 14, 16, 21); int(1..25)]
-$ Here is a simple "visualisation" for the value above.
+         sequence(1, 9, 14, 16, 21);
+             int(1..25)]
+$ Visualisation for horizontalLocs
 $  1  9 15 17 19
 $  1  7  9 12 19 25
 $  1  3  7 13 17 19 21 25
@@ -124,8 +151,9 @@ letting verticalLocs be
          sequence(4, 8, 12, 14, 16, 18, 20, 22, 25), sequence(1, 3, 7, 11, 14, 16, 25), sequence(12, 21, 24),
          sequence(1, 9, 12, 17, 19, 21), sequence(1, 7, 10, 17, 21), sequence(1, 3, 7, 12, 17, 25),
          sequence(1, 3, 7, 9, 11, 13, 18, 20, 22), sequence(1, 3, 7, 11, 17, 23), sequence(1, 7, 9, 12, 15, 18, 25),
-         sequence(1, 9, 12, 18, 22, 25); int(1..25)]
-$ Here is a simple "visualisation" for the value above.
+         sequence(1, 9, 12, 18, 22, 25);
+             int(1..25)]
+$ Visualisation for verticalLocs
 $  1  9 15 17 19
 $  1  7 11 16 19 25
 $  1  3  7  9 13 15 19 21 25
