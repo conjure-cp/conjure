@@ -123,8 +123,8 @@ resolveSearchOrder (BranchingOn nm) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
-                               : ("Bindings in context:" : prettyContext ctxt)
+        Nothing -> userErr1 $ vcat $ ("Undefined reference:" <+> pretty nm)
+                                   : ("Bindings in context:" : prettyContext ctxt)
         Just{}  -> return (BranchingOn nm)
 resolveSearchOrder (Cut x) =
     let f Find = CutFind
@@ -145,8 +145,8 @@ resolveX (Reference nm Nothing) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
-                               : ("Bindings in context:" : prettyContext ctxt)
+        Nothing -> userErr1 $ vcat $ ("Undefined reference:" <+> pretty nm)
+                                   : ("Bindings in context:" : prettyContext ctxt)
         Just r  -> return (Reference nm (Just r))
 
 resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving

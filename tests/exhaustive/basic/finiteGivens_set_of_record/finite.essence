@@ -1,0 +1,12 @@
+language Essence 1.3
+
+letting REC be domain record {a : int, b : int}
+
+given p : set of REC
+find x : int(0..100)
+such that x = sum([ i[a] + i[b] | i <- p ])
+
+given r : REC
+find r_in_p : bool
+such that r_in_p = r in p
+

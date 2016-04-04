@@ -28,7 +28,7 @@ sanityChecks model = do
         -- check for binary relation attrobutes
         checkDomain :: MonadWriter [Doc] m => Maybe Statement -> Domain () Expression -> m ()
         checkDomain mstmt domain = case domain of
-            DomainInt rs | isInfinite rs -> recordErr
+            DomainInt rs | inFind mstmt && isInfinite rs -> recordErr
                         [ "Infinite integer domain."
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
@@ -111,6 +111,10 @@ isInfinite [RangeOpen{}] = True
 isInfinite [RangeLowerBounded{}] = True
 isInfinite [RangeUpperBounded{}] = True
 isInfinite _ = False
+
+inFind :: Maybe Statement -> Bool
+inFind (Just (Declaration (FindOrGiven Find _ _))) = True
+inFind _ = False
 
 forgetRefs :: Statement -> Statement
 forgetRefs = transformBi f

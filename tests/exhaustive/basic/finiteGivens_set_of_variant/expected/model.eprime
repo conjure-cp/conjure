@@ -1,0 +1,30 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given fin2: int
+given fin3: int
+given fin4: int
+given fin5: int
+given p_Explicit__tag: matrix indexed by [int(1..fin1)] of int(1..2)
+given p_Explicit_a: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
+given p_Explicit_b: matrix indexed by [int(1..fin1)] of int(fin4..fin5)
+find x: int(0..100)
+find y: int(0..100)
+given fin6: int
+given fin7: int
+given fin8: int
+given fin9: int
+given r__tag: int(1..2)
+given r_a: int(fin6..fin7)
+given r_b: int(fin8..fin9)
+find r_in_p: bool
+such that
+    x = sum([p_Explicit_a[q1] | q1 : int(1..fin1), p_Explicit__tag[q1] = 1]),
+    and([p_Explicit__tag[q1] = 1 | q1 : int(1..fin1), p_Explicit__tag[q1] = 1]),
+    y = sum([p_Explicit_b[q2] | q2 : int(1..fin1), p_Explicit__tag[q2] = 2]),
+    and([p_Explicit__tag[q2] = 2 | q2 : int(1..fin1), p_Explicit__tag[q2] = 2]),
+    r_in_p =
+    or([p_Explicit__tag[q4] = r__tag /\
+        ((1 = p_Explicit__tag[q4] -> p_Explicit_a[q4] = r_a) /\ (2 = p_Explicit__tag[q4] -> p_Explicit_b[q4] = r_b))
+            | q4 : int(1..fin1)])
+
