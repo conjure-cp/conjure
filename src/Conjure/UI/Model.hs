@@ -1969,6 +1969,13 @@ rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
                     ( "xor to sum"
                     , return [essence| 1 = sum(&argOut) |]
                     )
+            AbstractLiteral (AbsLitMatrix dom elems) -> do
+                let argOut = AbstractLiteral $ AbsLitMatrix dom
+                                [ [essence| toInt(&el) |] | el <- elems ]
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum(&argOut) |]
+                    )
             _ -> do
                 (iPat, i) <- quantifiedVar
                 return
