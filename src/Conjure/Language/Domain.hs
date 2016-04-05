@@ -50,6 +50,7 @@ import Data.Data ( toConstr, constrIndex )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
+    | DomainIntE x
     | DomainInt [Range x]
     | DomainEnum
         Name
@@ -114,6 +115,7 @@ instance TypeOf (Domain r x) where
 typeOfDomain :: MonadFail m => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
+typeOfDomain DomainIntE{}              = return TypeInt
 typeOfDomain DomainInt{}               = return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
@@ -145,6 +147,7 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
+        go (DomainIntE x) = DomainIntE x
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
@@ -200,6 +203,7 @@ reprTreeEncoded = mconcat . enc1 . reprTree
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
 reprTree DomainBool{}    = Tree Nothing []
+reprTree DomainIntE{}    = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
@@ -745,6 +749,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
     pretty DomainAny{} = "?"
 
     pretty DomainBool = "bool"
+
+    pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges

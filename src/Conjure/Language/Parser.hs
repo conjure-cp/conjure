@@ -228,7 +228,7 @@ parseDomainWithRepr
     where
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum
-            [ pBool, pInt, try pEnum, try pReference
+            [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
             , pMatrix, try pTupleWithout, pTupleWith
             , pRecord, pVariant
             , pSet
@@ -259,6 +259,11 @@ parseDomainWithRepr
             -- parse and discard, compatibility with SR
             _ <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             return DomainBool
+
+        pIntFromExpr = do
+            lexeme L_int
+            x <- parens parseExpr
+            return $ DomainIntE x
 
         pInt = do
             lexeme L_int
