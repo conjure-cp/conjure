@@ -16,6 +16,8 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Domain.AddAttributes
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty
 import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeText, runLexer )
@@ -263,7 +265,9 @@ parseDomainWithRepr
         pIntFromExpr = do
             lexeme L_int
             x <- parens parseExpr
-            return $ DomainIntE x
+            case typeOf x of
+                Just TypeInt -> return $ DomainInt [RangeSingle x]
+                _ -> return $ DomainIntE x
 
         pInt = do
             lexeme L_int
