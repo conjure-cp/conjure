@@ -269,9 +269,10 @@ validateConstantForDomain :: forall m r . (MonadFail m, Pretty r) => Name -> Con
 validateConstantForDomain _ ConstantBool{} DomainBool{} = return ()
 
 validateConstantForDomain name c d@(DomainIntE x) =
-    let vals = case (viewConstantMatrix x, viewConstantSet x) of
-                (Just (_, xs), _) -> xs
-                (_, Just xs) -> xs
+    let vals = case (x, viewConstantMatrix x, viewConstantSet x) of
+                (ConstantInt{}, _, _) -> [x]
+                (_, Just (_, xs), _) -> xs
+                (_, _, Just xs) -> xs
                 _ -> []
     in  unless (c `elem` vals) (constantNotInDomain name c d)
 
