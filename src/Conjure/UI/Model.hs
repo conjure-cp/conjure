@@ -39,7 +39,7 @@ import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttrib
 import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
-import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
@@ -824,8 +824,9 @@ removeExtraSlices model = do
 
 
 prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
-prologue model = return model
-                                      >>= logDebugId "[input]"
+prologue model = do
+    void $ typeCheckModel_StandAlone model
+    return model                      >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
