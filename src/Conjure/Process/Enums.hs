@@ -181,8 +181,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
             (_, c@ConstantUndefined{}) -> c
 
-            (DomainBool , c) -> c
-            (DomainInt{}, c) -> c
+            (DomainBool  , c) -> c
+            (DomainIntE{}, c) -> c
+            (DomainInt{} , c) -> c
 
             (DomainEnum      ename _ _, ConstantInt i) ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
