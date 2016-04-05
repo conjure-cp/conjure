@@ -234,8 +234,9 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                 stderrSR   <- lastStderr
                 exitCodeSR <- lastExitCode
                 return (stdoutSR, stderrSR, exitCodeSR)
+        let stdouterrSR = T.unlines [stdoutSR, stderrSR]
         if
-            | exitCodeSR == 0 -> do
+            | exitCodeSR == 0 && not (T.isInfixOf "Exception" stdouterrSR) -> do
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
@@ -247,7 +248,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                             writeFile filename (renderNormal s)
-            | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
+            | T.isInfixOf "where false" stdouterrSR -> return ()
             | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                                                , "Savile Row stderr:"    <+> pretty stderrSR
                                                                , "Savile Row exit-code:" <+> pretty exitCodeSR
