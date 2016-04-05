@@ -115,7 +115,16 @@ instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
 typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain (DomainIntE x)            = typeOf x >> return TypeInt
+typeOfDomain d@(DomainIntE x)          = do
+    ty <- typeOf x
+    case ty of
+        TypeList     TypeInt -> return ()
+        TypeMatrix _ TypeInt -> return ()
+        TypeSet      TypeInt -> return ()
+        _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+                         , "In domain:" <+> pretty d
+                         ]
+    return TypeInt
 typeOfDomain d@(DomainInt rs)          = do
     forM_ rs $ \ r -> forM_ r $ \ x -> do
         ty <- typeOf x
