@@ -6,6 +6,7 @@ module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.CategoryOf ( categoryChecking )
@@ -159,5 +160,17 @@ typeCheckModel model1 = do
                 return (SuchThat xs')
     unless (null errs) (userErr errs)
 
-    return model2 { mStatements = statements3 }
+    -- now that everything knows its type, we can recover
+    -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
+    let
+        domainIntERecover :: forall m . MonadFail m => Domain () Expression -> m (Domain () Expression)
+        domainIntERecover d@(DomainIntE x) = do
+            ty <- typeOf x
+            return $ case ty of
+                TypeInt -> DomainInt [RangeSingle x]
+                _       -> d
+        domainIntERecover d = return d
+    statements4 <- transformBiM domainIntERecover statements3
+
+    return model2 { mStatements = statements4 }
 
