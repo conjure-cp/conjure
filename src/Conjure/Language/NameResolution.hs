@@ -227,6 +227,7 @@ resolveD
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        , Data r
+       , Pretty r
        )
     => Domain r Expression
     -> m (Domain r Expression)

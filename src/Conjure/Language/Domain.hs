@@ -109,14 +109,23 @@ instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
     shrink (DomainInt rs) = [DomainInt (init rs)]
     shrink _ = []
 
-instance TypeOf (Domain r x) where
+instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
-typeOfDomain :: MonadFail m => Domain r x -> m Type
+typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain DomainIntE{}              = return TypeInt
-typeOfDomain DomainInt{}               = return TypeInt
+typeOfDomain (DomainIntE x)            = typeOf x >> return TypeInt
+typeOfDomain d@(DomainInt rs)          = do
+    forM_ rs $ \ r -> forM_ r $ \ x -> do
+        ty <- typeOf x
+        case ty of
+            TypeInt -> return ()
+            _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+                             , "For:" <+> pretty x
+                             , "In domain:" <+> pretty d
+                             ]
+    return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs

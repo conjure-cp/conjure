@@ -54,7 +54,39 @@ typeCheckModel model1 = do
     let model2 = fixRelationProj model1
     (statements3, errs) <- runWriterT $ forM (mStatements model2) $ \ st ->
         case st of
-            Declaration{} -> return st
+            Declaration decl -> do
+                case decl of
+                    FindOrGiven _ _ domain -> do
+                        mty <- runExceptT $ typeOf domain
+                        case mty of
+                            Right _ -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In a declaration statement:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                    Letting _ x -> do
+                        mty <- runExceptT $ typeOf x
+                        case mty of
+                            Right _ -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In a letting statement:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                    GivenDomainDefnEnum{} -> return ()
+                    LettingDomainDefnEnum{} -> return ()
+                    LettingDomainDefnUnnamed _ x -> do
+                        mty <- runExceptT $ typeOf x
+                        case mty of
+                            Right TypeInt{} -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In the declaration of an unnamed type:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                            Right ty -> tell $ return $ vcat
+                                [ "In the declaration of an unnamed type:" <++> pretty st
+                                , "Expected type `int`, but got:" <++> pretty ty
+                                ]
+                return st
             SearchOrder xs -> do
                 forM_ xs $ \case
                     BranchingOn{} -> return ()                          -- TODO: check if the name is defined

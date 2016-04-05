@@ -141,6 +141,9 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
 introduceRecordFields
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
+       , Pretty r
+       , Pretty x
+       , TypeOf x
        )
     => Domain r x -> m ()
 introduceRecordFields (DomainRecord inners) =
