@@ -378,7 +378,7 @@ srStdoutHandler
                     let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum 6 '0' solutionNumber ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
-                    eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
+                    eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
                     writeFile filenameEprimeSol  (render lineWidth eprimeSol)
                     essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
