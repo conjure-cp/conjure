@@ -39,10 +39,11 @@ import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttrib
 import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
-import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
     ( downX1, downD, reprOptions, getStructurals
@@ -189,7 +190,7 @@ remainingWIP config (StartOver model)
     | Just modelZipper <- mkModelZipper model = do
         qs <- remaining config modelZipper (mInfo model)
         return qs
-    | otherwise = bug "remainingWIP: Cannot create zipper."
+    | otherwise = return []
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
     case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
@@ -824,8 +825,10 @@ removeExtraSlices model = do
 
 
 prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
-prologue model = return model
-                                      >>= logDebugId "[input]"
+prologue model = do
+    void $ typeCheckModel_StandAlone model
+    return model                      >>= logDebugId "[input]"
+    >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"

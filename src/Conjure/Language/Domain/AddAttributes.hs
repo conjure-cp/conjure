@@ -71,6 +71,7 @@ addAttributeToDomain
 
 addAttributeToDomain d@DomainAny{}       = const $ const $ return d
 addAttributeToDomain d@DomainBool{}      = const $ const $ return d
+addAttributeToDomain d@DomainIntE{}      = const $ const $ return d
 addAttributeToDomain d@DomainInt{}       = const $ const $ return d
 addAttributeToDomain d@DomainEnum{}      = const $ const $ return d
 addAttributeToDomain d@DomainUnnamed{}   = const $ const $ return d

@@ -236,6 +236,7 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
+instantiateD (DomainIntE x) = DomainIntE <$> instantiateE x
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id

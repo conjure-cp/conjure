@@ -141,6 +141,7 @@ dispatch domain = do
     let nope = bug $ "No representation for the domain:" <+> pretty domain
     case domain of
         DomainBool{}    -> primitive
+        DomainIntE{}    -> primitive
         DomainInt{}     -> primitive
         DomainTuple{}   -> tuple
         DomainRecord{}  -> record

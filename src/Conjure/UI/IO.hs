@@ -1,6 +1,7 @@
 module Conjure.UI.IO
     ( readModelFromFile
     , readModelPreambleFromFile
+    , readModelInfoFromFile
     , writeModel, writeModels
     , readModel
     ) where
@@ -35,7 +36,7 @@ readModelFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel id pair
+            readModel (Just id) pair
 
 
 readModelPreambleFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
@@ -45,31 +46,45 @@ readModelPreambleFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel onlyPreamble pair
+            readModel (Just onlyPreamble) pair
+
+readModelInfoFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readModelInfoFromFile fp = do
+    con <- liftIO $ BS.readFile fp
+    case Data.Serialize.decode con of
+        Right res -> return res
+        Left _ -> do
+            pair <- liftIO $ pairWithContents fp
+            readModel Nothing pair
 
 
-readModel :: (MonadUserError m, MonadFail m) => (Text -> Text) -> (FilePath, Text) -> m Model
-readModel preprocess (fp, con) =
-    case runLexerAndParser parseModel fp (preprocess con) of
-        Left  e -> userErr1 e
-        Right x ->
-            let
-                infoBlock = con
-                    |> T.lines
-                    |> dropWhile ("$ Conjure's" /=)     -- info block heading line
-                    |> drop 1                           -- drop the heading
-                    |> map (T.drop 2)                   -- uncomment
-                    |> T.unlines
-                infoJson = infoBlock
-                    |> T.encodeUtf8                     -- convert Text to ByteString
-                    |> Data.Aeson.decodeStrict
-            in
-                if T.null (T.filter isSpace infoBlock)
-                    then return x
-                    else
-                        case infoJson of
-                            Nothing -> fail "Malformed JSON"
-                            Just i  -> return x { mInfo = i }
+readModel :: (MonadUserError m, MonadFail m) => Maybe (Text -> Text) -> (FilePath, Text) -> m Model
+readModel preprocess (fp, con) = do
+
+    model <- case preprocess of
+        Nothing -> return def
+        Just prep ->
+            case runLexerAndParser parseModel fp (prep con) of
+                Left  e -> userErr1 e
+                Right x -> return x
+
+    let
+        infoBlock = con
+            |> T.lines
+            |> dropWhile ("$ Conjure's" /=)     -- info block heading line
+            |> drop 1                           -- drop the heading
+            |> map (T.drop 2)                   -- uncomment
+            |> T.unlines
+        infoJson = infoBlock
+            |> T.encodeUtf8                     -- convert Text to ByteString
+            |> Data.Aeson.decodeStrict
+
+    if T.null (T.filter isSpace infoBlock)
+        then return model
+        else
+            case infoJson of
+                Nothing -> fail "Malformed JSON"
+                Just i  -> return model { mInfo = i }
 
 
 onlyPreamble :: Text -> Text
