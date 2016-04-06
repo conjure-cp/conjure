@@ -268,6 +268,7 @@ applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
+isPrimitiveDomain DomainIntE{} = True
 isPrimitiveDomain DomainInt{} = True
 isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
 isPrimitiveDomain _ = False
