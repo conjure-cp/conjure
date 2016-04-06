@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -100,14 +100,14 @@ mainWithArgs TranslateParameter{..} = do
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     output <- runNameGen $ join $ translateParameter
-                    <$> readModelPreambleFromFile eprime
+                    <$> readModelInfoFromFile eprime
                     <*> readModelFromFile essenceParam
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     output <- runNameGen $ join $ translateSolution
-                    <$> readModelPreambleFromFile eprime
+                    <$> readModelInfoFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
@@ -379,7 +379,7 @@ srStdoutHandler
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
-                    writeFile filenameEprimeSol  (render lineWidth eprimeSol)
+                    writeFile filenameEprimeSol (render lineWidth eprimeSol)
                     essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)

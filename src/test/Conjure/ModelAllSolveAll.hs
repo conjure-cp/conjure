@@ -195,7 +195,7 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                 return (stdoutSR, stderrSR, exitCodeSR)
         if
             | exitCodeSR == 0 -> do
-                eprimeModel       <- readModelPreambleFromFile (outputsDir </> modelPath)
+                eprimeModel       <- readModelInfoFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
@@ -216,7 +216,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ do
         fileShouldExist (outputsDir </> modelPath)
         fileShouldExist (tBaseDir   </> paramPath)
-        eprimeModel <- readModelPreambleFromFile (outputsDir </> modelPath)
+        eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
         param       <- readModelFromFile (tBaseDir   </> paramPath)
         eprimeParam <- ignoreLogs $ runNameGen $ translateParameter eprimeModel param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
