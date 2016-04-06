@@ -236,7 +236,14 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
-instantiateD (DomainIntE x) = DomainIntE <$> instantiateE x
+instantiateD (DomainIntE x) = do
+    x' <- instantiateE x
+    let vals = case (x', viewConstantMatrix x', viewConstantSet x') of
+                (ConstantInt{}, _, _) -> [x']
+                (_, Just (_, xs), _) -> xs
+                (_, _, Just xs) -> xs
+                _ -> []
+    return (DomainInt (map RangeSingle vals))
 instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
