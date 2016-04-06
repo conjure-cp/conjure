@@ -53,7 +53,7 @@ distinctQuantifiedVars m@Model{mStatements=st} = do
                         if qn `elem` usedOnce
                             then return (qn, qn)
                             else do
-                                new <- nextName "distinct"
+                                new <- nextName "q"
                                 return (qn, new)
                     | qn <- quantifiedNames
                     ]
