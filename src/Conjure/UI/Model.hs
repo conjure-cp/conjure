@@ -190,7 +190,7 @@ remainingWIP config (StartOver model)
     | Just modelZipper <- mkModelZipper model = do
         qs <- remaining config modelZipper (mInfo model)
         return qs
-    | otherwise = bug "remainingWIP: Cannot create zipper."
+    | otherwise = return []
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
     case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
