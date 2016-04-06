@@ -828,10 +828,10 @@ prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDoma
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
-    >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
+    >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"

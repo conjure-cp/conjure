@@ -32,17 +32,25 @@ normaliseQuantifiedVariables m@Model{mStatements=st} =
 
 
 distinctQuantifiedVars :: NameGen m => Model -> m Model
-distinctQuantifiedVars m@Model{mStatements=st} = do
+distinctQuantifiedVars m@Model{mStatements=stmts} = do
     let
-        usedOnce :: [Name]
-        usedOnce =
+        -- usedOnce :: [Name]
+        -- usedOnce =
+        --     [ nm
+        --     | (nm, nb) <- histogram
+        --                     [ nm
+        --                     | Comprehension _ gocs <- universeBi stmts
+        --                     , nm <- getQuantifiedNames gocs
+        --                     ]
+        --     , nb == 1
+        --     ]
+
+        usedInALetting :: [Name]
+        usedInALetting =
             [ nm
-            | (nm, nb) <- histogram
-                            [ nm
-                            | Comprehension _ gocs <- universeBi st
-                            , nm <- getQuantifiedNames gocs
-                            ]
-            , nb == 1
+            | Declaration (Letting _ x) <- stmts
+            , Comprehension _ gocs <- universe x
+            , nm <- getQuantifiedNames gocs
             ]
 
         normX_Distinct :: NameGen m => Expression -> m Expression
@@ -50,11 +58,12 @@ distinctQuantifiedVars m@Model{mStatements=st} = do
             let quantifiedNames = getQuantifiedNames gocs
             oldNew <- sequence
                     [ do
-                        if qn `elem` usedOnce
-                            then return (qn, qn)
-                            else do
+                        if qn `elem` usedInALetting
+                            then do
                                 new <- nextName "q"
                                 return (qn, new)
+                            else
+                                return (qn, qn)
                     | qn <- quantifiedNames
                     ]
             let
@@ -65,10 +74,16 @@ distinctQuantifiedVars m@Model{mStatements=st} = do
             return (transformBi f p')
         normX_Distinct p = descendM normX_Distinct p
 
-    stOut <- descendBiM normX_Distinct st
-    namegenst <- exportNameGenState
-    let miInfoOut = (mInfo m) { miNameGenState = namegenst }
-    return m { mStatements = stOut, mInfo = miInfoOut }
+    if null usedInALetting
+        then return m
+        else do
+            stmtsOut <- forM stmts $ \ stmt ->
+                case stmt of
+                    Declaration Letting{} -> return stmt
+                    _                     -> descendBiM normX_Distinct stmt
+            namegenst <- exportNameGenState
+            let miInfoOut = (mInfo m) { miNameGenState = namegenst }
+            return m { mStatements = stmtsOut, mInfo = miInfoOut }
 
 
 getQuantifiedNames :: [GeneratorOrCondition] -> [Name]
