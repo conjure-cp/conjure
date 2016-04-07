@@ -133,7 +133,8 @@ such that
                                  =
                                  toInt(or([a_PartitionOccurrence_WhichPart[q45] = q23 /\ q45 = q42 | q45 : int(1..2)])))
                                     | q42 : int(1..2), q42 < q38]))))
-                            | q38 : int(1..2)]); int(1..3)])
+                            | q38 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q124 <= a_PartitionOccurrence_NumParts /\
                          (and([a_PartitionOccurrence_WhichPart[q127] = q124 ->
@@ -300,7 +301,8 @@ such that
                                  toInt(or([b_PartitionOccurrence_WhichPart[q178] = q156 /\ q178 = q175
                                                | q178 : int(1..2)])))
                                     | q175 : int(1..2), q175 < q171]))))
-                            | q171 : int(1..2)]); int(1..3)])
+                            | q171 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q257 <= a_PartitionOccurrence_NumParts /\
                          (and([a_PartitionOccurrence_WhichPart[q260] = q257 ->
