@@ -6,6 +6,7 @@ module Conjure.UI.MainHelper ( mainWithArgs ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
+import Conjure.Profiling ( runKeepStats )
 import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
@@ -94,7 +95,7 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             }
-    runNameGen $ outputModels config model
+    runKeepStats $ runNameGen $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"

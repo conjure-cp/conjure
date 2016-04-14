@@ -14,6 +14,7 @@ module Conjure.UI.Model
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
+import Conjure.Profiling
 import Conjure.Language.Definition
 import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
@@ -103,7 +104,7 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m, KeepStats m)
     => Config
     -> Model
     -> m ()
@@ -148,12 +149,14 @@ outputModels config model = do
 
 
 toCompletion
-    :: forall m . (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    :: forall m . (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m, KeepStats m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
 toCompletion config m = do
+    tickPhase "init"
     m2 <- prologue m
+    tickPhase "prologue"
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
@@ -172,6 +175,7 @@ toCompletion config m = do
                 then do
                     let model = modelWIPOut modelWIP
                     model' <- epilogue model
+                    tickPhase "epilogue"
                     yield (Right model')
                 else do
                     nextModels <- driver qs
@@ -186,20 +190,21 @@ remainingWIP
     => Config
     -> ModelWIP
     -> m [Question]
-remainingWIP config (StartOver model)
-    | Just modelZipper <- mkModelZipper model = do
-        qs <- remaining config modelZipper (mInfo model)
-        return qs
-    | otherwise = return []
-remainingWIP config wip@(TryThisFirst modelZipper info) = do
-    qs <- remaining config modelZipper info
-    case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
-        (False, _, _)  -> return qs                                         -- not null, return
-        (_, Just r, _) -> remainingWIP config (TryThisFirst r info)         -- there is a sibling to the right
-        (_, _, Just u) -> remainingWIP config (TryThisFirst u info)         -- there is a parent
-        _              -> remainingWIP config (StartOver (modelWIPOut wip)) -- we are done here,
-                                                                            -- start-over the whole model in case
-                                                                            -- something on the left needs attention.
+remainingWIP config = go where
+    go (StartOver model)
+        | Just modelZipper <- mkModelZipper model = do
+            qs <- remaining config modelZipper (mInfo model)
+            return qs
+        | otherwise = return []
+    go wip@(TryThisFirst modelZipper info) = do
+        qs <- remaining config modelZipper info
+        case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
+            (False, _, _)  -> return qs                                 -- not null, return
+            (_, Just r, _) -> go (TryThisFirst r info)                  -- there is a sibling to the right
+            (_, _, Just u) -> go (TryThisFirst u info)                  -- there is a parent
+            _              -> go (StartOver (modelWIPOut wip))          -- we are done here,
+                                                                        -- start-over the whole model in case
+                                                                        -- something on the left needs attention.
 
 
 remaining
@@ -367,6 +372,7 @@ strategyToDriver config questions = do
                             config
                             (strategyQ  config) pickedQNumber                   pickedQDescr
                             (strategyA' config) pickedANumber (length optionsA) pickedADescr
+                            (aRuleName pickedA)
                             (aText pickedA)
                             (aBefore pickedA)
                             (aAnswer pickedA)
@@ -454,12 +460,12 @@ addToTrail
     :: Config
     -> Strategy -> Int ->        Doc
     -> Strategy -> Int -> Int -> Doc
-    -> Doc -> Expression -> Expression
+    -> Doc -> Doc -> Expression -> Expression
     -> ModelInfo -> ModelInfo
 addToTrail Config{..}
            questionStrategy questionNumber                 questionDescr
            answerStrategy   answerNumber   answerNumbers   answerDescr
-           ruleDescr oldExpr newExpr
+           _ruleName ruleDescr oldExpr newExpr
            oldInfo = newInfo
     where
         newInfo = oldInfo { miTrailCompact  = (questionNumber, answerNumber, answerNumbers)

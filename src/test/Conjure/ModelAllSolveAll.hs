@@ -5,6 +5,7 @@ module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Profiling
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.UI.IO
@@ -460,7 +461,7 @@ fileShouldExist f = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir = ignoreLogs . runNameGen . outputModels Config
+modelAll dir = ignoreLogs . runKeepStats . runNameGen . outputModels Config
     { logLevel                   = LogNone
     , verboseTrail               = False
     , rewritesTrail              = False

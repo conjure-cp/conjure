@@ -8,6 +8,7 @@ module Conjure.Process.Enumerate
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
+import Conjure.Profiling
 import Conjure.Language.AdHoc
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
@@ -40,6 +41,7 @@ instance EnumerateDomain m => EnumerateDomain (StateT st m) where liftIO' = lift
 instance EnumerateDomain m => EnumerateDomain (Pipes.Proxy a b c d m) where liftIO' = lift . liftIO'
 instance EnumerateDomain m => EnumerateDomain (NameGenM m) where liftIO' = lift . liftIO'
 instance (EnumerateDomain m, MonadFail m) => EnumerateDomain (UserErrorT m) where liftIO' = lift . liftIO'
+instance EnumerateDomain m => EnumerateDomain (KeepStatsM m) where liftIO' = lift . liftIO'
 
 -- | Use this if you don't want to allow a (EnumerateDomain m => m a) computation actually do IO.
 data EnumerateDomainNoIO a = Done a | TriedIO | Failed Doc
