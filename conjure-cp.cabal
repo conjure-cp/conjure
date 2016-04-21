@@ -331,9 +331,9 @@ Test-Suite conjure-testing
                      , tasty-hunit
                      , tasty-rerun
                      , text
-                     -- we do not directly depend on clock, but we need to stick to 0.5.2 for now
+                     -- we do not directly depend on clock, but we need at least 0.7.2
                      -- see https://github.com/corsis/clock/issues/35
-                     , clock == 0.5.2
+                     , clock >= 0.7.2
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings
