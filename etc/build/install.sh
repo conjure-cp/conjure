@@ -61,7 +61,7 @@ else
 fi
 
 
-AVAILABLE_CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || 0 )
+AVAILABLE_CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || echo 0 )
 
 if [ $CORES -le 0 ]; then
     echo "CORES is set to 0. Will try to use all cores on the machine."
