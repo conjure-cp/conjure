@@ -1,22 +1,18 @@
-syntax: glob
 
-.stack-work
-dist
-debugging
-.tmtags
-tags
-TAGS
-.swp
-.essence.binary
+# generated files
 src/Conjure/RepositoryVersion.hs
 src/Conjure/Language/Expression/Internal/Generated.hs
 src/Conjure/Language/Expression/Op/Internal/Generated.hs
+
+# build artefacts
+dist
 cabal.sandbox.config
 .cabal-sandbox
-experiments/dontcare/remote
+.stack-work
+
+# test outputs
 tests/exhaustive/**/outputs
 tests/parse_print/**/stdout
 tests/parse_print/**/stderr
 tests/golden/*.generated
-conjure-output
-.tasty-rerun-log
+
