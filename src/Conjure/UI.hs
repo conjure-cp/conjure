@@ -6,6 +6,10 @@ module Conjure.UI ( UI(..), OutputFormat(..), ui ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
+import Paths_conjure_cp ( version )
+
+-- base
+import Data.Version ( showVersion )
 
 -- cmdargs
 import System.Console.CmdArgs hiding ( Default(..) )
@@ -1063,5 +1067,7 @@ ui = modes
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
     ]      &= program "conjure"
-           &= summary ("Conjure, the automated constraint modelling tool.\n\
-                       \Version: " ++ repositoryVersion)
+           &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
+                               , "Release version " ++ showVersion version
+                               , "Repository version " ++ repositoryVersion
+                               ])
