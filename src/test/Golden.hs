@@ -37,10 +37,15 @@ tests = testGroup "golden"
                         isBoth Both{} = True
                         isBoth _ = False
 
-                        -- drop 2 lines, to skip the version bit
+                        -- the second and third lines in the help output report
+                        -- the release version and the repository version
+                        dropVersionLines (x:_:_:xs) = x:xs
+                        dropVersionLines xs = xs
+
+                        -- drop the version lines, to skip that bit.
                         -- otherwise this test would never be able to pass!
-                        goldLines = drop 2 (T.lines gold)
-                        genLines  = drop 2 (T.lines gen)
+                        goldLines = dropVersionLines (T.lines gold)
+                        genLines  = dropVersionLines (T.lines gen)
 
                         diffs = filter (not . isBoth) $ getGroupedDiff goldLines genLines
                         diffsString = fmap (fmapDiff (fmap textToString)) diffs
