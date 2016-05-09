@@ -36,7 +36,7 @@ install:
  - mkdir -p bin
 
  # Savile Row
- - BIN_DIR=$(pwd)/bin etc/build/install-savilerow.sh
+ - (savilerow | grep 'Savile Row 1.6.4') || (BIN_DIR=$(pwd)/bin etc/build/install-savilerow.sh)
 
  # Conjure
  - cabal --version || echo "cabal not found"
