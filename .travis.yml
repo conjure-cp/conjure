@@ -1,0 +1,56 @@
+
+# travis phases and our setup
+# before_install
+# install                           -- compiling conjure
+# before_script
+# script                            -- running tests
+# after_success                     -- attempt cabal freeze
+# after_failure
+# OPTIONAL before_deploy
+# OPTIONAL deploy
+# OPTIONAL after_deploy
+# after_script
+
+language: c
+
+# explicitly request container-based infrastructure
+sudo: false
+
+matrix:
+  include:
+    - env: CABALVER=1.24 GHCVER=7.8.4
+      addons: {apt: {packages: [cabal-install-1.18,ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: CABALVER=1.24 GHCVER=7.10.3
+      addons: {apt: {packages: [cabal-install-1.22,ghc-7.10.1],sources: [hvr-ghc]}}
+    - env: CABALVER=head GHCVER=head
+      addons: {apt: {packages: [cabal-install-head,ghc-head],  sources: [hvr-ghc]}}
+
+  allow_failures:
+   - env: CABALVER=head GHCVER=head
+
+before_install:
+ - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$PATH
+
+install:
+ - mkdir -p bin
+ - cabal --version
+ - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+ - travis_retry cabal update
+ - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
+ - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 BIN_DIR=$(pwd)/bin time make
+
+script:
+ - time dist/build/conjure-testing/conjure-testing -p basic/set01 +RTS -s
+ - cabal sdist   # tests that a source-distribution can be generated
+
+after_success:
+ - make freeze
+ - git diff cabal.config
+
+cache:
+  directories:
+    - $HOME/.cabal
+    - $HOME/.ghc
+    - .cabal-sandbox
+    - dist
+
