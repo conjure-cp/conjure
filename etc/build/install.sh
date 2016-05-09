@@ -124,7 +124,9 @@ if [ -d "${HOME}/.tools/libs/gmp-6.1.0/lib" ]; then
 fi
 
 # installing ghc
-if [ "$(ghc --version | grep $GHC_VERSION)" ]; then
+if [ ${GHC_VERSION} = "head" ] ; then
+    echo "Using GHC head."
+elif [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     echo "GHC version ${GHC_VERSION} found."
     which ghc
     ghc --version
@@ -261,7 +263,11 @@ else
     DYNAMIC=""
 fi
 
-cp cabal.config-${GHC_VERSION} cabal.config || echo "file not found cabal.config-${GHC_VERSION}"
+if [ ${GHC_VERSION} = "head" ] ; then
+    rm -f cabal.config
+else
+    cp cabal.config-${GHC_VERSION} cabal.config || echo "file not found cabal.config-${GHC_VERSION}"
+fi
 
 # install conjure, finally
 

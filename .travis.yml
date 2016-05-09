@@ -27,6 +27,7 @@ addons:
       - cabal-install-1.24
       - ghc-7.8.4
       - ghc-7.10.3
+      - ghc-head
 
 # apparently explicitly setting the compiler here forces travis to
 # use separate caches for different compiler versions.
@@ -50,11 +51,23 @@ matrix:
       compiler: "# GHC 7.10.3"
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
       compiler: "# GHC 7.10.3"
+    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=minion
+      compiler: "# GHC head"
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
+      compiler: "# GHC head"
+    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=lingeling
+      compiler: "# GHC head"
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=lingeling
+      compiler: "# GHC head"
   allow_failures:
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=lingeling
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=lingeling
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
+    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=minion
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
+    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=lingeling
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=lingeling
 
 before_install:
   - export CABALVER=1.24
@@ -81,7 +94,6 @@ install:
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
-  - mv cabal.config-${GHC_VERSION} cabal.config
   - echo ${PATH}
   - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
   - conjure --version                        # print version
