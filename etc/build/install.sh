@@ -25,6 +25,7 @@ export CORES=${CORES:-0}
 export GHC_VERSION=${GHC_VERSION:-"7.10.3"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export INSTALL_GMP=${INSTALL_GMP:-no}
+export INSTALL_GHC=${INSTALL_GHC:-no}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
@@ -81,6 +82,7 @@ echo "AVAILABLE_CORES : ${AVAILABLE_CORES}"
 echo "USE_CORES       : ${USE_CORES}"
 echo "GMP_VERSION     : ${GMP_VERSION}"
 echo "INSTALL_GMP     : ${INSTALL_GMP}"
+echo "INSTALL_GHC     : ${INSTALL_GHC}"
 echo "GHC_VERSION     : ${GHC_VERSION}"
 echo "OPTIMISATION    : ${OPTIMISATION}"
 echo "LLVM            : ${LLVM}"
@@ -126,7 +128,7 @@ if [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     echo "GHC version ${GHC_VERSION} found."
     which ghc
     ghc --version
-else
+elif [ $INSTALL_GHC = "yes" ]; then
     echo "GHC version ${GHC_VERSION} not found. Installing."
     if [ "$(grep ${GHC_VERSION} ${PLATFORM} ${GMP_VERSION} etc/build/ghc_urls.txt)" ]; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt | cut -d ' ' -f 4)
@@ -143,6 +145,10 @@ else
         echo "Cannot download GHC version ${GHC_VERSION} for platform ${PLATFORM}."
         exit 1
     fi
+else
+    echo "GHC version ${GHC_VERSION} not found."
+    echo "Either set INSTALL_GHC=yes or install it manually."
+    exit 1
 fi
 
 # installing cabal-install
