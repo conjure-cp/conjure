@@ -18,11 +18,11 @@ sudo: false
 matrix:
   include:
     - env: CABALVER=1.24 GHCVER=7.8.4
-      addons: {apt: {packages: [cabal-install-1.24,ghc-7.8.4], sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24, ghc-7.8.4], sources: [hvr-ghc]}}
     - env: CABALVER=1.24 GHCVER=7.10.3
-      addons: {apt: {packages: [cabal-install-1.24,ghc-7.10.3],sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-1.24, ghc-7.10.3], sources: [hvr-ghc]}}
     - env: CABALVER=head GHCVER=head
-      addons: {apt: {packages: [cabal-install-head,ghc-head],  sources: [hvr-ghc]}}
+      addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
 
   allow_failures:
    - env: CABALVER=head GHCVER=head
@@ -36,7 +36,8 @@ install:
  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
  - travis_retry cabal update
  - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
- - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 BIN_DIR=$(pwd)/bin time make
+ - echo $PATH
+ - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 BIN_DIR=$(pwd)/bin make
 
 script:
  - time dist/build/conjure-testing/conjure-testing -p basic/set01 +RTS -s
