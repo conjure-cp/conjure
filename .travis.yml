@@ -32,6 +32,7 @@ before_install:
  - export CABALVER=1.24
  - export BIN_DIR=$(pwd)/bin
  - export PATH=${BIN_DIR}:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
+ - export CC="gcc-4.8" CXX="g++-4.8" LINK="gcc-4.8" LINKXX="g++-4.8"
 
 install:
  - mkdir -p bin
@@ -70,4 +71,13 @@ cache:
     - .cabal-sandbox
     - dist
     - bin
+
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
+    - clang
 
