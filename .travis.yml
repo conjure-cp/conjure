@@ -56,6 +56,8 @@ install:
  - echo $PATH
  - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 BIN_DIR=$(pwd)/bin make
 
+ - ls -l $(find bin -type f)
+
 script:
  - time dist/build/conjure-testing/conjure-testing -p basic/set01 +RTS -s
  - cabal sdist   # tests that a source-distribution can be generated
