@@ -37,7 +37,6 @@ export DYNAMIC=${DYNAMIC:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
-# cabal-install-1.22.0.0 doesn't support the option --disable-executable-profiling
 CABAL_VERSION="1.24.0.0"
 HAPPY_VERSION="1.19.5"
 HSCOLOUR_VERSION="1.20.3"
@@ -177,7 +176,7 @@ else
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
-        --disable-executable-profiling
+        --disable-profiling
     popd
     rm -rf dist/tools
 fi
@@ -196,7 +195,7 @@ if [ $BUILD_DOCS = "yes" ]; then
             --force-reinstalls \
             --disable-documentation \
             --disable-library-profiling \
-            --disable-executable-profiling
+            --disable-profiling
         popd
         rm -rf dist/tools
     fi
@@ -245,9 +244,9 @@ else
 fi
 
 if [ ${PROFILING} = "yes" ]; then
-    PROFILING="--enable-library-profiling --enable-executable-profiling"
+    PROFILING="--enable-library-profiling --enable-profiling"
 else
-    PROFILING="--disable-library-profiling --disable-executable-profiling"
+    PROFILING="--disable-library-profiling --disable-profiling"
 fi
 
 if [ ${DYNAMIC} = "yes" ]; then
