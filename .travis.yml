@@ -2,7 +2,8 @@
 # travis phases and our setup
 # before_install
 # install                           -- fetch/build non-haskell dependencies: savilerow, minion, lingeling
-#                                   -- compiling conjure
+#                                   -- build conjure
+#                                   -- save all these executables under $(pwd)/bin
 # before_script
 # script                            -- running tests
 # after_success                     -- attempt cabal freeze
@@ -29,7 +30,7 @@ matrix:
    - env: CABALVER=head GHCVER=head
 
 before_install:
- - export PATH=/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
+ - export PATH=$(pwd)/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
 
 install:
  - mkdir -p bin
