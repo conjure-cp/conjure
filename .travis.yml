@@ -19,17 +19,13 @@ sudo: false
 
 matrix:
   include:
-    - env: CABALVER=1.24 GHCVER=7.8.4
+    - env: GHCVER=7.8.4
       addons: {apt: {packages: [cabal-install-1.24, ghc-7.8.4], sources: [hvr-ghc]}}
-    - env: CABALVER=1.24 GHCVER=7.10.3
+    - env: GHCVER=7.10.3
       addons: {apt: {packages: [cabal-install-1.24, ghc-7.10.3], sources: [hvr-ghc]}}
-    # - env: CABALVER=head GHCVER=head
-    #   addons: {apt: {packages: [cabal-install-head, ghc-head], sources: [hvr-ghc]}}
-
-  allow_failures:
-   - env: CABALVER=head GHCVER=head
 
 before_install:
+ - export CABALVER=1.24
  - export PATH=$(pwd)/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
 
 install:
