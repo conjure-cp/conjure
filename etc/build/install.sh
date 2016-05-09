@@ -261,6 +261,8 @@ else
     DYNAMIC=""
 fi
 
+cp cabal.config-${GHC_VERSION} cabal.config || echo "file not found cabal.config-${GHC_VERSION}"
+
 # install conjure, finally
 
 cabal install                                                           \

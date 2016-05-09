@@ -81,7 +81,7 @@ install:
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
-  - if [ "${GHC_VERSION}" = "7.8.4" ]; then rm cabal.config ; fi
+  - mv cabal.config-${GHC_VERSION} cabal.config
   - echo ${PATH}
   - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
   - conjure --version                        # print version
