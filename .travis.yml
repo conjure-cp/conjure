@@ -23,6 +23,7 @@ addons:
       - hvr-ghc
       - ubuntu-toolchain-r-test
     packages:
+      - gcc-4.9
       - g++-4.9
       - cabal-install-1.24
       - ghc-7.8.4
@@ -88,7 +89,7 @@ install:
   - minion help | head -n2                   # print version
 
   # Lingeling
-  - (lingeling --help > /dev/null) || etc/build/install-lingeling.sh
+  - (lingeling --help > /dev/null) || (CC="gcc-4.9" etc/build/install-lingeling.sh)
 
   # Conjure
   - cabal --version || echo "cabal not found"
