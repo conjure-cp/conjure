@@ -8,7 +8,7 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 rm -rf ~/tmp-install-minion
 mkdir ~/tmp-install-minion
 pushd ~/tmp-install-minion
-hg clone ssh://hg@bitbucket.org/stacs_cp/minion
+hg clone --insecure ssh://hg@bitbucket.org/stacs_cp/minion
 mkdir -p minion/build
 (cd minion/build && ../build.py && make minion -j4)
 cp minion/build/minion ${BIN_DIR}/minion
