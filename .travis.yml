@@ -30,13 +30,19 @@ matrix:
 
 before_install:
  - export CABALVER=1.24
- - export PATH=$(pwd)/bin:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
+ - export BIN_DIR=$(pwd)/bin
+ - export PATH=${BIN_DIR}:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
 
 install:
  - mkdir -p bin
 
  # Savile Row
- - (savilerow | grep 'Savile Row 1.6.4') || (BIN_DIR=$(pwd)/bin etc/build/install-savilerow.sh)
+ - (savilerow | grep 'Savile Row 1.6.4') || etc/build/install-savilerow.sh
+ - savilerow | head -n2 | tail -n1          # print version
+
+ # Minion
+ - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
+ - minion help | head -n2                   # print version
 
  # Conjure
  - cabal --version || echo "cabal not found"
@@ -44,7 +50,8 @@ install:
  - travis_retry cabal update
  - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
  - echo $PATH
- - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 BIN_DIR=$(pwd)/bin make
+ - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 make
+ - conjure --version                        # print version
 
  - ls -l $(find bin -type f)
 
