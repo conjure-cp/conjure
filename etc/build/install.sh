@@ -154,7 +154,7 @@ else
     wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
-    bash bootstrap.sh --user --no-doc
+    EXTRA_CONFIGURE_OPTS="" bash bootstrap.sh --user --no-doc
     popd
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
 fi
