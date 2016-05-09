@@ -14,7 +14,7 @@ COMPILER="g++-4.9"
 if which ccache; then
     COMPILER="ccache ${COMPILER}"
 fi
-(cd minion/build && ../build.py --compiler "${COMPILER}" && make minion -j4)
+(cd minion/build && ../build.py --compiler "${COMPILER}" && make minion -j2)
 cp minion/build/minion ${BIN_DIR}/minion
 echo "minion executable is at ${BIN_DIR}/minion"
 ls -l ${BIN_DIR}/minion
