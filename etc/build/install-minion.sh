@@ -10,7 +10,11 @@ mkdir ~/tmp-install-minion
 pushd ~/tmp-install-minion
 hg clone https://bitbucket.org/stacs_cp/minion
 mkdir -p minion/build
-(cd minion/build && ../build.py --compiler "g++-4.9" && make minion -j4)
+COMPILER="g++-4.9"
+if which ccache; then
+    COMPILER="ccache ${COMPILER}"
+fi
+(cd minion/build && ../build.py --compiler "${COMPILER}" && make minion -j4)
 cp minion/build/minion ${BIN_DIR}/minion
 echo "minion executable is at ${BIN_DIR}/minion"
 ls -l ${BIN_DIR}/minion
