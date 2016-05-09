@@ -29,40 +29,40 @@ matrix:
       compiler: GHC-7.10.3
 
 before_install:
- - export CABALVER=1.24
- - export BIN_DIR=$(pwd)/bin
- - export PATH=${BIN_DIR}:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
- - export CC="gcc-4.8" CXX="g++-4.8" LINK="gcc-4.8" LINKXX="g++-4.8"
+  - export CABALVER=1.24
+  - export BIN_DIR=$(pwd)/bin
+  - export PATH=${BIN_DIR}:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
+  - export CC="gcc-4.8" CXX="g++-4.8" LINK="gcc-4.8" LINKXX="g++-4.8"
 
 install:
- - mkdir -p bin
+  - mkdir -p bin
 
- # Savile Row
- - (savilerow | grep 'Savile Row 1.6.4') || etc/build/install-savilerow.sh
- - savilerow | head -n2 | tail -n1          # print version
+  # Savile Row
+  - (savilerow | grep 'Savile Row 1.6.4') || etc/build/install-savilerow.sh
+  - savilerow | head -n2 | tail -n1          # print version
 
- # Minion
- - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
- - minion help | head -n2                   # print version
+  # Minion
+  - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
+  - minion help | head -n2                   # print version
 
- # Conjure
- - cabal --version || echo "cabal not found"
- - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
- - travis_retry cabal update
- - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
- - echo $PATH
- - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 make
- - conjure --version                        # print version
+  # Conjure
+  - cabal --version || echo "cabal not found"
+  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+  - travis_retry cabal update
+  - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
+  - echo $PATH
+  - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 make
+  - conjure --version                        # print version
 
- - ls -l $(find bin -type f)
+  - ls -l $(find bin -type f)
 
 script:
- - time dist/build/conjure-testing/conjure-testing -p basic/set01 +RTS -s
- - cabal sdist   # tests that a source-distribution can be generated
+  - time dist/build/conjure-testing/conjure-testing -p basic/set01 +RTS -s
+  - cabal sdist   # tests that a source-distribution can be generated
 
 after_success:
- - make freeze
- - git diff cabal.config
+  - make freeze
+  - git diff cabal.config
 
 cache:
   directories:
@@ -75,9 +75,9 @@ cache:
 addons:
   apt:
     sources:
-    - ubuntu-toolchain-r-test
+      - ubuntu-toolchain-r-test
     packages:
-    - gcc-4.8
-    - g++-4.8
-    - clang
+      - gcc-4.8
+      - g++-4.8
+      - clang
 
