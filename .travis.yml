@@ -17,37 +17,37 @@ language: c
 
 sudo: false
 
+# apparently explicitly setting the compiler here forces travis to
+# use separate caches for different compiler versions.
+# as seen in the Idris .travis.yml
+# (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
 matrix:
   include:
-    - env: GHC_VERSION=7.8.4
-      compiler: "# GHC 7.8.4" # apparently this forces travis to use separate caches for different compiler versions
-                              # as seen in the Idris .travis.yml
-                              # (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
-      addons:
-        apt:
-          packages:
-            - g++-4.9
-            - cabal-install-1.24
-            - ghc-7.8.4
-          sources:
-            - hvr-ghc
-            - ubuntu-toolchain-r-test
-    - env: GHC_VERSION=7.10.3
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=minion
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=minion
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
       compiler: "# GHC 7.10.3"
-      addons:
-        apt:
-          packages:
-            - g++-4.9
-            - cabal-install-1.24
-            - ghc-7.10.3
-          sources:
-            - hvr-ghc
-            - ubuntu-toolchain-r-test
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
+      compiler: "# GHC 7.10.3"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
 
 before_install:
   - export CABALVER=1.24
   - export BIN_DIR=$(pwd)/bin
   - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
+  - if [ ${SOLVER} = "minion" ] ; then
+      export SR_OPTIONS="${SR_OPTIONS} -minion"
+    elif [ ${SOLVER} = "lingeling" ] ; then
+      export SR_OPTIONS="${SR_OPTIONS} -sat"
+    else
+      echo "Unknown solver: ${SOLVER}"
+      exit 1
+    fi
 
 install:
   - mkdir -p bin
@@ -59,6 +59,9 @@ install:
   # Minion
   - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
   - minion help | head -n2                   # print version
+
+  # Lingeling
+  - (lingeling --help > /dev/null) || etc/build/install-lingeling.sh
 
   # Conjure
   - cabal --version || echo "cabal not found"
