@@ -19,20 +19,35 @@ sudo: false
 
 matrix:
   include:
-    - env: GHCVER=7.8.4
-      addons: {apt: {packages: [cabal-install-1.24, ghc-7.8.4], sources: [hvr-ghc]}}
+    - env: GHC_VERSION=7.8.4
       compiler: GHC-7.8.4 # apparently this forces travis to use separate caches for different compiler versions
                           # as seen in the Idris .travis.yml
                           # (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
-    - env: GHCVER=7.10.3
-      addons: {apt: {packages: [cabal-install-1.24, ghc-7.10.3], sources: [hvr-ghc]}}
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+            - cabal-install-1.24
+            - ghc-7.8.4
+          sources:
+            - hvr-ghc
+            - ubuntu-toolchain-r-test
+    - env: GHC_VERSION=7.10.3
       compiler: GHC-7.10.3
+      addons:
+        apt:
+          packages:
+            - g++-4.9
+            - cabal-install-1.24
+            - ghc-7.10.3
+          sources:
+            - hvr-ghc
+            - ubuntu-toolchain-r-test
 
 before_install:
   - export CABALVER=1.24
   - export BIN_DIR=$(pwd)/bin
-  - export PATH=${BIN_DIR}:/opt/ghc/$GHCVER/bin:/opt/cabal/$CABALVER/bin:$HOME/.cabal/bin:$PATH
-  - export CC="gcc-4.8" CXX="g++-4.8" LINK="gcc-4.8" LINKXX="g++-4.8"
+  - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
 
 install:
   - mkdir -p bin
@@ -49,9 +64,9 @@ install:
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
-  - if [ GHCVER=7.8.4 ]; then rm cabal.config ; fi
-  - echo $PATH
-  - OPTIMISATION=-O1 GHC_VERSION=${GHCVER} BUILD_TESTS=yes CORES=2 make
+  - if [ GHC_VERSION=7.8.4 ]; then rm cabal.config ; fi
+  - echo ${PATH}
+  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
   - conjure --version                        # print version
 
   - ls -l $(find bin -type f)
@@ -66,18 +81,9 @@ after_success:
 
 cache:
   directories:
-    - $HOME/.cabal
-    - $HOME/.ghc
+    - ${HOME}/.cabal
+    - ${HOME}/.ghc
     - .cabal-sandbox
     - dist
     - bin
-
-addons:
-  apt:
-    sources:
-      - ubuntu-toolchain-r-test
-    packages:
-      - gcc-4.8
-      - g++-4.8
-      - clang
 
