@@ -17,6 +17,17 @@ language: c
 
 sudo: false
 
+addons:
+  apt:
+    sources:
+      - hvr-ghc
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-4.9
+      - cabal-install-1.24
+      - ghc-7.8.4
+      - ghc-7.10.3
+
 # apparently explicitly setting the compiler here forces travis to
 # use separate caches for different compiler versions.
 # as seen in the Idris .travis.yml
@@ -25,16 +36,12 @@ matrix:
   include:
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=minion
       compiler: "# GHC 7.8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=minion
       compiler: "# GHC 7.8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
       compiler: "# GHC 7.10.3"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
       compiler: "# GHC 7.10.3"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
 
 before_install:
   - export CABALVER=1.24
