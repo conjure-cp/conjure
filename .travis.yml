@@ -20,9 +20,9 @@ sudo: false
 matrix:
   include:
     - env: GHC_VERSION=7.8.4
-      compiler: GHC-7.8.4 # apparently this forces travis to use separate caches for different compiler versions
-                          # as seen in the Idris .travis.yml
-                          # (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
+      compiler: "# GHC 7.8.4" # apparently this forces travis to use separate caches for different compiler versions
+                              # as seen in the Idris .travis.yml
+                              # (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
       addons:
         apt:
           packages:
@@ -33,7 +33,7 @@ matrix:
             - hvr-ghc
             - ubuntu-toolchain-r-test
     - env: GHC_VERSION=7.10.3
-      compiler: GHC-7.10.3
+      compiler: "# GHC 7.10.3"
       addons:
         apt:
           packages:
