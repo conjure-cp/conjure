@@ -47,14 +47,8 @@ before_install:
   - export CABALVER=1.24
   - export BIN_DIR=$(pwd)/bin
   - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
-  - if [ ${SOLVER} = "minion" ] ; then
-      export SR_OPTIONS="${SR_OPTIONS} -minion"
-    elif [ ${SOLVER} = "lingeling" ] ; then
-      export SR_OPTIONS="${SR_OPTIONS} -sat"
-    else
-      echo "Unknown solver: ${SOLVER}"
-      exit 1
-    fi
+  - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
+  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
 
 install:
   - mkdir -p bin
