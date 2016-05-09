@@ -21,8 +21,12 @@ matrix:
   include:
     - env: GHCVER=7.8.4
       addons: {apt: {packages: [cabal-install-1.24, ghc-7.8.4], sources: [hvr-ghc]}}
+      compiler: GHC-7.8.4 # apparently this forces travis to use separate caches for different compiler versions
+                          # as seen in the Idris .travis.yml
+                          # (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
     - env: GHCVER=7.10.3
       addons: {apt: {packages: [cabal-install-1.24, ghc-7.10.3], sources: [hvr-ghc]}}
+      compiler: GHC-7.10.3
 
 before_install:
  - export CABALVER=1.24
