@@ -1,6 +1,6 @@
 <div style="background-color: #eeeeee; padding: 20px;">
 <table class='cmdargs'>
-<tr><td colspan='3'>Conjure, the automated constraint modelling tool.</td></tr>
+<tr><td colspan='3'>Conjure: The Automated Constraint Modelling Tool</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure [COMMAND] ... [OPTIONS] </td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
@@ -85,7 +85,7 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]</td></tr>
-<tr><td colspan='3' style='padding-left:2ex;'>This is a combined mode, and it is available for convenience.<br />It runs conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and then solution translation.</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>This is a combined mode, and it is available for convenience.<br />It runs Conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and then solution translation.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>General:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--validate-solutions</td><td style='padding-left:2ex;'>Enable/disable solution validation. Off by default.</td></tr>
@@ -116,9 +116,11 @@
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representation-levels</td><td style='padding-left:2ex;'>Whether to use built-in precedence levels when choosing representations.<br />These levels are used to cut down the number of generated models.<br />Can be true or false. (true by default)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--seed=INT</td><td style='padding-left:2ex;'>The seed for the random number generator.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-models=INT</td><td style='padding-left:2ex;'>Maximum number of models to generate.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--use-existing-models=FILE</td><td style='padding-left:2ex;'>Takes paths of Essence' models generated beforehand.<br />If given, Conjure will skip the modelling phase and use the existing models for solving.</td></tr>
 <tr><td colspan='3'>Options for other tools:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--savilerow-options=ITEM</td><td style='padding-left:2ex;'>Options to be passed to Savile Row.<br />By default: '-O2'</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--minion-options=ITEM</td><td style='padding-left:2ex;'>Options to be passed to Minion.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver-options=ITEM</td><td style='padding-left:2ex;'>Options to be passed to the backend solver.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver to use.<br />Possible values: minion/lingeling/minisat<br />Default: minion</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure pretty [OPTIONS] FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Pretty print as Essence file to stdout.<br />This mode can be used to view a binary Essence file in textual form.</td></tr>

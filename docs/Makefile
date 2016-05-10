@@ -217,7 +217,7 @@ pseudoxml:
 
 .PHONY: conjure-help
 conjure-help:
-	@echo '<div style="background-color: #eeeeee; padding: 20px;">'      >  conjure-help.html
-	@conjure --help=all,html | grep -v "Version:"                        >> conjure-help.html
-	@echo "</div>"                                                       >> conjure-help.html
-	@echo "<br />"                                                       >> conjure-help.html
+	@echo '<div style="background-color: #eeeeee; padding: 20px;">'                     >  conjure-help.html
+	@conjure --help=all,html | grep -v "Release version" | grep -v "Repository version" >> conjure-help.html
+	@echo "</div>"                                                                      >> conjure-help.html
+	@echo "<br />"                                                                      >> conjure-help.html
