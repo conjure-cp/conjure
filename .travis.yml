@@ -52,23 +52,14 @@ matrix:
       compiler: "# GHC 7.10.3"
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
       compiler: "# GHC 7.10.3"
-    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=minion
-      compiler: "# GHC head"
     - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
-      compiler: "# GHC head"
-    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=lingeling
-      compiler: "# GHC head"
-    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=lingeling
       compiler: "# GHC head"
   allow_failures:
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=lingeling
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=lingeling
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
-    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=minion
     - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
-    - env: GHC_VERSION=head SR_OPTIONS="-O0" SOLVER=lingeling
-    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=lingeling
 
 before_install:
   - export CABALVER=1.24
