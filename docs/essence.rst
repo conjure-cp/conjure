@@ -93,7 +93,7 @@ Statement
                         | "maximising" Expression
 
 
-.. todo::
+TODO:
 
     Name, Domain, Expression left out from the grammar on purpose.
     Describe them here instead.

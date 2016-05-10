@@ -24,32 +24,3 @@ Operating at the class level has one very important benefit: Conjure needs to be
 Once the models are generated, they can be used to solve many instances of the same class.
 
 
-Glossary
---------
-
-Here is a list of some terms used in this document.
-
-.. todo::
-    Explain the things in the glossary.
-
-.. glossary::
-
-    Constraint Programming
-        Explain!
-
-    Constraint Modelling
-        Explain!
-
-    Problem specification
-        Explain!
-
-    Model
-        Explain!
-
-    Parameter
-        Explain!
-
-    Solution
-        Explain!
-
-

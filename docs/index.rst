@@ -1,7 +1,7 @@
 
-####################################
-Conjure: An Automated Modelling Tool
-####################################
+################################################
+Conjure: The Automated Constraint Modelling Tool
+################################################
 
 Welcome to the documentation of Conjure!
 
@@ -23,13 +23,11 @@ Contact
 Conjure's main developer is `Özgür Akgün <http://ozgur.host.cs.st-andrews.ac.uk>`_.
 Please get in touch via `email <ozgur.akgun@st-andrews.ac.uk>`_ if you have comments, suggestions, or if you encounter any problems.
 
-We are particularly interested in hearing specific comments (complaints, really) about the documentation.
+You can also use the `issue tracker <https://github.com/conjure-cp/conjure/issues>`_ to report bugs.
+
+We are particularly interested in hearing specific comments about the documentation.
 Please let us know if something is hard to understand, not easy to follow, or if the documentation is too sparse at a certain place.
-
-.. todo::
-    Is the above paragraph too apologetic?
-
-You can also use the `issue tracker <http://bitbucket.org/stacs_cp/conjure>`_ to report bugs.
+We will do our best to help!
 
 
 Table of Contents
@@ -45,7 +43,6 @@ Table of Contents
     essence
     demonstrations
     contact
-    todo
 
 
 
