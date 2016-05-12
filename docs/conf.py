@@ -30,6 +30,7 @@ import os
 # ones.
 extensions = [
     'sphinx.ext.todo',
+    'sphinxcontrib.bibtex',
 ]
 
 # Add any paths that contain templates here, relative to this directory.
@@ -356,9 +357,11 @@ epub_exclude_files = ['search.html']
 
 
 
+inline_highlight_respect_highlight = True
+inline_highlight_literals = True
 
 def setup(sphinx):
     from BNFLexer import BNFLexer
     sphinx.add_lexer("bnf", BNFLexer())
-    # from EssenceLexer import EssenceLexer
-    # sphinx.add_lexer("essence", EssenceLexer())
+    from EssenceLexer import EssenceLexer
+    sphinx.add_lexer("essence", EssenceLexer())

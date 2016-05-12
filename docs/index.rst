@@ -42,6 +42,7 @@ Table of Contents
     features
     essence
     demonstrations
+    references
     contact
 
 
