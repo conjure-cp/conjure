@@ -215,6 +215,26 @@ The first character of a valid name has to be a letter or an underscore characte
 Domains
 -------
 
+.. code-block:: bnf
+
+    Domain := "bool"
+            | "int" list(Expression, ",", "()")
+            | *(enumerated)* Name list(Expression, ",", "()")
+            | *(unnamed)* Name
+            | "tuple" list(Domain, ",", "()")
+            | "record" list(NameDomain, ",", "{}")
+            | "variant" list(NameDomain, ",", "{}")
+            | "matrix indexed by" list(Domain, ",", "[]") of Domain
+            | "set" list(Attribute, ",", "()") "of" Domain
+            | "mset" list(Attribute, ",", "()") "of" Domain
+            | "function" list(Attribute, ",", "()") Domain "-->" Domain
+            | "sequence" list(Attribute, ",", "()") "of" Domain
+            | "relation" list(Attribute, ",", "()") "of" list(Domain, "*", "()")
+            | "partition" list(Attribute, ",", "()") "from" Domain
+
+
+
+
 (In preparation)
 
 
