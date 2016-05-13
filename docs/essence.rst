@@ -224,7 +224,7 @@ Domains
             | "tuple" list(Domain, ",", "()")
             | "record" list(NameDomain, ",", "{}")
             | "variant" list(NameDomain, ",", "{}")
-            | "matrix indexed by" list(Domain, ",", "[]") of Domain
+            | "matrix indexed by" list(Domain, ",", "[]") "of" Domain
             | "set" list(Attribute, ",", "()") "of" Domain
             | "mset" list(Attribute, ",", "()") "of" Domain
             | "function" list(Attribute, ",", "()") Domain "-->" Domain
