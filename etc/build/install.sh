@@ -26,6 +26,7 @@ export GHC_VERSION=${GHC_VERSION:-"7.10.3"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export INSTALL_GMP=${INSTALL_GMP:-no}
 export INSTALL_GHC=${INSTALL_GHC:-no}
+export INSTALL_CABAL=${INSTALL_CABAL:-no}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
@@ -156,7 +157,7 @@ fi
 # installing cabal-install
 if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION_CHECK})" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} found."
-else
+elif [ $INSTALL_CABAL = "yes" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} not found. Installing version ${CABAL_VERSION}."
     wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
@@ -164,6 +165,10 @@ else
     EXTRA_CONFIGURE_OPTS="" bash bootstrap.sh --user --no-doc
     popd
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
+else
+    echo "cabal-install version ${CABAL_VERSION_CHECK} not found."
+    echo "Build will continue anyway."
+    echo "If it doesn't work, either set INSTALL_CABAL=yes or install the right version manually."
 fi
 
 if [ $DEVELOPMENT_MODE = "yes" ]; then
