@@ -2,7 +2,7 @@
 # Conjure
 
 [![Build Status](https://travis-ci.org/conjure-cp/conjure.svg?branch=master)](https://travis-ci.org/conjure-cp/conjure)
-[![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://readthedocs.org/projects/conjure/?badge=latest)
+[![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
 
 Conjure is an automated modelling tool for Constraint Programming.
 
