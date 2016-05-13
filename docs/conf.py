@@ -15,6 +15,8 @@
 import sys
 import os
 
+on_rtd = os.environ.get('READTHEDOCS') == 'True'
+
 # If extensions (or modules to document with autodoc) are in another directory,
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
@@ -357,6 +359,10 @@ epub_exclude_files = ['search.html']
 #epub_use_index = True
 
 
+
+# adding the "docs/" directory to the search path so sibling python files are available in the search path
+# a variantion of http://stackoverflow.com/questions/9002901/how-to-import-module-to-sphinx
+sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 
 inline_highlight_respect_highlight = True
 inline_highlight_literals = True
