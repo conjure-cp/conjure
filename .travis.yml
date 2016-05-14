@@ -92,7 +92,7 @@ install:
   - ls -l $(find bin -type f)
 
 script:
-  - time dist/build/conjure-testing/conjure-testing -p set +RTS -s
+  - time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s
   - cabal sdist   # tests that a source-distribution can be generated
 
 after_success:
