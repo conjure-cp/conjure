@@ -236,8 +236,9 @@ Library
                      , filepath
                      , hashable
                      , integer-gmp
-                     -- sepEndBy bugfixes
-                     , megaparsec >= 4.1.1
+                     -- >= 4.1.1 because of sepEndBy bugfixes
+                     -- < 5 because megaparsec-5 is backwards incompatible
+                     , megaparsec >= 4.1.1 && < 5
                      , mtl
                      , parallel-io
                      , pipes
