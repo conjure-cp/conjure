@@ -71,7 +71,7 @@ install:
   - mkdir -p bin
 
   # Savile Row
-  - (savilerow | grep 'Savile Row 1.6.4') || etc/build/install-savilerow.sh
+  - (savilerow | grep '706f710ca0f4') || etc/build/install-savilerow.sh
   - savilerow | head -n2 | tail -n1          # print version
 
   # Minion
