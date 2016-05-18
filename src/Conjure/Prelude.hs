@@ -13,7 +13,7 @@ module Conjure.Prelude
     , T.Text, stringToText, textToString
     , sameLength
     , concatMapM
-    , timedIO
+    , timedIO, timedPutStrLn
     , isLeft, isRight
     , tracing
     , allCombinations
@@ -199,6 +199,9 @@ import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )
 import System.CPUTime ( getCPUTime )
 
+-- time
+import Data.Time.Clock ( getCurrentTime )
+
 import Debug.Trace as X ( trace )
 
 tracing :: Show a => String -> a -> a
@@ -262,6 +265,11 @@ timedIO io = do
     end   <- getCPUTime
     let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
     return (a, diff)
+
+timedPutStrLn :: String -> IO ()
+timedPutStrLn str = do
+    t <- getCurrentTime
+    putStrLn (unwords [show t, str])
 
 isLeft :: Either a b -> Bool
 isLeft Left{} = True
