@@ -214,7 +214,11 @@ mainWithArgs config@Solve{..} = do
                 liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
                 return eprimes
 
-    msolutions <- liftIO $ savileRows eprimes essenceParamsParsed
+    eprimesParsed <- forM eprimes $ \ f -> do
+        p <- readModelInfoFromFile (outputDirectory </> f)
+        return (f, p)
+
+    msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
@@ -241,7 +245,10 @@ mainWithArgs config@Solve{..} = do
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
 
-        savileRows :: [FilePath] -> [(FilePath, Model)] -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
+        savileRows
+            :: [(FilePath, Model)]      -- models
+            -> [(FilePath, Model)]      -- params
+            -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
         savileRows eprimes params = fmap combineResults $
             if null params
                 then parallel [ savileRowNoParam config m
@@ -268,17 +275,16 @@ pp _       = liftIO . putStrLn . renderNormal
 
 savileRowNoParam
     :: UI
-    -> FilePath
+    -> (FilePath, Model)    -- model
     -> IO (Either
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
           ) ])
-savileRowNoParam ui@Solve{..} modelPath = sh $ errExit False $ do
+savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
-    eprimeModel <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let srArgs = srMkArgs ui outBase modelPath
     (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
                                 (liftIO . srStdoutHandler
@@ -294,18 +300,17 @@ savileRowNoParam _ _ = bug "savileRowNoParam"
 
 savileRowWithParams
     :: UI
-    -> FilePath
-    -> (FilePath, Model)
+    -> (FilePath, Model)    -- model
+    -> (FilePath, Model)    -- param
     -> IO (Either
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
           ) ])
-savileRowWithParams ui@Solve{..} modelPath (paramPath, essenceParam) = sh $ errExit False $ do
+savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
-    eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
