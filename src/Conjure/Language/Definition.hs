@@ -156,6 +156,7 @@ instance Pretty LanguageVersion where
 data ModelInfo = ModelInfo
     { miGivens :: [Name]
     , miFinds :: [Name]
+    , miLettings :: [(Name, Expression)]
     , miEnumGivens :: [Name]
     , miEnumLettings :: [Declaration]
     , miUnnameds :: [(Name, Expression)]
@@ -187,7 +188,7 @@ instance ToJSON    ModelInfo where toJSON = genericToJSON modelInfoJSONOptions
 instance FromJSON  ModelInfo where parseJSON = genericParseJSON modelInfoJSONOptions
 
 instance Default ModelInfo where
-    def = ModelInfo def def def def def def def def def def def def def def def def
+    def = ModelInfo def def def def def def def def def def def def def def def def def
 
 instance Pretty ModelInfo where
     pretty = commentLines . pretty . toJSON
@@ -213,6 +214,7 @@ initInfo model = model { mInfo = info }
                 ]
             , miEnumGivens   = [ nm     | Declaration (GivenDomainDefnEnum nm)         <- mStatements model ]
             , miEnumLettings = [ d      | Declaration d@LettingDomainDefnEnum{}        <- mStatements model ]
+            , miLettings     = [ (nm,x) | Declaration (Letting nm x)                   <- mStatements model ]
             , miUnnameds     = [ (nm,s) | Declaration (LettingDomainDefnUnnamed nm s)  <- mStatements model ]
             }
 

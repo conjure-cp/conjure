@@ -45,6 +45,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
                          extractLettings eprimeParam ++
                          extractLettings eprimeSolution ++
                          extractLettings eprimeModel ++
+                         (eprimeModel |> mInfo |> miLettings) ++
                          eprimeLettingsForEnums
     let essenceFindNames = eprimeModel |> mInfo |> miFinds
     let essenceFinds     = eprimeModel |> mInfo |> miRepresentations

@@ -70,13 +70,17 @@ translateParameter eprimeModel0 essenceParam0 = do
             , let nm = nm1 `mappend` "_EnumSize"
             ]
 
+    let allLettings = (eprimeModel |> mInfo |> miLettings)
+                   ++ essenceLettings
+                   ++ map (second Constant) eprimeLettingsForEnums
+
     essenceLettings' <- forM essenceLettings $ \ (name, val) -> do
-        constant <- instantiateExpression (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) val
+        constant <- instantiateExpression allLettings val
         return (name, constant)
     logDebug $ "[essenceLettings' ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceLettings' ]
 
     essenceGivens' <- forM essenceGivens $ \ (name, dom) -> do
-        constant <- instantiateDomain (essenceLettings ++ map (second Constant) eprimeLettingsForEnums) dom
+        constant <- instantiateDomain allLettings dom
         return (name, constant)
     logDebug $ "[essenceGivens'   ]" <+> vcat [ pretty n <> ":" <+> pretty x | (n,x) <- essenceGivens' ]
 
