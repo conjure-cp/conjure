@@ -2,6 +2,7 @@ module Conjure.Language.CategoryOf
     ( Category(..)
     , categoryOf
     , categoryChecking
+    , initInfo_Lettings
     ) where
 
 -- conjure
@@ -88,3 +89,12 @@ categoryChecking m = do
                         ]
                       | (domain, cat) <- errors2
                       ]
+
+initInfo_Lettings :: Model -> Model
+initInfo_Lettings model = model { mInfo = info }
+    where
+        info = (mInfo model)
+            { miLettings     = [ (nm,x) | Declaration (Letting nm x)                   <- mStatements model
+                                        , categoryOf x <= CatParameter
+                                        ]
+            }

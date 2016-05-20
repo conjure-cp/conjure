@@ -19,7 +19,7 @@ import Conjure.Language.Expression.Internal.Generated ()
 import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.Pretty
-import Conjure.Language.CategoryOf ( Category(..), categoryChecking, categoryOf )
+import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
 import Conjure.Language.Lenses
@@ -837,6 +837,7 @@ prologue model = do
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= return . initInfo_Lettings    >>= logDebugId "[initInfo_Lettings]"
     >>= removeDomainLettings          >>= logDebugId "[removeDomainLettings]"
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
