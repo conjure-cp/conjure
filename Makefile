@@ -25,6 +25,7 @@ refreeze:
 .PHONY: ghci
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
+	    -idist/build/autogen                       \
 	    -XFlexibleContexts                         \
 	    -XFlexibleInstances                        \
 	    -XMultiParamTypeClasses                    \
