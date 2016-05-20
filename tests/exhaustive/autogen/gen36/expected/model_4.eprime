@@ -4,7 +4,7 @@ find var6_ExplicitVarSizeWithFlagsR17R5R2_Flags: matrix indexed by [int(1..2)] o
 find var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker:
         matrix indexed by [int(1..2)] of int(0..4)
 find var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence:
-        matrix indexed by [int(1..2), int(1..4), int(2..2, 5)] of bool
+        matrix indexed by [int(1..2), int(1..4), int(2, 5)] of bool
 such that
     var6_ExplicitVarSizeWithFlagsR17R5R2_Flags[2] ->
     var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[1] <
@@ -23,7 +23,7 @@ such that
          and([and([var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                        [q2, q13, q14]
                    = false
-                       | q14 : int(2..2, 5)])
+                       | q14 : int(2, 5)])
                   | q13 : int(1..4)])
              | q2 : int(1..2)]),
     var6_ExplicitVarSizeWithFlagsR17R5R2_Flags[2] -> var6_ExplicitVarSizeWithFlagsR17R5R2_Flags[1],
@@ -36,7 +36,7 @@ such that
                          var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                              [q5, q15, q6])
                        | q15 : int(1..4)])
-                  | q6 : int(2..2, 5)])
+                  | q6 : int(2, 5)])
              | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR17R5R2_Flags[q5] ->
          and([q16 <= var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q5]
@@ -59,7 +59,7 @@ such that
               and([var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                        [q5, q10, q17]
                    = false
-                       | q17 : int(2..2, 5)])
+                       | q17 : int(2, 5)])
                   | q10 : int(1..4)])
              | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR17R5R2_Flags[q5] ->
@@ -74,7 +74,7 @@ such that
               0 =
               sum([toInt(var6_ExplicitVarSizeWithFlagsR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                              [q5, q11, q12])
-                       | q12 : int(2..2, 5)])
+                       | q12 : int(2, 5)])
                   | q11 : int(1..4)])
              | q5 : int(1..2)])
 

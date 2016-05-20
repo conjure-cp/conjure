@@ -29,7 +29,8 @@ such that
              /\
              and([q74 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q50] ->
                   3 = p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q50, q74]
-                      | q74 : int(1..3)]); int(1..3)])
+                      | q74 : int(1..3)]);
+                 int(1..3)])
              | q50 : int(1..8)]),
     or([q81 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
         (and([q83 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q81] ->

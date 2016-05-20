@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelPreambleFromFile, writeModel )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -101,14 +101,14 @@ mainWithArgs TranslateParameter{..} = do
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     output <- runNameGen $ join $ translateParameter
-                    <$> readModelPreambleFromFile eprime
+                    <$> readModelInfoFromFile eprime
                     <*> readModelFromFile essenceParam
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     output <- runNameGen $ join $ translateSolution
-                    <$> readModelPreambleFromFile eprime
+                    <$> readModelInfoFromFile eprime
                     <*> maybe (return def) readModelFromFile essenceParamO
                     <*> readModelFromFile eprimeSolution
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
@@ -147,6 +147,8 @@ mainWithArgs ParameterGenerator{..} = do
     writeModel lineWidth outputFormat (Just essenceOut) output
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
+    unless (solver `elem` ["minion", "lingeling", "minisat"]) $
+        userErr1 ("Unsupported solver:" <+> pretty solver)
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readModelFromFile f
@@ -166,43 +168,58 @@ mainWithArgs config@Solve{..} = do
     when (null givens && not hasNonEmptyParams) $
         userErr1 "The problem specification is _not_ parameterised, but *.param files are given."
 
-    savedHashes <- do
-        mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
-        case mfile of
-            Nothing -> return []
-            Just file -> return (lines file)
+    eprimes <-
+        if not (null useExistingModels)
+            then do
+                pp logLevel "Using existing models."
+                allEprimes <- getEprimes
+                let missingModels = useExistingModels \\ allEprimes
+                if null missingModels
+                    then return useExistingModels
+                    else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
+            else do
+                savedHashes <- do
+                    mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
+                    case mfile of
+                        Nothing -> return []
+                        Just file -> return (lines file)
+                -- start the show!
+                (eprimes, newHashes) <- runWriterT $
+                    doIfNotCached
+                        ( sort (mStatements essenceM)
+                        -- when the following flags change, invalidate hash
+                        -- nested tuples, because :(
+                        , ( numberingStart
+                          , smartFilenames
+                          , strategyQ
+                          , strategyA
+                          )
+                        , ( representations
+                          , representationsFinds
+                          , representationsGivens
+                          , representationsAuxiliaries
+                          , representationsQuantifieds
+                          , representationsCuts
+                          )
+                        , ( channelling
+                          , representationLevels
+                          , seed
+                          , limitModels
+                          , limitTime
+                          , outputFormat
+                          )
+                        )
+                        savedHashes
+                        (pp logLevel "Using cached models." >> getEprimes)
+                        conjuring
+                liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
+                return eprimes
 
-    -- start the show!
-    (eprimes, newHashes) <- runWriterT $
-        doIfNotCached
-            ( sort (mStatements essenceM)
-            -- when the following flags change, invalidate hash
-            -- nested tuples, because :(
-            , ( numberingStart
-              , smartFilenames
-              , strategyQ
-              , strategyA
-              )
-            , ( representations
-              , representationsFinds
-              , representationsGivens
-              , representationsAuxiliaries
-              , representationsQuantifieds
-              , representationsCuts
-              )
-            , ( channelling
-              , representationLevels
-              , seed
-              , limitModels
-              , limitTime
-              , outputFormat
-              )
-            )
-            savedHashes
-            (pp logLevel "Using cached models." >> getEprimes)
-            conjuring
-    liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
-    msolutions <- liftIO $ savileRows eprimes essenceParamsParsed
+    eprimesParsed <- forM eprimes $ \ f -> do
+        p <- readModelInfoFromFile (outputDirectory </> f)
+        return (f, p)
+
+    msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
         Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
@@ -212,10 +229,7 @@ mainWithArgs config@Solve{..} = do
         conjuring :: m [FilePath]
         conjuring = do
             pp logLevel $ "Generating models for" <+> pretty essence
-            -- tl;dr: rm -rf outputDirectory
-            -- removeDirectoryRecursive gets upset if the dir doesn't exist.
-            -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
-            liftIO $ createDirectoryIfMissing True outputDirectory >> removeDirectoryRecursive outputDirectory
+            liftIO $ removeDirectoryIfExists outputDirectory
             let modelling = let savedChoices = def
                             in  Modelling{..}                   -- construct a Modelling UI, copying all relevant fields
                                                                 -- from the given Solve UI
@@ -232,7 +246,10 @@ mainWithArgs config@Solve{..} = do
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
 
-        savileRows :: [FilePath] -> [(FilePath, Model)] -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
+        savileRows
+            :: [(FilePath, Model)]      -- models
+            -> [(FilePath, Model)]      -- params
+            -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
         savileRows eprimes params = fmap combineResults $
             if null params
                 then parallel [ savileRowNoParam config m
@@ -259,17 +276,16 @@ pp _       = liftIO . putStrLn . renderNormal
 
 savileRowNoParam
     :: UI
-    -> FilePath
+    -> (FilePath, Model)    -- model
     -> IO (Either
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
           ) ])
-savileRowNoParam ui@Solve{..} modelPath = sh $ errExit False $ do
+savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
-    eprimeModel <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let srArgs = srMkArgs ui outBase modelPath
     (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
                                 (liftIO . srStdoutHandler
@@ -285,18 +301,17 @@ savileRowNoParam _ _ = bug "savileRowNoParam"
 
 savileRowWithParams
     :: UI
-    -> FilePath
-    -> (FilePath, Model)
+    -> (FilePath, Model)    -- model
+    -> (FilePath, Model)    -- param
     -> IO (Either
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
           , FilePath        -- solution
           ) ])
-savileRowWithParams ui@Solve{..} modelPath (paramPath, essenceParam) = sh $ errExit False $ do
+savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
-    eprimeModel  <- liftIO $ readModelFromFile (outputDirectory </> modelPath)
     let
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
@@ -329,11 +344,19 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
-    , "-minion"
-    , "-num-solutions"  , "1"
     , "-solutions-to-stdout-one-line"
-    ] ++ map stringToText (words savilerowOptions)
-      ++ if null minionOptions then [] else [ "-solver-options", stringToText minionOptions ]
+    ] ++
+    ( case solver of
+        "minion"    -> [ "-minion" ]
+        "lingeling" -> [ "-sat"
+                       , "-sat-family", "lingeling"
+                       ]
+        "minisat"   -> [ "-sat"
+                       , "-sat-family", "minisat"
+                       ]
+        _ -> bug ("Unknown solver:" <+> pretty solver)
+    ) ++ map stringToText (words savilerowOptions)
+      ++ if null solverOptions then [] else [ "-solver-options", stringToText solverOptions ]
 srMkArgs _ _ _ = bug "srMkArgs"
 
 
@@ -361,8 +384,8 @@ srStdoutHandler
                     let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum 6 '0' solutionNumber ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
-                    eprimeSol  <- readModel id ("<memory>", stringToText solutionText)
-                    writeFile filenameEprimeSol  (render lineWidth eprimeSol)
+                    eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
+                    writeFile filenameEprimeSol (render lineWidth eprimeSol)
                     essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
@@ -382,6 +405,8 @@ srCleanUp stdoutSR solutions = do
             return (Left [vcat [ "Invalid instance, a where statement evaluated to false."
                                , "(It can be an implicit where statement added by Conjure.)"
                                ]])
+        | T.isInfixOf "Savile Row timed out." (T.unlines [stdoutSR, stderrSR]) ->
+            return (Left ["Savile Row timed out."])
         | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                   , "Savile Row stderr:"    <+> pretty stderrSR
                                   , "Savile Row exit-code:" <+> pretty exitCodeSR

@@ -36,8 +36,8 @@ import Data.Algorithm.Diff ( Diff(..), getGroupedDiff )
 import Data.Algorithm.DiffOutput ( ppDiff )
 
 
-srOptions :: String -> [Text]
-srOptions srExtraOptions =
+srOptionsMk :: String -> [Text]
+srOptionsMk srExtraOptions =
     [ "-run-solver"
     , "-minion"
     -- , "-timelimit"      , "1200000"
@@ -71,10 +71,11 @@ tests = do
     srExtraOptions <- do
         env <- getEnvironment
         return $ fromMaybe "-O0" (lookup "SR_OPTIONS" env)
-    putStrLn $ "Using Savile Row options: " ++ unwords (map textToString (srOptions srExtraOptions))
+    let srOptions = srOptionsMk srExtraOptions
+    putStrLn $ "Using Savile Row options: " ++ unwords (map textToString srOptions)
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
-    let testCases = map (testSingleDir srExtraOptions) (catMaybes dirs)
+    let testCases = map (testSingleDir srOptions) (catMaybes dirs)
     return (\ quickOrSlow -> testGroup "exhaustive" (map ($ quickOrSlow) testCases) )
 
 
@@ -129,15 +130,15 @@ isTestDir baseDir dir = do
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: String -> TestDirFiles -> QuickOrSlow -> TestTree
-testSingleDir srExtraOptions t@TestDirFiles{..} quickOrSlow =
+testSingleDir :: [Text] -> TestDirFiles -> QuickOrSlow -> TestTree
+testSingleDir srOptions t@TestDirFiles{..} quickOrSlow =
     if shouldRun
         then
             testGroup name $ concat
                 [ [conjuring]
                 , savileRows
                 , [validating]
-                , [checkExpectedAndExtraFiles t]
+                , [checkExpectedAndExtraFiles srOptions t]
                 , [equalNumberOfSolutions t]
                 , [noDuplicateSolutions t]
                 ]
@@ -153,20 +154,16 @@ testSingleDir srExtraOptions t@TestDirFiles{..} quickOrSlow =
 
         conjuring =
             testCase "Conjuring" $ do
-                -- tl;dr: rm -rf outputsDir
-                -- removeDirectoryRecursive gets upset if the dir doesn't exist.
-                -- terrible solution: create the dir if it doesn't exists, rm -rf after that.
-                createDirectoryIfMissing True outputsDir >> removeDirectoryRecursive outputsDir
-
+                removeDirectoryIfExists outputsDir
                 -- read in the essence, generate the eprimes
                 essence <- ignoreLogs $ readModelFromFile essenceFile
                 modelAll outputsDir essence
 
         savileRows =
             if null paramFiles
-                then [ savileRowNoParam    srExtraOptions t m   | m <- expectedModels ]
-                else [ savileRowWithParams srExtraOptions t m p | m <- expectedModels
-                                                                , p <- paramFiles     ]
+                then [ savileRowNoParam    srOptions t m   | m <- expectedModels ]
+                else [ savileRowWithParams srOptions t m p | m <- expectedModels
+                                                           , p <- paramFiles     ]
 
         validating =
             if null paramFiles
@@ -180,8 +177,8 @@ testSingleDir srExtraOptions t@TestDirFiles{..} quickOrSlow =
                                                   ]
 
 
-savileRowNoParam :: String -> TestDirFiles -> FilePath -> TestTree
-savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
+savileRowNoParam :: [Text] -> TestDirFiles -> FilePath -> TestTree
+savileRowNoParam srOptions TestDirFiles{..} modelPath =
     testCase (unwords ["Savile Row:", modelPath]) $ do
         let outBase = dropExtension modelPath
         fileShouldExist (outputsDir </> outBase ++ ".eprime")
@@ -193,21 +190,25 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                     , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
                     , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
                     , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-                    ] ++ srOptions srExtraOptions
+                    ] ++ srOptions
                 stderrSR   <- lastStderr
                 exitCodeSR <- lastExitCode
                 return (stdoutSR, stderrSR, exitCodeSR)
         if
             | exitCodeSR == 0 -> do
-                eprimeModel       <- readModelPreambleFromFile (outputsDir </> modelPath)
+                eprimeModel       <- readModelInfoFromFile (outputsDir </> modelPath)
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    s <- ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
-                    let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
-                    writeFile filename (renderNormal s)
+                    res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
+                    case res of
+                        Left err -> assertFailure $ renderNormal err
+                        Right s  -> do
+                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
+                            writeFile filename (renderNormal s)
+                    
             | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
             | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                                                , "Savile Row stderr:"    <+> pretty stderrSR
@@ -215,12 +216,12 @@ savileRowNoParam srExtraOptions TestDirFiles{..} modelPath =
                                                                ]
 
 
-savileRowWithParams :: String -> TestDirFiles -> FilePath -> FilePath -> TestTree
-savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
+savileRowWithParams :: [Text] -> TestDirFiles -> FilePath -> FilePath -> TestTree
+savileRowWithParams srOptions TestDirFiles{..} modelPath paramPath =
     testCase (unwords ["Savile Row:", modelPath, paramPath]) $ do
         fileShouldExist (outputsDir </> modelPath)
         fileShouldExist (tBaseDir   </> paramPath)
-        eprimeModel <- readModelPreambleFromFile (outputsDir </> modelPath)
+        eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
         param       <- readModelFromFile (tBaseDir   </> paramPath)
         eprimeParam <- ignoreLogs $ runNameGen $ translateParameter eprimeModel param
         let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
@@ -234,12 +235,13 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                     , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
                     , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
                     , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-                    ] ++ srOptions srExtraOptions
+                    ] ++ srOptions
                 stderrSR   <- lastStderr
                 exitCodeSR <- lastExitCode
                 return (stdoutSR, stderrSR, exitCodeSR)
+        let stdouterrSR = T.unlines [stdoutSR, stderrSR]
         if
-            | exitCodeSR == 0 -> do
+            | exitCodeSR == 0 && not (T.isInfixOf "Exception" stdouterrSR) -> do
                 nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
                                           <$> getDirectoryContents outputsDir
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
@@ -251,7 +253,7 @@ savileRowWithParams srExtraOptions TestDirFiles{..} modelPath paramPath =
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                             writeFile filename (renderNormal s)
-            | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
+            | T.isInfixOf "where false" stdouterrSR -> return ()
             | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                                                , "Savile Row stderr:"    <+> pretty stderrSR
                                                                , "Savile Row exit-code:" <+> pretty exitCodeSR
@@ -289,12 +291,17 @@ validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
                     Right () -> return ()
 
 
-checkExpectedAndExtraFiles :: TestDirFiles -> TestTree
-checkExpectedAndExtraFiles TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
+checkExpectedAndExtraFiles :: [Text] -> TestDirFiles -> TestTree
+checkExpectedAndExtraFiles srOptions TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
     let
+        relevantExts :: [String]
+        relevantExts = [".eprime", ".eprime-param"]
+                    ++ [".solution" | "-sat" `notElem` srOptions]       -- do not diff each individual solution
+                                                                        -- if we are using a sat solver
+
         relevantFile :: FilePath -> Bool
         relevantFile f = or [ suffix `isSuffixOf` f
-                            | suffix <- [".eprime", ".eprime-param", ".solution"]
+                            | suffix <- relevantExts
                             ]
     expecteds <- do
         b <- doesDirectoryExist expectedsDir

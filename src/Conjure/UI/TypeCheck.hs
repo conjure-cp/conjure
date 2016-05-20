@@ -6,6 +6,7 @@ module Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel ) where
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
+import Conjure.Language.Domain
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.CategoryOf ( categoryChecking )
@@ -54,7 +55,39 @@ typeCheckModel model1 = do
     let model2 = fixRelationProj model1
     (statements3, errs) <- runWriterT $ forM (mStatements model2) $ \ st ->
         case st of
-            Declaration{} -> return st
+            Declaration decl -> do
+                case decl of
+                    FindOrGiven _ _ domain -> do
+                        mty <- runExceptT $ typeOf domain
+                        case mty of
+                            Right _ -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In a declaration statement:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                    Letting _ x -> do
+                        mty <- runExceptT $ typeOf x
+                        case mty of
+                            Right _ -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In a letting statement:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                    GivenDomainDefnEnum{} -> return ()
+                    LettingDomainDefnEnum{} -> return ()
+                    LettingDomainDefnUnnamed _ x -> do
+                        mty <- runExceptT $ typeOf x
+                        case mty of
+                            Right TypeInt{} -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In the declaration of an unnamed type:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                            Right ty -> tell $ return $ vcat
+                                [ "In the declaration of an unnamed type:" <++> pretty st
+                                , "Expected type `int`, but got:" <++> pretty ty
+                                ]
+                return st
             SearchOrder xs -> do
                 forM_ xs $ \case
                     BranchingOn{} -> return ()                          -- TODO: check if the name is defined
@@ -127,5 +160,17 @@ typeCheckModel model1 = do
                 return (SuchThat xs')
     unless (null errs) (userErr errs)
 
-    return model2 { mStatements = statements3 }
+    -- now that everything knows its type, we can recover
+    -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
+    let
+        domainIntERecover :: forall m . MonadFail m => Domain () Expression -> m (Domain () Expression)
+        domainIntERecover d@(DomainIntE x) = do
+            ty <- typeOf x
+            return $ case ty of
+                TypeInt -> DomainInt [RangeSingle x]
+                _       -> d
+        domainIntERecover d = return d
+    statements4 <- transformBiM domainIntERecover statements3
+
+    return model2 { mStatements = statements4 }
 

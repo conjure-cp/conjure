@@ -256,6 +256,7 @@ functionals =
     , LIdentifier "or"
     , LIdentifier "sum"
     , LIdentifier "product"
+    , LIdentifier "xor"
 
     , L_active
 

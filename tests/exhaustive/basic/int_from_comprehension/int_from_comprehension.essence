@@ -1,0 +1,4 @@
+language Essence 1.3
+
+given m : matrix indexed by [int(1..6)] of int
+find x : int([ m[i] / 2 | i : int(1..6), i % 2 = 0 ])

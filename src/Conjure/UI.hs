@@ -6,6 +6,10 @@ module Conjure.UI ( UI(..), OutputFormat(..), ui ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
+import Paths_conjure_cp ( version )
+
+-- base
+import Data.Version ( showVersion )
 
 -- cmdargs
 import System.Console.CmdArgs hiding ( Default(..) )
@@ -107,9 +111,11 @@ data UI
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
-        -- flags for SR and Minion
+        , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
+        -- flags for SR and Minion/Lingeling
         , savilerowOptions           :: String
-        , minionOptions              :: String
+        , solverOptions              :: String
+        , solver                     :: String
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
@@ -769,6 +775,14 @@ ui = modes
             &= groupname "General"
             &= explicit
             &= help "Time limit in seconds (real time)."
+        , useExistingModels
+            = []
+            &= name "use-existing-models"
+            &= groupname "Model generation"
+            &= explicit
+            &= typFile
+            &= help "Takes paths of Essence' models generated beforehand.\n\
+                    \If given, Conjure will skip the modelling phase and use the existing models for solving."
         , savilerowOptions
             = "-O2"
             &= name "savilerow-options"
@@ -776,12 +790,20 @@ ui = modes
             &= explicit
             &= help "Options to be passed to Savile Row.\n\
                     \By default: '-O2'"
-        , minionOptions
+        , solverOptions
             = def
-            &= name "minion-options"
+            &= name "solver-options"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Options to be passed to Minion."
+            &= help "Options to be passed to the backend solver."
+        , solver
+            = "minion"
+            &= name "solver"
+            &= groupname "Options for other tools"
+            &= explicit
+            &= help "Backend solver to use.\n\
+                    \Possible values: minion/lingeling/minisat\n\
+                    \Default: minion"
         , outputFormat
             = def
             &= name "output-format"
@@ -803,7 +825,7 @@ ui = modes
         }   &= name "solve"
             &= explicit
             &= help "This is a combined mode, and it is available for convenience.\n\
-                    \It runs conjure in the modelling mode followed by \
+                    \It runs Conjure in the modelling mode followed by \
                     \parameter translation if required, \
                     \then Savile Row + Minion to solve, and \
                     \then solution translation."
@@ -1061,5 +1083,7 @@ ui = modes
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
     ]      &= program "conjure"
-           &= summary ("Conjure, the automated constraint modelling tool.\n\
-                       \Version: " ++ repositoryVersion)
+           &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
+                               , "Release version " ++ showVersion version
+                               , "Repository version " ++ repositoryVersion
+                               ])

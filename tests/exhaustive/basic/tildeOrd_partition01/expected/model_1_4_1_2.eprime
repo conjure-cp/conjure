@@ -142,7 +142,8 @@ such that
                                              | q230 : int(1..2)]))
                                = toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q70, q224])
                                    | q224 : int(1..2), q224 < q223])))
-                            | q223 : int(1..2)]); int(1..3)])
+                            | q223 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q248 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
                          (and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q248, q249] ->
@@ -321,7 +322,8 @@ such that
                                  =
                                  toInt(or([b_PartitionOccurrence_WhichPart[q93] = q71 /\ q93 = q90 | q93 : int(1..2)])))
                                     | q90 : int(1..2), q90 < q86]))))
-                            | q86 : int(1..2)]); int(1..3)])
+                            | q86 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q147 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
                          (and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q147, q148] ->

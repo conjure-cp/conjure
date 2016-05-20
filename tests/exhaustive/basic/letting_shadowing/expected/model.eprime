@@ -1,0 +1,19 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given fin2: int
+given fin3: int
+given fin4: int
+given fin5: int
+given fin6: int
+given fin7: int
+given fin8: int
+given fin9: int
+given acrossClueCoords_Explicit_1: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
+given acrossClueCoords_Explicit_2: matrix indexed by [int(1..fin1)] of int(fin4..fin5)
+given acrossClueCoords_Explicit_3: matrix indexed by [int(1..fin1)] of int(fin6..fin7)
+given acrossClueCoords_Explicit_4: matrix indexed by [int(1..fin1)] of int(fin8..fin9)
+letting let1 be [acrossClueCoords_Explicit_1[q3] | q3 : int(1..fin1)]
+find across: matrix indexed by [int(let1)] of int(0)
+such that 0 = across[2]
+

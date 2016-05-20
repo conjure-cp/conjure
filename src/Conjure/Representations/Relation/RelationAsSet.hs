@@ -116,9 +116,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
         up ctxt (name, domain@(DomainRelation Relation_AsSet{} _ _)) =
             case lookup (outName domain name) ctxt of
                 Just (ConstantAbstract (AbsLitSet tuples)) -> do
-                    let tupleOut (viewConstantTuple -> Just xs) = return xs
-                        tupleOut c = fail $ "Expecting a tuple, but got:" <+> pretty c
-                    vals <- mapM tupleOut tuples
+                    vals <- mapM viewConstantTuple tuples
                     return (name, ConstantAbstract (AbsLitRelation vals))
                 Nothing -> fail $ vcat $
                     [ "(in RelationAsSet up)"

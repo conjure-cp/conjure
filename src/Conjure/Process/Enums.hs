@@ -8,6 +8,7 @@ module Conjure.Process.Enums
 
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
@@ -18,7 +19,7 @@ import Data.Text as T ( pack )
 
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
-removeEnumsFromModel :: (MonadFail m, MonadLog m) => Model -> m Model
+removeEnumsFromModel :: (MonadFail m, MonadLog m, MonadUserError m) => Model -> m Model
 removeEnumsFromModel =
     removeEnumsFromModel_LettingEnums >=>
     removeEnumsFromModel_GivenEnums   >=>
@@ -33,14 +34,16 @@ removeEnumsFromModel =
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
                             let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
-                            if null (names `intersect` namesBefore)
-                                then modify ( ( [(ename, outDomain)]
-                                              , zip names allNats
-                                              ) `mappend` )
-                                else fail $ vcat [ "Some of the members of this enum domain seem to be defined"
-                                                 , "as part of other enum domains."
-                                                 , "While working on domain:" <+> pretty st
-                                                 ]
+                            case names `intersect` namesBefore of
+                                [] -> modify ( ( [(ename, outDomain)]
+                                             , zip names allNats
+                                             ) `mappend` )
+                                repeated -> userErr1 $ vcat
+                                    [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
+                                    , "as part of other enum domains."
+                                    , "Repeated:" <+> prettyList id "," repeated
+                                    , "While working on domain:" <+> pretty st
+                                    ]
                             return (Declaration (Letting ename (Domain outDomain)))
                         _ -> return st
 
@@ -113,8 +116,8 @@ removeEnumsFromModel =
 
 
 removeEnumsFromParam
-    :: (MonadFail m, MonadLog m)
-    => Model -> Model -> m Model
+    :: (MonadFail m, MonadLog m, MonadUserError m)
+    => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
                      ++ map (True,)  (mStatements param)
@@ -125,14 +128,16 @@ removeEnumsFromParam model param = do
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
                     let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
-                    if null (names `intersect` namesBefore)
-                        then modify ( ( [(ename, outDomain)]
-                                      , zip names allNats
-                                      ) `mappend` )
-                        else fail $ vcat [ "Some of the members of this enum domain seem to be defined"
-                                         , "as part of other enum domains."
-                                         , "While working on domain:" <+> pretty st
-                                         ]
+                    case names `intersect` namesBefore of
+                        [] -> modify ( ( [(ename, outDomain)]
+                                     , zip names allNats
+                                     ) `mappend` )
+                        repeated -> userErr1 $ vcat
+                            [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
+                            , "as part of other enum domains."
+                            , "Repeated:" <+> prettyList id "," repeated
+                            , "While working on domain:" <+> pretty st
+                            ]
                     return (Just (Declaration (Letting ename (Domain outDomain))))
                 _ -> return (if keep then Just st else Nothing)
 
@@ -155,8 +160,9 @@ removeEnumsFromParam model param = do
             = return (DomainReference nm (Just d))
         onD p = return p
 
-    statements'' <- (transformBiM onD >=> transformBiM onX) (catMaybes statements')
-    return param { mStatements = statements'' }
+    let param' = param { mStatements = catMaybes statements' }
+    let f = transformBiM onD >=> transformBiM onX
+    (,) <$> f model <*> f param'
 
 
 -- | Using the original domains from the Essence file.
@@ -180,8 +186,9 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 
             (_, c@ConstantUndefined{}) -> c
 
-            (DomainBool , c) -> c
-            (DomainInt{}, c) -> c
+            (DomainBool  , c) -> c
+            (DomainIntE{}, c) -> c
+            (DomainInt{} , c) -> c
 
             (DomainEnum      ename _ _, ConstantInt i) ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))

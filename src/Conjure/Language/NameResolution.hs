@@ -36,6 +36,8 @@ resolveNames_ model = do
     mapM_ check (universeBi statements)
     return model { mStatements = statements }
 
+-- this is for when a name will shadow an already existing name that is outside of this expression
+-- we rename the new names to avoid name shadowing
 shadowing
     :: ( MonadFail m
        , MonadState [(Name, ReferenceTo)] m
@@ -44,6 +46,7 @@ shadowing
     => Expression
     -> m Expression
 shadowing p@(Comprehension _ is) = do
+    -- list of names originating from this comprehension
     let generators = concat
             [ names
             | Generator gen <- is
@@ -51,6 +54,7 @@ shadowing p@(Comprehension _ is) = do
             , let names = [ n | n@Name{} <- universeBi pat ]
             ]
     ctxt <- gets id
+    -- a subset of names originating from this comprehension that will shadow already existing names
     let shadows = [ g | g <- generators, g `elem` map fst ctxt ]
     shadowsNew <- forM shadows $ \ s -> do n <- nextName "shadow" ; return (s,n)
     let f n = fromMaybe n (lookup n shadowsNew)
@@ -123,8 +127,8 @@ resolveSearchOrder (BranchingOn nm) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
-                               : ("Bindings in context:" : prettyContext ctxt)
+        Nothing -> userErr1 $ vcat $ ("Undefined reference:" <+> pretty nm)
+                                   : ("Bindings in context:" : prettyContext ctxt)
         Just{}  -> return (BranchingOn nm)
 resolveSearchOrder (Cut x) =
     let f Find = CutFind
@@ -145,8 +149,8 @@ resolveX (Reference nm Nothing) = do
     ctxt <- gets id
     mval <- gets (lookup nm)
     case mval of
-        Nothing -> fail $ vcat $ ("Undefined reference:" <+> pretty nm)
-                               : ("Bindings in context:" : prettyContext ctxt)
+        Nothing -> userErr1 $ vcat $ ("Undefined reference:" <+> pretty nm)
+                                   : ("Bindings in context:" : prettyContext ctxt)
         Just r  -> return (Reference nm (Just r))
 
 resolveX p@(Reference nm (Just refto)) = do             -- this is for re-resolving
@@ -227,6 +231,7 @@ resolveD
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
        , Data r
+       , Pretty r
        )
     => Domain r Expression
     -> m (Domain r Expression)

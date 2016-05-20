@@ -1,0 +1,17 @@
+language Essence 1.3
+
+letting AD be new type enum {A, D}
+letting CLUE be domain
+    variant
+        { is_constant    : int
+        , plus_constant  : (int, AD, int)
+        , minus_constant : (int, AD, int)
+        , times_constant : (int, AD, int)
+        , div_constant   : (int, AD, int)
+        , is_prime       : bool
+        , is_square      : bool
+        , times          : (int, AD, int, AD)
+        }
+
+given clues : set of (AD, int, CLUE)
+

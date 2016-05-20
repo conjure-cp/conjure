@@ -5,13 +5,13 @@ export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-"no"}
 if [ $DEVELOPMENT_MODE = "yes" ]; then
     echo "Not touching the version file: DEVELEOPMENT_MODE = yes"
 else
-    if ! [ -d .hg ] && [ -f src/Conjure/RepositoryVersion.hs ] ; then
-        echo "This is not a mercurial repository, but it contains repository information. Reusing."
+    if ! [ -d .git ] && [ -f src/Conjure/RepositoryVersion.hs ] ; then
+        echo "This is not a git repository, but it contains repository information. Reusing."
         cat src/Conjure/RepositoryVersion.hs | grep "repositoryVersion ="
     else
         VERSION="unknown"
-        if [ -d .hg ] ; then
-            VERSION=$(hg parent --template "{node|short} ({date|isodate})")
+        if [ -d .git ] ; then
+            VERSION=$(git log -1 --pretty=format:"%h (%ai)")
         fi
         if ( grep "repositoryVersion = \"${VERSION}\"" src/Conjure/RepositoryVersion.hs 2> /dev/null > /dev/null ) ; then
             echo "Reusing src/Conjure/RepositoryVersion.hs with version ${VERSION}."

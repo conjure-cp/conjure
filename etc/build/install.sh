@@ -25,6 +25,8 @@ export CORES=${CORES:-0}
 export GHC_VERSION=${GHC_VERSION:-"7.10.3"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export INSTALL_GMP=${INSTALL_GMP:-no}
+export INSTALL_GHC=${INSTALL_GHC:-no}
+export INSTALL_CABAL=${INSTALL_CABAL:-no}
 export OPTIMISATION=${OPTIMISATION:-"-O1"}
 export LLVM=${LLVM:-"llvm-off"}
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
@@ -37,12 +39,11 @@ export DYNAMIC=${DYNAMIC:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 
-# cabal-install-1.22.0.0 doesn't support the option --disable-executable-profiling
-CABAL_VERSION="1.22.6.0"
+CABAL_VERSION="1.24.0.0"
 HAPPY_VERSION="1.19.5"
 HSCOLOUR_VERSION="1.20.3"
 
-CABAL_VERSION_CHECK="1.22.6"
+CABAL_VERSION_CHECK="1.24"
 HAPPY_VERSION_CHECK="1.19"
 HSCOLOUR_VERSION_CHECK="1.20"
 
@@ -61,7 +62,7 @@ else
 fi
 
 
-AVAILABLE_CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || 0 )
+AVAILABLE_CORES=$( (grep -c ^processor /proc/cpuinfo 2> /dev/null) || (sysctl hw.logicalcpu | awk '{print $2}' 2> /dev/null) || echo 0 )
 
 if [ $CORES -le 0 ]; then
     echo "CORES is set to 0. Will try to use all cores on the machine."
@@ -82,6 +83,7 @@ echo "AVAILABLE_CORES : ${AVAILABLE_CORES}"
 echo "USE_CORES       : ${USE_CORES}"
 echo "GMP_VERSION     : ${GMP_VERSION}"
 echo "INSTALL_GMP     : ${INSTALL_GMP}"
+echo "INSTALL_GHC     : ${INSTALL_GHC}"
 echo "GHC_VERSION     : ${GHC_VERSION}"
 echo "OPTIMISATION    : ${OPTIMISATION}"
 echo "LLVM            : ${LLVM}"
@@ -123,11 +125,13 @@ if [ -d "${HOME}/.tools/libs/gmp-6.1.0/lib" ]; then
 fi
 
 # installing ghc
-if [ "$(ghc --version | grep $GHC_VERSION)" ]; then
+if [ ${GHC_VERSION} = "head" ] ; then
+    echo "Using GHC head."
+elif [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     echo "GHC version ${GHC_VERSION} found."
     which ghc
     ghc --version
-else
+elif [ $INSTALL_GHC = "yes" ]; then
     echo "GHC version ${GHC_VERSION} not found. Installing."
     if [ "$(grep ${GHC_VERSION} ${PLATFORM} ${GMP_VERSION} etc/build/ghc_urls.txt)" ]; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt | cut -d ' ' -f 4)
@@ -144,19 +148,27 @@ else
         echo "Cannot download GHC version ${GHC_VERSION} for platform ${PLATFORM}."
         exit 1
     fi
+else
+    echo "GHC version ${GHC_VERSION} not found."
+    echo "Either set INSTALL_GHC=yes or install it manually."
+    exit 1
 fi
 
 # installing cabal-install
 if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION_CHECK})" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} found."
-else
+elif [ $INSTALL_CABAL = "yes" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} not found. Installing version ${CABAL_VERSION}."
     wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
-    bash bootstrap.sh --user --no-doc
+    EXTRA_CONFIGURE_OPTS="" bash bootstrap.sh --user --no-doc
     popd
     rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
+else
+    echo "cabal-install version ${CABAL_VERSION_CHECK} not found."
+    echo "Build will continue anyway."
+    echo "If it doesn't work, either set INSTALL_CABAL=yes or install the right version manually."
 fi
 
 if [ $DEVELOPMENT_MODE = "yes" ]; then
@@ -177,7 +189,7 @@ else
         --force-reinstalls \
         --disable-documentation \
         --disable-library-profiling \
-        --disable-executable-profiling
+        --disable-profiling
     popd
     rm -rf dist/tools
 fi
@@ -196,7 +208,7 @@ if [ $BUILD_DOCS = "yes" ]; then
             --force-reinstalls \
             --disable-documentation \
             --disable-library-profiling \
-            --disable-executable-profiling
+            --disable-profiling
         popd
         rm -rf dist/tools
     fi
@@ -245,15 +257,24 @@ else
 fi
 
 if [ ${PROFILING} = "yes" ]; then
-    PROFILING="--enable-library-profiling --enable-executable-profiling"
+    PROFILING="--enable-library-profiling --enable-profiling"
 else
-    PROFILING="--disable-library-profiling --disable-executable-profiling"
+    PROFILING="--disable-library-profiling --disable-profiling"
 fi
 
 if [ ${DYNAMIC} = "yes" ]; then
     DYNAMIC="--ghc-options \"-dynamic\""
 else
     DYNAMIC=""
+fi
+
+if [ ${GHC_VERSION} = "head" ] ; then
+    rm -f cabal.config
+elif [ -f cabal.config-${GHC_VERSION} ]; then
+    cp cabal.config-${GHC_VERSION} cabal.config
+    echo "using a cabal freeze file: cabal.config-${GHC_VERSION}"
+else
+    echo "not using a cabal freeze file: cabal.config-${GHC_VERSION} not found"
 fi
 
 # install conjure, finally

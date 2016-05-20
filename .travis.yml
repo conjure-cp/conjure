@@ -1,0 +1,110 @@
+
+# travis phases and our setup
+# before_install
+# install                           -- fetch/build non-haskell dependencies: savilerow, minion, lingeling
+#                                   -- build conjure
+#                                   -- save all these executables under $(pwd)/bin
+# before_script
+# script                            -- running tests
+# after_success                     -- attempt cabal freeze
+# after_failure
+# OPTIONAL before_deploy
+# OPTIONAL deploy
+# OPTIONAL after_deploy
+# after_script
+
+language: c
+
+sudo: false
+
+# superset of all addons
+# addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4, ghc-7.10.3, ghc-head]}}
+
+# apparently explicitly setting the compiler here forces travis to
+# use separate caches for different compiler versions.
+# as seen in the Idris .travis.yml
+# (until https://github.com/travis-ci/travis-ci/issues/4393 is resolved)
+matrix:
+  include:
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=minion
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=minion
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=lingeling
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=lingeling
+      compiler: "# GHC 7.8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=minion
+      compiler: "# GHC 7.10.3"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=minion
+      compiler: "# GHC 7.10.3"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
+      compiler: "# GHC 7.10.3"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
+      compiler: "# GHC 7.10.3"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
+      compiler: "# GHC head"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-head]}}
+  allow_failures:
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=lingeling
+    - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=lingeling
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
+    - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
+    - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
+
+before_install:
+  - export CABALVER=1.24
+  - export BIN_DIR=$(pwd)/bin
+  - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
+  - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
+  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
+
+install:
+  - mkdir -p bin
+
+  # Savile Row
+  - (savilerow | grep '706f710ca0f4') || etc/build/install-savilerow.sh
+  - savilerow | head -n2 | tail -n1          # print version
+
+  # Minion
+  - (minion | grep 'Minion Version 2') || (COMPILER="g++-4.9" etc/build/install-minion.sh)
+  - minion help | head -n2                   # print version
+
+  # Lingeling
+  - (lingeling --help > /dev/null) || (CC="gcc-4.9" etc/build/install-lingeling.sh)
+
+  # Conjure
+  - cabal --version || echo "cabal not found"
+  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
+  - travis_retry cabal update
+  - echo ${PATH}
+  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
+  - conjure --version                        # print version
+
+  - ls -l $(find bin -type f)
+
+script:
+  - time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s
+  - cabal sdist   # tests that a source-distribution can be generated
+
+after_success:
+  - make freeze
+  - cp cabal.config cabal.config-${GHC_VERSION}
+  - git diff cabal.config-${GHC_VERSION}
+
+cache:
+  directories:
+    - ${HOME}/.cabal
+    - ${HOME}/.ghc
+    - .cabal-sandbox
+    - dist
+    - bin
+

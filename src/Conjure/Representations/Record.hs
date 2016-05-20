@@ -53,7 +53,12 @@ record = Representation chck downD structuralCons downC up
                     Just c  -> (mkName name n, d, c)
                 | (n,d) <- ds
                 ]
-        downC _ = na "{downC}"
+        downC (n, d, c) =
+            na $ "{downC} record" <+> vcat
+                [ "name  :" <+> pretty n
+                , "domain:" <+> pretty d
+                , "value :" <+> pretty c
+                ]
 
         up :: TypeOf_Up m
         up ctxt (name, DomainRecord ds) = do

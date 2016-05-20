@@ -2,13 +2,13 @@ language ESSENCE' 1.0
 
 letting let1 be 1
 letting let2 be 0
-find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..1)] of int(0..let2)
+find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1)] of int(0..let2)
 find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_1:
-        matrix indexed by [int(1..1), int(1..let2), int(2..4, 0..0)] of bool
+        matrix indexed by [int(1), int(1..let2), int(2..4, 0)] of bool
 find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2:
-        matrix indexed by [int(1..1), int(1..let2), int(2..4, 0..0)] of bool
+        matrix indexed by [int(1), int(1..let2), int(2..4, 0)] of bool
 find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3:
-        matrix indexed by [int(1..1), int(1..let2), int(2..4, 0..0)] of bool
+        matrix indexed by [int(1), int(1..let2), int(2..4, 0)] of bool
 such that
     false,
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] =
@@ -20,14 +20,14 @@ such that
          \/
          and([var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[1, q8, q12] =
               var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[1, q8 + 1, q12]
-                  | q12 : int(2..4, 0..0)])
+                  | q12 : int(2..4, 0)])
          /\
          (var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[1, q8, ..] <lex
           var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[1, q8 + 1, ..]
           \/
           and([var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[1, q8, q14] =
                var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2[1, q8 + 1, q14]
-                   | q14 : int(2..4, 0..0)])
+                   | q14 : int(2..4, 0)])
           /\
           var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3[1, q8, ..] <lex
           var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3[1, q8 + 1, ..])

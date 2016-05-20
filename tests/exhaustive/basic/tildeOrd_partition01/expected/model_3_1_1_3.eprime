@@ -140,7 +140,8 @@ such that
                                     [q98, q242]
                                 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q214, q217]; int(1..3)])
+                                    [q214, q217];
+                                    int(1..3)])
                            ->
                            toInt(or([q244 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -246,7 +247,8 @@ such that
                                     [q98, q224]
                                 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q98, q218]; int(1..3)])
+                                    [q98, q218];
+                                    int(1..3)])
                            ->
                            toInt(or([q226 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -386,7 +388,8 @@ such that
                                              | q280 : int(1..2)]),
                                     a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
                                         [q98, q277]
-                                    < q263; int(1..3)])
+                                    < q263;
+                                        int(1..3)])
                                ->
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                                          [q254,
@@ -459,7 +462,8 @@ such that
                                         [q98, q268]
                                     <
                                     a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                        [q98, q265]; int(1..3)])
+                                        [q98, q265];
+                                        int(1..3)])
                                ->
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                                          [q254,
@@ -477,7 +481,8 @@ such that
                                              [q98, q268]
                                              | q270 : int(1..2)]))
                                    | q268 : int(1..2)])))
-                            | q265 : int(1..2)]); int(1..3)])
+                            | q265 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q285 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                          (and([q287 <=
@@ -620,7 +625,8 @@ such that
                                          | q144 : int(1..2)]),
                                 q125 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q123, q126]; int(1..3)])
+                                    [q123, q126];
+                                    int(1..3)])
                            ->
                            toInt(or([q142 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -819,7 +825,8 @@ such that
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q148, q158]) =
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q100, q158])
                                    | q158 : int(1..2), q158 < q157])))
-                            | q157 : int(1..2)]); int(1..3)])
+                            | q157 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q164 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                          (and([q166 <=

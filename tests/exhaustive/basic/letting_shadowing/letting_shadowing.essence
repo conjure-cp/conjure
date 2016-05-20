@@ -1,0 +1,13 @@
+language Essence 1.3
+
+letting number be domain int(0)
+
+given acrossClueCoords : set of ( int   $ seq
+                                , int   $ the row
+                                , int   $ the starting column
+                                , int   $ the ending column
+                                )
+letting acrossIndex be domain int([i[1] | i <- acrossClueCoords])
+find across       : matrix indexed by [acrossIndex] of number
+
+such that exists i : number . i**2 = across[2]

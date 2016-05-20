@@ -14,6 +14,7 @@ primitive = Representation
     { rCheck = \ _ domain -> return $
         case domain of
             DomainBool -> [DomainBool]
+            DomainIntE x -> [DomainIntE x]
             DomainInt rs -> [DomainInt rs]
             _ -> []
     , rDownD      = const $ return Nothing

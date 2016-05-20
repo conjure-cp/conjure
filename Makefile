@@ -18,7 +18,7 @@ freeze:
 
 .PHONY: refreeze
 refreeze:
-	rm -rf cabal.sandbox.config cabal.config dist .cabal-sandbox
+	rm -rf cabal.sandbox.config cabal.config* dist .cabal-sandbox
 	BUILD_TESTS=yes make
 	make freeze
 

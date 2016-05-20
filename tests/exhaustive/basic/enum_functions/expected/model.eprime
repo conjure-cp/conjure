@@ -27,7 +27,8 @@ such that
     f_Function1DPartial_Values[3] = B_EnumSize,
     f_Function1DPartial_Flags[3],
     and([and([f_Function1DPartial_Values[i] < f_Function1DPartial_Values[i + 1], f_Function1DPartial_Flags[i],
-              f_Function1DPartial_Flags[i + 1]; int(1..3)])
+              f_Function1DPartial_Flags[i + 1];
+                  int(1..3)])
              | i : int(1..2)]),
     and([or([f_Function1DPartial_Flags[q12] /\
              (toInt(or([f_Function1DPartial_Flags[q37] /\
@@ -53,7 +54,8 @@ such that
                          !or([f_Function1DPartial_Flags[q31] /\
                               f_Function1DPartial_Values[q31] = f_Function1DPartial_Values[q25]
                                   | q31 : int(1..3), q31 = i + 1]),
-                         f_Function1DPartial_Values[q25] < f_Function1DPartial_Values[q12]; int(1..3)])
+                         f_Function1DPartial_Values[q25] < f_Function1DPartial_Values[q12];
+                             int(1..3)])
                     ->
                     toInt(or([f_Function1DPartial_Flags[q34] /\
                               f_Function1DPartial_Values[q34] = f_Function1DPartial_Values[q25]
@@ -92,7 +94,8 @@ such that
                          !or([f_Function1DPartial_Flags[q58] /\
                               f_Function1DPartial_Values[q58] = f_Function1DPartial_Values[q52]
                                   | q58 : int(1..3), q58 = i + 1]),
-                         f_Function1DPartial_Values[q52] < f_Function1DPartial_Values[q39]; int(1..3)])
+                         f_Function1DPartial_Values[q52] < f_Function1DPartial_Values[q39];
+                             int(1..3)])
                     ->
                     toInt(or([f_Function1DPartial_Flags[q61] /\
                               f_Function1DPartial_Values[q61] = f_Function1DPartial_Values[q52]

@@ -31,15 +31,19 @@ import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel, addUnnamedStructurals )
 import Conjure.Process.FiniteGivens ( finiteGivens )
-import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms, inlineLettingDomainsForDecls )
+import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms
+                                                , inlineLettingDomainsForDecls
+                                                , removeDomainLettings
+                                                )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
 import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
-import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.UI.TypeCheck ( typeCheckModel, typeCheckModel_StandAlone )
 import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
+import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
     ( downX1, downD, reprOptions, getStructurals
@@ -186,7 +190,7 @@ remainingWIP config (StartOver model)
     | Just modelZipper <- mkModelZipper model = do
         qs <- remaining config modelZipper (mInfo model)
         return qs
-    | otherwise = bug "remainingWIP: Cannot create zipper."
+    | otherwise = return []
 remainingWIP config wip@(TryThisFirst modelZipper info) = do
     qs <- remaining config modelZipper info
     case (null qs, Zipper.right modelZipper, Zipper.up modelZipper) of
@@ -698,7 +702,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                                    | c <- tail (ascendants x)
                                                    ]
                     _ -> return []
-    unless (null fails) (fail (vcat fails))
+    unless (null fails) (bug (vcat fails))
     return m
 checkIfAllRefined m = return m
 
@@ -718,7 +722,7 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
                 case hole x of
                     Constant ConstantUndefined{} -> returnMsg x
                     _ -> return []
-    unless (null fails) (fail (vcat fails))
+    unless (null fails) (bug (vcat fails))
     return m
 checkIfHasUndefined m = return m
 
@@ -829,18 +833,21 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m) => Config -> Model -> m Model
-prologue config model = return model
-                                      >>= logDebugId "[input]"
+prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+prologue model = do
+    void $ typeCheckModel_StandAlone model
+    return model                      >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
+    >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
     >>= return . initInfo             >>= logDebugId "[initInfo]"
     >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
     >>= addUnnamedStructurals config  >>= logDebugId "[addUnnamedStructurals]"
     >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
     >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
     >>= resolveNames                  >>= logDebugId "[resolveNames]"
+    >>= removeDomainLettings          >>= logDebugId "[removeDomainLettings]"
     >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
     >>= categoryChecking              >>= logDebugId "[categoryChecking]"
     >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
@@ -936,6 +943,8 @@ allRules config =
     , [ rule_ChooseRepr                 config
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
+      ]
+    , [ rule_Xor_To_Sum
       ]
     , verticalRules
     , horizontalRules
@@ -1100,6 +1109,9 @@ horizontalRules =
     , Horizontal.Function.rule_Image_Int
     , Horizontal.Function.rule_Image_IntMatrixIndexed
     , Horizontal.Function.rule_Image_IntTupleIndexed
+    , Horizontal.Function.rule_Image_Matrix_LexLhs
+    , Horizontal.Function.rule_Image_Matrix_LexRhs
+
     , Horizontal.Function.rule_Comprehension_Image
     , Horizontal.Function.rule_Comprehension_ImageSet
     , Horizontal.Function.rule_Eq
@@ -1131,6 +1143,7 @@ horizontalRules =
     , Horizontal.Sequence.rule_Image_Literal_Bool
     , Horizontal.Sequence.rule_Image_Literal_Int
     , Horizontal.Sequence.rule_Eq
+    , Horizontal.Sequence.rule_Eq_Comprehension
     , Horizontal.Sequence.rule_Neq
     , Horizontal.Sequence.rule_DotLeq
     , Horizontal.Sequence.rule_DotLt
@@ -1468,7 +1481,7 @@ rule_ChooseReprForLocals config = Rule "choose-repr-for-locals" (const theRule) 
             isReferencedWithoutRepr _ = False
 
         unless (any isReferencedWithoutRepr (universeBi (body, stmtBefore, stmtAfter))) $
-            fail $ "This local variable seems to be handled before:" <+> pretty nm
+            na $ "This local variable seems to be handled before:" <+> pretty nm
 
         let reprsWhichOrder
                 | representationsAuxiliaries config == Sparse   = reprsSparseOrder
@@ -1566,7 +1579,7 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
                 return ( "Remove the argument from true."
                        , return $ Constant $ ConstantBool True
                        )
-            _ -> fail "The argument of true doesn't have a representation."
+            _ -> na "The argument of true doesn't have a representation."
     theRule _ = na "rule_TrueIsNoOp"
 
 
@@ -1591,10 +1604,10 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
     theRule [essence| allDiff(&m) |] = do
         ty <- typeOf m
         case ty of
-            TypeMatrix _ TypeBool -> fail "allDiff can stay"
-            TypeMatrix _ TypeInt  -> fail "allDiff can stay"
+            TypeMatrix _ TypeBool -> na "allDiff can stay"
+            TypeMatrix _ TypeInt  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
-            _                     -> fail "allDiff on something other than a matrix."
+            _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
         return
             ( "Decomposing allDiff. Type:" <+> pretty ty
@@ -1735,7 +1748,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 | goc <- gensOrConds
                 ]
         theGuard <- case toInline of
-            []  -> fail "No condition to inline."
+            []  -> na "No condition to inline."
             [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
@@ -1765,7 +1778,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                     (_, _, _, _, Just{}) -> na "rule_InlineConditions (max)"
                     _                    -> na "rule_InlineConditions (meh-2)"
                                             -- case Zipper.up z of
-                                            --     Nothing -> fail "queryQ"
+                                            --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
     opAndSkip b x = [essence| &b -> &x |]
@@ -2004,3 +2017,29 @@ rule_Comprehension_Simplify = "comprehension-simplify" `namedRule` theRule where
             , return $ Comprehension x gocs'
             )
     theRule _ = na "rule_Comprehension_Simplify"
+
+
+rule_Xor_To_Sum :: Rule
+rule_Xor_To_Sum = "xor-to-sum" `namedRule` theRule where
+    theRule [essence| xor(&arg) |] =
+        case arg of
+            Comprehension body goc -> do
+                let argOut = Comprehension [essence| toInt(&body) |] goc
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum(&argOut) |]
+                    )
+            AbstractLiteral (AbsLitMatrix dom elems) -> do
+                let argOut = AbstractLiteral $ AbsLitMatrix dom
+                                [ [essence| toInt(&el) |] | el <- elems ]
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum(&argOut) |]
+                    )
+            _ -> do
+                (iPat, i) <- quantifiedVar
+                return
+                    ( "xor to sum"
+                    , return [essence| 1 = sum([ toInt(&i) | &iPat <- &arg ]) |]
+                    )
+    theRule _ = na "rule_Xor_To_Sum"

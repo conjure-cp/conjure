@@ -1,6 +1,7 @@
 module Conjure.UserError
     ( MonadUserError(..), userErr1
     , UserErrorT(..), runUserError
+    , failToUserError
     ) where
 
 import Conjure.Prelude hiding ( fail )
@@ -100,3 +101,11 @@ instance MonadFail m => MonadFail (UserErrorT m) where
 
 instance MonadFail m => MonadUserError (UserErrorT m) where
     userErr msgs = UserErrorT $ return $ Left msgs
+
+
+failToUserError :: MonadUserError m => ExceptT m a -> m a
+failToUserError comp = do
+    res <- runExceptT comp
+    case res of
+        Left err -> userErr1 err
+        Right x  -> return x

@@ -1,5 +1,6 @@
-Conjure, the automated constraint modelling tool.
-Version:
+Conjure: The Automated Constraint Modelling Tool
+Release version
+Repository version
 
 conjure [COMMAND] ... [OPTIONS]
 
@@ -154,7 +155,7 @@ General:
 
 conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
   This is a combined mode, and it is available for convenience.
-  It runs conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to
+  It runs Conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to
   solve, and then solution translation.
 
 General:
@@ -224,10 +225,16 @@ Model generation:
                                              Can be true or false. (true by default)
      --seed=INT                              The seed for the random number generator.
      --limit-models=INT                      Maximum number of models to generate.
+     --use-existing-models=FILE              Takes paths of Essence' models generated beforehand.
+                                             If given, Conjure will skip the modelling phase and use the existing
+                                             models for solving.
 Options for other tools:
      --savilerow-options=ITEM                Options to be passed to Savile Row.
                                              By default: '-O2'
-     --minion-options=ITEM                   Options to be passed to Minion.
+     --solver-options=ITEM                   Options to be passed to the backend solver.
+     --solver=ITEM                           Backend solver to use.
+                                             Possible values: minion/lingeling/minisat
+                                             Default: minion
 
 conjure pretty [OPTIONS] FILE
   Pretty print as Essence file to stdout.

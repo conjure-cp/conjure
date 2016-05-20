@@ -145,7 +145,8 @@ such that
                                  =
                                  toInt(or([a_PartitionOccurrence_WhichPart[q43] = q24 /\ q43 = q40 | q43 : int(1..2)])))
                                     | q40 : int(1..2), q40 < q36]))))
-                            | q36 : int(1..2)]); int(1..3)])
+                            | q36 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q85 <= a_PartitionOccurrence_NumParts /\
                          (and([a_PartitionOccurrence_WhichPart[q88] = q85 ->
@@ -307,7 +308,8 @@ such that
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q184, q194]) =
                                toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q128, q194])
                                    | q194 : int(1..2), q194 < q193])))
-                            | q193 : int(1..2)]); int(1..3)])
+                            | q193 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q199 <= a_PartitionOccurrence_NumParts /\
                          (and([a_PartitionOccurrence_WhichPart[q202] = q199 ->

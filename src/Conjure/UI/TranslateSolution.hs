@@ -31,7 +31,7 @@ translateSolution
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
     eprimeParam  <- translateParameter eprimeModel essenceParam'
-    essenceParam <- removeEnumsFromParam eprimeModel essenceParam'
+    (_, essenceParam) <- removeEnumsFromParam eprimeModel essenceParam'
 
     let eprimeLettingsForEnums =
             [ (nm, fromInt (genericLength vals))

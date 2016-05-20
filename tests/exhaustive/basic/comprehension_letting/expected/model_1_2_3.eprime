@@ -10,20 +10,26 @@ find aux1: int(-20..3)
 such that
     and([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q27] != 5, i != s_ExplicitVarSizeWithDummy[q27],
               allDiff([i + s_ExplicitVarSizeWithDummy[q27], i * s_ExplicitVarSizeWithDummy[q27],
-                       i / s_ExplicitVarSizeWithDummy[q27]; int(1..3)]),
-              (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0; int(1..5)])
+                       i / s_ExplicitVarSizeWithDummy[q27];
+                           int(1..3)]),
+              (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0;
+                  int(1..5)])
          ->
          min([i + s_ExplicitVarSizeWithDummy[q27], i - s_ExplicitVarSizeWithDummy[q27],
-              i * s_ExplicitVarSizeWithDummy[q27], i / s_ExplicitVarSizeWithDummy[q27]; int(1..4)])
+              i * s_ExplicitVarSizeWithDummy[q27], i / s_ExplicitVarSizeWithDummy[q27];
+                  int(1..4)])
          <= aux1
              | i : int(1..4), q27 : int(1..4)]),
     or([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q27] != 5, i != s_ExplicitVarSizeWithDummy[q27],
              allDiff([i + s_ExplicitVarSizeWithDummy[q27], i * s_ExplicitVarSizeWithDummy[q27],
-                      i / s_ExplicitVarSizeWithDummy[q27]; int(1..3)]),
-             (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0; int(1..5)])
+                      i / s_ExplicitVarSizeWithDummy[q27];
+                          int(1..3)]),
+             (i - s_ExplicitVarSizeWithDummy[q27]) % 2 = 0;
+                 int(1..5)])
         /\
         min([i + s_ExplicitVarSizeWithDummy[q27], i - s_ExplicitVarSizeWithDummy[q27],
-             i * s_ExplicitVarSizeWithDummy[q27], i / s_ExplicitVarSizeWithDummy[q27]; int(1..4)])
+             i * s_ExplicitVarSizeWithDummy[q27], i / s_ExplicitVarSizeWithDummy[q27];
+                 int(1..4)])
         = aux1
             | i : int(1..4), q27 : int(1..4)]),
     x = aux1,

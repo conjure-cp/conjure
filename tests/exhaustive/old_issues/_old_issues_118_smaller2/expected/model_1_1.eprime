@@ -7,7 +7,8 @@ such that
              p_PartitionAsSet_ExplicitR2_Occurrence[q11, 2] /\
              and([p_PartitionAsSet_ExplicitR2_Occurrence[q11, q21] -> 2 = q21 | q21 : int(1..3)]),
              p_PartitionAsSet_ExplicitR2_Occurrence[q11, 3] /\
-             and([p_PartitionAsSet_ExplicitR2_Occurrence[q11, q26] -> 3 = q26 | q26 : int(1..3)]); int(1..3)])
+             and([p_PartitionAsSet_ExplicitR2_Occurrence[q11, q26] -> 3 = q26 | q26 : int(1..3)]);
+                 int(1..3)])
              | q11 : int(1..3)]),
     or([and([p_PartitionAsSet_ExplicitR2_Occurrence[q33, q34] -> 1 = q34 | q34 : int(1..3)]) /\
         p_PartitionAsSet_ExplicitR2_Occurrence[q33, 1]

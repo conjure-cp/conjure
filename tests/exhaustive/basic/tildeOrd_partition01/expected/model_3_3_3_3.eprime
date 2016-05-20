@@ -145,7 +145,8 @@ such that
                                     [q32, q254]
                                 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q226, q229]; int(1..3)])
+                                    [q226, q229];
+                                    int(1..3)])
                            ->
                            toInt(or([q256 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -251,7 +252,8 @@ such that
                                     [q32, q236]
                                 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q32, q230]; int(1..3)])
+                                    [q32, q230];
+                                    int(1..3)])
                            ->
                            toInt(or([q238 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -455,7 +457,8 @@ such that
                                         [q32, q305]
                                     <
                                     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                        [q266, q280]; int(1..3)])
+                                        [q266, q280];
+                                        int(1..3)])
                                ->
                                toInt(or([q307 <=
                                          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -566,7 +569,8 @@ such that
                                         [q32, q287]
                                     <
                                     a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                        [q32, q281]; int(1..3)])
+                                        [q32, q281];
+                                        int(1..3)])
                                ->
                                toInt(or([q289 <=
                                          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -590,7 +594,8 @@ such that
                                              [q32, q287]
                                              | q291 : int(1..2)]))
                                    | q287 : int(1..2)])))
-                            | q281 : int(1..2)]); int(1..3)])
+                            | q281 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q318 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                          (and([q320 <=
@@ -812,7 +817,8 @@ such that
                                     [q34, q97]
                                 <
                                 a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q69, q72]; int(1..3)])
+                                    [q69, q72];
+                                    int(1..3)])
                            ->
                            toInt(or([q99 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -916,7 +922,8 @@ such that
                                     [q34, q79]
                                 <
                                 b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                    [q34, q73]; int(1..3)])
+                                    [q34, q73];
+                                    int(1..3)])
                            ->
                            toInt(or([q81 <=
                                      a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -1118,7 +1125,8 @@ such that
                                         [q34, q148]
                                     <
                                     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                        [q109, q123]; int(1..3)])
+                                        [q109, q123];
+                                        int(1..3)])
                                ->
                                toInt(or([q150 <=
                                          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -1229,7 +1237,8 @@ such that
                                         [q34, q130]
                                     <
                                     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
-                                        [q34, q124]; int(1..3)])
+                                        [q34, q124];
+                                        int(1..3)])
                                ->
                                toInt(or([q132 <=
                                          b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
@@ -1253,7 +1262,8 @@ such that
                                              [q34, q130]
                                              | q134 : int(1..2)]))
                                    | q130 : int(1..2)])))
-                            | q124 : int(1..2)]); int(1..3)])
+                            | q124 : int(1..2)]);
+                        int(1..3)])
                ->
                toInt(or([q161 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                          (and([q163 <=

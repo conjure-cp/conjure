@@ -17,7 +17,8 @@ such that
                       | q60 : int(1..3)]),
              p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q50, 3] /\
              and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q50, q65] -> 3 = q65
-                      | q65 : int(1..3)]); int(1..3)])
+                      | q65 : int(1..3)]);
+                 int(1..3)])
              | q50 : int(1..8)]),
     or([q72 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
         (and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q72, q73] -> 1 = q73 | q73 : int(1..3)]) /\

@@ -1,12 +1,13 @@
 
 Name:           conjure-cp
-Version:        1.0
-Synopsis:       Extensible Automated Constraint Modelling
+Version:        2.0
+Synopsis:       Conjure: The Automated Constraint Modelling Tool
 Description:    .
-Homepage:       http://www.cs.st-andrews.ac.uk/~ozgur
-License:        AllRightsReserved
-Author:         Ozgur Akgun
-Maintainer:     ozgur.akgun@st-andrews.ac.uk
+Homepage:       http://ozgur.host.cs.st-andrews.ac.uk
+License:        BSD3
+License-file:   LICENSE
+Author:         Özgür Akgün
+Maintainer:     ozgurakgun@gmail.com
 Category:       Constraint Programming
 Build-type:     Simple
 Cabal-version:  >= 1.20
@@ -111,6 +112,7 @@ Library
                      , Conjure.Language.Expression.Op.True
                      , Conjure.Language.Expression.Op.TwoBars
                      , Conjure.Language.Expression.Op.Union
+                     , Conjure.Language.Expression.Op.Xor
 
                      -- and some operations on the language constructs
                      , Conjure.Language.CategoryOf
@@ -234,8 +236,9 @@ Library
                      , filepath
                      , hashable
                      , integer-gmp
-                     -- sepEndBy bugfixes
-                     , megaparsec >= 4.1.1
+                     -- >= 4.1.1 because of sepEndBy bugfixes
+                     -- < 5 because megaparsec-5 is backwards incompatible
+                     , megaparsec >= 4.1.1 && < 5
                      , mtl
                      , parallel-io
                      , pipes
@@ -252,6 +255,7 @@ Library
                      , template-haskell
                      , temporary
                      , text
+                     , time
                      , transformers >= 0.4
                      , uniplate
                      , unordered-containers
@@ -330,9 +334,9 @@ Test-Suite conjure-testing
                      , tasty-hunit
                      , tasty-rerun
                      , text
-                     -- we do not directly depend on clock, but we need to stick to 0.5.2 for now
+                     -- we do not directly depend on clock, but we need at least 0.7.2
                      -- see https://github.com/corsis/clock/issues/35
-                     , clock == 0.5.2
+                     , clock >= 0.7.2
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings

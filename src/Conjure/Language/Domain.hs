@@ -50,6 +50,7 @@ import Data.Data ( toConstr, constrIndex )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
+    | DomainIntE x
     | DomainInt [Range x]
     | DomainEnum
         Name
@@ -108,13 +109,33 @@ instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
     shrink (DomainInt rs) = [DomainInt (init rs)]
     shrink _ = []
 
-instance TypeOf (Domain r x) where
+instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
-typeOfDomain :: MonadFail m => Domain r x -> m Type
+typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain DomainInt{}               = return TypeInt
+typeOfDomain d@(DomainIntE x)          = do
+    ty <- typeOf x
+    case ty of
+        TypeInt              -> return ()       -- pre recoverDomainInt
+        TypeList     TypeInt -> return ()
+        TypeMatrix _ TypeInt -> return ()
+        TypeSet      TypeInt -> return ()
+        _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+                         , "In domain:" <+> pretty d
+                         ]
+    return TypeInt
+typeOfDomain d@(DomainInt rs)          = do
+    forM_ rs $ \ r -> forM_ r $ \ x -> do
+        ty <- typeOf x
+        case ty of
+            TypeInt -> return ()
+            _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+                             , "For:" <+> pretty x
+                             , "In domain:" <+> pretty d
+                             ]
+    return TypeInt
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
@@ -145,6 +166,7 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
+        go (DomainIntE x) = DomainIntE x
         go (DomainInt rs) = DomainInt rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
@@ -200,6 +222,7 @@ reprTreeEncoded = mconcat . enc1 . reprTree
 reprTree :: Domain r x -> Tree (Maybe r)
 reprTree DomainAny{}     = Tree Nothing []
 reprTree DomainBool{}    = Tree Nothing []
+reprTree DomainIntE{}    = Tree Nothing []
 reprTree DomainInt{}     = Tree Nothing []
 reprTree DomainEnum{}    = Tree Nothing []
 reprTree DomainUnnamed{} = Tree Nothing []
@@ -245,6 +268,7 @@ applyReprTree dom _ = fail $ "applyReprTree:" <++> pretty dom
 
 isPrimitiveDomain :: Domain r x -> Bool
 isPrimitiveDomain DomainBool{} = True
+isPrimitiveDomain DomainIntE{} = True
 isPrimitiveDomain DomainInt{} = True
 isPrimitiveDomain (DomainMatrix index inner) = and [isPrimitiveDomain index, isPrimitiveDomain inner]
 isPrimitiveDomain _ = False
@@ -746,6 +770,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
+    pretty (DomainIntE x) = "int" <> prParens (pretty x)
+
     pretty (DomainInt []) = "int"
     pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
 
@@ -820,6 +846,7 @@ instance Pretty a => Pretty (Range a) where
     pretty (RangeSingle x) = pretty x
     pretty (RangeLowerBounded x) = pretty x <> ".."
     pretty (RangeUpperBounded x) = ".." <> pretty x
+    pretty (RangeBounded x y) | show x == show y = pretty x
     pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
 instance Pretty HasRepresentation where

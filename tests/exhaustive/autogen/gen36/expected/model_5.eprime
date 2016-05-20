@@ -4,7 +4,7 @@ find var6_ExplicitVarSizeWithFlagsR17R5R3_Flags: matrix indexed by [int(1..2)] o
 find var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker:
         matrix indexed by [int(1..2)] of int(0..4)
 find var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
-        matrix indexed by [int(1..2), int(1..4), int(1..0)] of int(2..2, 5)
+        matrix indexed by [int(1..2), int(1..4), int(1..0)] of int(2, 5)
 such that
     var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[2] ->
     var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1] <

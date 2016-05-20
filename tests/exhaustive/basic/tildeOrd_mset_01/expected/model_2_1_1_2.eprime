@@ -34,7 +34,8 @@ such that
                     !or([q50 <= a_ExplicitWithRepetition_Flag /\
                          a_ExplicitWithRepetition_Values[q50] = b_ExplicitWithFlags_Values[q48]
                              | q50 : int(1..9)]),
-                    b_ExplicitWithFlags_Values[q48] < a_ExplicitWithRepetition_Values[q53]; int(1..3)])
+                    b_ExplicitWithFlags_Values[q48] < a_ExplicitWithRepetition_Values[q53];
+                        int(1..3)])
                ->
                sum([toInt(q46 <= a_ExplicitWithRepetition_Flag) *
                     toInt(a_ExplicitWithRepetition_Values[q46] = b_ExplicitWithFlags_Values[q48])
@@ -74,7 +75,8 @@ such that
                     !or([q50 <= a_ExplicitWithRepetition_Flag /\
                          a_ExplicitWithRepetition_Values[q50] = b_ExplicitWithFlags_Values[q48]
                              | q50 : int(1..9)]),
-                    b_ExplicitWithFlags_Values[q48] < b_ExplicitWithFlags_Values[q54]; int(1..3)])
+                    b_ExplicitWithFlags_Values[q48] < b_ExplicitWithFlags_Values[q54];
+                        int(1..3)])
                ->
                sum([toInt(q46 <= a_ExplicitWithRepetition_Flag) *
                     toInt(a_ExplicitWithRepetition_Values[q46] = b_ExplicitWithFlags_Values[q48])

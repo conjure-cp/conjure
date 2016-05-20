@@ -10,6 +10,9 @@ import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
+-- pretty
+import qualified Text.PrettyPrint as Pr ( cat )
+
 
 data OpIndexing x = OpIndexing x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -114,7 +117,7 @@ instance SimplifyOp OpIndexing x where
     simplifyOp _ = na "simplifyOp{OpIndexing}"
 
 instance Pretty x => Pretty (OpIndexing x) where
-    prettyPrec _ (OpIndexing  a b) = pretty a <++> prBrackets (pretty b)
+    prettyPrec _ (OpIndexing a b) = Pr.cat [pretty a, nest 4 (prBrackets (pretty b))]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpIndexing x) where
     varSymBreakingDescription (OpIndexing a b) = JSON.Object $ M.fromList

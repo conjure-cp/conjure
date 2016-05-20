@@ -28,13 +28,13 @@ translateParameter
     -> Model      -- essence param
     -> m Model    -- eprime param
 
-translateParameter eprimeModel essenceParam0 = do
-
-    essenceParam1 <- removeEnumsFromParam eprimeModel essenceParam0
-    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
-
+translateParameter eprimeModel0 essenceParam0 = do
+    logDebug $ "[eprimeModel  0]" <+> pretty essenceParam0
     logDebug $ "[essenceParam 0]" <+> pretty essenceParam0
+    (eprimeModel, essenceParam1) <- removeEnumsFromParam eprimeModel0 essenceParam0
+    logDebug $ "[eprimeModel  1]" <+> pretty eprimeModel
     logDebug $ "[essenceParam 1]" <+> pretty essenceParam1
+    (essenceParam, generatedLettingNames) <- finiteGivensParam eprimeModel essenceParam1
     logDebug $ "[essenceParam 2]" <+> pretty essenceParam
 
     let essenceLettings   = extractLettings essenceParam
@@ -148,7 +148,7 @@ translateParameter eprimeModel essenceParam0 = do
 
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
-        <- concatMapM downC essenceGivensAndLettings'
+        <- failToUserError $ concatMapM downC essenceGivensAndLettings'
     logDebug $ "[eprimeLettings           ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
                                                              , "constant:" <+> pretty c
