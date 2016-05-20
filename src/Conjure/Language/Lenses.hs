@@ -1415,24 +1415,6 @@ opFactorial _ =
     )
 
 
-opLex
-    :: ( Op x :< x
-       , Pretty x
-       , MonadFail m
-       )
-    => Proxy (m :: * -> *)
-    -> ( (x -> x -> x, (x,x)) -> x
-       , x -> m (x -> x -> x, (x,x))
-       )
-opLex _ =
-    ( \ (mk, (x,y)) -> mk x y
-    , \ p -> case project p of
-        Just (MkOpLexLt  (OpLexLt  x y)) -> return (\ x' y' -> inject (MkOpLexLt  (OpLexLt  x' y')), (x,y) )
-        Just (MkOpLexLeq (OpLexLeq x y)) -> return (\ x' y' -> inject (MkOpLexLeq (OpLexLeq x' y')), (x,y) )
-        _ -> na ("Lenses.opLex:" <++> pretty p)
-    )
-
-
 fixRelationProj :: Data a => a -> a
 fixRelationProj = transformBi f
     where
