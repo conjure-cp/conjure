@@ -27,7 +27,14 @@ main = do
                 ("refine-param":rest) -> "translate-parameter" : rest
                 _ -> args
 
+        -- if no arguments are given, print the help message
+        noArgPrintsHelp args =
+            if null args
+                then ["--help"]
+                else args
+
     args  <- getArgs >>= return . compatRefineParam
+                     >>= return . noArgPrintsHelp
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (show input))
