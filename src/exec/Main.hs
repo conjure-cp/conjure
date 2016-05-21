@@ -10,6 +10,7 @@ import System.CPUTime ( getCPUTime )
 import System.Environment ( withArgs )
 import System.Timeout ( timeout )
 import Text.Printf ( printf )
+import Data.Char ( isDigit )
 
 -- cmdargs
 import System.Console.CmdArgs ( cmdArgs )
@@ -17,14 +18,17 @@ import System.Console.CmdArgs ( cmdArgs )
 
 main :: IO ()
 main = do
-    args <- getArgs
-    -- this is for backward compatibility, so bilal's old scripts continue to work.
-    -- "refine-param", if given as the first arg (i.e. it is the command)
-    -- is rewritten to "translate-parameter"
-    let args' = case args of
-                    ("refine-param":rest) -> "translate-parameter" : rest
-                    _ -> args
-    input <- withArgs args' (cmdArgs ui)
+    let
+        -- this is for backward compatibility, so bilal's old scripts continue to work.
+        -- "refine-param", if given as the first arg (i.e. it is the command)
+        -- is rewritten to "translate-parameter"
+        compatRefineParam args =
+            case args of
+                ("refine-param":rest) -> "translate-parameter" : rest
+                _ -> args
+
+    args  <- getArgs >>= return . compatRefineParam
+    input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (show input))
             mainWithArgs input
