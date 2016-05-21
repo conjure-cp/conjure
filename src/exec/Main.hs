@@ -15,6 +15,9 @@ import Data.Char ( isDigit )
 -- cmdargs
 import System.Console.CmdArgs ( cmdArgs )
 
+-- terminal-size
+import qualified System.Console.Terminal.Size as Terminal ( size, width )
+
 
 main :: IO ()
 main = do
@@ -33,8 +36,28 @@ main = do
                 then ["--help"]
                 else args
 
+        -- if a width is not specified, we try to find out their terminal width automatically
+        -- and use the full width.
+        helpAutoWidth args = do
+            let
+                rawHelpVals = mapMaybe (stripPrefix "--help=") args
+                helpVals = concatMap (splitOn ",") rawHelpVals
+                containsWidth = any (all isDigit) helpVals
+                containsHelp = any (isPrefixOf "--help") args
+            case (containsHelp, containsWidth) of
+                (False, _) -> return args                           -- no "--help*"s were given
+                (_, True) -> return args                            -- a width was specified
+                _ -> do                                             -- use the full with of the terminal
+                    terminalSize <- Terminal.size
+                    case terminalSize of
+                        Nothing -> return args                      -- cannot work out the terminal size
+                        Just s  -> do
+                            let terminalWidth = Terminal.width s
+                            return $ args ++ ["--help=" ++ intercalate "," (helpVals ++ [show (terminalWidth :: Int)])]
+
     args  <- getArgs >>= return . compatRefineParam
                      >>= return . noArgPrintsHelp
+                     >>= helpAutoWidth
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (show input))
