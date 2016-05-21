@@ -16,20 +16,15 @@ import Test.Tasty.Options ( OptionDescription(..) )
 -- tasty-ant-xml
 import Test.Tasty.Runners.AntXML ( antXMLRunner )
 
--- tasty-rerun
-import Test.Tasty.Ingredients.Rerun ( rerunningTests )
-
 
 main :: IO ()
 main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
     typeCheckAllTests     <- Conjure.TypeCheckAll.tests
     parsePrintTests       <- Conjure.ParsePrint.tests
-    let ingredients =
-            [ rerunningTests ( antXMLRunner
-                             : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.QuickOrSlow)]
-                             : defaultIngredients
-                             ) ]
+    let ingredients = antXMLRunner
+                    : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.QuickOrSlow)]
+                    : defaultIngredients
     defaultMainWithIngredients ingredients $ askOption $ \ quickOrSlow ->
         testGroup "conjure"
             [ Conjure.Language.DomainSizeTest.tests
