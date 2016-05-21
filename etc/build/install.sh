@@ -137,7 +137,19 @@ elif [ $INSTALL_GHC = "yes" ]; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt | cut -d ' ' -f 4)
         URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
         wget --no-check-certificate -c "${URL}"
-        tar xvjf "${GHC_TARBALL}"
+        echo "Extracting..."
+        case "${GHC_TARBALL}" in 
+            *tar.bz2)
+                tar --extract --file="${GHC_TARBALL}" --bzip2
+                ;;
+            *tar.xz)
+                tar --extract --file="${GHC_TARBALL}" --xz
+                ;;
+            *)
+                echo "Sorry, cannot extract: ${GHC_TARBALL}"
+                exit 1
+                ;;
+        esac
         pushd "ghc-${GHC_VERSION}"
         mkdir -p "${HOME}/.tools/ghc"
         ./configure --prefix="${HOME}/.tools/ghc/${GHC_VERSION}"
