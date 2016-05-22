@@ -275,6 +275,7 @@ cabal install                                                           \
     --only-dependencies                                                 \
     --force-reinstalls                                                  \
     --enable-split-objs                                                 \
+    --reorder-goals --max-backjumps 10000                               \
     ${DYNAMIC} ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION}    \
     --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
