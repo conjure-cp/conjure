@@ -13,8 +13,7 @@ preinstall:
 
 .PHONY: freeze
 freeze:
-	@cabal freeze --enable-tests
-	@cat cabal.config | grep -v '             base ==' > tmp ; mv tmp cabal.config
+	@bash etc/build/freeze-deps.sh
 
 .PHONY: refreeze
 refreeze:
