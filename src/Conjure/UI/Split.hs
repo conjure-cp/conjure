@@ -10,7 +10,7 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputSplittedModels
-    :: (MonadIO m, MonadFail m, MonadLog m)
+    :: (MonadIO m, MonadFail m)
     => FilePath
     -> Model
     -> m ()
@@ -29,7 +29,7 @@ outputSplittedModels outputDirectory model = do
 
 
 split
-    :: (MonadIO m, MonadFail m)
+    :: MonadIO m
     => Model
     -> Producer Model m ()
 split m = do

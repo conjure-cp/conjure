@@ -19,7 +19,7 @@ instance Hashable  x => Hashable  (OpMin x)
 instance ToJSON    x => ToJSON    (OpMin x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMin x) where parseJSON = genericParseJSON jsonOptions
 
-instance ( TypeOf x, Pretty x, ExpressionLike x
+instance ( TypeOf x, Pretty x
          , Domain () x :< x
          ) => TypeOf (OpMin x) where
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
@@ -66,7 +66,7 @@ instance EvaluateOp OpMin where
 instance SimplifyOp OpMin x where
     simplifyOp _ = na "simplifyOp{OpMin}"
 
-instance (Pretty x, ExpressionLike x) => Pretty (OpMin x) where
+instance Pretty x => Pretty (OpMin x) where
     prettyPrec _ (OpMin x) = "min" <> prParens (pretty x)
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpMin x) where

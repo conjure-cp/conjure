@@ -16,7 +16,7 @@ import Conjure.Language.Pretty
 --   however, this transformation (as part of `Conjure.UI.Model.prologue`) cleans this up by introducing
 --   extra letting statements.
 lettingsForComplexInDoms
-    :: (MonadFail m, MonadLog m, NameGen m)
+    :: (MonadFail m, NameGen m)
     => Model
     -> m Model
 lettingsForComplexInDoms m = do

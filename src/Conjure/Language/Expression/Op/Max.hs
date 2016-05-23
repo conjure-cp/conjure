@@ -19,7 +19,7 @@ instance Hashable  x => Hashable  (OpMax x)
 instance ToJSON    x => ToJSON    (OpMax x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpMax x) where parseJSON = genericParseJSON jsonOptions
 
-instance ( TypeOf x, Pretty x, ExpressionLike x
+instance ( TypeOf x, Pretty x
          , Domain () x :< x
          ) => TypeOf (OpMax x) where
     typeOf p@(OpMax x) | Just (dom :: Domain () x) <- project x = do
@@ -68,7 +68,7 @@ instance EvaluateOp OpMax where
 instance SimplifyOp OpMax x where
     simplifyOp _ = na "simplifyOp{OpMax}"
 
-instance (Pretty x, ExpressionLike x) => Pretty (OpMax x) where
+instance Pretty x => Pretty (OpMax x) where
     prettyPrec _ (OpMax x) = "max" <> prParens (pretty x)
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpMax x) where

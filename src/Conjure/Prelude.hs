@@ -557,7 +557,7 @@ removeDirectoryIfExists f = removeDirectoryRecursive f `catch` handleExists
 setRandomSeed :: Int -> IO ()
 setRandomSeed = setStdGen . mkStdGen
 
-nchoosek :: (Num a, Integral a) => (a -> a) -> a -> a -> a
+nchoosek :: Integral a => (a -> a) -> a -> a -> a
 nchoosek f n k = f n `div` (f k * f (n-k))
 
 type JSONValue = JSON.Value

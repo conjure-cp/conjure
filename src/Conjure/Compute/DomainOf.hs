@@ -31,7 +31,7 @@ class DomainOf a where
         => a -> m [Dom]
     indexDomainsOf = defIndexDomainsOf
 
-defIndexDomainsOf :: (MonadFail m, NameGen m, Pretty a, DomainOf a) => a -> m [Dom]
+defIndexDomainsOf :: (MonadFail m, NameGen m, DomainOf a) => a -> m [Dom]
 defIndexDomainsOf x = do
     dom <- domainOf x
     let
@@ -313,14 +313,14 @@ instance DomainOf (OpApart x) where
 instance DomainOf (OpAttributeAsConstraint x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, DomainOf x) => DomainOf (OpDefined x) where
+instance DomainOf x => DomainOf (OpDefined x) where
     domainOf (OpDefined f) = do
         fDom <- domainOf f
         case fDom of
             DomainFunction _ _ fr _ -> return $ DomainSet def def fr
             _ -> fail "domainOf, OpDefined, not a function"
 
-instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpDiv x) where
+instance DomainOf x => DomainOf (OpDiv x) where
     domainOf (OpDiv x y) = do
         xDom :: Dom <- domainOf x
         yDom :: Dom <- domainOf y
@@ -447,7 +447,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
         return (DomainInt [RangeBounded low upp] :: Dom)
     domainOf op = mkDomainAny ("OpMin:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpMinus x) where
+instance DomainOf x => DomainOf (OpMinus x) where
     domainOf (OpMinus x y) = do
         xDom :: Dom <- domainOf x
         yDom :: Dom <- domainOf y
@@ -476,7 +476,7 @@ instance DomainOf (OpXor x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpParticipants x) where
     domainOf op = mkDomainAny ("OpParticipants:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, DomainOf x) => DomainOf (OpParts x) where
+instance DomainOf x => DomainOf (OpParts x) where
     domainOf (OpParts p) = do
         dom <- domainOf p
         case dom of
@@ -498,7 +498,7 @@ instance (Pretty x, TypeOf x) => DomainOf (OpPreImage x) where
 instance DomainOf x => DomainOf (OpPred x) where
     domainOf (OpPred x) = domainOf x        -- TODO: improve
 
-instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpProduct x) where
+instance (ExpressionLike x, DomainOf x) => DomainOf (OpProduct x) where
     domainOf (OpProduct x)
         | Just xs <- listOut x
         , not (null xs) = do
@@ -514,7 +514,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpProdu
         return $ DomainInt [RangeBounded low upp]
     domainOf _ = return $ DomainInt [RangeBounded 1 1]
 
-instance (Pretty x, DomainOf x) => DomainOf (OpRange x) where
+instance DomainOf x => DomainOf (OpRange x) where
     domainOf (OpRange f) = do
         fDom <- domainOf f
         case fDom of
@@ -524,7 +524,7 @@ instance (Pretty x, DomainOf x) => DomainOf (OpRange x) where
 instance (Pretty x, TypeOf x) => DomainOf (OpRelationProj x) where
     domainOf op = mkDomainAny ("OpRelationProj:" <++> pretty op) <$> typeOf op
 
-instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
+instance (DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
     domainOf (OpRestrict f x) = do
         d    <- project x
         fDom <- domainOf f
@@ -532,7 +532,7 @@ instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
             DomainFunction fRepr a _ to -> return (DomainFunction fRepr a d to)
             _ -> fail "domainOf, OpRestrict, not a function"
 
-instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpSlicing x) where
+instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x
     indexDomainsOf (OpSlicing x _ _) = indexDomainsOf x
 
@@ -551,7 +551,7 @@ instance DomainOf (OpSubstring x) where
 instance DomainOf x => DomainOf (OpSucc x) where
     domainOf (OpSucc x) = domainOf x        -- TODO: improve
 
-instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
+instance (ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
     domainOf (OpSum x)
         | Just xs <- listOut x
         , not (null xs) = do
@@ -575,7 +575,7 @@ instance DomainOf (OpTildeLeq x) where
 instance DomainOf (OpTildeLt x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpToInt x) where
+instance DomainOf (OpToInt x) where
     domainOf _ = return $ DomainInt [RangeBounded 0 1]
 
 instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where

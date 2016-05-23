@@ -103,7 +103,7 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> m ()
@@ -148,7 +148,7 @@ outputModels config model = do
 
 
 toCompletion
-    :: forall m . (MonadIO m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    :: forall m . (MonadIO m, MonadFail m, NameGen m, EnumerateDomain m)
     => Config
     -> Model
     -> Producer LogOrModel m ()
@@ -182,7 +182,7 @@ toCompletion config m = do
 --   and new rules will be tried using P as the top of the zipper-tree.
 --   The whole model (containing P too) will be tried later for completeness.
 remainingWIP
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> ModelWIP
     -> m [Question]
@@ -203,7 +203,7 @@ remainingWIP config wip@(TryThisFirst modelZipper info) = do
 
 
 remaining
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
     => Config
     -> ModelZipper
     -> ModelInfo
@@ -280,7 +280,7 @@ remaining config modelZipper minfo = do
 -- | Computes all applicable questions.
 --   strategyQ == PickFirst is special-cased for performance.
 getQuestions
-    :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+    :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
     => Config
     -> ModelZipper
     -> m [(ModelZipper, [(Doc, RuleResult m)])]
@@ -293,7 +293,7 @@ getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$
                                    Nothing -> loopLevels as
                                    Just {} -> return bs
 
-        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+        processLevel :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
                      -> m (Maybe (ModelZipper, [(Doc, RuleResult m)]))
         processLevel rulesAtLevel =
@@ -317,7 +317,7 @@ getQuestions config modelZipper =
                                    then loopLevels as
                                    else return bs
 
-        processLevel :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
+        processLevel :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
                      => [Rule]
                      -> m [(ModelZipper, [(Doc, RuleResult m)])]
         processLevel rulesAtLevel =
@@ -824,7 +824,7 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-prologue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
@@ -847,7 +847,7 @@ prologue model = do
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
@@ -1281,7 +1281,6 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
     mkHook
         :: ( MonadLog m
            , MonadFail m
-           , MonadUserError m
            , NameGen m
            , EnumerateDomain m
            )
@@ -1306,7 +1305,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
             usedBefore = (name, reprTree domain) `elem` representationsTree
 
-            mkStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+            mkStructurals :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
                           => m [Expression]
             mkStructurals = do
                 let ref = Reference name (Just (DeclHasRepr forg name domain))
@@ -1317,7 +1316,7 @@ rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
                 logDebugVerbose $ "After  name resolution:" <+> vcat (map pretty resolved)
                 return resolved
 
-            addStructurals :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m)
+            addStructurals :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
                            => Model -> m Model
             addStructurals
                 | forg == Given = return

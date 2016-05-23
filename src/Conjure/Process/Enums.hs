@@ -116,7 +116,7 @@ removeEnumsFromModel =
 
 
 removeEnumsFromParam
-    :: (MonadFail m, MonadLog m, MonadUserError m)
+    :: (MonadFail m, MonadUserError m)
     => Model -> Model -> m (Model, Model)
 removeEnumsFromParam model param = do
     let allStatements = map (False,) (map Declaration (miEnumLettings (mInfo model)))
@@ -170,9 +170,7 @@ removeEnumsFromParam model param = do
 -- TODO: complete addEnumsAndUnnamedsBack
 
 addEnumsAndUnnamedsBack
-    :: ( Show r, Show x
-       , Pretty r, Pretty x
-       )
+    :: ( Pretty r, Pretty x )
     => [Name]                           -- unnamed types
     -> [((Integer, Name), Constant)]    -- a lookup table for enums
     -> Domain r x                       -- the domain we are working on

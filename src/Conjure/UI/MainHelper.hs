@@ -42,7 +42,7 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
 
 
-mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, MonadUserError m, EnumerateDomain m) => UI -> m ()
+mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, EnumerateDomain m) => UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering

@@ -163,7 +163,7 @@ logFollow config q@Question{..} options = do
     nullListMay  [] = Nothing
     nullListMay  xs = Just xs
 
-    setMapMaybe :: (Ord a, Ord b) => (a -> Maybe b) -> Set a -> Set b
+    setMapMaybe :: Ord b => (a -> Maybe b) -> Set a -> Set b
     setMapMaybe f = S.map (fromJustNote "setMapMaybe") . S.filter isJust . S.map f
 
 
@@ -277,7 +277,7 @@ jsonToDoc :: ToJSON a => a -> Doc
 jsonToDoc  = Pr.text . L.unpack . L.toLazyText . A.encodeToTextBuilder . toJSON
 
 
-holeHash :: (Show x, Pretty x) =>x  -> HoleHash
+holeHash :: Pretty x => x -> HoleHash
 holeHash = hash . show . pretty
 
 fou1 :: (a,b,c,d) -> a

@@ -18,7 +18,7 @@ instance Hashable  x => Hashable  (OpSucc x)
 instance ToJSON    x => ToJSON    (OpSucc x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpSucc x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSucc x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpSucc x) where
     typeOf p@(OpSucc x) = do
         ty <- typeOf x
         case ty of
@@ -37,10 +37,10 @@ instance EvaluateOp OpSucc where
 instance SimplifyOp OpSucc x where
     simplifyOp _ = na "simplifyOp{OpSucc}"
 
-instance (Pretty x, ExpressionLike x) => Pretty (OpSucc x) where
+instance Pretty x => Pretty (OpSucc x) where
     prettyPrec _ (OpSucc x) = "pred" <> prParens (pretty x)
 
-instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpSucc x) where
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpSucc x) where
     varSymBreakingDescription (OpSucc a) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpSucc")
         , ("children", JSON.Array $ V.fromList

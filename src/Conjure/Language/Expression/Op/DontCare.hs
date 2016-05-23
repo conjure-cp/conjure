@@ -18,7 +18,7 @@ instance Hashable  x => Hashable  (OpDontCare x)
 instance ToJSON    x => ToJSON    (OpDontCare x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpDontCare x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpDontCare x) where
+instance TypeOf (OpDontCare x) where
     typeOf (OpDontCare _) = return TypeBool
 
 instance EvaluateOp OpDontCare where

@@ -6,7 +6,6 @@ module Conjure.Representations.Common where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Pretty
 import Conjure.Language.TH
 
 -- containers
@@ -24,7 +23,7 @@ mkSizeCons sizeAttr cardinality =
                                    , [essence| &cardinality <= &y |]
                                    ]
 
-mkBinRelCons :: (NameGen m, Pretty r) => BinaryRelationAttrs -> Domain r Expression -> Expression -> m [Expression]
+mkBinRelCons :: NameGen m => BinaryRelationAttrs -> Domain r Expression -> Expression -> m [Expression]
 mkBinRelCons (BinaryRelationAttrs binRelAttrs) dom rel = do
     (xP, x) <- quantifiedVar
     (yP, y) <- quantifiedVar

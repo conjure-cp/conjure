@@ -22,7 +22,7 @@ instance Hashable  x => Hashable  (OpIndexing x)
 instance ToJSON    x => ToJSON    (OpIndexing x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpIndexing x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Show x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (OpIndexing x) where
+instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf (OpIndexing x) where
     typeOf p@(OpIndexing m i) = do
         tyM <- typeOf m
         tyI <- typeOf i

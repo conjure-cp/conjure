@@ -18,20 +18,20 @@ make :: (Proxy Identity -> (a, b)) -> a
 make  f = fst (f (Proxy :: Proxy Identity))
 
 -- | To use a lens for deconstructing stuf.
-match :: CanBeAnAlias b => (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
+match :: (Proxy (m :: * -> *) -> (a, b -> m c)) -> b -> m c
 match f = snd (f Proxy)
 
 followAliases :: CanBeAnAlias b => (b -> c) -> b -> c
 followAliases m (isAlias -> Just x) = followAliases m x
 followAliases m x = m x
 
-tryMatch :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
+tryMatch :: (Proxy Maybe -> (a, b -> Maybe c)) -> b -> Maybe c
 tryMatch f = match f
 
-matchOr :: CanBeAnAlias b => c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
+matchOr :: c -> (Proxy Maybe -> (a, b -> Maybe c)) -> b -> c
 matchOr defOut f inp = fromMaybe defOut (match f inp)
 
-matchDef :: CanBeAnAlias b => (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
+matchDef :: (Proxy Maybe -> (a, b -> Maybe b)) -> b -> b
 matchDef f inp = matchOr inp f inp
 
 matchDefs :: CanBeAnAlias b => [Proxy Maybe -> (a, b -> Maybe b)] -> b -> b
@@ -1051,7 +1051,6 @@ opQuantifier _ =
 
 opModifier
     :: ( Op x :< x
-       , Pretty x
        , MonadFail m
        )
     => Proxy (m :: * -> *)
@@ -1071,7 +1070,6 @@ opModifier _ =
 
 opModifierNoP
     :: ( Op x :< x
-       , Pretty x
        , MonadFail m
        )
     => Proxy (m :: * -> *)

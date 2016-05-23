@@ -82,7 +82,7 @@ minionTimelimit = 60
 savilerowTimelimit :: Int
 savilerowTimelimit = 60 * 1000
 
-enumerateDomain :: (MonadFail m, MonadUserError m, EnumerateDomain m) => Domain () Constant -> m [Constant]
+enumerateDomain :: (MonadFail m, EnumerateDomain m) => Domain () Constant -> m [Constant]
 
 enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
     bug $ vcat [ "called enumerateDomain with a domain that has undefinedness values in it."

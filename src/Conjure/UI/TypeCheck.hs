@@ -46,8 +46,6 @@ typeCheckModel_StandAlone model0 = do
 typeCheckModel
     :: ( MonadFail m
        , MonadUserError m
-       , MonadLog m
-       , NameGen m
        )
     => Model
     -> m Model

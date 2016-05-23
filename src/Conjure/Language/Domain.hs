@@ -93,7 +93,7 @@ instance (Hashable  r, Hashable  x) => Hashable  (Domain r x)
 instance (ToJSON    r, ToJSON    x) => ToJSON    (Domain r x) where toJSON = genericToJSON jsonOptions
 instance (FromJSON  r, FromJSON  x) => FromJSON  (Domain r x) where parseJSON = genericParseJSON jsonOptions
 
-instance (Arbitrary r, Arbitrary x) => Arbitrary (Domain r x) where
+instance Arbitrary x => Arbitrary (Domain r x) where
     arbitrary = sized f
         where
             f 0 = oneof [ return DomainBool
@@ -155,13 +155,13 @@ typeOfDomain (DomainReference _ (Just d)) = typeOf d
 typeOfDomain (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
 typeOfDomain (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
 
-forgetRepr :: (Pretty r, Pretty x) => Domain r x -> Domain () x
+forgetRepr :: Domain r x -> Domain () x
 forgetRepr = defRepr
 
-defRepr :: (Default r2, Pretty r, Pretty x) => Domain r x -> Domain r2 x
+defRepr :: Default r2 => Domain r x -> Domain r2 x
 defRepr = changeRepr def
 
-changeRepr :: (Pretty r, Pretty x) => r2 -> Domain r x -> Domain r2 x
+changeRepr :: r2 -> Domain r x -> Domain r2 x
 changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
@@ -938,7 +938,7 @@ normaliseDomain  norm (DomainPartition r attr dom      ) = DomainPartition r (fm
                                                                              (normaliseDomain norm dom)
 normaliseDomain _norm d = d
 
-normaliseRange :: Ord c => (c -> c) -> Range c -> Range c
+normaliseRange :: (c -> c) -> Range c -> Range c
 normaliseRange _norm RangeOpen             = RangeOpen
 normaliseRange  norm (RangeSingle x)       = RangeBounded (norm x) (norm x)
 normaliseRange  norm (RangeLowerBounded x) = RangeLowerBounded (norm x)

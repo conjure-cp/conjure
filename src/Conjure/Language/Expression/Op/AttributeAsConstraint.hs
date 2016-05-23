@@ -20,7 +20,7 @@ instance Hashable  x => Hashable  (OpAttributeAsConstraint x)
 instance ToJSON    x => ToJSON    (OpAttributeAsConstraint x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpAttributeAsConstraint x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpAttributeAsConstraint x) where
+instance TypeOf (OpAttributeAsConstraint x) where
     -- TODO
     typeOf OpAttributeAsConstraint{} = return TypeBool
 

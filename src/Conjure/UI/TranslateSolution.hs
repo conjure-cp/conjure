@@ -3,7 +3,6 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
@@ -19,7 +18,6 @@ import Data.Text as T ( pack )
 
 translateSolution
     :: ( MonadFail m
-       , MonadUserError m
        , MonadLog m
        , NameGen m
        , EnumerateDomain m

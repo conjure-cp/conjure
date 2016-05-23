@@ -14,8 +14,6 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 
 validateSolution
     :: ( MonadFail m
-       , MonadUserError m
-       , MonadLog m
        , EnumerateDomain m
        )
     => Model      -- essence model

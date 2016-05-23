@@ -45,7 +45,6 @@ allSupportedAttributes =
 
 addAttributesToDomain
     :: ( MonadFail m
-       , Monoid BinaryRelationAttrs
        , Pretty r
        , Pretty x
        )
@@ -60,7 +59,6 @@ addAttributesToDomain domain ((attr, val) : rest) = do
 
 addAttributeToDomain
     :: ( MonadFail m
-       , Monoid BinaryRelationAttrs
        , Pretty r
        , Pretty x
        )

@@ -65,7 +65,7 @@ main = do
                 ]
 
             , [ ""
-              , "instance ( Show x, Pretty x"
+              , "instance ( Pretty x"
               , "         , ExpressionLike x"
               , "         , ReferenceContainer x"
               , "         , TypeOf x"

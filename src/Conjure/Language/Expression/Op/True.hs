@@ -18,7 +18,7 @@ instance Hashable  x => Hashable  (OpTrue x)
 instance ToJSON    x => ToJSON    (OpTrue x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpTrue x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpTrue x) where
+instance TypeOf (OpTrue x) where
     typeOf (OpTrue _) = return TypeBool
 
 instance EvaluateOp OpTrue where

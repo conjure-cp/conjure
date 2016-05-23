@@ -31,7 +31,7 @@ trySimplify x = do
 
 
 instantiateExpression
-    :: (MonadFail m, MonadUserError m, EnumerateDomain m)
+    :: (MonadFail m, EnumerateDomain m)
     => [(Name, Expression)]
     -> Expression
     -> m Constant
@@ -47,9 +47,7 @@ instantiateExpression ctxt x = do
 
 instantiateDomain
     :: ( MonadFail m
-       , MonadUserError m
        , EnumerateDomain m
-       , Show r
        , Pretty r
        , Default r
        )
@@ -64,7 +62,6 @@ newtype HasUndef = HasUndef Any
 
 instantiateE
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -74,7 +71,6 @@ instantiateE
 instantiateE (Comprehension body gensOrConds) = do
     let
         loop :: ( MonadFail m
-                , MonadUserError m
                 , MonadState [(Name, Expression)] m
                 , EnumerateDomain m
                 ) => [GeneratorOrCondition] -> WriterT HasUndef m [Constant]
@@ -203,7 +199,6 @@ instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
 instantiateOp
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -214,7 +209,6 @@ instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstan
 
 instantiateAbsLit
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -225,10 +219,8 @@ instantiateAbsLit = mapM instantiateE
 
 instantiateD
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
-       , Show r
        , Pretty r
        , Default r
        )
@@ -290,7 +282,6 @@ instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 instantiateSetAttr
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -301,7 +292,6 @@ instantiateSetAttr (SetAttr s) = SetAttr <$> instantiateSizeAttr s
 
 instantiateSizeAttr
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -316,7 +306,6 @@ instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instanti
 
 instantiateMSetAttr
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -327,7 +316,6 @@ instantiateMSetAttr (MSetAttr s o) = MSetAttr <$> instantiateSizeAttr s <*> inst
 
 instantiateOccurAttr
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )
@@ -341,7 +329,6 @@ instantiateOccurAttr (OccurAttr_MinMaxOccur x y) = OccurAttr_MinMaxOccur <$> ins
 
 instantiateFunctionAttr
     :: ( MonadFail m
-       , MonadUserError m
        , MonadState [(Name, Expression)] m
        , EnumerateDomain m
        )

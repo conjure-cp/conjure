@@ -12,7 +12,7 @@ import Conjure.Language.ModelStats ( finds )
 data St = St { seenSearchOrder :: Bool }
 
 dealWithCuts
-    :: (MonadFail m, MonadLog m, NameGen m)
+    :: (MonadFail m, NameGen m)
     => Model
     -> m Model
 dealWithCuts m = flip evalStateT (St False) $ do

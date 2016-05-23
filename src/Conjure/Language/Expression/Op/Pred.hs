@@ -18,7 +18,7 @@ instance Hashable  x => Hashable  (OpPred x)
 instance ToJSON    x => ToJSON    (OpPred x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpPred x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpPred x) where
+instance (TypeOf x, Pretty x) => TypeOf (OpPred x) where
     typeOf p@(OpPred x) = do
         ty <- typeOf x
         case ty of
@@ -37,10 +37,10 @@ instance EvaluateOp OpPred where
 instance SimplifyOp OpPred x where
     simplifyOp _ = na "simplifyOp{OpPred}"
 
-instance (Pretty x, ExpressionLike x) => Pretty (OpPred x) where
+instance Pretty x => Pretty (OpPred x) where
     prettyPrec _ (OpPred x) = "pred" <> prParens (pretty x)
 
-instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (OpPred x) where
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpPred x) where
     varSymBreakingDescription (OpPred a) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpPred")
         , ("children", JSON.Array $ V.fromList
