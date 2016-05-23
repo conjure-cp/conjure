@@ -106,8 +106,7 @@ install:
   - ls -l $(find bin -type f)
 
 script:
-  - time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s > conjure-testing.stdout 2> conjure-testing.stderr || true
-  - cat conjure-testing.stderr
+  - ((time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s) > >(tee conjure-testing.stdout | grep -B1 Conjuring) 2> >(tee conjure-testing.stderr >&2)) || true
   - ! grep FAIL conjure-testing.stdout
   - cabal sdist   # tests that a source-distribution can be generated
 
