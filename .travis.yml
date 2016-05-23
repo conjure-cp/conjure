@@ -103,7 +103,7 @@ install:
   - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
   - conjure --version                        # print version
 
-  - ls -l $(find bin -type f)
+  - ls -Alh $(find bin -type f)
 
 script:
   - ((time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s) > >(tee conjure-testing.stdout | grep -B1 Conjuring | sed '/^--$/d') 2> >(tee conjure-testing.stderr >&2)) || true
