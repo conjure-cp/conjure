@@ -1,6 +1,7 @@
 
 # Conjure
 
+[![License BSD3](https://img.shields.io/badge/license-BSD3-brightgreen.svg)](http://opensource.org/licenses/BSD-3-Clause)
 [![Build Status](https://travis-ci.org/conjure-cp/conjure.svg?branch=master)](https://travis-ci.org/conjure-cp/conjure)
 [![Documentation Status](https://readthedocs.org/projects/conjure/badge/?version=latest)](https://conjure.readthedocs.io)
 
