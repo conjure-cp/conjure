@@ -376,6 +376,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -433,6 +434,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -497,6 +499,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -550,6 +553,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -793,6 +797,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -845,6 +850,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -888,6 +894,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -955,6 +962,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -1002,6 +1010,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
@@ -1048,6 +1057,7 @@ ui = modes
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
+            &= typ "FORMAT"
             &= help "Conjure's output can be in multiple formats.\n\
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\

@@ -34,7 +34,7 @@ Logging & Output:
      --log-rule-successes                    Generate logs for rule applications.
      --log-rule-attempts                     Generate logs for rule attempts. (Caution: these can be a lot!)
      --log-choices                           Store the choices in a way that can be reused be by -al
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -99,7 +99,7 @@ Flags:
                                              if the Essence parameter file is named 'foo.param'
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -125,7 +125,7 @@ Flags:
                                              extensions dropped the extension '.solution' is added instead.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -147,7 +147,7 @@ Flags:
      --solution=FILE                         An Essence solution.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -184,7 +184,7 @@ Logging & Output:
      --log-rule-successes                    Generate logs for rule applications.
      --log-rule-attempts                     Generate logs for rule attempts. (Caution: these can be a lot!)
      --log-choices                           Store the choices in a way that can be reused be by -al
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -252,7 +252,7 @@ Flags:
      --remove-unused                         Whether to remove unused declarations or not. Off by default.
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -269,7 +269,7 @@ conjure diff [OPTIONS] FILE FILE
 
 Logging & Output:
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -296,7 +296,7 @@ Logging & Output:
   -o --output-directory=DIR                  Output directory. Generated models will be saved here.
                                              Default value: 'conjure-output'
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -316,7 +316,7 @@ Logging & Output:
                                              By default, its value will be 'foo.essence-json'
                                              if the Essence file is named 'foo.essence'
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
@@ -335,7 +335,7 @@ conjure parameter-generator [OPTIONS] ESSENCE_FILE
 Logging & Output:
      --essence-out=FILE                      Output file path.
      --log-level=LOGLEVEL                    Log level.
-     --output-format=OUTPUTFORMAT            Conjure's output can be in multiple formats.
+     --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                  plain : The default
                                                  binary: A binary encoding of the Essence output.
                                                          It can be read back in by Conjure.
