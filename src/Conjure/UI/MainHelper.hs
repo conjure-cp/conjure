@@ -32,6 +32,12 @@ import Conjure.Language.NameResolution ( resolveNamesMulti )
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 
+-- filepath
+import System.FilePath ( splitFileName, takeBaseName, (<.>) )
+
+-- directory
+import System.Directory ( copyFile )
+
 -- shelly
 import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
 
@@ -221,7 +227,56 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
-        Right solutions -> when validateSolutionsOpt $ liftIO $ validating solutions
+        Right solutions -> do
+            when validateSolutionsOpt $ liftIO $ validating solutions
+            -- clean-up: move the solutions next to the essence file.
+            -- our intention is that a user intending to just solve something
+            -- should never have to look into outputDirectory.
+            let
+                copySolution :: MonadIO m => FilePath -> FilePath -> m ()
+                copySolution old new = do
+                    pp logLevel ("Copying solution to:" <+> pretty new)
+                    liftIO (copyFile old new)
+            let (essenceDir, essenceFilename) = splitFileName essence
+            let essenceBasename = takeBaseName essenceFilename
+            when (length eprimes == 1) $
+                if null essenceParams
+                    then do
+                        let solutions' = [ solution
+                                         | (_, _, solution) <- solutions ]
+                        case solutions' of
+                            [solution] ->
+                                copySolution solution (essenceDir
+                                                        </> intercalate "-" [ essenceBasename
+                                                                            ]
+                                                        <.> ".solution")
+                            _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
+                                copySolution solution (essenceDir
+                                                        </> intercalate "-" [ essenceBasename
+                                                                            , paddedNum 6 '0' i
+                                                                            ]
+                                                        <.> ".solution")
+                    else forM_ essenceParams $ \ essenceParam -> do
+                        let (_paramDir, paramFilename) = splitFileName essenceParam
+                        let paramBasename = takeBaseName paramFilename
+                        let solutions' = [ solution
+                                         | (_, essenceParam', solution) <- solutions
+                                         , essenceParam == essenceParam' ]
+                        case solutions' of
+                            [solution] ->
+                                copySolution solution (essenceDir
+                                                        </> intercalate "-" [ essenceBasename
+                                                                            , paramBasename
+                                                                            ]
+                                                        <.> ".solution")
+                            _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
+                                copySolution solution (essenceDir
+                                                        </> intercalate "-" [ essenceBasename
+                                                                            , paramBasename
+                                                                            , paddedNum 6 '0' i
+                                                                            ]
+                                                        <.> ".solution")
+
     liftIO stopGlobalPool
 
     where
