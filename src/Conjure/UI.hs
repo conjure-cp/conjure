@@ -1080,10 +1080,10 @@ ui = modes
            &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
                                , "Release version " ++ showVersion version
                                , "Repository version " ++ repositoryVersion
-                               , ""
-                               , "The command line interface of Conjure takes a command name as the first argument \
-                                 \followed by more arguments depending on the command.\n\
-                                 \This help text gives a list of the available commands.\n\
-                                 \For details of a specific command, pass the --help flag after the command name.\n\
-                                 \For example: 'conjure translate-solution --help'"
                                ])
+           &= help "The command line interface of Conjure takes a command name as the first argument \
+                   \followed by more arguments depending on the command.\n\
+                   \This help text gives a list of the available commands.\n\
+                   \For details of a specific command, pass the --help flag after the command name.\n\
+                   \For example: 'conjure translate-solution --help'"
+
