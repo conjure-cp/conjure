@@ -178,7 +178,7 @@ mainWithArgs config@Solve{..} = do
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
             else do
                 savedHashes <- do
-                    mfile <- liftIO $ readFileIfExists (outputDirectory </> "conjure.hashes")
+                    mfile <- liftIO $ readFileIfExists (outputDirectory </> ".conjure-checksum")
                     case mfile of
                         Nothing -> return []
                         Just file -> return (lines file)
@@ -211,7 +211,7 @@ mainWithArgs config@Solve{..} = do
                         savedHashes
                         (pp logLevel "Using cached models." >> getEprimes)
                         conjuring
-                liftIO $ writeFile (outputDirectory </> "conjure.hashes") (unlines newHashes)
+                liftIO $ writeFile (outputDirectory </> ".conjure-checksum") (unlines newHashes)
                 return eprimes
 
     eprimesParsed <- forM eprimes $ \ f -> do
