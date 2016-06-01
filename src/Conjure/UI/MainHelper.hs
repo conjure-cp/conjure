@@ -31,6 +31,7 @@ import Conjure.Language.NameResolution ( resolveNamesMulti )
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
+import Data.Char ( isDigit )
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
@@ -154,6 +155,10 @@ mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat"]) $
         userErr1 ("Unsupported solver:" <+> pretty solver)
+    unless (nbSolutions == "all" || all isDigit nbSolutions) $
+        userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
+                       , "Was given:" <+> pretty nbSolutions
+                       ])
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readModelFromFile f
@@ -229,53 +234,54 @@ mainWithArgs config@Solve{..} = do
         Left msg        -> userErr msg
         Right solutions -> do
             when validateSolutionsOpt $ liftIO $ validating solutions
-            -- clean-up: move the solutions next to the essence file.
-            -- our intention is that a user intending to just solve something
-            -- should never have to look into outputDirectory.
-            let
-                copySolution :: MonadIO m => FilePath -> FilePath -> m ()
-                copySolution old new = do
-                    pp logLevel ("Copying solution to:" <+> pretty new)
-                    liftIO (copyFile old new)
-            let (essenceDir, essenceFilename) = splitFileName essence
-            let essenceBasename = takeBaseName essenceFilename
-            when (length eprimes == 1) $
-                if null essenceParams
-                    then do
-                        let solutions' = [ solution
-                                         | (_, _, solution) <- solutions ]
-                        case solutions' of
-                            [solution] ->
-                                copySolution solution (essenceDir
-                                                        </> intercalate "-" [ essenceBasename
-                                                                            ]
-                                                        <.> ".solution")
-                            _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                copySolution solution (essenceDir
-                                                        </> intercalate "-" [ essenceBasename
-                                                                            , paddedNum 6 '0' i
-                                                                            ]
-                                                        <.> ".solution")
-                    else forM_ essenceParams $ \ essenceParam -> do
-                        let (_paramDir, paramFilename) = splitFileName essenceParam
-                        let paramBasename = takeBaseName paramFilename
-                        let solutions' = [ solution
-                                         | (_, essenceParam', solution) <- solutions
-                                         , essenceParam == essenceParam' ]
-                        case solutions' of
-                            [solution] ->
-                                copySolution solution (essenceDir
-                                                        </> intercalate "-" [ essenceBasename
-                                                                            , paramBasename
-                                                                            ]
-                                                        <.> ".solution")
-                            _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
-                                copySolution solution (essenceDir
-                                                        </> intercalate "-" [ essenceBasename
-                                                                            , paramBasename
-                                                                            , paddedNum 6 '0' i
-                                                                            ]
-                                                        <.> ".solution")
+            when copySolutions $ do
+                -- clean-up: move the solutions next to the essence file.
+                -- our intention is that a user intending to just solve something
+                -- should never have to look into outputDirectory.
+                let
+                    copySolution :: MonadIO m => FilePath -> FilePath -> m ()
+                    copySolution old new = do
+                        pp logLevel ("Copying solution to:" <+> pretty new)
+                        liftIO (copyFile old new)
+                let (essenceDir, essenceFilename) = splitFileName essence
+                let essenceBasename = takeBaseName essenceFilename
+                when (length eprimes == 1) $
+                    if null essenceParams
+                        then do
+                            let solutions' = [ solution
+                                             | (_, _, solution) <- solutions ]
+                            case solutions' of
+                                [solution] ->
+                                    copySolution solution (essenceDir
+                                                            </> intercalate "-" [ essenceBasename
+                                                                                ]
+                                                            <.> ".solution")
+                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
+                                    copySolution solution (essenceDir
+                                                            </> intercalate "-" [ essenceBasename
+                                                                                , paddedNum 6 '0' i
+                                                                                ]
+                                                            <.> ".solution")
+                        else forM_ essenceParams $ \ essenceParam -> do
+                            let (_paramDir, paramFilename) = splitFileName essenceParam
+                            let paramBasename = takeBaseName paramFilename
+                            let solutions' = [ solution
+                                             | (_, essenceParam', solution) <- solutions
+                                             , essenceParam == essenceParam' ]
+                            case solutions' of
+                                [solution] ->
+                                    copySolution solution (essenceDir
+                                                            </> intercalate "-" [ essenceBasename
+                                                                                , paramBasename
+                                                                                ]
+                                                            <.> ".solution")
+                                _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
+                                    copySolution solution (essenceDir
+                                                            </> intercalate "-" [ essenceBasename
+                                                                                , paramBasename
+                                                                                , paddedNum 6 '0' i
+                                                                                ]
+                                                            <.> ".solution")
 
     liftIO stopGlobalPool
 
@@ -400,6 +406,10 @@ srMkArgs Solve{..} outBase modelPath =
     , "-run-solver"
     , "-solutions-to-stdout-one-line"
     ] ++
+    ( if nbSolutions == "all"
+        then ["-all-solutions"]
+        else ["-num-solutions", stringToText nbSolutions]
+    ) ++
     ( case solver of
         "minion"    -> [ "-minion" ]
         "lingeling" -> [ "-sat"

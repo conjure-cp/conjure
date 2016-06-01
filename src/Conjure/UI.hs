@@ -114,6 +114,8 @@ data UI
         , savilerowOptions           :: String
         , solverOptions              :: String
         , solver                     :: String
+        , nbSolutions                :: String              -- a number, or "all". by default 1
+        , copySolutions              :: Bool
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
@@ -777,7 +779,7 @@ ui = modes
             &= groupname "Options for other tools"
             &= explicit
             &= help "Options to be passed to Savile Row.\n\
-                    \By default: '-O2'"
+                    \Default: '-O2'"
         , solverOptions
             = def
             &= name "solver-options"
@@ -792,6 +794,21 @@ ui = modes
             &= help "Backend solver to use.\n\
                     \Possible values: minion/lingeling/minisat\n\
                     \Default: minion"
+        , nbSolutions
+            = "1"
+            &= name "number-of-solutions"
+            &= groupname "General"
+            &= explicit
+            &= help "Number of solutions to find.\n\
+                    \Pass the string \"all\" to enumerate all solutions.\n\
+                    \Default: 1"
+        , copySolutions
+            = True
+            &= name "copy-solutions"
+            &= groupname "General"
+            &= explicit
+            &= help "Whether to place a copy of solution(s) next to the Essence file or not.\n\
+                    \Default: on"
         , outputFormat
             = def
             &= name "output-format"
