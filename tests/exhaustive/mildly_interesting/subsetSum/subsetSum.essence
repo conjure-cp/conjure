@@ -4,5 +4,5 @@ $ https://en.wikipedia.org/wiki/Subset_sum_problem
 
 given s : int
 given nums : set of int
-find x : set (minSize 1, maxSize |nums|) of int(min(nums)..max(nums))
+find x : set (minSize 1, maxSize |nums|) of int([ i | i <- nums])
 such that x subsetEq nums, s = sum i in x . i
