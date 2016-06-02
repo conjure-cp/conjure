@@ -243,7 +243,8 @@ mainWithArgs config@Solve{..} = do
                     copySolution old new = do
                         pp logLevel ("Copying solution to:" <+> pretty new)
                         liftIO (copyFile old new)
-                let (essenceDir, essenceFilename) = splitFileName essence
+                let (essenceDir0, essenceFilename) = splitFileName essence
+                let essenceDir = if essenceDir0 == "./" then "" else essenceDir0
                 let essenceBasename = takeBaseName essenceFilename
                 when (length eprimes == 1) $
                     if null essenceParams
