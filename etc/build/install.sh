@@ -260,6 +260,11 @@ else
     DYNAMIC=""
 fi
 
+case "${GHC_VERSION}" in
+    7*) WARNINGOFF="" ;;
+    *)  WARNINGOFF="--ghc-options \"-Wno-redundant-constraints\"" ;;
+esac
+
 if [ ${GHC_VERSION} = "head" ] ; then
     rm -f cabal.config
 elif [ -f cabal.config-${GHC_VERSION} ]; then
@@ -281,6 +286,7 @@ cabal install                                                           \
 
 cabal configure                                                         \
     --enable-split-objs                                                 \
+    ${WARNINGOFF}                                                       \
     ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
     --bindir="${BIN_DIR}"
 
