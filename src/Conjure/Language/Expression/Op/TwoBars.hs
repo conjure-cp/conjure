@@ -5,6 +5,7 @@ module Conjure.Language.Expression.Op.TwoBars where
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
 import Conjure.Language.DomainSizeOf
+import Conjure.Language.NameGen ( runNameGen)
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -24,6 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
         ty <- typeOf a
         case ty of
             TypeInt{}       -> return ()
+            TypeList{}      -> return ()
             TypeSet{}       -> return ()
             TypeMSet{}      -> return ()
             TypeFunction{}  -> return ()
@@ -40,17 +42,17 @@ instance EvaluateOp OpTwoBars where
             ConstantInt y                      -> return $ ConstantInt $ abs y
 
             -- cardinality of a constant
-            (viewConstantSet       -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            (viewConstantMSet      -> Just xs) -> return $ ConstantInt $ genericLength                xs
-            (viewConstantFunction  -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            (viewConstantSequence  -> Just xs) -> return $ ConstantInt $ genericLength                xs
-            (viewConstantRelation  -> Just xs) -> return $ ConstantInt $ genericLength $ nub          xs
-            (viewConstantPartition -> Just xs) -> return $ ConstantInt $ genericLength $ nub $ concat xs
+            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt $ genericLength                xs
+            (viewConstantSet       -> Just xs)      -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt $ genericLength                xs
+            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt $ genericLength                xs
+            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt $ genericLength $ nub          xs
+            (viewConstantPartition -> Just xs)      -> return $ ConstantInt $ genericLength $ nub $ concat xs
 
             -- cardinality of a domain
             DomainInConstant (DomainInt rs)    -> ConstantInt . genericLength <$> rangesInts rs
-            DomainInConstant dom               -> domainSizeOf dom
-
+            DomainInConstant dom               -> runNameGen $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 instance SimplifyOp OpTwoBars x where
