@@ -111,8 +111,8 @@ data UI
         , limitTime                  :: Maybe Int
         , useExistingModels          :: [FilePath]          -- [] by default, which means generate models
         -- flags for SR and Minion/Lingeling
-        , savilerowOptions           :: String
-        , solverOptions              :: String
+        , savilerowOptions           :: [String]
+        , solverOptions              :: [String]
         , solver                     :: String
         , nbSolutions                :: String              -- a number, or "all". by default 1
         , copySolutions              :: Bool
@@ -774,12 +774,11 @@ ui = modes
             &= help "Takes paths of Essence' models generated beforehand.\n\
                     \If given, Conjure will skip the modelling phase and use the existing models for solving."
         , savilerowOptions
-            = "-O2"
+            = def
             &= name "savilerow-options"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Options to be passed to Savile Row.\n\
-                    \Default: '-O2'"
+            &= help "Options to be passed to Savile Row."
         , solverOptions
             = def
             &= name "solver-options"

@@ -420,8 +420,8 @@ srMkArgs Solve{..} outBase modelPath =
                        , "-sat-family", "minisat"
                        ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
-    ) ++ map stringToText (words savilerowOptions)
-      ++ if null solverOptions then [] else [ "-solver-options", stringToText solverOptions ]
+    ) ++ map stringToText savilerowOptions
+      ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords solverOptions) ]
 srMkArgs _ _ _ = bug "srMkArgs"
 
 

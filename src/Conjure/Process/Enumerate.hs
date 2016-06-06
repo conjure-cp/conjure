@@ -118,12 +118,12 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             { UI.essence                    = essenceFile
             , validateSolutionsOpt          = False
             , outputDirectory               = outDir
-            , savilerowOptions              = unwords
+            , savilerowOptions              =
                 [ "-O0"
                 , "-preprocess"    , "None"
                 , "-timelimit"     , show savilerowTimelimit
                 ]
-            , solverOptions                 = unwords
+            , solverOptions                 =
                 [ "-cpulimit"      , show minionTimelimit
                 ]
             , solver                        = "minion"
