@@ -72,7 +72,7 @@ rule_SubsetEq = "set-subsetEq" `namedRule` theRule where
             ( "Horizontal rule for set subsetEq"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| forAll &iPat in (&x) . &i in &y |]
+                 return [essence| forAll &iPat in &x . &i in &y |]
             )
 
 
