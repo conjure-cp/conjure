@@ -17,9 +17,13 @@ freeze:
 
 .PHONY: refreeze
 refreeze:
-	rm -rf cabal.sandbox.config cabal.config* dist .cabal-sandbox
-	BUILD_TESTS=yes make
-	make freeze
+	@make clean
+	@BUILD_TESTS=yes make install
+	@make freeze
+
+.PHONY: clean
+clean:
+	@bash etc/build/clean.sh
 
 .PHONY: ghci
 ghci:
@@ -57,11 +61,6 @@ hlint:
 	    -i "Use ++" \
 	    -i "Redundant return" \
 	    -i "Monad law, left identity"
-
-.PHONY: clean
-clean:
-	@bash etc/build/clean.sh
-
 
 .PHONY: runtests_quick
 runtests_quick:
