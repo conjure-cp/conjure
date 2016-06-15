@@ -22,7 +22,7 @@ set -o errexit
 set -o nounset
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
-source ${SCRIPT_DIR}/default_envvars.sh
+source "${SCRIPT_DIR}"/default_envvars.sh
 
 CABAL_VERSION="1.24.0.0"
 HAPPY_VERSION="1.19.5"
