@@ -39,6 +39,8 @@ class BNFLexer(RegexLexer):
 
             (r'(:=|\||\*|\(|\))', Operator),
 
+            (r'#.*?$', Comment.Singleline),
+
             # Strings
             (r"'", String.Char, 'character'),
             (r'"', String, 'string'),

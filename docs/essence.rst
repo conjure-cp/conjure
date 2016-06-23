@@ -14,9 +14,12 @@ This section gives a description of Essence, a more thorough description can be 
 is :cite:`frisch2008essence`.
 
 We will adopt a BNF-style format to describe all the constructs of the language.
-In the BNF format, we use double-quotes for terminal strings, and we use a ``list`` construct to indicate a list of syntax elements.
+In the BNF format,
+we use the "#" character to denote comments,
+we use double-quotes for terminal strings,
+and we use a ``list`` construct to indicate a list of syntax elements.
 
-``list`` has two variants:
+The ``list`` construct has two variants:
 
 1. First variant takes two arguments where the first argument is the syntax of the items of the list and second argument is the item separator.
 2. Second variant takes an additional third argument which indicates the surrounding bracket for the list. The third argument can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
