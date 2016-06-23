@@ -13,7 +13,7 @@ Conjure works on problem specifications written in Essence.
 This section gives a description of Essence, a more thorough description can be found in the reference paper on Essence
 is :cite:`frisch2008essence`.
 
-We  adopt a BNF-style format to describe all the constructs of the language.
+We adopt a BNF-style format to describe all the constructs of the language.
 In the BNF format,
 we use the "#" character to denote comments,
 we use double-quotes for terminal strings,
@@ -130,8 +130,8 @@ Enumerated types can be declared in two ways: using a given-enum syntax or using
 
 The given-enum syntax defers the specification of actual values of the enumerated type until instantiation.
 With this syntax, an enumerated type can be declared by only giving its name in the problem specification file.
-In a parameter file the actual values that will be the members of this type can be given.
-This will allow Conjure to produce a model independent of the values of the enumerated type and only substitute the actual values during parameter instantiation.
+In a parameter file, values for the actual members of this type can be given.
+This allows Conjure to produce a model independent of the values of the enumerated type and only substitute the actual values during parameter instantiation.
 
 The letting-enum syntax can be used to declare an enumerated type directly in a problem specification as well.
 
@@ -174,8 +174,8 @@ Essence is a high level problem specification language and typically it doesn't 
 In fact the reference paper on Essence (:cite:`frisch2008essence`) does not include these search directives at all.
 
 For pragmatic reasons we support adding search directives in the form of a branching-on statement, which takes a list of either variable names or expressions.
-Decision variables in a branching-on statement will be searched using a static value ordering.
-Expressions can be used to introduce *cuts*; the model produced by Conjure will search for solutions satisfying the cut constraints first, and only after that will proceed to searching the rest of the search space.
+Decision variables in a branching-on statement are searched using a static value ordering.
+Expressions can be used to introduce *cuts*; in which case when solving the model produced by Conjure, the solver is instructed to search for solutions satisfying the cut constraints first, and proceed to searching the rest of the search space later.
 
 A problem specification can contain at most one branching-on statement.
 
@@ -189,7 +189,7 @@ Instantiation conditions
 
 Where statements are syntactically similar to constraints, however they cannot refer to decision variables.
 They can be used to post conditions on the parameters of the problem specification.
-These conditions will be checked during parameter instantiation.
+These conditions are checked during parameter instantiation.
 
 
 Constraints
@@ -265,10 +265,10 @@ An integer domain is denoted by the keyword "int", followed by a list of integer
 The list of ranges is optional, if omitted the integer domain denotes the infinite domain of all integers.
 
 An integer range is either a single integer, or a list of sequential integers with a given lower and upper bound.
-The bounds can be omitted to create an open range, but note that using open ranges inside an integer domain declaration will create an infinite domain.
+The bounds can be omitted to create an open range, but note that using open ranges inside an integer domain declaration creates an infinite domain.
 
 Integer domains can also be constructed using a single set expression inside the round brackets, instead of a list of ranges.
-The integer domain will contain all members of the set in this case.
+The integer domain contains all members of the set in this case.
 Note that the set expression cannot contain references to decision variables if this syntax is used.
 
 Enumerated domains
@@ -280,7 +280,7 @@ An enumerated domain is denoted by using the name of the enumerated type, follow
 The list of ranges is optional, if omitted the enumerated domain denotes the finite domain containing all values of the enumerated type.
 
 A range is either a single value (member of the enumerated type), or a list of sequential values with a given lower and upper bound.
-The bounds can be omitted to create an open range, when an open range is used the omitted bound will be the same as the corresponding bound of the enumerated type.
+The bounds can be omitted to create an open range, when an open range is used the omitted bound is considered to be the same as the corresponding bound of the enumerated type.
 
 Unnamed domains
 ~~~~~~~~~~~~~~~
@@ -288,7 +288,7 @@ Unnamed domains
 Unnamed types are declared using the syntax given in `Declaring unname types`_.
 
 An unnamed domain is denoted by using the name of the unnamed type.
-It does not take a list of ranges to limit the values in the domain, an unnamed domain will always contain all values in the corresponding unnamed type.
+It does not take a list of ranges to limit the values in the domain, an unnamed domain always contains all values in the corresponding unnamed type.
 
 
 
