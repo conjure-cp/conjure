@@ -247,6 +247,8 @@ Domains
            | ".." Expression
            | Expression ".." Expression
 
+    NameDomain := Name ":" Domain
+
 Essence contains a rich selection of domain constructors, which can be used in an arbitrarily nested fashion to create domains for problem parameters, decision variables, quantified expressions and comprehensions.
 Quantified expressions and comprehensions are explained under `Expressions`_.
 
@@ -290,17 +292,70 @@ Unnamed types are declared using the syntax given in `Declaring unname types`_.
 An unnamed domain is denoted by using the name of the unnamed type.
 It does not take a list of ranges to limit the values in the domain, an unnamed domain always contains all values in the corresponding unnamed type.
 
+Tuple domains
+~~~~~~~~~~~~~
 
+Tuple is a domain constructor, it takes a list of domains as arguments.
+Tuples can be of arbitrary arity.
 
+A tuple domain is denoted by the keyword "tuple" followed by a list of domains separated by commas inside round brackets.
+The keyword "tuple" is optional for tuples of arity greater or equal to 2.
+
+When needed, domains inside a tuple are referred to using their positions.
+In an n-arity tuple, the position of the first domain is 1, and the position of the last domain is n.
+
+Record domains
+~~~~~~~~~~~~~~
+
+Record is a domain constructor, it takes a list of name-domain pairs as arguments.
+Records can be of arbitrary arity.
+
+A record domain is denoted by the keyword "record" followed by a list of name-domain pairs separated by commas inside curly brackets.
+
+Records are very similar to tuples; except they use labels for their components instead of positions.
+When needed, domains inside a record are referred to using their labels.
+
+Variant domains
+~~~~~~~~~~~~~~~
+
+Variant is a domain constructor, it takes a list of name-domain pairs as arguments.
+Variants can be of arbitrary arity.
+
+A variant domain is denoted by the keyword "variant" followed by a list of name-domain pairs separated by commas inside curly brackets.
+
+Variants are similar to records but with a very important distinction.
+A member of a record domain contains a value for each component of the record, however
+a member of a variant domain contains a value for only one of the components of the variant.
+
+Variant domains are similar to `tagged unions <http://en.wikipedia.org/wiki/Tagged_union>`_ in other programming languages.
+
+Matrix domains
+~~~~~~~~~~~~~~
+
+Matrix is a domain constructor, it takes a list of domains for its indices and a domain for the entries of the matrix.
+Matrices can be of arbitrary dimensionality (greater than 0).
+
+A matrix domain is denoted by the keywords "matrix indexed by",
+followed by a list of domains separated by commas inside square brackets,
+followed by the keyword "of", and another domain.
+
+Matrix domains are the most basic container-like domains in Essence.
+They are used when the decision variable or the problem parameter does not have any further relevant structure.
+In most problem specifications in Essence, using another kind of domain is more appropriate.
 
 
 (In preparation)
 
 
-Espressions
+Expressions
 -----------
 
 (In preparation)
+
+Matrix indexing
+
+Tuple indexing
+
 
 
 
