@@ -13,7 +13,7 @@ Conjure works on problem specifications written in Essence.
 This section gives a description of Essence, a more thorough description can be found in the reference paper on Essence
 is :cite:`frisch2008essence`.
 
-We will adopt a BNF-style format to describe all the constructs of the language.
+We  adopt a BNF-style format to describe all the constructs of the language.
 In the BNF format,
 we use the "#" character to denote comments,
 we use double-quotes for terminal strings,
@@ -227,9 +227,10 @@ Domains
 .. code-block:: bnf
 
     Domain := "bool"
-            | "int" list(Expression, ",", "()")
-            | *(enumerated)* Name list(Expression, ",", "()")
-            | *(unnamed)* Name
+            | "int" list(Range, ",", "()")
+            | "int" "(" Expression ")"
+            | Name list(Range, ",", "()") # the Name refers to an enumerated type
+            | Name                        # the Name refers to an unnamed type
             | "tuple" list(Domain, ",", "()")
             | "record" list(NameDomain, ",", "{}")
             | "variant" list(NameDomain, ",", "{}")
@@ -240,6 +241,55 @@ Domains
             | "sequence" list(Attribute, ",", "()") "of" Domain
             | "relation" list(Attribute, ",", "()") "of" list(Domain, "*", "()")
             | "partition" list(Attribute, ",", "()") "from" Domain
+
+    Range := Expression
+           | Expression ".."
+           | ".." Expression
+           | Expression ".." Expression
+
+Essence contains a rich selection of domain constructors, which can be used in an arbitrarily nested fashion to create domains for problem parameters, decision variables, quantified expressions and comprehensions.
+Quantified expressions and comprehensions are explained under `Expressions`_.
+
+Domains can be finite or infinite, but infinite domains can only be used when declaring of problem parameters.
+The domains for both decision variables and quantified variables have to be finite.
+
+Boolean domains
+~~~~~~~~~~~~~~~
+
+A Boolean domain is denoted with the keyword "bool", and has two values: "false" and "true".
+
+Integer domains
+~~~~~~~~~~~~~~~
+
+An integer domain is denoted by the keyword "int", followed by a list of integer ranges inside round brackets.
+The list of ranges is optional, if omitted the integer domain denotes the infinite domain of all integers.
+
+An integer range is either a single integer, or a list of sequential integers with a given lower and upper bound.
+The bounds can be omitted to create an open range, but note that using open ranges inside an integer domain declaration will create an infinite domain.
+
+Integer domains can also be constructed using a single set expression inside the round brackets, instead of a list of ranges.
+The integer domain will contain all members of the set in this case.
+Note that the set expression cannot contain references to decision variables if this syntax is used.
+
+Enumerated domains
+~~~~~~~~~~~~~~~~~~
+
+Enumerated types are declared using the syntax given in `Declaring enumerated types`_.
+
+An enumerated domain is denoted by using the name of the enumerated type, followed by a list of ranges inside round brackets.
+The list of ranges is optional, if omitted the enumerated domain denotes the finite domain containing all values of the enumerated type.
+
+A range is either a single value (member of the enumerated type), or a list of sequential values with a given lower and upper bound.
+The bounds can be omitted to create an open range, when an open range is used the omitted bound will be the same as the corresponding bound of the enumerated type.
+
+Unnamed domains
+~~~~~~~~~~~~~~~
+
+Unnamed types are declared using the syntax given in `Declaring unname types`_.
+
+An unnamed domain is denoted by using the name of the unnamed type.
+It does not take a list of ranges to limit the values in the domain, an unnamed domain will always contain all values in the corresponding unnamed type.
+
 
 
 
