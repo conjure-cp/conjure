@@ -471,6 +471,9 @@ In the expression language of Essence, each operator has a typing rules associat
 These typing rules are used to both type check expression fragments and to calculate the types of resulting expressions.
 
 For example, the arithmetic operator "+" requires two arguments both of which are integers, and the resulting expression is also an integer.
+So if ``a``, and ``b`` are integers ``a + b`` is also an integer.
+Conjure gives a type error otherwise.
+
 
 Using these typing rules every Essence expression can be checked for type correctness statically.
 
