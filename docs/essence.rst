@@ -21,8 +21,8 @@ and we use a ``list`` construct to indicate a list of syntax elements.
 
 The ``list`` construct has two variants:
 
-1. First variant takes two arguments where the first argument is the syntax of the items of the list and second argument is the item separator.
-2. Second variant takes an additional third argument which indicates the surrounding bracket for the list. The third argument can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
+#. First variant takes two arguments where the first argument is the syntax of the items of the list and second argument is the item separator.
+#. Second variant takes an additional third argument which indicates the surrounding bracket for the list. The third argument can be one of round brackets (``()``), curly brackets (``{}``), or square brackets (``[]``).
 
 Problem Specification
 ---------------------
@@ -247,13 +247,26 @@ Domains
            | ".." Expression
            | Expression ".." Expression
 
+    Attribute := Name
+               | Name Expression
+
     NameDomain := Name ":" Domain
+
 
 Essence contains a rich selection of domain constructors, which can be used in an arbitrarily nested fashion to create domains for problem parameters, decision variables, quantified expressions and comprehensions.
 Quantified expressions and comprehensions are explained under `Expressions`_.
 
 Domains can be finite or infinite, but infinite domains can only be used when declaring of problem parameters.
 The domains for both decision variables and quantified variables have to be finite.
+
+Some kinds of domains can take an optional list of attributes.
+An attribute is either a label or a label with an associated value.
+Different kinds of domains take different attributes.
+
+Multiple attributes can be used in a single domain.
+Using contradicting values for the attribute values may result in an empty domain.
+
+In the following, each kind of domain is described in a subsection of its own.
 
 Boolean domains
 ~~~~~~~~~~~~~~~
@@ -298,7 +311,7 @@ Tuple domains
 Tuple is a domain constructor, it takes a list of domains as arguments.
 Tuples can be of arbitrary arity.
 
-A tuple domain is denoted by the keyword "tuple" followed by a list of domains separated by commas inside round brackets.
+A tuple domain is denoted by the keyword "tuple", followed by a list of domains separated by commas inside round brackets.
 The keyword "tuple" is optional for tuples of arity greater or equal to 2.
 
 When needed, domains inside a tuple are referred to using their positions.
@@ -310,7 +323,7 @@ Record domains
 Record is a domain constructor, it takes a list of name-domain pairs as arguments.
 Records can be of arbitrary arity.
 
-A record domain is denoted by the keyword "record" followed by a list of name-domain pairs separated by commas inside curly brackets.
+A record domain is denoted by the keyword "record", followed by a list of name-domain pairs separated by commas inside curly brackets.
 
 Records are very similar to tuples; except they use labels for their components instead of positions.
 When needed, domains inside a record are referred to using their labels.
@@ -321,7 +334,7 @@ Variant domains
 Variant is a domain constructor, it takes a list of name-domain pairs as arguments.
 Variants can be of arbitrary arity.
 
-A variant domain is denoted by the keyword "variant" followed by a list of name-domain pairs separated by commas inside curly brackets.
+A variant domain is denoted by the keyword "variant", followed by a list of name-domain pairs separated by commas inside curly brackets.
 
 Variants are similar to records but with a very important distinction.
 A member of a record domain contains a value for each component of the record, however
@@ -341,7 +354,108 @@ followed by the keyword "of", and another domain.
 
 Matrix domains are the most basic container-like domains in Essence.
 They are used when the decision variable or the problem parameter does not have any further relevant structure.
-In most problem specifications in Essence, using another kind of domain is more appropriate.
+Using another kind of domain is more appropriate for most problem specifications in Essence.
+
+Set domains
+~~~~~~~~~~~
+
+Set is a domain constructor, it takes a domain as argument denoting the domain of the members of the set.
+
+A set domain is denoted by the keyword "set",
+followed by an optional comma separated list of set attributes,
+followed by the keyword "of", and the domain for members of the set.
+
+Set attributes are all related to cardinality: "size", "minSize", and "maxSize".
+
+Multi-set domains
+~~~~~~~~~~~~~~~~~
+
+Multi-set is a domain constructor, it takes a domain as argument denoting the domain of the members of the multi-set.
+
+A multi-set domain is denoted by the keyword "mset",
+followed by an optional comma separated list of multi-set attributes,
+followed by the keyword "of", and the domain for members of the multi-set.
+
+There are two groups of multi-set attributes:
+
+#. Related to cardinality: "size", "minSize", and "maxSize".
+#. Related to number of occurrences of values in the multi-set: "minOccur", and "maxOccur".
+
+Since a multi-set domain is infinite without a "size", "maxSize", or "maxOccur" attribute, one of these attributes is mandatory to define a finite domain.
+
+Function domains
+~~~~~~~~~~~~~~~~
+
+Function is a domain constructor, it takes two domains as arguments denoting the *defined* and the *range* sets of the function.
+It is important to take note that we are using *defined* to mean the domain of the function, and *range* to mean the codomain.
+
+A function domain is denoted by the keyword "function",
+followed by an optional comma separated list of function attributes,
+followed by the two domains separated by an arrow symbol: "-->".
+
+There are three groups of function attributes:
+
+#. Related to cardinality: "size", "minSize", and "maxSize".
+#. Related to function properties: "injective", "surjective", and "bijective".
+#. Related to partiality: "total".
+
+Cardinality attributes take arguments, but the rest of the arguments do not.
+Function domains are partial by default, and using the "total" attribute makes them total.
+
+Sequence domains
+~~~~~~~~~~~~~~~~
+
+Sequence is a domain constructor, it takes a domain as argument denoting the domain of the members of the sequence.
+
+A sequence is denoted by the keyword "sequence",
+followed by an optional comma separated list of sequence attributes,
+followed by the keyword "of", and the domain for members of the sequence.
+
+There are 2 groups of sequence attributes:
+
+#. Related to cardinality: "size", "minSize", and "maxSize".
+#. Related to function-like properties: "injective", "surjective", and "bijective".
+
+Cardinality attributes take arguments, but the rest of the arguments do not.
+Sequence domains are total by default, hence they do not take a separate "total" attribute.
+
+Relation domains
+~~~~~~~~~~~~~~~~
+
+Relation is a domain constructor, it takes a list of domains as arguments.
+Relations can be of arbitrary arity.
+
+A relation domain is denoted by the keyword "relation",
+followed by an optional comma separated list of relation attributes,
+followed by the keyword "of", and a list of domains separated by the "*" symbol inside round brackets.
+
+There are 2 groups of relation attributes:
+
+#. Related to cardinality: "size", "minSize", and "maxSize".
+#. Binary relation attributes: "reflexive", "irreflexive", "coreflexive"
+                             , "symmetric" , "antiSymmetric" , "aSymmetric"
+                             , "transitive", "total", "connex", "Euclidean", "serial", "equivalence", "partialOrder".
+
+The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
+
+Partition domains
+~~~~~~~~~~~~~~~~~
+
+Partition is a domain constructor, it takes a domain as an argument denoting the members in the partition.
+
+A partition is denoted by the keyword "partition",
+followed by an optional comma separated list of partition attributes,
+followed by the keyword "from", and the domain for the members in the partition.
+
+There are N groups of partition attributes:
+
+#. Related to the number of parts in the partition: "numParts", "minNumParts", and "maxNumParts".
+#. Related to the cardinality of each part in the partition: "partSize", "minPartSize", and "maxPartSize".
+#. Partition properties: "regular".
+
+The first and second groups of attributes are related to number of parts and cardinalities of each part in the partition.
+The "regular" attribute forces each part to be of the same cardinality without specifying the actual number of parts or cardinalities of each part.
+
 
 
 (In preparation)
