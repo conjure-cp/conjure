@@ -470,7 +470,6 @@ parseSequenceAttr = do
     checkExtraAttributes pos "sequence" attrs
         [ "size", "minSize", "maxSize"
         , "injective", "surjective", "bijective"
-        , "total"
         ]
     size <- case filterSizey attrs of
         [DANameValue "size"    a] -> return (SizeAttr_Size a)
