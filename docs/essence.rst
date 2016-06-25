@@ -456,6 +456,24 @@ There are N groups of partition attributes:
 The first and second groups of attributes are related to number of parts and cardinalities of each part in the partition.
 The "regular" attribute forces each part to be of the same cardinality without specifying the actual number of parts or cardinalities of each part.
 
+Types
+-----
+
+Essence is a statically typed language.
+A declaration -- whether it is a decision variable, a problem parameter or a quantified variable -- has an associated domain.
+From its domain, a type can be calculated.
+
+A type is obtained from a domain by
+removing attributes (from set, multi-set, function, sequence, relation, and partition domains),
+and removing bounds (from integer and enumerated domains).
+
+In the expression language of Essence, each operator has a typing rules associated with it.
+These typing rules are used to both type check expression fragments and to calculate the types of resulting expressions.
+
+For example, the arithmetic operator "+" requires two arguments both of which are integers, and the resulting expression is also an integer.
+
+Using these typing rules every Essence expression can be checked for type correctness statically.
+
 
 
 (In preparation)
