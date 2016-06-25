@@ -221,3 +221,6 @@ conjure-help:
 	@conjure --help=all,html | grep -v "Release version" | grep -v "Repository version" >> conjure-help.html
 	@echo "</div>"                                                                      >> conjure-help.html
 	@echo "<br />"                                                                      >> conjure-help.html
+
+auto-html:
+	watchmedo shell-command --patterns="*.rst" --ignore-pattern='_build/*' --recursive --command='make html'
