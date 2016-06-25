@@ -247,7 +247,8 @@ Library
                      , random
                      , safe
                      , scientific
-                     , shelly >= 1.6.6
+                     -- 1.6.7, because of the stderr handling fix
+                     , shelly >= 1.6.7
                      , split
                      , stm
                      , strict
