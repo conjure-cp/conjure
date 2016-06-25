@@ -30,6 +30,11 @@ class BNFLexer(RegexLexer):
                 , 'Name'
                 , 'Domain'
                 , 'Expression'
+                , 'Literal'
+                , 'Quantification'
+                , 'Comprehension'
+                , 'Type'
+                , 'Operator'
                 )
 
     tokens = {
