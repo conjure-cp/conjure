@@ -300,7 +300,7 @@ The bounds can be omitted to create an open range, when an open range is used th
 Unnamed domains
 ~~~~~~~~~~~~~~~
 
-Unnamed types are declared using the syntax given in `Declaring unname types`_.
+Unnamed types are declared using the syntax given in `Declaring unnamed types`_.
 
 An unnamed domain is denoted by using the name of the unnamed type.
 It does not take a list of ranges to limit the values in the domain, an unnamed domain always contains all values in the corresponding unnamed type.
