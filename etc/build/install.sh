@@ -267,11 +267,11 @@ esac
 
 if [ ${GHC_VERSION} = "head" ] ; then
     rm -f cabal.config
-elif [ -f cabal.config-${GHC_VERSION} ]; then
-    cp cabal.config-${GHC_VERSION} cabal.config
-    echo "using a cabal freeze file: cabal.config-${GHC_VERSION}"
+elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
+    cp etc/hs-deps/cabal.config-${GHC_VERSION} cabal.config
+    echo "using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION}"
 else
-    echo "not using a cabal freeze file: cabal.config-${GHC_VERSION} not found"
+    echo "not using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION} not found"
 fi
 
 # install conjure, finally

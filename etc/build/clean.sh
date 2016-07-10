@@ -10,7 +10,7 @@ rm -rf dist \
        cabal.sandbox.config .cabal-sandbox \
        src/RepositoryVersion.hs \
        cabal.config \
-       cabal.config-${GHC_VERSION}
+       etc/hs-deps/cabal.config-${GHC_VERSION}
 
 find . -name "*.prof" -delete
 find . -name "*.hi" -delete
