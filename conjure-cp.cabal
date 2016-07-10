@@ -261,6 +261,9 @@ Library
                      , uniplate
                      , unordered-containers
                      , vector
+                     -- we do not directly depend on clock, but we need at least 0.7.2
+                     -- see https://github.com/corsis/clock/issues/35
+                     , clock >= 0.7.2
 
     default-extensions:
         FlexibleContexts
@@ -335,9 +338,6 @@ Test-Suite conjure-testing
                      , tasty-golden >= 2.3
                      , tasty-hunit
                      , text
-                     -- we do not directly depend on clock, but we need at least 0.7.2
-                     -- see https://github.com/corsis/clock/issues/35
-                     , clock >= 0.7.2
     default-extensions:
         NoImplicitPrelude
         OverloadedStrings
