@@ -261,10 +261,14 @@ else
     DYNAMIC=""
 fi
 
-case "${GHC_VERSION}" in
-    7*) WARNINGOFF="" ;;
-    *)  WARNINGOFF="--ghc-options \"-Wno-redundant-constraints\"" ;;
-esac
+WARNINGOFF=""
+SPLIT_OBJS="--enable-split-objs"
+if [[ "${GHC_VERSION}" == 8* ]]; then
+    WARNINGOFF="--ghc-options \"-Wno-redundant-constraints\""
+    if [ "$OS" == "Darwin" ]; then
+        SPLIT_OBJS=""
+    fi
+fi
 
 if [ ${GHC_VERSION} = "head" ] ; then
     rm -f cabal.config
@@ -280,14 +284,14 @@ fi
 cabal install                                                           \
     --only-dependencies                                                 \
     --force-reinstalls                                                  \
-    --enable-split-objs                                                 \
     --reorder-goals --max-backjumps 10000                               \
+    ${SPLIT_OBJS}                                                       \
     ${DYNAMIC} ${PROFILING} ${TESTS} ${DOCS} ${LLVM} ${OPTIMISATION}    \
     --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                         \
-    --enable-split-objs                                                 \
     ${WARNINGOFF}                                                       \
+    ${SPLIT_OBJS}                                                       \
     ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
     --bindir="${BIN_DIR}"
 
