@@ -264,6 +264,10 @@ Library
                      -- we do not directly depend on clock, but we need at least 0.7.2
                      -- see https://github.com/corsis/clock/issues/35
                      , clock >= 0.7.2
+                     -- we do not directly depend on generic-deriving, but we need at least 1.10.6
+                     -- see https://github.com/dreixel/generic-deriving/issues/41
+                     , generic-deriving >= 1.10.6
+
 
     default-extensions:
         FlexibleContexts
