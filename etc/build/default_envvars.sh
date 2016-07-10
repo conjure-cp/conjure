@@ -17,6 +17,7 @@ export RUN_TESTS=${RUN_TESTS:-no}
 export COVERAGE=${COVERAGE:-no}
 export PROFILING=${PROFILING:-no}
 export DYNAMIC=${DYNAMIC:-no}
+export SPLIT_OBJS=${SPLIT_OBJS:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH

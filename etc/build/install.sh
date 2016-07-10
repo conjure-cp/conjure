@@ -81,6 +81,7 @@ echo "RUN_TESTS       : ${RUN_TESTS}"
 echo "COVERAGE        : ${COVERAGE}"
 echo "PROFILING       : ${PROFILING}"
 echo "DYNAMIC         : ${DYNAMIC}"
+echo "SPLIT_OBJS      : ${SPLIT_OBJS}"
 echo "DEVELOPMENT_MODE: ${DEVELOPMENT_MODE}"
 
 # installing gmp
@@ -261,13 +262,15 @@ else
     DYNAMIC=""
 fi
 
+if [ $SPLIT_OBJS = "yes" ]; then
+    SPLIT_OBJS="--enable-split-objs"
+else
+    SPLIT_OBJS=""
+fi
+
 WARNINGOFF=""
-SPLIT_OBJS="--enable-split-objs"
 if [[ "${GHC_VERSION}" == 8* ]]; then
     WARNINGOFF="--ghc-options \"-Wno-redundant-constraints\""
-    if [ "$OS" == "Darwin" ]; then
-        SPLIT_OBJS=""
-    fi
 fi
 
 if [ ${GHC_VERSION} = "head" ] ; then
