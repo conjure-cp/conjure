@@ -243,7 +243,8 @@ Library
                      , parallel-io
                      , pipes
                      , pretty > 1.1.1.1
-                     , QuickCheck
+                     -- >= 2.9 because of the TH fix: https://github.com/nick8325/quickcheck/issues/101
+                     , QuickCheck >= 2.9
                      , random
                      , safe
                      , scientific
