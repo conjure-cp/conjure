@@ -12,6 +12,7 @@ import Conjure.UI.Model
 import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
+import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
 import System.Environment ( getEnvironment )
@@ -268,7 +269,9 @@ validateSolutionNoParam TestDirFiles{..} solutionPaths =
             step (unwords ["Validating solution:", solutionPath])
             fileShouldExist (outputsDir </> solutionPath)
             solution <- readModelFromFile (outputsDir </> solutionPath)
-            result   <- runExceptT $ ignoreLogs $ validateSolution essence def solution
+            result   <- runExceptT $ ignoreLogs $ runNameGen $ do
+                [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
+                validateSolution essence2 param2 solution2
             case result of
                 Left err -> assertFailure $ renderNormal err
                 Right () -> return ()
@@ -285,7 +288,9 @@ validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
                 step (unwords ["Validating solution:", paramPath, solutionPath])
                 fileShouldExist (outputsDir </> solutionPath)
                 solution <- readModelFromFile (outputsDir </> solutionPath)
-                result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essence param solution
+                result   <- runExceptT $ ignoreLogs $ runNameGen $ do
+                    [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
+                    validateSolution essence2 param2 solution2
                 case result of
                     Left err -> assertFailure $ renderNormal err
                     Right () -> return ()

@@ -274,4 +274,6 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
     case mapMaybe (isTheVariant . snd) mval of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
         _ -> userErr1 ("Not a member of a variant type:" <+> pretty p)
-resolveAbsLit lit = descendBiM resolveX lit
+resolveAbsLit lit = (descendBiM resolveX >=> descendBiM resolveD') lit
+    where
+        resolveD' d = resolveD (d :: Domain () Expression)
