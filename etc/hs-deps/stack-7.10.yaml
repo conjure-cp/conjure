@@ -1,6 +1,11 @@
-resolver: lts-6.4
+resolver: lts-6.10
 packages:
 - '.'
-extra-deps: [shelly-1.6.7]
 system-ghc: true
 install-ghc: false
+extra-deps:
+- QuickCheck-2.9.1
+- generic-deriving-1.10.7
+flags:
+  generic-deriving:
+    base-4-9: false

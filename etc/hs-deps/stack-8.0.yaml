@@ -1,6 +1,10 @@
 resolver: nightly-2016-06-21
 packages:
 - '.'
-extra-deps: [megaparsec-4.4.0, shelly-1.6.7]
 system-ghc: true
 install-ghc: false
+extra-deps:
+- QuickCheck-2.9.1
+- generic-deriving-1.10.7
+- megaparsec-4.4.0
+- shelly-1.6.8
