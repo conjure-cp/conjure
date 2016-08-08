@@ -20,7 +20,7 @@ import Conjure.UserError
 import Conjure.UI.IO ( readModelFromFile )
 
 import qualified Data.Aeson as A
-import qualified Data.Aeson.Encode as A
+import qualified Data.Aeson.Text as A
 import qualified Data.ByteString.Lazy as B
 
 import qualified Data.Text as T
