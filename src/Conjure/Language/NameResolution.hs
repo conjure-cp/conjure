@@ -268,7 +268,7 @@ resolveAbsLit
        )
     => AbstractLiteral Expression
     -> m (AbstractLiteral Expression)
-resolveAbsLit p@(AbsLitVariant Nothing n x) = do
+resolveAbsLit (AbsLitVariant Nothing n x) = do
     x'   <- resolveX x
     mval <- gets id
     let
@@ -276,7 +276,7 @@ resolveAbsLit p@(AbsLitVariant Nothing n x) = do
         isTheVariant _ = Nothing
     case mapMaybe (isTheVariant . snd) mval of
         (DomainVariant dom:_) -> return (AbsLitVariant (Just dom) n x')
-        _ -> userErr1 ("Not a member of a variant type:" <+> pretty p)
+        _ -> return (AbsLitVariant Nothing n x')
 resolveAbsLit lit = (descendBiM resolveX >=> descendBiM resolveD') lit
     where
         resolveD' d = resolveD (d :: Domain () Expression)

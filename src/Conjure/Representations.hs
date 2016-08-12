@@ -51,8 +51,6 @@ onConstant x = bug ("downX1.onConstant:" <++> pretty (show x))
 onAbstractLiteral :: (MonadFail m, NameGen m, EnumerateDomain m) => AbstractLiteral Expression -> m [Expression]
 onAbstractLiteral (AbsLitTuple xs) = return xs
 onAbstractLiteral (AbsLitRecord xs) = return (map snd xs)
--- onAbstractLiteral AbsLitVariant{} = fail "onAbstractLiteral, this should be handled differently."
---                                             -- zeroVal doesn't work on `Domain r Expression`s
 onAbstractLiteral (AbsLitVariant (Just t) n x)
     | Just i <- elemIndex n (map fst t)
     , let iExpr = fromInt (fromIntegral (i+1))
