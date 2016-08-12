@@ -281,6 +281,8 @@ validateConstantForDomain name c@(ConstantInt i) d@(DomainInt rs) =
         intInRange _                                              = False
     in  unless (any intInRange rs) (constantNotInDomain name c d)
 
+validateConstantForDomain _ (ConstantInt i) (DomainUnnamed _ (ConstantInt a)) | i >= 1 && i <= a = return ()
+
 validateConstantForDomain _ _ (DomainEnum _ Nothing _) = return ()    -- no restrictions
 validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
     fail $ vcat [ "validateConstantForDomain: enum not handled"

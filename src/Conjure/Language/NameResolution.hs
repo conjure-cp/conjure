@@ -95,7 +95,10 @@ resolveStatement st =
                     x' <- resolveX x
                     modify ((nm, Alias x') :)
                     return (Declaration (Letting nm x'))
-                LettingDomainDefnUnnamed{}  -> return st             -- ignoring
+                LettingDomainDefnUnnamed nm x -> do
+                    x' <- resolveX x
+                    modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
+                    return (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum _ nms -> do
                     modify ( [ (nm, Alias (Constant (ConstantInt i)))
                              | (nm, i) <- zip nms [1..]
