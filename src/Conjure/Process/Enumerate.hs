@@ -91,6 +91,7 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainUnnamed _ (ConstantInt n)) = return (map ConstantInt [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
 enumerateDomain (DomainTuple ds) = do
     inners <- mapM enumerateDomain ds
@@ -158,9 +159,10 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , lineWidth                     = 120
             }
     -- catching the (SR timeout) error, and raising a user error
-    catch solve $ \ (_ :: SomeException) -> userErr1 $ vcat
+    catch solve $ \ (e :: SomeException) -> userErr1 $ vcat
         [ "Enumerate domain: too many."
         , "When working on domain:" <++> pretty d
+        , "Exception:" <++> pretty (show e)
         ]
     solutions   <- filter (".solution" `isSuffixOf`) <$> getDirectoryContents outDir
     when (length solutions >= enumerateDomainMax) $ userErr1 $ vcat
