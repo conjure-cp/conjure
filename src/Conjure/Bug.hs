@@ -24,7 +24,7 @@ bug message = errorWithStackTrace $ unlines
     , ""
     , "Also include the repository version for this build: " ++ repositoryVersion
     , ""
-    , "Issue tracker: http://bitbucket.org/stacs_cp/conjure-public/issues"
+    , "Issue tracker: http://github.com/conjure-cp/conjure/issues"
     , "", "" , renderNormal message
     ]
 
