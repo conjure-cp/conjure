@@ -187,43 +187,33 @@ mainWithArgs config@Solve{..} = do
                 if null missingModels
                     then return useExistingModels
                     else userErr1 $ "Models not found:" <+> vcat (map pretty missingModels)
-            else do
-                savedHashes <- do
-                    mfile <- liftIO $ readFileIfExists (outputDirectory </> ".conjure-checksum")
-                    case mfile of
-                        Nothing -> return []
-                        Just file -> return (lines file)
-                -- start the show!
-                (eprimes, newHashes) <- runWriterT $
-                    doIfNotCached
-                        ( sort (mStatements essenceM)
-                        -- when the following flags change, invalidate hash
-                        -- nested tuples, because :(
-                        , ( numberingStart
-                          , smartFilenames
-                          , strategyQ
-                          , strategyA
-                          )
-                        , ( representations
-                          , representationsFinds
-                          , representationsGivens
-                          , representationsAuxiliaries
-                          , representationsQuantifieds
-                          , representationsCuts
-                          )
-                        , ( channelling
-                          , representationLevels
-                          , seed
-                          , limitModels
-                          , limitTime
-                          , outputFormat
-                          )
-                        )
-                        savedHashes
-                        (pp logLevel "Using cached models." >> getEprimes)
-                        conjuring
-                liftIO $ writeFile (outputDirectory </> ".conjure-checksum") (unlines newHashes)
-                return eprimes
+            else doIfNotCached          -- start the show!
+                    ( sort (mStatements essenceM)
+                    -- when the following flags change, invalidate hash
+                    -- nested tuples, because :(
+                    , ( numberingStart
+                      , smartFilenames
+                      , strategyQ
+                      , strategyA
+                      )
+                    , ( representations
+                      , representationsFinds
+                      , representationsGivens
+                      , representationsAuxiliaries
+                      , representationsQuantifieds
+                      , representationsCuts
+                      )
+                    , ( channelling
+                      , representationLevels
+                      , seed
+                      , limitModels
+                      , limitTime
+                      , outputFormat
+                      )
+                    )
+                    (outputDirectory </> ".conjure-checksum")
+                    (pp logLevel "Using cached models." >> getEprimes)
+                    conjuring
 
     eprimesParsed <- forM eprimes $ \ f -> do
         p <- readModelInfoFromFile (outputDirectory </> f)
@@ -506,14 +496,18 @@ validateSolutionWithParams _ _ _ = bug "validateSolutionWithParams"
 
 
 doIfNotCached
-    :: (Monad m, Hashable h)
+    :: (MonadIO m, Hashable h)
     => h                        -- thing to hash
-    -> [String]                 -- saved hashes
+    -> FilePath                 -- saved hashes file
     -> m a                      -- the result from cache
     -> m a                      -- the action
-    -> WriterT [String] m a     -- the results and accumulating new hashes in the writer
-doIfNotCached (show . hash -> h) savedHashes getResult act = do
-    tell [h]
-    lift $ if h `elem` savedHashes
-            then getResult
-            else act
+    -> m a                      -- the results and writing the new hashes in the file
+doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
+    savedHashes <- liftIO $ readFileIfExists savedHashesFile
+    let skip = Just h == savedHashes                -- skip if h was the hash in the file
+    if skip
+        then getResult
+        else do
+            res <- act
+            liftIO $ writeFile savedHashesFile h
+            return res
