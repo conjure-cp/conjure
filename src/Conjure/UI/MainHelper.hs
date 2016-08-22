@@ -392,6 +392,7 @@ srMkArgs :: UI -> FilePath -> FilePath -> [Text]
 srMkArgs Solve{..} outBase modelPath =
     [ "-in-eprime"      , stringToText $ outputDirectory </> modelPath
     , "-out-minion"     , stringToText $ outputDirectory </> outBase ++ ".eprime-minion"
+    , "-out-sat"        , stringToText $ outputDirectory </> outBase ++ ".eprime-dimacs"
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
