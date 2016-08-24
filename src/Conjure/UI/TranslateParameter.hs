@@ -149,9 +149,15 @@ translateParameter eprimeModel0 essenceParam0 = do
             Right () -> return ()
     unless (null errs) (userErr errs)
 
+    let
+        decorateWithType (name, domain, constant) | emptyCollection constant = do
+            ty <- typeOf domain
+            return (name, domain, TypedConstant constant ty)
+        decorateWithType p = return p
+    
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
-        <- failToUserError $ concatMapM downC essenceGivensAndLettings'
+        <- failToUserError $ concatMapM downC essenceGivensAndLettings' >>= mapM decorateWithType
     logDebug $ "[eprimeLettings           ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
                                                              , "constant:" <+> pretty c
