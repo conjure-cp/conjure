@@ -150,6 +150,7 @@ translateParameter eprimeModel0 essenceParam0 = do
     unless (null errs) (userErr errs)
 
     let
+        decorateWithType p@(_, _, TypedConstant{}) = return p
         decorateWithType (name, domain, constant) | emptyCollection constant = do
             ty <- typeOf domain
             return (name, domain, TypedConstant constant ty)
