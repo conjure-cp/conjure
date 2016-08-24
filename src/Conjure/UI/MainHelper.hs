@@ -455,14 +455,20 @@ srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
 srCleanUp stdoutSR solutions = do
     stderrSR   <- lastStderr
     exitCodeSR <- lastExitCode
-    if
-        | exitCodeSR == 0 -> return (Right solutions)
-        | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) ->
+    let combinedSR = T.unlines [stdoutSR, stderrSR]
+    if  | or [ T.isInfixOf "Exception in thread" combinedSR
+             , T.isInfixOf "ERROR" combinedSR
+             ] ->      bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                  , "Savile Row stderr:"    <+> pretty stderrSR
+                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                  ]
+        | T.isInfixOf "Savile Row timed out." combinedSR ->
+            return (Left ["Savile Row timed out."])
+        | T.isInfixOf "where false" combinedSR ->
             return (Left [vcat [ "Invalid instance, a where statement evaluated to false."
                                , "(It can be an implicit where statement added by Conjure.)"
                                ]])
-        | T.isInfixOf "Savile Row timed out." (T.unlines [stdoutSR, stderrSR]) ->
-            return (Left ["Savile Row timed out."])
+        | exitCodeSR == 0 -> return (Right solutions)
         | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                   , "Savile Row stderr:"    <+> pretty stderrSR
                                   , "Savile Row exit-code:" <+> pretty exitCodeSR
