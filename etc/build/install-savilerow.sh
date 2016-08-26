@@ -19,5 +19,5 @@ popd
 rm -rf savilerow-1.6.4-linux.tgz savilerow-1.6.4-linux
 
 # using an unreleased version of savilerow
-wget -c https://dl.dropboxusercontent.com/u/14272760/SavileRow/2015-05-12%2014-45%20706f710ca0f4/savilerow.jar
+wget -c https://dl.dropboxusercontent.com/u/14272760/SavileRow/2016-08-25%2014-59%20c9d0b46c82b2/savilerow.jar
 cp savilerow.jar ${BIN_DIR}/savilerow.jar
