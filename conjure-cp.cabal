@@ -230,7 +230,8 @@ Library
                      , cereal >= 0.5.1.0
                      -- changes in newline handling
                      , cmdargs >= 0.10.14
-                     , containers
+                     -- a bunch of improvements in 0.5.8.1
+                     , containers >= 0.5.8.1
                      , data-default
                      , directory
                      , filepath
@@ -340,7 +341,7 @@ Test-Suite conjure-testing
     build-depends    : conjure-cp
                      , base
                      , bytestring
-                     , containers
+                     , containers >= 0.5.8.1
                      , Diff
                      , shelly
                      , tasty
