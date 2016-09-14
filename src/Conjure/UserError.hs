@@ -32,9 +32,7 @@ instance MonadUserError (Either Doc) where
                 _     -> [ "Error" <+> pretty (i :: Int) <> ":" <++> msg
                          | (i, msg) <- zip [1..] msgs
                          ]
-        Left $ vcat
-            $ "Conjure is exiting due to user errors."
-            : msgsOut
+        Left (vcat msgsOut)
 
 -- user errors exit with exit code 2 now.
 -- in the future we intend to exit with different exit code for different kind of user errors,
