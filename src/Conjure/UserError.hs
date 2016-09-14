@@ -10,7 +10,7 @@ import Conjure.Bug
 import Conjure.Language.Pretty
 
 -- base
-import System.Exit ( exitFailure )
+import System.Exit ( exitWith, ExitCode(..) )
 import System.IO as X ( stderr, hPutStrLn )
 import Control.Monad ( fail )
 
@@ -36,10 +36,16 @@ instance MonadUserError (Either Doc) where
             $ "Conjure is exiting due to user errors."
             : msgsOut
 
+-- user errors exit with exit code 2 now.
+-- in the future we intend to exit with different exit code for different kind of user errors,
+-- but they will always use values >1
+-- exit code 0 is for success
+-- exit code 1 is for bugs
+-- exit code >1 for user errors
 instance MonadUserError IO where
     userErr msgs =
         case userErr msgs of
-            Left doc -> hPutStrLn stderr (renderNormal (doc :: Doc)) >> exitFailure
+            Left doc -> hPutStrLn stderr (renderNormal (doc :: Doc)) >> exitWith (ExitFailure 2)
             Right x  -> return x
 
 instance MonadUserError m => MonadUserError (IdentityT m) where
