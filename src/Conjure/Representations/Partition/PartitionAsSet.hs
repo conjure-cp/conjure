@@ -145,7 +145,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     ("Bindings in context:" : prettyContext ctxt)
                 Just (viewConstantSet -> Just sets) -> do
                     let setOut (viewConstantSet -> Just xs) = return xs
-                        setOut c = fail $ "Expecting a set, but got:" <+> pretty c
+                        setOut c = fail $ "Expecting a set, but got:" <++> pretty c
                     vals <- mapM setOut sets
                     return (name, ConstantAbstract (AbsLitPartition vals))
                 Just (ConstantUndefined msg ty) ->        -- undefined propagates
@@ -154,7 +154,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
-                    , "Expected a set value, but got:" <+> pretty constant
+                    , "Expected a set value, but got:" <++> pretty constant
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ (name, domain) = na $ vcat [ "{up} PartitionAsSet"

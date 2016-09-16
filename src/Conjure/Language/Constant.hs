@@ -243,7 +243,7 @@ valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
 valuesInIntDomain ranges =
     if isFinite
         then return allValues
-        else fail $ "Expected finite integer ranges, but got:" <+> prettyList id "," ranges
+        else fail $ "Expected finite integer ranges, but got:" <++> prettyList id "," ranges
 
     where
 
@@ -443,41 +443,41 @@ viewConstantBool      :: MonadFail m => Constant -> m Bool
 viewConstantBool      (ConstantBool i) = return i
 viewConstantBool      (ConstantInt  0) = return False
 viewConstantBool      (ConstantInt  1) = return True
-viewConstantBool      constant = fail ("Expecting a boolean integer, but got:" <+> pretty constant)
+viewConstantBool      constant = fail ("Expecting a boolean integer, but got:" <++> pretty constant)
 
 viewConstantInt       :: MonadFail m => Constant -> m Integer
 viewConstantInt       (ConstantInt i) = return i
-viewConstantInt       constant = fail ("Expecting an integer, but got:" <+> pretty constant)
+viewConstantInt       constant = fail ("Expecting an integer, but got:" <++> pretty constant)
 
 viewConstantTuple     :: MonadFail m => Constant -> m [Constant]
 viewConstantTuple     (ConstantAbstract (AbsLitTuple xs)) = return xs
 viewConstantTuple     (TypedConstant c _) = viewConstantTuple c
-viewConstantTuple    constant = fail ("Expecting a tuple, but got:" <+> pretty constant)
+viewConstantTuple    constant = fail ("Expecting a tuple, but got:" <++> pretty constant)
 
 viewConstantRecord    :: MonadFail m => Constant -> m [(Name, Constant)]
 viewConstantRecord    (ConstantAbstract (AbsLitRecord xs)) = return xs
 viewConstantRecord    (TypedConstant c _) = viewConstantRecord c
-viewConstantRecord    constant = fail ("Expecting a record, but got:" <+> pretty constant)
+viewConstantRecord    constant = fail ("Expecting a record, but got:" <++> pretty constant)
 
 viewConstantVariant   :: MonadFail m => Constant -> m (Maybe [(Name, Domain () Constant)], Name, Constant)
 viewConstantVariant   (ConstantAbstract (AbsLitVariant lu nm x)) = return (lu, nm, x)
 viewConstantVariant   (TypedConstant c _) = viewConstantVariant c
-viewConstantVariant   constant = fail ("Expecting a variant, but got:" <+> pretty constant)
+viewConstantVariant   constant = fail ("Expecting a variant, but got:" <++> pretty constant)
 
 viewConstantMatrix    :: MonadFail m => Constant -> m (Domain () Constant, [Constant])
 viewConstantMatrix    (ConstantAbstract (AbsLitMatrix ind xs)) = return (ind, xs)
 viewConstantMatrix    (TypedConstant c _) = viewConstantMatrix c
-viewConstantMatrix    constant = fail ("Expecting a matrix, but got:" <+> pretty constant)
+viewConstantMatrix    constant = fail ("Expecting a matrix, but got:" <++> pretty constant)
 
 viewConstantSet       :: MonadFail m => Constant -> m [Constant]
 viewConstantSet       (ConstantAbstract (AbsLitSet xs)) = return xs
 viewConstantSet       (TypedConstant c _) = viewConstantSet c
-viewConstantSet       constant = fail ("Expecting a set, but got:" <+> pretty constant)
+viewConstantSet       constant = fail ("Expecting a set, but got:" <++> pretty constant)
 
 viewConstantMSet      :: MonadFail m => Constant -> m [Constant]
 viewConstantMSet      (ConstantAbstract (AbsLitMSet xs)) = return xs
 viewConstantMSet      (TypedConstant c _) = viewConstantMSet c
-viewConstantMSet      constant = fail ("Expecting an mset, but got:" <+> pretty constant)
+viewConstantMSet      constant = fail ("Expecting an mset, but got:" <++> pretty constant)
 
 viewConstantFunction  :: MonadFail m => Constant -> m [(Constant, Constant)]
 viewConstantFunction  (ConstantAbstract (AbsLitFunction xs)) = return xs
@@ -490,23 +490,23 @@ viewConstantFunction  constant = do
                 return $ Just $ pretty $ AbsLitFunction (zip (map ConstantInt froms) vals)
             _ -> return Nothing
     suggestion >>= \case
-        Nothing  -> fail ("Expecting a function, but got:" <+> pretty constant)
-        Just sug -> fail (vcat [ "Expecting a function, but got:" <+> pretty constant
-                               , "Maybe you meant:" <+> sug
+        Nothing  -> fail ("Expecting a function, but got:" <++> pretty constant)
+        Just sug -> fail (vcat [ "Expecting a function, but got:" <++> pretty constant
+                               , "Maybe you meant:" <++> sug
                                ])
 
 viewConstantSequence  :: MonadFail m => Constant -> m [Constant]
 viewConstantSequence  (ConstantAbstract (AbsLitSequence xs)) = return xs
 viewConstantSequence  (TypedConstant c _) = viewConstantSequence c
-viewConstantSequence  constant = fail ("Expecting a sequence, but got:" <+> pretty constant)
+viewConstantSequence  constant = fail ("Expecting a sequence, but got:" <++> pretty constant)
 
 viewConstantRelation  :: MonadFail m => Constant -> m [[Constant]]
 viewConstantRelation  (ConstantAbstract (AbsLitRelation xs)) = return xs
 viewConstantRelation  (TypedConstant c _) = viewConstantRelation c
-viewConstantRelation  constant = fail ("Expecting a relation, but got:" <+> pretty constant)
+viewConstantRelation  constant = fail ("Expecting a relation, but got:" <++> pretty constant)
 
 viewConstantPartition :: MonadFail m => Constant -> m [[Constant]]
 viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
-viewConstantPartition constant = fail ("Expecting a partition, but got:" <+> pretty constant)
+viewConstantPartition constant = fail ("Expecting a partition, but got:" <++> pretty constant)
 

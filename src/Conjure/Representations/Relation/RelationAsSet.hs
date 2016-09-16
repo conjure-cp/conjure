@@ -129,7 +129,7 @@ relationAsSet dispatch reprOptions useLevels = Representation chck downD structu
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
-                    , "Expected a set value, but got:" <+> pretty constant
+                    , "Expected a set value, but got:" <++> pretty constant
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ (name, domain) = na $ vcat [ "{up} RelationAsSet"

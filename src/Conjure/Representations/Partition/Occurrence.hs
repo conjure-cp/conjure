@@ -217,7 +217,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
             maxNumParts' <- getMaxNumParts attrs innerDomain
             maxNumParts  <- case viewConstantInt maxNumParts' of
                 Just i -> return i
-                Nothing -> bug ("expecting an integer literal, but got:" <+> pretty maxNumParts')
+                Nothing -> bug ("expecting an integer literal, but got:" <++> pretty maxNumParts')
             z <- zeroVal innerDomain
             let
                 whichPartValInside :: [(Integer, Constant)]

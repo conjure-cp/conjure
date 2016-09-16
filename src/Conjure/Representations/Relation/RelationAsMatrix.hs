@@ -152,7 +152,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                             Just False -> return Nothing
                             Just True  -> return (Just these)
                             _ -> fail $ vcat
-                                [ "Expecting a boolean literal, but got:" <+> pretty indexed
+                                [ "Expecting a boolean literal, but got:" <++> pretty indexed
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain
                                 ]

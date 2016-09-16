@@ -155,7 +155,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
             case lookup (outName domain name) ctxt of
                 Just (ConstantAbstract (AbsLitRelation pairs)) -> do
                     let pairOut [a,b] = return (a,b)
-                        pairOut c = fail $ "Expecting a 2-tuple, but got:" <+> prettyList prParens "," c
+                        pairOut c = fail $ "Expecting a 2-tuple, but got:" <++> prettyList prParens "," c
                     vals <- mapM pairOut pairs
                     return (name, ConstantAbstract (AbsLitFunction vals))
                 Nothing -> fail $ vcat $
@@ -169,7 +169,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
                     [ "Incompatible value for:" <+> pretty (outName domain name)
                     , "When working on:" <+> pretty name
                     , "With domain:" <+> pretty domain
-                    , "Expected a set value, but got:" <+> pretty constant
+                    , "Expected a set value, but got:" <++> pretty constant
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ (name, domain) = na $ vcat [ "{up} FunctionAsRelation"

@@ -122,7 +122,7 @@ typeOfDomain d@(DomainIntE x)          = do
         TypeList     TypeInt -> return ()
         TypeMatrix _ TypeInt -> return ()
         TypeSet      TypeInt -> return ()
-        _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+        _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
     return TypeInt
@@ -131,7 +131,7 @@ typeOfDomain d@(DomainInt rs)          = do
         ty <- typeOf x
         case ty of
             TypeInt -> return ()
-            _ -> fail $ vcat [ "Expected an integer, but got:" <+> pretty ty
+            _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                              , "For:" <+> pretty x
                              , "In domain:" <+> pretty d
                              ]

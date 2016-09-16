@@ -454,13 +454,13 @@ instance ReferenceContainer Expression where
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
     intOut doc (Constant c) = intOut ("intOut{Expression}" <+> doc) c
-    intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <+> pretty x
+    intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <++> pretty x
                                , "Called from:" <+> doc
                                ]
 
     fromBool = Constant . fromBool
     boolOut (Constant c) = boolOut c
-    boolOut x = fail ("Expecting a constant, but got:" <+> pretty x)
+    boolOut x = fail ("Expecting a constant, but got:" <++> pretty x)
 
     fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs

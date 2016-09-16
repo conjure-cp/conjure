@@ -241,7 +241,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                             Just False -> return Nothing
                             Just True  -> return (Just (mk these, value))
                             _ -> fail $ vcat
-                                [ "Expecting a boolean literal, but got:" <+> pretty flag
+                                [ "Expecting a boolean literal, but got:" <++> pretty flag
                                 , "                           , and    :" <+> pretty value
                                 , "When working on:" <+> pretty name
                                 , "With domain:" <+> pretty domain

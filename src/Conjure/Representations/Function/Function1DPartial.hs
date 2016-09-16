@@ -173,7 +173,7 @@ function1DPartial = Representation chck downD structuralCons downC up
                     functionValues <- forM (zip3 flagMatrix froms valuesMatrix) $ \ (flag, from, to) ->
                         case viewConstantBool flag of
                             Just b  -> return $ if b then Just (from,to) else Nothing
-                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <+> pretty flag
+                            Nothing -> fail $ vcat [ "Expected a boolean, but got:" <++> pretty flag
                                                    , "When working on:" <+> pretty name
                                                    , "With domain:" <+> pretty domain
                                                    ]
