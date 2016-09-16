@@ -9,9 +9,12 @@ import Conjure.Prelude
 import Conjure.RepositoryVersion ( repositoryVersion )
 import Conjure.Language.Pretty
 
+-- base
+import GHC.Stack
+
 
 -- call this function instead of "error"
-bug :: Doc -> a
+bug :: HasCallStack => Doc -> a
 bug message = error $ unlines
     [ "This should never happen, sorry!"
     , ""
