@@ -482,7 +482,18 @@ viewConstantMSet      constant = fail ("Expecting an mset, but got:" <+> pretty 
 viewConstantFunction  :: MonadFail m => Constant -> m [(Constant, Constant)]
 viewConstantFunction  (ConstantAbstract (AbsLitFunction xs)) = return xs
 viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
-viewConstantFunction  constant = fail ("Expecting a function, but got:" <+> pretty constant)
+viewConstantFunction  constant = do
+    let
+        suggestion = case constant of
+            ConstantAbstract (AbsLitMatrix (DomainInt rs) vals) -> do
+                froms <- valuesInIntDomain rs
+                return $ Just $ pretty $ AbsLitFunction (zip (map ConstantInt froms) vals)
+            _ -> return Nothing
+    suggestion >>= \case
+        Nothing  -> fail ("Expecting a function, but got:" <+> pretty constant)
+        Just sug -> fail (vcat [ "Expecting a function, but got:" <+> pretty constant
+                               , "Maybe you meant:" <+> sug
+                               ])
 
 viewConstantSequence  :: MonadFail m => Constant -> m [Constant]
 viewConstantSequence  (ConstantAbstract (AbsLitSequence xs)) = return xs
