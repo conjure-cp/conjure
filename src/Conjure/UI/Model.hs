@@ -1200,6 +1200,7 @@ otherRules =
     ,
         [ BubbleUp.rule_MergeNested
         , BubbleUp.rule_ToAnd
+        , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
         , BubbleUp.rule_NotBoolYet
         , BubbleUp.rule_ConditionInsideGeneratorDomain
         , BubbleUp.rule_LiftVars

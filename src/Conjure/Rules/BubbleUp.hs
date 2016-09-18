@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Rules.BubbleUp where
 
 import Conjure.Rules.Import
@@ -43,6 +45,20 @@ rule_ToAnd = "bubble-to-and" `namedRule` theRule where
             , return out
             )
     theRule _ = na "rule_BubbleToAnd"
+
+
+rule_ToMultiply_HeadOfIntComprehension :: Rule
+rule_ToMultiply_HeadOfIntComprehension = "bubble-to-multiply-HeadOfIntComprehension" `namedRule` theRule where
+    theRule p = do
+        (mk, Comprehension (WithLocals x (DefinednessConstraints cons)) gocs) <- match opQuantifier p
+        TypeInt <- typeOf x
+        let conjunct = make opAnd (fromList cons)
+        let x' = [essence| &x * toInt(&conjunct) |]
+        let out = mk $ Comprehension x' gocs
+        return
+            ( "Converting a bubble into a multiplication."
+            , return out
+            )
 
 
 rule_NotBoolYet :: Rule
