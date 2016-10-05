@@ -32,6 +32,15 @@ sanityChecks model = do
                         [ "Infinite integer domain."
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
+            DomainSequence _ (SequenceAttr size _) _ ->
+                case size of
+                    SizeAttr_Size{} -> return ()
+                    SizeAttr_MaxSize{} -> return ()
+                    SizeAttr_MinMaxSize{} -> return ()
+                    _ -> recordErr
+                        [ "sequence requires (at least) one of the following attributes: size, maxSize"
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
+                        ]
             DomainMSet _ (MSetAttr size occur) _ ->
                 case (size, occur) of
                     (SizeAttr_Size{}, _) -> return ()
