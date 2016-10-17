@@ -7,6 +7,7 @@ import qualified Conjure.RepresentationsTest ( tests )
 import qualified Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) )
 import qualified Conjure.TypeCheckAll ( tests )
 import qualified Conjure.ParsePrint ( tests )
+import qualified Conjure.Custom ( tests )
 import qualified Golden ( tests )
 
 -- tasty
@@ -22,6 +23,7 @@ main = do
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
     typeCheckAllTests     <- Conjure.TypeCheckAll.tests
     parsePrintTests       <- Conjure.ParsePrint.tests
+    customTests           <- Conjure.Custom.tests
     let ingredients = antXMLRunner
                     : includingOptions [Option (Proxy :: Proxy Conjure.ModelAllSolveAll.QuickOrSlow)]
                     : defaultIngredients
@@ -32,5 +34,6 @@ main = do
             , modelAllSolveAllTests quickOrSlow
             , typeCheckAllTests
             , parsePrintTests
+            , customTests
             , Golden.tests
             ]
