@@ -9,11 +9,10 @@ Conjure can be installed either by downloading a binary distribution, or by comp
 Downloading a binary
 --------------------
 
-Conjure is available as a binary for most platforms.
-If it is available for your platform, you can just download it and run it.
+Conjure is available as a binary for Linux and MacOS.
+If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
 It may be useful to save the binary under a directory that is in your search PATH, so you do not have to type the full path to the Conjure executable to run it.
 
-TODO: link to executables will come here.
 
 Compiling from source
 ---------------------
@@ -28,7 +27,10 @@ Conjure is implemented in Haskell, it can be compiled using the commonly availab
     cd conjure
     make install
 
-It is known to work with `GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_ and `GHC-7.10.3 <http://www.haskell.org/ghc/download_ghc_7_10_3>`_.
+It is known to work with
+`GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_,
+`GHC-7.10.3 <http://www.haskell.org/ghc/download_ghc_7_10_3>`_, and
+`GHC-8.0.1 <http://www.haskell.org/ghc/download_ghc_8.0.1>`_.
 
 
 Installing Savile Row
