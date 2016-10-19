@@ -268,11 +268,6 @@ else
     SPLIT_OBJS=""
 fi
 
-WARNINGOFF=""
-if [[ "${GHC_VERSION}" == 8* ]]; then
-    WARNINGOFF="--ghc-options \"-Wno-redundant-constraints\""
-fi
-
 if [ ${GHC_VERSION} = "head" ] ; then
     rm -f cabal.config
 elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
@@ -293,7 +288,6 @@ cabal install                                                           \
     --bindir="${BIN_DIR}" -j"${USE_CORES}"
 
 cabal configure                                                         \
-    ${WARNINGOFF}                                                       \
     ${SPLIT_OBJS}                                                       \
     ${DYNAMIC} ${PROFILING} ${HPC} ${TESTS} ${LLVM} ${OPTIMISATION}     \
     --bindir="${BIN_DIR}"
