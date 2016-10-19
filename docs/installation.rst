@@ -9,7 +9,7 @@ Conjure can be installed either by downloading a binary distribution, or by comp
 Downloading a binary
 --------------------
 
-Conjure is available as a binary for Linux and MacOS.
+Conjure is available as an executable binary for Linux, MacOS, and Windows.
 If it is available for your platform, you can just `download it <https://www.github.com/conjure-cp/conjure/releases/latest>`_ and run it.
 It may be useful to save the binary under a directory that is in your search PATH, so you do not have to type the full path to the Conjure executable to run it.
 
@@ -19,7 +19,9 @@ Compiling from source
 
 In order to compile Conjure on your computer, please download the source code from `GitHub <https://github.com/conjure-cp/conjure>`_.
 
-Conjure is implemented in Haskell, it can be compiled using the commonly available `cabal <http://wiki.haskell.org/Cabal-Install>`_ tool.
+Conjure is implemented in Haskell, it can be compiled using the standard `cabal-install <http://wiki.haskell.org/Cabal-Install>`_ tool.
+
+It comes with a Makefile which sets things up correctly before running cabal-install.
 
 .. code-block:: bash
 
