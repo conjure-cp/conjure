@@ -1,7 +1,7 @@
 {-# LANGUAGE RecordWildCards #-}
 {-# LANGUAGE ViewPatterns #-}
 
-module Conjure.UI.MainHelper ( mainWithArgs ) where
+module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 
 import Conjure.Prelude
 import Conjure.Bug
@@ -30,11 +30,15 @@ import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
+import System.Info ( os )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
 -- filepath
 import System.FilePath ( splitFileName, takeBaseName, (<.>) )
+
+-- system-filepath
+import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
 import System.Directory ( copyFile )
@@ -325,6 +329,13 @@ pp LogNone = const $ return ()
 pp _       = liftIO . putStrLn . renderNormal
 
 
+savilerowScriptName :: Sys.FilePath
+savilerowScriptName
+    | os `elem` ["darwin", "linux"] = "savilerow"
+    | os `elem` ["mingw32"] = "savilerow.bat"
+    | otherwise = "Cannot detect operating system."
+
+
 savileRowNoParam
     :: UI
     -> (FilePath, Model)    -- model
@@ -338,7 +349,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
-    (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
+    (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
@@ -376,7 +387,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
-            (stdoutSR, solutions) <- partitionEithers <$> runHandle "savilerow" srArgs
+            (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath

@@ -12,6 +12,7 @@ import Conjure.UI.Model
 import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
+import Conjure.UI.MainHelper ( savilerowScriptName )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
@@ -185,7 +186,7 @@ savileRowNoParam srOptions TestDirFiles{..} modelPath =
         fileShouldExist (outputsDir </> outBase ++ ".eprime")
         (stdoutSR, stderrSR, exitCodeSR) <-
             sh $ errExit False $ do
-                stdoutSR <- run "savilerow" $
+                stdoutSR <- run savilerowScriptName $
                     [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
                     , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
                     , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
@@ -229,7 +230,7 @@ savileRowWithParams srOptions TestDirFiles{..} modelPath paramPath =
         writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
         (stdoutSR, stderrSR, exitCodeSR) <-
             sh $ errExit False $ do
-                stdoutSR <- run "savilerow" $
+                stdoutSR <- run savilerowScriptName $
                     [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
                     , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
                     , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
