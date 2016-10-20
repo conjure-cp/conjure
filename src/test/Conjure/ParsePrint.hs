@@ -12,6 +12,9 @@ import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( readModelFromFile, writeModel )
 import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
 
+-- base
+import System.Info ( os )
+
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
@@ -75,17 +78,23 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
             removeFileIfExists (tBaseDir </> "stderr")
 
     let
+
+        fixWindowsPaths :: String -> String
+        fixWindowsPaths
+            | os `elem` ["mingw32"] = map (\ ch -> if ch == '\\' then '/' else ch )
+            | otherwise             = id
+
         readIfExists :: FilePath -> IO String
         readIfExists f = fromMaybe "" <$> readFileIfExists f
 
     step "Checking stdout"
-    stdoutG <- readIfExists (tBaseDir </> "stdout")
+    stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
     stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
     unless (stdoutE == stdoutG) $
         assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
                                             , "was expecting:    " <++> pretty stdoutE ]
     step "Checking stderr"
-    stderrG <- readIfExists (tBaseDir </> "stderr")
+    stderrG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stderr")
     stderrE <- readIfExists (tBaseDir </> "stderr.expected")
     unless (stderrE == stderrG) $
         assertFailure $ renderNormal $ vcat [ "unexpected stderr:" <++> pretty stderrG
