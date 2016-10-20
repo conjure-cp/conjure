@@ -57,5 +57,5 @@ build_script:
 test_script:
 - cmd: >-
 
-    stack test --ghc-options "-with-rtsopts=-M2G" --test-arguments "--hide-successes --select-tests=quick +RTS -s"
+    stack test --ghc-options "-with-rtsopts=-M2G" --test-arguments "--hide-successes --select-tests=quick -p parse_print +RTS -s"
 
