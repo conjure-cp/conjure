@@ -155,7 +155,7 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
             , do
                  (iPat, i) <- quantifiedVar
                  let val  = make opIndexing i 1
-                 let over = make opHist matrix
+                 let over = make opHistAll matrix
                  return $ Comprehension (upd val body)
                          $  gocBefore
                          ++ [Generator (GenInExpr iPat over)]
@@ -207,13 +207,13 @@ rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule wh
     theRule _ = na "rule_Comprehension_Nested"
 
 
-rule_Comprehension_Hist :: Rule
-rule_Comprehension_Hist = "matrix-hist" `namedRule` theRule where
+rule_Comprehension_HistAll :: Rule
+rule_Comprehension_HistAll = "matrix-histAll" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Hist"
-        matrix               <- match opHist expr
+        matrix               <- match opHistAll expr
         TypeMatrix{}         <- typeOf matrix
         index:_              <- indexDomainsOf matrix
         let upd val old = lambdaToFunction pat old val

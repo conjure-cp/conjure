@@ -101,7 +101,6 @@ mkOp op xs =
                                                                          (arg xs 1 "inverse")
             L_freq         -> inject $ MkOpFreq         $ OpFreq         (arg xs 0 "freq")
                                                                          (arg xs 1 "freq")
-            L_hist         -> inject $ MkOpHist         $ OpHist         (arg xs 0 "hist")
             L_parts        -> inject $ MkOpParts        $ OpParts        (arg xs 0 "parts")
             L_together     -> inject $ MkOpTogether     $ OpTogether     (arg xs 0 "together")
                                                                          (arg xs 1 "together")
@@ -118,13 +117,18 @@ mkOp op xs =
             L_powerSet     -> inject $ MkOpPowerSet     $ OpPowerSet     (arg xs 0 "powerSet")
             L_concatenate  -> inject $ MkOpFlatten      $ OpFlatten      (Just 1)
                                                                          (arg xs 0 "concatenate")
+            L_hist         ->
+                case xs of
+                    [m]    -> inject $ MkOpHist         $ OpHistAll       m
+                    [m,n]  -> inject $ MkOpHist         $ OpHistForValues m n
+                    _      -> bug "hist takes 1 or 2 arguments."
             L_flatten      ->
-                 case xs of
-                     [m]   -> inject $ MkOpFlatten      $ OpFlatten      Nothing  m
-                     [n,m] ->
-                          let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut "flatten" n)
-                          in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
-                     _     -> bug "flatten takes 1 or 2 arguments."
+                case xs of
+                    [m]    -> inject $ MkOpFlatten      $ OpFlatten      Nothing  m
+                    [n,m]  ->
+                        let n' = fromInteger $ fromMaybe (bug "The 1st argument of flatten has to be a constant integer.") (intOut "flatten" n)
+                        in  inject $ MkOpFlatten      $ OpFlatten      (Just n') m
+                    _      -> bug "flatten takes 1 or 2 arguments."
             _ -> bug ("Unknown lexeme for operator:" <+> pretty (show l))
 
 arg :: [a] -> Int -> Doc -> a

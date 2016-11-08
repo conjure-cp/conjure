@@ -607,7 +607,7 @@ opFreq _ =
     )
 
 
-opHist
+opHistAll
     :: ( Op x :< x
        , Pretty x
        , MonadFail m
@@ -616,13 +616,32 @@ opHist
     -> ( x -> x
        , x -> m x
        )
-opHist _ =
-    ( inject . MkOpHist . OpHist
+opHistAll _ =
+    ( inject . MkOpHist . OpHistAll
     , \ p -> do
             op <- project p
             case op of
-                MkOpHist (OpHist x) -> return x
-                _ -> na ("Lenses.opHist:" <++> pretty p)
+                MkOpHist (OpHistAll x) -> return x
+                _ -> na ("Lenses.opHistAll:" <++> pretty p)
+    )
+
+
+opHistForValues
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x,x)
+       )
+opHistForValues _ =
+    ( \ x y -> inject (MkOpHist (OpHistForValues x y))
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpHist (OpHistForValues x y) -> return (x,y)
+                _ -> na ("Lenses.opHistForValues:" <++> pretty p)
     )
 
 
