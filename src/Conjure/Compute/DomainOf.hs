@@ -361,8 +361,10 @@ instance DomainOf (OpGeq x) where
 instance DomainOf (OpGt x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpHist x) where
     domainOf op = mkDomainAny ("OpHist:" <++> pretty op) <$> typeOf op
+    indexDomainsOf op@(OpHistForValues _ n) = indexDomainsOf n
+    indexDomainsOf op@OpHistAll{} = defIndexDomainsOf op
 
 instance DomainOf (OpIff x) where
     domainOf _ = return DomainBool

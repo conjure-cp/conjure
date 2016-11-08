@@ -212,13 +212,13 @@ rule_Comprehension_HistAll = "matrix-histAll" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
-            _ -> na "rule_Comprehension_Hist"
+            _ -> na "rule_Comprehension_HistAll"
         matrix               <- match opHistAll expr
         TypeMatrix{}         <- typeOf matrix
         index:_              <- indexDomainsOf matrix
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for comprehension over matrix-hist"
+            ( "Rule for comprehension over matrix-hist"
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
@@ -246,7 +246,32 @@ rule_Comprehension_HistAll = "matrix-histAll" `namedRule` theRule where
                             ]
                          ++ transformBi (upd val) gocAfter
             )
-    theRule _ = na "rule_Comprehension_Hist"
+    theRule _ = na "rule_Comprehension_HistAll"
+
+
+rule_Comprehension_HistFor :: Rule
+rule_Comprehension_HistFor = "matrix-histFor" `namedRule` theRule where
+    theRule [essence| hist(&m, &n)[&i] |] = do
+        return
+            ( "Rule for histogram, indexed"
+            , return [essence| freq(&m, &n[&i]) |]
+            )
+    theRule _ = na "rule_Comprehension_HistFor"
+
+
+-- freq(mset,arg) ~~> sum([ toInt(arg = i) | i in mset ])
+rule_Matrix_Freq :: Rule
+rule_Matrix_Freq = "matrix-freq" `namedRule` theRule where
+    theRule p = do
+        (matrix, arg) <- match opFreq p
+        index:_       <- indexDomainsOf matrix
+        TypeMatrix{}  <- typeOf matrix
+        return
+            ( "Rule for matrix-freq."
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| sum &iPat : &index . toInt(&matrix[&i] = &arg) |]
+            )
 
 
 rule_Matrix_Eq :: Rule

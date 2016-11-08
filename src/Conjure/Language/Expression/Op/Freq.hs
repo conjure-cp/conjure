@@ -25,14 +25,15 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         case tyM of
             TypeMSet tyE'
                 | tyE `typeUnify` tyE' -> return TypeInt
-                | otherwise            -> raiseTypeError $ vcat
-                    [ "The first argument of freq is expected to be a multi-set."
-                    , pretty p
-                    ]
+                | otherwise            -> raiseTypeError p
+            TypeMatrix _ tyE'
+                | tyE `typeUnify` tyE' -> return TypeInt
+                | otherwise            -> raiseTypeError p
             _ -> raiseTypeError p
 
 instance EvaluateOp OpFreq where
-    evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (viewConstantMSet   -> Just     cs ) c) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (viewConstantMatrix -> Just (_, cs)) c) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
 instance SimplifyOp OpFreq x where

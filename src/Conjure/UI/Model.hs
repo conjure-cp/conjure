@@ -692,7 +692,21 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                                    | i <- allNats
                                                    | c <- tail (ascendants x)
                                                    ]
-                    _ -> return []
+                    holex -> do
+                        let unexpected = case holex of
+                                            Op MkOpHist{} -> True
+                                            Op MkOpFreq{} -> True
+                                            _             -> False
+                        if unexpected
+                            then
+                                return $ ""
+                                       : ("Operator not refined:" <+> pretty (hole x))
+                                       : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                         | i <- allNats
+                                         | c <- tail (ascendants x)
+                                         ]
+                            else
+                                return []
     unless (null fails) (bug (vcat fails))
     return m
 checkIfAllRefined m = return m
@@ -989,6 +1003,8 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_HistAll
+    , Vertical.Matrix.rule_Comprehension_HistFor
+    , Vertical.Matrix.rule_Matrix_Freq
     , Vertical.Matrix.rule_Comprehension_ToSet
     -- , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Matrix_Eq
