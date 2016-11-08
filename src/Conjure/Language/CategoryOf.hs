@@ -8,9 +8,7 @@ module Conjure.Language.CategoryOf
 -- conjure
 import Conjure.Prelude
 import Conjure.UserError
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
+import Conjure.Language
 
 
 data Category = CatBottom | CatConstant | CatParameter | CatQuantified | CatDecision
@@ -71,8 +69,16 @@ categoryChecking m = do
                | cat > CatQuantified
                , domain `notElem` map fst errors1        -- only if this is a new error
                ]
+    errors3 <- fmap concat $ forM (universeBi (mStatements m) :: [Expression]) $ \ expr -> do
+        case expr of
+            Op (MkOpGCC (OpGCC _primary values _counts))
+                | categoryOf values >= CatDecision
+                -> return [ vcat [ "The second argument of gcc cannot contain decision expressions."
+                                 , "In:" <++> pretty expr
+                                 ]]
+            _ -> return []
 
-    if null errors1 && null errors2
+    if null errors1 && null errors2 && null errors3
         then return m
         else userErr1 $ vcat
             $  [ "Category checking failed." ]
@@ -88,6 +94,9 @@ categoryChecking m = do
                         , ""
                         ]
                       | (domain, cat) <- errors2
+                      ]
+            ++        [ msg
+                      | msg <- errors3
                       ]
 
 initInfo_Lettings :: Model -> Model

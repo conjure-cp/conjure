@@ -93,6 +93,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpFactorial x) = domainOf x
     domainOf (MkOpFlatten x) = domainOf x
     domainOf (MkOpFreq x) = domainOf x
+    domainOf (MkOpGCC x) = domainOf x
     domainOf (MkOpGeq x) = domainOf x
     domainOf (MkOpGt x) = domainOf x
     domainOf (MkOpHist x) = domainOf x
@@ -162,6 +163,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpFactorial x) = indexDomainsOf x
     indexDomainsOf (MkOpFlatten x) = indexDomainsOf x
     indexDomainsOf (MkOpFreq x) = indexDomainsOf x
+    indexDomainsOf (MkOpGCC x) = indexDomainsOf x
     indexDomainsOf (MkOpGeq x) = indexDomainsOf x
     indexDomainsOf (MkOpGt x) = indexDomainsOf x
     indexDomainsOf (MkOpHist x) = indexDomainsOf x
@@ -354,6 +356,9 @@ instance (Pretty x, TypeOf x) => DomainOf (OpFlatten x) where
 
 instance (Pretty x, TypeOf x) => DomainOf (OpFreq x) where
     domainOf op = mkDomainAny ("OpFreq:" <++> pretty op) <$> typeOf op
+
+instance (Pretty x, TypeOf x) => DomainOf (OpGCC x) where
+    domainOf op = mkDomainAny ("OpGCC:" <++> pretty op) <$> typeOf op
 
 instance DomainOf (OpGeq x) where
     domainOf _ = return DomainBool

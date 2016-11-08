@@ -223,6 +223,7 @@ functionals =
     , L_min
     , L_max
     , L_allDiff
+    , L_gcc
     , L_dontCare
     , L_hist
     , L_factorial
