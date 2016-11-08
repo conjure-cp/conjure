@@ -252,10 +252,28 @@ rule_Comprehension_HistAll = "matrix-histAll" `namedRule` theRule where
 rule_Comprehension_HistFor :: Rule
 rule_Comprehension_HistFor = "matrix-histFor" `namedRule` theRule where
     theRule [essence| hist(&m, &n)[&i] |] = do
-        return
-            ( "Rule for histogram, indexed"
-            , return [essence| freq(&m, &n[&i]) |]
-            )
+        TypeMatrix _ mInner <- typeOf m
+        TypeMatrix _ nInner <- typeOf n
+        mIndex:_            <- indexDomainsOf m
+        case nInner of
+            _ | typeUnify mInner nInner ->
+                return
+                    ( "Rule for histogram, indexed"
+                    , do
+                        (jPat, j) <- quantifiedVar
+                        return [essence| sum &jPat : &mIndex . toInt(&m[&j] = &n[&i])
+                                         |]
+                    )
+            TypeTuple [lb, ub] | typesUnify [mInner,lb,ub] ->
+                return
+                    ( "Rule for histogram, indexed"
+                    , do
+                        (jPat, j) <- quantifiedVar
+                        return [essence| sum &jPat : &mIndex . toInt(&m[&j] >= &n[&i][1]
+                                                                  /\ &m[&j] <  &n[&i][2])
+                                       |]
+                    )
+            _ -> na "rule_Comprehension_HistFor"
     theRule _ = na "rule_Comprehension_HistFor"
 
 

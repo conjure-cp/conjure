@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+find m1: matrix indexed by [int(1..2)] of int(0..9)
+find m2: matrix indexed by [int(1..2)] of int(0..9)
+find m3: matrix indexed by [int(1..2)] of int(0..9)
+such that
+    and([m1[q4] = [0, 1; int(1..2)][q4] | q4 : int(1..2)]),
+    and([m2[q6] = 1 | q6 : int(1..2)]),
+    and([m3[q8] = [0, 1; int(1..2)][q8] | q8 : int(1..2)])
+

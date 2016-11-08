@@ -363,7 +363,7 @@ instance DomainOf (OpGt x) where
 
 instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpHist x) where
     domainOf op = mkDomainAny ("OpHist:" <++> pretty op) <$> typeOf op
-    indexDomainsOf op@(OpHistForValues _ n) = indexDomainsOf n
+    indexDomainsOf (OpHistForValues _ n) = indexDomainsOf n
     indexDomainsOf op@OpHistAll{} = defIndexDomainsOf op
 
 instance DomainOf (OpIff x) where

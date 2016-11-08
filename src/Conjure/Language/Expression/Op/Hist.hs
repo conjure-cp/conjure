@@ -50,13 +50,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
     typeOf p@(OpHistForValues a b) = do
         tyA <- typeOf a
         tyB <- typeOf b
-        case tyB of
-            TypeMatrix bIndex bInner ->
-                case tyA of
-                    TypeMSet     aInner | typeUnify aInner bInner -> return $ TypeMatrix bIndex TypeInt
-                    TypeMatrix _ aInner | typeUnify aInner bInner -> return $ TypeMatrix bIndex TypeInt
-                    TypeList     aInner | typeUnify aInner bInner -> return $ TypeMatrix bIndex TypeInt
-                    _ -> raiseTypeError p
+        (bIndex, bInners) <- case tyB of
+            TypeMatrix bIndex (TypeTuple [b1,b2]) -> return (bIndex, [b1,b2])
+            TypeMatrix bIndex bInner              -> return (bIndex, [bInner])
+            _ -> raiseTypeError p
+        case tyA of
+            TypeMSet     aInner | typesUnify (aInner:bInners) -> return $ TypeMatrix bIndex TypeInt
+            TypeMatrix _ aInner | typesUnify (aInner:bInners) -> return $ TypeMatrix bIndex TypeInt
+            TypeList     aInner | typesUnify (aInner:bInners) -> return $ TypeMatrix bIndex TypeInt
             _ -> raiseTypeError p
 
 instance EvaluateOp OpHist where
