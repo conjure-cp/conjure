@@ -27,10 +27,33 @@ instance (TypeOf x, Pretty x) => TypeOf (OpGCC x) where
         tyPrimary <- typeOf primary
         tyValues  <- typeOf values
         tyCounts  <- typeOf counts
-        case (tyPrimary, tyValues, tyCounts) of
-            (TypeMatrix _ tyPrimaryI, TypeMatrix _ tyValuesI, TypeMatrix _ TypeInt)
-                | typeUnify tyPrimaryI tyValuesI -> return TypeBool
-            _ -> raiseTypeError p
+        tyPrimaryI <- case tyPrimary of
+                        TypeMatrix _ i -> return i
+                        _ -> raiseTypeError $ vcat
+                            [ pretty p
+                            , "Unexpected type for the 1st argument:" <++> pretty tyPrimary
+                            ]
+        tyValuesI  <- case tyValues of
+                        TypeMatrix _ i -> return i
+                        TypeList     i -> return i
+                        _ -> raiseTypeError $ vcat
+                            [ pretty p
+                            , "Unexpected type for the 2nd argument:" <++> pretty tyValues
+                            ]
+        case tyCounts of
+            TypeMatrix _ TypeInt -> return ()
+            _ -> raiseTypeError $ vcat
+                [ pretty p
+                , "Unexpected type for the 3rd argument:" <++> pretty tyCounts
+                ]
+        if typeUnify tyPrimaryI tyValuesI
+            then return TypeBool
+            else raiseTypeError $ vcat [ pretty p
+                                       , "The types of the 1st and 2nd arguments do not unify."
+                                       , "1st argument has type:" <++> pretty tyPrimary
+                                       , "2nd argument has type:" <++> pretty tyValues
+                                       , "3rd argument has type:" <++> pretty tyCounts
+                                       ]
 
 instance EvaluateOp OpGCC where
     evaluateOp (OpGCC (viewConstantMatrix -> Just (_, primaries))
