@@ -6,13 +6,11 @@ given fin3: int
 given fin4: int
 given bins_1: matrix indexed by [int(1..2)] of int(fin1..fin2)
 given bins_2: matrix indexed by [int(1..2)] of int(fin3..fin4)
-find m: matrix indexed by [int(2..6)] of int(0..99)
-find n: matrix indexed by [int(1..2)] of int(0..10)
+find m: matrix indexed by [int(2..6)] of int(1..4)
+find n: matrix indexed by [int(1..2)] of int(1..3)
 such that
     and([n[q3] = sum([toInt(m[q5] >= bins_1[q3] /\ m[q5] < bins_2[q3]) | q5 : int(2..6)]) | q3 : int(1..2)]),
-    m[2] = 1,
-    m[3] = 2,
-    m[4] = 3,
-    m[5] = 4,
-    m[6] = 5
+    m[2] = 2,
+    m[3] = 3,
+    m[4] = 4
 
