@@ -333,6 +333,7 @@ rule_Comprehension_HistFor_gcc_eq = "matrix-histFor-gcc-eq" `namedRule` theRule 
 -- if the result of hist is indexed
 -- we can do better (avoid the aux out-var), if it is in a equality context.
 -- see rule_Comprehension_HistFor_gcc_eq
+-- (disabled)
 rule_Comprehension_HistFor_gcc_indexed :: Rule
 rule_Comprehension_HistFor_gcc_indexed = "matrix-histFor-gcc-indexed" `namedRule` theRule where
     theRule [essence| hist(&m, &bins)[&j] |] = do
@@ -386,6 +387,68 @@ rule_Comprehension_HistFor_gcc_indexed = "matrix-histFor-gcc-indexed" `namedRule
                     )
             _ -> na "rule_Comprehension_HistFor_gcc_indexed"
     theRule _ = na "rule_Comprehension_HistFor_gcc_indexed"
+
+
+rule_Comprehension_HistFor_gcc2_eq :: Rule
+rule_Comprehension_HistFor_gcc2_eq = "matrix-histFor-gcc2-eq" `namedRule` theRule where
+    theRule [essence| &out = hist(&m, &bins) |] = helper out m bins
+    theRule [essence| hist(&m, &bins) = &out |] = helper out m bins
+    theRule _ = na "rule_Comprehension_HistFor_gcc2_eq"
+
+    helper out m bins = do
+        TypeMatrix _ mInner    <- typeOf m
+        TypeMatrix _ binsInner <- typeOf bins
+        mIndex:_               <- indexDomainsOf m
+        binsIndex:_            <- indexDomainsOf bins
+        case binsInner of
+            _ | typeUnify mInner binsInner ->
+                na "rule_Comprehension_HistFor_gcc2_eq"
+                -- return
+                --     ( "Rule for histogram, indexed"
+                --     , do
+                --         (jPat, j) <- quantifiedVar
+                --         return [essence| sum &jPat : &mIndex . toInt(&m[&j] = &n[&i])
+                --                          |]
+                --     )
+            TypeTuple [lb, ub] | typesUnify [mInner,lb,ub] ->
+                return
+                    ( "Rule for histogram, indexed"
+                    , do
+                        (iPat, i) <- quantifiedVar
+
+                        let binsMin = [essence| min([ &bins[&i][1] | &iPat : &binsIndex ]) |]
+                        let binsMax = [essence| max([ &bins[&i][2] | &iPat : &binsIndex ]) |]
+                        let m_countIndex = DomainInt [RangeBounded binsMin binsMax]
+
+                        (m_countName, m_count) <- auxiliaryVar
+                        let m_countDom = DomainMatrix m_countIndex
+                                            $ DomainInt [RangeBounded 0
+                                                            -- number of entries in m
+                                                            [essence| sum([1 | &iPat : &mIndex ]) |]
+                                                        ]
+
+                        (kPat, k) <- quantifiedVar
+
+                        return $ WithLocals
+                            [essence| gcc(&m, [ &i | &iPat : &m_countIndex ], &m_count) |]
+                            (AuxiliaryVars
+                                [ Declaration (FindOrGiven LocalFind m_countName m_countDom)
+                                , SuchThat
+                                    [ [essence|
+                                        forAll &iPat : &binsIndex .
+                                            &out[&i] = sum([ &m_count[&k]
+                                                           | &kPat : int(&bins[&i][1] .. &bins[&i][2] - 1)
+                                                           ])
+                                              |]
+                                    , [essence|
+                                        sum([1 | &iPat : &mIndex ])     $ number of value variables (entries in m)
+                                        =
+                                        sum([ &out[&i] | &iPat : &binsIndex ])
+                                              |]
+                                    ]
+                                ])
+                    )
+            _ -> na "rule_Comprehension_HistFor_gcc2_eq"
 
 
 -- freq(mset,arg) ~~> sum([ toInt(arg = i) | i in mset ])

@@ -1005,7 +1005,8 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_HistAll
     , Vertical.Matrix.rule_Comprehension_HistFor
     , Vertical.Matrix.rule_Comprehension_HistFor_gcc_eq
-    , Vertical.Matrix.rule_Comprehension_HistFor_gcc_indexed
+    -- , Vertical.Matrix.rule_Comprehension_HistFor_gcc_indexed
+    , Vertical.Matrix.rule_Comprehension_HistFor_gcc2_eq
     , Vertical.Matrix.rule_Matrix_Freq
     , Vertical.Matrix.rule_Comprehension_ToSet
     -- , Vertical.Matrix.rule_Comprehension_ToSet2
