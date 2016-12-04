@@ -100,8 +100,9 @@ isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
     dirContents <- getDirectoryContents dir
     let testKind
-            | "invalid" `elem` dirContents = TK_Invalid
-            | "slow"    `elem` dirContents = TK_Slow
+            | "disabled" `elem` dirContents = TK_Invalid
+            | "invalid"  `elem` dirContents = TK_Invalid
+            | "slow"     `elem` dirContents = TK_Slow
             | otherwise                    = TK_Quick
     let essenceFiles = filter (".essence" `isSuffixOf`) dirContents
     case essenceFiles of
