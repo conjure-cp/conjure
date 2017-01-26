@@ -29,46 +29,46 @@ matrix:
   include:
 
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=minion
-      compiler: "# GHC 7.8.4"
+      compiler: ": # GHC 7.8.4"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=minion
-      compiler: "# GHC 7.8.4"
+      compiler: ": # GHC 7.8.4"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O0" SOLVER=lingeling
-      compiler: "# GHC 7.8.4"
+      compiler: ": # GHC 7.8.4"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
     - env: GHC_VERSION=7.8.4 SR_OPTIONS="-O2" SOLVER=lingeling
-      compiler: "# GHC 7.8.4"
+      compiler: ": # GHC 7.8.4"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
 
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=minion
-      compiler: "# GHC 7.10.3"
+      compiler: ": # GHC 7.10.3"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=minion
-      compiler: "# GHC 7.10.3"
+      compiler: ": # GHC 7.10.3"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O0" SOLVER=lingeling
-      compiler: "# GHC 7.10.3"
+      compiler: ": # GHC 7.10.3"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
     - env: GHC_VERSION=7.10.3 SR_OPTIONS="-O2" SOLVER=lingeling
-      compiler: "# GHC 7.10.3"
+      compiler: ": # GHC 7.10.3"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
 
     - env: GHC_VERSION=8.0.1 SR_OPTIONS="-O0" SOLVER=minion
-      compiler: "# GHC 8.0.1"
+      compiler: ": # GHC 8.0.1"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.0.1]}}
     - env: GHC_VERSION=8.0.1 SR_OPTIONS="-O2" SOLVER=minion
-      compiler: "# GHC 8.0.1"
+      compiler: ": # GHC 8.0.1"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.0.1]}}
     - env: GHC_VERSION=8.0.1 SR_OPTIONS="-O0" SOLVER=lingeling
-      compiler: "# GHC 8.0.1"
+      compiler: ": # GHC 8.0.1"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.0.1]}}
     - env: GHC_VERSION=8.0.1 SR_OPTIONS="-O2" SOLVER=lingeling
-      compiler: "# GHC 8.0.1"
+      compiler: ": # GHC 8.0.1"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.0.1]}}
 
     - env: GHC_VERSION=head SR_OPTIONS="-O2" SOLVER=minion
-      compiler: "# GHC head"
+      compiler: ": # GHC head"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-head]}}
 
   allow_failures:
