@@ -106,7 +106,7 @@ install:
   - ls -Alh $(find bin -type f)
 
 script:
-  - ((time dist/build/conjure-testing/conjure-testing --select-tests quick -p autogen +RTS -s) > >(tee conjure-testing.stdout | grep -B1 'Conjuring\|Savile') 2> >(tee conjure-testing.stderr >&2)) || true
+  - ((time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s) > >(tee conjure-testing.stdout | grep -B1 'Conjuring\|Savile') 2> >(tee conjure-testing.stderr >&2)) || true
   - if ! grep FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
   - cabal sdist   # tests that a source-distribution can be generated
 
