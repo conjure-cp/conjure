@@ -3,8 +3,9 @@ SHELL := /bin/bash
 
 .PHONY: install-with-stack
 install-with-stack:
-	@make preinstall
 	@cp etc/hs-deps/stack-8.0.yaml stack.yaml
+	@stack setup
+	@make preinstall
 	@stack install
 	@rm stack.yaml
 
