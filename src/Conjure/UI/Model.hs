@@ -103,11 +103,28 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m)
     => Config
     -> Model
     -> m ()
 outputModels config model = do
+
+    -- Savile Row does not support ' characters in identifiers
+    -- We could implement a workaround where we insert a marker (like __PRIME__) for each ' character
+    -- and recover these after a solution is found.
+    -- But this will be too hairy, instead we will reject such identifiers for now.
+    -- If somebody really needs to use a ' character as part of an identifier, we can revisit this decision.
+    let
+        primeyIdentifiers = catMaybes
+            [ if '\'' `elem` textToString identifier
+                then Just identifier
+                else Nothing
+            | Declaration decl <- mStatements model
+            , Name identifier <- universeBi decl
+            ]
+    unless (null primeyIdentifiers) $ userErr1 $ vcat
+        ["Identifiers cannot contain a quotation mark character in them:" <+> prettyList id "," primeyIdentifiers]
+
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
 
