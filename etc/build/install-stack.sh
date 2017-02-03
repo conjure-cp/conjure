@@ -5,8 +5,6 @@ set -o nounset
 
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source ${SCRIPT_DIR}/default_envvars.sh
-echo "Creating a cabal-freeze file for GHC ${GHC_VERSION}"
-cabal freeze --enable-tests
 
 if ! which stack ; then
     echo "Installing Haskell build tool stack"
