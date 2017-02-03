@@ -10,8 +10,8 @@ install-with-stack:
 	@stack install
 	@rm stack.yaml
 
-.PHONY: install
-install:
+.PHONY: install-with-cabal
+install-with-cabal:
 	@bash etc/build/install.sh
 
 .PHONY: preinstall
@@ -27,7 +27,7 @@ freeze:
 .PHONY: refreeze
 refreeze:
 	@make clean
-	@BUILD_TESTS=yes make install
+	@BUILD_TESTS=yes make install-with-cabal
 	@make freeze
 
 .PHONY: clean

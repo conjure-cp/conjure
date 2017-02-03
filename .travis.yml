@@ -100,7 +100,7 @@ install:
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - travis_retry cabal update
   - echo ${PATH}
-  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make
+  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make install-with-cabal
   - conjure --version                        # print version
 
   - ls -Alh $(find bin -type f)
