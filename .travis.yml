@@ -113,8 +113,6 @@ script:
 
 after_success:
   - make freeze
-  - cp cabal.config cabal.config-${GHC_VERSION}
-  - git diff cabal.config-${GHC_VERSION}
 
 cache:
   directories:
