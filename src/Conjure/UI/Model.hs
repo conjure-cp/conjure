@@ -1018,6 +1018,8 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
+    , Vertical.Set.Explicit.rule_Min
+    , Vertical.Set.Explicit.rule_Max
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
