@@ -21,7 +21,7 @@ mkdir -p minion/build
         fi
         ../build.py --compiler "${COMPILER}"
     fi
-    make minion -j2
+    make minion
 )
 cp minion/build/minion ${BIN_DIR}/minion
 echo "minion executable is at ${BIN_DIR}/minion"
