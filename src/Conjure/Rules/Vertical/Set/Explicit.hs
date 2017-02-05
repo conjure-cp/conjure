@@ -81,9 +81,9 @@ rule_Card = "set-card{Explicit}" `namedRule` theRule where
 rule_Min :: Rule
 rule_Min = "set-min{Explicit}" `namedRule` theRule where
     theRule p = do
-        s                                         <- match opMin p
-        TypeSet{}                                 <- typeOf s
-        Set_Explicit                              <- representationOf s
+        s                    <- match opMin p
+        TypeSet{}            <- typeOf s
+        Set_Explicit         <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         minInIndex           <-
@@ -102,9 +102,9 @@ rule_Min = "set-min{Explicit}" `namedRule` theRule where
 rule_Max :: Rule
 rule_Max = "set-max{Explicit}" `namedRule` theRule where
     theRule p = do
-        s                                         <- match opMax p
-        TypeSet{}                                 <- typeOf s
-        Set_Explicit                              <- representationOf s
+        s                    <- match opMax p
+        TypeSet{}            <- typeOf s
+        Set_Explicit         <- representationOf s
         [m]                  <- downX1 s
         DomainMatrix index _ <- domainOf m
         maxInIndex           <-
