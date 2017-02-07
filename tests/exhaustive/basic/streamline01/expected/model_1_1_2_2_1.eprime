@@ -7,7 +7,7 @@ find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 find aux1: matrix indexed by [int(1)] of int(1..2)
 find aux2: matrix indexed by [int(1)] of int(1..2)
 such that
-    and([s_Occurrence[q18] -> f_Function1DPartial_Flags[q18] | q18 : int(1..2)]),
+    and([s_Occurrence[q16] -> f_Function1DPartial_Flags[q16] | q16 : int(1..2)]),
     and([s_Occurrence[q13] -> q13 >= aux1[1] | q13 : int(1..2)]),
     or([s_Occurrence[q13] /\ q13 = aux1[1] | q13 : int(1..2)]),
     and([s_Occurrence[q14] -> q14 >= aux2[1] | q14 : int(1..2)]),

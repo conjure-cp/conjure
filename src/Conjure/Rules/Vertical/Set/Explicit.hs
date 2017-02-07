@@ -75,3 +75,45 @@ rule_Card = "set-card{Explicit}" `namedRule` theRule where
             ( "Vertical rule for set cardinality, Explicit representation."
             , return n
             )
+
+
+-- | the first member
+rule_Min :: Rule
+rule_Min = "set-min{Explicit}" `namedRule` theRule where
+    theRule p = do
+        s                    <- match opMin p
+        TypeSet{}            <- typeOf s
+        Set_Explicit         <- representationOf s
+        [m]                  <- downX1 s
+        DomainMatrix index _ <- domainOf m
+        minInIndex           <-
+            case index of
+                DomainInt [RangeBounded lb _] -> return lb
+                _ -> do
+                    (jPat, j) <- quantifiedVar
+                    return [essence| min([&j | &jPat : &index]) |]
+        return
+            ( "Vertical rule for set min, Explicit representation."
+            , return [essence| &m[&minInIndex] |]
+            )
+
+
+-- | the last member
+rule_Max :: Rule
+rule_Max = "set-max{Explicit}" `namedRule` theRule where
+    theRule p = do
+        s                    <- match opMax p
+        TypeSet{}            <- typeOf s
+        Set_Explicit         <- representationOf s
+        [m]                  <- downX1 s
+        DomainMatrix index _ <- domainOf m
+        maxInIndex           <-
+            case index of
+                DomainInt [RangeBounded _ ub] -> return ub
+                _ -> do
+                    (jPat, j) <- quantifiedVar
+                    return [essence| max([&j | &jPat : &index]) |]
+        return
+            ( "Vertical rule for set max, Explicit representation."
+            , return [essence| &m[&maxInIndex] |]
+            )
