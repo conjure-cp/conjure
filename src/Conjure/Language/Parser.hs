@@ -221,13 +221,31 @@ parseDomain :: Parser (Domain () Expression)
 parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr
-    = shuntingYardDomain
-    $ some
-    $ msum [ Right <$> try pDomainAtom <?> "domain"
-           , Left  <$> parseOp'
-           ]
+parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
+
     where
+
+        -- either parse an domain and continue to parseBeforeShuntO
+        -- or return []
+        parseBeforeShuntD :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
+        parseBeforeShuntD =
+            try ((:) <$> (Right <$> pDomainAtom <?> "domain")
+                     <*> parseBeforeShuntO)
+
+        parseBeforeShuntD1 :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
+        parseBeforeShuntD1 =
+            ((:) <$> (Right <$> pDomainAtom <?> "domain")
+                 <*> parseBeforeShuntO)
+
+        -- either parse an operator and continue to parseBeforeShuntD
+        -- or return []
+        parseBeforeShuntO :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
+        parseBeforeShuntO =
+            try ((:) <$> (Left <$> parseOp')
+                     <*> parseBeforeShuntD)
+            <|>
+            (return [])
+
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum
             [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
@@ -613,19 +631,34 @@ metaVarInE :: String -> Expression
 metaVarInE = ExpressionMetaVar
 
 parseExpr :: Parser Expression
-parseExpr = shuntingYardExpr parseBeforeShunt
+parseExpr = shuntingYardExpr parseBeforeShuntE1
     where
-        parseBeforeShunt :: Parser [Either Lexeme Expression]
-        parseBeforeShunt = some $ msum
-            [ Right <$> try parseAtomicExpr
-            , Left  <$> parseOp
-            ]
+        -- either parse an expression and continue to parseBeforeShuntO
+        -- or return []
+        parseBeforeShuntE :: Parser [Either Lexeme Expression]
+        parseBeforeShuntE =
+            (:) <$> (Right <$> parseAtomicExpr)
+                <*> parseBeforeShuntO
+
+        parseBeforeShuntE1 :: Parser [Either Lexeme Expression]
+        parseBeforeShuntE1 =
+            ((:) <$> (Right <$> parseAtomicExpr)
+                 <*> parseBeforeShuntO)
+
+        -- either parse an operator and continue to parseBeforeShuntE
+        -- or return []
+        parseBeforeShuntO :: Parser [Either Lexeme Expression]
+        parseBeforeShuntO =
+            (:) <$> (Left <$> parseOp)
+                <*> parseBeforeShuntE
+            <|>
+            (return [])
 
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do
     let
         prefixes = do
-            fs <- some $ msum parsePrefixes
+            fs <- some $ msum (parsePrefixes)
             return $ foldr1 (.) fs
         postfixes = do
             fs <- some $ msum parsePostfixes
@@ -935,17 +968,15 @@ shuntingYardExpr :: Parser [Either Lexeme Expression] -> Parser Expression
 shuntingYardExpr p = do
     let mergeOp = mkBinOp . lexemeText
     beforeShunt <- fixNegate <$> p
-    if not $ checkAlternating beforeShunt
-        then fail "Malformed expression, Shunting Yard failed."
-        else shunt mergeOp beforeShunt
+    checkAlternating beforeShunt
+    shunt mergeOp beforeShunt
 
 shuntingYardDomain :: (Eq a, Eq r) => Parser [Either Lexeme (Domain r a)] -> Parser (Domain r a)
 shuntingYardDomain p = do
     let mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
     beforeShunt <- p
-    if not $ checkAlternating beforeShunt
-        then fail "Malformed expression, Shunting Yard failed."
-        else shunt mergeOp beforeShunt
+    checkAlternating beforeShunt
+    shunt mergeOp beforeShunt
 
 fixNegate :: [Either Lexeme Expression] -> [Either Lexeme Expression]
 fixNegate ( Right a
@@ -955,10 +986,12 @@ fixNegate ( Right a
 fixNegate (a:bs) = a : fixNegate bs
 fixNegate [] = []
 
-checkAlternating :: [Either a b] -> Bool
-checkAlternating [Right _] = True
-checkAlternating (Right _:Left _:rest) = checkAlternating rest
-checkAlternating _ = False
+-- "Left"s are operators, "Right"s are expressions
+checkAlternating :: MonadFail m => [Either a b] -> m ()
+checkAlternating (Right{} : Right{} : _) = fail "Malformed expression."
+checkAlternating (Left{}  : Left{}  : _) = fail "Malformed expression."
+checkAlternating (_:xs) = checkAlternating xs
+checkAlternating [] = return ()
 
 shunt :: Eq a => (Lexeme -> a -> a -> a) -> [Either Lexeme a] -> Parser a
 shunt mergeOp xs = do
