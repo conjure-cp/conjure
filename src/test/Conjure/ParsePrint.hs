@@ -81,8 +81,15 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
 
         fixWindowsPaths :: String -> String
         fixWindowsPaths
-            | os `elem` ["mingw32"] = map (\ ch -> if ch == '\\' then '/' else ch )
+            | os `elem` ["mingw32"] = fixBackslashes
             | otherwise             = id
+
+        fixBackslashes :: String -> String
+        fixBackslashes ('/'  : '\\' : xs) = "/\\" ++ fixBackslashes xs
+        fixBackslashes ('\\' : '/'  : xs) = "\\/" ++ fixBackslashes xs
+        fixBackslashes ('\\'        : xs) = '/'    : fixBackslashes xs
+        fixBackslashes [] = []
+        fixBackslashes (x:xs) = x : fixBackslashes xs
 
         readIfExists :: FilePath -> IO String
         readIfExists f = fromMaybe "" <$> readFileIfExists f
