@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find var2:
+        relation (size -0) of
+            (tuple (bool) *
+             function (maxSize 4, total, injective) int(3..4, 2..2) --> bool *
+             matrix indexed by [int(2..4, 0..3)] of bool)

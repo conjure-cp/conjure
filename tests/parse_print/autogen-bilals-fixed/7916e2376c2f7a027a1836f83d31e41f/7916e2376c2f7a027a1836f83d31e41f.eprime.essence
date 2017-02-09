@@ -1,0 +1,43 @@
+language ESSENCE' 1.0
+
+find var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..1)] of int(0..256)
+find var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D:
+        matrix indexed by [int(1..1), int(1..256), bool] of int(3..5, 4)
+such that
+    and([1 =
+         or([q14 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+             (and([q1_Function1D[q16] =
+                   var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q14,
+                                                                                            q16]
+                       | q16 : bool])
+              /\
+              and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                            q14, q17]
+                   = q1_Function1D[q17]
+                       | q17 : bool]))
+                 | q14 : int(1..256)])
+             | q1_Function1D : matrix indexed by [bool] of int(3..5, 4),
+               allDiff(q1_Function1D), false, true]),
+    var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] >= 1,
+    and([q6 + 1 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1]
+         ->
+         var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q6,
+                                                                                  ..]
+         <lex
+         var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                  q6 + 1, ..]
+             | q6 : int(1..255)]),
+    and([q7 > var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                       q7, q26]
+              = 3 | q26 : bool])
+             | q7 : int(1..256)]),
+    and([q8 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         allDiff(var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                          q8, ..])
+             | q8 : int(1..256)]),
+    and([q8 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         false
+             | q8 : int(1..256)])
+

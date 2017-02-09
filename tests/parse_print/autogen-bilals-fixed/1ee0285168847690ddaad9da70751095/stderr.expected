@@ -1,0 +1,67 @@
+Error 1:
+    In a 'such that' statement:
+        and([false
+                 | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool,
+                   q1_Function1DPartial_Values : matrix indexed by [bool] of bool,
+                   and([q1_Function1DPartial_Values[q41] != q1_Function1DPartial_Values[q42]
+                            | q41 : bool, q42 : bool, q41 != q42, q1_Function1DPartial_Flags[q41],
+                              q1_Function1DPartial_Flags[q42]]),
+                   and([q1_Function1DPartial_Flags[q43] = false -> q1_Function1DPartial_Values[q43] = false
+                            | q43 : bool]),
+                   0 = sum([q1_Function1DPartial_Flags[q44] | q44 : bool])])
+    Error:
+        Type error in sum([q1_Function1DPartial_Flags[q44] | q44 : bool])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([or([var3_Function1DPartial_Flags[q31] /\
+                 (and([var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Flags[q31, q56] > 0 ->
+                       sum([(var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q57] =
+                             var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q56])
+                            * var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Flags[q31, q57]
+                                | q57 : int(1..4)])
+                       =
+                       sum([(q30_ExplicitVarSizeWithFlags_Values[q58] =
+                             var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q56])
+                            * q30_ExplicitVarSizeWithFlags_Flags[q58]
+                                | q58 : int(1..4)])
+                           | q56 : int(1..4)])
+                  /\
+                  and([sum([(var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q60] =
+                             q30_ExplicitVarSizeWithFlags_Values[q59])
+                            * var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Flags[q31, q60]
+                                | q60 : int(1..4)])
+                       =
+                       sum([q30_ExplicitVarSizeWithFlags_Flags[q61]
+                                | q61 : int(1..4),
+                                  q30_ExplicitVarSizeWithFlags_Values[q61] = q30_ExplicitVarSizeWithFlags_Values[q59]])
+                           | q59 : int(1..4), q30_ExplicitVarSizeWithFlags_Flags[q59] > 0]))
+                     | q31 : bool])
+                 | q30_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..4)] of int(0..2),
+                   q30_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..4)] of int(5, 4),
+                   and([q30_ExplicitVarSizeWithFlags_Flags[q46 + 1] > 0 ->
+                        q30_ExplicitVarSizeWithFlags_Values[q46] < q30_ExplicitVarSizeWithFlags_Values[q46 + 1]
+                            | q46 : int(1..3)]),
+                   and([q30_ExplicitVarSizeWithFlags_Flags[q47] = 0 -> q30_ExplicitVarSizeWithFlags_Values[q47] = 5
+                            | q47 : int(1..4)]),
+                   and([q30_ExplicitVarSizeWithFlags_Flags[q48 + 1] > 0 -> q30_ExplicitVarSizeWithFlags_Flags[q48] > 0
+                            | q48 : int(1..3)]),
+                   1 <= sum([q30_ExplicitVarSizeWithFlags_Flags[q50] | q50 : int(1..4)]),
+                   sum([q30_ExplicitVarSizeWithFlags_Flags[q50] | q50 : int(1..4)]) <= 4])
+    Error:
+        Not uniformly typed: [var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q57] =
+                              var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Values[q31, q56],
+                              var3_Function1DPartial_Values_ExplicitVarSizeWithFlags_Flags[q31, q57];
+                                  int(1..2)]
+        Involved types are: bool
+                            int
+Error 3:
+    In a 'such that' statement: 4 <= sum([var3_Function1DPartial_Flags[q33] | q33 : bool])
+    Error:
+        Type error in sum([var3_Function1DPartial_Flags[q33] | q33 : bool])
+                      The argument has type: [bool]
+Error 4:
+    In a 'such that' statement: sum([var3_Function1DPartial_Flags[q33] | q33 : bool]) <= 4
+    Error:
+        Type error in sum([var3_Function1DPartial_Flags[q33] | q33 : bool])
+                      The argument has type: [bool]

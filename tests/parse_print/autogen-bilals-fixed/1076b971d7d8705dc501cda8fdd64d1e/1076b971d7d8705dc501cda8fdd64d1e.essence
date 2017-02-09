@@ -1,0 +1,26 @@
+language Essence 1.3
+
+find var1: bool
+find var2: matrix indexed by [int(0, 1..4), int(4, 3..5)] of int(0..3, 2..3)
+find var3: matrix indexed by [int(5, 5..5), int(3, 4..5)] of bool
+find var4: matrix indexed by [int(4..4, 0)] of int(2..3, 3)
+find var5:
+        matrix indexed by [int(5, 2), int(3..5, 3..4), int(2..2, 0..4), int(3, 3),
+                           int(5..5, 5..5), int(0..5, 1..1)] of bool
+find var6:
+        matrix indexed by [int(4..5, 5..5), int(1..5, 4), int(0..0, 4..5)] of int(0, 0)
+such that
+    true =
+    ([[0 | l_1 : int(1..2, 5..5), l_2 : int(1..2, 2..4)], var4; int(5, 0..0)] =
+     [[4, 2; int(5, 4..4)], [1, 0, 1, 4, 3; int(2..4, 10..11)],
+      [2, 5, 3, 1; int(1..3, 11..11)]; int(4..6)]),
+    [true | l_3 : bool, l_4 : bool, l_3, l_3][var2[3, var4[2 ** (5 ** 5)]]],
+    var1,
+    true,
+    false,
+    var1,
+    true,
+    1 **
+    ([3, 3, 2; int(6..8)][2 ** 0] **
+     [5, 3, 3, 1, 2; int(15, 8, 13, 10, 7..7)][1 ** 2])
+    = 3

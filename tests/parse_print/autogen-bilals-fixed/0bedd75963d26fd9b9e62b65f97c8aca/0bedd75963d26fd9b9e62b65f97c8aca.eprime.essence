@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1_Occurrence: matrix indexed by [int(5, 0)] of bool
+such that
+    and([var1_Occurrence[q3] -> var1_Occurrence[q3] | q3 : int(5, 0)]),
+    and([var1_Occurrence[q4] -> var1_Occurrence[q4] | q4 : int(5, 0)]),
+    and([var1_Occurrence[q7] -> var1_Occurrence[q7] | q7 : int(5, 0)]),
+    and([var1_Occurrence[q8] -> var1_Occurrence[q8] | q8 : int(5, 0)])
+

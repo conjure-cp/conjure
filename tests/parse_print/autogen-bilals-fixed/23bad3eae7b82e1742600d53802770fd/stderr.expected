@@ -1,0 +1,64 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             (1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+              or([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                           [1, q43, q45]
+                       > 0
+                       ->
+                       sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q43, q46]
+                             =
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q43, q45])
+                            *
+                            var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                [1, q43, q46]
+                                | q46 : int(1..8)])
+                       =
+                       sum([(q1_ExplicitVarSizeWithFlags_Values[q47] =
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q43, q45])
+                            * q1_ExplicitVarSizeWithFlags_Flags[q47]
+                                | q47 : int(1..8)])
+                           | q45 : int(1..8)])
+                  /\
+                  and([sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q43, q49]
+                             = q1_ExplicitVarSizeWithFlags_Values[q48])
+                            *
+                            var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                [1, q43, q49]
+                                | q49 : int(1..8)])
+                       =
+                       sum([q1_ExplicitVarSizeWithFlags_Flags[q50]
+                                | q50 : int(1..8),
+                                  q1_ExplicitVarSizeWithFlags_Values[q50] = q1_ExplicitVarSizeWithFlags_Values[q48]])
+                           | q48 : int(1..8), q1_ExplicitVarSizeWithFlags_Flags[q48] > 0])
+                      | q43 : int(1..4)]))
+                 | q1_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..8)] of int(0..4),
+                   q1_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..8)] of int(4, 2),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q30 + 1] > 0 ->
+                        q1_ExplicitVarSizeWithFlags_Values[q30] < q1_ExplicitVarSizeWithFlags_Values[q30 + 1]
+                            | q30 : int(1..7)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q31] = 0 -> q1_ExplicitVarSizeWithFlags_Values[q31] = 4
+                            | q31 : int(1..8)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q32 + 1] > 0 -> q1_ExplicitVarSizeWithFlags_Flags[q32] > 0
+                            | q32 : int(1..7)]),
+                   0 <= sum([q1_ExplicitVarSizeWithFlags_Flags[q34] | q34 : int(1..8)])])
+    Error:
+        Not uniformly typed: [var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                  [1, q43, q46]
+                              =
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                  [1, q43, q45],
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                  [1, q43, q46];
+                                  int(1..2)]
+        Involved types are: bool
+                            int
+Error 2:
+    In a 'such that' statement: 4 <= sum([var2_2_Function1DPartial_Flags[q28] | q28 : int(4, 4)])
+    Error:
+        Type error in sum([var2_2_Function1DPartial_Flags[q28] | q28 : int(4, 4)])
+                      The argument has type: [bool]

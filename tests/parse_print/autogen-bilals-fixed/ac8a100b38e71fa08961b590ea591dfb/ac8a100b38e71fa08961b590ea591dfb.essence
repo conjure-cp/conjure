@@ -1,0 +1,63 @@
+language Essence 1.3
+
+find var1:
+        relation of (set of bool * function bool --> bool * bool * partition from bool)
+such that
+    true,
+    relation(((mset() : `mset of int`),
+              {-4, |mset(false)|, 9, toInt(false) % toInt(true), toInt(true) * toInt(false),
+               -4},
+              mset((false -> false) <-> false),
+              mset(freq(mset(false), 5 = 5), -4, 6, toInt(false) % -8, |partition({false})|,
+                   |{3, 6}|)),
+             (mset(0), toSet(toMSet({-10, -1})),
+              mset(mset(true, false) = mset(false, true), var1 = var1, false),
+              toMSet({-5, -10 * 0})),
+             (mset(4, 5, 2, -7 / 2 * 10, |partition({false}, {false})|),
+              {toInt(false), toInt(true), toInt(true), 10} union participants(partition({3})),
+              (mset() : `mset of bool`),
+              mset(|{true, true}|, 3, -6, 2, -5, |function(false --> true)|)))
+    !=
+    relation((mset(10, 6 * 4), ({} : `set of int`), toMSet(({} : `set of bool`)),
+              mset(-9, -1) union mset(-1)),
+             ((mset() : `mset of int`), {2, 7 / -7, -6}, mset(true, true),
+              toMSet(({} : `set of int`))),
+             ((mset() : `mset of int`), ({} : `set of int`),
+              mset(false = false, true, false /\ true), mset(-7) - (mset() : `mset of int`)))
+    union
+    relation((mset(toInt(false), 4 + -4, -2), ({} : `set of int`), toMSet({true}),
+              mset(toInt(true), -8 / -2, -4)),
+             (toMSet(({} : `set of int`)), ({} : `set of int`) intersect {3},
+              (mset() : `mset of bool`), mset(toInt(false), toInt(true))),
+             (mset(toInt(true), toInt(true)), {5, -7} - {0, 3},
+              mset(false, false) intersect mset(false),
+              (mset() : `mset of int`) intersect mset(-2)))
+    <-> true,
+    mset({{tuple (8), tuple (5), tuple (9)}, {tuple (7), tuple (1), tuple (-7)},
+          {tuple (8)}, ({} : `set of tuple(int)`)},
+         {{tuple (-1)}}, {{tuple (8), tuple (-2), tuple (2)}, {tuple (4), tuple (7)}})
+    =
+    mset({{tuple (-4), tuple (-2), tuple (-5)}},
+         parts(partition({tuple (-8)}, {tuple (4)}, {tuple (2), tuple (-5)})),
+         {{tuple (-5), tuple (-4), tuple (-2)}},
+         {{tuple (3)}, {tuple (-10), tuple (-10)}, {tuple (-2)},
+          {tuple (-10), tuple (3), tuple (5), tuple (-10)}},
+         {({} : `set of tuple(int)`), {tuple (0), tuple (2)},
+          {tuple (-6), tuple (-5), tuple (-7), tuple (2)}},
+         parts(partition({tuple (1)}, {tuple (4)}))),
+    parts(partition({partition({function(-10 --> false, -10 --> false)})},
+                    {partition({function(4 --> false), function(-3 --> false, -4 --> true)})},
+                    {partition({function(10 --> true, -8 --> true)},
+                               {function(2 --> true, 6 --> true)}, {function(1 --> true)})},
+                    {partition({function(9 --> true), function(1 --> true)},
+                               {function(-9 --> true), function(3 --> false, 1 --> false)})}))
+    =
+    parts(partition({partition({function(7 --> false, 1 --> true)},
+                               {function(-4 --> false, -3 --> true)}, {function(-9 --> false)})})),
+    mset(toSet(toMSet({-7}))) !=
+    mset(toSet(mset(toInt(false), -5)), toSet(toMSet({10})),
+         {-4, 2, |({} : `set of int`)|, toInt(true) / -9, 1},
+         {-6 % 0} intersect {6, -3} union party(-9, partition({-7})),
+         participants(partition({-4})) - participants(partition({2})), {1},
+         {-7 % (-1 * 6)}),
+    false

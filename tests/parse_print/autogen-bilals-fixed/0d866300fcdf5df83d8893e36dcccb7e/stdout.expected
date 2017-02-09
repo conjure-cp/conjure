@@ -1,0 +1,50 @@
+language ESSENCE' 1.0
+
+find var1_Occurrence: matrix indexed by [int(5, 0)] of bool
+find var1_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find var1_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(5, 0)
+find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find var1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(5, 0)
+such that
+    and([q6 <= var1_ExplicitVarSizeWithMarker_Marker -> var1_Occurrence[var1_ExplicitVarSizeWithMarker_Values[q6]]
+             | q6 : int(1..2)]),
+    and([var1_Occurrence[q5] ->
+         or([q8 <= var1_ExplicitVarSizeWithMarker_Marker /\ var1_ExplicitVarSizeWithMarker_Values[q8] = q5
+                 | q8 : int(1..2)])
+             | q5 : int(5, 0)]),
+    and([var1_Occurrence[q10] ->
+         or([q12 <= var1_ExplicitVarSizeWithMarker_Marker /\ var1_ExplicitVarSizeWithMarker_Values[q12] = q10
+                 | q12 : int(1..2)])
+             | q10 : int(5, 0)]),
+    and([q13 <= var1_ExplicitVarSizeWithMarker_Marker -> var1_Occurrence[var1_ExplicitVarSizeWithMarker_Values[q13]]
+             | q13 : int(1..2)]),
+    2 <= var1_ExplicitVarSizeWithMarker_Marker ->
+    var1_ExplicitVarSizeWithMarker_Values[1] < var1_ExplicitVarSizeWithMarker_Values[2],
+    and([q1 > var1_ExplicitVarSizeWithMarker_Marker -> var1_ExplicitVarSizeWithMarker_Values[q1] = 5 | q1 : int(1..2)]),
+    and([q14 <= var1_ExplicitVarSizeWithMarker_Marker -> var1_Occurrence[var1_ExplicitVarSizeWithMarker_Values[q14]]
+             | q14 : int(1..2)]),
+    and([var1_Occurrence[q11] ->
+         or([q16 <= var1_ExplicitVarSizeWithMarker_Marker /\ var1_ExplicitVarSizeWithMarker_Values[q16] = q11
+                 | q16 : int(1..2)])
+             | q11 : int(5, 0)]),
+    var1_ExplicitVarSizeWithFlags_Flags[2] ->
+    var1_ExplicitVarSizeWithFlags_Values[1] < var1_ExplicitVarSizeWithFlags_Values[2],
+    and([var1_ExplicitVarSizeWithFlags_Flags[q2] = false -> var1_ExplicitVarSizeWithFlags_Values[q2] = 5
+             | q2 : int(1..2)]),
+    var1_ExplicitVarSizeWithFlags_Flags[2] -> var1_ExplicitVarSizeWithFlags_Flags[1],
+    and([var1_ExplicitVarSizeWithFlags_Flags[q17] -> var1_Occurrence[var1_ExplicitVarSizeWithFlags_Values[q17]]
+             | q17 : int(1..2)]),
+    and([var1_Occurrence[q15] ->
+         or([var1_ExplicitVarSizeWithFlags_Flags[q19] /\ var1_ExplicitVarSizeWithFlags_Values[q19] = q15
+                 | q19 : int(1..2)])
+             | q15 : int(5, 0)]),
+    and([var1_ExplicitVarSizeWithFlags_Flags[q20] ->
+         or([q21 <= var1_ExplicitVarSizeWithMarker_Marker /\
+             var1_ExplicitVarSizeWithMarker_Values[q21] = var1_ExplicitVarSizeWithFlags_Values[q20]
+                 | q21 : int(1..2)])
+             | q20 : int(1..2)]),
+    and([q22 <= var1_ExplicitVarSizeWithMarker_Marker ->
+         or([var1_ExplicitVarSizeWithFlags_Flags[q23] /\
+             var1_ExplicitVarSizeWithFlags_Values[q23] = var1_ExplicitVarSizeWithMarker_Values[q22]
+                 | q23 : int(1..2)])
+             | q22 : int(1..2)])

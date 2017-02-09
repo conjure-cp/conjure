@@ -1,0 +1,25 @@
+language Essence 1.3
+
+find var1:
+        (mset (minSize 0 , maxSize 1, maxOccur 3) of bool,
+         partition (numParts 0, minPartSize 1, regular) from bool,
+         mset (size 2, minOccur 5 , maxOccur 5) of int(0, 0..5), (bool, bool, bool))
+find var2:
+        relation (maxSize -0) of (relation (minSize 2) of (bool * bool * int(5..5, 2)))
+find var3: bool
+find var4:
+        mset (minSize 5 , maxSize 5, maxOccur 1 % 0) of set (minSize 0) of bool
+find var5:
+        function (minSize -1, total, injective)
+            (bool, bool, bool, bool) --> (bool, bool)
+find var6:
+        mset (size 0 % 4, minOccur 4 , maxOccur 5) of
+            set (minSize 4 , maxSize 4) of int(3, 3..4)
+such that
+    var3,
+    var3,
+    var3,
+    var3,
+    var3,
+    var3,
+    var3

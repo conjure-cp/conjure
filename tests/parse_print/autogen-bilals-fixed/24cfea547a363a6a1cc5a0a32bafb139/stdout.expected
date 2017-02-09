@@ -1,0 +1,37 @@
+language Essence 1.3
+
+find var1: bool
+find var2: bool
+such that
+    and([l_1 | l_1 : bool, l_1, (l_1 >= l_1) < l_1]),
+    image(function([false, true, true; int(2..4)] --> tuple (true)),
+          flatten([var1, var2, var2, var2, var1; int(9..13)]))
+        [1],
+    var1,
+    var2,
+    together({relation(tuple (1), tuple (4), tuple (2), tuple (5)),
+              relation(tuple (3), tuple (2), tuple (4), tuple (3), tuple (2))},
+             partition({relation(tuple (2), tuple (2), tuple (3), tuple (0), tuple (3)), relation(tuple (2)),
+                        relation(tuple (0))},
+                       {relation(tuple (3), tuple (5), tuple (3)),
+                        relation(tuple (0), tuple (1), tuple (5), tuple (4))}))
+    <-> var2,
+    var1,
+    image(function([true, true, true, true; int(4, 0, 9, 7)] --> [false, false, false, false; int(5..6, 12, 2)],
+                   [false, true, true, true; int(7, 9..10, 5)] --> [true, true, false, false, true; int(0..4)]),
+          [l_3 | l_2 : bool, l_3 : bool])
+        [freq((mset() : `mset of bool`), var1) - factorial(3) ** factorial(1)],
+    apart(({} : `set of matrix indexed by [int, int] of bool`),
+          partition({[[true, true, true, true, false; int(10..14)]; int(0)],
+                     [[true, false; int(4..5)], [false, false, true; int(7, 1, 2)],
+                      ([] : `matrix indexed by [int] of bool`);
+                          int(4..6)],
+                     [[true, true; int(3..4)], [true, true, true; int(2, 4, 8)]; int(1, 4)]},
+                    {[[false, true; int(0..1)], ([] : `matrix indexed by [int] of bool`); int(5, 1)],
+                     [[false, true, false; int(7, 5..6)], [false, true, false; int(5, 2, 3)],
+                      ([] : `matrix indexed by [int] of bool`), [false; int(2)], [false, false; int(4..5)];
+                          int(6, 5, 10..12)],
+                     [[true, true; int(4, 2)], ([] : `matrix indexed by [int] of bool`),
+                      [true, true, false, false; int(12, 10, 2, 9)], [true, true; int(4..5)],
+                      ([] : `matrix indexed by [int] of bool`);
+                          int(15, 11, 2, 0..1)]}))

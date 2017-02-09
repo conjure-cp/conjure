@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var3_ExplicitVarSizeWithMarker_Marker: int(0..1)
+find var3_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..1), int(1..0)] of int(0..4)
+find var3_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..1), int(1..0)] of bool
+such that true
+

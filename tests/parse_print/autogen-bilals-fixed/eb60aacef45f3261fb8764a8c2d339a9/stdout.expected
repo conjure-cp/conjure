@@ -1,0 +1,16 @@
+language Essence 1.3
+
+given given1: partition (minPartSize 0, regular) from bool
+find var1: relation (minSize 0, maxSize 0) of (bool * bool * bool)
+given given2: function (injective) int(2, 5) --> bool
+find var2: relation (minSize 2) of (bool * bool * bool * bool)
+such that
+    and([l_1 | l_1 : bool]) <= ({false < true, true >= false, true < false} subsetEq ({} : `set of bool`)),
+    or([[true, true, false, false; int(7..10)], [false, false, true, false; int(8, 9, 0, 5)]; int(4..5)]
+           [-toInt(false)]),
+    mset(relation((true, false))) union
+    mset(relation((false, false), (true, true), (true, false)), relation((true, true), (true, false), (true, true)))
+    in
+    {mset(relation((true, false), (false, true)), relation((true, true), (true, false), (false, false))),
+     mset(relation((true, true), (false, true), (true, false), (false, true), (false, false)),
+          (relation() : `relation of (bool * bool)`), (relation() : `relation of (bool * bool)`))}

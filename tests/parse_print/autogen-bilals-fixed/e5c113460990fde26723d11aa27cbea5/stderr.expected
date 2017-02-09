@@ -1,0 +1,37 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             sum([q21 <= var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q24 <=
+                      var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q21]
+                      /\
+                      (and([q1_Function1D[q26] =
+                            var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1D
+                                [q21, q24, q26]
+                                | q26 : bool])
+                       /\
+                       and([var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1D
+                                [q21, q24, q27]
+                            = q1_Function1D[q27]
+                                | q27 : bool]))
+                          | q24 : int(1..4)])
+                      | q21 : int(1..65536)])
+                 | q1_Function1D : matrix indexed by [bool] of int(1, 4), allDiff(q1_Function1D)])
+    Error:
+        Type error in sum([q21 <= var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q24 <=
+                               var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q21]
+                               /\
+                               (and([q1_Function1D[q26] =
+                                     var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1D
+                                         [q21, q24, q26]
+                                         | q26 : bool])
+                                /\
+                                and([var1_1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_Function1D
+                                         [q21, q24, q27]
+                                     = q1_Function1D[q27]
+                                         | q27 : bool]))
+                                   | q24 : int(1..4)])
+                               | q21 : int(1..65536)])
+                      The argument has type: [bool]

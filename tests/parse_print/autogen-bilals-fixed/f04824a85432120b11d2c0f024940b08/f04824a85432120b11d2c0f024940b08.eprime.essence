@@ -1,0 +1,31 @@
+language ESSENCE' 1.0
+
+given given1_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..0)
+given given1_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of bool
+find var1_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find var1_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of bool
+given given2_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..8)
+given given2_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence:
+        matrix indexed by [int(1..8), int(2, 2..3)] of bool
+find var2_ExplicitWithRepetition_Flag: int(0..0)
+find var2_ExplicitWithRepetition_Values: matrix indexed by [int(1..0)] of bool
+given given3_ExplicitWithRepetition_Flag: int(0..1)
+given given3_ExplicitWithRepetition_Values: matrix indexed by [int(1..1)] of bool
+find var3_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..5)
+find var3_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of bool
+find var4_1: bool
+such that
+    false,
+    2 <= var1_ExplicitVarSizeWithMarker_Marker ->
+    var1_ExplicitVarSizeWithMarker_Values[1] < var1_ExplicitVarSizeWithMarker_Values[2],
+    and([q2 > var1_ExplicitVarSizeWithMarker_Marker -> var1_ExplicitVarSizeWithMarker_Values[q2] = false
+             | q2 : int(1..2)]),
+    var2_ExplicitWithRepetition_Flag <= 0,
+    and([var3_ExplicitWithFlags_Flags[q9 + 1] > 0 ->
+         var3_ExplicitWithFlags_Values[q9] < var3_ExplicitWithFlags_Values[q9 + 1]
+             | q9 : int(1..3)]),
+    and([var3_ExplicitWithFlags_Flags[q10] = 0 -> var3_ExplicitWithFlags_Values[q10] = false | q10 : int(1..4)]),
+    and([var3_ExplicitWithFlags_Flags[q11 + 1] > 0 -> var3_ExplicitWithFlags_Flags[q11] > 0 | q11 : int(1..3)]),
+    4 <= sum([var3_ExplicitWithFlags_Flags[q13] | q13 : int(1..4)]),
+    sum([var3_ExplicitWithFlags_Flags[q13] | q13 : int(1..4)]) <= 4
+

@@ -1,0 +1,39 @@
+language ESSENCE' 1.0
+
+find var1_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..24)] of int(0..2)
+find var1_Explicit_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..24), int(1..2)] of bool
+find var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..1)] of int(0..0)
+find var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..1), int(1..0), int(1..4)] of int(0..0)
+find var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..1), int(1..0), int(1..4)] of bool
+such that
+    false,
+    ([] : `matrix indexed by [int] of bool`)[min(([] : `matrix indexed by [int] of int`))],
+    and([var1_Explicit_ExplicitVarSizeWithMarker_Marker[q1] <
+         var1_Explicit_ExplicitVarSizeWithMarker_Marker[q1 + 1]
+         \/
+         var1_Explicit_ExplicitVarSizeWithMarker_Marker[q1] =
+         var1_Explicit_ExplicitVarSizeWithMarker_Marker[q1 + 1]
+         /\
+         var1_Explicit_ExplicitVarSizeWithMarker_Values[q1, ..] <lex
+         var1_Explicit_ExplicitVarSizeWithMarker_Values[q1 + 1, ..]
+             | q1 : int(1..23)]),
+    and([2 <= var1_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+         var1_Explicit_ExplicitVarSizeWithMarker_Values[q2, 1] <
+         var1_Explicit_ExplicitVarSizeWithMarker_Values[q2, 2]
+             | q2 : int(1..24)]),
+    and([and([q4 > var1_Explicit_ExplicitVarSizeWithMarker_Marker[q2] ->
+              var1_Explicit_ExplicitVarSizeWithMarker_Values[q2, q4] = false
+                  | q4 : int(1..2)])
+             | q2 : int(1..24)]),
+    and([4 <= var1_Explicit_ExplicitVarSizeWithMarker_Marker[q2]
+             | q2 : int(1..24)]),
+    var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] =
+    var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1],
+    var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] >= 1,
+    5 <= var2_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1]
+

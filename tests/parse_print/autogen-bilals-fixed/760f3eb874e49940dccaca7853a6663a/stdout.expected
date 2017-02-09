@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1: int(4, 5)
+find var2: matrix indexed by [int(0, 2)] of bool
+find var3: matrix indexed by [int(0, 4)] of bool
+minimising var1
+such that
+    and([var3[q3] = var3[q3] | q3 : int(0, 4)]),
+    var2[var1]

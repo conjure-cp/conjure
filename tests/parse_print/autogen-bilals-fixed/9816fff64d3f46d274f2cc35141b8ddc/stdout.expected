@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var1: ((bool, int(-3)), function int(-2..5, 2..5) --> bool, int(5, -1..3), partition from int(3, 2))
+find var2: function set of bool --> partition from int(-2, -1)
+find var3: set of int(-3..5)
+such that
+    or([{function(4 --> -3), function(10 --> 4, 0 --> -4)} = ({} : `set of function int --> int`)
+            | q_4 <- var3, q_4 <= (6 + 7 ** 2) ** |partition({true}, {true})|]),
+    and([-6 / -7 in ({} : `set of int`) \/ (7 != -2) in (mset() : `mset of bool`) | q_6 : set of int(-3..5)]),
+    and([mset(false, true) = mset(false, true) /\ (false \/ true) in mset(true) | q_7 <- var3])

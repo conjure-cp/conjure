@@ -1,0 +1,36 @@
+language Essence 1.3
+
+find var1: bool
+find var2: relation of (set of int(-1..0) * function int(-4) --> bool * set of int(2))
+find var3: set of tuple (int(3..4))
+find var4: int(-5..0)
+find var5: set of tuple (int(2))
+find var6: int(-2)
+find var7: int(-4..-1)
+such that
+    mset([{false}; int(4)],
+         [({} : `set of bool`), {true, false}, ({} : `set of bool`), {false}, ({} : `set of bool`); int(1..4, 4..5)],
+         [{false}; int(-4)], [{true}, {false, true}, {true, false}; int(-2, 4..5)])
+    !=
+    mset([{false}, ({} : `set of bool`), {false, true}, {true}; int(-4..-1)],
+         [{false}, ({} : `set of bool`), {true, true}; int(-3, 0..1)], [({} : `set of bool`); int(0)],
+         [({} : `set of bool`), {true}; int(-3, 0)])
+    \/
+    (((false -> false) in (mset() : `mset of bool`) <-> var1 /\ -8 != 9) <-> var1 in (mset() : `mset of bool`) /\ var1),
+    true,
+    or([false | q_8 : set of tuple (int(3..4)), |q_8| <= 2]),
+    and([-3 != max(party(10 ** toInt(true), partition({-7})))
+             | q_9 <- var5, tuple (min((mset() : `mset of int`) union (mset() : `mset of int`))) = q_9]),
+    or([partition({({} : `set of mset of bool`), {mset(false), (mset() : `mset of bool`)}},
+                  {{mset(false), (mset() : `mset of bool`)}, ({} : `set of mset of bool`)}, {{mset(true)}},
+                  {{mset(false, false), mset(true), mset(true), (mset() : `mset of bool`)}})
+        =
+        partition({{(mset() : `mset of bool`), mset(true), (mset() : `mset of bool`), mset(false)}, {mset(true)},
+                   {mset(true), (mset() : `mset of bool`)}},
+                  {{(mset() : `mset of bool`)}, {mset(true, false)}, {(mset() : `mset of bool`)}})
+            | q_10 : set of tuple (int(3..4)),
+              defined(function(tuple (10) --> function(-10 --> 0)) intersect
+                      function(tuple (-1) --> function(0 --> 7, 7 --> 2), tuple (7) --> function(-7 --> -2, 5 --> 4),
+                               tuple (-1) --> function(1 --> -10, 2 --> 9),
+                               tuple (-6) --> function(3 --> -2, -3 --> 3)))
+              != q_10])

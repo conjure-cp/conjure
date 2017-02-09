@@ -1,0 +1,15 @@
+Error:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q13 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[q13, q14] = q8[q14]
+                           | q14 : int(4, 3)])
+                      | q13 : int(1..256)])
+                 | q8 : matrix indexed by [int(4, 3)] of int(2..4, 1)])
+    Error:
+        Type error in sum([q13 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[q13, q14] =
+                                q8[q14]
+                                    | q14 : int(4, 3)])
+                               | q13 : int(1..256)])
+                      The argument has type: [bool]

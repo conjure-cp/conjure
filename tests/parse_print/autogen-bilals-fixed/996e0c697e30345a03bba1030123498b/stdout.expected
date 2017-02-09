@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2: int(1..4, 5)
+minimising var2
+such that
+    var1,
+    2 = var2 \/ 3 = var2,
+    !(2 = var2 \/ 3 = var2) \/ (!(var2 = 2) \/ !(var2 = 3))

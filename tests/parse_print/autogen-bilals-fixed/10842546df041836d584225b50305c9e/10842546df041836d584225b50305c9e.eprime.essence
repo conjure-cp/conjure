@@ -1,0 +1,12 @@
+language ESSENCE' 1.0
+
+given given1_PartitionAsSetR17R5R3_ExplicitVarSizeWithMarkerR5R17R5R3_Marker: int(0..4)
+given given1_PartitionAsSetR17R5R3_ExplicitVarSizeWithMarkerR5R17R5R3_Values_ExplicitVarSizeWithMarkerR17R5R3_Marker:
+        matrix indexed by [int(1..4)] of int(0..2)
+given given1_PartitionAsSetR17R5R3_ExplicitVarSizeWithMarkerR5R17R5R3_Values_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker:
+        matrix indexed by [int(1..4), int(1..2)] of int(0..5)
+given given1_PartitionAsSetR17R5R3_ExplicitVarSizeWithMarkerR5R17R5R3_Values_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
+        matrix indexed by [int(1..4), int(1..2), int(1..5), int(1..0)] of int(4..5, 2)
+find unused: bool
+such that true
+

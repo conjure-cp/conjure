@@ -1,0 +1,5 @@
+language Essence 1.3
+
+find var1:
+        mset (maxSize |({} : `set of int`)|, minOccur 3, maxOccur product([2; int(1)])) of
+            mset (maxSize toInt(false), minOccur 0) of function (size 4, total, bijective) bool --> bool

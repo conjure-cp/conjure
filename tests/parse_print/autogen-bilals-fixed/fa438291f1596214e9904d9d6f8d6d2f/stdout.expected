@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find var1: set (minSize 3, maxSize 4) of int(4, 0..1)
+find var2: bool
+find var3: matrix indexed by [int(3..4, 2)] of function (size 5, total) bool --> bool
+find var4: function (maxSize 3, bijective) int(0, 5) --> matrix indexed by [int(2..3, 1)] of int(1..3, 2..3)
+find var5: mset (size 5 / 0, maxOccur 3 / 0) of bool

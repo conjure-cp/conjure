@@ -1,0 +1,16 @@
+language ESSENCE' 1.0
+
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker:
+        int(0..0)
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..0), int(1..5)] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..0), int(1..5)] of bool
+find var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_Function1D:
+        matrix indexed by [int(1..0), bool] of bool
+such that
+    var2_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 0,
+    and([false
+             | q14_Function1D : matrix indexed by [bool] of bool, allDiff(q14_Function1D),
+               false])
+

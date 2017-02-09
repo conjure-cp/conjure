@@ -1,0 +1,62 @@
+Error 1:
+    In a 'such that' statement: 0 <= sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..4)])
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..4)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement: sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..4)]) <= 4
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..4)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement:
+        and([var1_ExplicitVarSizeWithFlags_Flags[q5] ->
+             3 <= sum([var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q5, q9] | q9 : int(1..2)])
+                 | q5 : int(1..4)])
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Values_ExplicitVarSizeWithFlags_Flags[q5, q9]
+                               | q9 : int(1..2)])
+                      The argument has type: [bool]
+Error 4:
+    In a 'such that' statement:
+        and([1 =
+             sum([q28 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q35 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q28]
+                      /\
+                      (and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_RelationAsMatrix
+                                [q28, q35, q37_1, q37_2, q37_3]
+                            ->
+                            or([and([q40_1 = q37_1, q40_2 = q37_2, q40_3 = q37_3; int(1..3)])
+                                    | q40_1 : bool, q40_2 : bool, q40_3 : bool,
+                                      q11_RelationAsMatrix[q40_1, q40_2, q40_3]])
+                                | q37_1 : bool, q37_2 : bool, q37_3 : bool])
+                       /\
+                       and([or([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_RelationAsMatrix
+                                    [q28, q35, q42_1, q42_2, q42_3]
+                                /\ and([q42_1 = q38_1, q42_2 = q38_2, q42_3 = q38_3; int(1..3)])
+                                    | q42_1 : bool, q42_2 : bool, q42_3 : bool])
+                                | q38_1 : bool, q38_2 : bool, q38_3 : bool, q11_RelationAsMatrix[q38_1, q38_2, q38_3]]))
+                          | q35 : int(1..8)])
+                      | q28 : int(1..256)])
+                 | q11_RelationAsMatrix : matrix indexed by [bool, bool, bool] of bool,
+                   1 = sum([sum([sum([q11_RelationAsMatrix[q25, q26, q27] | q27 : bool]) | q26 : bool]) | q25 : bool])])
+    Error:
+        Type error in sum([q11_RelationAsMatrix[q25, q26, q27] | q27 : bool])
+                      The argument has type: [bool]
+Error 5:
+    In a 'such that' statement:
+        and([q18 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+             and([q21 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q18] ->
+                  1 =
+                  sum([sum([sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_RelationAsMatrix
+                                     [q18, q21, q22, q23, q24]
+                                     | q24 : bool])
+                                | q23 : bool])
+                           | q22 : bool])
+                      | q21 : int(1..8)])
+                 | q18 : int(1..256)])
+    Error:
+        Type error in sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_RelationAsMatrix
+                               [q18, q21, q22, q23, q24]
+                               | q24 : bool])
+                      The argument has type: [bool]

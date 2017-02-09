@@ -1,0 +1,48 @@
+language ESSENCE' 1.0
+
+find var1_Function1D: matrix indexed by [bool] of bool
+find var2_ExplicitWithRepetition_Flag: int(0..16)
+find var2_ExplicitWithRepetition_Values: matrix indexed by [int(1..16)] of bool
+find var3_RelationAsMatrix: matrix indexed by [bool, bool, bool, bool] of bool
+such that
+    or([!(false = var1_Function1D[q20]) | q20 : bool]),
+    and([var3_RelationAsMatrix[q23_1, q23_2, q23_3, q23_4] ->
+         and([q23_1, false = q23_2, false = q23_3, false = q23_4; int(1..4)]) \/
+         and([q23_1, false = q23_2, q23_3, false = q23_4; int(1..4)])
+             | q23_1 : bool, q23_2 : bool, q23_3 : bool, q23_4 : bool]),
+    or([var3_RelationAsMatrix[q27_1, q27_2, q27_3, q27_4] /\
+        !(and([q27_1, false = q27_2, false = q27_3, false = q27_4; int(1..4)]) \/
+          and([q27_1, false = q27_2, q27_3, false = q27_4; int(1..4)]))
+            | q27_1 : bool, q27_2 : bool, q27_3 : bool, q27_4 : bool])
+    \/
+    (!or([var3_RelationAsMatrix[q32_1, q32_2, q32_3, q32_4] /\
+          and([q32_1, q32_2 = false, q32_3 = false, q32_4 = false; int(1..4)])
+              | q32_1 : bool, q32_2 : bool, q32_3 : bool, q32_4 : bool])
+     \/
+     !or([var3_RelationAsMatrix[q34_1, q34_2, q34_3, q34_4] /\
+          and([q34_1, q34_2 = false, q34_3, q34_4 = false; int(1..4)])
+              | q34_1 : bool, q34_2 : bool, q34_3 : bool, q34_4 : bool])),
+    allDiff(var1_Function1D),
+    and([or([var1_Function1D[q2] = q1 | q2 : bool]) | q1 : bool]),
+    and([q8 + 1 <= var2_ExplicitWithRepetition_Flag ->
+         var2_ExplicitWithRepetition_Values[q8] <= var2_ExplicitWithRepetition_Values[q8 + 1]
+             | q8 : int(1..15)]),
+    and([q9 > var2_ExplicitWithRepetition_Flag -> var2_ExplicitWithRepetition_Values[q9] = false | q9 : int(1..16)]),
+    and([q10 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q14 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q14] = var2_ExplicitWithRepetition_Values[q10])
+                  | q14 : int(1..16)])
+         = 0
+         \/
+         sum([toInt(q16 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q16] = var2_ExplicitWithRepetition_Values[q10])
+                  | q16 : int(1..16)])
+         >= 4
+             | q10 : int(1..16)]),
+    and([q11 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q18 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q18] = var2_ExplicitWithRepetition_Values[q11])
+                  | q18 : int(1..16)])
+         <= 4
+             | q11 : int(1..16)]),
+    var2_ExplicitWithRepetition_Flag <= 4

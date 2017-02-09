@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find unused: bool
+such that
+    function((true, true, false) --> function(true --> true)) supset
+    function((true, true, true) --> function(true --> true, false --> true, true --> true))

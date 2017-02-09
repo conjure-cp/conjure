@@ -1,0 +1,203 @@
+language Essence 1.3
+
+find var1: function bool --> set of int(-3)
+find var2: set of bool
+find var3: (int(-5..-1), (bool, int(-3, -1)))
+find var4: function partition from bool --> int(-5)
+find var5:
+        relation of (tuple (int(-1..3, -1)) * (bool, int(-2..3)) * tuple (bool))
+find var6: partition from set of bool
+such that
+    false,
+    participants(partition({relation(tuple (function(false --> 2 != -3,
+                                                     false = true --> true, false --> true /\ false)),
+                                     tuple (function(true --> 7 = -7)),
+                                     tuple (function(true /\ false --> -6 != -3)))},
+                           {relation(tuple (function(true --> true)),
+                                     tuple (function(false --> false, false --> true) - function(false --> true)),
+                                     tuple (function(false \/ false --> false, true -> false --> false,
+                                                     false /\ false --> false = false)))},
+                           {relation(tuple (function(true --> false) intersect
+                                            function(true --> true, true --> false)),
+                                     tuple (function(true --> false) - function(false --> true, true --> false)),
+                                     tuple (function(false --> false, true --> false) -
+                                            function(false --> true, true --> true)))},
+                           {relation(tuple (function(true /\ false --> true /\ false)),
+                                     tuple (function(true --> true -> true)),
+                                     tuple (function(false --> true, true --> true) intersect
+                                            function(false --> true, false --> false)))},
+                           {relation(tuple (function(true != true --> true \/ true, true --> true = true,
+                                                     true --> true = true, false --> true = true)),
+                                     tuple (function(false \/ true --> true, true = true --> false \/ true,
+                                                     true != false --> -6 = 2, true --> true /\ false)),
+                                     tuple (function(true --> true = true))),
+                            relation(tuple (function(true -> false --> false \/ false)),
+                                     tuple (function(false --> true) intersect function(true --> true)),
+                                     tuple (function(false != true --> true -> false, true --> -3 = -6)))}))
+    =
+    {relation(tuple (function(false --> false, false --> false) -
+                     function(false --> false)),
+              tuple (function(false --> true) intersect function(true --> true)),
+              tuple (function(false --> false, true --> false) intersect
+                     function(false --> true)))
+     union
+     relation(tuple (function(5 = 5 --> true /\ false, true <-> false --> -2 != 0)),
+              tuple (function(true --> false) - function(false --> true, true --> true)),
+              tuple (function(false --> false) - function(true --> true, true --> true))),
+     relation(tuple (function(false <-> false --> true, true = false --> false,
+                              true -> true --> false, false --> true)),
+              tuple (function(true \/ false --> 9 != -9)),
+              tuple (function(false --> false) intersect
+                     function(false --> true, false --> false)))
+     intersect
+     relation(tuple (function(true = false --> true = true,
+                              false -> true --> false \/ false, -4 != -1 --> true, true -> false --> 4 = -6)),
+              tuple (function(-2 != -3 --> false -> true, true <-> true --> true)),
+              tuple (function(false --> false, false --> false) -
+                     function(false --> true, false --> true))),
+     relation(tuple (function(partition({-6}, {2}) = partition({-4}) --> false,
+                              (false /\ true) in mset(true, false) --> true \/ false -> true \/ false,
+                              {2, 8} = ({} : `set of int`) --> false,
+                              true --> partition({-4}) != partition({-3}))),
+              tuple (function((true != false) = (true \/ false) --> var3 != var3)),
+              tuple (function(true --> true, false --> 7 != -3,
+                              false -> true --> true \/ true)
+                     intersect
+                     (function(true --> false, true --> false) -
+                      (function(false --> true, false --> true) -
+                       function(false --> false, false --> true))))),
+     relation(tuple (function(3 != -6 --> true, true --> true <-> true)),
+              tuple (function(true --> false) intersect function(true --> false)),
+              tuple (function(-8 = -5 --> false <-> true)))
+     intersect
+     relation(tuple (function(false --> true) -
+                     function(true --> true, false --> false)),
+              tuple (function(true --> false) - function(true --> false, true --> true)),
+              tuple (function(false --> true, false --> true) - function(false --> true))),
+     relation(tuple (function(-3 = -1 --> false)),
+              tuple (function(true --> false, false --> false) intersect
+                     function(false --> false)),
+              tuple (function(true --> true, true --> false) - function(true --> false)))
+     -
+     relation(tuple (function(true --> false, false /\ true --> true != true,
+                              9 != 9 --> -2 = 0, true \/ false --> true)),
+              tuple (function(2 = -8 --> false = false, true --> -6 = -8, true --> true,
+                              true --> true /\ true)),
+              tuple (function(false --> false) - function(true --> true))),
+     relation(tuple (function(false = false --> false)),
+              tuple (function(false --> true, true --> false) intersect
+                     function(false --> false)),
+              tuple (function(false --> true <-> false, true --> 5 != 3,
+                              true --> false != false)))
+     -
+     relation(tuple (function(false --> true, false --> true) -
+                     function(true --> true)),
+              tuple (function(true --> true, true --> false) - function(true --> true)),
+              tuple (function(true \/ false --> false))),
+     relation(tuple (function(false --> -1 != -6, false --> 9 = 8,
+                              true --> false -> false, false --> false /\ false)
+                     intersect
+                     (function(false --> false, true --> true) intersect
+                      function(-4 != -8 --> -4 != 9))),
+              tuple (function(true --> false, false --> false, false --> -3 = 3,
+                              true <-> false --> 4 = 6)
+                     intersect
+                     function(false --> true, false <-> false --> true != true,
+                              false -> false --> 4 = 8)),
+              tuple (function(false <-> -5 = -7 --> (true -> false) /\ false = false,
+                              var2 = var2 --> toInt(false) in mset(-8, -5),
+                              together(false != false, true <-> true, partition({false, true})) --> var2
+                                                                                                    supsetEq var2))),
+     relation(tuple (function(false --> true, true --> true) -
+                     function(true --> true, false --> true)
+                     -
+                     function(true --> false, false --> true) intersect
+                     function(true = false --> true, false -> false --> true,
+                              false --> false \/ true)),
+              tuple (function(true --> true) intersect
+                     function(true --> false, false --> false)
+                     intersect
+                     function(true \/ true --> true -> false, false --> false,
+                              true = false --> false)),
+              tuple (function(false \/ true --> -5 != 7, true /\ true --> false -> true) -
+                     function(false --> false, true --> false) intersect function(false --> true)))},
+    false,
+    relation(tuple (function(var2 --> partition({true})) -
+                    function({false, false} --> partition({true}))),
+             tuple (function({false, true} --> partition({true, false}),
+                             var2 --> partition({true}), var2 --> partition({false}))
+                    intersect
+                    function(var2 --> partition({true, false}), var2 --> partition({true}, {true}),
+                             var2 --> partition({false}), var2 --> partition({false, true}))),
+             tuple (function(var2 --> partition({false}),
+                             ({} : `set of bool`) --> partition({false, false}))
+                    - function({false} --> partition({true}))))
+    -
+    relation(tuple (function(var2 --> partition({true = true}, {false},
+                                                {true -> true, 5 = 3}),
+                             {false, true != false, false} --> partition({true}))),
+             tuple (function(var2 --> partition({7 = 5, -6 = -1}),
+                             var2 --> partition({false \/ true}, {false <-> false, true}),
+                             participants(partition({false, false})) --> partition({true}, {false},
+                                                                                   {9 != -2}, {false <-> true}),
+                             var2 --> partition({true <-> false, true = false, true != true}),
+                             {false, true -> true, true, false} --> partition({true = false}))),
+             tuple (function(var2 --> partition({true, true}), {true} --> partition({false}))
+                    -
+                    function({false, true} --> partition({false}, {true}),
+                             ({} : `set of bool`) --> partition({true}),
+                             {false, true} --> partition({true}))))
+    =
+    relation(tuple (function(var2 --> partition({true}, {true}),
+                             var2 --> partition({false}, {false}))
+                    intersect
+                    function(var2 --> partition({true}), {false} --> partition({false, true}),
+                             var2 --> partition({true}, {true}))
+                    intersect function(var2 --> partition({false}))
+                    intersect
+                    function({true, -10 = -6} --> partition({false -> true},
+                                                            {false /\ true, 10 != -4, true}),
+                             toSet(mset(false, true)) --> partition({6 != 6}, {10 != -1}))),
+             tuple (function(var2 --> partition({true <-> true, false \/ false}),
+                             toSet(mset(false, false)) --> partition({true -> true, false}),
+                             {false, true} --> partition({false /\ false, true -> false}, {6 != 4}))
+                    -
+                    function({true, true} --> partition({true}),
+                             var2 --> partition({false}, {true}), {false, true} --> partition({true}),
+                             ({} : `set of bool`) --> partition({true, false}))
+                    -
+                    function(var2 --> partition({false, false /\ false, true}, {true -> false}),
+                             var2 --> partition({false \/ true, false != true, false}, {false \/ true}),
+                             toSet((mset() : `mset of bool`)) --> partition({true -> false, false, false}),
+                             {false \/ false, true -> true, false \/ true} --> partition({9 = -1}))),
+             tuple (function(party(true, partition({true, false})) intersect
+                             party(false in mset(false), partition({true, true})) --> partition({(false ->
+                                                                                                  false)
+                                                                                                 -> (false -> true),
+                                                                                                 (true -> false) =
+                                                                                                 (-8 = 9)},
+                                                                                                {var3 != var3}),
+                             range(function(0 = -10 --> false = true,
+                                            -5 = -7 --> -6 = -3)) --> partition({(mset() : `mset of int`) = mset(-10),
+                                                                                 false},
+                                                                                {function(false --> 9) !=
+                                                                                 function(true --> -10, false --> 6),
+                                                                                 (false \/ true) /\ true = true}),
+                             var2 --> partition({6 in mset(6, -2)}, {false, (false <-> false) in {true}},
+                                                {var6 = var6}, {var3 = var3}, {var6 != var6})))),
+    and([function({partition({false}, {false}), partition({false, true}),
+                   partition({false}, {true}), partition({false})} --> {tuple (5), tuple (5),
+                                                                        tuple (-6)})
+         =
+         function({partition({false}), partition({false}, {true}),
+                   partition({true, true})} --> ({} : `set of tuple(int)`),
+                  {partition({true}), partition({false}), partition({false, true}),
+                   partition({true, true})} --> {tuple (-2), tuple (-2), tuple (-1)},
+                  {partition({false}), partition({false}), partition({true})} --> {tuple (-10),
+                                                                                   tuple (7)},
+                  {partition({true, true})} --> {tuple (-10)})
+             | q_7 : set of bool, -10 >= |q_7|]),
+    min(party(var4(partition({false})) / (-5 * -9 * toInt(true)),
+              partition({10, -4}))
+        union {-9 * 5 / (-9 % -1), 1})
+    = -4

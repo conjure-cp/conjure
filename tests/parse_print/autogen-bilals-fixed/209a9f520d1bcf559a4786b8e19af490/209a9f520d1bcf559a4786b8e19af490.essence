@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find var3: int(-3)
+such that
+    toMSet({relation((0, var3, false))}) !=
+    (mset() : `mset of relation of (int * int * bool)`)

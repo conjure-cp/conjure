@@ -1,0 +1,22 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given given1_RelationAsMatrix: matrix indexed by [int(5, 3)] of bool
+find var1_Function1D: matrix indexed by [bool] of bool
+given given2_ExplicitWithRepetition_Flag: int(0..96)
+given given2_ExplicitWithRepetition_Values: matrix indexed by [int(1..96)] of int(2..5, 4..5)
+find var2_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var2_Function1DPartial_Values: matrix indexed by [bool] of int(2, 2)
+given given3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1)] of int(0..4)
+given given3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1), int(1..4)] of bool
+such that
+    false,
+    allDiff(var1_Function1D),
+    and([var2_Function1DPartial_Flags[q2] /\ var2_Function1DPartial_Flags[q3] ->
+         var2_Function1DPartial_Values[q2] != var2_Function1DPartial_Values[q3]
+             | q2 : bool, q3 : bool, q2 < q3]),
+    and([or([var2_Function1DPartial_Flags[q5] /\ var2_Function1DPartial_Values[q5] = q4 | q5 : bool])
+             | q4 : int(2, 2)]),
+    and([var2_Function1DPartial_Flags[q6] = false -> var2_Function1DPartial_Values[q6] = 2 | q6 : bool]),
+    2 <= sum([toInt(var2_Function1DPartial_Flags[q7]) | q7 : bool]),
+    sum([toInt(var2_Function1DPartial_Flags[q7]) | q7 : bool]) <= 3

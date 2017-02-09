@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find unused: bool
+such that
+    [l_6 | l_5 : bool, l_6 : bool,
+           inverse(function(true --> false, true --> false, false --> true, true --> true),
+                   function(false --> true, false --> false, false --> false))]
+        [min(({} : `set of int`))]

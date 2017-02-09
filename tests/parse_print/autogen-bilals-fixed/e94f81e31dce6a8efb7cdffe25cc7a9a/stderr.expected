@@ -1,0 +1,26 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             sum([q26 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q33 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q26]
+                      /\
+                      and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                               [q26, q33, q34]
+                           = q13[q34]
+                               | q34 : int(2, 5)])
+                          | q33 : int(1..5)])
+                      | q26 : int(1..2)])
+                 | q13 : matrix indexed by [int(2, 5)] of int(5, 5)])
+    Error:
+        Type error in sum([q26 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q33 <=
+                               var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q26]
+                               /\
+                               and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                        [q26, q33, q34]
+                                    = q13[q34]
+                                        | q34 : int(2, 5)])
+                                   | q33 : int(1..5)])
+                               | q26 : int(1..2)])
+                      The argument has type: [bool]

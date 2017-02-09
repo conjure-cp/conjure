@@ -1,0 +1,37 @@
+language ESSENCE' 1.0
+
+given given1_PartitionOccurrence_NumParts: int(1..5)
+given given1_PartitionOccurrence_WhichPart: matrix indexed by [int(2..5, 4)] of int(1..5)
+given given1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..5)] of int(0..5)
+given given1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..5)] of int(2..5, 4)
+find var1_PartitionOccurrence_NumParts: int(1..2)
+find var1_PartitionOccurrence_WhichPart: matrix indexed by [int(5..5, 1)] of int(1..2)
+find var1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
+find var1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(5..5, 1)
+given given2_1: bool
+given given2_2: bool
+given given2_3: bool
+given given2_4: int(3, 0..1)
+such that
+    false,
+    and([q1 <= var1_PartitionOccurrence_NumParts -> 5 = var1_PartitionOccurrence_PartSizes[q1] | q1 : int(1..2)]),
+    and([q1 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
+    2 <= var1_PartitionOccurrence_NumParts ->
+    var1_PartitionOccurrence_PartSizes[1] = var1_PartitionOccurrence_PartSizes[2],
+    var1_PartitionOccurrence_NumParts = max([var1_PartitionOccurrence_WhichPart[q5] | q5 : int(5..5, 1)]),
+    and([var1_PartitionOccurrence_PartSizes[q6] =
+         sum([toInt(var1_PartitionOccurrence_WhichPart[q7] = q6) | q7 : int(5..5, 1)])
+             | q6 : int(1..2)]),
+    and([q8 <= var1_PartitionOccurrence_NumParts ->
+         and([var1_PartitionOccurrence_WhichPart[q9] = q8 -> var1_PartitionOccurrence_FirstIndex[q8] <= q9
+                  | q9 : int(5..5, 1)])
+             | q8 : int(1..2)]),
+    and([q8 <= var1_PartitionOccurrence_NumParts ->
+         or([var1_PartitionOccurrence_WhichPart[q9] = q8 /\ var1_PartitionOccurrence_FirstIndex[q8] = q9
+                 | q9 : int(5..5, 1)])
+             | q8 : int(1..2)]),
+    and([var1_PartitionOccurrence_PartSizes[q8] = 0 -> var1_PartitionOccurrence_FirstIndex[q8] = 5 | q8 : int(1..2)]),
+    and([q10 <= var1_PartitionOccurrence_NumParts /\ q11 <= var1_PartitionOccurrence_NumParts ->
+         (q10 < q11 <-> var1_PartitionOccurrence_FirstIndex[q10] < var1_PartitionOccurrence_FirstIndex[q11])
+             | q10 : int(1..2), q11 : int(1..2)])
+

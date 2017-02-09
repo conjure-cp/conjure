@@ -1,0 +1,156 @@
+language Essence 1.3
+
+find var1: partition from function bool --> int(5..5)
+find var2: function set of int(5..5) --> int(2..4)
+find var3: (partition from int(5), partition from bool)
+find var4: function function bool --> bool --> bool
+such that
+    function(-9 --> function(false --> relation((toInt(true), true),
+                                                (1, true <-> false), (-6 / -7, false = true))),
+             toInt(true) --> function(false --> relation((-3, false /\ true),
+                                                         (-7, true <-> false), (6, false = true))),
+             |{-7}| --> function(false = true --> relation((-5, true),
+                                                           (toInt(true), false = false), (1 % -4, 3 != 8)),
+                                 false = true --> relation((-7, false = false), (-7 + 10, 4 != -3),
+                                                           (-3 % -1, true)),
+                                 true --> relation((toInt(true), -5 = 10), (toInt(false), true),
+                                                   (toInt(true), true)),
+                                 false --> relation((-4 + 6, true), (-10, 4 = -6), (-2, 8 != 3))))
+    -
+    function(toInt(-9 = -3) --> function(false --> relation((8, true /\ false),
+                                                            (3, true), (toInt(true), true /\ true)),
+                                         false --> relation((toInt(false), false \/ false), (toInt(true), false),
+                                                            (9 % -3, true != true)),
+                                         false --> relation((-10 * -9, true = false), (1, -1 = 3),
+                                                            (-6 / 7, false \/ false)),
+                                         true != false --> relation((1, true -> true), (-4 % -10, false),
+                                                                    (toInt(true), false = true))),
+             var2({-4, -1 * 6}) --> function(true --> relation((-4, true != true),
+                                                               (8, false), (-4, false <-> false)),
+                                             false != true --> relation((toInt(false), true /\ false),
+                                                                        (-1 / -3, -2 != -4), (-8 + -6, false)),
+                                             10 = 10 --> relation((toInt(false), true), (toInt(true), true <-> false),
+                                                                  (-5 % -5, false)),
+                                             false != true --> relation((toInt(false), false = true), (10, 5 = 5),
+                                                                        (toInt(false), 1 = 4))),
+             toInt(true) / (-5 / 5) --> function(true --> relation((10 % 1, false = true),
+                                                                   (-10 / 2, false != false), (toInt(false), -5 != 2))),
+             5 / toInt(true) --> function(false --> relation((toInt(true), -3 = -8),
+                                                             (-2 + -6, true /\ true), (toInt(false), true)),
+                                          true --> relation((toInt(true), true), (-1, false = false), (-5, true)),
+                                          true --> relation((6, 9 != 7), (toInt(false), true), (-10, true))),
+             2 --> function(true <-> true --> relation((toInt(false), true -> true),
+                                                       (-9, true != false), (-5 / -5, true -> false)),
+                            true != false --> relation((-9 * 5, true -> true), (0, true),
+                                                       (9 % 9, false != false))),
+             -8 --> function(true <-> true --> relation((6, false -> true), (-4, -2 = -8),
+                                                        (-7, true = true)),
+                             false -> true --> relation((2, false != true), (-10, true),
+                                                        (toInt(false), false = false))))
+    !=
+    function(|function(true --> -2, false --> 3)| +
+             |(mset() : `mset of bool`)| --> function(false --> relation((7, -7 != 1),
+                                                                         (-2, true <-> false),
+                                                                         (-3 * -7, false /\ false)),
+                                                      1 != 4 --> relation((toInt(false), true -> false),
+                                                                          (1 % 2, false /\ false), (8, 10 != -7)))
+                                             intersect
+                                             function(-5 != -1 --> relation((8, true), (9, true <-> false),
+                                                                            (-10 + 8, -9 != -7)),
+                                                      true --> relation((4 + -1, false), (toInt(true), true \/ false),
+                                                                        (toInt(false), true = false)),
+                                                      false = true --> relation((-8 % 2, false), (10, false = false),
+                                                                                (-3 % -8, false)),
+                                                      false != false --> relation((1 % 0, true /\ true), (0, true),
+                                                                                  (toInt(false), false))),
+             5 --> function(true = false --> relation((toInt(false), true != false),
+                                                      (3, false), (-7, true != true)),
+                            false != true --> relation((toInt(false), true != true), (toInt(false), false),
+                                                       (-1, -9 = 9)))
+                   -
+                   function(false --> relation((toInt(true), false = false), (toInt(true), true),
+                                               (-5, false)),
+                            -5 != -10 --> relation((2 / -4, false \/ false),
+                                                   (toInt(false), false <-> false), (6 * 3, true)),
+                            false != false --> relation((-10, -1 != 0), (-7, true /\ true),
+                                                        (toInt(true), true -> true))),
+             var2(party(toInt(false), partition({-8, -5}))) *
+             10 --> function(true --> relation((-10 % -8, -10 != 6), (-10, true != false),
+                                               (8, true <-> false)))
+                    intersect
+                    function(0 != 3 --> relation((-1, true = false), (toInt(true), 5 = -9),
+                                                 (9 % 9, true \/ false)),
+                             true \/ true --> relation((6, true), (5, true), (1, 0 != 5)),
+                             false != false --> relation((toInt(false), false -> true), (-10, true),
+                                                         (10, -8 != -10)),
+                             false != true --> relation((7 / -4, false), (-9 * 7, false <-> true),
+                                                        (toInt(false), -9 = 6))),
+             var2({|{true}|, 0}) --> function(var4 = var4 --> relation((|{8, -7}|, false),
+                                                                       (9, 3 != -3 -> (false <-> true)),
+                                                                       (0, mset(7, 8) = mset(-9))),
+                                              toInt(false) in mset(-1, 2) --> relation((toInt(true) * -8, var4 = var4),
+                                                                                       (var2(toSet(mset(-3))),
+                                                                                        var3 = var3),
+                                                                                       (var2(participants(partition({5}))),
+                                                                                        toInt(true) in mset(-9)))),
+             -8 / (-8 + toInt(false)) --> function(true --> relation((toInt(false) *
+                                                                      toInt(false),
+                                                                      var2 = var2),
+                                                                     (-6, (true -> false) \/ -5 = 3), (-8, false)),
+                                                   false --> relation((var2(party(toInt(false), partition({2}))), true),
+                                                                      (var2({-1 % -3, toInt(false), toInt(true)}),
+                                                                       true),
+                                                                      (9, false)),
+                                                   true --> relation((var2(toSet(mset(-10, -7))), true),
+                                                                     (-7 % -7 * 9, var4 != var4), (|{true}|, true)),
+                                                   true --> toRelation(function(5 --> true)),
+                                                   toInt(true) in mset(-3, -6) --> toRelation(function(-5 --> false,
+                                                                                                       -3 --> false)),
+                                                   false --> toRelation(function(-2 --> true, 7 --> true))),
+             toInt(mset(9, 5) = mset(-4, -6)) --> function(true <-> false --> relation((4,
+                                                                                        false -> false),
+                                                                                       (-7, true <-> true),
+                                                                                       (4, false /\ false)),
+                                                           true <-> true --> relation((toInt(false), true),
+                                                                                      (-3 + 7, true -> false),
+                                                                                      (3, true \/ true)),
+                                                           false = true --> relation((toInt(true), true -> true),
+                                                                                     (toInt(false), -4 != -10),
+                                                                                     (-3 / 10, true = true)),
+                                                           true = true --> relation((-4 * 2, false = true), (10, true),
+                                                                                    (4 / 9, true)))
+                                                  intersect
+                                                  function(true \/ false --> relation((6, true = false),
+                                                                                      (4, true != true),
+                                                                                      (toInt(false), true -> false)),
+                                                           true = true --> relation((9 * 7, true), (-10, false),
+                                                                                    (toInt(true), true)),
+                                                           7 != -1 --> relation((toInt(true), true = true),
+                                                                                (toInt(true), true \/ true),
+                                                                                (8, false -> false)),
+                                                           -3 = 9 --> relation((6 + -7, false -> false), (-3 / 6, true),
+                                                                               (9 + 4, 0 = -10))),
+             var2(participants(partition({-1 % 10, -7 + 7, 6, -1}))) --> function((true =
+                                                                                   true)
+                                                                                  in {false} --> relation((6,
+                                                                                                           (mset() : `mset of bool`)
+                                                                                                           =
+                                                                                                           mset(false,
+                                                                                                                true)),
+                                                                                                          (|partition({false},
+                                                                                                                      {false})|,
+                                                                                                           true =
+                                                                                                           (true <->
+                                                                                                            false)),
+                                                                                                          (-1,
+                                                                                                           var2 =
+                                                                                                           var2)),
+                                                                                  (false \/ true) in
+                                                                                  ({} : `set of bool`) --> toRelation(function(6 --> true,
+                                                                                                                               4 --> true)),
+                                                                                  true /\
+                                                                                  (false ->
+                                                                                   true) --> toRelation(function(-1 --> false)),
+                                                                                  var4 =
+                                                                                  var4 --> toRelation(function(7 --> true)))),
+    true

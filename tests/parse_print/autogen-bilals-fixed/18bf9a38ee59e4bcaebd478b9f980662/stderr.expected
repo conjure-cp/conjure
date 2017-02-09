@@ -1,0 +1,54 @@
+Error:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q16 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([q29 <=
+                        var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                            [q16]
+                        ->
+                        or([q8_ExplicitVarSizeWithMarker_Values[q31] =
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q16, q29]
+                                | q31 : int(1..2), q31 <= q8_ExplicitVarSizeWithMarker_Marker])
+                            | q29 : int(1..2)])
+                   /\
+                   and([or([q35 <=
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                                [q16]
+                            /\
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q16, q35]
+                            = q8_ExplicitVarSizeWithMarker_Values[q33]
+                                | q35 : int(1..2)])
+                            | q33 : int(1..2), q33 <= q8_ExplicitVarSizeWithMarker_Marker]))
+                      | q16 : int(1..5)])
+                 | q8_ExplicitVarSizeWithMarker_Marker : int(0..2),
+                   q8_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(3..5, 0),
+                   2 <= q8_ExplicitVarSizeWithMarker_Marker ->
+                   q8_ExplicitVarSizeWithMarker_Values[1] < q8_ExplicitVarSizeWithMarker_Values[2],
+                   and([q13 > q8_ExplicitVarSizeWithMarker_Marker -> q8_ExplicitVarSizeWithMarker_Values[q13] = 3
+                            | q13 : int(1..2)]),
+                   2 <= q8_ExplicitVarSizeWithMarker_Marker, q8_ExplicitVarSizeWithMarker_Marker <= 2])
+    Error:
+        Type error in sum([q16 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           (and([q29 <=
+                                 var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                                     [q16]
+                                 ->
+                                 or([q8_ExplicitVarSizeWithMarker_Values[q31] =
+                                     var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                         [q16, q29]
+                                         | q31 : int(1..2), q31 <= q8_ExplicitVarSizeWithMarker_Marker])
+                                     | q29 : int(1..2)])
+                            /\
+                            and([or([q35 <=
+                                     var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                                         [q16]
+                                     /\
+                                     var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                         [q16, q35]
+                                     = q8_ExplicitVarSizeWithMarker_Values[q33]
+                                         | q35 : int(1..2)])
+                                     | q33 : int(1..2), q33 <= q8_ExplicitVarSizeWithMarker_Marker]))
+                               | q16 : int(1..5)])
+                      The argument has type: [bool]

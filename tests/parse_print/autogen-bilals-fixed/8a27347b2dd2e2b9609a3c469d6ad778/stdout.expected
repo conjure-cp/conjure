@@ -1,0 +1,12 @@
+language Essence 1.3
+
+find var1:
+        relation (minSize 5 ** 2) of
+            (partition (numParts 5, maxPartSize 5, regular) from bool * set (minSize 2) of bool *
+             function (maxSize 3, total, bijective) bool --> bool * relation (size 3) of (bool))
+find var2: function (minSize factorial(2)) tuple (bool) --> (bool, bool)
+find var3: mset (size 3 / 0, minOccur 2, maxOccur 3) of mset (maxSize 3, maxOccur 4) of bool
+find var4:
+        relation (size 4 / 1) of
+            (matrix indexed by [int(1, 0)] of bool * mset (minSize 1, minOccur 0, maxOccur 0) of bool *
+             set (minSize 1) of bool)

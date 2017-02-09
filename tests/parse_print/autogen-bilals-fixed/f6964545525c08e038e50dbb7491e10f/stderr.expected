@@ -1,0 +1,9 @@
+Error:
+    In a 'such that' statement: (2 <= var1 /\ 2 <= var1 /\ (2 < var1 \/ 2 < var1)) < !!var1
+    Error:
+        When type checking: 2 <= var1
+        Cannot unify the types of the following.
+        lhs        : 2
+        type of lhs: int
+        rhs        : var1
+        type of rhs: bool

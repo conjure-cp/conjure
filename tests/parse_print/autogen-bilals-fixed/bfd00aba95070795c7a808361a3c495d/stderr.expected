@@ -1,0 +1,42 @@
+Error 1:
+    In a 'such that' statement: 1 <= sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..64)])
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..64)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([1 =
+             sum([q25 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([q30 <=
+                        var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Marker
+                            [q25, 1]
+                        ->
+                        or([q9_ExplicitVarSizeWithFlags_Values[q32] =
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Values
+                                [q25, 1, q30]
+                                | q32 : int(1..5), q9_ExplicitVarSizeWithFlags_Flags[q32]])
+                            | q30 : int(1..5)])
+                   /\
+                   and([or([q36 <=
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Marker
+                                [q25, 1]
+                            /\
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Values
+                                [q25, 1, q36]
+                            = q9_ExplicitVarSizeWithFlags_Values[q34]
+                                | q36 : int(1..5)])
+                            | q34 : int(1..5), q9_ExplicitVarSizeWithFlags_Flags[q34]]))
+                      | q25 : int(1..4)])
+                 | q9_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..5)] of bool,
+                   q9_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..5)] of int(2, 1..2),
+                   and([q9_ExplicitVarSizeWithFlags_Flags[q20 + 1] ->
+                        q9_ExplicitVarSizeWithFlags_Values[q20] < q9_ExplicitVarSizeWithFlags_Values[q20 + 1]
+                            | q20 : int(1..4)]),
+                   and([q9_ExplicitVarSizeWithFlags_Flags[q21] = false -> q9_ExplicitVarSizeWithFlags_Values[q21] = 2
+                            | q21 : int(1..5)]),
+                   and([q9_ExplicitVarSizeWithFlags_Flags[q22 + 1] -> q9_ExplicitVarSizeWithFlags_Flags[q22]
+                            | q22 : int(1..4)]),
+                   sum([q9_ExplicitVarSizeWithFlags_Flags[q23] | q23 : int(1..5)]) <= 5])
+    Error:
+        Type error in sum([q9_ExplicitVarSizeWithFlags_Flags[q23] | q23 : int(1..5)])
+                      The argument has type: [bool]

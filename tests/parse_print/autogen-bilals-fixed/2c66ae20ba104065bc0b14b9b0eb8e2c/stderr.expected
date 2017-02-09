@@ -1,0 +1,67 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             or([q24 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                 (and([q1_Function1D[q26] =
+                       var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q24, q26]
+                           | q26 : bool])
+                  /\
+                  and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q24, q27] =
+                       q1_Function1D[q27]
+                           | q27 : bool]))
+                     | q24 : int(1..256)])
+                 | q1_Function1D : matrix indexed by [bool] of int(3..5, 4), allDiff(q1_Function1D), false, true])
+    Error:
+        When type checking: 1 =
+                            or([q24 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                                (and([q1_Function1D[q26] =
+                                      var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                          [1, q24, q26]
+                                          | q26 : bool])
+                                 /\
+                                 and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                          [1, q24, q27]
+                                      = q1_Function1D[q27]
+                                          | q27 : bool]))
+                                    | q24 : int(1..256)])
+        Cannot unify the types of the following.
+        lhs        : 1
+        type of lhs: int
+        rhs        : or([q24 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                         (and([q1_Function1D[q26] =
+                               var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q24, q26]
+                                   | q26 : bool])
+                          /\
+                          and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q24, q27] =
+                               q1_Function1D[q27]
+                                   | q27 : bool]))
+                             | q24 : int(1..256)])
+        type of rhs: bool
+Error 2:
+    In a 'such that' statement:
+        and([q12 <= var3_ExplicitVarSizeWithMarker_Marker ->
+             2 <=
+             sum([sum([sum([sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
+                                     | q16 : int(0, 5)])
+                                | q15 : bool])
+                           | q14 : int(4, 5)])
+                      | q13 : int(4, 3)])
+                 | q12 : int(1..2)])
+    Error:
+        Type error in sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
+                               | q16 : int(0, 5)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement:
+        and([q12 <= var3_ExplicitVarSizeWithMarker_Marker ->
+             sum([sum([sum([sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
+                                     | q16 : int(0, 5)])
+                                | q15 : bool])
+                           | q14 : int(4, 5)])
+                      | q13 : int(4, 3)])
+             <= 3
+                 | q12 : int(1..2)])
+    Error:
+        Type error in sum([var3_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q12, q13, q14, q15, q16]
+                               | q16 : int(0, 5)])
+                      The argument has type: [bool]

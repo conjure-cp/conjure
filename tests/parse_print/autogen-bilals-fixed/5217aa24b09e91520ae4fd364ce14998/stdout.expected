@@ -1,0 +1,41 @@
+language ESSENCE' 1.0
+
+find var2: int(4)
+find var3_1: bool
+find var4_Function1DPartial_Flags: matrix indexed by [int(3, 5)] of bool
+find var4_Function1DPartial_Values: matrix indexed by [int(3, 5)] of int(1..5, -4..-3)
+find aux1_Occurrence: matrix indexed by [int(3, 5)] of bool
+find aux2_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find aux2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(3, 5)
+such that
+    var2 = var2 <-> var3_1 = var3_1,
+    var2 != var2 -> false,
+    var2 = var2,
+    and([var4_Function1DPartial_Flags[q12] -> aux1_Occurrence[q12] | q12 : int(3, 5)]),
+    and([aux1_Occurrence[q9] -> or([var4_Function1DPartial_Flags[q13] /\ q13 = q9 | q13 : int(3, 5)])
+             | q9 : int(3, 5)]),
+    2 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+    aux2_ExplicitVarSizeWithMarker_Values[1] < aux2_ExplicitVarSizeWithMarker_Values[2],
+    and([q19 > aux2_ExplicitVarSizeWithMarker_Marker -> aux2_ExplicitVarSizeWithMarker_Values[q19] = 3
+             | q19 : int(1..2)]),
+    and([var4_Function1DPartial_Flags[q22] ->
+         or([q26 <= aux2_ExplicitVarSizeWithMarker_Marker /\ aux2_ExplicitVarSizeWithMarker_Values[q26] = q22
+                 | q26 : int(1..2)])
+             | q22 : int(3, 5)]),
+    and([q23 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+         or([var4_Function1DPartial_Flags[q24] /\ q24 = aux2_ExplicitVarSizeWithMarker_Values[q23] | q24 : int(3, 5)])
+             | q23 : int(1..2)]),
+    and([var4_Function1DPartial_Flags[q5] ->
+         var4_Function1DPartial_Values[q5] = var4_Function1DPartial_Values[q5] /\ var4_Function1DPartial_Flags[q5]
+             | q5 : int(3, 5)])
+    /\
+    and([var4_Function1DPartial_Flags[q6] ->
+         var4_Function1DPartial_Values[q6] = var4_Function1DPartial_Values[q6] /\ var4_Function1DPartial_Flags[q6]
+             | q6 : int(3, 5)])
+    /\
+    (and([aux1_Occurrence[q8] -> var4_Function1DPartial_Flags[q8] | q8 : int(3, 5)]) /\
+     and([q21 <= aux2_ExplicitVarSizeWithMarker_Marker ->
+          var4_Function1DPartial_Flags[aux2_ExplicitVarSizeWithMarker_Values[q21]]
+              | q21 : int(1..2)]))
+    -> false,
+    and([var4_Function1DPartial_Flags[q1] = false -> var4_Function1DPartial_Values[q1] = 1 | q1 : int(3, 5)])

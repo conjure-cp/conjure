@@ -1,0 +1,50 @@
+Error 1:
+    In a 'such that' statement:
+        and([or([var2_Function1DPartial_Flags[q2] /\
+                 (and([var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q21] ->
+                       q1_Function1DPartial_Values[q21] =
+                       var2_Function1DPartial_Values_Function1DPartial_Values[q2, q21]
+                       /\ q1_Function1DPartial_Flags[q21]
+                           | q21 : bool])
+                  /\
+                  and([var2_Function1DPartial_Values_Function1DPartial_Values[q2, q22] =
+                       q1_Function1DPartial_Values[q22]
+                       /\ var2_Function1DPartial_Values_Function1DPartial_Flags[q2, q22]
+                           | q22 : bool, q1_Function1DPartial_Flags[q22]])
+                  /\
+                  (and([q30 <= aux1_ExplicitVarSizeWithMarker_Marker[q1_Function1DPartial_Flags, q2] ->
+                        q1_Function1DPartial_Flags
+                            [aux1_ExplicitVarSizeWithMarker_Values[q1_Function1DPartial_Flags, q2, q30]]
+                            | q30 : int(1..2)])
+                   /\
+                   and([aux2_ExplicitVarSizeWithFlags_Flags[q1_Function1DPartial_Flags, q2, q45] ->
+                        var2_Function1DPartial_Values_Function1DPartial_Flags
+                            [q2, aux2_ExplicitVarSizeWithFlags_Values[q1_Function1DPartial_Flags, q2, q45]]
+                            | q45 : int(1..2)])))
+                     | q2 : bool])
+                 | q1_Function1DPartial_Flags : matrix indexed by [bool] of bool,
+                   q1_Function1DPartial_Values : matrix indexed by [bool] of bool,
+                   and([q1_Function1DPartial_Values[q13] != q1_Function1DPartial_Values[q14]
+                            | q13 : bool, q14 : bool, q13 != q14, q1_Function1DPartial_Flags[q13],
+                              q1_Function1DPartial_Flags[q14]]),
+                   and([or([q1_Function1DPartial_Flags[q16] /\ q1_Function1DPartial_Values[q16] = q15 | q16 : bool])
+                            | q15 : bool]),
+                   and([q1_Function1DPartial_Flags[q17] = false -> q1_Function1DPartial_Values[q17] = false
+                            | q17 : bool]),
+                   5 = sum([q1_Function1DPartial_Flags[q18] | q18 : bool])])
+    Error:
+        Type error in sum([q1_Function1DPartial_Flags[q18] | q18 : bool])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement: 0 <= sum([var2_Function1DPartial_Flags[q4] | q4 : bool])
+    Error:
+        Type error in sum([var2_Function1DPartial_Flags[q4] | q4 : bool])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement:
+        and([var2_Function1DPartial_Flags[q5] ->
+             5 = sum([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q11] | q11 : bool])
+                 | q5 : bool])
+    Error:
+        Type error in sum([var2_Function1DPartial_Values_Function1DPartial_Flags[q5, q11] | q11 : bool])
+                      The argument has type: [bool]

@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_1_Occurrence:
+        matrix indexed by [int(1..fin1), int(5, 4..5)] of bool
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker:
+        matrix indexed by [int(1..fin1)] of int(0..4)
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..fin1), int(1..4)] of int(0..2)
+given given1_FunctionAsRelationR2R17R5R5_RelationAsSetR2R17R5R5_ExplicitR2R17R5R5_2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..fin1), int(1..4), int(1..2)] of bool
+find unused: bool
+such that true
+

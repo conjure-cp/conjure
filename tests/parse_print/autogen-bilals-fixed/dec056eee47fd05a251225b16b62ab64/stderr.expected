@@ -1,0 +1,62 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             sum([or([q58 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q49] /\
+                      (and([q1_Function1D[q60] =
+                            var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[q49, q58, q60]
+                                | q60 : bool])
+                       /\
+                       and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[q49, q58, q61] =
+                            q1_Function1D[q61]
+                                | q61 : bool]))
+                          | q58 : int(1..6)])
+                      | q49 : int(1..5)])
+                 | q1_Function1D : matrix indexed by [bool] of int(4, 4), true])
+    Error:
+        Type error in sum([or([q58 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q49] /\
+                               (and([q1_Function1D[q60] =
+                                     var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                         [q49, q58, q60]
+                                         | q60 : bool])
+                                /\
+                                and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                         [q49, q58, q61]
+                                     = q1_Function1D[q61]
+                                         | q61 : bool]))
+                                   | q58 : int(1..6)])
+                               | q49 : int(1..5)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement: 2 <= sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
+    Error:
+        Type error in sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement: sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)]) <= 4
+    Error:
+        Type error in sum([var4_1_Function1DPartial_Flags[q28] | q28 : int(3..5, 3)])
+                      The argument has type: [bool]
+Error 4:
+    In a 'such that' statement:
+        and([1 =
+             sum([q51 <= var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[q51, 1] = q30
+                      | q51 : int(1..5)])
+                 | q30 : bool])
+    Error:
+        Type error in sum([q51 <= var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[q51, 1] = q30
+                               | q51 : int(1..5)])
+                      The argument has type: [bool]
+Error 5:
+    In a 'such that' statement:
+        and([1 =
+             sum([1 <= var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q55] /\
+                  var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q55, 1] = q40
+                      | q55 : int(1..5)])
+                 | q40 : bool])
+    Error:
+        Type error in sum([1 <= var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[q55] /\
+                           var4_3_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values[q55, 1] = q40
+                               | q55 : int(1..5)])
+                      The argument has type: [bool]

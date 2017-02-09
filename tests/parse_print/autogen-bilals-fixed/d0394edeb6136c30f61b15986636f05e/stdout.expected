@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+given given1_1: matrix indexed by [int(3..5, 5)] of bool
+given given1_2: matrix indexed by [int(3..5, 5)] of int(0, 5)
+given given1_3: matrix indexed by [int(3..5, 5)] of int(0, 5)
+find var1: matrix indexed by [int(0, 0..4), int(1, 2)] of int(0, 0)
+given given2_ExplicitWithFlags_Flags: matrix indexed by [int(1..20)] of int(0..5)
+given given2_ExplicitWithFlags_Values_1: matrix indexed by [int(1..20)] of int(0, 0)
+given given2_ExplicitWithFlags_Values_2: matrix indexed by [int(1..20)] of bool
+such that false

@@ -1,0 +1,17 @@
+Error:
+    In a 'such that' statement:
+        1 >=
+        sum([q5 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+             (1 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5] /\
+              var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_1[q5, 1] = -1)
+                 | q5 : int(1..2)])
+    Error:
+        Type error in sum([q5 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           (1 <=
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5]
+                            /\
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_1
+                                [q5, 1]
+                            = -1)
+                               | q5 : int(1..2)])
+                      The argument has type: [bool]

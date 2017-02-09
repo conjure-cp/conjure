@@ -1,0 +1,81 @@
+language ESSENCE' 1.0
+
+find var1_Function1DPartial_Flags: matrix indexed by [int(4, 3..4)] of bool
+find var1_Function1DPartial_Values:
+        matrix indexed by [int(4, 3..4)] of int(1..4, 3..3)
+find var2: bool
+find var3: int(-3, -3)
+find var4_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var4_Function1DPartial_Values_1: matrix indexed by [bool] of bool
+find var5: int(3)
+find aux1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(3), int(1..2)] of bool
+find aux1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(3), int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(3), int(1..2)] of bool
+find aux2_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(3), int(1..2)] of bool
+such that
+    aux1_ExplicitVarSizeWithFlags_Flags[3, 2] ->
+    aux1_ExplicitVarSizeWithFlags_Values[3, 1] <
+    aux1_ExplicitVarSizeWithFlags_Values[3, 2],
+    and([aux1_ExplicitVarSizeWithFlags_Flags[3, q15] = false ->
+         aux1_ExplicitVarSizeWithFlags_Values[3, q15] = false
+             | q15 : int(1..2)]),
+    aux1_ExplicitVarSizeWithFlags_Flags[3, 2] ->
+    aux1_ExplicitVarSizeWithFlags_Flags[3, 1],
+    and([var4_Function1DPartial_Flags[q20] ->
+         or([aux1_ExplicitVarSizeWithFlags_Flags[3, q24] /\
+             aux1_ExplicitVarSizeWithFlags_Values[3, q24] = q20
+                 | q24 : int(1..2)])
+             | q20 : bool]),
+    and([aux1_ExplicitVarSizeWithFlags_Flags[3, q21] ->
+         or([var4_Function1DPartial_Flags[q22] /\
+             q22 = aux1_ExplicitVarSizeWithFlags_Values[3, q21]
+                 | q22 : bool])
+             | q21 : int(1..2)]),
+    aux2_ExplicitVarSizeWithFlags_Flags[3, 2] ->
+    aux2_ExplicitVarSizeWithFlags_Values[3, 1] <
+    aux2_ExplicitVarSizeWithFlags_Values[3, 2],
+    and([aux2_ExplicitVarSizeWithFlags_Flags[3, q30] = false ->
+         aux2_ExplicitVarSizeWithFlags_Values[3, q30] = false
+             | q30 : int(1..2)]),
+    aux2_ExplicitVarSizeWithFlags_Flags[3, 2] ->
+    aux2_ExplicitVarSizeWithFlags_Flags[3, 1],
+    and([var4_Function1DPartial_Flags[q35] ->
+         or([aux2_ExplicitVarSizeWithFlags_Flags[3, q39] /\
+             aux2_ExplicitVarSizeWithFlags_Values[3, q39] = q35
+                 | q39 : int(1..2)])
+             | q35 : bool]),
+    and([aux2_ExplicitVarSizeWithFlags_Flags[3, q36] ->
+         or([var4_Function1DPartial_Flags[q37] /\
+             q37 = aux2_ExplicitVarSizeWithFlags_Values[3, q36]
+                 | q37 : bool])
+             | q36 : int(1..2)]),
+    or([and([var4_Function1DPartial_Flags[q8] ->
+             var4_Function1DPartial_Values_1[q8] = var4_Function1DPartial_Values_1[q8] /\
+             var4_Function1DPartial_Flags[q8]
+                 | q8 : bool])
+        /\
+        and([var4_Function1DPartial_Flags[q9] ->
+             var4_Function1DPartial_Values_1[q9] = var4_Function1DPartial_Values_1[q9] /\
+             var4_Function1DPartial_Flags[q9]
+                 | q9 : bool])
+        /\
+        (and([aux1_ExplicitVarSizeWithFlags_Flags[3, q19] ->
+              var4_Function1DPartial_Flags[aux1_ExplicitVarSizeWithFlags_Values[3, q19]]
+                  | q19 : int(1..2)])
+         /\
+         and([aux2_ExplicitVarSizeWithFlags_Flags[3, q34] ->
+              var4_Function1DPartial_Flags[aux2_ExplicitVarSizeWithFlags_Values[3, q34]]
+                  | q34 : int(1..2)]))
+        <-> var5 != var5
+            | true]),
+    and([var4_Function1DPartial_Flags[q1] = false ->
+         var4_Function1DPartial_Values_1[q1] = false
+             | q1 : bool]),
+    and([var1_Function1DPartial_Flags[q4] = false ->
+         var1_Function1DPartial_Values[q4] = 1
+             | q4 : int(4, 3..4)])
+

@@ -1,0 +1,85 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q31 <= var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q38 <=
+                      var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q31]
+                      /\
+                      var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q31, q38]
+                      = q5
+                          | q38 : int(1..2)])
+                      | q31 : int(1..4)])
+                 | q5 : bool])
+    Error:
+        Type error in sum([q31 <= var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q38 <=
+                               var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q31]
+                               /\
+                               var4_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                   [q31, q38]
+                               = q5
+                                   | q38 : int(1..2)])
+                               | q31 : int(1..4)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q33 <= var5_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q40 <= var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q33]
+                      /\
+                      (and([q42 <=
+                            var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                [q33, q40]
+                            ->
+                            or([q15_ExplicitVarSizeWithMarker_Values[q44] =
+                                var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                    [q33, q40, q42]
+                                    | q44 : int(1..2), q44 <= q15_ExplicitVarSizeWithMarker_Marker])
+                                | q42 : int(1..2)])
+                       /\
+                       and([or([q48 <=
+                                var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                    [q33, q40]
+                                /\
+                                var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                    [q33, q40, q48]
+                                = q15_ExplicitVarSizeWithMarker_Values[q46]
+                                    | q48 : int(1..2)])
+                                | q46 : int(1..2), q46 <= q15_ExplicitVarSizeWithMarker_Marker]))
+                          | q40 : int(1..4)])
+                      | q33 : int(1..16)])
+                 | q15_ExplicitVarSizeWithMarker_Marker : int(0..2),
+                   q15_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(1, 1),
+                   2 <= q15_ExplicitVarSizeWithMarker_Marker ->
+                   q15_ExplicitVarSizeWithMarker_Values[1] < q15_ExplicitVarSizeWithMarker_Values[2],
+                   and([q29 > q15_ExplicitVarSizeWithMarker_Marker -> q15_ExplicitVarSizeWithMarker_Values[q29] = 1
+                            | q29 : int(1..2)])])
+    Error:
+        Type error in sum([q33 <= var5_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q40 <=
+                               var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q33]
+                               /\
+                               (and([q42 <=
+                                     var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                         [q33, q40]
+                                     ->
+                                     or([q15_ExplicitVarSizeWithMarker_Values[q44] =
+                                         var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                             [q33, q40, q42]
+                                             | q44 : int(1..2), q44 <= q15_ExplicitVarSizeWithMarker_Marker])
+                                         | q42 : int(1..2)])
+                                /\
+                                and([or([q48 <=
+                                         var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                             [q33, q40]
+                                         /\
+                                         var5_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                             [q33, q40, q48]
+                                         = q15_ExplicitVarSizeWithMarker_Values[q46]
+                                             | q48 : int(1..2)])
+                                         | q46 : int(1..2), q46 <= q15_ExplicitVarSizeWithMarker_Marker]))
+                                   | q40 : int(1..4)])
+                               | q33 : int(1..16)])
+                      The argument has type: [bool]

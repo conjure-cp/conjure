@@ -1,0 +1,27 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             sum([q11 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q11, 1, q15] ->
+                        q1_Occurrence[q15]
+                            | q15 : int(2, 1..2)])
+                   /\
+                   and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q11, 1, q16]
+                            | q16 : int(2, 1..2), q1_Occurrence[q16]]))
+                      | q11 : int(1..4)])
+                 | q1_Occurrence : matrix indexed by [int(2, 1..2)] of bool,
+                   sum([q1_Occurrence[q10] | q10 : int(2, 1..2)]) <= 5])
+    Error:
+        Type error in sum([q1_Occurrence[q10] | q10 : int(2, 1..2)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([q6 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+             sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q6, 1, q9]
+                      | q9 : int(2, 1..2)])
+             <= 5
+                 | q6 : int(1..4)])
+    Error:
+        Type error in sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q6, 1, q9]
+                               | q9 : int(2, 1..2)])
+                      The argument has type: [bool]

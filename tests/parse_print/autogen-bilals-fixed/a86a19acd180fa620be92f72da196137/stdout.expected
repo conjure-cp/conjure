@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+letting given1_RelationAsMatrix be
+        [[[false, false, true, false, false, false; int(0..5)], [false, false, false, true, false, false; int(0..5)];
+              int(0, 2)],
+         [[false, false, false, false, false, false; int(0..5)], [false, false, false, true, false, false; int(0..5)];
+              int(0, 2)];
+             bool]
+letting given2_ExplicitWithFlags_Flags be [2, 4, 3, 3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0; int(1..16)]
+letting given2_ExplicitWithFlags_Values be [1, 2, 3, 4, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1; int(1..16)]
+letting given3_Function1DPartial_Flags be [true, false, true; int(3..5)]
+letting given3_Function1DPartial_Values be [false, false, true; int(3..5)]
+letting fin1 be 3
+letting fin2 be 2

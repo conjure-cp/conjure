@@ -1,0 +1,30 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             sum([q16 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q16, q4]
+                      | q16 : int(1..16)])
+                 | q4 : int(2..4, 1)])
+    Error:
+        Type error in sum([q16 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q16, q4]
+                               | q16 : int(1..16)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([q17 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+             sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q17, q18] | q18 : int(2..4, 1)]) >= 1
+                 | q17 : int(1..16)])
+    Error:
+        Type error in sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q17, q18]
+                               | q18 : int(2..4, 1)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement:
+        and([q9 <= var3_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+             sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9, q10] | q10 : int(2..4, 1)]) <= 3
+                 | q9 : int(1..16)])
+    Error:
+        Type error in sum([var3_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Occurrence[q9, q10]
+                               | q10 : int(2..4, 1)])
+                      The argument has type: [bool]

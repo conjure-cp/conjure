@@ -1,0 +1,36 @@
+language Essence 1.3
+
+find var1: bool
+find var10: set of (int(-3), int(-5, 1..2))
+find var2: relation of (set of int(2..5, 2..3))
+find var3: set of function int(5, -2..-1) --> bool
+find var4: int(0)
+find var5: bool
+find var6: (bool, tuple (bool), partition from int(0), tuple (int(1)))
+find var7: function function int(3..5, -3) --> bool --> tuple (int(-1))
+find var8: partition from int(3)
+find var9: function bool --> set of int(-5, 5)
+such that
+    (function(var4 --> 10 != -7, var4 --> var5) in ({} : `set of function int --> bool`) -> false \/ true in {true}) ->
+    function(({} : `set of partition from int`) --> partition({mset(7)}, {mset(4, -9)}),
+             {var8} --> partition({mset(7)}, {(mset() : `mset of int`)}),
+             {var8} --> partition({mset(-4, -8)}, {mset(-1, 10), mset(6, 1)}))
+    =
+    function({var8} --> partition({mset(-8), mset(-3, -7)}),
+             ({} : `set of partition from int`) --> partition({mset(-9)}, {mset(2), mset(6, 10)}),
+             ({} : `set of partition from int`) --> partition({mset(3)},
+                                                              {mset(-10), mset(2), (mset() : `mset of int`)})),
+    relation((partition({mset(6, -3), mset(-9, 6)}), mset(tuple (true), tuple (true)),
+              relation((0, 3, true), (7, 5, false), (5, -10, true))),
+             (partition({mset(-4, -2), (mset() : `mset of int`), mset(-6, 7)}), (mset() : `mset of tuple(bool)`),
+              relation((8, -9, true), (9, 5, true), (0, 4, true))),
+             (partition({(mset() : `mset of int`)}, {(mset() : `mset of int`)}), mset(tuple (false), tuple (false)),
+              relation((6, 1, false), (-10, 8, false), (2, -6, false))))
+    =
+    relation((partition({mset(-1)}), (mset() : `mset of tuple(bool)`),
+              relation((2, -9, false), (-4, -9, false), (9, 0, false))),
+             (partition({mset(2)}, {mset(10)}, {mset(10)}),
+              mset(tuple (false), tuple (true), tuple (false), tuple (true)),
+              relation((2, 10, true), (3, 9, true), (9, -4, false))),
+             (partition({(mset() : `mset of int`)}), (mset() : `mset of tuple(bool)`),
+              relation((1, 5, false), (7, 1, false), (5, 7, true))))

@@ -1,0 +1,188 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given fin2: int
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker:
+        matrix indexed by [int(1..fin1)] of int(0..0)
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
+        matrix indexed by [int(1..fin1), int(1..0), int(1..5)] of bool
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_2_ExplicitWithRepetition_Flag:
+        matrix indexed by [int(1..fin1)] of int(0..5)
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_2_ExplicitWithRepetition_Values:
+        matrix indexed by [int(1..fin1), int(1..5)] of bool
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_3_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..fin1), int(1..fin2)] of bool
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_3_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..fin1), int(1..fin2)] of bool
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_4_ExplicitWithFlags_Flags:
+        matrix indexed by [int(1..fin1), int(1..10)] of int(0..5)
+given given1_RelationAsSetR17R5R3R8R4R7_ExplicitR17R5R3R8R4R7_4_ExplicitWithFlags_Values:
+        matrix indexed by [int(1..fin1), int(1..10)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0..40)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1: matrix indexed by [int(1..40)] of int(2..5, 4)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2: matrix indexed by [int(1..40)] of int(3, 4)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3: matrix indexed by [int(1..40)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_4: matrix indexed by [int(1..40)] of bool
+given given2: bool
+find var2_1_PartitionOccurrence_NumParts: int(1..2)
+find var2_1_PartitionOccurrence_WhichPart: matrix indexed by [int(0, 1)] of int(1..2)
+find var2_1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
+find var2_1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(0, 1)
+find var2_2: bool
+given fin3: int
+given given3_Explicit: matrix indexed by [int(1..fin3)] of bool
+find var3: bool
+find var4_1_ExplicitWithRepetition_Flag: int(0..9)
+find var4_1_ExplicitWithRepetition_Values: matrix indexed by [int(1..9)] of int(1..5, 0..4)
+find var4_2: int(2..4, 0)
+find var5_ExplicitWithRepetitionR10_Flag: int(0..256)
+find var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags: matrix indexed by [int(1..256), bool] of bool
+find var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values: matrix indexed by [int(1..256), bool] of bool
+such that
+    var3,
+    and([q1 + 1 <= var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q1] <
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q1 + 1]
+         \/
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q1] =
+         var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q1 + 1]
+         /\
+         (var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q1] <
+          var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q1 + 1]
+          \/
+          var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q1] =
+          var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q1 + 1]
+          /\
+          (var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q1] <
+           var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q1 + 1]
+           \/
+           var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q1] =
+           var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q1 + 1]
+           /\
+           var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_4[q1] <
+           var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_4[q1 + 1]))
+             | q1 : int(1..39)]),
+    and([q2 > var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q2] = 2,
+              var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q2] = 3,
+              var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q2] = false,
+              var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_4[q2] = false; int(1..4)])
+             | q2 : int(1..40)]),
+    and([q4 <= var2_1_PartitionOccurrence_NumParts -> 4 <= var2_1_PartitionOccurrence_PartSizes[q4] | q4 : int(1..2)]),
+    and([q4 > var2_1_PartitionOccurrence_NumParts -> var2_1_PartitionOccurrence_PartSizes[q4] = 0 | q4 : int(1..2)]),
+    var2_1_PartitionOccurrence_NumParts = max([var2_1_PartitionOccurrence_WhichPart[q7] | q7 : int(0, 1)]),
+    and([var2_1_PartitionOccurrence_PartSizes[q8] =
+         sum([toInt(var2_1_PartitionOccurrence_WhichPart[q9] = q8) | q9 : int(0, 1)])
+             | q8 : int(1..2)]),
+    and([q10 <= var2_1_PartitionOccurrence_NumParts ->
+         and([var2_1_PartitionOccurrence_WhichPart[q11] = q10 -> var2_1_PartitionOccurrence_FirstIndex[q10] <= q11
+                  | q11 : int(0, 1)])
+             | q10 : int(1..2)]),
+    and([q10 <= var2_1_PartitionOccurrence_NumParts ->
+         or([var2_1_PartitionOccurrence_WhichPart[q11] = q10 /\ var2_1_PartitionOccurrence_FirstIndex[q10] = q11
+                 | q11 : int(0, 1)])
+             | q10 : int(1..2)]),
+    and([var2_1_PartitionOccurrence_PartSizes[q10] = 0 -> var2_1_PartitionOccurrence_FirstIndex[q10] = 0
+             | q10 : int(1..2)]),
+    and([q12 <= var2_1_PartitionOccurrence_NumParts /\ q13 <= var2_1_PartitionOccurrence_NumParts ->
+         (q12 < q13 <-> var2_1_PartitionOccurrence_FirstIndex[q12] < var2_1_PartitionOccurrence_FirstIndex[q13])
+             | q12 : int(1..2), q13 : int(1..2)]),
+    and([q14 + 1 <= var4_1_ExplicitWithRepetition_Flag ->
+         var4_1_ExplicitWithRepetition_Values[q14] <= var4_1_ExplicitWithRepetition_Values[q14 + 1]
+             | q14 : int(1..8)]),
+    and([q15 > var4_1_ExplicitWithRepetition_Flag -> var4_1_ExplicitWithRepetition_Values[q15] = 1 | q15 : int(1..9)]),
+    and([q16 <= var4_1_ExplicitWithRepetition_Flag ->
+         sum([toInt(q20 <= var4_1_ExplicitWithRepetition_Flag) *
+              toInt(var4_1_ExplicitWithRepetition_Values[q20] = var4_1_ExplicitWithRepetition_Values[q16])
+                  | q20 : int(1..9)])
+         = 0
+         \/
+         sum([toInt(q22 <= var4_1_ExplicitWithRepetition_Flag) *
+              toInt(var4_1_ExplicitWithRepetition_Values[q22] = var4_1_ExplicitWithRepetition_Values[q16])
+                  | q22 : int(1..9)])
+         >= 0
+             | q16 : int(1..9)]),
+    3 = var4_1_ExplicitWithRepetition_Flag,
+    and([q23 + 1 <= var5_ExplicitWithRepetitionR10_Flag ->
+         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q23, ..] <lex
+         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q23 + 1, ..]
+         \/
+         and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q23, q33] =
+              var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q23 + 1, q33]
+                  | q33 : bool])
+         /\
+         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q23, ..] <=lex
+         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q23 + 1, ..]
+             | q23 : int(1..255)]),
+    and([q24 > var5_ExplicitWithRepetitionR10_Flag ->
+         and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q24, q35] = false | q35 : bool]) /\
+         and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q24, q36] = false | q36 : bool])
+             | q24 : int(1..256)]),
+    and([q25 <= var5_ExplicitWithRepetitionR10_Flag ->
+         sum([toInt(q38 <= var5_ExplicitWithRepetitionR10_Flag) *
+              toInt(and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q38, q40] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q25, q40] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q38, q40]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q25, q40]
+                             | q40 : bool])
+                    /\
+                    and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q25, q41] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q38, q41] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q25, q41]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q38, q41]
+                             | q41 : bool]))
+                  | q38 : int(1..256)])
+         = 0
+         \/
+         sum([toInt(q43 <= var5_ExplicitWithRepetitionR10_Flag) *
+              toInt(and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q43, q45] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q25, q45] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q43, q45]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q25, q45]
+                             | q45 : bool])
+                    /\
+                    and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q25, q46] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q43, q46] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q25, q46]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q43, q46]
+                             | q46 : bool]))
+                  | q43 : int(1..256)])
+         >= 4
+             | q25 : int(1..256)]),
+    and([q26 <= var5_ExplicitWithRepetitionR10_Flag ->
+         sum([toInt(q48 <= var5_ExplicitWithRepetitionR10_Flag) *
+              toInt(and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q48, q50] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q26, q50] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q48, q50]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q26, q50]
+                             | q50 : bool])
+                    /\
+                    and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q26, q51] ->
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q48, q51] =
+                         var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q26, q51]
+                         /\ var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q48, q51]
+                             | q51 : bool]))
+                  | q48 : int(1..256)])
+         <= 4
+             | q26 : int(1..256)]),
+    2 <= var5_ExplicitWithRepetitionR10_Flag,
+    and([q27 <= var5_ExplicitWithRepetitionR10_Flag ->
+         and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q27, q28] /\
+              var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q27, q29]
+              ->
+              var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q27, q28] !=
+              var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q27, q29]
+                  | q28 : bool, q29 : bool, q28 < q29])
+             | q27 : int(1..256)]),
+    and([q27 <= var5_ExplicitWithRepetitionR10_Flag ->
+         and([var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q27, q30] = false ->
+              var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Values[q27, q30] = false
+                  | q30 : bool])
+             | q27 : int(1..256)]),
+    and([q27 <= var5_ExplicitWithRepetitionR10_Flag ->
+         3 <= sum([toInt(var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q27, q31]) | q31 : bool])
+             | q27 : int(1..256)]),
+    and([q27 <= var5_ExplicitWithRepetitionR10_Flag ->
+         sum([toInt(var5_ExplicitWithRepetitionR10_Values_Function1DPartial_Flags[q27, q31]) | q31 : bool]) <= 4
+             | q27 : int(1..256)])
+

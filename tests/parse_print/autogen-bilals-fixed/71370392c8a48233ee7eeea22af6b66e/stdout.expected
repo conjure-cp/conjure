@@ -1,0 +1,6 @@
+language Essence 1.3
+
+find var1: int(5)
+such that
+    (function() : `function int --> tuple(bool)`) !=
+    function(toInt(true) --> tuple (false), 2 --> tuple (false), var1 --> tuple (false))

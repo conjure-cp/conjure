@@ -1,0 +1,69 @@
+language ESSENCE' 1.0
+
+given given1: int(1, 4)
+find var1_1: int(0..4, 3)
+find var1_2: bool
+given given2_1: bool
+find var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..16)
+find var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..16), int(1..4)] of int(3..5, 3, 6)
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..4)
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..4)] of int(0..2)
+given given3_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..4), int(1..2)] of bool
+find var3: matrix indexed by [int(0, 5)] of bool
+maximising given1
+such that
+    false,
+    and([1 =
+         sum([toInt(q15 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                    or([var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q15, q17] != 6
+                        /\
+                        var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q15, q17] = q1
+                            | q17 : int(1..4)]))
+                  | q15 : int(1..16)])
+             | q1 : int(3..5, 3)]),
+    and([q18 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+         q19 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker
+         ->
+         sum([toInt(var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q18, q21] != 6)
+                  | q21 : int(1..4)])
+         =
+         sum([toInt(var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q19, q23] != 6)
+                  | q23 : int(1..4)])
+             | q18 : int(1..16), q19 : int(1..16)]),
+    and([q24 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q24, q26] != 6)
+                  | q26 : int(1..4)])
+         >= 1
+             | q24 : int(1..16)]),
+    and([q6 + 1 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q6, ..] <lex
+         var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q6 + 1, ..]
+             | q6 : int(1..15)]),
+    and([q7 > var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q7, q13] = 3
+                  | q13 : int(1..4)])
+             | q7 : int(1..16)]),
+    and([q8 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9] <
+              var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9 + 1]
+              \/ var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9] = 6
+                  | q9 : int(1..3)])
+             | q8 : int(1..16)]),
+    and([q8 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q10] = 6 ->
+              var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q10 + 1] = 6
+                  | q10 : int(1..3)])
+             | q8 : int(1..16)]),
+    and([q8 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         4 <=
+         sum([toInt(var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q11] != 6)
+                  | q11 : int(1..4)])
+             | q8 : int(1..16)]),
+    and([q8 <= var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(var2_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q11] != 6)
+                  | q11 : int(1..4)])
+         <= 4
+             | q8 : int(1..16)])

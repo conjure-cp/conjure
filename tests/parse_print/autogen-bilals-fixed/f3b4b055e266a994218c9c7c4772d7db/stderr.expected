@@ -1,0 +1,10 @@
+Error 1:
+    In a 'such that' statement: 5 <= sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..5)])
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..5)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement: sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..5)]) <= 5
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..5)])
+                      The argument has type: [bool]

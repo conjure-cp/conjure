@@ -1,0 +1,36 @@
+Error:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q18 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([q31 <=
+                        var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                            [q18]
+                        ->
+                        or([q8_ExplicitVarSizeWithFlags_Values[q33] =
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q18, q31]
+                                | q33 : int(1..2), q8_ExplicitVarSizeWithFlags_Flags[q33]])
+                            | q31 : int(1..2)])
+                   /\
+                   and([or([q37 <=
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                                [q18]
+                            /\
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q18, q37]
+                            = q8_ExplicitVarSizeWithFlags_Values[q35]
+                                | q37 : int(1..2)])
+                            | q35 : int(1..2), q8_ExplicitVarSizeWithFlags_Flags[q35]]))
+                      | q18 : int(1..5)])
+                 | q8_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of bool,
+                   q8_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(3..5, 0),
+                   q8_ExplicitVarSizeWithFlags_Flags[2] ->
+                   q8_ExplicitVarSizeWithFlags_Values[1] < q8_ExplicitVarSizeWithFlags_Values[2],
+                   and([q8_ExplicitVarSizeWithFlags_Flags[q13] = false -> q8_ExplicitVarSizeWithFlags_Values[q13] = 3
+                            | q13 : int(1..2)]),
+                   q8_ExplicitVarSizeWithFlags_Flags[2] -> q8_ExplicitVarSizeWithFlags_Flags[1],
+                   2 <= sum([q8_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..2)]),
+                   sum([q8_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..2)]) <= 2])
+    Error:
+        Type error in sum([q8_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..2)])
+                      The argument has type: [bool]

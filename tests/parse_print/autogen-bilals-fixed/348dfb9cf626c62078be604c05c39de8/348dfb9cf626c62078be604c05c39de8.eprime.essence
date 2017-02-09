@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1: int(5, 3)
+find var2: int(4, 4)
+minimising var1
+such that
+    false = [false, true; int(1..2)][var1 ** (var1 ** (var1 ** var1))],
+    [false, false, true, true; int(0..0, 4..4, 5..5, 11..11)][var2] = false
+

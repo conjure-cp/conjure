@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..0)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..0), int(4, 4)] of bool
+find var2: bool
+such that
+    var2,
+    var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 0

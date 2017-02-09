@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var1: function (size -0, total, bijective) (bool, bool, bool, bool) --> relation (size 0) of (bool * bool)
+find var2: function (minSize -2) bool --> relation (size 0) of (bool)
+find var3: relation (maxSize -2) of (bool * set (maxSize 0) of bool)
+find var4: relation (minSize factorial(3)) of (mset (maxSize 4, minOccur 2, maxOccur 4) of bool)
+such that
+    false = true,
+    true > true,
+    false = true
