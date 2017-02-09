@@ -234,8 +234,8 @@ parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
 
         parseBeforeShuntD1 :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
         parseBeforeShuntD1 =
-            ((:) <$> (Right <$> pDomainAtom <?> "domain")
-                 <*> parseBeforeShuntO)
+            (:) <$> (Right <$> pDomainAtom <?> "domain")
+                <*> parseBeforeShuntO
 
         -- either parse an operator and continue to parseBeforeShuntD
         -- or return []
@@ -244,7 +244,7 @@ parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
             try ((:) <$> (Left <$> parseOp')
                      <*> parseBeforeShuntD)
             <|>
-            (return [])
+            return []
 
         parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum
@@ -642,8 +642,8 @@ parseExpr = shuntingYardExpr parseBeforeShuntE1
 
         parseBeforeShuntE1 :: Parser [Either Lexeme Expression]
         parseBeforeShuntE1 =
-            ((:) <$> (Right <$> parseAtomicExpr)
-                 <*> parseBeforeShuntO)
+            (:) <$> (Right <$> parseAtomicExpr)
+                <*> parseBeforeShuntO
 
         -- either parse an operator and continue to parseBeforeShuntE
         -- or return []
@@ -652,13 +652,13 @@ parseExpr = shuntingYardExpr parseBeforeShuntE1
             (:) <$> (Left <$> parseOp)
                 <*> parseBeforeShuntE
             <|>
-            (return [])
+            return []
 
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do
     let
         prefixes = do
-            fs <- some $ msum (parsePrefixes)
+            fs <- some $ msum parsePrefixes
             return $ foldr1 (.) fs
         postfixes = do
             fs <- some $ msum parsePostfixes
@@ -1068,7 +1068,7 @@ runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserS
         modifyErr :: ParseError -> Either (Doc, Int, Int) a
         modifyErr e = Left $
             let pos  = errorPos e
-            in  ( if isPrefixOf file (show e)
+            in  ( if file `isPrefixOf` show e
                     then                       pretty (show e)
                     else pretty file <> ":" <> pretty (show e)
             -- in  ( pretty file <> ":" <> pretty (show e)
