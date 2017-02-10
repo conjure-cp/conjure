@@ -221,19 +221,13 @@ parseDomain :: Parser (Domain () Expression)
 parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
+parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD
 
     where
 
-        -- either parse an domain and continue to parseBeforeShuntO
-        -- or return []
+        -- parse a domain and continue to parseBeforeShuntO
         parseBeforeShuntD :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
         parseBeforeShuntD =
-            (:) <$> (Right <$> pDomainAtom <?> "domain")
-                <*> parseBeforeShuntO
-
-        parseBeforeShuntD1 :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
-        parseBeforeShuntD1 =
             (:) <$> (Right <$> pDomainAtom <?> "domain")
                 <*> parseBeforeShuntO
 
@@ -241,8 +235,8 @@ parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
         -- or return []
         parseBeforeShuntO :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
         parseBeforeShuntO =
-            try ((:) <$> (Left <$> parseOp')
-                     <*> parseBeforeShuntD)
+            (:) <$> (Left <$> parseOp')
+                <*> parseBeforeShuntD
             <|>
             return []
 
@@ -631,17 +625,11 @@ metaVarInE :: String -> Expression
 metaVarInE = ExpressionMetaVar
 
 parseExpr :: Parser Expression
-parseExpr = shuntingYardExpr parseBeforeShuntE1
+parseExpr = shuntingYardExpr parseBeforeShuntE
     where
-        -- either parse an expression and continue to parseBeforeShuntO
-        -- or return []
+        -- parse an expression and continue to parseBeforeShuntO
         parseBeforeShuntE :: Parser [Either Lexeme Expression]
         parseBeforeShuntE =
-            (:) <$> (Right <$> parseAtomicExpr)
-                <*> parseBeforeShuntO
-
-        parseBeforeShuntE1 :: Parser [Either Lexeme Expression]
-        parseBeforeShuntE1 =
             (:) <$> (Right <$> parseAtomicExpr)
                 <*> parseBeforeShuntO
 
