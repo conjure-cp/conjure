@@ -941,7 +941,7 @@ parseLiteral = label "value" $ msum
 
         pRelation = do
             lexeme L_relation
-            xs <- parens (commaSeparated0 (try pTupleWith <|> pTupleWithout))
+            xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
             return (AbsLitRelation [is | AbsLitTuple is <- xs])
             -- return [xMake| value.relation.values := xs |]
 
