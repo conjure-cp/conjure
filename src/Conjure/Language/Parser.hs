@@ -229,8 +229,8 @@ parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD1
         -- or return []
         parseBeforeShuntD :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
         parseBeforeShuntD =
-            try ((:) <$> (Right <$> pDomainAtom <?> "domain")
-                     <*> parseBeforeShuntO)
+            (:) <$> (Right <$> pDomainAtom <?> "domain")
+                <*> parseBeforeShuntO
 
         parseBeforeShuntD1 :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
         parseBeforeShuntD1 =
