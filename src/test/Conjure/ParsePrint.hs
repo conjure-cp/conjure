@@ -94,15 +94,16 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
         readIfExists :: FilePath -> IO String
         readIfExists f = fromMaybe "" <$> readFileIfExists f
 
-    step "Checking stdout"
-    stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
-    stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
-    unless (stdoutE == stdoutG) $
-        assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
-                                            , "was expecting:    " <++> pretty stdoutE ]
     step "Checking stderr"
     stderrG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stderr")
     stderrE <- readIfExists (tBaseDir </> "stderr.expected")
     unless (stderrE == stderrG) $
         assertFailure $ renderNormal $ vcat [ "unexpected stderr:" <++> pretty stderrG
                                             , "was expecting:    " <++> pretty stderrE ]
+    step "Checking stdout"
+    stdoutG <- fixWindowsPaths <$> readIfExists (tBaseDir </> "stdout")
+    stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
+    unless (stdoutE == stdoutG) $
+        assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
+                                            , "was expecting:    " <++> pretty stdoutE ]
+
