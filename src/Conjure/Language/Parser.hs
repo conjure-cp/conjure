@@ -836,7 +836,7 @@ parseQuantifiedExpr = do
 
 
 parseAbstractPattern :: Parser AbstractPattern
-parseAbstractPattern = label "pattern" $ msum $ map try
+parseAbstractPattern = label "pattern" $ msum
     [ AbstractPatternMetaVar <$> parseMetaVariable
     , Single <$> parseName
     , do
