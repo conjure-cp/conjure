@@ -39,6 +39,9 @@ before_install:
   - export GHC_VERSION="${GHC}"
   - export SR_OPTIONS="${SR}"
   - export SOLVER="${SOL}"
+  - unset GHC
+  - unset SR_OPTIONS
+  - unset SOL
   #
   - export CABALVER=1.24
   - export BIN_DIR=$(pwd)/bin
