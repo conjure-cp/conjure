@@ -88,9 +88,8 @@ install:
   # Conjure
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - travis_retry cabal update
   - echo ${PATH}
-  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make install-with-cabal
+  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 INSTALL_GHC=yes INSTALL_CABAL=yes make install-with-cabal
   - conjure --version                        # print version
 
   # Savile Row
