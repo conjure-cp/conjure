@@ -13,7 +13,7 @@
 # OPTIONAL after_deploy
 # after_script
 
-language: c
+language: generic
 
 sudo: false
 
@@ -87,7 +87,7 @@ install:
 
   # Use gcc-4.8 on travis osx
   # See https://github.com/travis-ci/travis-ci/issues/2423
-  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then ln -s $(which gcc-4.8) ~/.cabal/bin/gcc ; fi
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then export CC=gcc-4.8 ; export CXX=g++-4.8 ; fi
 
   # Conjure
   - cabal --version || echo "cabal not found"
