@@ -85,6 +85,10 @@ before_install:
 install:
   - mkdir -p bin
 
+  # Use gcc-4.8 on travis osx
+  # See https://github.com/travis-ci/travis-ci/issues/2423
+  - if [ "${TRAVIS_OS_NAME}" == "osx" ]; then ln -s $(which gcc-4.8) ~/.cabal/bin/gcc ; fi
+
   # Conjure
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
