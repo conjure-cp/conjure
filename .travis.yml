@@ -55,6 +55,9 @@ before_install:
 install:
   - mkdir -p bin
 
+  # take the config file out of the cache
+  - if [ -f .cabal-sandbox/cabal.sandbox.config ] ; then mv .cabal-sandbox/cabal.sandbox.config . ; fi
+
   # Conjure
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
@@ -75,6 +78,8 @@ install:
   - minion help | head -n2                   # print version
 
   - ls -Alh $(find bin -type f)
+
+  - cp cabal.sandbox.config .cabal-sandbox   # move the config file under the sandbox so it is cached
 
 script:
   - touch conjure-testing.stdout
