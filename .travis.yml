@@ -87,6 +87,7 @@ before_install:
   - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
   - if [ "${TRAVIS_OS_NAME}" == "osx" ];   then export COMPILER_C=gcc     ; export COMPILER_CPP=g++     ; fi
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export COMPILER_C=gcc-4.9 ; export COMPILER_CPP=g++-4.9 ; fi
+  - export SKIP_TESTS="no"
 
 install:
   - mkdir -p bin
@@ -98,7 +99,7 @@ install:
   - cabal --version || echo "cabal not found"
   - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
   - echo ${PATH}
-  - (OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make install-with-cabal) || (OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 INSTALL_GHC=yes INSTALL_CABAL=yes make install-with-cabal ; export BUILT_STUFF="yes")
+  - (OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 make install-with-cabal) || (export SKIP_TESTS="yes" ; OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 INSTALL_GHC=yes INSTALL_CABAL=yes make install-with-cabal)
   - conjure --version                        # print version
 
   # Savile Row
@@ -109,7 +110,7 @@ install:
   - (lingeling --help > /dev/null) || (CC=${COMPILER_C} etc/build/install-lingeling.sh)
 
   # Minion
-  # - (minion | grep 'Minion Version 2') || (COMPILER=${COMPILER_CPP} etc/build/install-minion.sh ; export BUILT_STUFF="yes")
+  # - (minion | grep 'Minion Version 2') || (export SKIP_TESTS="yes" ; COMPILER=${COMPILER_CPP} etc/build/install-minion.sh)
   - (minion | grep 'Minion Version 1.8') || etc/build/download-minion.sh
   - minion help | head -n2                   # print version
 
@@ -119,7 +120,7 @@ install:
 
 script:
   - touch conjure-testing.stdout
-  - if [ ${BUILT_STUFF} == "yes" ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s) > >(tee conjure-testing.stdout | grep -B1 'Conjuring\|Savile') 2> >(tee conjure-testing.stderr >&2)) || true; fi
+  - if [ ${SKIP_TESTS} == "yes" ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --select-tests quick +RTS -s) > >(tee conjure-testing.stdout | grep -B1 'Conjuring\|Savile') 2> >(tee conjure-testing.stderr >&2)) || true; fi
   - if ! grep -B10 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
   - cabal sdist   # tests that a source-distribution can be generated
 
