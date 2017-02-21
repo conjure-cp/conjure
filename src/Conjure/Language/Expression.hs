@@ -55,6 +55,9 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
+    | SNS_Neighbourhood Name            -- the name of the neighbourhood
+                        Expression      -- variables, probably a list
+                        [Expression]    -- constraints
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -69,6 +72,11 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
+    pretty (SNS_Neighbourhood name vars cons) = vcat
+        [ "neighbourhood" <+> pretty name
+        , nest 4 $ "using" <+> pretty vars
+        , nest 4 $ "such that" <++> vcat (punctuate "," $ map pretty cons)
+        ]
 
 instance VarSymBreakingDescription Statement where
     varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
@@ -91,7 +99,12 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-
+    varSymBreakingDescription (SNS_Neighbourhood nm vars cons) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "SNS_Neighbourhood")
+        , ("children", JSON.Array $ V.fromList $ toJSON nm
+                                               : varSymBreakingDescription vars
+                                               : map varSymBreakingDescription cons)
+        ]
 
 ------------------------------------------------------------------------------------------------------------------------
 -- SearchOrder ---------------------------------------------------------------------------------------------------------

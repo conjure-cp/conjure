@@ -192,6 +192,16 @@ parseTopLevels = do
                     nm <- parseName
                     return [ SearchHeuristic nm ]
                     <?> "branching on"
+                , do
+                    lexeme L_neighbourhood
+                    nm   <- parseName
+                    lexeme L_using
+                    vars <- parseExpr
+                    lexeme L_such
+                    lexeme L_that
+                    xs <- commaSeparated parseExpr
+                    return [SNS_Neighbourhood nm vars xs]
+                    <?> "neighbourhood declaration"
                 ] <?> "statement"
     concat <$> some one
 
