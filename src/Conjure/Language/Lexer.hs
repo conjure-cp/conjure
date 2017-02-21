@@ -260,6 +260,7 @@ data Lexeme
 
     | L_neighbourhood
     | L_using
+    | L_shadow
 
     deriving (Eq, Ord, Show, Generic)
 
@@ -468,6 +469,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_neighbourhood, "neighbourhood" )
     , ( L_neighbourhood, "neighborhood" )
     , ( L_using, "using" )
+    , ( L_shadow, "shadow" )
 
     ]
 

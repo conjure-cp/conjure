@@ -127,6 +127,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpRange x) = domainOf x
     domainOf (MkOpRelationProj x) = domainOf x
     domainOf (MkOpRestrict x) = domainOf x
+    domainOf (MkOpShadow x) = domainOf x
     domainOf (MkOpSlicing x) = domainOf x
     domainOf (MkOpSubsequence x) = domainOf x
     domainOf (MkOpSubset x) = domainOf x
@@ -196,6 +197,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpRange x) = indexDomainsOf x
     indexDomainsOf (MkOpRelationProj x) = indexDomainsOf x
     indexDomainsOf (MkOpRestrict x) = indexDomainsOf x
+    indexDomainsOf (MkOpShadow x) = indexDomainsOf x
     indexDomainsOf (MkOpSlicing x) = indexDomainsOf x
     indexDomainsOf (MkOpSubsequence x) = indexDomainsOf x
     indexDomainsOf (MkOpSubset x) = indexDomainsOf x
@@ -531,6 +533,10 @@ instance (DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
         case fDom of
             DomainFunction fRepr a _ to -> return (DomainFunction fRepr a d to)
             _ -> fail "domainOf, OpRestrict, not a function"
+
+instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpShadow x) where
+    domainOf (OpShadow x) = domainOf x
+    indexDomainsOf (OpShadow x) = indexDomainsOf x
 
 instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x
