@@ -466,6 +466,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_succ, "succ" )
 
     , ( L_neighbourhood, "neighbourhood" )
+    , ( L_neighbourhood, "neighborhood" )
     , ( L_using, "using" )
 
     ]
