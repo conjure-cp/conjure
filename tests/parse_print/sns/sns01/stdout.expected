@@ -1,0 +1,19 @@
+language Essence 1.4
+
+letting RANGE be domain int(1..9)
+letting VALUES be domain int(0..9)
+given values: matrix indexed by [RANGE, RANGE] of VALUES
+find field: matrix indexed by [RANGE, RANGE] of RANGE
+such that
+    and([allDiff(field[row, ..]) | row : RANGE]),
+    and([allDiff(field[.., col]) | col : RANGE]),
+    and([and([col1 != col2 /\ row1 != row2 -> field[row1 + i * 3, col1 + j * 3] != field[row2 + i * 3, col2 + j * 3]
+                  | col1 : int(1..3), col2 : int(1..3), row1 : int(1..3), row2 : int(1..3)])
+             | i : int(0..2), j : int(0..2)]),
+    and([values[row, col] > 0 -> field[row, col] = values[row, col] | row : RANGE, col : RANGE])
+neighbourhood row1
+    using field[1, ..]
+    such that true
+neighbourhood row1FirstHalf
+    using field[1, ..]
+    such that true
