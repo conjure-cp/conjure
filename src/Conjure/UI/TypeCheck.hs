@@ -156,6 +156,29 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
+            SNS_Neighbourhood nm vars cons -> do
+                cons' <- forM cons $ \ x -> do
+                    mty <- runExceptT $ typeOf x
+                    case mty of
+                        Right TypeBool{} -> return x
+                        Right (TypeList TypeBool) -> return (make opAnd x)
+                        Right (TypeMatrix _ TypeBool) -> return (make opAnd x)
+                        Left err -> do
+                            tell $ return $ vcat
+                                [ "Inside a neighbourhood declaration"
+                                , "In a 'such that' statement:" <++> pretty x
+                                , "Error:" <++> pretty err
+                                ]
+                            return x
+                        Right ty -> do
+                            tell $ return $ vcat
+                                [ "Inside a neighbourhood declaration"
+                                , "In a 'such that' statement:" <++> pretty x
+                                , "Expected type `bool`, but got:" <++> pretty ty
+                                ]
+                            return x
+                -- TODO: "type-check" vars
+                return (SNS_Neighbourhood nm vars cons')
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

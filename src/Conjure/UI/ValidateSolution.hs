@@ -134,6 +134,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                              , nm `elem` (universeBi x :: [Name])
                                                              ]
                                                          ]
+        SNS_Neighbourhood{} -> return ()
 
 
 introduceRecordFields

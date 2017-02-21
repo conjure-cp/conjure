@@ -116,6 +116,7 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
+        SNS_Neighbourhood nm vars cons -> SNS_Neighbourhood nm <$> resolveX vars <*> mapM resolveX cons
 
 
 resolveSearchOrder
