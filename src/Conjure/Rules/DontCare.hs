@@ -96,6 +96,7 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
         case ty of
             TypeSet      {} -> return ()
             TypeMSet     {} -> return ()
+            TypeSequence {} -> return ()
             TypeFunction {} -> return ()
             TypeRelation {} -> return ()
             TypePartition{} -> return ()
