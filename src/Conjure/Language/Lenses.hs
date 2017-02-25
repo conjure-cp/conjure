@@ -1025,6 +1025,7 @@ opSum _ =
     )
 
 
+-- We should really call these operators something like "reducers"
 opQuantifier
     :: ( Op x :< x
        , Pretty x
@@ -1041,6 +1042,7 @@ opQuantifier _ =
             case op of
                 MkOpAnd     (OpAnd     x) -> return (inject . MkOpAnd     . OpAnd     , x)
                 MkOpOr      (OpOr      x) -> return (inject . MkOpOr      . OpOr      , x)
+                MkOpXor     (OpXor     x) -> return (inject . MkOpXor     . OpXor     , x)
                 MkOpSum     (OpSum     x) -> return (inject . MkOpSum     . OpSum     , x)
                 MkOpProduct (OpProduct x) -> return (inject . MkOpProduct . OpProduct , x)
                 MkOpMax     (OpMax     x) -> return (inject . MkOpMax     . OpMax     , x)
