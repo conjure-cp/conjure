@@ -968,6 +968,7 @@ paramRules =
     [ Horizontal.Set.rule_Param_MinOfSet
     , Horizontal.Set.rule_Param_MaxOfSet
     , Horizontal.Set.rule_Param_Card
+    , Horizontal.Function.rule_Param_DefinedRange
     , Horizontal.Relation.rule_Param_Card
     ]
 
