@@ -327,7 +327,7 @@ rule_Param_DefinedRange :: Rule
 rule_Param_DefinedRange = "param-DefinedRange-of-function" `namedRule` theRule where
     theRule p = do
         unless (categoryOf p == CatParameter) $ na "rule_Param_DefinedRange"
-        (mk, p2) <- match opQuantifier p
+        (mk, p2) <- match opReducer p
         (index, f) <- case p2 of
             [essence| defined(&f) |] -> return (1, f)
             [essence| range(&f)   |] -> return (2, f)
