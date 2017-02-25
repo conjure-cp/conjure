@@ -70,7 +70,7 @@ rule_ModifierAroundIndexedMatrixLiteral = "modifier-around-indexed-matrix-litera
 rule_QuantifierAroundIndexedMatrixLiteral :: Rule
 rule_QuantifierAroundIndexedMatrixLiteral = "quantifier-around-indexed-matrix-literal" `namedRule` theRule where
     theRule p = do
-        (mkM, p2)         <- match opReducer p
+        (_, mkM, p2)      <- match opReducer p
         (matrix, indices) <- match opMatrixIndexing p2
         case match opMatrixIndexing p of
             Nothing -> return ()
@@ -427,7 +427,7 @@ rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `na
 rule_Comprehension_Singleton :: Rule
 rule_Comprehension_Singleton = "matrix-comprehension-singleton" `namedRule` theRule where
     theRule p = do
-        (_mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
+        (_, _mkQuan, AbstractLiteral (AbsLitMatrix _ [singleVal])) <- match opReducer p
         return
             ( "Removing quantifier of a single item"
             , return singleVal

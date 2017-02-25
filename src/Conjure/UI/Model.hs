@@ -1584,7 +1584,7 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
 rule_ReducerToComprehension :: Rule
 rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
     theRule p = do
-        (mk, coll) <- match opReducer p
+        (_, mk, coll) <- match opReducer p
         -- leave comprehensions alone
         case coll of
             Comprehension{} -> na "rule_ReducerToComprehension"
@@ -1940,7 +1940,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
 rule_QuantifierShift :: Rule
 rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner  )               <- match opReducer p
+        (_, mkQuan, inner)              <- match opReducer p
         (matrix, indexer)               <- match opIndexing inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -1962,7 +1962,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
 rule_QuantifierShift2 :: Rule
 rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)                 <- match opReducer p
+        (_, mkQuan, inner)              <- match opReducer p
         matrix                          <- match opFlatten inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -1986,7 +1986,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)                 <- match opReducer p
+        (_, mkQuan, inner)              <- match opReducer p
         matrix                          <- match opConcatenate inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return
