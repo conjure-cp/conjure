@@ -322,6 +322,24 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
     theRule _ = na "rule_Comprehension_Range"
 
 
+-- TODO: What about duplicates for sum, product, etc?
+rule_Param_DefinedRange :: Rule
+rule_Param_DefinedRange = "param-DefinedRange-of-function" `namedRule` theRule where
+    theRule p = do
+        unless (categoryOf p == CatParameter) $ na "rule_Param_DefinedRange"
+        (mk, p2) <- match opQuantifier p
+        (index, f) <- case p2 of
+            [essence| defined(&f) |] -> return (1, f)
+            [essence| range(&f)   |] -> return (2, f)
+            _ -> na "rule_Param_DefinedRange"
+        return
+            ( "rule_Param_DefinedRange"
+            , do
+                (iPat, i) <- quantifiedVar
+                return $ mk $ [essence| [ &i[&index] | &iPat <- &f ] |]
+            )
+
+
 rule_Comprehension_Defined_Size :: Rule
 rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule where
     theRule [essence| size(defined(&func), &n) |] = do
