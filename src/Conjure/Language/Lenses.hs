@@ -1025,8 +1025,7 @@ opSum _ =
     )
 
 
--- We should really call these operators something like "reducers"
-opQuantifier
+opReducer
     :: ( Op x :< x
        , Pretty x
        , MonadFail m
@@ -1035,7 +1034,7 @@ opQuantifier
     -> ( (x -> x, x) -> x
        , x -> m (x -> x, x)
        )
-opQuantifier _ =
+opReducer _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- project p
@@ -1047,7 +1046,7 @@ opQuantifier _ =
                 MkOpProduct (OpProduct x) -> return (inject . MkOpProduct . OpProduct , x)
                 MkOpMax     (OpMax     x) -> return (inject . MkOpMax     . OpMax     , x)
                 MkOpMin     (OpMin     x) -> return (inject . MkOpMin     . OpMin     , x)
-                _ -> na ("Lenses.opQuantifier:" <++> pretty p)
+                _ -> na ("Lenses.opReducer:" <++> pretty p)
     )
 
 
