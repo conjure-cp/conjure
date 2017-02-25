@@ -27,6 +27,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
             TypeList TypeInt -> return TypeInt
             TypeMatrix _ TypeAny -> return TypeInt
             TypeMatrix _ TypeInt -> return TypeInt
+            TypeSet TypeInt -> return TypeInt
+            TypeMSet TypeInt -> return TypeInt
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
