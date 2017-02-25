@@ -1231,7 +1231,6 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
-        , rule_ReducerToComprehension
 
         , rule_DomainCardinality
         , rule_DomainMinMax
@@ -1267,6 +1266,8 @@ delayedRules =
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
+        ]
+    ,   [ rule_ReducerToComprehension
         ]
     ]
 
