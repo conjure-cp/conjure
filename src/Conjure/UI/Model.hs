@@ -1230,6 +1230,7 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
+        , rule_ReducerToComprehension
 
         , rule_DomainCardinality
         , rule_DomainMinMax
@@ -1577,6 +1578,35 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
             , return $ transformBi f $ Comprehension body rest
             )
     theRule _ = na "rule_GeneratorsFirst"
+
+
+rule_ReducerToComprehension :: Rule
+rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
+    theRule p = do
+        (mk, coll) <- match opQuantifier p
+        -- leave comprehensions alone
+        case coll of
+            Comprehension{} -> na "rule_ReducerToComprehension"
+            _ -> return ()
+        -- leave matrix literals alone
+        case tryMatch matrixLiteral coll of
+            Nothing -> return ()
+            Just {} -> na "rule_ReducerToComprehension"
+        tyColl <- typeOf coll
+        howToIndex <- case tyColl of
+            TypeMatrix{} -> return $ Left ()
+            TypeList{} -> return $ Left ()
+            TypeSet{} -> return $ Right ()
+            TypeMSet{} -> return $ Right ()
+            _ -> na "rule_ReducerToComprehension"
+        return
+            ( "Creating a comprehension for the collection inside the reducer operator."
+            , do
+                (iPat, i) <- quantifiedVar
+                case howToIndex of
+                    Left{}  -> return $ mk [essence| [ &i[2] | &iPat <- &coll ] |]
+                    Right{} -> return $ mk [essence| [ &i    | &iPat <- &coll ] |]
+            )
 
 
 rule_TrueIsNoOp :: Rule
