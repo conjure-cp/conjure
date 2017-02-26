@@ -35,7 +35,7 @@ data UI
         , strategyA                  :: String
         , representations            :: Maybe String        -- (def: strategyA)
         , representationsFinds       :: Maybe String        -- (def: representations)
-        , representationsGivens      :: Maybe String        -- (def: c)
+        , representationsGivens      :: Maybe String        -- (def: s)
         , representationsAuxiliaries :: Maybe String        -- (def: representations)
         , representationsQuantifieds :: Maybe String        -- (def: representations)
         , representationsCuts        :: Maybe String        -- (def: representations)
@@ -305,7 +305,7 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= help "Strategy to use when choosing a representation for a parameter.\n\
-                    \Default value: c (for compact)"
+                    \Default value: s (for sparse)"
         , representationsAuxiliaries
             = Nothing
             &= typ "STRATEGY"
@@ -705,7 +705,7 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= help "Strategy to use when choosing a representation for a parameter.\n\
-                    \Default value: c (for compact)"
+                    \Default value: s (for sparse)"
         , representationsAuxiliaries
             = Nothing
             &= typ "STRATEGY"

@@ -72,7 +72,7 @@ mainWithArgs Modelling{..} = do
         strategyA'                  <- parseStrategy_ strategyA
         representations'            <- maybe (return strategyA')       parseStrategy_ representations
         representationsFinds'       <- maybe (return representations') parseStrategy_ representationsFinds
-        representationsGivens'      <- maybe (return representations') parseStrategy_ representationsGivens
+        representationsGivens'      <- maybe (return Sparse          ) parseStrategy_ representationsGivens
         representationsAuxiliaries' <- maybe (return representations') parseStrategy_ representationsAuxiliaries
         representationsQuantifieds' <- maybe (return representations') parseStrategy_ representationsQuantifieds
         representationsCuts'        <- maybe (return representations') parseStrategy_ representationsCuts
