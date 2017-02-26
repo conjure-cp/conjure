@@ -243,8 +243,8 @@ reprsSparseOrder = map return
 
     , msetExplicitWithFlags, msetExplicitWithRepetition
 
-    , functionAsRelation dispatch (reprOptions reprsSparseOrder)
     , function1D, functionND
+    , functionAsRelation dispatch (reprOptions reprsSparseOrder)
     , function1DPartial, functionNDPartial                    -- redundant
 
     , sequenceExplicitBounded
