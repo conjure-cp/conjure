@@ -1587,9 +1587,12 @@ rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule whe
     theRule p = do
         (_, mk, coll) <- match opReducer p
         -- leave comprehensions alone
-        case coll of
-            Comprehension{} -> na "rule_ReducerToComprehension"
-            _ -> return ()
+        let
+            isComprehension Comprehension{} = True
+            isComprehension _ = False
+        case followAliases isComprehension coll of
+            True  -> na "rule_ReducerToComprehension"
+            False -> return ()
         -- leave matrix literals alone
         case tryMatch matrixLiteral coll of
             Nothing -> return ()
@@ -1597,9 +1600,9 @@ rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule whe
         tyColl <- typeOf coll
         howToIndex <- case tyColl of
             TypeMatrix{} -> return $ Left ()
-            TypeList{} -> return $ Left ()
-            TypeSet{} -> return $ Right ()
-            TypeMSet{} -> return $ Right ()
+            TypeList{}   -> return $ Right ()
+            TypeSet{}    -> return $ Right ()
+            TypeMSet{}   -> return $ Right ()
             _ -> na "rule_ReducerToComprehension"
         return
             ( "Creating a comprehension for the collection inside the reducer operator."
