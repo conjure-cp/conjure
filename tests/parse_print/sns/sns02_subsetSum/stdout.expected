@@ -1,0 +1,14 @@
+language Essence 1.4
+
+given s: int
+given nums: set of int
+find x: set (minSize 1, maxSize |nums|) of int([i | i <- nums])
+such that
+    x subsetEq nums,
+    s = sum([i | i <- x])
+neighbourhood removeElem
+    using x
+    such that or([shadow(x) = x - {i} | i <- x])
+neighbourhood addElem
+    using x
+    such that or([shadow(x) = x union {i} | i <- x])
