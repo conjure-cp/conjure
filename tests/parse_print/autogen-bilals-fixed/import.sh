@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Assuming the breaking_conjure repo is at: ~/repos/stacs_cp/breaking_conjure
 
