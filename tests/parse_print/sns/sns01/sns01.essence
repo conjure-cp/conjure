@@ -62,7 +62,7 @@ $ neighbourhood row1 : (activator_row1, [field[1,..]])
 neighbourhood row1FirstHalf
     using field[1,..]
     such that
-        forAll i : int(1..5) . shadow(field[1,i]) = field[1,i]
+        forAll i : int(1..5) . incumbent(field[1,i]) = field[1,i]
 
 $ find activator_row1FirstHalf : bool
 $ find shadowOf_field : ...

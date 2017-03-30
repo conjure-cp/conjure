@@ -265,7 +265,7 @@ functionals =
 
     , L_powerSet
 
-    , L_shadow
+    , L_incumbent
 
     ]
 

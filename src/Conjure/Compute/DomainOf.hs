@@ -101,6 +101,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpImageSet x) = domainOf x
     domainOf (MkOpImply x) = domainOf x
     domainOf (MkOpIn x) = domainOf x
+    domainOf (MkOpIncumbent x) = domainOf x
     domainOf (MkOpIndexing x) = domainOf x
     domainOf (MkOpIntersect x) = domainOf x
     domainOf (MkOpInverse x) = domainOf x
@@ -127,7 +128,6 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpRange x) = domainOf x
     domainOf (MkOpRelationProj x) = domainOf x
     domainOf (MkOpRestrict x) = domainOf x
-    domainOf (MkOpShadow x) = domainOf x
     domainOf (MkOpSlicing x) = domainOf x
     domainOf (MkOpSubsequence x) = domainOf x
     domainOf (MkOpSubset x) = domainOf x
@@ -171,6 +171,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpImageSet x) = indexDomainsOf x
     indexDomainsOf (MkOpImply x) = indexDomainsOf x
     indexDomainsOf (MkOpIn x) = indexDomainsOf x
+    indexDomainsOf (MkOpIncumbent x) = indexDomainsOf x
     indexDomainsOf (MkOpIndexing x) = indexDomainsOf x
     indexDomainsOf (MkOpIntersect x) = indexDomainsOf x
     indexDomainsOf (MkOpInverse x) = indexDomainsOf x
@@ -197,7 +198,6 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpRange x) = indexDomainsOf x
     indexDomainsOf (MkOpRelationProj x) = indexDomainsOf x
     indexDomainsOf (MkOpRestrict x) = indexDomainsOf x
-    indexDomainsOf (MkOpShadow x) = indexDomainsOf x
     indexDomainsOf (MkOpSlicing x) = indexDomainsOf x
     indexDomainsOf (MkOpSubsequence x) = indexDomainsOf x
     indexDomainsOf (MkOpSubset x) = indexDomainsOf x
@@ -534,9 +534,9 @@ instance (DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
             DomainFunction fRepr a _ to -> return (DomainFunction fRepr a d to)
             _ -> fail "domainOf, OpRestrict, not a function"
 
-instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpShadow x) where
-    domainOf (OpShadow x) = domainOf x
-    indexDomainsOf (OpShadow x) = indexDomainsOf x
+instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpIncumbent x) where
+    domainOf (OpIncumbent x) = domainOf x
+    indexDomainsOf (OpIncumbent x) = indexDomainsOf x
 
 instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x

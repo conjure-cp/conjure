@@ -16,4 +16,4 @@ neighbourhood row1
     such that true
 neighbourhood row1FirstHalf
     using field[1, ..]
-    such that and([shadow(field[1, i]) = field[1, i] | i : int(1..5)])
+    such that and([incumbent(field[1, i]) = field[1, i] | i : int(1..5)])

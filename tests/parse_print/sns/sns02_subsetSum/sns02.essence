@@ -10,9 +10,9 @@ such that x subsetEq nums, s = sum i in x . i
 
 neighbourhood removeElem
 using x
-such that exists i in x . shadow(x) = x - {i}
+such that exists i in x . incumbent(x) = x - {i}
 
 neighbourhood addElem
 using x
-such that exists i in x . shadow(x) = x union {i}
+such that exists i in x . incumbent(x) = x union {i}
 

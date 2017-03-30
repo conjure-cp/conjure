@@ -118,7 +118,7 @@ mkOp op xs =
             L_powerSet     -> inject $ MkOpPowerSet     $ OpPowerSet     (arg xs 0 "powerSet")
             L_concatenate  -> inject $ MkOpFlatten      $ OpFlatten      (Just 1)
                                                                          (arg xs 0 "concatenate")
-            L_shadow       -> inject $ MkOpShadow       $ OpShadow       (arg xs 0 "shadow")
+            L_incumbent    -> inject $ MkOpIncumbent    $ OpIncumbent    (arg xs 0 "incumbent")
             L_flatten      ->
                  case xs of
                      [m]   -> inject $ MkOpFlatten      $ OpFlatten      Nothing  m
