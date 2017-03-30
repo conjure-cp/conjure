@@ -611,7 +611,7 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -637,13 +637,17 @@ updateDeclarations model = do
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
                 SNS_Neighbourhood name sizeVarName sizeVarDom cons vars -> do
-                    outNames <- forM vars $ \ var -> case var of
-                        Reference nm _ -> do
-                            let domains = [ d | (n, d) <- representations, n == nm ]
-                            outNames <- concatMapM (onEachDomainSearch nm) domains
-                            return outNames
-                        _ -> userErr1 $ "Expecting a name of a decision variable, but got:" <+> pretty var
-                    let vars' = [ Reference n Nothing | n <- nub (concat outNames) ]
+                    let
+                        go vars1 = do
+                            vars2 <- fmap concat $ forM vars1 $ \ v -> do
+                                vs <- downX1 v
+                                if null vs
+                                    then return [v]
+                                    else return vs
+                            if vars1 == vars2
+                                then return vars1
+                                else go vars2
+                    vars' <- go vars
                     return [SNS_Neighbourhood name sizeVarName sizeVarDom cons vars']
                 _ -> return [inStatement]
 
