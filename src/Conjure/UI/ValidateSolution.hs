@@ -135,6 +135,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                              ]
                                                          ]
         SNS_Neighbourhood{} -> return ()
+        IncumbentMapping{}  -> return ()
 
 
 introduceRecordFields

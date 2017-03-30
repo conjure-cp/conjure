@@ -186,6 +186,7 @@ typeCheckModel model1 = do
                         return cons
                 -- TODO: "type-check" vars
                 return (SNS_Neighbourhood name sizeVarName sizeVarDom cons' vars)
+            IncumbentMapping{} -> return st
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

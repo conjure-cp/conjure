@@ -60,6 +60,7 @@ data Statement
                         (Domain () Expression)  -- the domain of the neighbourhood-size variable
                         Expression              -- the neighbourhood constraint
                         [Expression]            -- the variables that are involved
+    | IncumbentMapping [Expression] [Expression]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -81,6 +82,10 @@ instance Pretty Statement where
                                            , prettyList prBrackets "," vars
                                            ]
         ]
+    pretty (IncumbentMapping originals incumbents) =
+        "incumbentMapping" <> prettyList prParens "," [ prettyList prBrackets "," originals
+                                                      , prettyList prBrackets "," incumbents
+                                                      ]
 
 instance VarSymBreakingDescription Statement where
     varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
@@ -112,6 +117,13 @@ instance VarSymBreakingDescription Statement where
                                                  ]
                                                  ++ map varSymBreakingDescription vars)
         ]
+    varSymBreakingDescription (IncumbentMapping originals incumbents) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "IncumbentMapping")
+        , ("children", JSON.Array $ V.fromList $ [ toJSON originals
+                                                 , toJSON incumbents
+                                                 ])
+        ]
+
 
 ------------------------------------------------------------------------------------------------------------------------
 -- SearchOrder ---------------------------------------------------------------------------------------------------------

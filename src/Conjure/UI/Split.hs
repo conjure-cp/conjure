@@ -44,6 +44,7 @@ split m = do
         toPermute st@Objective{}         = Left [st]
         toPermute (SuchThat xs)          = Left [SuchThat [x] | x <- xs]
         toPermute SNS_Neighbourhood{}    = Left [] -- drop
+        toPermute IncumbentMapping{}     = Left [] -- drop
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat

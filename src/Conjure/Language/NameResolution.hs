@@ -122,6 +122,7 @@ resolveStatement st =
             cons' <- resolveX cons
             vars' <- mapM resolveX vars
             return (SNS_Neighbourhood name sizeVarName sizeVarDom' cons' vars')
+        IncumbentMapping{} -> return st
 
 
 resolveSearchOrder
