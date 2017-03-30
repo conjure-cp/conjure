@@ -871,15 +871,17 @@ addIncumbentVariables model
         applyWash (match opIndexing -> Just (m,i)) = make opIndexing (applyWash m) i
         applyWash what = bug (pretty (show what))
 
-    outStatements <- forM (mStatements model) $ \ st ->
+    (outStatements, (originals, incumbents)) <- runWriterT $ forM (mStatements model) $ \ st ->
         case st of
-            Declaration (FindOrGiven Find nm domain) ->
+            Declaration (FindOrGiven Find nm domain) -> do
+                tell ([Reference nm Nothing], [Reference (appendIncumbent nm) Nothing])
                 return [ Declaration (FindOrGiven Find nm domain)
                        , Declaration (FindOrGiven Find (appendIncumbent nm) domain)
                        ]
             _ -> return [st]
 
-    return model { mStatements = descendBi washIncumbent (concat outStatements) }
+    return model { mStatements = descendBi washIncumbent (concat outStatements)
+                              ++ [IncumbentMapping originals incumbents] }
 
 addIncumbentVariables model = return model
 
