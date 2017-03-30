@@ -4,26 +4,29 @@ given n: int
 given fin1: int
 given g_RelationAsMatrix: matrix indexed by [int(1..n), int(1..n)] of bool
 where
-    and([!(or([q10_1 = q12_2 /\ q10_2 = q12_1 | q10_1 : int(1..n), q10_2 : int(1..n), g_RelationAsMatrix[q10_1, q10_2]])
+    and([!(or([q12_1 = q14_2 /\ q12_2 = q14_1 | q12_1 : int(1..n), q12_2 : int(1..n), g_RelationAsMatrix[q12_1, q12_2]])
            \/
-           or([or([q6_1 = q12_2 /\ q6_2 = path_ExplicitBounded_Values[1] /\ 1 <= path_ExplicitBounded_Length
+           or([or([q8_1 = q14_2 /\ q8_2 = path_ExplicitBounded_Values[1] /\ 1 <= path_ExplicitBounded_Length
+                       | q8_1 : int(1..n), q8_2 : int(1..n), g_RelationAsMatrix[q8_1, q8_2]])
+               /\
+               or([q6_1 = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\ q6_2 = q14_1 /\
+                   path_ExplicitBounded_Length <= path_ExplicitBounded_Length
                        | q6_1 : int(1..n), q6_2 : int(1..n), g_RelationAsMatrix[q6_1, q6_2]])
                /\
-               or([q4_1 = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\ q4_2 = q12_1 /\
-                   path_ExplicitBounded_Length <= path_ExplicitBounded_Length
-                       | q4_1 : int(1..n), q4_2 : int(1..n), g_RelationAsMatrix[q4_1, q4_2]])
-               /\
-               and([or([and([q8_1 = path_ExplicitBounded_Values[x] /\ q8_2 = path_ExplicitBounded_Values[x + 1],
+               and([or([and([q10_1 = path_ExplicitBounded_Values[x] /\ q10_2 = path_ExplicitBounded_Values[x + 1],
                              x <= path_ExplicitBounded_Length, x + 1 <= path_ExplicitBounded_Length;
                                  int(1..3)])
-                            | q8_1 : int(1..n), q8_2 : int(1..n), g_RelationAsMatrix[q8_1, q8_2]])
+                            | q10_1 : int(1..n), q10_2 : int(1..n), g_RelationAsMatrix[q10_1, q10_2]])
                         | x : int(1..path_ExplicitBounded_Length - 1)])
                    | path_ExplicitBounded_Length : int(0..n - 2),
                      path_ExplicitBounded_Values : matrix indexed by [int(1..n - 2)] of int(1..n),
                      and([q1 > path_ExplicitBounded_Length -> path_ExplicitBounded_Values[q1] = 1
                               | q1 : int(1..n - 2)]),
-                     1 <= path_ExplicitBounded_Length, path_ExplicitBounded_Length <= n - 2]))
-             | q12_1 : int(1..n), q12_2 : int(1..n), g_RelationAsMatrix[q12_1, q12_2]])
+                     1 <= path_ExplicitBounded_Length, path_ExplicitBounded_Length <= n - 2,
+                     and([path_ExplicitBounded_Values[q2] != path_ExplicitBounded_Values[q3]
+                              | q2 : int(1..n - 2), q3 : int(1..n - 2), q2 < q3, q2 <= path_ExplicitBounded_Length,
+                                q3 <= path_ExplicitBounded_Length])]))
+             | q14_1 : int(1..n), q14_2 : int(1..n), g_RelationAsMatrix[q14_1, q14_2]])
 find b: int(0)
 such that true
 
