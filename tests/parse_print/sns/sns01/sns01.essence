@@ -47,10 +47,7 @@ $ SNS stuff
 
 
 
-neighbourhood row1
-    using field[1,..]
-    such that
-        true
+neighbourhood row1 : (n:int(1), true, [field[1,..]])
 
 $ find activator_row1 : bool
 $ find shadowOf_field : ...
@@ -59,10 +56,7 @@ $ neighbourhood row1 : (activator_row1, [field[1,..]])
 
 
 
-neighbourhood row1FirstHalf
-    using field[1,..]
-    such that
-        forAll i : int(1..5) . incumbent(field[1,i]) = field[1,i]
+neighbourhood row1FirstHalf : (n : int(1), forAll i : int(1..5) . incumbent(field[1,i]) = field[1,i], [field[1,..]])
 
 $ find activator_row1FirstHalf : bool
 $ find shadowOf_field : ...

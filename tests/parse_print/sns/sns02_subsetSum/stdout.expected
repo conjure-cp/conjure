@@ -6,9 +6,7 @@ find x: set (minSize 1, maxSize |nums|) of int([i | i <- nums])
 such that
     x subsetEq nums,
     s = sum([i | i <- x])
-neighbourhood removeElem
-    using x
-    such that or([incumbent(x) = x - {i} | i <- x])
-neighbourhood addElem
-    using x
-    such that or([incumbent(x) = x union {i} | i <- x])
+neighbourhood removeElem :
+    (n : int(1), or([incumbent(x) = x - {i} | i <- x]), [x])
+neighbourhood addElem :
+    (n : int(1), or([incumbent(x) = x union {i} | i <- x]), [x])

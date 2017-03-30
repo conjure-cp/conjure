@@ -156,29 +156,36 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
-            SNS_Neighbourhood nm vars cons -> do
-                cons' <- forM cons $ \ x -> do
-                    mty <- runExceptT $ typeOf x
-                    case mty of
-                        Right TypeBool{} -> return x
-                        Right (TypeList TypeBool) -> return (make opAnd x)
-                        Right (TypeMatrix _ TypeBool) -> return (make opAnd x)
-                        Left err -> do
-                            tell $ return $ vcat
+            SNS_Neighbourhood name sizeVarName sizeVarDom cons vars -> do
+                sizeVarDomType <- typeOf sizeVarDom
+                case sizeVarDomType of
+                    TypeInt -> return ()
+                    _       -> tell $ return $ vcat
                                 [ "Inside a neighbourhood declaration"
-                                , "In a 'such that' statement:" <++> pretty x
-                                , "Error:" <++> pretty err
+                                , "The domain of the neighbourhood size variable need to be an int."
+                                , "But it was:" <++> pretty sizeVarDomType
                                 ]
-                            return x
-                        Right ty -> do
-                            tell $ return $ vcat
-                                [ "Inside a neighbourhood declaration"
-                                , "In a 'such that' statement:" <++> pretty x
-                                , "Expected type `bool`, but got:" <++> pretty ty
-                                ]
-                            return x
+                mty <- runExceptT $ typeOf cons
+                cons' <- case mty of
+                    Right TypeBool{} -> return cons
+                    Right (TypeList TypeBool) -> return (make opAnd cons)
+                    Right (TypeMatrix _ TypeBool) -> return (make opAnd cons)
+                    Left err -> do
+                        tell $ return $ vcat
+                            [ "Inside a neighbourhood declaration"
+                            , "In the neighbourhood constraint part:" <++> pretty cons
+                            , "Error:" <++> pretty err
+                            ]
+                        return cons
+                    Right ty -> do
+                        tell $ return $ vcat
+                            [ "Inside a neighbourhood declaration"
+                            , "In the neighbourhood constraint part:" <++> pretty cons
+                            , "Expected type `bool`, but got:" <++> pretty ty
+                            ]
+                        return cons
                 -- TODO: "type-check" vars
-                return (SNS_Neighbourhood nm vars cons')
+                return (SNS_Neighbourhood name sizeVarName sizeVarDom cons' vars)
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

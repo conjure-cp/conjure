@@ -194,13 +194,19 @@ parseTopLevels = do
                     <?> "branching on"
                 , do
                     lexeme L_neighbourhood
-                    nm   <- parseName
-                    lexeme L_using
-                    vars <- parseExpr
-                    lexeme L_such
-                    lexeme L_that
-                    xs <- commaSeparated parseExpr
-                    return [SNS_Neighbourhood nm vars xs]
+                    neighbourhoodName <- parseName
+                    colon
+                    parens $ do
+                        sizeVarName <- parseName
+                        colon
+                        sizeVarDomain <- parseDomain
+                        comma
+                        neighbourhoodCons <- parseExpr
+                        comma
+                        involvedVars <- brackets $ commaSeparated parseExpr
+                        return [SNS_Neighbourhood neighbourhoodName
+                                    sizeVarName sizeVarDomain
+                                    neighbourhoodCons involvedVars]
                     <?> "neighbourhood declaration"
                 ] <?> "statement"
     concat <$> some one
