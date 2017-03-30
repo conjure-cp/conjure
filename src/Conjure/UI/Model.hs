@@ -632,9 +632,19 @@ updateDeclarations model = do
                     orders' <- forM orders $ \case
                         BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            nub <$> concatMapM (onEachDomainSearch nm) domains
+                            outNames <- concatMapM (onEachDomainSearch nm) domains
+                            return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
+                SNS_Neighbourhood name sizeVarName sizeVarDom cons vars -> do
+                    outNames <- forM vars $ \ var -> case var of
+                        Reference nm _ -> do
+                            let domains = [ d | (n, d) <- representations, n == nm ]
+                            outNames <- concatMapM (onEachDomainSearch nm) domains
+                            return outNames
+                        _ -> userErr1 $ "Expecting a name of a decision variable, but got:" <+> pretty var
+                    let vars' = [ Reference n Nothing | n <- nub (concat outNames) ]
+                    return [SNS_Neighbourhood name sizeVarName sizeVarDom cons vars']
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =
@@ -647,7 +657,7 @@ updateDeclarations model = do
         onEachDomainSearch nm domain =
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
-                Right outs -> return [ BranchingOn n
+                Right outs -> return [ n
                                      | (n, _) <- outs
                                      ]
 
@@ -841,6 +851,35 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
+addIncumbentVariables :: Monad m => Model -> m Model
+addIncumbentVariables model
+    | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
+    , hasSNS = do
+    let
+        appendIncumbent nm = mappend "incumbent_" nm
+
+        washIncumbent p =
+            case match opIncumbent p of
+                Nothing -> descend washIncumbent p
+                Just q  -> applyWash q
+
+        applyWash (Reference nm _) = Reference (appendIncumbent nm) Nothing
+        applyWash (match opIndexing -> Just (m,i)) = make opIndexing (applyWash m) i
+        applyWash what = bug (pretty (show what))
+
+    outStatements <- forM (mStatements model) $ \ st ->
+        case st of
+            Declaration (FindOrGiven Find nm domain) ->
+                return [ Declaration (FindOrGiven Find nm domain)
+                       , Declaration (FindOrGiven Find (appendIncumbent nm) domain)
+                       ]
+            _ -> return [st]
+
+    return model { mStatements = descendBi washIncumbent (concat outStatements) }
+
+addIncumbentVariables model = return model
+
+
 prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 prologue model = do
     void $ typeCheckModel_StandAlone model
@@ -868,6 +907,7 @@ epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> 
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
+    >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
