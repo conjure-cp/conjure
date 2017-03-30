@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # create a dependency freeze file
 

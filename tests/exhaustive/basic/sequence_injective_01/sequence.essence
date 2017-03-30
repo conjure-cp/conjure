@@ -1,0 +1,6 @@
+language Essence 1.3
+
+letting e1 be new type enum {a,b}
+letting e2 be new type enum {x,y}
+
+find f : sequence (size 2, injective) of tuple (e1,e2)
