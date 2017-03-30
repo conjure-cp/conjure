@@ -1378,6 +1378,26 @@ opActive _ =
     )
 
 
+
+opIncumbent
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opIncumbent _ =
+    ( inject . MkOpIncumbent . OpIncumbent
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpIncumbent (OpIncumbent x) -> return x
+                _ -> na ("Lenses.opIncumbent:" <++> pretty p)
+    )
+
+
 opFactorial
     :: ( Op x :< x
        , Pretty x
