@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var1: partition from bool
+such that
+    function(mset(-3, -7) --> var1, mset(-4) --> partition({false})) =
+    function(mset(-8) --> partition({false}, {true}), mset(-2, 3) --> var1,
+             mset(9) --> var1),
+    toInt(true) in {5, -9} -> tuple (false) != tuple (false),
+    parts(var1) = parts(var1),
+    false

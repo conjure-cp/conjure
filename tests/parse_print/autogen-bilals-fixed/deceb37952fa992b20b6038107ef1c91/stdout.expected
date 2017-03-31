@@ -1,0 +1,19 @@
+language ESSENCE' 1.0
+
+find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
+find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
+such that
+    or([var2_Occurrence[q7] /\
+        !or([var2_ExplicitVarSizeWithFlags_Flags[q10] /\ var2_ExplicitVarSizeWithFlags_Values[q10] = q7
+                 | q10 : int(1..11)])
+            | q7 : int(-4..5, 2)])
+    \/
+    or([var2_ExplicitVarSizeWithFlags_Flags[q8] /\ !var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q8]]
+            | q8 : int(1..11)]),
+    and([var2_ExplicitVarSizeWithFlags_Flags[q12] -> var2_Occurrence[var2_ExplicitVarSizeWithFlags_Values[q12]]
+             | q12 : int(1..11)]),
+    and([var2_Occurrence[q13] ->
+         or([var2_ExplicitVarSizeWithFlags_Flags[q15] /\ var2_ExplicitVarSizeWithFlags_Values[q15] = q13
+                 | q15 : int(1..11)])
+             | q13 : int(-4..5, 2)])

@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+find unused: bool
+given fin1: int
+given fin2: int
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_1_Function1DPartial_Flags:
+        matrix indexed by [int(1..fin1), bool] of bool
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_1_Function1DPartial_Values:
+        matrix indexed by [int(1..fin1), bool] of int(1, 2)
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_2_ExplicitWithFlags_Flags:
+        matrix indexed by [int(1..fin1), int(1..5)] of int(0..1)
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_2_ExplicitWithFlags_Values:
+        matrix indexed by [int(1..fin1), int(1..5)] of bool
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_3_ExplicitWithRepetition_Flag:
+        matrix indexed by [int(1..fin1)] of int(0..16)
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_3_ExplicitWithRepetition_Values:
+        matrix indexed by [int(1..fin1), int(1..16)] of bool
+given given2_RelationAsSetR10R7R8R15_ExplicitR10R7R8R15_4_RelationAsMatrix:
+        matrix indexed by [int(1..fin1), bool, bool, bool] of bool
+such that true

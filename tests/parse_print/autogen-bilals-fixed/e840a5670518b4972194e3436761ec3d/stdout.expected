@@ -1,0 +1,20 @@
+language Essence 1.3
+
+find var1: bool
+such that
+    [function((mset(true, true), tuple (0), partition({true}, {false})) --> |mset(true, true)|,
+              (mset(false), tuple (-9), partition({true})) --> 10,
+              (mset(true), tuple (-4), partition({true, false})) --> 1,
+              ((mset() : `mset of bool`), tuple (6), partition({false}, {false})) --> -5,
+              (mset(false, false), tuple (5), partition({false})) --> toInt(var1)),
+     function((mset(false), tuple (10), partition({false})) --> toInt(var1),
+              (mset(true, false), tuple (8), partition({true}, {false})) --> 6,
+              (mset(false), tuple (1), partition({true})) --> -8 / -9,
+              (mset(true, false), tuple (4), partition({false})) --> 6),
+     function((mset(true), tuple (2), partition({false}, {false})) --> 7,
+              ((mset() : `mset of bool`), tuple (4), partition({true, false})) --> |partition({8})|,
+              ((mset() : `mset of bool`), tuple (-2), partition({true})) --> 1,
+              ((mset() : `mset of bool`), tuple (-3), partition({false}, {true})) --> toInt(false = true),
+              (mset(true), tuple (9), partition({true}, {true})) --> toInt(true /\ true));
+         int(3, 2..4)]
+    != [function((mset(true), tuple (9), partition({true})) --> -5); int(-3)]

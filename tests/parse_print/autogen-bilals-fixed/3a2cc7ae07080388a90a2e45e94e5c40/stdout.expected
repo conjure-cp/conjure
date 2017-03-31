@@ -1,0 +1,85 @@
+language Essence 1.3
+
+find var1: partition from set of int(-1..2, 1..5)
+find var2: bool
+such that
+    function(function(function(true --> true, true --> true) --> mset(true, true),
+                      function(false --> false, true --> false) --> mset(true),
+                      function(false --> false) --> (mset() : `mset of bool`)) --> [partition({-2}), partition({-8}),
+                                                                                    partition({-7}), partition({8}),
+                                                                                    partition({4, 6});
+                                                                                        int(-3..0, 5)],
+             function(function(true --> true, true --> true) --> mset(true, true),
+                      function(true --> true, true --> true) --> mset(false),
+                      function(false --> true) --> (mset() : `mset of bool`),
+                      function(false --> true, true --> true) --> mset(false)) --> [partition({7, -5}); int(4)],
+             function(function(false --> true) --> mset(true),
+                      function(true --> false) --> mset(false)) --> [partition({9}, {-3}), partition({0}, {10});
+                                                                         int(0, 1)],
+             function(function(false --> false) --> (mset() : `mset of bool`)) --> [partition({0}, {7}); int(4)],
+             function(function(true --> true) --> (mset() : `mset of bool`),
+                      function(false --> false, true --> false) --> mset(true)) --> [partition({-6, 0}); int(1)],
+             function(function(true --> false, false --> false) --> (mset() : `mset of bool`),
+                      function(false --> false, true --> true) --> mset(false, true),
+                      function(true --> false) --> mset(true),
+                      function(false --> true) --> mset(true, false)) --> [partition({-7}); int(1)])
+    !=
+    function(function(function(true --> false, true --> false) --> (mset() : `mset of bool`),
+                      function(false --> true, true --> false) --> (mset() : `mset of bool`),
+                      function(false --> true) --> mset(true, true),
+                      function(false --> true) --> (mset() : `mset of bool`)) --> [partition({9, 9}),
+                                                                                   partition({9, -10}),
+                                                                                   partition({-9}, {-9}),
+                                                                                   partition({-4, -3});
+                                                                                       int(2..5, 5)],
+             function(function(true --> true, true --> false) --> mset(false, true),
+                      function(false --> true, true --> false) --> (mset() : `mset of bool`),
+                      function(false --> false, false --> true) --> mset(false)) --> [partition({5}), partition({4}),
+                                                                                      partition({2}),
+                                                                                      partition({7}, {-2}),
+                                                                                      partition({7});
+                                                                                          int(-3..0, 2)],
+             function(function(false --> true, true --> false) --> (mset() : `mset of bool`),
+                      function(true --> true, true --> true) --> (mset() : `mset of bool`),
+                      function(false --> false) --> mset(false, true),
+                      function(false --> false) --> mset(false, false)) --> [partition({0}), partition({-9}, {7});
+                                                                                 int(-3, 0)],
+             function(function(true --> true, true --> true) --> (mset() : `mset of bool`),
+                      function(true --> true) --> mset(false, false),
+                      function(true --> false, true --> true) --> (mset() : `mset of bool`),
+                      function(false --> false, true --> false) --> mset(false)) --> [partition({-6, -2}); int(-2)],
+             function(function(true --> false, true --> true) --> (mset() : `mset of bool`),
+                      function(false --> true, false --> true) --> mset(true, false)) --> [partition({4}),
+                                                                                           partition({-5, 0}),
+                                                                                           partition({-10, -6}),
+                                                                                           partition({10}),
+                                                                                           partition({9}, {-6});
+                                                                                               int(-2..2)],
+             function(function(true --> false, false --> true) --> mset(true, false),
+                      function(true --> true) --> (mset() : `mset of bool`),
+                      function(true --> false) --> mset(false, true),
+                      function(false --> false, true --> true) --> (mset() : `mset of bool`)) --> [partition({-2}, {7}),
+                                                                                                   partition({9, 8}),
+                                                                                                   partition({-3, 9}),
+                                                                                                   partition({5}, {1}),
+                                                                                                   partition({3, 2}),
+                                                                                                   partition({9}),
+                                                                                                   partition({-7}),
+                                                                                                   partition({-1},
+                                                                                                             {-4});
+                                                                                                       int(-4..3)]),
+    function((6 = 9) in {true} --> partition({partition({true})}, {partition({false})}),
+             toInt(false) in ({} : `set of int`) --> partition({partition({false}), partition({false})},
+                                                               {partition({false, true})}))
+    =
+    function(var1 = var1 --> partition({partition({false})}, {partition({true})}),
+             3 != 5 + 0 --> partition({partition({false})}, {partition({false}, {true})}, {partition({false}, {true})},
+                                      {partition({false, false})}),
+             (false /\ true) in (mset() : `mset of bool`) --> partition({partition({false, false})},
+                                                                        {partition({true})}, {partition({false})},
+                                                                        {partition({false})}),
+             false --> partition({partition({false, true}), partition({true})}),
+             var2 != (false -> true) --> partition({partition({true}), partition({true})},
+                                                   {partition({false, false}), partition({true, true})}),
+             true \/ false --> partition({partition({true})}, {partition({false})}, {partition({false, false})})),
+    ((8, -4) != (7, 3) -> (false <-> false) in mset(true)) <-> true

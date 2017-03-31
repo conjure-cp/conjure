@@ -1,0 +1,12 @@
+language Essence 1.3
+
+find var1: partition (numParts 5, maxPartSize factorial(3)) from function (minSize 0, total) bool --> int(4, 4)
+find var2: set (maxSize 1 - 5) of partition (minNumParts 4, minPartSize 5, maxPartSize 5, regular) from bool
+find var3: (function (size 1, total) bool --> bool, (bool, int(4, 0..5)))
+find var4:
+        (function (minSize 2, maxSize 4, injective) int(3..5, 3) --> int(2, 1),
+         partition (minNumParts 5, maxNumParts 5, partSize 1, regular) from bool,
+         partition (numParts 5, maxPartSize 1) from bool)
+such that
+    true,
+    ({0, 4, 4}, function(false --> 5, true --> 2), {false}, true)[4]

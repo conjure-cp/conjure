@@ -1,0 +1,22 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given fin2: int
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker:
+        matrix indexed by [int(1..fin1)] of int(0)
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_1_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
+        matrix indexed by [int(1..fin1), int(1..0), int(1..5)] of bool
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_2_ExplicitWithFlags_Flags:
+        matrix indexed by [int(1..fin1), int(1..5)] of int(0..1)
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_2_ExplicitWithFlags_Values:
+        matrix indexed by [int(1..fin1), int(1..5)] of bool
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_3_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..fin1)] of int(0..fin2)
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_3_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..fin1), int(1..fin2)] of bool
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_4_ExplicitWithFlags_Flags:
+        matrix indexed by [int(1..fin1), int(1..10)] of int(0..5)
+given given1_RelationAsSetR17R5R3R7R5R7_ExplicitR17R5R3R7R5R7_4_ExplicitWithFlags_Values:
+        matrix indexed by [int(1..fin1), int(1..10)] of bool
+find unused: bool
+such that true

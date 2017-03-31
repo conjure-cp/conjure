@@ -1,0 +1,33 @@
+language Essence 1.3
+
+find var1: bool
+find var2: mset (size 1, minOccur 3, maxOccur 3) of partition (maxNumParts 3) from bool
+find var3:
+        relation (minSize 5, maxSize 5) of
+            (set (minSize 1) of bool * set (minSize 5) of int(4, 5) * matrix indexed by [int(1..4, 0..4)] of int(5, 2))
+find var4: bool
+find var5: set (maxSize 1 ** 1) of bool
+such that
+    false,
+    var4,
+    function(mset(mset(4)) --> mset(false, true),
+             mset(mset(4), mset(3, 1), mset(3, 4, 1)) --> (mset() : `mset of bool`),
+             mset(mset(4), mset(5, 1, 3)) --> mset(false, true) union mset(true, true, false),
+             mset(mset(4), mset(1, 4)) --> mset(false, false))
+    =
+    function(mset(mset(3, 0)) --> mset(false, true),
+             mset(mset(3, 0, 3), mset(3, 1), mset(4)) --> mset(true, true, true) intersect mset(true, false, false),
+             (mset() : `mset of mset of int`) --> mset(true)),
+    image(function([1, 0; int(3, 0)] --> [false, true, false, false, false; int(3, 15, 0, 4, 2)]),
+          [5, 2 - 5; int(2, 5)])
+    <=lex [l_2 | l_1 : bool, l_2 : bool, and(([] : `matrix indexed by [int] of bool`)), l_2],
+    image(function((tuple (0), false, false, partition({true}, {false})) --> true,
+                   (tuple (4), true = false, true, partition({false, true, true})) --> true > false,
+                   (tuple (1), false, false,
+                    partition({true, true}, {false, true}, {true, true, false, true, false},
+                              {false, false, false, true})) --> tuple (true)[1],
+                   (tuple (3), true, false < false, partition({false}, {false, true})) --> false,
+                   (tuple (0), true -> false, false,
+                    partition({false, false}, {true, false}, {false, false, true, false, false},
+                              {false, false, true, false})) --> false <= (true < true)),
+          (tuple (1), true, true, partition({false}, {false}, {true})))

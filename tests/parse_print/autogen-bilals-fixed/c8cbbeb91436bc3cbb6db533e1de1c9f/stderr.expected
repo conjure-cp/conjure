@@ -1,0 +1,37 @@
+Error 1:
+    In a 'such that' statement:
+        and([1 =
+             sum([q21 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q21, 1, q25] ->
+                        or([q7_ExplicitVarSizeWithFlags_Values[q27] = q25
+                                | q27 : int(1..5), q7_ExplicitVarSizeWithFlags_Flags[q27]])
+                            | q25 : int(2, 1..2)])
+                   /\
+                   and([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence
+                            [q21, 1, q7_ExplicitVarSizeWithFlags_Values[q29]]
+                            | q29 : int(1..5), q7_ExplicitVarSizeWithFlags_Flags[q29]]))
+                      | q21 : int(1..4)])
+                 | q7_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..5)] of bool,
+                   q7_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..5)] of int(2, 1..2),
+                   and([q7_ExplicitVarSizeWithFlags_Flags[q16 + 1] ->
+                        q7_ExplicitVarSizeWithFlags_Values[q16] < q7_ExplicitVarSizeWithFlags_Values[q16 + 1]
+                            | q16 : int(1..4)]),
+                   and([q7_ExplicitVarSizeWithFlags_Flags[q17] = false -> q7_ExplicitVarSizeWithFlags_Values[q17] = 2
+                            | q17 : int(1..5)]),
+                   and([q7_ExplicitVarSizeWithFlags_Flags[q18 + 1] -> q7_ExplicitVarSizeWithFlags_Flags[q18]
+                            | q18 : int(1..4)]),
+                   sum([q7_ExplicitVarSizeWithFlags_Flags[q19] | q19 : int(1..5)]) <= 5])
+    Error:
+        Type error in sum([q7_ExplicitVarSizeWithFlags_Flags[q19] | q19 : int(1..5)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([q12 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker ->
+             sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q12, 1, q15]
+                      | q15 : int(2, 1..2)])
+             <= 5
+                 | q12 : int(1..4)])
+    Error:
+        Type error in sum([var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_Occurrence[q12, 1, q15]
+                               | q15 : int(2, 1..2)])
+                      The argument has type: [bool]

@@ -1,0 +1,10 @@
+language Essence 1.2.0
+
+given nnodes: int(1..20)
+given nrings: int(1..20)
+given capacity: int(1..20)
+letting Nodes be domain int(1..nnodes)
+given demand: set of set (size 2) of Nodes
+find network: mset (size nrings) of set (maxSize capacity) of Nodes
+minimising sum([|ring| | ring <- network])
+such that and([or([pair subsetEq ring | ring <- network]) | pair <- demand])

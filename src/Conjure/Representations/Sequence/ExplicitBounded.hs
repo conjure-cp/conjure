@@ -63,9 +63,37 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitBounded"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) _) innerDomain) = do
-            let
-                innerStructuralCons values = do
+        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
+            let injectiveCons values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            and([ &values[&i] != &values[&j]
+                                | &iPat : int(1..&size)
+                                , &jPat : int(1..&size)
+                                , &i .< &j
+                                ])
+                        |]
+
+            let surjectiveCons values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            forAll &iPat : &innerDomain .
+                                exists &jPat : int(1..&size) .
+                                    &values[&j] = &i
+                        |]
+
+            let jectivityCons values = case jectivityAttr of
+                    JectivityAttr_None       -> return []
+                    JectivityAttr_Injective  -> injectiveCons  values
+                    JectivityAttr_Surjective -> surjectiveCons values
+                    JectivityAttr_Bijective  -> (++) <$> injectiveCons  values
+                                                     <*> surjectiveCons values
+
+            let innerStructuralCons values = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&size) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&size) . &b |]
 
@@ -79,14 +107,46 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ \ sequ -> do
                 refs <- downX1 sequ
                 case refs of
-                    [_marker,values] -> do
-                        isc <- innerStructuralCons values
-                        return isc
+                    [_marker,values] ->
+                        concat <$> sequence
+                            [ jectivityCons       values
+                            , innerStructuralCons values
+                            ]
                     _ -> na "{structuralCons} ExplicitBounded"
-        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr _) innerDomain) = do
+        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr sizeAttr jectivityAttr) innerDomain) = do
             maxSize <- getMaxSize sizeAttr
-            let
-                dontCareAfterMarker marker values = do
+            let injectiveCons marker values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            and([ &values[&i] != &values[&j]
+                                | &iPat : int(1..&maxSize)
+                                , &jPat : int(1..&maxSize)
+                                , &i .< &j
+                                , &i <= &marker
+                                , &j <= &marker
+                                ])
+                        |]
+
+            let surjectiveCons marker values = do
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    return $ return $ -- list
+                        [essence|
+                            forAll &iPat : &innerDomain .
+                                exists &jPat : int(1..&maxSize) .
+                                    (&j <= &marker) /\ &values[&j] = &i
+                        |]
+
+            let jectivityCons marker values = case jectivityAttr of
+                    JectivityAttr_None       -> return []
+                    JectivityAttr_Injective  -> injectiveCons  marker values
+                    JectivityAttr_Surjective -> surjectiveCons marker values
+                    JectivityAttr_Bijective  -> (++) <$> injectiveCons  marker values
+                                                     <*> surjectiveCons marker values
+
+            let dontCareAfterMarker marker values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
@@ -94,7 +154,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                 dontCare(&values[&i])
                         |]
 
-                innerStructuralCons marker values = do
+            let innerStructuralCons marker values = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxSize) |]
                     let activeZone b = [essence| forAll &iPat : int(1..&maxSize) . &i <= &marker -> &b |]
 
@@ -112,6 +172,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         concat <$> sequence
                             [ dontCareAfterMarker marker values
                             , return (mkSizeCons sizeAttr marker)
+                            , jectivityCons       marker values
                             , innerStructuralCons marker values
                             ]
                     _ -> na "{structuralCons} ExplicitBounded"

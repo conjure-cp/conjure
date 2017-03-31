@@ -1,0 +1,12 @@
+language Essence 1.3
+
+given given1: partition (regular) from partition (minNumParts 5 , maxNumParts 5, partSize 0, regular) from int(4..5, 2)
+find var1: partition (minNumParts toInt(false), maxPartSize factorial(2)) from (bool, bool, bool)
+given given2: mset (size 5 ** 1, minOccur 4, maxOccur 5) of tuple (bool)
+find var2:
+        partition (numParts toInt(false), maxPartSize 5 - 5, regular) from
+            partition (minNumParts 2, partSize 5, regular) from bool
+given given3: matrix indexed by [int(1..4, 5)] of (bool, bool)
+find var3: partition (numParts toInt(false), partSize toInt(true), regular) from set (minSize 4, maxSize 4) of bool
+find var4: matrix indexed by [int(5..5, 4), int(3, 2)] of bool
+such that false

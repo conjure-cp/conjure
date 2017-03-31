@@ -1,0 +1,59 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             (1 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+              or([and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                           [1, q28, q30]
+                       > 0
+                       ->
+                       sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q28, q31]
+                             =
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q28, q30])
+                            *
+                            var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                [1, q28, q31]
+                                | q31 : int(1..8)])
+                       =
+                       sum([(q1_ExplicitVarSizeWithFlags_Values[q32] =
+                             var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q28, q30])
+                            * q1_ExplicitVarSizeWithFlags_Flags[q32]
+                                | q32 : int(1..8)])
+                           | q30 : int(1..8)])
+                  /\
+                  and([sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                 [1, q28, q34]
+                             = q1_ExplicitVarSizeWithFlags_Values[q33])
+                            *
+                            var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                [1, q28, q34]
+                                | q34 : int(1..8)])
+                       =
+                       sum([q1_ExplicitVarSizeWithFlags_Flags[q35]
+                                | q35 : int(1..8),
+                                  q1_ExplicitVarSizeWithFlags_Values[q35] = q1_ExplicitVarSizeWithFlags_Values[q33]])
+                           | q33 : int(1..8), q1_ExplicitVarSizeWithFlags_Flags[q33] > 0])
+                      | q28 : int(1..4)]))
+                 | q1_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..8)] of int(0..4),
+                   q1_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..8)] of int(4, 2),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q17 + 1] > 0 ->
+                        q1_ExplicitVarSizeWithFlags_Values[q17] < q1_ExplicitVarSizeWithFlags_Values[q17 + 1]
+                            | q17 : int(1..7)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q18] = 0 -> q1_ExplicitVarSizeWithFlags_Values[q18] = 4
+                            | q18 : int(1..8)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q19 + 1] > 0 -> q1_ExplicitVarSizeWithFlags_Flags[q19] > 0
+                            | q19 : int(1..7)]),
+                   0 <= sum([q1_ExplicitVarSizeWithFlags_Flags[q21] | q21 : int(1..8)])])
+    Error:
+        Not uniformly typed: [var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                  [1, q28, q31]
+                              =
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Values
+                                  [1, q28, q30],
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithFlags_Flags
+                                  [1, q28, q31];
+                                  int(1..2)]
+        Involved types are: bool
+                            int

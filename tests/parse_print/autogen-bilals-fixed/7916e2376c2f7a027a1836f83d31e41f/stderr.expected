@@ -1,0 +1,39 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             or([q14 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                 (and([q1_Function1D[q16] =
+                       var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q14, q16]
+                           | q16 : bool])
+                  /\
+                  and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q14, q17] =
+                       q1_Function1D[q17]
+                           | q17 : bool]))
+                     | q14 : int(1..256)])
+                 | q1_Function1D : matrix indexed by [bool] of int(3..5, 4), allDiff(q1_Function1D), false, true])
+    Error:
+        When type checking: 1 =
+                            or([q14 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                                (and([q1_Function1D[q16] =
+                                      var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                          [1, q14, q16]
+                                          | q16 : bool])
+                                 /\
+                                 and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D
+                                          [1, q14, q17]
+                                      = q1_Function1D[q17]
+                                          | q17 : bool]))
+                                    | q14 : int(1..256)])
+        Cannot unify the types of the following.
+        lhs        : 1
+        type of lhs: int
+        rhs        : or([q14 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+                         (and([q1_Function1D[q16] =
+                               var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q14, q16]
+                                   | q16 : bool])
+                          /\
+                          and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q14, q17] =
+                               q1_Function1D[q17]
+                                   | q17 : bool]))
+                             | q14 : int(1..256)])
+        type of rhs: bool

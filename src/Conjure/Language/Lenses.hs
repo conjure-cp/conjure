@@ -1044,27 +1044,31 @@ opSum _ =
     )
 
 
-opQuantifier
+data ReducerType = RepetitionIsFine | RepetitionIsNotFine
+    deriving (Eq, Ord, Show)
+
+opReducer
     :: ( Op x :< x
        , Pretty x
        , MonadFail m
        )
     => Proxy (m :: * -> *)
     -> ( (x -> x, x) -> x
-       , x -> m (x -> x, x)
+       , x -> m (ReducerType, x -> x, x)
        )
-opQuantifier _ =
+opReducer _ =
     ( \ (mk, x) -> mk x
     , \ p -> do
             op <- project p
             case op of
-                MkOpAnd     (OpAnd     x) -> return (inject . MkOpAnd     . OpAnd     , x)
-                MkOpOr      (OpOr      x) -> return (inject . MkOpOr      . OpOr      , x)
-                MkOpSum     (OpSum     x) -> return (inject . MkOpSum     . OpSum     , x)
-                MkOpProduct (OpProduct x) -> return (inject . MkOpProduct . OpProduct , x)
-                MkOpMax     (OpMax     x) -> return (inject . MkOpMax     . OpMax     , x)
-                MkOpMin     (OpMin     x) -> return (inject . MkOpMin     . OpMin     , x)
-                _ -> na ("Lenses.opQuantifier:" <++> pretty p)
+                MkOpAnd     (OpAnd     x) -> return (RepetitionIsNotFine, inject . MkOpAnd     . OpAnd     , x)
+                MkOpOr      (OpOr      x) -> return (RepetitionIsNotFine, inject . MkOpOr      . OpOr      , x)
+                MkOpXor     (OpXor     x) -> return (RepetitionIsNotFine, inject . MkOpXor     . OpXor     , x)
+                MkOpSum     (OpSum     x) -> return (RepetitionIsFine   , inject . MkOpSum     . OpSum     , x)
+                MkOpProduct (OpProduct x) -> return (RepetitionIsFine   , inject . MkOpProduct . OpProduct , x)
+                MkOpMax     (OpMax     x) -> return (RepetitionIsNotFine, inject . MkOpMax     . OpMax     , x)
+                MkOpMin     (OpMin     x) -> return (RepetitionIsNotFine, inject . MkOpMin     . OpMin     , x)
+                _ -> na ("Lenses.opReducer:" <++> pretty p)
     )
 
 

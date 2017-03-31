@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find var2: partition from bool
+such that
+    function(var2 --> (false, false), partition({true}) --> (true, false),
+             var2 --> (true, true), partition({true, true}) --> (true, false))
+    != function(var2 --> (false, true))

@@ -1,0 +1,16 @@
+language Essence 1.3
+
+find var1: bool
+find var2: int(1..4, 1..4)
+such that
+    var1,
+    var1,
+    [{(mset() : `mset of bool`)}, {mset(var1, var1, var1)}, {(mset() : `mset of bool`)},
+     {mset(true, true, false), mset(false, false, true), mset(false)}, ({} : `set of mset of bool`);
+         int(11..12, 3, 9, 4)]
+    =
+    [{mset(false), mset(true, true), mset(false, false, false)},
+     {mset(false, true), mset(true, true, true), mset(true, true)}, {mset(true, false), mset(true, false)};
+         int(8, 9, 3)],
+    var1
+minimising var2

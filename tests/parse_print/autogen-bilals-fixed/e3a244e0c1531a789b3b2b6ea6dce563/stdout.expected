@@ -1,0 +1,23 @@
+language Essence 1.3
+
+find var1: int(4, 1)
+such that
+    var1 in mset(var1, var1, var1) >=
+    image(function(false --> true, false --> false, false --> true, true --> true), true >= true),
+    apart({[0, var1, var1, var1, var1; int(2, 7..10)], [var1, var1, var1; int(7, 9, 8)],
+           [var1, var1, var1, var1; int(9, 5, 2, 0)]},
+          partition({([] : `matrix indexed by [int] of int`)},
+                    {[1, 4, 2, 0; int(7..8, 11, 0)], [0, 2, 1, 2, 4; int(0, 13..14, 3..4)], [0; int(1)],
+                     [4, 5, 0, 4, 5; int(10..14)], ([] : `matrix indexed by [int] of int`)},
+                    {[2, 4, 5, 1, 2; int(0..1, 5, 2, 10)]},
+                    {[4, 1, 5; int(9, 6, 1)], [0, 3, 3, 4; int(0, 9..10, 3)], [0; int(0)],
+                     ([] : `matrix indexed by [int] of int`)},
+                    {[0, 3, 4, 4, 5; int(14, 2, 9, 0, 3)], [4, 2, 1, 1, 2; int(6..7, 14, 9, 5)]})),
+    false,
+    var1 >= var1,
+    function(mset(2, 3, 4) --> partition({2, 5}, {2}), mset(1) --> partition({2, 1}, {1}, {5, 4}, {0, 2}, {3, 0, 4, 4}),
+             mset(3, 2) --> partition({1}, {4, 5, 5, 4}, {2}, {3, 3, 5, 0, 1}),
+             mset(5, 2) --> (partition() : `partition from int`),
+             mset(2, 2, 4) --> partition({4}, {4, 4, 5}, {2, 2, 0, 0, 4}, {5, 4, 0, 0}))
+    subset function((mset() : `mset of int`) --> partition({1, 0, 3, 4, 0}, {3, 0}, {2}))
+maximising var1

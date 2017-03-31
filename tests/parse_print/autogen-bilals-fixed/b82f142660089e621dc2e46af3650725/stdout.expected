@@ -1,0 +1,19 @@
+language ESSENCE' 1.0
+
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..4)
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..4)] of int(0..2)
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..4), int(1..2)] of bool
+find var1_RelationAsMatrix: matrix indexed by [bool, bool, bool] of bool
+given fin1: int
+given given2_Function1DPartial_Flags: matrix indexed by [int(2, 5)] of bool
+given given2_Function1DPartial_Values: matrix indexed by [int(2, 5)] of bool
+find var2_RelationAsMatrix: matrix indexed by [bool, bool, bool, bool] of bool
+such that
+    false,
+    0 <= sum([sum([sum([toInt(var1_RelationAsMatrix[q1, q2, q3]) | q3 : bool]) | q2 : bool]) | q1 : bool]),
+    sum([sum([sum([toInt(var1_RelationAsMatrix[q1, q2, q3]) | q3 : bool]) | q2 : bool]) | q1 : bool]) <= 0,
+    2 <=
+    sum([sum([sum([sum([toInt(var2_RelationAsMatrix[q4, q5, q6, q7]) | q7 : bool]) | q6 : bool]) | q5 : bool])
+             | q4 : bool])

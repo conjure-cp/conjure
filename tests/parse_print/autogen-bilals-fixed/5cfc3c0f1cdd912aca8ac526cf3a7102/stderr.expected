@@ -1,0 +1,61 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             sum([q22 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q25 <= var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q22]
+                      /\
+                      (and([var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                                [q22, q25, q27]
+                            > 0
+                            ->
+                            sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                      [q22, q25, q28]
+                                  =
+                                  var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                      [q22, q25, q27])
+                                 *
+                                 var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                                     [q22, q25, q28]
+                                     | q28 : int(1..2)])
+                            =
+                            sum([(q1_ExplicitVarSizeWithFlags_Values[q29] =
+                                  var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                      [q22, q25, q27])
+                                 * q1_ExplicitVarSizeWithFlags_Flags[q29]
+                                     | q29 : int(1..2)])
+                                | q27 : int(1..2)])
+                       /\
+                       and([sum([(var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                      [q22, q25, q31]
+                                  = q1_ExplicitVarSizeWithFlags_Values[q30])
+                                 *
+                                 var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                                     [q22, q25, q31]
+                                     | q31 : int(1..2)])
+                            =
+                            sum([q1_ExplicitVarSizeWithFlags_Flags[q32]
+                                     | q32 : int(1..2),
+                                       q1_ExplicitVarSizeWithFlags_Values[q32] =
+                                       q1_ExplicitVarSizeWithFlags_Values[q30]])
+                                | q30 : int(1..2), q1_ExplicitVarSizeWithFlags_Flags[q30] > 0]))
+                          | q25 : int(1..4)])
+                      | q22 : int(1..16)])
+                 | q1_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of int(0..2),
+                   q1_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(2..4, 4),
+                   q1_ExplicitVarSizeWithFlags_Flags[2] > 0 ->
+                   q1_ExplicitVarSizeWithFlags_Values[1] < q1_ExplicitVarSizeWithFlags_Values[2],
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q17] = 0 -> q1_ExplicitVarSizeWithFlags_Values[q17] = 2
+                            | q17 : int(1..2)]),
+                   q1_ExplicitVarSizeWithFlags_Flags[2] > 0 -> q1_ExplicitVarSizeWithFlags_Flags[1] > 0,
+                   sum([q1_ExplicitVarSizeWithFlags_Flags[q20] | q20 : int(1..2)]) <= 2])
+    Error:
+        Not uniformly typed: [var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                  [q22, q25, q28]
+                              =
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Values
+                                  [q22, q25, q27],
+                              var1_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithFlags_Flags
+                                  [q22, q25, q28];
+                                  int(1..2)]
+        Involved types are: bool
+                            int

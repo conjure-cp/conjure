@@ -1,0 +1,43 @@
+language ESSENCE' 1.0
+
+given given1: matrix indexed by [int(3, 0), int(0, 4)] of bool
+find var1_1: bool
+find var1_2_1: int(0, 3)
+find var1_3_1: bool
+find var1_3_2: bool
+given given2_ExplicitWithFlagsR15_Flags: matrix indexed by [int(1..5)] of int(0..1)
+given given2_ExplicitWithFlagsR15_Values_RelationAsMatrix:
+        matrix indexed by [int(1..5), int(3..4, 0), int(0, 1), bool, bool] of bool
+find var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker: int(0..16)
+find var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker:
+        matrix indexed by [int(1..16)] of int(0)
+find var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..16), int(1..0), int(1..2)] of int(3, 5, 6)
+find var3_1: matrix indexed by [int(0, 1..5)] of int(0, 0)
+such that
+    false,
+    and([q23 <= var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker ->
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q23] >= 1
+             | q23 : int(1..16)]),
+    and([q4 + 1 <= var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker ->
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q4] <
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q4 + 1]
+         \/
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q4] =
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q4 + 1]
+         /\
+         flatten(var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
+                     [q4, .., ..])
+         <lex
+         flatten(var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
+                     [q4 + 1, .., ..])
+             | q4 : int(1..15)]),
+    and([q5 > var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker ->
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q5] = 0
+             | q5 : int(1..16)]),
+    and([q6 <= var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker ->
+         0 <= var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q6]
+             | q6 : int(1..16)]),
+    and([q6 <= var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Marker ->
+         var2_PartitionAsSetR6_ExplicitVarSizeWithMarkerR5R6_Values_ExplicitVarSizeWithMarkerR6_Marker[q6] <= 0
+             | q6 : int(1..16)])

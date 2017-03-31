@@ -1,0 +1,11 @@
+language Essence 1.3
+
+find var1: function (bool, int(4..4)) --> int(3)
+find var5: set of tuple (bool)
+such that
+    or([false | q_9 <- var5]),
+    false,
+    or([(-2, 0) != (5, 4) \/ true | q_10 : set of tuple (bool)]),
+    and([var1 = var1 <-> -2 / -3 in mset(10)
+             | q_11 : set of tuple (bool),
+               |q_11| < max((mset() : `mset of int`) intersect mset(7, 2))])

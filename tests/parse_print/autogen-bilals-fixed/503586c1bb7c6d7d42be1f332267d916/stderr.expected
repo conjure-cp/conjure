@@ -1,0 +1,20 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             (1 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+              and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1, q14] = q8[q14]
+                       | q14 : int(4, 3)]))
+                 | q8 : matrix indexed by [int(4, 3)] of int(2..4, 1)])
+    Error:
+        When type checking: 1 =
+                            (1 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                             and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1, q14] =
+                                  q8[q14]
+                                      | q14 : int(4, 3)]))
+        Cannot unify the types of the following.
+        lhs        : 1
+        type of lhs: int
+        rhs        : 1 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                     and([var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1[1, q14] = q8[q14]
+                              | q14 : int(4, 3)])
+        type of rhs: bool

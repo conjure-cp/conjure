@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given fin2: int
+given fin3: int
+given nums_Explicit: matrix indexed by [int(1..fin1)] of int(fin2..fin3)
+given N: int
+such that N = sum([nums_Explicit[q1] | q1 : int(1..fin1)])
+

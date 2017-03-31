@@ -1,0 +1,6 @@
+Error:
+    In a 'such that' statement:
+        and([1 <= sum([var2_ExplicitVarSizeWithFlags_Flags[q1, q5] | q5 : int(1..2)]) | q1 : int(3, 2)])
+    Error:
+        Type error in sum([var2_ExplicitVarSizeWithFlags_Flags[q1, q5] | q5 : int(1..2)])
+                      The argument has type: [bool]

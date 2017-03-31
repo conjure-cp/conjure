@@ -1,8 +1,19 @@
 
 SHELL := /bin/bash
 
-.PHONY: install
-install:
+.PHONY: install-with-stack
+install-with-stack:
+	@bash etc/build/install-stack.sh
+	@cp etc/hs-deps/stack-8.0.yaml stack.yaml
+	@stack setup
+	@bash etc/build/version.sh
+	@stack runhaskell etc/build/gen_Operator.hs
+	@stack runhaskell etc/build/gen_Expression.hs
+	@stack install
+	@rm stack.yaml
+
+.PHONY: install-with-cabal
+install-with-cabal:
 	@bash etc/build/install.sh
 
 .PHONY: preinstall
@@ -18,7 +29,7 @@ freeze:
 .PHONY: refreeze
 refreeze:
 	@make clean
-	@BUILD_TESTS=yes make install
+	@BUILD_TESTS=yes make install-with-cabal
 	@make freeze
 
 .PHONY: clean

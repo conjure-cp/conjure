@@ -1,0 +1,35 @@
+language Essence 1.3
+
+find var1:
+        function (size 3 - 4, total, injective)
+            function (minSize 4, total, injective) bool --> bool
+                --> partition (numParts 3, minPartSize 4 , maxPartSize 4) from bool
+find var2:
+        function (minSize 3 , maxSize 3, total)
+            relation (size 5) of (int(3, 1..3) * bool * bool) --> bool
+find var3: bool
+such that
+    inverse(function([false, true; int(4, 3..3)] --> partition({false, true, true,
+                                                                true},
+                                                               {true, true}, {false, true, false, true},
+                                                               {false, true, true, false, false})),
+            function(partition({false}, {false, false, true}, {true},
+                               {true, true, true, false}, {true, true, false, false}) --> [true, false, true,
+                                                                                           true; int(7..10)],
+                     partition({true, true, true, true}, {true, true, true, true},
+                               {false, false, true, false}) --> [true, false, true; int(5..7)],
+                     partition({true}, {false, true, false, false, true}, {true},
+                               {false}) --> ([] : `matrix indexed by [int] of bool`),
+                     (partition() : `partition from bool`) --> [true, true, true; int(7, 2..3)],
+                     partition({false, true, false, false, false}, {false, true}, {false},
+                               {false, false, false, false, true}, {false}) --> [false, false; int(3, 2..2)])),
+    apart({([] : `matrix indexed by [int] of bool`), [var3, var3; int(2..3)],
+           [var3, var3; int(2, 5..5)]},
+          partition({([] : `matrix indexed by [int] of bool`),
+                     [false, true, false; int(3, 1..2)], ([] : `matrix indexed by [int] of bool`)},
+                    {[true; int(2..2)], ([] : `matrix indexed by [int] of bool`),
+                     [false, false; int(4..5)]},
+                    {([] : `matrix indexed by [int] of bool`), [true; int(0..0)],
+                     [true; int(2..2)]})),
+    var3 <= var3,
+    [l_1 | l_1 : bool, l_1][factorial(0) - 4 / 3]

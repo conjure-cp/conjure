@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find var1: matrix indexed by [int(2..4, 4..5), int(5, 2), int(2, 1), int(4..5, 2..3), int(1, 1)] of int(4, 1)
+find var2: int(1, 4)
+such that
+    ([] : `matrix indexed by [int] of bool`)[var2],
+    true
+minimising var2

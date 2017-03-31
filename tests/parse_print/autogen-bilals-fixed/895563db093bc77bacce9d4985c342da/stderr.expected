@@ -1,0 +1,10 @@
+Error:
+    In a 'such that' statement:
+        and([1 <=
+             sum([sum([sum([sum([var3_RelationAsMatrix[q10, q11, q12, q13, q14] | q14 : bool]) | q13 : bool])
+                           | q12 : bool])
+                      | q11 : bool])
+                 | q10 : int(3, 2)])
+    Error:
+        Type error in sum([var3_RelationAsMatrix[q10, q11, q12, q13, q14] | q14 : bool])
+                      The argument has type: [bool]

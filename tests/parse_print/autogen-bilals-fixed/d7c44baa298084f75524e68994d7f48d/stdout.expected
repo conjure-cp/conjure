@@ -1,0 +1,31 @@
+language ESSENCE' 1.0
+
+given given1: matrix indexed by [int(1, 1)] of bool
+find var1: bool
+given given2_PartitionOccurrence_NumParts: int(1..6)
+given given2_PartitionOccurrence_WhichPart: matrix indexed by [int(1, 0..4)] of int(1..6)
+given given2_PartitionOccurrence_PartSizes: matrix indexed by [int(1..6)] of int(0..6)
+given given2_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..6)] of int(1, 0..4)
+find var2_1: int(2, 4)
+find var2_2: bool
+given given3_RelationAsMatrix: matrix indexed by [bool, bool, bool] of bool
+find var3: int(4, 4)
+find var4_ExplicitWithRepetition_Flag: int(0..10)
+find var4_ExplicitWithRepetition_Values: matrix indexed by [int(1..10)] of int(1, 5)
+such that
+    var1,
+    toInt(var1) > 1 / var3,
+    or(given1),
+    false,
+    and([q1 + 1 <= var4_ExplicitWithRepetition_Flag ->
+         var4_ExplicitWithRepetition_Values[q1] <= var4_ExplicitWithRepetition_Values[q1 + 1]
+             | q1 : int(1..9)]),
+    and([q2 > var4_ExplicitWithRepetition_Flag -> var4_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..10)]),
+    and([q4 <= var4_ExplicitWithRepetition_Flag ->
+         sum([toInt(q7 <= var4_ExplicitWithRepetition_Flag) *
+              toInt(var4_ExplicitWithRepetition_Values[q7] = var4_ExplicitWithRepetition_Values[q4])
+                  | q7 : int(1..10)])
+         <= 2
+             | q4 : int(1..10)]),
+    5 <= var4_ExplicitWithRepetition_Flag,
+    var4_ExplicitWithRepetition_Flag <= 5

@@ -1,0 +1,26 @@
+Error 1:
+    In a 'such that' statement: sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..81)]) <= 81
+    Error:
+        Type error in sum([var1_ExplicitVarSizeWithFlags_Flags[q4] | q4 : int(1..81)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([q14 <= var2_ExplicitVarSizeWithMarker_Marker ->
+             5 =
+             sum([sum([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q14, q15, q16] | q16 : int(0..1, 2..5)])
+                      | q15 : bool])
+                 | q14 : int(1..5)])
+    Error:
+        Type error in sum([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q14, q15, q16]
+                               | q16 : int(0..1, 2..5)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement: 1 <= sum([var5_Function1DPartial_Flags[q26] | q26 : bool])
+    Error:
+        Type error in sum([var5_Function1DPartial_Flags[q26] | q26 : bool])
+                      The argument has type: [bool]
+Error 4:
+    In a 'such that' statement: sum([var5_Function1DPartial_Flags[q26] | q26 : bool]) <= 5
+    Error:
+        Type error in sum([var5_Function1DPartial_Flags[q26] | q26 : bool])
+                      The argument has type: [bool]

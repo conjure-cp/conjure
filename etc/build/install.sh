@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # This script will install ghc + cabal + happy + conjure.
 # It will only install these tools if they aren't already installed.

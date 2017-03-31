@@ -1,0 +1,32 @@
+language ESSENCE' 1.0
+
+find var1_1: bool
+find var1_2: bool
+find var1_3: bool
+find var2_PartitionOccurrence_NumParts: int(1..2)
+find var2_PartitionOccurrence_WhichPart: matrix indexed by [bool] of int(1..2)
+find var2_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
+find var2_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of bool
+find var3: matrix indexed by [int(4..4, 3..4)] of bool
+find var4_Function1DPartial_Flags: matrix indexed by [bool] of bool
+find var4_Function1DPartial_Values: matrix indexed by [bool] of bool
+such that
+    allDiff(var3),
+    and([q2 > var2_PartitionOccurrence_NumParts -> var2_PartitionOccurrence_PartSizes[q2] = 0 | q2 : int(1..2)]),
+    var2_PartitionOccurrence_NumParts = max([var2_PartitionOccurrence_WhichPart[q5] | q5 : bool]),
+    and([var2_PartitionOccurrence_PartSizes[q6] = sum([toInt(var2_PartitionOccurrence_WhichPart[q7] = q6) | q7 : bool])
+             | q6 : int(1..2)]),
+    and([q8 <= var2_PartitionOccurrence_NumParts ->
+         and([var2_PartitionOccurrence_WhichPart[q9] = q8 -> var2_PartitionOccurrence_FirstIndex[q8] <= q9 | q9 : bool])
+             | q8 : int(1..2)]),
+    and([q8 <= var2_PartitionOccurrence_NumParts ->
+         or([var2_PartitionOccurrence_WhichPart[q9] = q8 /\ var2_PartitionOccurrence_FirstIndex[q8] = q9 | q9 : bool])
+             | q8 : int(1..2)]),
+    and([var2_PartitionOccurrence_PartSizes[q8] = 0 -> var2_PartitionOccurrence_FirstIndex[q8] = false
+             | q8 : int(1..2)]),
+    and([q10 <= var2_PartitionOccurrence_NumParts /\ q11 <= var2_PartitionOccurrence_NumParts ->
+         (q10 < q11 <-> var2_PartitionOccurrence_FirstIndex[q10] < var2_PartitionOccurrence_FirstIndex[q11])
+             | q10 : int(1..2), q11 : int(1..2)]),
+    and([var4_Function1DPartial_Flags[q12] = false -> var4_Function1DPartial_Values[q12] = false | q12 : bool]),
+    sum([toInt(var4_Function1DPartial_Flags[q13]) | q13 : bool]) <= 5
+

@@ -1,0 +1,35 @@
+Error:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q16 <= var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([q27 <=
+                        var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                            [q16]
+                        ->
+                        or([q7_ExplicitVarSizeWithFlags_Values[q29] =
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q16, q27]
+                                | q29 : int(1..2), q7_ExplicitVarSizeWithFlags_Flags[q29]])
+                            | q27 : int(1..2)])
+                   /\
+                   and([or([q33 <=
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Marker
+                                [q16]
+                            /\
+                            var1_FunctionAsRelation_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithMarker_Values
+                                [q16, q33]
+                            = q7_ExplicitVarSizeWithFlags_Values[q31]
+                                | q33 : int(1..2)])
+                            | q31 : int(1..2), q7_ExplicitVarSizeWithFlags_Flags[q31]]))
+                      | q16 : int(1..3)])
+                 | q7_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of bool,
+                   q7_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(1, 2),
+                   q7_ExplicitVarSizeWithFlags_Flags[2] ->
+                   q7_ExplicitVarSizeWithFlags_Values[1] < q7_ExplicitVarSizeWithFlags_Values[2],
+                   and([q7_ExplicitVarSizeWithFlags_Flags[q12] = false -> q7_ExplicitVarSizeWithFlags_Values[q12] = 1
+                            | q12 : int(1..2)]),
+                   q7_ExplicitVarSizeWithFlags_Flags[2] -> q7_ExplicitVarSizeWithFlags_Flags[1],
+                   sum([q7_ExplicitVarSizeWithFlags_Flags[q14] | q14 : int(1..2)]) <= 2])
+    Error:
+        Type error in sum([q7_ExplicitVarSizeWithFlags_Flags[q14] | q14 : int(1..2)])
+                      The argument has type: [bool]

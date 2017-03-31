@@ -1,0 +1,20 @@
+Error:
+    In a 'such that' statement:
+        [l_7 | l_6 : bool, l_7 : bool]
+            [freq(mset((relation() : `relation of (mset of int * partition from int)`)),
+                  relation((mset(factorial(1), toInt(true), factorial(0)), partition({0 / 0}, {2 - 4})),
+                           (toMSet({2}), partition({factorial(1), 5 % 2, -1}, {1 % 2, 4 % 4, -3})),
+                           (mset(4, 0, 4) - mset(4),
+                            (partition() : `partition from int`) - (partition() : `partition from int`)),
+                           (toMSet({3}), partition({0 ** 3, 0}, {0 / 5}, {-0, 5 ** 0})),
+                           (mset(toInt(true)),
+                            partition({0 ** 5, 4 ** 4}, {toInt(false), 2 % 1, toInt(false)},
+                                      {1 / 4, toInt(true), 3 % 2, toInt(false)}, {4 % 3, factorial(3), 3 - 2},
+                                      {-0, -0, 3 - 0}))))]
+    Error:
+        When type checking: (partition() : `partition from int`) - (partition() : `partition from int`)
+        Arguments expected to be one of these types: int, set of ?, mset of ?, function ? --> ?, relation of (?)
+        lhs        : (partition() : `partition from int`)
+        type of lhs: partition from int
+        rhs        : (partition() : `partition from int`)
+        type of rhs: partition from int

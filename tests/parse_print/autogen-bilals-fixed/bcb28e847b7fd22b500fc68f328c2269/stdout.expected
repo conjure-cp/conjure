@@ -1,0 +1,8 @@
+language Essence 1.3
+
+find var1: bool
+such that
+    relation(tuple ({false, false}), tuple (({} : `set of bool`)), tuple (({} : `set of bool`))) !=
+    relation(tuple ({true, false}), tuple (({} : `set of bool`)), tuple (({} : `set of bool`))),
+    ((var1 <-> var1) <-> {true} != {true, false}) <-> false,
+    false /\ ({} : `set of int`) != {-7, 5} /\ false

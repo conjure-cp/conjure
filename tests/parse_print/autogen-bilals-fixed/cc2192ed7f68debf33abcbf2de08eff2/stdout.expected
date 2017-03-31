@@ -1,0 +1,46 @@
+language Essence 1.3
+
+find var1: matrix indexed by [int(2..4, 2)] of bool
+such that
+    relation(({true, false}, relation((false, true, true), (false, false, true), (true, false, false)), {true}),
+             ({false, false, true}, relation((true, true, false), (false, false, false)), {true, true}))
+    !=
+    relation(({true, false, false},
+              relation((true, true, false), (true, true, false), (true, true, true), (true, true, true),
+                       (false, false, true)),
+              ({} : `set of bool`)),
+             ({false, true, false}, relation((false, true, true), (true, false, true)), {true, false, true}),
+             ({false, false, true},
+              relation((false, true, true), (true, true, false), (false, true, false), (true, false, false)),
+              {false, false}),
+             ({false, false, true},
+              relation((false, false, false), (false, true, false), (true, true, false), (false, false, false),
+                       (true, false, false)),
+              {false, true})),
+    allDiff([partition({false, false, false, true}, {true}, {true, false, true, true, true}),
+             partition({false, false, false, false}, {true, true, false, false}, {false, true}, {true, false, false},
+                       {false}),
+             partition({false, true, false, true}, {false});
+                 int(4..6)]),
+    image(function(true --> false), var1 <=lex [true, true, true; int(2, 4, 0)]),
+    image(function({true} --> false, {true} --> false), {true <-> false}),
+    together({relation((true, true))},
+             partition({relation((true, false), (false, true), (false, false), (false, false), (true, true)),
+                        relation((true, false), (true, true), (true, true), (false, true)),
+                        relation((false, true), (false, false), (true, false)),
+                        relation((false, false), (true, false), (false, false))},
+                       {relation((true, true), (false, false), (false, true)),
+                        relation((true, false), (true, true), (true, true), (false, false), (true, false)),
+                        relation((true, true), (false, true), (true, false), (false, true)),
+                        relation((false, true), (true, false), (true, false)),
+                        relation((true, false), (true, true), (false, true))},
+                       {relation((false, true)),
+                        relation((false, false), (false, true), (false, false), (true, true), (true, false)),
+                        relation((false, true), (false, true), (true, false), (false, false))},
+                       {relation((false, false), (true, false), (false, true), (true, true))},
+                       {relation((true, true)),
+                        relation((false, true), (true, true), (false, true), (true, false), (true, false)),
+                        relation((true, false)), relation((false, false), (true, true), (true, false))})),
+    [l_1 | l_1 : bool, l_1, l_1][0],
+    mset(relation(tuple (2), tuple (1), tuple (5), tuple (3), tuple (0))) supset
+    mset(relation(tuple (4)), relation(tuple (4), tuple (1), tuple (3), tuple (4), tuple (1)))

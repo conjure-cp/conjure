@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+letting var1_Function1D be [false, true; bool]
+letting var2_ExplicitWithRepetition_Flag be 0
+letting var2_ExplicitWithRepetition_Values be
+        [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false;
+             int(1..16)]
+letting var3_RelationAsMatrix be
+        [[[[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool]; bool],
+         [[[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool]; bool];
+             bool]

@@ -1,0 +1,15 @@
+language Essence 1.3
+
+find var1: relation (minSize 4) of (int(3, 1))
+find var2: relation (size 1, reflexive) of (bool * bool)
+find var3: relation (size 5) of (bool * bool * bool * int(5, 3))
+find var4: function (size 5, bijective) int(5, 0) --> bool
+such that
+    or([true; int(2)]),
+    false,
+    true,
+    relation(tuple (false), tuple (false), tuple (true)) subset
+    relation(tuple (false), tuple (false), tuple (false), tuple (false), tuple (true)),
+    image(var4, 5),
+    var1 != var1,
+    [0; int(0)] <=lex [3, 1, 1, 5, 3; int(10, 1, 0, 15, 12)]

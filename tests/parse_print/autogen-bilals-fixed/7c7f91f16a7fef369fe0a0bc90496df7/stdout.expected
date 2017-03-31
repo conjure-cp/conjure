@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+find var4_FunctionND: matrix indexed by [bool, bool, int(4, 4)] of bool
+such that
+    allDiff([var4_FunctionND[q1_1, q1_2, ..] | q1_1 : bool, q1_2 : bool]),
+    and([or([and([var4_FunctionND[q3_1, q3_2, q8] = q2[q8] | q8 : int(4, 4)]) | q3_1 : bool, q3_2 : bool])
+             | q2 : matrix indexed by [int(4, 4)] of bool])

@@ -103,11 +103,28 @@ import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
-    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
+    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m)
     => Config
     -> Model
     -> m ()
 outputModels config model = do
+
+    -- Savile Row does not support ' characters in identifiers
+    -- We could implement a workaround where we insert a marker (like __PRIME__) for each ' character
+    -- and recover these after a solution is found.
+    -- But this will be too hairy, instead we will reject such identifiers for now.
+    -- If somebody really needs to use a ' character as part of an identifier, we can revisit this decision.
+    let
+        primeyIdentifiers = catMaybes
+            [ if '\'' `elem` textToString identifier
+                then Just identifier
+                else Nothing
+            | Declaration decl <- mStatements model
+            , Name identifier <- universeBi decl
+            ]
+    unless (null primeyIdentifiers) $ userErr1 $ vcat
+        ["Identifiers cannot contain a quotation mark character in them:" <+> prettyList id "," primeyIdentifiers]
+
     let dir = outputDirectory config
     liftIO $ createDirectoryIfMissing True dir
 
@@ -965,6 +982,7 @@ paramRules =
     [ Horizontal.Set.rule_Param_MinOfSet
     , Horizontal.Set.rule_Param_MaxOfSet
     , Horizontal.Set.rule_Param_Card
+    , Horizontal.Function.rule_Param_DefinedRange
     , Horizontal.Relation.rule_Param_Card
     ]
 
@@ -1020,6 +1038,8 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
+    , Vertical.Set.Explicit.rule_Min
+    , Vertical.Set.Explicit.rule_Max
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
@@ -1265,6 +1285,8 @@ delayedRules =
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
+        ]
+    ,   [ rule_ReducerToComprehension
         ]
     ]
 
@@ -1577,6 +1599,38 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
             , return $ transformBi f $ Comprehension body rest
             )
     theRule _ = na "rule_GeneratorsFirst"
+
+
+rule_ReducerToComprehension :: Rule
+rule_ReducerToComprehension = "reducer-to-comprehension" `namedRule` theRule where
+    theRule p = do
+        (_, mk, coll) <- match opReducer p
+        -- leave comprehensions alone
+        let
+            isComprehension Comprehension{} = True
+            isComprehension _ = False
+        case followAliases isComprehension coll of
+            True  -> na "rule_ReducerToComprehension"
+            False -> return ()
+        -- leave matrix literals alone
+        case tryMatch matrixLiteral coll of
+            Nothing -> return ()
+            Just {} -> na "rule_ReducerToComprehension"
+        tyColl <- typeOf coll
+        howToIndex <- case tyColl of
+            TypeMatrix{} -> return $ Left ()
+            TypeList{}   -> return $ Right ()
+            TypeSet{}    -> return $ Right ()
+            TypeMSet{}   -> return $ Right ()
+            _ -> na "rule_ReducerToComprehension"
+        return
+            ( "Creating a comprehension for the collection inside the reducer operator."
+            , do
+                (iPat, i) <- quantifiedVar
+                case howToIndex of
+                    Left{}  -> return $ mk [essence| [ &i[2] | &iPat <- &coll ] |]
+                    Right{} -> return $ mk [essence| [ &i    | &iPat <- &coll ] |]
+            )
 
 
 rule_TrueIsNoOp :: Rule
@@ -1909,7 +1963,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
 rule_QuantifierShift :: Rule
 rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner  )               <- match opQuantifier p
+        (_, mkQuan, inner)              <- match opReducer p
         (matrix, indexer)               <- match opIndexing inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -1931,7 +1985,7 @@ rule_QuantifierShift = "quantifier-shift" `namedRule` theRule where
 rule_QuantifierShift2 :: Rule
 rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)                 <- match opQuantifier p
+        (_, mkQuan, inner)              <- match opReducer p
         matrix                          <- match opFlatten inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         case ty of
@@ -1955,7 +2009,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
 rule_QuantifierShift3 :: Rule
 rule_QuantifierShift3 = "quantifier-shift3" `namedRule` theRule where
     theRule p = do
-        (mkQuan, inner)                 <- match opQuantifier p
+        (_, mkQuan, inner)              <- match opReducer p
         matrix                          <- match opConcatenate inner
         (TypeMatrix _ ty, index, elems) <- match matrixLiteral matrix
         return

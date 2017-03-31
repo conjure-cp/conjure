@@ -1,0 +1,7 @@
+language Essence 1.3
+
+find var2: int(4, 0)
+such that
+    image(function((partition() : `partition from function bool --> bool`) --> tuple (4)),
+          partition({function(true --> false)}))[1]
+    >= var2

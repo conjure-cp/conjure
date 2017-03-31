@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+find var1_1: bool
+find var2_ExplicitWithRepetition_Flag: int(0..32)
+find var2_ExplicitWithRepetition_Values: matrix indexed by [int(1..32)] of int(5, 1)
+such that
+    and([q1 + 1 <= var2_ExplicitWithRepetition_Flag ->
+         var2_ExplicitWithRepetition_Values[q1] <= var2_ExplicitWithRepetition_Values[q1 + 1]
+             | q1 : int(1..31)]),
+    and([q2 > var2_ExplicitWithRepetition_Flag -> var2_ExplicitWithRepetition_Values[q2] = 5 | q2 : int(1..32)]),
+    and([q4 <= var2_ExplicitWithRepetition_Flag ->
+         sum([toInt(q7 <= var2_ExplicitWithRepetition_Flag) *
+              toInt(var2_ExplicitWithRepetition_Values[q7] = var2_ExplicitWithRepetition_Values[q4])
+                  | q7 : int(1..32)])
+         <= 4
+             | q4 : int(1..32)])
+

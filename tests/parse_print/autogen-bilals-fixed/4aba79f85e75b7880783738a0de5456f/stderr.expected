@@ -1,0 +1,57 @@
+Error 1:
+    In a 'such that' statement:
+        or([sum([[[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
+                 [[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
+                     | q8 : int(1..2)])
+            != 0
+                | q9 : int(1..2)])
+        <-> var4
+    Error:
+        Type error in sum([[[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
+                           [[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
+                               | q8 : int(1..2)])
+                      The argument has type: [bool]
+Error 2:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q1 <= var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q10 <= var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q1]
+                      /\
+                      var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q1, q10] =
+                      q2  | q10 : int(1..2)])
+                      | q1 : int(1..4)])
+                 | q2 : int(1, 1)])
+    Error:
+        Type error in sum([q1 <= var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q10 <=
+                               var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q1]
+                               /\
+                               var3_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                   [q1, q10]
+                               = q2
+                                   | q10 : int(1..2)])
+                               | q1 : int(1..4)])
+                      The argument has type: [bool]
+Error 3:
+    In a 'such that' statement:
+        and([1 >=
+             sum([q5 <= var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  or([q11 <= var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker[q5]
+                      /\
+                      var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values[q5, q11] =
+                      q2  | q11 : int(1..2)])
+                      | q5 : int(1..4)])
+                 | q2 : bool])
+    Error:
+        Type error in sum([q5 <= var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                           or([q11 <=
+                               var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q5]
+                               /\
+                               var3_4_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values
+                                   [q5, q11]
+                               = q2
+                                   | q11 : int(1..2)])
+                               | q5 : int(1..4)])
+                      The argument has type: [bool]

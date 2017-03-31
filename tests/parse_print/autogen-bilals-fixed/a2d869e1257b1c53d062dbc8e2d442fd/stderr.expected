@@ -1,0 +1,10 @@
+Error:
+    In a 'such that' statement:
+        and([q10 <= var2_ExplicitVarSizeWithMarker_Marker ->
+             sum([sum([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q14, q15] | q15 : bool])
+                      | q14 : bool])
+             <= 2
+                 | q10 : int(1..16)])
+    Error:
+        Type error in sum([var2_ExplicitVarSizeWithMarker_Values_RelationAsMatrix[q10, q14, q15] | q15 : bool])
+                      The argument has type: [bool]

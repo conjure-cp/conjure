@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..32)
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..32)] of int(0..5)
+given given1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..32), int(1..5)] of int(2..5, 3)
+find var1_1: bool
+find var1_2: bool
+find var1_3: int(2..3, 4)
+given fin1: int
+given given2_Explicit: matrix indexed by [int(1..fin1)] of bool
+find var2: matrix indexed by [int(1..3, 4)] of bool
+such that false

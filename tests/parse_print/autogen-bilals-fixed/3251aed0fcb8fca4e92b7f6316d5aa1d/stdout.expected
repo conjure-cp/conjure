@@ -1,0 +1,14 @@
+language ESSENCE' 1.0
+
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..0), int(1..2)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..0), int(1..2)] of bool
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..0)] of int(0..2)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..0), int(1..2)] of int(0..1)
+find var1_RelationAsSet_ExplicitVarSizeWithMarker_Values_2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..0), int(1..2), int(1)] of bool
+such that var1_RelationAsSet_ExplicitVarSizeWithMarker_Marker <= 0

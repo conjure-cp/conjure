@@ -1,0 +1,10 @@
+language Essence 1.3
+
+find var1:
+        partition (minNumParts 3 / 1, partSize 4, regular) from
+            mset (maxSize 2) of int(2..4, 4)
+such that
+    true,
+    3 > 2,
+    false,
+    !true

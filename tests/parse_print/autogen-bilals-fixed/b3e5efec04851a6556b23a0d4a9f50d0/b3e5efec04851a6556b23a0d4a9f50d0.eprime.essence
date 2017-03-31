@@ -1,0 +1,87 @@
+language ESSENCE' 1.0
+
+find var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..1)] of int(0..256)
+find var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D:
+        matrix indexed by [int(1..1), int(1..256), bool] of int(3..5, 4)
+find var2: bool
+find var3_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix:
+        matrix indexed by [int(1..2), int(4..4, 3..3), int(4, 5), bool,
+                           int(0, 5)] of bool
+find var4_RelationAsSet_Explicit_1:
+        matrix indexed by [int(1..0), int(5..5, 4)] of bool
+such that
+    var2,
+    and([1 =
+         or([q26 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] /\
+             (and([q1_Function1D[q28] =
+                   var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q26,
+                                                                                            q28]
+                       | q28 : bool])
+              /\
+              and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                            q26, q29]
+                   = q1_Function1D[q29]
+                       | q29 : bool]))
+                 | q26 : int(1..256)])
+             | q1_Function1D : matrix indexed by [bool] of int(3..5, 4),
+               allDiff(q1_Function1D), false, true]),
+    var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] >= 1,
+    and([q6 + 1 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1]
+         ->
+         var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1, q6,
+                                                                                  ..]
+         <lex
+         var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                  q6 + 1, ..]
+             | q6 : int(1..255)]),
+    and([q7 > var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         and([var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                       q7, q38]
+              = 3 | q38 : bool])
+             | q7 : int(1..256)]),
+    and([q8 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         allDiff(var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Values_Function1D[1,
+                                                                                          q8, ..])
+             | q8 : int(1..256)]),
+    and([q8 <= var1_PartitionAsSet_Explicit_ExplicitVarSizeWithMarker_Marker[1] ->
+         false
+             | q8 : int(1..256)]),
+    var3_ExplicitVarSizeWithFlags_Flags[2] ->
+    flatten(var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[1, .., .., ..,
+                                                                  ..])
+    <lex
+    flatten(var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[2, .., .., ..,
+                                                                  ..]),
+    and([var3_ExplicitVarSizeWithFlags_Flags[q11] = false ->
+         and([and([and([and([var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[q11,
+                                                                                   q39, q40, q41, q42]
+                             = false
+                                 | q42 : int(0, 5)])
+                            | q41 : bool])
+                       | q40 : int(4, 5)])
+                  | q39 : int(4..4, 3..3)])
+             | q11 : int(1..2)]),
+    var3_ExplicitVarSizeWithFlags_Flags[2] ->
+    var3_ExplicitVarSizeWithFlags_Flags[1],
+    sum([var3_ExplicitVarSizeWithFlags_Flags[q13] | q13 : int(1..2)]) <= 2,
+    and([var3_ExplicitVarSizeWithFlags_Flags[q14] ->
+         2 <=
+         sum([sum([sum([sum([var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[q14,
+                                                                                   q15, q16, q17, q18]
+                                 | q18 : int(0, 5)])
+                            | q17 : bool])
+                       | q16 : int(4, 5)])
+                  | q15 : int(4..4, 3..3)])
+             | q14 : int(1..2)]),
+    and([var3_ExplicitVarSizeWithFlags_Flags[q14] ->
+         sum([sum([sum([sum([var3_ExplicitVarSizeWithFlags_Values_RelationAsMatrix[q14,
+                                                                                   q15, q16, q17, q18]
+                                 | q18 : int(0, 5)])
+                            | q17 : bool])
+                       | q16 : int(4, 5)])
+                  | q15 : int(4..4, 3..3)])
+         <= 3
+             | q14 : int(1..2)])
+

@@ -1,0 +1,12 @@
+language Essence 1.3
+
+find var1: int(2..3, 5)
+find var2:
+        (function (size 2, total, bijective) bool --> int(3, 2), function (maxSize 2) bool --> int(2..5, 2..5),
+         (int(0, 5), bool))
+find var3: matrix indexed by [int(2, 0..5)] of int(0..3, 2..3)
+find var4: int(5, 4)
+such that
+    [l_1 | l_1 : bool, l_1] <lex [[true; int(0)], [true, true; int(1, 5)]; int(5, 2)][0],
+    true,
+    false

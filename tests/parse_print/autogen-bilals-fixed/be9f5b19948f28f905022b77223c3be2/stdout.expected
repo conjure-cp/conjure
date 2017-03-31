@@ -1,0 +1,13 @@
+language Essence 1.3
+
+given given1: mset (maxOccur 1) of int(0, 0)
+find var1: function (maxSize 2) bool --> bool
+find var2: partition (minNumParts 0, maxNumParts 2, regular) from int(2, 3)
+find var3: int(1, 1)
+such that
+    true,
+    1 = 4,
+    true < true,
+    true != false,
+    false
+maximising var3 - var3

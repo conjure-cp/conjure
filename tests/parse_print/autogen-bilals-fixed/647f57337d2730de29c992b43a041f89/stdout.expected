@@ -1,0 +1,18 @@
+language ESSENCE' 1.0
+
+letting var1_ExplicitVarSizeWithFlags_Flags be ([] : `matrix indexed by [int, int] of int`)
+letting var1_ExplicitVarSizeWithFlags_Values be ([] : `matrix indexed by [int, int] of bool`)
+letting var2_ExplicitVarSizeWithFlags_Flags be
+        [false, false, false, false, false, false, false, false, false, false, false, false, false, false, false, false;
+             int(1..16)]
+letting var2_ExplicitVarSizeWithFlags_Values_RelationAsMatrix be
+        [[[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool],
+         [[false, false; bool], [false, false; bool]; bool], [[false, false; bool], [false, false; bool]; bool];
+             int(1..16)]
+letting var3 be true

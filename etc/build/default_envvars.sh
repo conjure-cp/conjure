@@ -1,4 +1,4 @@
-#/bin/bash
+#!/bin/bash
 
 # Default values for environment variables (to be used by the install script and make)
 

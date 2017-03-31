@@ -1,0 +1,75 @@
+language Essence 1.3
+
+find var1: (function bool --> bool, bool)
+find var2: bool
+find var3: (function int(0) --> bool, set of int(3))
+find var4: relation of (set of int(-1..3, 2) * function bool --> bool * bool * tuple (int(0..2, 4)))
+such that
+    true,
+    toMSet({partition({6 % -8}, {toInt(true)}, {toInt(false)}), partition({0, toInt(false)}),
+            partition({toInt(false), 6 + -8, 6 * -5}, {-10})}
+           intersect {partition({-1}, {-8}), partition({0, -1}), partition({1, -3})})
+    =
+    mset(partition({2 * 0 / (5 * -3)}, {toInt(false) * toInt(false)}, {5}, {5}),
+         partition({|(mset() : `mset of int`)|}, {|({} : `set of bool`)|})),
+    [relation((partition({|({} : `set of bool`)|, toInt(var2)}, {7}, {-2}), toMSet({10} intersect {0}), var3[2],
+               var3[2]),
+              (partition({|function(2 --> true, 10 --> false)|, 2 + 5}, {toInt(var2)}, {toInt(var2)}),
+               mset(toInt(false /\ true), |{false, false}|, -4, toInt(var2), -7, toInt(var2)), toSet(toMSet({0})),
+               var3[2]),
+              (partition({|{-2}|, |{5, 10}|, 9, |mset(true)|, -10 * -3 / toInt(true), toInt(var2)}),
+               mset(8, -8, 10 * 9 / 6, -1, toInt(true) % toInt(false)), var3[2],
+               {0, toInt(var2), |function(1 --> 3)|})),
+     relation((partition({toInt(var2)}), toMSet(party(2 * -3 * -8, partition({0}))), var3[2],
+               {|mset(-2)|, toInt(true <-> false), -3 % -7 % -6, toInt(var2), |function(-2 --> 3, 6 --> -8)|}),
+              (partition({1}, {|mset(0)|}, {7}, {|{false}|}),
+               mset(toInt(var2), toInt(false) + toInt(false), 5, toInt(var2), toInt(var2)),
+               {4, |function(-1 --> false, 10 --> true)|, toInt(var2), -5}, {10, toInt(false) * toInt(true), -9}),
+              (partition({toInt(true) * toInt(false), toInt(var2)}), mset(-4 / 3 * (-6 * -8)), var3[2], var3[2])),
+     relation((partition({toInt(true)}, {1 % 0}), mset(8 * -2, toInt(true)), {4, toInt(true)},
+               {toInt(true), 7, toInt(true), -10}),
+              (partition({-3}), toMSet({9, 5}), {3 / -10}, toSet(mset(3))),
+              (partition({3, toInt(true), 8}), (mset() : `mset of int`) intersect mset(-4, -8), {7 + 7, 0, -3 % 5},
+               participants(partition({-3, -3}))))
+     intersect
+     relation((partition({3}), (mset() : `mset of int`), {10}, ({} : `set of int`) intersect ({} : `set of int`)),
+              (partition({-3}), mset(-5) union mset(-5, 1), {5}, toSet((mset() : `mset of int`))),
+              (partition({6 * 7, -6}, {toInt(true)}), toMSet({-8, -7}), participants(partition({7})),
+               {-8, toInt(false), 9 % -2, toInt(true)})),
+     relation((partition({toInt(false), -4 * 6}), toMSet({-3}), toSet((mset() : `mset of int`)),
+               {-4} union ({} : `set of int`)),
+              (partition({10 % 1}, {toInt(true)}, {-7}), mset(9, 2) union mset(7), {7 * 3},
+               participants(partition({6}))),
+              (partition({10 + -4}, {-2}, {toInt(false)}), mset(toInt(true), -10 + -6, toInt(false), -9 * -6),
+               ({} : `set of int`), participants(partition({-9, 7}))))
+     intersect
+     relation((partition({9 * -6}, {toInt(false)}), (mset() : `mset of int`), {-8}, {-8, -3} union {5, -5}),
+              (partition({7 + -7}), mset(10 / 6, -9 + -7), {-8, -9 * -6, -7}, {-2} union {5}),
+              (partition({3}, {7 + 8, toInt(true)}), mset(-7 % -6, 1), {-3, toInt(true), -4 % -9},
+               party(toInt(true), partition({6}))));
+         int(-3, -3..0)]
+    =
+    [relation((partition({-4, -7}, {-2}, {10}), mset(toInt(var2), toInt(var2), 4), ({} : `set of int`), var3[2]),
+              (partition({-1}), mset(-6 * -4 * toInt(true), toInt(var2), 10, -1, |function(-4 --> 7)|, 5 * 9 + -3),
+               toSet(mset(9, 6) - toMSet({9, -6})), var3[2]),
+              (partition({toInt(true) * (-7 + 0)}, {-2, |{6, -6}|}),
+               mset(-1 / 5, 4 * 5, toInt(false), toInt(false)) union toMSet({-5}),
+               {-6, freq(mset(true), true \/ false), toInt(var2), |mset(true)|, toInt(var2)},
+               {toInt(var2), -10, -2, 3})),
+     relation((partition({3 / 0 / toInt(true)}), mset(-5 * 4, |function(true --> false)|), var3[2],
+               {toInt(var2), (-7 + 8) / toInt(true), toInt(var2)}),
+              (partition({toInt(var2)}), mset(-8, -3, 7, |{9}|, toInt(false) + toInt(false)), {toInt(true) * (-5 + 5)},
+               {-8, -3 / (-9 + -10)}),
+              (partition({toInt(false) * (8 * 7), 0},
+                         {|function(false --> true, false --> true)|, |partition({true})|, toInt(true) * toInt(false)},
+                         {-8}),
+               mset(toInt(var2), toInt(true), -8), var3[2], {toInt(var2), 4, toInt(true) / -3, toInt(var2)})),
+     relation((partition({-6 / 6 + toInt(false)}, {10 % 1 * toInt(true)}), toMSet({5} - ({} : `set of int`)), {-8},
+               {-4, |mset(false)|}),
+              (partition({3}, {-7}),
+               (mset(2 / 4, 10 * -7) - (mset() : `mset of int`)) intersect toMSet(({} : `set of int`)),
+               party(3 / (1 + 5), partition({5 / -9}, {toInt(true)}, {-9}, {4 / -3})),
+               {toInt(var2), 3, |function(-7 --> false, 9 --> true)|, 10, toInt(var2)}),
+              (partition({toInt(var2), toInt(var2), -1 * toInt(false)}), mset(|function(false --> false)|, toInt(var2)),
+               {3 % 10 * toInt(false), toInt(var2), -7, -9 * 1 * -8, 2}, var3[2]));
+         int(0, 4..5)]

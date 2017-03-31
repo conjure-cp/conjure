@@ -1,0 +1,37 @@
+Error:
+    In a 'such that' statement:
+        and([1 =
+             sum([q17 <= var2_PartitionAsSet_ExplicitVarSizeWithMarker_Marker /\
+                  (and([q22 <=
+                        var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Marker
+                            [q17, 1]
+                        ->
+                        or([q1_ExplicitVarSizeWithFlags_Values[q24] =
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Values
+                                [q17, 1, q22]
+                                | q24 : int(1..5), q1_ExplicitVarSizeWithFlags_Flags[q24]])
+                            | q22 : int(1..5)])
+                   /\
+                   and([or([q28 <=
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Marker
+                                [q17, 1]
+                            /\
+                            var2_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit_ExplicitVarSizeWithMarker_Values
+                                [q17, 1, q28]
+                            = q1_ExplicitVarSizeWithFlags_Values[q26]
+                                | q28 : int(1..5)])
+                            | q26 : int(1..5), q1_ExplicitVarSizeWithFlags_Flags[q26]]))
+                      | q17 : int(1..4)])
+                 | q1_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..5)] of bool,
+                   q1_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..5)] of int(2, 1..2),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q12 + 1] ->
+                        q1_ExplicitVarSizeWithFlags_Values[q12] < q1_ExplicitVarSizeWithFlags_Values[q12 + 1]
+                            | q12 : int(1..4)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q13] = false -> q1_ExplicitVarSizeWithFlags_Values[q13] = 2
+                            | q13 : int(1..5)]),
+                   and([q1_ExplicitVarSizeWithFlags_Flags[q14 + 1] -> q1_ExplicitVarSizeWithFlags_Flags[q14]
+                            | q14 : int(1..4)]),
+                   sum([q1_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..5)]) <= 5])
+    Error:
+        Type error in sum([q1_ExplicitVarSizeWithFlags_Flags[q15] | q15 : int(1..5)])
+                      The argument has type: [bool]

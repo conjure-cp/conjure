@@ -1,0 +1,7 @@
+language ESSENCE' 1.0
+
+find var1: bool
+find var2: bool
+such that
+    var1 = var2 \/ false = var2,
+    !(var1 = var2 \/ false = var2) \/ (!(var2 = var1) \/ !(var2 = false))

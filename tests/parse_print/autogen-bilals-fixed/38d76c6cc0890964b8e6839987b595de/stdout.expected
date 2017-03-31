@@ -1,0 +1,8 @@
+language ESSENCE' 1.0
+
+find var1: int(2, 1)
+find var2: bool
+such that
+    and([[var2 | l_3 : bool, l_4 : bool]
+             | l_1 : matrix indexed by [int(0..2, 1)] of bool, l_2 : matrix indexed by [int(0, 0)] of bool]
+            [var1, ..])

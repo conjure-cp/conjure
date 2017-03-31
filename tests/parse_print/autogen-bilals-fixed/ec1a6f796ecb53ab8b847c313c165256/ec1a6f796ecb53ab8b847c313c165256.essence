@@ -1,0 +1,48 @@
+language Essence 1.3
+
+find var1:
+        relation of
+            (bool *
+             mset (size image(function(0 --> 4, 4 --> 0, 4 --> 4, 5 --> 5), 5),
+                   minOccur |function(true --> 1, true --> 1, false --> 4, true --> 5)|) of
+                 int(5, 5..5))
+find var2:
+        relation (minSize 5 - factorial(4 - 0) + 19 , maxSize 4) of
+            (tuple (set (size factorial(0)) of (int(2..5, 5), bool)) *
+             ((set (minSize 5 , maxSize 5) of bool, mset (size 1, maxOccur 0) of bool),
+              matrix indexed by [int(1..2, 1)] of mset (minOccur 3 , maxOccur 3) of
+                                                      int(1, 1..3)) *
+             matrix indexed by [int(4, 3)] of set (minSize 4 , maxSize 4) of
+                                                  relation (maxSize 3) of
+                                                      (bool * int(4, 3..4) * int(0..4, 5..5) * int(3..3, 1)))
+find var3:
+        mset (maxSize min(flatten(([] : `matrix indexed by [int] of int`))),
+              minOccur sum([4, 3, 0, 2; int(4, 12, 10, 3..3)])) of
+            matrix indexed by [int(5..5, 2)] of (set (minSize 2 , maxSize 4) of int(1, 4),
+                                                 bool, partition (numParts 1, minPartSize 3 , maxPartSize 4) from bool)
+find var4: matrix indexed by [int(1, 0)] of bool
+find var5:
+        relation (minSize sum([0 - 5
+                                   | l_1 : int(0..3, 3), l_2 : int(4..5, 0..0), true,
+                                     true -> false]) , maxSize 4) of
+            (matrix indexed by [int(2, 0..5)] of relation (minSize 0 , maxSize 5) of
+                                                     (relation (size 4) of (int(2, 5..5) * int(5, 1)) *
+                                                      matrix indexed by [int(0..0, 3)] of bool) *
+             set (size 1) of
+                 relation of
+                     (int(5..5, 5) * partition (maxNumParts 4, minPartSize 5, regular) from bool) *
+             ((bool, (int(5..5, 3..4), bool, bool), set (size 4) of int(0, 5..5)),
+              matrix indexed by [int(3, 1)] of relation of (int(4, 3) * bool * bool),
+              matrix indexed by [int(5..5, 0..3)] of bool,
+              function (minSize 3 , maxSize 5, injective)
+                  partition (minNumParts 5, minPartSize 1 , maxPartSize 5) from bool
+                      --> function (minSize 1, total, surjective) bool --> int(3, 1..4)))
+find var6: bool
+find var7:
+        mset (size |mset(mset(4, 5), mset(2, 1, 3), mset(0))|, maxOccur 5) of
+            tuple (mset (minSize 5 , maxSize 5, minOccur 2 , maxOccur 2) of
+                       function (minSize 3 , maxSize 3, bijective) bool --> bool)
+such that
+    var6,
+    var6,
+    var6

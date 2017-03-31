@@ -1,0 +1,14 @@
+language Essence 1.3
+
+find var1: tuple (function (minSize 4, maxSize 5, bijective) bool --> bool)
+find var2: partition (minNumParts 3, maxNumParts 3, partSize 1 % 4, regular) from mset (size 3, maxOccur 1) of bool
+find var3:
+        function (maxSize 0 % 4, bijective)
+            function (minSize 5, total, bijective) bool --> bool --> set (minSize 3) of bool
+find var4: function (minSize 4 - 2, total, bijective) (bool, bool) --> matrix indexed by [int(4, 4)] of bool
+such that
+    false -> false,
+    true,
+    true <= false,
+    true = false,
+    true = true

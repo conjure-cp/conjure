@@ -1,0 +1,87 @@
+language Essence 1.3
+
+find var1: partition from set of bool
+find var2: function int(5) --> (bool, int(-4..0, -2))
+find var3: int(-3)
+find var4: partition from int(3..3)
+find var5: (function bool --> int(-4, -4), bool, partition from bool)
+such that
+    [mset((partition({2}), true \/ false, function(2 --> false)),
+          (partition({-5}), false = true, function(0 --> true, 7 --> true))),
+     (mset() : `mset of (partition from int, bool, function int --> bool)`),
+     mset((var4, false, function(1 --> false)),
+          (partition({-1, 7}), -4 != -4, function(-7 --> true, 5 --> false)),
+          (partition({-4}), true, function(5 --> false)),
+          (partition({-1}, {-10}), false /\ false, function(9 --> false, -2 --> true)),
+          (partition({-10}, {2}), false, function(-5 --> false, -1 --> true))); int(0,
+                                                                                    -2..0)]
+    =
+    [mset((var4, false, function(9 --> true, -9 --> false)),
+          (var4, false <-> false, function(-5 --> false))),
+     mset((var4, false \/ true, function(-3 --> false)),
+          (partition({0}), false, function(2 --> true)),
+          (var4, true -> true, function(5 --> false))),
+     mset((partition({0}, {5}), false <-> true, function(-6 --> true, 7 --> true)),
+          (var4, false != false, function(3 --> false, 7 --> false)),
+          (partition({-7}), false, function(-5 --> false, -5 --> true)),
+          (partition({8}, {-3}), 5 != 6, function(0 --> true, -5 --> false)),
+          (var4, false, function(-6 --> false, 2 --> false))),
+     mset((partition({7}), -8 != -3, function(-7 --> true, 10 --> false)),
+          (partition({-7, 5}), true <-> false, function(-9 --> false)),
+          (var4, true /\ false, function(5 --> true, 10 --> false)),
+          (partition({-4, 8}), true, function(0 --> false, 0 --> true)),
+          (partition({-3, 2}), false /\ true, function(1 --> true)),
+          (var4, false = true, function(2 --> true, 3 --> true))),
+     mset((var4, 7 = -9, function(4 --> false)),
+          (partition({-4}, {-7}), true != false, function(0 --> false)),
+          (var4, false <-> false, function(-7 --> false))); int(0..4)],
+    true <->
+    toMSet({relation((0 + -6, var3, true /\ false), (var3, toInt(true), false),
+                     (var3, 10 % -5, false != false)),
+            relation((-8, toInt(true), false != false), (4 + -10, toInt(false), -8 != -4),
+                     (var3, -8 / -3, false <-> false)),
+            relation((0 % 1, toInt(false), true), (9, var3, true != false),
+                     (-7, var3, true -> false))})
+    !=
+    mset(relation((var3, toInt(true), true /\ false), (var3, var3, true \/ true),
+                  (var3, 2, true \/ true)))
+    -
+    mset(relation((var3, toInt(false), false), (4 + 3, var3, true /\ false),
+                  (8, toInt(true), true \/ false))),
+    false,
+    (toMSet(toSet(mset(false))),
+     [(true, (10, true)), (true != false, (-4, true)); int(2, -4)],
+     max(participants(var4)))
+    =
+    (toMSet(participants(partition({false, true}))),
+     [(true, (9, false)), (true = true, (4, true)); int(2, -5)], -7),
+    and([true \/ var4 = var4 | q_6 : int(-3)]),
+    (mset(({-10, 2}, true), ({-10, -2}, false <-> true),
+          (({} : `set of int`), true != false), ({7}, true != true)),
+     mset(mset(partition({true}), partition({true}), partition({false})),
+          mset(partition({true}), partition({false}), partition({true})),
+          mset(partition({true}, {true}), partition({false}), partition({false}, {true}),
+               partition({false})),
+          mset(partition({true}))),
+     ({} : `set of function mset of int --> function int --> int`), false)
+    !=
+    (mset(({0}, true), ({1, -7}, -6 = -9), ({0, 0}, true)),
+     mset(mset(partition({false}, {true}), partition({true}, {false}),
+               partition({false, false}), partition({true}, {true})),
+          mset(partition({true}), partition({true})),
+          mset(partition({true, true}), partition({false, false}), partition({true}),
+               partition({false, false}))),
+     {function((mset() : `mset of int`) --> function(1 --> -8),
+               (mset() : `mset of int`) --> function(-5 --> 10, 7 --> 5)),
+      function(mset(6) --> function(-8 --> 7, 10 --> 1),
+               mset(-6, -9) --> function(-2 --> 9, 1 --> 5),
+               (mset() : `mset of int`) --> function(2 --> -2, -1 --> -2),
+               mset(-6, -7) --> function(1 --> 7, -6 --> 0)),
+      function(mset(-6) --> function(-7 --> -1),
+               mset(-6) --> function(4 --> -8, 9 --> -7)),
+      function((mset() : `mset of int`) --> function(2 --> 10, 3 --> 0),
+               mset(0, 3) --> function(10 --> 5)),
+      function((mset() : `mset of int`) --> function(-2 --> 5, -8 --> 5),
+               mset(-1) --> function(-10 --> 0, -4 --> 8)),
+      function(mset(-4, -8) --> function(-1 --> 8, -9 --> 10))},
+     false)

@@ -30,6 +30,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpAnd x) where
             TypeList TypeBool -> return TypeBool
             TypeMatrix _ TypeAny -> return TypeBool
             TypeMatrix _ TypeBool -> return TypeBool
+            TypeSet TypeBool -> return TypeBool
+            TypeMSet TypeBool -> return TypeBool
             TypeAny -> return TypeBool
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty

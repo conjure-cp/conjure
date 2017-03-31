@@ -5,7 +5,7 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 such that
-    and([s_Occurrence[q19] -> f_Function1DPartial_Flags[q19] | q19 : int(1..2)]),
+    and([s_Occurrence[q13] -> f_Function1DPartial_Flags[q13] | q13 : int(1..2)]),
     s_Explicit[1] != s_Explicit[1] ->
     and([f_Function1DPartial_Values[s_Explicit[1]] > f_Function1DPartial_Values[s_Explicit[1]],
          f_Function1DPartial_Flags[s_Explicit[1]], f_Function1DPartial_Flags[s_Explicit[1]];

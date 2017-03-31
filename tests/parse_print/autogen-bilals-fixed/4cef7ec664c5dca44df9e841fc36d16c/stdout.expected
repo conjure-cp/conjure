@@ -1,0 +1,38 @@
+language ESSENCE' 1.0
+
+given given1_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0)
+given given1_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of bool
+find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find var1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
+given given2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..8)
+given given2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..8)] of int(0..3)
+given given2_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
+        matrix indexed by [int(1..8), int(1..3)] of int(2, 2..3)
+find var2_ExplicitWithRepetition_Flag: int(0)
+find var2_ExplicitWithRepetition_Values: matrix indexed by [int(1..0)] of bool
+given given3_ExplicitWithRepetition_Flag: int(0..1)
+given given3_ExplicitWithRepetition_Values: matrix indexed by [int(1)] of bool
+find var3_ExplicitWithRepetition_Flag: int(0..20)
+find var3_ExplicitWithRepetition_Values: matrix indexed by [int(1..20)] of bool
+find var4_1: bool
+such that
+    false,
+    var1_ExplicitVarSizeWithFlags_Flags[2] ->
+    var1_ExplicitVarSizeWithFlags_Values[1] < var1_ExplicitVarSizeWithFlags_Values[2],
+    and([var1_ExplicitVarSizeWithFlags_Flags[q2] = false -> var1_ExplicitVarSizeWithFlags_Values[q2] = false
+             | q2 : int(1..2)]),
+    var1_ExplicitVarSizeWithFlags_Flags[2] -> var1_ExplicitVarSizeWithFlags_Flags[1],
+    var2_ExplicitWithRepetition_Flag <= 0,
+    and([q11 + 1 <= var3_ExplicitWithRepetition_Flag ->
+         var3_ExplicitWithRepetition_Values[q11] <= var3_ExplicitWithRepetition_Values[q11 + 1]
+             | q11 : int(1..19)]),
+    and([q12 > var3_ExplicitWithRepetition_Flag -> var3_ExplicitWithRepetition_Values[q12] = false | q12 : int(1..20)]),
+    and([q14 <= var3_ExplicitWithRepetition_Flag ->
+         sum([toInt(q17 <= var3_ExplicitWithRepetition_Flag) *
+              toInt(var3_ExplicitWithRepetition_Values[q17] = var3_ExplicitWithRepetition_Values[q14])
+                  | q17 : int(1..20)])
+         <= 5
+             | q14 : int(1..20)]),
+    4 <= var3_ExplicitWithRepetition_Flag,
+    var3_ExplicitWithRepetition_Flag <= 4

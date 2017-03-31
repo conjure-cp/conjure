@@ -25,7 +25,7 @@ It comes with a Makefile which sets things up correctly before running cabal-ins
 
     git clone git@github.com:conjure-cp/conjure.git
     cd conjure
-    make install
+    make
 
 It is known to work with
 `GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_,

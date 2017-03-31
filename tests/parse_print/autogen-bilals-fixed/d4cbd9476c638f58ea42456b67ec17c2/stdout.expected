@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+find var1_Function1D: matrix indexed by [int(0, 3)] of int(5, 2..3)
+find var2_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(3, 0)
+find var3_Occurrence: matrix indexed by [int(0, 2)] of bool
+such that
+    2 <= var2_ExplicitVarSizeWithMarker_Marker ->
+    var2_ExplicitVarSizeWithMarker_Values[1] < var2_ExplicitVarSizeWithMarker_Values[2],
+    and([q3 > var2_ExplicitVarSizeWithMarker_Marker -> var2_ExplicitVarSizeWithMarker_Values[q3] = 3 | q3 : int(1..2)]),
+    0 <= var2_ExplicitVarSizeWithMarker_Marker

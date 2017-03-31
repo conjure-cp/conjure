@@ -1,0 +1,85 @@
+language Essence 1.3
+
+find var1:
+        (partition from bool, tuple (bool), function int(-5, -5) --> int(-2..4, 5..5),
+         function int(0) --> bool)
+find var2: function tuple (int(-2..5)) --> tuple (int(0, -1))
+find var3: (int(-2), partition from bool, tuple (bool))
+find var4: bool
+find var5: (set of int(-3..2, -2..3), set of bool, (int(-2..4), int(-1..0)))
+such that
+    true,
+    false,
+    function(mset((function(7 --> false), tuple (-9), mset(false)),
+                  (function(-8 --> true, 3 --> false), tuple (3), (mset() : `mset of bool`)),
+                  (function(-10 --> false), tuple (-1), mset(false, true))) --> relation((9 + 6,
+                                                                                          mset(-5, 7), {false, true},
+                                                                                          mset(0, -8),
+                                                                                          partition({false}, {false})),
+                                                                                         (8, mset(-9, 9), {false},
+                                                                                          mset(-7),
+                                                                                          partition({false, false})),
+                                                                                         (toInt(true),
+                                                                                          (mset() : `mset of int`),
+                                                                                          {false}, mset(-7),
+                                                                                          partition({true, false}))))
+    =
+    function(mset((function(2 --> false, -7 --> true), tuple (9), mset(true)),
+                  (function(-6 --> false, 0 --> true), tuple (-7), mset(false, false)),
+                  (function(4 --> false), tuple (7), mset(false)),
+                  (function(5 --> true), tuple (6), mset(false)),
+                  (function(-7 --> true, -10 --> true), tuple (-7), mset(false, true)),
+                  (function(-2 --> true, -8 --> false), tuple (8),
+                   mset(false, false))) --> relation((toInt(true), mset(10), ({} : `set of bool`),
+                                                      mset(9, 5), partition({true}, {true})),
+                                                     (-8, (mset() : `mset of int`), {false, true}, mset(-8, -9),
+                                                      partition({false})),
+                                                     (toInt(true), mset(7), {true, true}, mset(2), partition({false}))),
+             mset((function(-4 --> true), tuple (5), mset(true)),
+                  (function(-3 --> false), tuple (4), (mset() : `mset of bool`)),
+                  (function(5 --> false), tuple (-7), mset(false)),
+                  (function(-4 --> true), tuple (6), mset(false, true)),
+                  (function(8 --> false, -9 --> false), tuple (-7),
+                   (mset() : `mset of bool`))) --> relation((toInt(true), mset(7), {true, true},
+                                                             mset(1, 10), partition({true}, {false})),
+                                                            (9, mset(9), ({} : `set of bool`), mset(6),
+                                                             partition({false})),
+                                                            (1 ** -1, mset(-7, -1), {false, true}, mset(-8, 5),
+                                                             partition({true}, {false}))),
+             mset((function(10 --> false, 3 --> true), tuple (-6), mset(false, true)),
+                  (function(-2 --> false, 8 --> true), tuple (-2), mset(true)),
+                  (function(-7 --> false, -8 --> false), tuple (-10), mset(false, true)),
+                  (function(8 --> false), tuple (7), (mset() : `mset of bool`)),
+                  (function(-8 --> false), tuple (-9),
+                   (mset() : `mset of bool`))) --> relation((toInt(true), mset(-8), {false},
+                                                             mset(8), partition({true, false})),
+                                                            (-8, mset(-3), ({} : `set of bool`), mset(-6),
+                                                             partition({true})),
+                                                            (8, mset(6, 9), {true, true}, mset(0, -7),
+                                                             partition({true}, {true}))),
+             (mset() : `mset of (function int --> bool, tuple(int),
+                                 mset of bool)`) --> relation((-8, mset(-1, 9), {false, true}, mset(8, -7),
+                                                               partition({false}, {true})),
+                                                              (3, mset(5, -3), {false}, (mset() : `mset of int`),
+                                                               partition({false})),
+                                                              (toInt(true), mset(4), {false, true}, mset(10),
+                                                               partition({true})))),
+    false,
+    party(({} : `set of bool`), partition({({} : `set of bool`)})) -
+    {{false, true = false}, {var4}}
+    =
+    parts(partition({var4}, {false \/ false, true <-> true}, {false /\ true}))
+    intersect (parts(partition({false})) - parts(partition({true}))),
+    partition({(mset() : `mset of set of bool`)},
+              {mset(({} : `set of bool`)), mset(({} : `set of bool`))})
+    !=
+    partition({mset({false, false}, ({} : `set of bool`), {false})},
+              {mset({true, false}, {true})}, {(mset() : `mset of set of bool`)},
+              {(mset() : `mset of set of bool`)})
+    <->
+    {(function(false --> 5, false --> 7), partition({true}, {false}))} =
+    {(function(false --> 7), partition({false})),
+     (function(true --> -5, false --> -5), partition({true}, {false})),
+     (function(true --> 6), partition({true}, {true})),
+     (function(true --> -7), partition({false})),
+     (function(true --> 5), partition({true}))}

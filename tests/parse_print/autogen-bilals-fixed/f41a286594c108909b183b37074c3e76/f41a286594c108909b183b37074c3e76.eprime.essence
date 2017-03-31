@@ -1,0 +1,105 @@
+language ESSENCE' 1.0
+
+find var1: int(3..4, 5..5)
+find var2: int(3, 3)
+find var3: bool
+find var4_Occurrence: matrix indexed by [int(3, 2..4), int(1..4, 2..5)] of bool
+find var5_RelationAsSet_ExplicitVarSizeWithMarker_Marker: int(0..64)
+find var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1:
+        matrix indexed by [int(1..64)] of int(5..5, 4..4)
+find var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2:
+        matrix indexed by [int(1..64)] of bool
+find var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3:
+        matrix indexed by [int(1..64)] of bool
+find var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_2:
+        matrix indexed by [int(1..64), int(5, 3..4)] of bool
+find var6_ExplicitVarSizeWithMarker_Marker: int(0..2)
+find var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker:
+        matrix indexed by [int(1..2)] of int(0..4)
+find var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit:
+        matrix indexed by [int(1..2), int(1..4), int(1..0)] of int(2..2, 5)
+minimising var1
+such that
+    var3,
+    and([sum([toInt(var4_Occurrence[q1, q2]) | q2 : int(1..4, 2..5)]) <= 4
+             | q1 : int(3, 2..4)]),
+    and([q3 + 1 <= var5_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3] <
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3 + 1]
+         \/
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3] =
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3 + 1]
+         /\
+         (var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3] <
+          var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3 + 1]
+          \/
+          var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3] =
+          var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3 + 1]
+          /\
+          var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q3] <
+          var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q3 + 1])
+         \/
+         and([var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3] =
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q3 + 1],
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3] =
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q3 + 1],
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q3] =
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q3 + 1]; int(1..3)])
+         /\
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q3, ..] <lex
+         var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q3 + 1, ..]
+             | q3 : int(1..63)]),
+    and([q4 > var5_RelationAsSet_ExplicitVarSizeWithMarker_Marker ->
+         and([var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_1[q4] = 5,
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_2[q4] = false,
+              var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_1_3[q4] = false; int(1..3)])
+         /\
+         and([var5_RelationAsSet_ExplicitVarSizeWithMarker_Values_2[q4, q22] = false
+                  | q22 : int(5, 3..4)])
+             | q4 : int(1..64)]),
+    1 <= var5_RelationAsSet_ExplicitVarSizeWithMarker_Marker,
+    2 <= var6_ExplicitVarSizeWithMarker_Marker ->
+    var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[1]
+    <
+    var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[2]
+    \/
+    var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[1]
+    =
+    var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[2]
+    /\
+    flatten(var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[1,
+                                                                                                           .., ..])
+    <lex
+    flatten(var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[2,
+                                                                                                           .., ..]),
+    and([q8 > var6_ExplicitVarSizeWithMarker_Marker ->
+         var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[q8]
+         = 0 | q8 : int(1..2)]),
+    and([q9 <= var6_ExplicitVarSizeWithMarker_Marker -> false | q9 : int(1..2)]),
+    and([q9 <= var6_ExplicitVarSizeWithMarker_Marker ->
+         and([q19 <=
+              var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[q9]
+              -> false
+                  | q19 : int(1..4)])
+             | q9 : int(1..2)]),
+    and([q9 <= var6_ExplicitVarSizeWithMarker_Marker ->
+         and([q13 + 1 <=
+              var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[q9]
+              ->
+              var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[q9,
+                                                                                                             q13, ..]
+              <lex
+              var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Values_Explicit[q9,
+                                                                                                             q13 + 1,
+                                                                                                             ..]
+                  | q13 : int(1..3)])
+             | q9 : int(1..2)]),
+    and([q9 <= var6_ExplicitVarSizeWithMarker_Marker ->
+         3 <=
+         var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[q9]
+             | q9 : int(1..2)]),
+    and([q9 <= var6_ExplicitVarSizeWithMarker_Marker ->
+         var6_ExplicitVarSizeWithMarker_Values_PartitionAsSet_ExplicitVarSizeWithMarker_Marker[q9]
+         <= 4
+             | q9 : int(1..2)])
+
