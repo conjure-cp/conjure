@@ -284,10 +284,20 @@ rule_Comprehension_HistFor_gcc_eq = "matrix-histFor-gcc-eq" `namedRule` theRule 
     theRule _ = na "rule_Comprehension_HistFor_gcc_eq"
 
     helper out m bins = do
+        traceM $ show $ "m" <+> pretty m
+        tyM <- typeOf m
+        traceM $ show $ "ty" <+> pretty tyM
+        traceM $ show $ "bins" <+> pretty bins
+        tyBins <- typeOf bins
+        traceM $ show $ "ty" <+> pretty tyBins
         TypeMatrix _ mInner    <- typeOf m
         TypeMatrix _ binsInner <- typeOf bins
         mIndex:_               <- indexDomainsOf m
+        traceM $ show $ "mInner" <+> pretty mInner
+        traceM $ show $ "mIndex" <+> pretty mIndex
         binsIndex:_            <- indexDomainsOf bins
+        traceM $ show $ "binsInner" <+> pretty binsInner
+        traceM $ show $ "binsIndex" <+> pretty binsIndex
         case binsInner of
             _ | typeUnify mInner binsInner ->
                 na "rule_Comprehension_HistFor_gcc_eq"
@@ -298,7 +308,8 @@ rule_Comprehension_HistFor_gcc_eq = "matrix-histFor-gcc-eq" `namedRule` theRule 
                 --         return [essence| sum &jPat : &mIndex . toInt(&m[&j] = &n[&i])
                 --                          |]
                 --     )
-            TypeTuple [lb, ub] | typesUnify [mInner,lb,ub] ->
+            TypeTuple [lb, ub] | typesUnify [mInner,lb,ub] -> do
+                traceM "here"
                 return
                     ( "Rule for histogram, indexed"
                     , do
@@ -312,20 +323,22 @@ rule_Comprehension_HistFor_gcc_eq = "matrix-histFor-gcc-eq" `namedRule` theRule 
                         (whichBinPat, whichBin) <- quantifiedVar
                         (kPat, k) <- quantifiedVar
 
-                        return $ WithLocals
-                            [essence| gcc(&m_whichBin, [ &k | &kPat : &binsIndex ], &out) |]
-                            (AuxiliaryVars
-                                [ Declaration (FindOrGiven LocalFind m_whichBinName m_whichBinDom)
-                                , SuchThat
-                                    [ [essence|
-                                        forAll &iPat : &mIndex .
-                                            forAll &whichBinPat : &binsIndex .
-                                                (&m[&i] >= &bins[&whichBin][1] /\ &m[&i] < &bins[&whichBin][2])
-                                                <->
-                                                &m_whichBin[&i] = &whichBin
-                                              |]
-                                    ]
-                                ])
+                        let outtt = WithLocals
+                                [essence| gcc(&m_whichBin, [ &k | &kPat : &binsIndex ], &out) |]
+                                (AuxiliaryVars
+                                    [ Declaration (FindOrGiven LocalFind m_whichBinName m_whichBinDom)
+                                    , SuchThat
+                                        [ [essence|
+                                            forAll &iPat : &mIndex .
+                                                forAll &whichBinPat : &binsIndex .
+                                                    (&m[&i] >= &bins[&whichBin][1] /\ &m[&i] < &bins[&whichBin][2])
+                                                    <->
+                                                    &m_whichBin[&i] = &whichBin
+                                                  |]
+                                        ]
+                                    ])
+                        traceM $ "there" ++ show (pretty outtt)
+                        return outtt
                     )
             _ -> na "rule_Comprehension_HistFor_gcc_eq"
 

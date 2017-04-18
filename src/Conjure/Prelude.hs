@@ -202,7 +202,7 @@ import System.CPUTime ( getCPUTime )
 -- time
 import Data.Time.Clock ( getCurrentTime )
 
-import Debug.Trace as X ( trace )
+import Debug.Trace as X ( trace, traceM )
 
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
