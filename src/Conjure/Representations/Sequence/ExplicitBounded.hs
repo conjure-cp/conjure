@@ -43,7 +43,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 size])
+                      (DomainInt [RangeBounded 0 size])
                       innerDomain
                   ) ]
         downD (name, domain@(DomainSequence
@@ -57,7 +57,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 maxSize])
+                      (DomainInt [RangeBounded 0 maxSize])
                       innerDomain
                   ) ]
         downD _ = na "{downD} ExplicitBounded"
@@ -190,8 +190,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   , ConstantInt (genericLength constants)
                   )
                 , ( nameValues domain name
-                  , DomainMatrix (DomainInt [RangeBounded 1 size]) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (DomainInt [RangeBounded 1 size]) constants
+                  , DomainMatrix (DomainInt [RangeBounded 0 size]) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (DomainInt [RangeBounded 0 size]) constants
                   )
                 ]
         downC ( name
