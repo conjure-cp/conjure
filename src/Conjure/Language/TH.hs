@@ -28,12 +28,12 @@ essenceStmts = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
-        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
@@ -43,12 +43,12 @@ essence = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
-        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
@@ -58,12 +58,12 @@ essenceDomain = QuasiQuoter
     { quoteExp = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str
-        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP) e
+        let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
         appE [| $(varE (mkName "fixRelationProj")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str
-        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP) e
+        dataToPatQ (const Nothing `extQ` patE `extQ` patD `extQ` patAP `extQ` patName) e
     , quoteType = bug "quoteType"
     , quoteDec  = bug "quoteDec"
     }
@@ -88,18 +88,26 @@ expAP :: AbstractPattern -> Maybe ExpQ
 expAP (AbstractPatternMetaVar x) = Just [| $(varE (mkName x)) |]
 expAP _ = Nothing
 
+expName :: Name -> Maybe ExpQ
+expName (NameMetaVar x) = Just [| $(varE (mkName x)) |]
+expName _ = Nothing
+
 
 patE :: Expression -> Maybe PatQ
 patE (ExpressionMetaVar x) = toPat x
 patE _ = Nothing
 
 patD :: Domain () Expression -> Maybe PatQ
-patD (DomainMetaVar x) = Just (varP (mkName x))
+patD (DomainMetaVar x) = toPat x
 patD _ = Nothing
 
 patAP :: AbstractPattern -> Maybe PatQ
-patAP (AbstractPatternMetaVar x) = Just (varP (mkName x))
+patAP (AbstractPatternMetaVar x) = toPat x
 patAP _ = Nothing
+
+patName :: Name -> Maybe PatQ
+patName (NameMetaVar x) = toPat x
+patName _ = Nothing
 
 
 toPat :: String -> Maybe PatQ
