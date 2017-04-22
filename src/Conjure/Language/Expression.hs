@@ -579,7 +579,8 @@ quantifiedVarOverDomain domain = do
 --   snd: the expression to be used everywhere else
 auxiliaryVar :: NameGen m => m (Name, Expression)
 auxiliaryVar = do
-    nm <- nextName "aux"
+    -- Savile Row has a bug which is triggered when there are variables with names of the form aux*
+    nm <- nextName "conjure_aux"
     let ref = Reference nm Nothing
     return (nm, ref)
 
