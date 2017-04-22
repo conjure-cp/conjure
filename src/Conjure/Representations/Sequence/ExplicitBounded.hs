@@ -230,8 +230,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                     case marker of
                         ConstantInt card ->
                             case viewConstantMatrix constantMatrix of
-                                -- TODO: we are ignoring the 0th value here, revert this when the 0th value is removed
-                                Just (_, _:vals) ->
+                                Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)
