@@ -1840,11 +1840,12 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             []  -> na "No condition to inline."
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
+        bodySkipped <- opSkip theGuard body
         return
             [ RuleResult
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
                 , ruleResultType  = ExpressionRefinement
-                , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResult      = return $ Comprehension bodySkipped toKeep
                 , ruleResultHook  = Nothing
                 } ]
     theRule _ _ = na "rule_InlineConditions"
@@ -1869,9 +1870,31 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
-    opAndSkip b x = [essence| &b -> &x |]
-    opOrSkip  b x = [essence| &b /\ &x |]
-    opSumSkip b x = [essence| toInt(&b) * &x |]
+    opAndSkip b x = return [essence| &b -> &x |]
+    opOrSkip  b x = return [essence| &b /\ &x |]
+    opSumSkip b x = do
+        domX <- domainOf x
+        -- extend the domain to include 0
+        domX0 <- case domX of
+                    DomainInt rs | or [ case r of
+                                            RangeSingle 0 -> True
+                                            RangeLowerBounded 0 -> True
+                                            RangeUpperBounded 0 -> True
+                                            RangeBounded 0 _ -> True
+                                            RangeBounded _ 0 -> True
+                                            _ -> False
+                                      | r <- rs
+                                      ] -> return (DomainInt rs)
+                    DomainInt rs -> return $ DomainInt (RangeSingle 0:rs)
+                    _ -> bug ("opSumSkip, unexpected domain:" <+> pretty domX)
+        (auxName, aux) <- auxiliaryVar
+        return [essence| { &aux
+                         @ find &auxName : &domX0
+                           such that
+                             &b -> &aux = &x,
+                             !&b -> &aux = 0
+                         }
+                       |]
 
 
 rule_InlineConditions_MaxMin :: Rule
