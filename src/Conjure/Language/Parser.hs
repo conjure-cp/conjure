@@ -92,7 +92,7 @@ parseTopLevels = do
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
-                        is <- commaSeparated parseName
+                        is <- commaSeparated (parseName <|> NameMetaVar <$> parseMetaVariable)
                         j  <- colon >> parseDomain
                         return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
