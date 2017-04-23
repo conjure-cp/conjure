@@ -103,8 +103,8 @@ install:
   - conjure --version                        # print version
 
   # Savile Row
-  - (savilerow | grep 'c9d0b46c82b2') || etc/build/install-savilerow.sh
-  - savilerow | head -n2 | tail -n1          # print version
+  - (savilerow -help | grep '726042477d4b') || etc/build/install-savilerow.sh
+  - savilerow -help | head -n1               # print version
 
   # Lingeling
   - (lingeling --help > /dev/null) || (CC=${COMPILER_C} etc/build/install-lingeling.sh)
