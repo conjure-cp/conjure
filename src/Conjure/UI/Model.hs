@@ -1905,7 +1905,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
         -- for each element, we do element-lowerBound+1
         -- this makes sure the smallest element is 1
         -- hence we can use 0 as the except value!
-        let bodySkipped = [essence| toInt(!&theGuard) * (&body + (1 - &lowerBound)) |]
+        let bodySkipped = [essence| toInt(&theGuard) * catchUndef(&body + (1 - &lowerBound), 0) |]
 
         return
             ( "Inlining conditions, inside allDiff"
