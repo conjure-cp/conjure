@@ -1859,7 +1859,8 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             Nothing -> na "rule_InlineConditions (meh-1)"
             Just z -> do
                 let h = hole z
-                case (match opAnd h, match opOr h, match opSum h, match opMin h, match opMax h) of
+                case ( match opAnd h, match opOr h, match opSum h
+                     , match opMin h, match opMax h ) of
                     (Just{}, _, _, _, _) -> return ("and", opAndSkip)
                     (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
                     (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
