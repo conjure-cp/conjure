@@ -9,18 +9,18 @@ such that
     and([q2 > x_ExplicitWithRepetition_Flag -> x_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..36)]),
     and([q3 <= x_ExplicitWithRepetition_Flag ->
          sum([toInt(q7 <= x_ExplicitWithRepetition_Flag) *
-              toInt(x_ExplicitWithRepetition_Values[q7] = x_ExplicitWithRepetition_Values[q3])
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q7] = x_ExplicitWithRepetition_Values[q3]), 0)
                   | q7 : int(1..36)])
          = 0
          \/
          sum([toInt(q9 <= x_ExplicitWithRepetition_Flag) *
-              toInt(x_ExplicitWithRepetition_Values[q9] = x_ExplicitWithRepetition_Values[q3])
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q9] = x_ExplicitWithRepetition_Values[q3]), 0)
                   | q9 : int(1..36)])
          >= 2
              | q3 : int(1..36)]),
     and([q4 <= x_ExplicitWithRepetition_Flag ->
          sum([toInt(q11 <= x_ExplicitWithRepetition_Flag) *
-              toInt(x_ExplicitWithRepetition_Values[q11] = x_ExplicitWithRepetition_Values[q4])
+              catchUndef(toInt(x_ExplicitWithRepetition_Values[q11] = x_ExplicitWithRepetition_Values[q4]), 0)
                   | q11 : int(1..36)])
          <= 3
              | q4 : int(1..36)])

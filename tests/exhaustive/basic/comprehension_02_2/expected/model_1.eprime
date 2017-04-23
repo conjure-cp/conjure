@@ -4,7 +4,7 @@ find x: int(0..1000)
 find y: int(7, 8)
 such that
     x =
-    sum([toInt(i_Occurrence[y]) * j
+    sum([toInt(i_Occurrence[y]) * catchUndef(j, 0)
              | i_Occurrence : matrix indexed by [int(7..8)] of bool, j : int(7..8),
                1 <= sum([toInt(i_Occurrence[q1]) | q1 : int(7..8)]),
                sum([toInt(i_Occurrence[q1]) | q1 : int(7..8)]) <= 2, i_Occurrence[j]])

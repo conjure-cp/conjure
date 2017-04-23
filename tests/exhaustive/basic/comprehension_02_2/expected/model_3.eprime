@@ -6,7 +6,7 @@ such that
     x =
     sum([toInt(or([i_ExplicitVarSizeWithMarker_Values[q6] = y
                        | q6 : int(1..2), q6 <= i_ExplicitVarSizeWithMarker_Marker]))
-         * i_ExplicitVarSizeWithMarker_Values[q4]
+         * catchUndef(i_ExplicitVarSizeWithMarker_Values[q4], 0)
              | i_ExplicitVarSizeWithMarker_Marker : int(0..2),
                i_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..2)] of int(7..8), q4 : int(1..2),
                2 <= i_ExplicitVarSizeWithMarker_Marker ->

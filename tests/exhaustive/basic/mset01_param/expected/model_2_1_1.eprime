@@ -10,14 +10,15 @@ such that
                   | q11 : int(1..fin1 * 2), q11 <= g_ExplicitWithRepetition_Flag])
          =
          sum([toInt(x_ExplicitWithFlags_Values[q9] = g_ExplicitWithRepetition_Values[q8]) *
-              x_ExplicitWithFlags_Flags[q9]
+              catchUndef(x_ExplicitWithFlags_Flags[q9], 0)
                   | q9 : int(1..4)])
              | q8 : int(1..fin1 * 2), q8 <= g_ExplicitWithRepetition_Flag]),
     and([x_ExplicitWithFlags_Flags[q12] > 0 ->
          sum([toInt(g_ExplicitWithRepetition_Values[q15] = x_ExplicitWithFlags_Values[q12])
                   | q15 : int(1..fin1 * 2), q15 <= g_ExplicitWithRepetition_Flag])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q13] = x_ExplicitWithFlags_Values[q12]) * x_ExplicitWithFlags_Flags[q13]
+         sum([toInt(x_ExplicitWithFlags_Values[q13] = x_ExplicitWithFlags_Values[q12]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q13], 0)
                   | q13 : int(1..4)])
              | q12 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q1 + 1] > 0 -> x_ExplicitWithFlags_Values[q1] < x_ExplicitWithFlags_Values[q1 + 1]

@@ -9,14 +9,17 @@ such that
     and([sum([g_ExplicitWithFlags_Flags[q9]
                   | q9 : int(1..fin1), g_ExplicitWithFlags_Values[q9] = g_ExplicitWithFlags_Values[q8]])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q10] = g_ExplicitWithFlags_Values[q8]) * x_ExplicitWithFlags_Flags[q10]
+         sum([toInt(x_ExplicitWithFlags_Values[q10] = g_ExplicitWithFlags_Values[q8]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q10], 0)
                   | q10 : int(1..4)])
              | q8 : int(1..fin1), g_ExplicitWithFlags_Flags[q8] > 0]),
     and([x_ExplicitWithFlags_Flags[q11] > 0 ->
-         sum([toInt(g_ExplicitWithFlags_Values[q12] = x_ExplicitWithFlags_Values[q11]) * g_ExplicitWithFlags_Flags[q12]
+         sum([toInt(g_ExplicitWithFlags_Values[q12] = x_ExplicitWithFlags_Values[q11]) *
+              catchUndef(g_ExplicitWithFlags_Flags[q12], 0)
                   | q12 : int(1..fin1)])
          =
-         sum([toInt(x_ExplicitWithFlags_Values[q13] = x_ExplicitWithFlags_Values[q11]) * x_ExplicitWithFlags_Flags[q13]
+         sum([toInt(x_ExplicitWithFlags_Values[q13] = x_ExplicitWithFlags_Values[q11]) *
+              catchUndef(x_ExplicitWithFlags_Flags[q13], 0)
                   | q13 : int(1..4)])
              | q11 : int(1..4)]),
     and([x_ExplicitWithFlags_Flags[q1 + 1] > 0 -> x_ExplicitWithFlags_Values[q1] < x_ExplicitWithFlags_Values[q1 + 1]
