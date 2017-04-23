@@ -1300,6 +1300,7 @@ otherRules =
         ]
 
     ,   [ rule_InlineConditions
+        , rule_InlineConditions_AllDiff
         , rule_InlineConditions_MaxMin
         ]
     ]
@@ -1896,6 +1897,43 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                              !&b -> &aux = 0
                          }
                        |]
+
+
+rule_InlineConditions_AllDiff :: Rule
+rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule where
+    theRule (Op (MkOpAllDiff (OpAllDiff (Comprehension body gensOrConds)))) = do
+        let (toInline, toKeep) = mconcat
+                [ case goc of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[goc])
+                | goc <- gensOrConds
+                ]
+        theGuard <- case toInline of
+            []  -> na "No condition to inline."
+            xs  -> return $ make opAnd $ fromList xs
+
+        domBody <- domainOf body
+        let
+            collectLowerBounds (RangeSingle x) = return x
+            collectLowerBounds (RangeBounded x _) = return x
+            collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
+
+            collectLowerBoundsD (DomainInt rs) = mapM collectLowerBounds rs
+            collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
+
+        bounds <- collectLowerBoundsD domBody
+        let lowerBound = make opMin (fromList bounds)
+
+        -- for each element, we do element-lowerBound+1
+        -- this makes sure the smallest element is 1
+        -- hence we can use 0 as the except value!
+        let bodySkipped = [essence| toInt(!&theGuard) * (&body + (1 - &lowerBound)) |]
+
+        return
+            ( "Inlining conditions, inside allDiff"
+            , return $ make opAllDiffExcept (Comprehension bodySkipped toKeep) 0
+            )
+    theRule _ = na "rule_InlineConditions_AllDiff"
 
 
 rule_InlineConditions_MaxMin :: Rule
