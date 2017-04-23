@@ -1874,29 +1874,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
 
     opAndSkip b x = return [essence| &b -> &x |]
     opOrSkip  b x = return [essence| &b /\ &x |]
-    opSumSkip b x = do
-        domX <- domainOf x
-        -- extend the domain to include 0
-        domX0 <- case domX of
-                    DomainInt rs | or [ case r of
-                                            RangeSingle 0 -> True
-                                            RangeLowerBounded 0 -> True
-                                            RangeUpperBounded 0 -> True
-                                            RangeBounded 0 _ -> True
-                                            RangeBounded _ 0 -> True
-                                            _ -> False
-                                      | r <- rs
-                                      ] -> return (DomainInt rs)
-                    DomainInt rs -> return $ DomainInt (RangeSingle 0:rs)
-                    _ -> bug ("opSumSkip, unexpected domain:" <+> pretty domX)
-        (auxName, aux) <- auxiliaryVar
-        return [essence| { &aux
-                         @ find &auxName : &domX0
-                           such that
-                             &b -> &aux = &x,
-                             !&b -> &aux = 0
-                         }
-                       |]
+    opSumSkip b x = return [essence| toInt(&b) * catchUndef(&x, 0) |]
 
 
 rule_InlineConditions_AllDiff :: Rule
