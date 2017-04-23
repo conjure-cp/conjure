@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+find m: matrix indexed by [int(1..5)] of int(0..10)
+such that
+    m[1] = 1,
+    m[2] = 2,
+    m[3] = 3,
+    m[4] = 0,
+    m[5] = 0,
+    alldifferent_except(m, 0)
+
