@@ -149,7 +149,10 @@ data Lexeme
     -- global constraints
     | L_allDiff
     | L_alldifferent_except
+
     | L_dontCare
+
+    | L_catchUndef
 
     -- matrix only operators
     | L_flatten
@@ -393,6 +396,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_alldifferent_except, "alldifferent_except" )
 
     , ( L_dontCare, "dontCare" )
+    , ( L_catchUndef, "catchUndef" )
+
     , ( L_flatten, "flatten" )
     , ( L_concatenate, "concatenate" )
     , ( L_normIndices, "normIndices" )

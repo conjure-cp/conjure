@@ -85,6 +85,11 @@ mkOp op xs =
             L_range        -> inject $ MkOpRange        $ OpRange        (arg xs 0 "range")
             L_restrict     -> inject $ MkOpRestrict     $ OpRestrict     (arg xs 0 "restrict") (arg xs 1 "restrict")
             L_allDiff      -> inject $ MkOpAllDiff      $ OpAllDiff      (arg xs 0 "allDiff")
+            L_alldifferent_except -> inject $ MkOpAllDiffExcept $ OpAllDiffExcept
+                                                                         (arg xs 0 "allDiffExcept")
+                                                                         (arg xs 1 "allDiffExcept")
+            L_catchUndef   -> inject $ MkOpCatchUndef   $ OpCatchUndef   (arg xs 0 "catchUndef")
+                                                                         (arg xs 1 "catchUndef")
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (arg xs 0 "dontCare")
             L_toSet        -> inject $ MkOpToSet        $ OpToSet        (arg xs 0 "toSet")
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (arg xs 0 "toMSet")
