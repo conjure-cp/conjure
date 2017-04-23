@@ -41,7 +41,6 @@ import Data.Algorithm.DiffOutput ( ppDiff )
 srOptionsMk :: String -> [Text]
 srOptionsMk srExtraOptions =
     [ "-run-solver"
-    , "-minion"
     -- , "-timelimit"      , "1200000"
     -- , "-solver-options" , "-cpulimit 1200"
     , "-all-solutions"
