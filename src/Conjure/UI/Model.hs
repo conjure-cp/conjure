@@ -1841,7 +1841,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             []  -> na "No condition to inline."
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
-        bodySkipped <- opSkip theGuard body
+        let bodySkipped = opSkip theGuard body
         return
             [ RuleResult
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
@@ -1872,9 +1872,9 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                                             --     Nothing -> na "queryQ"
                                             --     Just u  -> queryQ u
 
-    opAndSkip b x = return [essence| &b -> &x |]
-    opOrSkip  b x = return [essence| &b /\ &x |]
-    opSumSkip b x = return [essence| toInt(&b) * catchUndef(&x, 0) |]
+    opAndSkip b x = [essence| &b -> &x |]
+    opOrSkip  b x = [essence| &b /\ &x |]
+    opSumSkip b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
 
 
 rule_InlineConditions_AllDiff :: Rule
