@@ -871,19 +871,27 @@ parseLiteral :: Parser Expression
 parseLiteral = label "value" $ msum
     [ Constant <$> pBool
     , Constant <$> pInt
-    , AbstractLiteral <$> pMatrix
-    , AbstractLiteral <$> pTupleWith
-    , AbstractLiteral <$> pTupleWithout
-    , AbstractLiteral <$> pRecord
-    , AbstractLiteral <$> pVariant
-    , AbstractLiteral <$> pSet
-    , AbstractLiteral <$> pMSet
-    , AbstractLiteral <$> pFunction
-    , AbstractLiteral <$> pSequence
-    , AbstractLiteral <$> pRelation
-    , AbstractLiteral <$> pPartition
+    , mkAbstractLiteral <$> pMatrix
+    , mkAbstractLiteral <$> pTupleWith
+    , mkAbstractLiteral <$> pTupleWithout
+    , mkAbstractLiteral <$> pRecord
+    , mkAbstractLiteral <$> pVariant
+    , mkAbstractLiteral <$> pSet
+    , mkAbstractLiteral <$> pMSet
+    , mkAbstractLiteral <$> pFunction
+    , mkAbstractLiteral <$> pSequence
+    , mkAbstractLiteral <$> pRelation
+    , mkAbstractLiteral <$> pPartition
     ]
     where
+
+        -- convert x to a constant if possible
+        -- might save us from evaluating it again and again later
+        mkAbstractLiteral x =
+            case e2c (AbstractLiteral x) of
+                Nothing -> AbstractLiteral x
+                Just c  -> Constant c
+
         pBool = do
             x <- False <$ lexeme L_false
                  <|>
