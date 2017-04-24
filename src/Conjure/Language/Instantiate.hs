@@ -57,9 +57,6 @@ instantiateDomain
 instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (instantiateD x) ctxt
 
 
-newtype HasUndef = HasUndef Any
-    deriving (Monoid)
-
 instantiateE
     :: ( MonadFail m
        , MonadState [(Name, Expression)] m
@@ -73,7 +70,7 @@ instantiateE (Comprehension body gensOrConds) = do
         loop :: ( MonadFail m
                 , MonadState [(Name, Expression)] m
                 , EnumerateDomain m
-                ) => [GeneratorOrCondition] -> WriterT HasUndef m [Constant]
+                ) => [GeneratorOrCondition] -> MaybeT m [Constant]
         loop [] = return <$> instantiateE body
         loop (Generator (GenDomainNoRepr pat domain) : rest) = do
             DomainInConstant domainConstant <- instantiateE (Domain domain)
@@ -91,28 +88,9 @@ instantiateE (Comprehension body gensOrConds) = do
                                 then loop rest
                                 else return [] )
                         enumeration
-                else do
-                    tell (HasUndef (Any True))
-                    return []
-        loop (Generator (GenDomainHasRepr pat domain) : rest) = do
-            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
-            let undefinedsInsideTheDomain =
-                    [ und
-                    | und@ConstantUndefined{} <- universeBi domainConstant
-                    ]
-            if null undefinedsInsideTheDomain
-                then do
-                    enumeration <- enumerateDomain domainConstant
-                    concatMapM
-                        (\ val -> scope $ do
-                            valid <- bind (Single pat) val
-                            if valid
-                                then loop rest
-                                else return [] )
-                        enumeration
-                else do
-                    tell (HasUndef (Any True))
-                    return []
+                else MaybeT (return Nothing)
+        loop (Generator (GenDomainHasRepr pat domain) : rest) =
+            loop (Generator (GenDomainNoRepr (Single pat) (forgetRepr domain)) : rest)
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
             enumeration <- enumerateInConstant exprConstant
@@ -135,14 +113,14 @@ instantiateE (Comprehension body gensOrConds) = do
             loop rest
 
 
-    (constants, HasUndef (Any undefinedsInsideGeneratorDomains)) <- runWriterT (loop gensOrConds)
-    if undefinedsInsideGeneratorDomains
-        then do
+    mconstants <- runMaybeT (loop gensOrConds)
+    case mconstants of
+        Nothing -> do
             ty <- typeOf (Comprehension body gensOrConds)
             return $ ConstantUndefined
                 "Comprehension contains undefined values inside generator domains."
                 ty
-        else
+        Just constants ->
             return $ ConstantAbstract $ AbsLitMatrix
                 (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
                 constants
