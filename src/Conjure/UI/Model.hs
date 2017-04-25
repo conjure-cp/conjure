@@ -640,10 +640,10 @@ updateDeclarations model = do
                     let
                         go vars1 = do
                             vars2 <- fmap concat $ forM vars1 $ \ v -> do
-                                vs <- downX1 v
-                                if null vs
-                                    then return [v]
-                                    else return vs
+                                mvs <- runMaybeT (downX1 v)
+                                case mvs of
+                                    Nothing -> return [v]
+                                    Just vs -> return vs
                             if vars1 == vars2
                                 then return vars1
                                 else go vars2

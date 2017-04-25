@@ -66,6 +66,11 @@ instance NameGen m => NameGen (ExceptT m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
+instance NameGen m => NameGen (MaybeT m) where
+    nextName = lift . nextName
+    exportNameGenState = lift exportNameGenState
+    importNameGenState = lift . importNameGenState
+
 instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     nextName = lift . nextName
     exportNameGenState = lift exportNameGenState
