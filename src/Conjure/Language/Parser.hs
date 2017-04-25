@@ -872,7 +872,7 @@ parseLiteral = label "value" $ msum
     , mkAbstractLiteral <$> pTupleWith
     , mkAbstractLiteral <$> pTupleWithout
     , mkAbstractLiteral <$> pRecord
-    , mkAbstractLiteral <$> pVariant
+    , AbstractLiteral <$> pVariant
     , mkAbstractLiteral <$> pSet
     , mkAbstractLiteral <$> pMSet
     , mkAbstractLiteral <$> pFunction
