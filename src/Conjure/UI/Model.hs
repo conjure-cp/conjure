@@ -636,7 +636,7 @@ updateDeclarations model = do
                             return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
-                SNS_Neighbourhood name sizeVarName sizeVarDom cons vars -> do
+                SNS_Neighbourhood name activationVarName sizeVarName vars -> do
                     let
                         go vars1 = do
                             vars2 <- fmap concat $ forM vars1 $ \ v -> do
@@ -648,7 +648,7 @@ updateDeclarations model = do
                                 then return vars1
                                 else go vars2
                     vars' <- go vars
-                    return [SNS_Neighbourhood name sizeVarName sizeVarDom cons vars']
+                    return [SNS_Neighbourhood name activationVarName sizeVarName vars']
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =

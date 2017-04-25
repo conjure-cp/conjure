@@ -116,12 +116,9 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
-        SNS_Neighbourhood name sizeVarName sizeVarDom cons vars -> do
-            sizeVarDom' <- resolveD sizeVarDom
-            modify ((sizeVarName, DeclNoRepr Find sizeVarName sizeVarDom' NoRegion) :)
-            cons' <- resolveX cons
+        SNS_Neighbourhood name activationVarName sizeVarName vars -> do
             vars' <- mapM resolveX vars
-            return (SNS_Neighbourhood name sizeVarName sizeVarDom' cons' vars')
+            return (SNS_Neighbourhood name activationVarName sizeVarName vars')
         IncumbentMapping{} -> return st
 
 

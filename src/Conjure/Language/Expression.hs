@@ -56,9 +56,8 @@ data Statement
     | Objective Objective Expression
     | SuchThat [Expression]
     | SNS_Neighbourhood Name                    -- the name of the neighbourhood
+                        Name                    -- the name of the neighbourhood-activation variable
                         Name                    -- the name of the neighbourhood-size variable
-                        (Domain () Expression)  -- the domain of the neighbourhood-size variable
-                        Expression              -- the neighbourhood constraint
                         [Expression]            -- the variables that are involved
     | IncumbentMapping [Expression] [Expression]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
@@ -75,10 +74,10 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
-    pretty (SNS_Neighbourhood name sizeVarName sizeVarDom cons vars) = vcat
+    pretty (SNS_Neighbourhood name activationVarName sizeVarName vars) = vcat
         [ "neighbourhood" <+> pretty name <+> ":"
-        , nest 4 $ prettyList prParens "," [ pretty sizeVarName <+> ":" <+> pretty sizeVarDom
-                                           , pretty cons
+        , nest 4 $ prettyList prParens "," [ pretty activationVarName
+                                           , pretty sizeVarName
                                            , prettyList prBrackets "," vars
                                            ]
         ]
@@ -108,12 +107,11 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (SNS_Neighbourhood name sizeVarName sizeVarDom cons vars) = JSON.Object $ M.fromList
+    varSymBreakingDescription (SNS_Neighbourhood name activationVarName sizeVarName vars) = JSON.Object $ M.fromList
         [ ("type", JSON.String "SNS_Neighbourhood")
         , ("children", JSON.Array $ V.fromList $ [ toJSON name
+                                                 , toJSON activationVarName
                                                  , toJSON sizeVarName
-                                                 , varSymBreakingDescription sizeVarDom
-                                                 , varSymBreakingDescription cons
                                                  ]
                                                  ++ map varSymBreakingDescription vars)
         ]

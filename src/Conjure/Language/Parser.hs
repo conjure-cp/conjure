@@ -197,16 +197,13 @@ parseTopLevels = do
                     neighbourhoodName <- parseName
                     colon
                     parens $ do
-                        sizeVarName <- parseName
-                        colon
-                        sizeVarDomain <- parseDomain
+                        activationVarName <- parseName
                         comma
-                        neighbourhoodCons <- parseExpr
+                        sizeVarName <- parseName
                         comma
                         involvedVars <- brackets $ commaSeparated parseExpr
                         return [SNS_Neighbourhood neighbourhoodName
-                                    sizeVarName sizeVarDomain
-                                    neighbourhoodCons involvedVars]
+                                    activationVarName sizeVarName involvedVars]
                     <?> "neighbourhood declaration"
                 ] <?> "statement"
     concat <$> some one
