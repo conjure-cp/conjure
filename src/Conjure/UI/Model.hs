@@ -642,8 +642,8 @@ updateDeclarations model = do
                             vars2 <- fmap concat $ forM vars1 $ \ v -> do
                                 mvs <- runMaybeT (downX1 v)
                                 case mvs of
-                                    Nothing -> return [v]
-                                    Just vs -> return vs
+                                    Just vs | length vs > 0 -> return vs
+                                    _ -> return [v]
                             if vars1 == vars2
                                 then return vars1
                                 else go vars2
