@@ -1726,9 +1726,11 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             _ -> na "rule_DomainCardinality"
         return
             ( "Cardinality of a domain"
-            , do
-                (iPat, _) <- quantifiedVar
-                return [essence| sum([ 1 | &iPat : &d ]) |]
+            , case d of
+                DomainInt [RangeBounded 1 u] -> return u
+                _ -> do
+                    (iPat, _) <- quantifiedVar
+                    return [essence| sum([ 1 | &iPat : &d ]) |]
             )
 
 
