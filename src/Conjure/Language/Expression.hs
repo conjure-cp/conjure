@@ -59,7 +59,7 @@ data Statement
                         Name                    -- the name of the neighbourhood-activation variable
                         Name                    -- the name of the neighbourhood-size variable
                         [Expression]            -- the variables that are involved
-    | IncumbentMapping [Expression] [Expression]
+    | IncumbentMapping [Name] [Name]
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement

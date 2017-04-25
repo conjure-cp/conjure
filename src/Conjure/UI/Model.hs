@@ -860,28 +860,34 @@ addIncumbentVariables model
     | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
     , hasSNS = do
     let
+        appendIncumbent :: Name -> Name
         appendIncumbent nm = mappend "incumbent_" nm
 
         washIncumbent p =
             case match opIncumbent p of
-                Nothing -> descend washIncumbent p
+                Nothing -> descendM washIncumbent p
                 Just q  -> applyWash q
 
-        applyWash (Reference nm _) = Reference (appendIncumbent nm) Nothing
-        applyWash (match opIndexing -> Just (m,i)) = make opIndexing (applyWash m) i
+        applyWash (Reference nm _) = do
+            tell [nm]
+            return (Reference (appendIncumbent nm) Nothing)
+        applyWash (match opIndexing -> Just (m,i)) = do
+            m' <- applyWash m
+            return (make opIndexing m' i)
         applyWash what = bug (pretty (show what))
 
-    (outStatements, (originals, incumbents)) <- runWriterT $ forM (mStatements model) $ \ st ->
+    (stWashed, originalsWithDups)  <- runWriterT $ descendBiM washIncumbent (mStatements model)
+    let originals = nub originalsWithDups
+    stIncumbentsDeclared <- forM stWashed $ \ st ->
         case st of
-            Declaration (FindOrGiven Find nm domain) -> do
-                tell ([Reference nm Nothing], [Reference (appendIncumbent nm) Nothing])
-                return [ Declaration (FindOrGiven Find nm domain)
+            Declaration (FindOrGiven Find nm domain) | nm `elem` originals ->
+                return [ st
                        , Declaration (FindOrGiven Find (appendIncumbent nm) domain)
                        ]
             _ -> return [st]
 
-    return model { mStatements = descendBi washIncumbent (concat outStatements)
-                              ++ [IncumbentMapping originals incumbents] }
+    return model { mStatements = concat stIncumbentsDeclared
+                              ++ [IncumbentMapping originals (map appendIncumbent originals) ] }
 
 addIncumbentVariables model = return model
 
