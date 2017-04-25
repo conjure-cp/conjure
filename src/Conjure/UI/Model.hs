@@ -2018,6 +2018,12 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
 
 rule_PartialEvaluate :: Rule
 rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
+    -- if a variable only has a single value in its domain, replace it with the value
+    theRule (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+        return
+            ( "Partial evaluator"
+            , return val
+            )
     theRule (Op x) = do
         x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
