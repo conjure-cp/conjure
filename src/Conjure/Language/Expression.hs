@@ -455,6 +455,7 @@ instance RepresentationOf Expression where
         case mTree of
             Tree _ [r] -> return r
             _ -> fail "domainOf, OpIndexing, not a matrix"
+    representationTreeOf (Op (MkOpIncumbent (OpIncumbent x))) = representationTreeOf x
     representationTreeOf _ = fail "doesn't seem to have a representation"
 
 instance Domain () Expression :< Expression where

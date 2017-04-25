@@ -83,4 +83,7 @@ onOp p@(MkOpIndexing (OpIndexing m i)) = do
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
+onOp (MkOpIncumbent (OpIncumbent x)) = do
+    xs <- downX1 x
+    return $ map (Op . MkOpIncumbent . OpIncumbent) xs
 onOp op = fail ("downX1.onOp:" <++> pretty op)
