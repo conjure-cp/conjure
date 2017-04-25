@@ -87,9 +87,7 @@ rDownToX
     -> m [Expression]                                   -- expressions referring to the representation
 rDownToX repr forg name domain = do
     pairs <- rDownD repr (name, domain)
-    return [ case singletonDomainInt d of
-               Just x  -> x            -- special case: if the domain is a singleton int, use the value
-               Nothing -> Reference n (Just (DeclHasRepr forg n d))
+    return [ Reference n (Just (DeclHasRepr forg n d))
            | (n,d) <- concat pairs
            ]
 
