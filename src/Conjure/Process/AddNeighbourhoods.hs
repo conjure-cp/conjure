@@ -16,9 +16,6 @@ addNeighbourhoods inpModel = do
     let outModel = inpModel { mStatements = mStatements inpModel
                                          ++ [maxNeighbourhoodSizeDecl]
                                          ++ neighbourhoods }
-    traceM $ show $ pretty (inpModel { mStatements = [maxNeighbourhoodSizeDecl] ++ neighbourhoods
-                                     , mInfo = def
-                                     })
     return outModel
 
 
