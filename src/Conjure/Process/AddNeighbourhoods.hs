@@ -20,7 +20,7 @@ addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) =
 addNeighbourhoods _ inpModel = do
     neighbourhoods <-
         concatForM (mStatements inpModel) $ \case
-            Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm dom
+            Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm (Reference nm Nothing) dom
             _ -> return []
     let maxNeighbourhoodSizeDecl = Declaration (FindOrGiven Given maxNeighbourhoodSizeVarName (DomainInt []))
     let outModel = inpModel { mStatements = mStatements inpModel
@@ -36,8 +36,8 @@ maxNeighbourhoodSizeVar :: Expression
 maxNeighbourhoodSizeVar = Reference maxNeighbourhoodSizeVarName Nothing
 
 
-generateNeighbourhoods :: NameGen m => Name -> Domain () Expression -> m [Statement]
-generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
+generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
+generateNeighbourhoods name theVar domain = concatMapM (\ gen -> gen name theVar domain )
     [ setRemove
     , setAdd
     , setSwap
@@ -49,15 +49,14 @@ generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
     ]
 
 
-setRemove :: Monad m => Name -> Domain () Expression -> m [Statement]
-setRemove name DomainSet{} = do
+setRemove :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
+setRemove name theVar DomainSet{} = do
     let
         generatorName     = "setRemove"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -73,18 +72,17 @@ setRemove name DomainSet{} = do
                 !&activatorVar -> dontCare(&sizeVar)
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-setRemove _ _ = return []
+setRemove _ _ _ = return []
 
 
-setAdd :: Monad m => Name -> Domain () Expression -> m [Statement]
-setAdd name DomainSet{} = do
+setAdd :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
+setAdd name theVar DomainSet{} = do
     let
         generatorName     = "setAdd"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -100,18 +98,17 @@ setAdd name DomainSet{} = do
                 !&activatorVar -> dontCare(&sizeVar)
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-setAdd _ _ = return []
+setAdd _ _ _ = return []
 
 
-setSwap :: Monad m => Name -> Domain () Expression -> m [Statement]
-setSwap name DomainSet{} = do
+setSwap :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
+setSwap name theVar DomainSet{} = do
     let
         generatorName     = "setSwap"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -127,18 +124,17 @@ setSwap name DomainSet{} = do
                 !&activatorVar -> dontCare(&sizeVar)
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-setSwap _ _ = return []
+setSwap _ _ _ = return []
 
 
-setSwapAdd :: Monad m => Name -> Domain () Expression -> m [Statement]
-setSwapAdd name DomainSet{} = do
+setSwapAdd :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
+setSwapAdd name theVar DomainSet{} = do
     let
         generatorName     = "setSwapAdd"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -153,18 +149,17 @@ setSwapAdd name DomainSet{} = do
                 !&activatorVar -> dontCare(&sizeVar)
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-setSwapAdd _ _ = return []
+setSwapAdd _ _ _ = return []
 
 
-sequenceReverseSubSeq :: NameGen m => Name -> Domain () Expression -> m [Statement]
-sequenceReverseSubSeq name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceReverseSubSeq :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
+sequenceReverseSubSeq name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
     let
         generatorName     = "sequenceReverseSubSeq"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -194,18 +189,17 @@ sequenceReverseSubSeq name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) 
                 !&activatorVar -> dontCare(tuple (&i, &j, &sizeVar))
                 neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-sequenceReverseSubSeq _ _ = return []
+sequenceReverseSubSeq _ _ _ = return []
 
 
-sequenceAnySwap :: NameGen m => Name -> Domain () Expression -> m [Statement]
-sequenceAnySwap name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceAnySwap :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
+sequenceAnySwap name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
     let
         generatorName     = "sequenceAnySwap"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -221,18 +215,17 @@ sequenceAnySwap name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) 
                 !&activatorVar -> dontCare(&sizeVar)
                 neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-sequenceAnySwap _ _ = return []
+sequenceAnySwap _ _ _ = return []
 
 
-sequenceRelaxSub :: NameGen m => Name -> Domain () Expression -> m [Statement]
-sequenceRelaxSub name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceRelaxSub :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
+sequenceRelaxSub name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
     let
         generatorName     = "sequenceRelaxSub"
         neighbourhoodName = mconcat [name, "_", generatorName]
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
-        theVar            = Reference name Nothing
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
@@ -261,5 +254,5 @@ sequenceRelaxSub name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _)
                 !&activatorVar -> dontCare(tuple (&i, &j, &l, &sizeVar))
                 neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
-sequenceRelaxSub _ _ = return []
+sequenceRelaxSub _ _ _ = return []
 
