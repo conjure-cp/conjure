@@ -2017,14 +2017,15 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
 
 
 rule_PartialEvaluate :: Rule
-rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
+rule_PartialEvaluate = "partial-evaluate" `namedRuleZ` theRule where
     -- if a variable only has a single value in its domain, replace it with the value
-    theRule (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
-        return
-            ( "Partial evaluator"
-            , return val
-            )
-    theRule (Op x) = do
+    theRule z (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+        case hole <$> Zipper.up z of
+            Just (Op (MkOpTrue _)) -> na "rule_PartialEvaluate, inside a true(ref)"
+            _                      -> return ( "Partial evaluator"
+                                             , return val
+                                             )
+    theRule _ (Op x) = do
         x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
             [ "rule_PartialEvaluate, simplifier returns the input unchanged."
@@ -2036,7 +2037,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
             ( "Partial evaluator"
             , return x'
             )
-    theRule _ = na "rule_PartialEvaluate"
+    theRule _ _ = na "rule_PartialEvaluate"
 
 
 -- | shifting quantifiers inwards, if they operate on a row of a 2d matrix,

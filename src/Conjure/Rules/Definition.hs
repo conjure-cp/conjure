@@ -2,7 +2,7 @@
 {-# LANGUAGE Rank2Types #-}
 
 module Conjure.Rules.Definition
-    ( Rule(..), RuleResult(..), namedRule
+    ( Rule(..), RuleResult(..), namedRule, namedRuleZ
     , Question(..), QuestionType(..), Answer(..)
     , LogOrModel, LogOr
     , Driver, Strategy(..), viewAuto, parseStrategy
@@ -168,6 +168,21 @@ namedRule nm f = Rule
         return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
     }
 
+namedRuleZ
+    :: Doc
+    -> (forall n m a .
+            ( MonadFail n, MonadUserError n, MonadLog n
+            , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
+            , MonadFail m, MonadUserError m, MonadLog m
+            , NameGen m, EnumerateDomain m
+            ) => Zipper a Expression -> Expression -> n (Doc, m Expression))
+    -> Rule
+namedRuleZ nm f = Rule
+    { rName = nm
+    , rApply = \ z x -> do
+        (rResultDescr, rResult) <- runReaderT (f z x) z
+        return [RuleResult rResultDescr ExpressionRefinement rResult Nothing]
+    }
 
 isAtomic :: Expression -> Bool
 isAtomic Reference{} = True
