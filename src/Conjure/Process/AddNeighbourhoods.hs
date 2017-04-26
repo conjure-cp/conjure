@@ -33,8 +33,8 @@ generateNeighbourhoods :: Monad m => Name -> Domain () Expression -> m [Statemen
 generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
     [ setRemove
     , setAdd
-    -- , setSwap
-    -- , setSwapAdd
+    , setSwap
+    , setSwapAdd
     ]
 
 
@@ -90,3 +90,57 @@ setAdd name DomainSet{} = do
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
 setAdd _ _ = return []
+
+
+setSwap :: Monad m => Name -> Domain () Expression -> m [Statement]
+setSwap name DomainSet{} = do
+    let
+        generatorName     = "setSwap"
+        neighbourhoodName = mconcat [name, "_", generatorName]
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        theVar            = Reference name Nothing
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+    return
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            such that
+                &activatorVar ->
+                    (|&theVar - incumbent(&theVar)| = &sizeVar) /\
+                    (|incumbent(&theVar)| = |&theVar|)
+            such that
+                !&activatorVar -> dontCare(&sizeVar)
+            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+        |]
+setSwap _ _ = return []
+
+
+setSwapAdd :: Monad m => Name -> Domain () Expression -> m [Statement]
+setSwapAdd name DomainSet{} = do
+    let
+        generatorName     = "setSwapAdd"
+        neighbourhoodName = mconcat [name, "_", generatorName]
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        theVar            = Reference name Nothing
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+    return
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            such that
+                &activatorVar ->
+                    |&theVar - incumbent(&theVar)| = &sizeVar
+            such that
+                !&activatorVar -> dontCare(&sizeVar)
+            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+        |]
+setSwapAdd _ _ = return []
+
