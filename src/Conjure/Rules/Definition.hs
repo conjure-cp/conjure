@@ -96,6 +96,7 @@ data Config = Config
     , outputDirectory            :: FilePath
     , channelling                :: Bool
     , representationLevels       :: Bool
+    , generateNeighbourhoods     :: Bool
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -123,6 +124,7 @@ instance Default Config where
         , outputDirectory            = "conjure-output"
         , channelling                = True
         , representationLevels       = True
+        , generateNeighbourhoods     = False
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False

@@ -494,6 +494,7 @@ modelAll dir = ignoreLogs . runNameGen . outputModels Config
     , outputDirectory            = dir
     , channelling                = True
     , representationLevels       = True
+    , generateNeighbourhoods     = False
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True

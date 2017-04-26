@@ -4,10 +4,12 @@ module Conjure.Process.AddNeighbourhoods where
 
 import Conjure.Prelude
 import Conjure.Language
+import qualified Conjure.Rules.Definition as Config ( Config(..) )
 
 
-addNeighbourhoods :: Monad m => Model -> m Model
-addNeighbourhoods inpModel = do
+addNeighbourhoods :: Monad m => Config.Config -> Model -> m Model
+addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) = return inpModel
+addNeighbourhoods _ inpModel = do
     neighbourhoods <-
         concatForM (mStatements inpModel) $ \case
             Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm dom

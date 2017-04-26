@@ -41,6 +41,7 @@ data UI
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , generateNeighbourhoods          :: Bool
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -106,6 +107,7 @@ data UI
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
+        , generateNeighbourhoods          :: Bool
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -347,6 +349,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations.\n\
                     \These levels are used to cut down the number of generated models.\n\
                     \Can be true or false. (true by default)"
+        , generateNeighbourhoods
+            = False
+            &= name "generate-neighbourhoods"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Whether to produce SNS-style neighbourhood definitions or not.\n\
+                    \Can be true or false. (false by default)."
         , seed
             = Nothing
             &= name "seed"
@@ -747,6 +756,13 @@ ui = modes
             &= help "Whether to use built-in precedence levels when choosing representations.\n\
                     \These levels are used to cut down the number of generated models.\n\
                     \Can be true or false. (true by default)"
+        , generateNeighbourhoods
+            = False
+            &= name "generate-neighbourhoods"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "Whether to produce SNS-style neighbourhood definitions or not.\n\
+                    \Can be true or false. (false by default)."
         , seed
             = Nothing
             &= name "seed"

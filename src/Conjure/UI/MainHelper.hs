@@ -100,6 +100,7 @@ mainWithArgs Modelling{..} = do
             , Config.representationsCuts        = representationsCuts'
             , Config.channelling                = channelling
             , Config.representationLevels       = representationLevels
+            , Config.generateNeighbourhoods     = generateNeighbourhoods
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames

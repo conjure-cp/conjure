@@ -171,7 +171,7 @@ toCompletion
     -> Model
     -> Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- prologue m
+    m2 <- prologue config m
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
@@ -894,8 +894,8 @@ addIncumbentVariables model
 addIncumbentVariables model = return model
 
 
-prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
-prologue model = do
+prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Config -> Model -> m Model
+prologue config model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
@@ -915,7 +915,7 @@ prologue model = do
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
-    >>= addNeighbourhoods             >>= logDebugId "[addNeighbourhoods]"
+    >>= addNeighbourhoods config      >>= logDebugId "[addNeighbourhoods]"
 
 
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
