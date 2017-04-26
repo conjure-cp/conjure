@@ -13,7 +13,8 @@ such that
     and([q7 <= x_ExplicitVarSizeWithMarker_Marker -> nums_Occurrence[x_ExplicitVarSizeWithMarker_Values[q7]]
              | q7 : int(1..let1)]),
     s =
-    sum([toInt(q5 <= x_ExplicitVarSizeWithMarker_Marker) * x_ExplicitVarSizeWithMarker_Values[q5] | q5 : int(1..let1)]),
+    sum([toInt(q5 <= x_ExplicitVarSizeWithMarker_Marker) * catchUndef(x_ExplicitVarSizeWithMarker_Values[q5], 0)
+             | q5 : int(1..let1)]),
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..let1 - 1)]),
