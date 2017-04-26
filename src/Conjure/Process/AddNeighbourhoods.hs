@@ -49,29 +49,52 @@ generateNeighbourhoods name theVar domain = concatMapM (\ gen -> gen name theVar
     ]
 
 
-setRemove :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setRemove name theVar DomainSet{} = do
+skeleton :: Name                                            -- neighbourhood generator name
+         -> Name -> Expression                              -- name of the variable, and a Reference to it
+         -> (Expression -> (Expression, Expression))        -- constraint generator
+         -> [Statement]                                     -- neighbourhood definition
+skeleton generatorName varName var consGen =
     let
-        generatorName     = "setRemove"
-        neighbourhoodName = mconcat [name, "_", generatorName]
+        neighbourhoodName = mconcat [varName, "_", generatorName]
+
         activatorName     = mconcat [neighbourhoodName, "_", "activator"]
         sizeName          = mconcat [neighbourhoodName, "_", "size"]
 
         activatorVar      = Reference activatorName Nothing
         sizeVar           = Reference sizeName Nothing
 
-    return
+        (consPositive, consNegative) = consGen sizeVar
+    in
         [essenceStmts|
             find &activatorName : bool
             find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&var])
             such that
-                &activatorVar ->
-                    &theVar subsetEq incumbent(&theVar) /\
-                    |incumbent(&theVar)| - |&theVar| = &sizeVar
-            such that
-                !&activatorVar -> dontCare(&sizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+                &activatorVar -> &consPositive,
+                !&activatorVar -> &consNegative
         |]
+
+
+setRemove :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
+setRemove name theVar DomainSet{} = do
+    let
+        generatorName     = "setRemove"
+        -- neighbourhoodName = mconcat [name, "_", generatorName]
+        -- activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        -- sizeName          = mconcat [neighbourhoodName, "_", "size"]
+        --
+        -- activatorVar      = Reference activatorName Nothing
+        -- sizeVar           = Reference sizeName Nothing
+
+    return $ skeleton generatorName name theVar $ \ sizeVar ->
+        ( [essence|
+            &theVar subsetEq incumbent(&theVar) /\
+            |incumbent(&theVar)| - |&theVar| = &sizeVar
+          |]
+        , [essence|
+            dontCare(&sizeVar)
+          |]
+        )
 setRemove _ _ _ = return []
 
 
