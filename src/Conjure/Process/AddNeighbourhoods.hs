@@ -76,17 +76,9 @@ skeleton generatorName varName var consGen =
 
 
 setRemove :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setRemove name theVar DomainSet{} = do
-    let
-        generatorName     = "setRemove"
-        -- neighbourhoodName = mconcat [name, "_", generatorName]
-        -- activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        -- sizeName          = mconcat [neighbourhoodName, "_", "size"]
-        --
-        -- activatorVar      = Reference activatorName Nothing
-        -- sizeVar           = Reference sizeName Nothing
-
-    return $ skeleton generatorName name theVar $ \ sizeVar ->
+setRemove theVarName theVar DomainSet{} = do
+    let generatorName = "setRemove"
+    return $ skeleton generatorName theVarName theVar $ \ sizeVar ->
         ( [essence|
             &theVar subsetEq incumbent(&theVar) /\
             |incumbent(&theVar)| - |&theVar| = &sizeVar
