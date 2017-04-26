@@ -11,7 +11,11 @@ such that
                   | col1 : int(1..3), col2 : int(1..3), row1 : int(1..3), row2 : int(1..3)])
              | i : int(0..2), j : int(0..2)]),
     and([values[row, col] > 0 -> field[row, col] = values[row, col] | row : RANGE, col : RANGE])
+find act1: bool
+find n: int(1)
 neighbourhood row1 :
-    (n : int(1), true, [field[1, ..]])
+    (act1, n, [field[1, ..]])
+find act2: bool
 neighbourhood row1FirstHalf :
-    (n : int(1), and([incumbent(field[1, i]) = field[1, i] | i : int(1..5)]), [field[1, ..]])
+    (act2, n, [field[1, ..]])
+such that and([incumbent(field[1, i]) = field[1, i] | i : int(1..5)])

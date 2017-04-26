@@ -6,7 +6,12 @@ find x: set (minSize 1, maxSize |nums|) of int([i | i <- nums])
 such that
     x subsetEq nums,
     s = sum([i | i <- x])
+find nSize: int(1)
+find act1: bool
 neighbourhood removeElem :
-    (n : int(1), or([incumbent(x) = x - {i} | i <- x]), [x])
+    (act1, nSize, [x])
+such that act1 -> or([incumbent(x) = x - {i} | i <- x])
+find act2: bool
 neighbourhood addElem :
-    (n : int(1), or([incumbent(x) = x union {i} | i <- x]), [x])
+    (act2, nSize, [x])
+such that act2 -> or([incumbent(x) = x union {i} | i <- x])
