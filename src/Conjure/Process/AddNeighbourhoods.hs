@@ -32,14 +32,14 @@ maxNeighbourhoodSizeVar = Reference maxNeighbourhoodSizeVarName Nothing
 generateNeighbourhoods :: Monad m => Name -> Domain () Expression -> m [Statement]
 generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
     [ setRemove
-    -- , setAdd
+    , setAdd
     -- , setSwap
     -- , setSwapAdd
     ]
 
 
 setRemove :: Monad m => Name -> Domain () Expression -> m [Statement]
-setRemove name domain@DomainSet{} = do
+setRemove name DomainSet{} = do
     let
         generatorName     = "setRemove"
         neighbourhoodName = mconcat [name, "_", generatorName]
@@ -64,3 +64,29 @@ setRemove name domain@DomainSet{} = do
         |]
 setRemove _ _ = return []
 
+
+setAdd :: Monad m => Name -> Domain () Expression -> m [Statement]
+setAdd name DomainSet{} = do
+    let
+        generatorName     = "setAdd"
+        neighbourhoodName = mconcat [name, "_", generatorName]
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        theVar            = Reference name Nothing
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+    return
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            such that
+                &activatorVar ->
+                    incumbent(&theVar) subsetEq &theVar /\
+                    |&theVar| - |incumbent(&theVar)| = &sizeVar
+            such that
+                !&activatorVar -> dontCare(&sizeVar)
+            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+        |]
+setAdd _ _ = return []
