@@ -868,6 +868,7 @@ addIncumbentVariables model
                 Nothing -> descendM washIncumbent p
                 Just q  -> applyWash q
 
+        applyWash p@(Reference _ (Just (Alias _))) = return p
         applyWash (Reference nm _) = do
             tell [nm]
             return (Reference (appendIncumbent nm) Nothing)
