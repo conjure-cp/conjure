@@ -76,7 +76,8 @@ type NeighbourhoodGenResult = (Name, Expression -> (Maybe [Statement], Maybe Exp
 
 allNeighbourhoods :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
-    [ setRemove
+    [ setLiftExists
+    , setRemove
     , setAdd
     , setSwap
     , setSwapAdd
@@ -87,22 +88,24 @@ allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
     ]
 
 
--- setLiftExists :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
--- setLiftExists theVar (DomainSet _ _ inner) = do
---     let generatorName = "setLiftExists"
---     (iPat, i) <- quantifiedVar
---     ns <- allNeighbourhoods i inner
---     return
---         [ ( mconcat [generatorName, "_", innerGeneratorName]
---           , \ sizeVar ->
---               let (consPositive, consNegative) = rule sizeVar
---               in  ( [essence| exists &iPat in &theVar . &consPositive |]
---                   , [essence| exists &iPat in &theVar . &consNegative |]
---                   )
---           )
---         | (innerGeneratorName, rule) <- ns
---         ]
--- setLiftExists _ _ = return []
+setLiftExists :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftExists theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftExists"
+    (iPat, i) <- quantifiedVar
+    let liftCons c = [essence| exists &iPat in &theVar . &c |]
+    ns <- allNeighbourhoods i inner
+    return
+        [ ( mconcat [generatorName, "_", innerGeneratorName]
+          , \ sizeVar ->
+              let (statements, consPositive, consNegative) = rule sizeVar
+              in  ( statements
+                  , liftCons <$> consPositive
+                  , liftCons <$> consNegative
+                  )
+          )
+        | (innerGeneratorName, rule) <- ns
+        ]
+setLiftExists _ _ = return []
 
 
 setRemove :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
