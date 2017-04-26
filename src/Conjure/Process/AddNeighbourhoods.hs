@@ -4,10 +4,18 @@ module Conjure.Process.AddNeighbourhoods where
 
 import Conjure.Prelude
 import Conjure.Language
+import Conjure.UI.TypeCheck ( typeCheckModel )
+import Conjure.Language.NameResolution ( resolveNames )
 import qualified Conjure.Rules.Definition as Config ( Config(..) )
 
 
-addNeighbourhoods :: Monad m => Config.Config -> Model -> m Model
+addNeighbourhoods
+    :: ( NameGen m
+       , MonadFail m
+       , MonadUserError m
+       , MonadLog m
+       )
+    => Config.Config -> Model -> m Model
 addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) = return inpModel
 addNeighbourhoods _ inpModel = do
     neighbourhoods <-
@@ -18,7 +26,7 @@ addNeighbourhoods _ inpModel = do
     let outModel = inpModel { mStatements = mStatements inpModel
                                          ++ [maxNeighbourhoodSizeDecl]
                                          ++ neighbourhoods }
-    return outModel
+    (resolveNames >=> typeCheckModel) outModel
 
 
 maxNeighbourhoodSizeVarName :: Name
@@ -28,12 +36,14 @@ maxNeighbourhoodSizeVar :: Expression
 maxNeighbourhoodSizeVar = Reference maxNeighbourhoodSizeVarName Nothing
 
 
-generateNeighbourhoods :: Monad m => Name -> Domain () Expression -> m [Statement]
+generateNeighbourhoods :: NameGen m => Name -> Domain () Expression -> m [Statement]
 generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
     [ setRemove
     , setAdd
     , setSwap
     , setSwapAdd
+
+    , sequenceReverseSubSeq
     ]
 
 
@@ -142,4 +152,46 @@ setSwapAdd name DomainSet{} = do
             neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
 setSwapAdd _ _ = return []
+
+
+sequenceReverseSubSeq :: NameGen m => Name -> Domain () Expression -> m [Statement]
+sequenceReverseSubSeq name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+    let
+        generatorName     = "sequenceReverseSubSeq"
+        neighbourhoodName = mconcat [name, "_", generatorName]
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        theVar            = Reference name Nothing
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+    (iPat, i) <- auxiliaryVar
+    (jPat, j) <- auxiliaryVar
+    (kPat, k) <- quantifiedVar
+
+    return
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            find &iPat, &jPat :  int(1..&size)
+            such that 
+                &activatorVar ->
+                    and([ &j - &i = &sizeVar
+                        , and([ &theVar(&k) = incumbent(&theVar)(&k)
+                              | &kPat : int(1..&sizeVar)
+                              , &k < &i
+                              , &k > &j
+                              ])
+                        , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
+                              | &kPat : int(1..&sizeVar)
+                              , &k >= &i
+                              , &k <= &j
+                              ])
+                        ]),
+                !&activatorVar -> dontCare(tuple (&i, &j, &sizeVar))
+                neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+        |]
+sequenceReverseSubSeq _ _ = return []
+
 
