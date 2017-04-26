@@ -37,7 +37,45 @@ maxNeighbourhoodSizeVar = Reference maxNeighbourhoodSizeVarName Nothing
 
 
 generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
-generateNeighbourhoods name theVar domain = concatMapM (\ gen -> gen name theVar domain )
+generateNeighbourhoods theVarName theVar domain = do
+    neighbourhoods <- allNeighbourhoods theVar domain
+    return $ concatMap (skeleton theVarName theVar) neighbourhoods
+
+
+skeleton
+    :: Name -> Expression
+    -> NeighbourhoodGenResult
+    -> [Statement]
+skeleton varName var gen =
+    let
+        (generatorName, consGen) = gen
+
+        neighbourhoodName = mconcat [varName, "_", generatorName]
+
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+        (statements, consPositive, consNegative) = consGen sizeVar
+    in
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&var])
+        |]
+        ++ fromMaybe [] statements
+        ++ concat [ [essenceStmts| such that  &activatorVar -> &c |] | Just c <- [consPositive] ]
+        ++ concat [ [essenceStmts| such that !&activatorVar -> &c |] | Just c <- [consNegative] ]
+        ++ concat [ [essenceStmts| such that !&activatorVar -> dontCare(&sizeVar) |] ]
+
+
+type NeighbourhoodGenResult = (Name, Expression -> (Maybe [Statement], Maybe Expression, Maybe Expression))
+
+
+allNeighbourhoods :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
     [ setRemove
     , setAdd
     , setSwap
@@ -49,200 +87,147 @@ generateNeighbourhoods name theVar domain = concatMapM (\ gen -> gen name theVar
     ]
 
 
-skeleton :: Name                                            -- neighbourhood generator name
-         -> Name -> Expression                              -- name of the variable, and a Reference to it
-         -> (Expression -> (Expression, Expression))        -- constraint generator
-         -> [Statement]                                     -- neighbourhood definition
-skeleton generatorName varName var consGen =
-    let
-        neighbourhoodName = mconcat [varName, "_", generatorName]
-
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
-
-        (consPositive, consNegative) = consGen sizeVar
-    in
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&var])
-            such that
-                &activatorVar -> &consPositive,
-                !&activatorVar -> &consNegative
-        |]
+-- setLiftExists :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+-- setLiftExists theVar (DomainSet _ _ inner) = do
+--     let generatorName = "setLiftExists"
+--     (iPat, i) <- quantifiedVar
+--     ns <- allNeighbourhoods i inner
+--     return
+--         [ ( mconcat [generatorName, "_", innerGeneratorName]
+--           , \ sizeVar ->
+--               let (consPositive, consNegative) = rule sizeVar
+--               in  ( [essence| exists &iPat in &theVar . &consPositive |]
+--                   , [essence| exists &iPat in &theVar . &consNegative |]
+--                   )
+--           )
+--         | (innerGeneratorName, rule) <- ns
+--         ]
+-- setLiftExists _ _ = return []
 
 
-setRemove :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setRemove theVarName theVar DomainSet{} = do
+setRemove :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setRemove theVar DomainSet{} = do
     let generatorName = "setRemove"
-    return $ skeleton generatorName theVarName theVar $ \ sizeVar ->
-        ( [essence|
-            &theVar subsetEq incumbent(&theVar) /\
-            |incumbent(&theVar)| - |&theVar| = &sizeVar
-          |]
-        , [essence|
-            dontCare(&sizeVar)
-          |]
-        )
-setRemove _ _ _ = return []
-
-
-setAdd :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setAdd name theVar DomainSet{} = do
-    let
-        generatorName     = "setAdd"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
-
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            such that
-                &activatorVar ->
-                    incumbent(&theVar) subsetEq &theVar /\
-                    |&theVar| - |incumbent(&theVar)| = &sizeVar
-            such that
-                !&activatorVar -> dontCare(&sizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-setAdd _ _ _ = return []
+        [( generatorName
+         , \ sizeVar ->
+            ( Nothing
+            , Just [essence|
+                &theVar subsetEq incumbent(&theVar) /\
+                |incumbent(&theVar)| - |&theVar| = &sizeVar
+              |]
+            , Nothing
+            )
+        )]
+setRemove _ _ = return []
 
 
-setSwap :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setSwap name theVar DomainSet{} = do
-    let
-        generatorName     = "setSwap"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
-
+setAdd :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setAdd theVar DomainSet{} = do
+    let generatorName = "setAdd"
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            such that
-                &activatorVar ->
-                    (|&theVar - incumbent(&theVar)| = &sizeVar) /\
-                    (|incumbent(&theVar)| = |&theVar|)
-            such that
-                !&activatorVar -> dontCare(&sizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-setSwap _ _ _ = return []
+        [( generatorName
+         , \ sizeVar ->
+            ( Nothing
+            , Just [essence|
+                incumbent(&theVar) subsetEq &theVar /\
+                |&theVar| - |incumbent(&theVar)| = &sizeVar
+              |]
+            , Nothing
+            )
+        )]
+setAdd _ _ = return []
 
 
-setSwapAdd :: Monad m => Name -> Expression -> Domain () Expression -> m [Statement]
-setSwapAdd name theVar DomainSet{} = do
-    let
-        generatorName     = "setSwapAdd"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
-
+setSwap :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwap theVar DomainSet{} = do
+    let generatorName = "setSwap"
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            such that
-                &activatorVar ->
-                    |&theVar - incumbent(&theVar)| = &sizeVar
-            such that
-                !&activatorVar -> dontCare(&sizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-setSwapAdd _ _ _ = return []
+        [( generatorName
+         , \ sizeVar ->
+            ( Nothing
+            , Just [essence|
+                (|&theVar - incumbent(&theVar)| = &sizeVar) /\
+                (|incumbent(&theVar)| = |&theVar|)
+              |]
+            , Nothing
+            )
+        )]
+setSwap _ _ = return []
 
 
-sequenceReverseSubSeq :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
-sequenceReverseSubSeq name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
-    let
-        generatorName     = "sequenceReverseSubSeq"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+setSwapAdd :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwapAdd theVar DomainSet{} = do
+    let generatorName = "setSwapAdd"
+    return
+        [( generatorName
+         , \ sizeVar ->
+            ( Nothing
+            , Just [essence|
+                |&theVar - incumbent(&theVar)| = &sizeVar
+              |]
+            , Nothing
+            )
+        )]
+setSwapAdd _ _ = return []
 
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
+
+sequenceReverseSubSeq :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+    let generatorName = "sequenceReverseSubSeq"
 
     (iPat, i) <- auxiliaryVar
     (jPat, j) <- auxiliaryVar
     (kPat, k) <- quantifiedVar
 
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            find &iPat, &jPat :  int(1..&size)
-            such that 
-                &activatorVar ->
-                    and([ &j - &i = &sizeVar
-                        , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                              | &kPat : int(1..&sizeVar)
-                              , &k < &i
-                              , &k > &j
-                              ])
-                        , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
-                              | &kPat : int(1..&sizeVar)
-                              , &k >= &i
-                              , &k <= &j
-                              ])
-                        ]),
-                !&activatorVar -> dontCare(tuple (&i, &j, &sizeVar))
-                neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-sequenceReverseSubSeq _ _ _ = return []
+        [( generatorName
+         , \ sizeVar ->
+            ( Just [essenceStmts|
+                find &iPat, &jPat :  int(1..&size)
+              |]
+            , Just [essence|
+                and([ &j - &i = &sizeVar
+                    , and([ &theVar(&k) = incumbent(&theVar)(&k)
+                          | &kPat : int(1..&sizeVar)
+                          , &k < &i
+                          , &k > &j
+                          ])
+                    , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
+                          | &kPat : int(1..&sizeVar)
+                          , &k >= &i
+                          , &k <= &j
+                          ])
+                    ])
+              |]
+            , Just [essence| dontCare(tuple (&i, &j)) |]
+            )
+        )]
+sequenceReverseSubSeq _ _ = return []
 
 
-sequenceAnySwap :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
-sequenceAnySwap name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
-    let
-        generatorName     = "sequenceAnySwap"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
+sequenceAnySwap :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+sequenceAnySwap theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+    let generatorName = "sequenceAnySwap"
 
     (iPat, i) <- quantifiedVar
 
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            such that 
-                &activatorVar ->
-                    (sum &iPat : int(1..&size) . toInt(&theVar(&i) != incumbent(&theVar)(&i))) = &sizeVar * 2,
-                !&activatorVar -> dontCare(&sizeVar)
-                neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-sequenceAnySwap _ _ _ = return []
+        [( generatorName
+         , \ sizeVar ->
+             ( Nothing
+             , Just [essence|
+                 (sum &iPat : int(1..&size) . toInt(&theVar(&i) != incumbent(&theVar)(&i))) = &sizeVar * 2
+               |]
+             , Nothing
+             )
+        )]
+sequenceAnySwap _ _ = return []
 
 
-sequenceRelaxSub :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
-sequenceRelaxSub name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
-    let
-        generatorName     = "sequenceRelaxSub"
-        neighbourhoodName = mconcat [name, "_", generatorName]
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
-
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
+sequenceRelaxSub :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+    let generatorName = "sequenceRelaxSub"
 
     (iPat, i) <- auxiliaryVar
     (jPat, j) <- auxiliaryVar
@@ -250,24 +235,27 @@ sequenceRelaxSub name theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size
     (lPat, l) <- auxiliaryVar
 
     return
-        [essenceStmts|
-            find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            find &iPat, &jPat, &lPat :  int(1..&size)
-            such that 
-                &activatorVar ->
-                    and([ &j - &i = &sizeVar
-                        , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                              | &kPat : int(1..&sizeVar)
-                              , &k < &i
-                              , &k > &j
-                              ])
-                        , &l >= &i
-                        , &l <= &j
-                        , &theVar(&l) != incumbent(&theVar)(&l)
-                        ]),
-                !&activatorVar -> dontCare(tuple (&i, &j, &l, &sizeVar))
-                neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
-        |]
-sequenceRelaxSub _ _ _ = return []
+        [( generatorName
+        , \ sizeVar -> 
+            ( Just [essenceStmts|
+                find &iPat, &jPat, &lPat :  int(1..&size)
+              |]
+            , Just [essence|
+                and([ &j - &i = &sizeVar
+                    , and([ &theVar(&k) = incumbent(&theVar)(&k)
+                          | &kPat : int(1..&sizeVar)
+                          , &k < &i
+                          , &k > &j
+                          ])
+                    , &l >= &i
+                    , &l <= &j
+                    , &theVar(&l) != incumbent(&theVar)(&l)
+                    ])
+              |]
+            , Just [essence|
+                dontCare(tuple (&i, &j, &l))
+              |]
+            )
+        )]
+sequenceRelaxSub _ _ = return []
 
