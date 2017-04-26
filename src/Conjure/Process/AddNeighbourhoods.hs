@@ -44,6 +44,7 @@ generateNeighbourhoods name domain = concatMapM (\ gen -> gen name domain )
     , setSwapAdd
 
     , sequenceReverseSubSeq
+    , sequenceAnySwap
     ]
 
 
@@ -193,5 +194,32 @@ sequenceReverseSubSeq name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) 
                 neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
         |]
 sequenceReverseSubSeq _ _ = return []
+
+
+sequenceAnySwap :: NameGen m => Name -> Domain () Expression -> m [Statement]
+sequenceAnySwap name (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+    let
+        generatorName     = "sequenceAnySwap"
+        neighbourhoodName = mconcat [name, "_", generatorName]
+        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
+        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+
+        theVar            = Reference name Nothing
+        activatorVar      = Reference activatorName Nothing
+        sizeVar           = Reference sizeName Nothing
+
+    (iPat, i) <- quantifiedVar
+
+    return
+        [essenceStmts|
+            find &activatorName : bool
+            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
+            such that 
+                &activatorVar ->
+                    (sum &iPat : int(1..&size) . toInt(&theVar(&i) != incumbent(&theVar)(&i))) = &sizeVar * 2,
+                !&activatorVar -> dontCare(&sizeVar)
+                neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&theVar])
+        |]
+sequenceAnySwap _ _ = return []
 
 
