@@ -27,6 +27,7 @@ import Conjure.Language.TH ( essence )
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )
+import Conjure.Process.AddNeighbourhoods ( addNeighbourhoods )
 import Conjure.Process.Sanity ( sanityChecks )
 import Conjure.Process.Enums ( removeEnumsFromModel )
 import Conjure.Process.Unnameds ( removeUnnamedsFromModel )
@@ -914,6 +915,7 @@ prologue model = do
     >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
     >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
     >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
+    >>= addNeighbourhoods             >>= logDebugId "[addNeighbourhoods]"
 
 
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model

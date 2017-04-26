@@ -92,7 +92,7 @@ parseTopLevels = do
                 [ do
                     lexeme L_find
                     decls <- flip sepEndBy1 comma $ do
-                        is <- commaSeparated (parseName <|> NameMetaVar <$> parseMetaVariable)
+                        is <- commaSeparated parseNameOrMeta
                         j  <- colon >> parseDomain
                         return [ Declaration (FindOrGiven Find i j)
                                | i <- is ]
@@ -194,12 +194,12 @@ parseTopLevels = do
                     <?> "branching on"
                 , do
                     lexeme L_neighbourhood
-                    neighbourhoodName <- parseName
+                    neighbourhoodName <- parseNameOrMeta
                     colon
                     parens $ do
-                        activationVarName <- parseName
+                        activationVarName <- parseNameOrMeta
                         comma
-                        sizeVarName <- parseName
+                        sizeVarName <- parseNameOrMeta
                         comma
                         involvedVars <- brackets $ commaSeparated parseExpr
                         return [SNS_Neighbourhood neighbourhoodName
@@ -809,6 +809,9 @@ parseWithLocals = braces $ do
                     then DefinednessConstraints cons
                     else AuxiliaryVars (decls ++ [SuchThat cons])
     return (WithLocals i locals)
+
+parseNameOrMeta :: Parser Name
+parseNameOrMeta = parseName <|> NameMetaVar <$> parseMetaVariable
 
 parseName :: Parser Name
 parseName = Name <$> identifierText

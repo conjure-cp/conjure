@@ -12,7 +12,7 @@ module Conjure.Prelude
     , withRest, withAfter, withBefore
     , T.Text, stringToText, textToString
     , sameLength
-    , concatMapM
+    , concatMapM, concatForM
     , timedIO, timedPutStrLn
     , isLeft, isRight
     , tracing
@@ -257,6 +257,9 @@ sameLength _ _ = False
 
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = concat <$> mapM f xs
+
+concatForM :: (Functor m, Monad m) => [a] -> (a -> m [b]) -> m [b]
+concatForM f xs = concatMapM xs f
 
 timedIO :: IO a -> IO (a, Double)
 timedIO io = do
