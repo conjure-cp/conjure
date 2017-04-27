@@ -176,7 +176,9 @@ setSwapAdd _ _ = return []
 
 
 sequenceReverseSubSeq :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
+    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
+
     let generatorName = "sequenceReverseSubSeq"
 
     (iPat, i) <- auxiliaryVar
@@ -187,10 +189,12 @@ sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size
         [( generatorName
          , \ sizeVar ->
             ( Just [essenceStmts|
-                find &iPat, &jPat :  int(1..&size)
+                find &iPat, &jPat :  int(1..&maxSize)
               |]
             , Just [essence|
                 and([ &j - &i = &sizeVar
+                    , &i <= |&theVar|
+                    , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
                           | &kPat : int(1..&sizeVar)
                           , &k < &i
@@ -210,7 +214,9 @@ sequenceReverseSubSeq _ _ = return []
 
 
 sequenceAnySwap :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceAnySwap theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceAnySwap theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
+    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
+
     let generatorName = "sequenceAnySwap"
 
     (iPat, i) <- quantifiedVar
@@ -220,7 +226,10 @@ sequenceAnySwap theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _
          , \ sizeVar ->
              ( Nothing
              , Just [essence|
-                 (sum &iPat : int(1..&size) . toInt(&theVar(&i) != incumbent(&theVar)(&i))) = &sizeVar * 2
+                 &sizeVar * 2 = sum([ toInt(&theVar(&i) != incumbent(&theVar)(&i))
+                                    | &iPat : int(1..&maxSize)
+                                    , &i <= |&theVar|
+                                    ])
                |]
              , Nothing
              )
@@ -229,7 +238,9 @@ sequenceAnySwap _ _ = return []
 
 
 sequenceRelaxSub :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) _) = do
+sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
+    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
+
     let generatorName = "sequenceRelaxSub"
 
     (iPat, i) <- auxiliaryVar
@@ -241,10 +252,12 @@ sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr (SizeAttr_Size size) _) 
         [( generatorName
         , \ sizeVar -> 
             ( Just [essenceStmts|
-                find &iPat, &jPat, &lPat :  int(1..&size)
+                find &iPat, &jPat, &lPat :  int(1..&maxSize)
               |]
             , Just [essence|
                 and([ &j - &i = &sizeVar
+                    , &i <= |&theVar|
+                    , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
                           | &kPat : int(1..&sizeVar)
                           , &k < &i
