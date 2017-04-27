@@ -294,11 +294,11 @@ sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ sizeVar -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&maxSize)
+                find &iPat :  int(1..&sizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&maxSize)
                           , &k <= |&theVar|
                           ])
                     , |incumbent(&theVar)| = |&theVar| + &i
@@ -326,11 +326,11 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ sizeVar -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&maxSize)
+                find &iPat :  int(1..&sizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&i+&k)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&maxSize)
                           , &k <= |&theVar|
                           ])
                     , |incumbent(&theVar)| = |&theVar| + &i
@@ -358,11 +358,11 @@ sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ sizeVar -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&maxSize)
+                find &iPat :  int(1..&sizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&maxSize)
                           , &k <= |&theVar| - &i
                           ])
                     , |incumbent(&theVar)| = |&theVar| - &i
@@ -390,11 +390,11 @@ sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ sizeVar -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&maxSize)
+                find &iPat :  int(1..&sizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k - &i)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&maxSize)
                           , &k <= |&theVar| - &i
                           ])
                     , |incumbent(&theVar)| = |&theVar| - &i
