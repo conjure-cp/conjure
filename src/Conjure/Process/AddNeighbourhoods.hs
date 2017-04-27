@@ -23,9 +23,16 @@ addNeighbourhoods _ inpModel = do
             Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm (Reference nm Nothing) dom
             _ -> return []
     let maxNeighbourhoodSizeDecl = Declaration (FindOrGiven Given maxNeighbourhoodSizeVarName (DomainInt []))
+    let inpModelInfo = mInfo inpModel
     let outModel = inpModel { mStatements = mStatements inpModel
                                          ++ [maxNeighbourhoodSizeDecl]
-                                         ++ neighbourhoods }
+                                         ++ neighbourhoods
+                            , mInfo = inpModelInfo { miGivens = miGivens inpModelInfo
+                                                        ++ [maxNeighbourhoodSizeVarName]
+                                                   , miOriginalDomains = miOriginalDomains inpModelInfo
+                                                        ++ [(maxNeighbourhoodSizeVarName, DomainInt [])]
+                                                   }
+                            }
     (resolveNames >=> typeCheckModel) outModel
 
 

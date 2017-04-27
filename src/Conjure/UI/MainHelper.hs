@@ -19,6 +19,7 @@ import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
+import Conjure.Process.AddNeighbourhoods ( maxNeighbourhoodSizeVarName )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
 import Conjure.Language.NameGen ( runNameGen )
@@ -170,6 +171,7 @@ mainWithArgs config@Solve{..} = do
         return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
+              ++ [ maxNeighbourhoodSizeVarName | generateNeighbourhoods ]
     when (not (null givens) && null essenceParams) $
         userErr1 $ vcat
             [ "The problem specification is parameterised, but no *.param files are given."
