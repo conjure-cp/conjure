@@ -8,10 +8,8 @@ such that
     s = sum([i | i <- x])
 find nSize: int(1)
 find act1: bool
-neighbourhood removeElem :
-    (act1, nSize, [x])
+neighbourhood removeElem : (act1, nSize, [x])
 such that act1 -> or([incumbent(x) = x - {i} | i <- x])
 find act2: bool
-neighbourhood addElem :
-    (act2, nSize, [x])
+neighbourhood addElem : (act2, nSize, [x])
 such that act2 -> or([incumbent(x) = x union {i} | i <- x])

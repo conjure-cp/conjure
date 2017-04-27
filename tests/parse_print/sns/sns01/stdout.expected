@@ -13,9 +13,7 @@ such that
     and([values[row, col] > 0 -> field[row, col] = values[row, col] | row : RANGE, col : RANGE])
 find act1: bool
 find n: int(1)
-neighbourhood row1 :
-    (act1, n, [field[1, ..]])
+neighbourhood row1 : (act1, n, [field[1, ..]])
 find act2: bool
-neighbourhood row1FirstHalf :
-    (act2, n, [field[1, ..]])
+neighbourhood row1FirstHalf : (act2, n, [field[1, ..]])
 such that and([incumbent(field[1, i]) = field[1, i] | i : int(1..5)])
