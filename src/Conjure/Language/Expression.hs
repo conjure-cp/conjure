@@ -74,13 +74,12 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
-    pretty (SNS_Neighbourhood name activationVarName sizeVarName vars) = vcat
-        [ "neighbourhood" <+> pretty name <+> ":"
-        , nest 4 $ prettyList prParens "," [ pretty activationVarName
-                                           , pretty sizeVarName
-                                           , prettyList prBrackets "," vars
-                                           ]
-        ]
+    pretty (SNS_Neighbourhood name activationVarName sizeVarName vars) =
+        "neighbourhood" <+> pretty name <+> ":" <++>
+        prettyList prParens "," [ pretty activationVarName
+                                , pretty sizeVarName
+                                , prettyList prBrackets "," vars
+                                ]
     pretty (IncumbentMapping originals incumbents) =
         "incumbentMapping" <> prettyList prParens "," [ prettyList prBrackets "," originals
                                                       , prettyList prBrackets "," incumbents
