@@ -207,12 +207,14 @@ sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                     , &i <= |&theVar|
                     , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&neighbourhoodSize)
+                          | &kPat : int(1..&maxNeighbourhoodSizeVar)
+                          , &k <= &neighbourhoodSize
                           , &k < &i
                           , &k > &j
                           ])
                     , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
-                          | &kPat : int(1..&neighbourhoodSize)
+                          | &kPat : int(1..&maxNeighbourhoodSizeVar)
+                          , &k <= &neighbourhoodSize
                           , &k >= &i
                           , &k <= &j
                           ])
@@ -271,7 +273,8 @@ sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                     , &i <= |&theVar|
                     , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&neighbourhoodSize)
+                          | &kPat : int(1..&maxNeighbourhoodSizeVar)
+                          , &k <= &neighbourhoodSize
                           , &k < &i
                           , &k > &j
                           ])
@@ -302,7 +305,7 @@ sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&neighbourhoodSize)
+                find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
@@ -310,6 +313,7 @@ sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                           , &k <= |&theVar|
                           ])
                     , |incumbent(&theVar)| = |&theVar| + &i
+                    , &i <= &neighbourhoodSize
                     ])
               |]
             , Just [essence|
@@ -334,7 +338,7 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&neighbourhoodSize)
+                find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k + &i)
@@ -342,6 +346,7 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                           , &k <= |&theVar|
                           ])
                     , |incumbent(&theVar)| = |&theVar| + &i
+                    , &i <= &neighbourhoodSize
                     ])
               |]
             , Just [essence|
@@ -366,7 +371,7 @@ sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&neighbourhoodSize)
+                find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
@@ -374,6 +379,7 @@ sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                           , &k <= |&theVar| - &i
                           ])
                     , |incumbent(&theVar)| = |&theVar| - &i
+                    , &i <= &neighbourhoodSize
                     ])
               |]
             , Just [essence|
@@ -398,7 +404,7 @@ sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
         [( generatorName
         , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&neighbourhoodSize)
+                find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k - &i)
@@ -406,6 +412,7 @@ sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                           , &k <= |&theVar| - &i
                           ])
                     , |incumbent(&theVar)| = |&theVar| - &i
+                    , &i <= &neighbourhoodSize
                     ])
               |]
             , Just [essence|
