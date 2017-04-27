@@ -330,7 +330,7 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
                 find &iPat :  int(1..&neighbourhoodSize)
               |]
             , Just [essence|
-                and([ and([ &theVar(&k) = incumbent(&theVar)(&i+&k)
+                and([ and([ &theVar(&k) = incumbent(&theVar)(&k + &i)
                           | &kPat : int(1..&maxSize)
                           , &k <= |&theVar|
                           ])
