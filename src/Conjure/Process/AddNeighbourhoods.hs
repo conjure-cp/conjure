@@ -50,25 +50,25 @@ skeleton varName var gen =
     let
         (generatorName, consGen) = gen
 
-        neighbourhoodName = mconcat [varName, "_", generatorName]
+        neighbourhoodName     = mconcat [varName, "_", generatorName]
 
-        activatorName     = mconcat [neighbourhoodName, "_", "activator"]
-        sizeName          = mconcat [neighbourhoodName, "_", "size"]
+        activatorName         = mconcat [neighbourhoodName, "_", "activator"]
+        neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
 
-        activatorVar      = Reference activatorName Nothing
-        sizeVar           = Reference sizeName Nothing
+        activatorVar          = Reference activatorName Nothing
+        neighbourhoodSize     = Reference neighbourhoodSizeName Nothing
 
-        (statements, consPositive, consNegative) = consGen sizeVar
+        (statements, consPositive, consNegative) = consGen neighbourhoodSize
     in
         [essenceStmts|
             find &activatorName : bool
-            find &sizeName : int(1..&maxNeighbourhoodSizeVar)
-            neighbourhood &neighbourhoodName : (&sizeName, &activatorName, [&var])
+            find &neighbourhoodSizeName : int(1..&maxNeighbourhoodSizeVar)
+            neighbourhood &neighbourhoodName : (&neighbourhoodSizeName, &activatorName, [&var])
         |]
         ++ fromMaybe [] statements
         ++ concat [ [essenceStmts| such that  &activatorVar -> &c |] | Just c <- [consPositive] ]
         ++ concat [ [essenceStmts| such that !&activatorVar -> &c |] | Just c <- [consNegative] ]
-        ++ concat [ [essenceStmts| such that !&activatorVar -> dontCare(&sizeVar) |] ]
+        ++ concat [ [essenceStmts| such that !&activatorVar -> dontCare(&neighbourhoodSize) |] ]
 
 
 type NeighbourhoodGenResult = (Name, Expression -> (Maybe [Statement], Maybe Expression, Maybe Expression))
@@ -100,8 +100,8 @@ setLiftExists theVar (DomainSet _ _ inner) = do
     ns <- allNeighbourhoods i inner
     return
         [ ( mconcat [generatorName, "_", innerGeneratorName]
-          , \ sizeVar ->
-              let (statements, consPositive, consNegative) = rule sizeVar
+          , \ neighbourhoodSize ->
+              let (statements, consPositive, consNegative) = rule neighbourhoodSize
               in  ( statements
                   , liftCons <$> consPositive
                   , liftCons <$> consNegative
@@ -117,11 +117,11 @@ setRemove theVar DomainSet{} = do
     let generatorName = "setRemove"
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
             ( Nothing
             , Just [essence|
                 &theVar subsetEq incumbent(&theVar) /\
-                |incumbent(&theVar)| - |&theVar| = &sizeVar
+                |incumbent(&theVar)| - |&theVar| = &neighbourhoodSize
               |]
             , Nothing
             )
@@ -134,11 +134,11 @@ setAdd theVar DomainSet{} = do
     let generatorName = "setAdd"
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
             ( Nothing
             , Just [essence|
                 incumbent(&theVar) subsetEq &theVar /\
-                |&theVar| - |incumbent(&theVar)| = &sizeVar
+                |&theVar| - |incumbent(&theVar)| = &neighbourhoodSize
               |]
             , Nothing
             )
@@ -151,10 +151,10 @@ setSwap theVar DomainSet{} = do
     let generatorName = "setSwap"
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
             ( Nothing
             , Just [essence|
-                (|&theVar - incumbent(&theVar)| = &sizeVar) /\
+                (|&theVar - incumbent(&theVar)| = &neighbourhoodSize) /\
                 (|incumbent(&theVar)| = |&theVar|)
               |]
             , Nothing
@@ -168,10 +168,10 @@ setSwapAdd theVar DomainSet{} = do
     let generatorName = "setSwapAdd"
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
             ( Nothing
             , Just [essence|
-                |&theVar - incumbent(&theVar)| = &sizeVar
+                |&theVar - incumbent(&theVar)| = &neighbourhoodSize
               |]
             , Nothing
             )
@@ -191,21 +191,21 @@ sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat, &jPat :  int(1..&maxSize)
               |]
             , Just [essence|
-                and([ &j - &i = &sizeVar
+                and([ &j - &i = &neighbourhoodSize
                     , &i <= |&theVar|
                     , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&neighbourhoodSize)
                           , &k < &i
                           , &k > &j
                           ])
                     , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&neighbourhoodSize)
                           , &k >= &i
                           , &k <= &j
                           ])
@@ -227,13 +227,14 @@ sequenceAnySwap theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-         , \ sizeVar ->
+         , \ neighbourhoodSize ->
              ( Nothing
              , Just [essence|
-                 &sizeVar * 2 = sum([ toInt(&theVar(&i) != incumbent(&theVar)(&i))
-                                    | &iPat : int(1..&maxSize)
-                                    , &i <= |&theVar|
-                                    ])
+                 &neighbourhoodSize * 2
+                     = sum([ toInt(&theVar(&i) != incumbent(&theVar)(&i))
+                           | &iPat : int(1..&maxSize)
+                           , &i <= |&theVar|
+                           ])
                |]
              , Nothing
              )
@@ -254,16 +255,16 @@ sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ sizeVar -> 
+        , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
                 find &iPat, &jPat, &lPat :  int(1..&maxSize)
               |]
             , Just [essence|
-                and([ &j - &i = &sizeVar
+                and([ &j - &i = &neighbourhoodSize
                     , &i <= |&theVar|
                     , &j <= |&theVar|
                     , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                          | &kPat : int(1..&sizeVar)
+                          | &kPat : int(1..&neighbourhoodSize)
                           , &k < &i
                           , &k > &j
                           ])
@@ -292,9 +293,9 @@ sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ sizeVar -> 
+        , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&sizeVar)
+                find &iPat :  int(1..&neighbourhoodSize)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
@@ -324,9 +325,9 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ sizeVar -> 
+        , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&sizeVar)
+                find &iPat :  int(1..&neighbourhoodSize)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&i+&k)
@@ -356,9 +357,9 @@ sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ sizeVar -> 
+        , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&sizeVar)
+                find &iPat :  int(1..&neighbourhoodSize)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
@@ -388,9 +389,9 @@ sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ sizeVar -> 
+        , \ neighbourhoodSize -> 
             ( Just [essenceStmts|
-                find &iPat :  int(1..&sizeVar)
+                find &iPat :  int(1..&neighbourhoodSize)
               |]
             , Just [essence|
                 and([ and([ &theVar(&k) = incumbent(&theVar)(&k - &i)
