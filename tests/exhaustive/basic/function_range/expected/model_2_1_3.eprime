@@ -2,47 +2,51 @@ language ESSENCE' 1.0
 
 find x_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
 find x_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
-find aux1_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..4)
-find aux2_Occurrence: matrix indexed by [int(1..3)] of bool
-find aux3_ExplicitVarSizeWithMarker_Marker: int(0..3)
-find aux3_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
+find conjure_aux1_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..4)
+find conjure_aux2_Occurrence: matrix indexed by [int(1..3)] of bool
+find conjure_aux3_ExplicitVarSizeWithMarker_Marker: int(0..3)
+find conjure_aux3_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
 such that
-    and([aux1_ExplicitVarSizeWithDummy[q10] < aux1_ExplicitVarSizeWithDummy[q10 + 1] \/
-         aux1_ExplicitVarSizeWithDummy[q10] = 4
+    and([conjure_aux1_ExplicitVarSizeWithDummy[q10] < conjure_aux1_ExplicitVarSizeWithDummy[q10 + 1] \/
+         conjure_aux1_ExplicitVarSizeWithDummy[q10] = 4
              | q10 : int(1..2)]),
-    and([aux1_ExplicitVarSizeWithDummy[q11] = 4 -> aux1_ExplicitVarSizeWithDummy[q11 + 1] = 4 | q11 : int(1..2)]),
+    and([conjure_aux1_ExplicitVarSizeWithDummy[q11] = 4 -> conjure_aux1_ExplicitVarSizeWithDummy[q11 + 1] = 4
+             | q11 : int(1..2)]),
     and([x_Function1DPartial_Flags[q14] ->
-         or([aux1_ExplicitVarSizeWithDummy[q16] != 4 /\
-             aux1_ExplicitVarSizeWithDummy[q16] = x_Function1DPartial_Values[q14]
+         or([conjure_aux1_ExplicitVarSizeWithDummy[q16] != 4 /\
+             conjure_aux1_ExplicitVarSizeWithDummy[q16] = x_Function1DPartial_Values[q14]
                  | q16 : int(1..3)])
              | q14 : int(1..3)]),
-    and([aux1_ExplicitVarSizeWithDummy[q17] != 4 ->
-         or([x_Function1DPartial_Flags[q18] /\ x_Function1DPartial_Values[q18] = aux1_ExplicitVarSizeWithDummy[q17]
+    and([conjure_aux1_ExplicitVarSizeWithDummy[q17] != 4 ->
+         or([x_Function1DPartial_Flags[q18] /\
+             x_Function1DPartial_Values[q18] = conjure_aux1_ExplicitVarSizeWithDummy[q17]
                  | q18 : int(1..3)])
              | q17 : int(1..3)]),
-    and([x_Function1DPartial_Flags[q25] -> aux2_Occurrence[x_Function1DPartial_Values[q25]] | q25 : int(1..3)]),
-    and([aux2_Occurrence[q22] ->
+    and([x_Function1DPartial_Flags[q25] -> conjure_aux2_Occurrence[x_Function1DPartial_Values[q25]] | q25 : int(1..3)]),
+    and([conjure_aux2_Occurrence[q22] ->
          or([x_Function1DPartial_Flags[q26] /\ x_Function1DPartial_Values[q26] = q22 | q26 : int(1..3)])
              | q22 : int(1..3)]),
-    and([q31 + 1 <= aux3_ExplicitVarSizeWithMarker_Marker ->
-         aux3_ExplicitVarSizeWithMarker_Values[q31] < aux3_ExplicitVarSizeWithMarker_Values[q31 + 1]
+    and([q31 + 1 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker ->
+         conjure_aux3_ExplicitVarSizeWithMarker_Values[q31] < conjure_aux3_ExplicitVarSizeWithMarker_Values[q31 + 1]
              | q31 : int(1..2)]),
-    and([q32 > aux3_ExplicitVarSizeWithMarker_Marker -> aux3_ExplicitVarSizeWithMarker_Values[q32] = 1
+    and([q32 > conjure_aux3_ExplicitVarSizeWithMarker_Marker -> conjure_aux3_ExplicitVarSizeWithMarker_Values[q32] = 1
              | q32 : int(1..3)]),
     and([x_Function1DPartial_Flags[q34] ->
-         or([q36 <= aux3_ExplicitVarSizeWithMarker_Marker /\
-             aux3_ExplicitVarSizeWithMarker_Values[q36] = x_Function1DPartial_Values[q34]
+         or([q36 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker /\
+             conjure_aux3_ExplicitVarSizeWithMarker_Values[q36] = x_Function1DPartial_Values[q34]
                  | q36 : int(1..3)])
              | q34 : int(1..3)]),
-    and([q37 <= aux3_ExplicitVarSizeWithMarker_Marker ->
+    and([q37 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker ->
          or([x_Function1DPartial_Flags[q38] /\
-             x_Function1DPartial_Values[q38] = aux3_ExplicitVarSizeWithMarker_Values[q37]
+             x_Function1DPartial_Values[q38] = conjure_aux3_ExplicitVarSizeWithMarker_Values[q37]
                  | q38 : int(1..3)])
              | q37 : int(1..3)]),
-    or([aux1_ExplicitVarSizeWithDummy[q19] != 4 /\ aux1_ExplicitVarSizeWithDummy[q19] = 1 | q19 : int(1..3)]),
-    or([aux2_Occurrence[q21] /\ q21 = 2 | q21 : int(1..3)]),
-    and([q39 <= aux3_ExplicitVarSizeWithMarker_Marker ->
-         1 = aux3_ExplicitVarSizeWithMarker_Values[q39] \/ 2 = aux3_ExplicitVarSizeWithMarker_Values[q39]
+    or([conjure_aux1_ExplicitVarSizeWithDummy[q19] != 4 /\ conjure_aux1_ExplicitVarSizeWithDummy[q19] = 1
+            | q19 : int(1..3)]),
+    or([conjure_aux2_Occurrence[q21] /\ q21 = 2 | q21 : int(1..3)]),
+    and([q39 <= conjure_aux3_ExplicitVarSizeWithMarker_Marker ->
+         1 = conjure_aux3_ExplicitVarSizeWithMarker_Values[q39] \/
+         2 = conjure_aux3_ExplicitVarSizeWithMarker_Values[q39]
              | q39 : int(1..3)]),
     and([x_Function1DPartial_Flags[q1] = false -> x_Function1DPartial_Values[q1] = 1 | q1 : int(1..3)])
 

@@ -4,6 +4,6 @@ find b: bool
 find i: int(0..5)
 find x: int(1..2)
 such that
-    toInt(false = b) * 5 + toInt(2 = x /\ b) * x = i,
+    toInt(false = b) * 5 + toInt(2 = x /\ b) * catchUndef(x, 0) = i,
     false = b \/ 2 = x /\ b
 

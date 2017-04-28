@@ -2,6 +2,18 @@ language ESSENCE' 1.0
 
 letting given1_PartitionOccurrence_NumParts be [2, 4; int(2, 5)]
 letting given1_PartitionOccurrence_WhichPart be [[1, 1, 2, 2, 2; int(1..5)], [1, 1, 2, 3, 4; int(1..5)]; int(2, 5)]
+$ Visualisation for given1_PartitionOccurrence_WhichPart
+$ 1 1 2 2 2
+$ 1 1 2 3 4
+
 letting given1_PartitionOccurrence_PartSizes be [[2, 3, 0, 0, 0; int(1..5)], [2, 1, 1, 1, 0; int(1..5)]; int(2, 5)]
+$ Visualisation for given1_PartitionOccurrence_PartSizes
+$ 2 3 0 0 0
+$ 2 1 1 1 0
+
 letting given1_PartitionOccurrence_FirstIndex be [[0, 2, 1, 1, 1; int(1..5)], [0, 2, 3, 4, 1; int(1..5)]; int(2, 5)]
+$ Visualisation for given1_PartitionOccurrence_FirstIndex
+$ 0 2 1 1 1
+$ 0 2 3 4 1
+
 letting given2 be 3

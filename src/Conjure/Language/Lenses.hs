@@ -1109,6 +1109,25 @@ opAllDiff _ =
     )
 
 
+opAllDiffExcept
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> x
+       , x -> m (x, x)
+       )
+opAllDiffExcept _ =
+    ( \ x y -> inject $ MkOpAllDiffExcept $ OpAllDiffExcept x y
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpAllDiffExcept (OpAllDiffExcept x y) -> return (x, y)
+                _ -> na ("Lenses.opAllDiffExcept:" <++> pretty p)
+    )
+
+
 constantInt
     :: MonadFail m
     => Proxy (m :: * -> *)

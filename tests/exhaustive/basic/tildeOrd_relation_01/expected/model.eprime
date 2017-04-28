@@ -4,17 +4,17 @@ find a_RelationAsMatrix: matrix indexed by [int(1..2), bool] of bool
 find b_RelationAsMatrix: matrix indexed by [int(1..2), bool] of bool
 such that
     or([a_RelationAsMatrix[q7_1, q7_2] /\
-        (sum([toInt(a_RelationAsMatrix[q23_1, q23_2]) * toInt(q23_1 = q7_1 /\ q23_2 = q7_2)
+        (sum([toInt(a_RelationAsMatrix[q23_1, q23_2]) * catchUndef(toInt(q23_1 = q7_1 /\ q23_2 = q7_2), 0)
                   | q23_1 : int(1..2), q23_2 : bool])
          <
-         sum([toInt(b_RelationAsMatrix[q9_1, q9_2]) * toInt(q9_1 = q7_1 /\ q9_2 = q7_2)
+         sum([toInt(b_RelationAsMatrix[q9_1, q9_2]) * catchUndef(toInt(q9_1 = q7_1 /\ q9_2 = q7_2), 0)
                   | q9_1 : int(1..2), q9_2 : bool])
          /\
          (and([a_RelationAsMatrix[q10_1, q10_2] ->
-               sum([toInt(a_RelationAsMatrix[q21_1, q21_2]) * toInt(q21_1 = q10_1 /\ q21_2 = q10_2)
+               sum([toInt(a_RelationAsMatrix[q21_1, q21_2]) * catchUndef(toInt(q21_1 = q10_1 /\ q21_2 = q10_2), 0)
                         | q21_1 : int(1..2), q21_2 : bool])
                =
-               sum([toInt(b_RelationAsMatrix[q12_1, q12_2]) * toInt(q12_1 = q10_1 /\ q12_2 = q10_2)
+               sum([toInt(b_RelationAsMatrix[q12_1, q12_2]) * catchUndef(toInt(q12_1 = q10_1 /\ q12_2 = q10_2), 0)
                         | q12_1 : int(1..2), q12_2 : bool])
                    | q10_1 : int(1..2), q10_2 : bool, q10_1 < q7_1 \/ q10_1 = q7_1 /\ q10_2 < q7_2])
           /\
@@ -22,10 +22,10 @@ such that
                !or([a_RelationAsMatrix[q17_1, q17_2] /\ (q17_1 = q13_1 /\ q17_2 = q13_2)
                         | q17_1 : int(1..2), q17_2 : bool])
                ->
-               sum([toInt(a_RelationAsMatrix[q19_1, q19_2]) * toInt(q19_1 = q13_1 /\ q19_2 = q13_2)
+               sum([toInt(a_RelationAsMatrix[q19_1, q19_2]) * catchUndef(toInt(q19_1 = q13_1 /\ q19_2 = q13_2), 0)
                         | q19_1 : int(1..2), q19_2 : bool])
                =
-               sum([toInt(b_RelationAsMatrix[q15_1, q15_2]) * toInt(q15_1 = q13_1 /\ q15_2 = q13_2)
+               sum([toInt(b_RelationAsMatrix[q15_1, q15_2]) * catchUndef(toInt(q15_1 = q13_1 /\ q15_2 = q13_2), 0)
                         | q15_1 : int(1..2), q15_2 : bool])
                    | q13_1 : int(1..2), q13_2 : bool, q13_1 < q7_1 \/ q13_1 = q7_1 /\ q13_2 < q7_2])))
             | q7_1 : int(1..2), q7_2 : bool])
@@ -33,17 +33,17 @@ such that
     or([b_RelationAsMatrix[q24_1, q24_2] /\
         !or([a_RelationAsMatrix[q42_1, q42_2] /\ (q42_1 = q24_1 /\ q42_2 = q24_2) | q42_1 : int(1..2), q42_2 : bool])
         /\
-        (sum([toInt(a_RelationAsMatrix[q40_1, q40_2]) * toInt(q40_1 = q24_1 /\ q40_2 = q24_2)
+        (sum([toInt(a_RelationAsMatrix[q40_1, q40_2]) * catchUndef(toInt(q40_1 = q24_1 /\ q40_2 = q24_2), 0)
                   | q40_1 : int(1..2), q40_2 : bool])
          <
-         sum([toInt(b_RelationAsMatrix[q26_1, q26_2]) * toInt(q26_1 = q24_1 /\ q26_2 = q24_2)
+         sum([toInt(b_RelationAsMatrix[q26_1, q26_2]) * catchUndef(toInt(q26_1 = q24_1 /\ q26_2 = q24_2), 0)
                   | q26_1 : int(1..2), q26_2 : bool])
          /\
          (and([a_RelationAsMatrix[q27_1, q27_2] ->
-               sum([toInt(a_RelationAsMatrix[q38_1, q38_2]) * toInt(q38_1 = q27_1 /\ q38_2 = q27_2)
+               sum([toInt(a_RelationAsMatrix[q38_1, q38_2]) * catchUndef(toInt(q38_1 = q27_1 /\ q38_2 = q27_2), 0)
                         | q38_1 : int(1..2), q38_2 : bool])
                =
-               sum([toInt(b_RelationAsMatrix[q29_1, q29_2]) * toInt(q29_1 = q27_1 /\ q29_2 = q27_2)
+               sum([toInt(b_RelationAsMatrix[q29_1, q29_2]) * catchUndef(toInt(q29_1 = q27_1 /\ q29_2 = q27_2), 0)
                         | q29_1 : int(1..2), q29_2 : bool])
                    | q27_1 : int(1..2), q27_2 : bool, q27_1 < q24_1 \/ q27_1 = q24_1 /\ q27_2 < q24_2])
           /\
@@ -51,10 +51,10 @@ such that
                !or([a_RelationAsMatrix[q34_1, q34_2] /\ (q34_1 = q30_1 /\ q34_2 = q30_2)
                         | q34_1 : int(1..2), q34_2 : bool])
                ->
-               sum([toInt(a_RelationAsMatrix[q36_1, q36_2]) * toInt(q36_1 = q30_1 /\ q36_2 = q30_2)
+               sum([toInt(a_RelationAsMatrix[q36_1, q36_2]) * catchUndef(toInt(q36_1 = q30_1 /\ q36_2 = q30_2), 0)
                         | q36_1 : int(1..2), q36_2 : bool])
                =
-               sum([toInt(b_RelationAsMatrix[q32_1, q32_2]) * toInt(q32_1 = q30_1 /\ q32_2 = q30_2)
+               sum([toInt(b_RelationAsMatrix[q32_1, q32_2]) * catchUndef(toInt(q32_1 = q30_1 /\ q32_2 = q30_2), 0)
                         | q32_1 : int(1..2), q32_2 : bool])
                    | q30_1 : int(1..2), q30_2 : bool, q30_1 < q24_1 \/ q30_1 = q24_1 /\ q30_2 < q24_2])))
             | q24_1 : int(1..2), q24_2 : bool])

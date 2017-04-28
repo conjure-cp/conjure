@@ -81,9 +81,11 @@ instance DomainOf Expression where
 instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Dom :< x) => DomainOf (Op x) where
     domainOf (MkOpActive x) = domainOf x
     domainOf (MkOpAllDiff x) = domainOf x
+    domainOf (MkOpAllDiffExcept x) = domainOf x
     domainOf (MkOpAnd x) = domainOf x
     domainOf (MkOpApart x) = domainOf x
     domainOf (MkOpAttributeAsConstraint x) = domainOf x
+    domainOf (MkOpCatchUndef x) = domainOf x
     domainOf (MkOpDefined x) = domainOf x
     domainOf (MkOpDiv x) = domainOf x
     domainOf (MkOpDontCare x) = domainOf x
@@ -150,9 +152,11 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
 
     indexDomainsOf (MkOpActive x) = indexDomainsOf x
     indexDomainsOf (MkOpAllDiff x) = indexDomainsOf x
+    indexDomainsOf (MkOpAllDiffExcept x) = indexDomainsOf x
     indexDomainsOf (MkOpAnd x) = indexDomainsOf x
     indexDomainsOf (MkOpApart x) = indexDomainsOf x
     indexDomainsOf (MkOpAttributeAsConstraint x) = indexDomainsOf x
+    indexDomainsOf (MkOpCatchUndef x) = indexDomainsOf x
     indexDomainsOf (MkOpDefined x) = indexDomainsOf x
     indexDomainsOf (MkOpDiv x) = indexDomainsOf x
     indexDomainsOf (MkOpDontCare x) = indexDomainsOf x
@@ -303,6 +307,12 @@ instance DomainOf (OpActive x) where
 
 instance DomainOf (OpAllDiff x) where
     domainOf _ = return DomainBool
+
+instance DomainOf (OpAllDiffExcept x) where
+    domainOf _ = return DomainBool
+
+instance DomainOf x => DomainOf (OpCatchUndef x) where
+    domainOf (OpCatchUndef x _) = domainOf x
 
 instance DomainOf (OpAnd x) where
     domainOf _ = return DomainBool

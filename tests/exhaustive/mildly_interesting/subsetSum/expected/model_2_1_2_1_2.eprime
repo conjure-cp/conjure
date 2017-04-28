@@ -16,7 +16,7 @@ such that
          or([nums_Explicit[q23] = x_ExplicitVarSizeWithMarker_Values[q21] | q23 : int(1..fin1)])
              | q21 : int(1..let1)]),
     s =
-    sum([toInt(q19 <= x_ExplicitVarSizeWithMarker_Marker) * x_ExplicitVarSizeWithMarker_Values[q19]
+    sum([toInt(q19 <= x_ExplicitVarSizeWithMarker_Marker) * catchUndef(x_ExplicitVarSizeWithMarker_Values[q19], 0)
              | q19 : int(1..let1)]),
     and([q2 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q2] < x_ExplicitVarSizeWithMarker_Values[q2 + 1]

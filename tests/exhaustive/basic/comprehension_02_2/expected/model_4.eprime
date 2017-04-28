@@ -5,7 +5,7 @@ find y: int(7, 8)
 such that
     x =
     sum([toInt(or([i_ExplicitVarSizeWithFlags_Values[q7] = y | q7 : int(1..2), i_ExplicitVarSizeWithFlags_Flags[q7]])) *
-         i_ExplicitVarSizeWithFlags_Values[q8]
+         catchUndef(i_ExplicitVarSizeWithFlags_Values[q8], 0)
              | i_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..2)] of bool,
                i_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..2)] of int(7..8), q8 : int(1..2),
                i_ExplicitVarSizeWithFlags_Flags[2] ->

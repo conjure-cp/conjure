@@ -39,15 +39,22 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
             , let nm = nm1 `mappend` "_EnumSize"
             ]
 
-    let eprimeLettings = extractLettings essenceParam ++
-                         extractLettings eprimeParam ++
-                         extractLettings eprimeSolution ++
-                         extractLettings eprimeModel ++
-                         (eprimeModel |> mInfo |> miLettings) ++
-                         eprimeLettingsForEnums
+    let eprimeLettings0 = extractLettings essenceParam ++
+                          extractLettings eprimeParam ++
+                          extractLettings eprimeSolution ++
+                          extractLettings eprimeModel ++
+                          (eprimeModel |> mInfo |> miLettings) ++
+                          eprimeLettingsForEnums
     let essenceFindNames = eprimeModel |> mInfo |> miFinds
     let essenceFinds     = eprimeModel |> mInfo |> miRepresentations
                                        |> filter (\ (n,_) -> n `elem` essenceFindNames )
+
+    -- the right hand sides of these lettings may be expressions (as opposed to constants)
+    -- that will make evaluation unnecessarily slower
+    let eprimeLettings =
+            [ (name, maybe val Constant (e2c val))
+            | (name, val) <- eprimeLettings0
+            ]
 
     eprimeLettings' <- forM eprimeLettings $ \ (name, val) -> do
         constant <- instantiateExpression eprimeLettings val

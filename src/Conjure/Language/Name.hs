@@ -14,7 +14,7 @@ import qualified Data.Text as T
 import Test.QuickCheck ( Arbitrary(..), choose )
 
 
-data Name = Name Text | MachineName Text Int [Text]
+data Name = Name Text | MachineName Text Int [Text] | NameMetaVar String
     deriving (Show, Data, Typeable, Generic)
 
 instance Eq Name where
@@ -43,6 +43,7 @@ instance IsString Name where
 instance Pretty Name where
     pretty (Name n) = pretty n
     pretty (MachineName base n rest) = pretty base <> pretty n <> hcat (map pretty rest)
+    pretty (NameMetaVar n) = "&" <> pretty n
 
 instance Monoid Name where
     mempty = ""

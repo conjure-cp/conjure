@@ -5,13 +5,13 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1..4)
 letting let1 be -100
 find x: int(-100..100)
-find aux1: int(-16..3)
+find conjure_aux1: int(-16..3)
 such that
-    and([s_Occurrence[i] /\ s_Occurrence[j] -> min([i + j, i - j, i * j, i / j; int(1..4)]) <= aux1
+    and([s_Occurrence[i] /\ s_Occurrence[j] -> min([i + j, i - j, i * j, i / j; int(1..4)]) <= conjure_aux1
              | i : int(1..4), j : int(1..4), i != j, allDiff([i + j, i * j, i / j; int(1..3)]), (i - j) % 2 = 0]),
-    or([s_Occurrence[i] /\ s_Occurrence[j] /\ min([i + j, i - j, i * j, i / j; int(1..4)]) = aux1
+    or([s_Occurrence[i] /\ s_Occurrence[j] /\ min([i + j, i - j, i * j, i / j; int(1..4)]) = conjure_aux1
             | i : int(1..4), j : int(1..4), i != j, allDiff([i + j, i * j, i / j; int(1..3)]), (i - j) % 2 = 0]),
-    x = aux1,
+    x = conjure_aux1,
     and([q2 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
          s_ExplicitVarSizeWithMarker_Values[q2] < s_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..3)]),

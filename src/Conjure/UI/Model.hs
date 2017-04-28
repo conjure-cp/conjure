@@ -611,7 +611,7 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -632,7 +632,8 @@ updateDeclarations model = do
                     orders' <- forM orders $ \case
                         BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            nub <$> concatMapM (onEachDomainSearch nm) domains
+                            outNames <- concatMapM (onEachDomainSearch nm) domains
+                            return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
                 _ -> return [inStatement]
@@ -647,7 +648,7 @@ updateDeclarations model = do
         onEachDomainSearch nm domain =
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
-                Right outs -> return [ BranchingOn n
+                Right outs -> return [ n
                                      | (n, _) <- outs
                                      ]
 
@@ -1254,6 +1255,7 @@ otherRules =
         ]
 
     ,   [ rule_InlineConditions
+        , rule_InlineConditions_AllDiff
         , rule_InlineConditions_MaxMin
         ]
     ]
@@ -1679,9 +1681,11 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
             _ -> na "rule_DomainCardinality"
         return
             ( "Cardinality of a domain"
-            , do
-                (iPat, _) <- quantifiedVar
-                return [essence| sum([ 1 | &iPat : &d ]) |]
+            , case d of
+                DomainInt [RangeBounded 1 u] -> return u
+                _ -> do
+                    (iPat, _) <- quantifiedVar
+                    return [essence| sum([ 1 | &iPat : &d ]) |]
             )
 
 
@@ -1794,11 +1798,12 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             []  -> na "No condition to inline."
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
+        let bodySkipped = opSkip theGuard body
         return
             [ RuleResult
                 { ruleResultDescr = "Inlining conditions, inside" <+> nameQ
                 , ruleResultType  = ExpressionRefinement
-                , ruleResult      = return $ Comprehension (opSkip theGuard body) toKeep
+                , ruleResult      = return $ Comprehension bodySkipped toKeep
                 , ruleResultHook  = Nothing
                 } ]
     theRule _ _ = na "rule_InlineConditions"
@@ -1812,7 +1817,8 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
             Nothing -> na "rule_InlineConditions (meh-1)"
             Just z -> do
                 let h = hole z
-                case (match opAnd h, match opOr h, match opSum h, match opMin h, match opMax h) of
+                case ( match opAnd h, match opOr h, match opSum h
+                     , match opMin h, match opMax h ) of
                     (Just{}, _, _, _, _) -> return ("and", opAndSkip)
                     (_, Just{}, _, _, _) -> return ("or" , opOrSkip )
                     (_, _, Just{}, _, _) -> return ("sum", opSumSkip)
@@ -1825,7 +1831,44 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
 
     opAndSkip b x = [essence| &b -> &x |]
     opOrSkip  b x = [essence| &b /\ &x |]
-    opSumSkip b x = [essence| toInt(&b) * &x |]
+    opSumSkip b x = [essence| toInt(&b) * catchUndef(&x, 0) |]
+
+
+rule_InlineConditions_AllDiff :: Rule
+rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule where
+    theRule (Op (MkOpAllDiff (OpAllDiff (Comprehension body gensOrConds)))) = do
+        let (toInline, toKeep) = mconcat
+                [ case goc of
+                    Condition x | categoryOf x == CatDecision -> ([x],[])
+                    _ -> ([],[goc])
+                | goc <- gensOrConds
+                ]
+        theGuard <- case toInline of
+            []  -> na "No condition to inline."
+            xs  -> return $ make opAnd $ fromList xs
+
+        domBody <- domainOf body
+        let
+            collectLowerBounds (RangeSingle x) = return x
+            collectLowerBounds (RangeBounded x _) = return x
+            collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
+
+            collectLowerBoundsD (DomainInt rs) = mapM collectLowerBounds rs
+            collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
+
+        bounds <- collectLowerBoundsD domBody
+        let lowerBound = make opMin (fromList bounds)
+
+        -- for each element, we do element-lowerBound+1
+        -- this makes sure the smallest element is 1
+        -- hence we can use 0 as the except value!
+        let bodySkipped = [essence| toInt(&theGuard) * catchUndef(&body + (1 - &lowerBound), 0) |]
+
+        return
+            ( "Inlining conditions, inside allDiff"
+            , return $ make opAllDiffExcept (Comprehension bodySkipped toKeep) 0
+            )
+    theRule _ = na "rule_InlineConditions_AllDiff"
 
 
 rule_InlineConditions_MaxMin :: Rule
@@ -1923,8 +1966,15 @@ rule_FullEvaluate = "full-evaluate" `namedRule` theRule where
 
 
 rule_PartialEvaluate :: Rule
-rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
-    theRule (Op x) = do
+rule_PartialEvaluate = "partial-evaluate" `namedRuleZ` theRule where
+    -- if a variable only has a single value in its domain, replace it with the value
+    theRule z (Reference _ (Just (DeclHasRepr _ _ (singletonDomainInt -> Just val)))) =
+        case hole <$> Zipper.up z of
+            Just (Op (MkOpTrue _)) -> na "rule_PartialEvaluate, inside a true(ref)"
+            _                      -> return ( "Partial evaluator"
+                                             , return val
+                                             )
+    theRule _ (Op x) = do
         x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
             [ "rule_PartialEvaluate, simplifier returns the input unchanged."
@@ -1936,7 +1986,7 @@ rule_PartialEvaluate = "partial-evaluate" `namedRule` theRule where
             ( "Partial evaluator"
             , return x'
             )
-    theRule _ = na "rule_PartialEvaluate"
+    theRule _ _ = na "rule_PartialEvaluate"
 
 
 -- | shifting quantifiers inwards, if they operate on a row of a 2d matrix,

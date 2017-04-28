@@ -13,7 +13,9 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..let1)] of int(
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q10] -> nums_Occurrence[x_ExplicitVarSizeWithFlags_Values[q10]]
              | q10 : int(1..let1)]),
-    s = sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) * x_ExplicitVarSizeWithFlags_Values[q8] | q8 : int(1..let1)]),
+    s =
+    sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) * catchUndef(x_ExplicitVarSizeWithFlags_Values[q8], 0)
+             | q8 : int(1..let1)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
          x_ExplicitVarSizeWithFlags_Values[q2] < x_ExplicitVarSizeWithFlags_Values[q2 + 1]
              | q2 : int(1..let1 - 1)]),

@@ -5,7 +5,7 @@ find y: int(7, 8)
 such that
     x =
     sum([toInt(or([i_ExplicitVarSizeWithDummy[q7] = y | q7 : int(1..2), i_ExplicitVarSizeWithDummy[q7] != 9])) *
-         i_ExplicitVarSizeWithDummy[q5]
+         catchUndef(i_ExplicitVarSizeWithDummy[q5], 0)
              | i_ExplicitVarSizeWithDummy : matrix indexed by [int(1..2)] of int(7..9), q5 : int(1..2),
                i_ExplicitVarSizeWithDummy[1] < i_ExplicitVarSizeWithDummy[2] \/ i_ExplicitVarSizeWithDummy[1] = 9,
                i_ExplicitVarSizeWithDummy[1] = 9 -> i_ExplicitVarSizeWithDummy[2] = 9,

@@ -16,8 +16,8 @@ such that
               x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q76, q79] != 5;
                   int(1..3)])
          ->
-         2 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q76, q79] \/
-         4 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q76, q79]
+         4 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q76, q79] \/
+         2 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q76, q79]
              | q76 : int(1..16), q79 : int(1..4)]),
     or([and([q88 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
              or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q88, q90] != 5 /\
@@ -25,7 +25,7 @@ such that
                      | q90 : int(1..4)]),
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q88, q91] != 5;
                  int(1..3)])
-        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q88, q91] = 2
+        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q88, q91] = 4
             | q88 : int(1..16), q91 : int(1..4)]),
     or([and([q96 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
              or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q96, q98] != 5 /\
@@ -33,7 +33,7 @@ such that
                      | q98 : int(1..4)]),
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q96, q99] != 5;
                  int(1..3)])
-        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q96, q99] = 4
+        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q96, q99] = 2
             | q96 : int(1..16), q99 : int(1..4)]),
     and([q104 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q104, q105] != 5

@@ -26,12 +26,12 @@ parameterGenerator = runNameGen . resolveNames >=> core
                         Just (_ :: Expression)
                                 -> return [Declaration (FindOrGiven Find nm dom)]
                 Declaration (FindOrGiven Find  _  _  ) -> return []
-                Declaration {}                         -> return [st]
-                SearchOrder {}                         -> return []
-                SearchHeuristic {}                     -> return []
-                Where       xs                         -> return [SuchThat xs]
-                Objective   {}                         -> return []
-                SuchThat    {}                         -> return []
+                Declaration       {}                   -> return [st]
+                SearchOrder       {}                   -> return []
+                SearchHeuristic   {}                   -> return []
+                Where             xs                   -> return [SuchThat xs]
+                Objective         {}                   -> return []
+                SuchThat          {}                   -> return []
             if null errs
                 then return m { mStatements = concat outStatements }
                 else userErr1 $ vcat $ "Some parameters have infinite domains."

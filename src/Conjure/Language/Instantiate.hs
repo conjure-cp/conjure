@@ -94,25 +94,8 @@ instantiateE (Comprehension body gensOrConds) = do
                 else do
                     tell (HasUndef (Any True))
                     return []
-        loop (Generator (GenDomainHasRepr pat domain) : rest) = do
-            DomainInConstant domainConstant <- instantiateE (Domain (forgetRepr domain))
-            let undefinedsInsideTheDomain =
-                    [ und
-                    | und@ConstantUndefined{} <- universeBi domainConstant
-                    ]
-            if null undefinedsInsideTheDomain
-                then do
-                    enumeration <- enumerateDomain domainConstant
-                    concatMapM
-                        (\ val -> scope $ do
-                            valid <- bind (Single pat) val
-                            if valid
-                                then loop rest
-                                else return [] )
-                        enumeration
-                else do
-                    tell (HasUndef (Any True))
-                    return []
+        loop (Generator (GenDomainHasRepr pat domain) : rest) =
+            loop (Generator (GenDomainNoRepr (Single pat) (forgetRepr domain)) : rest)
         loop (Generator (GenInExpr pat expr) : rest) = do
             exprConstant <- instantiateE expr
             enumeration <- enumerateInConstant exprConstant

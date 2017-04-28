@@ -12,7 +12,7 @@ module Conjure.Prelude
     , withRest, withAfter, withBefore
     , T.Text, stringToText, textToString
     , sameLength
-    , concatMapM
+    , concatMapM, concatForM
     , timedIO, timedPutStrLn
     , isLeft, isRight
     , tracing
@@ -202,7 +202,7 @@ import System.CPUTime ( getCPUTime )
 -- time
 import Data.Time.Clock ( getCurrentTime )
 
-import Debug.Trace as X ( trace )
+import Debug.Trace as X ( trace, traceM )
 
 tracing :: Show a => String -> a -> a
 tracing s a = trace ("tracing " ++ s ++ ": " ++ show a) a
@@ -257,6 +257,9 @@ sameLength _ _ = False
 
 concatMapM :: (Functor m, Monad m) => (a -> m [b]) -> [a] -> m [b]
 concatMapM f xs = concat <$> mapM f xs
+
+concatForM :: (Functor m, Monad m) => [a] -> (a -> m [b]) -> m [b]
+concatForM f xs = concatMapM xs f
 
 timedIO :: IO a -> IO (a, Double)
 timedIO io = do

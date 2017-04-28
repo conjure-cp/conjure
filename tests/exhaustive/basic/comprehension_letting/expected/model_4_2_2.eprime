@@ -5,7 +5,7 @@ find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 letting let1 be -100
 find x: int(-100..100)
-find aux1: int(-20..3)
+find conjure_aux1: int(-20..3)
 such that
     and([and([s_ExplicitVarSizeWithFlags_Flags[q18], s_ExplicitVarSizeWithDummy[q19] != 5,
               s_ExplicitVarSizeWithFlags_Values[q18] != s_ExplicitVarSizeWithDummy[q19],
@@ -21,7 +21,7 @@ such that
               s_ExplicitVarSizeWithFlags_Values[q18] * s_ExplicitVarSizeWithDummy[q19],
               s_ExplicitVarSizeWithFlags_Values[q18] / s_ExplicitVarSizeWithDummy[q19];
                   int(1..4)])
-         <= aux1
+         <= conjure_aux1
              | q18 : int(1..4), q19 : int(1..4)]),
     or([and([s_ExplicitVarSizeWithFlags_Flags[q18], s_ExplicitVarSizeWithDummy[q19] != 5,
              s_ExplicitVarSizeWithFlags_Values[q18] != s_ExplicitVarSizeWithDummy[q19],
@@ -37,9 +37,9 @@ such that
              s_ExplicitVarSizeWithFlags_Values[q18] * s_ExplicitVarSizeWithDummy[q19],
              s_ExplicitVarSizeWithFlags_Values[q18] / s_ExplicitVarSizeWithDummy[q19];
                  int(1..4)])
-        = aux1
+        = conjure_aux1
             | q18 : int(1..4), q19 : int(1..4)]),
-    x = aux1,
+    x = conjure_aux1,
     and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),
