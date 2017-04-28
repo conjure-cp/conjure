@@ -264,7 +264,7 @@ sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ neighbourhoodSize -> 
+        , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat, &jPat, &lPat :  int(1..&maxSize)
               |]
@@ -303,7 +303,7 @@ sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ neighbourhoodSize -> 
+        , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
@@ -336,7 +336,7 @@ sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ neighbourhoodSize -> 
+        , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
@@ -369,7 +369,7 @@ sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ neighbourhoodSize -> 
+        , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
@@ -402,7 +402,7 @@ sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-        , \ neighbourhoodSize -> 
+        , \ neighbourhoodSize ->
             ( Just [essenceStmts|
                 find &iPat :  int(1..&maxNeighbourhoodSizeVar)
               |]
