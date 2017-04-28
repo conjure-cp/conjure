@@ -36,7 +36,7 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
              , MonadIO
              )
 
-class Monad m => NameGen m where
+class (Functor m, Applicative m, Monad m) => NameGen m where
     nextName :: NameKind -> m Name
     exportNameGenState :: m [(NameKind, Int)]
     importNameGenState :: [(NameKind, Int)] -> m ()
@@ -76,7 +76,7 @@ instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
-instance Monad m => NameGen (NameGenM m) where
+instance (Functor m, Monad m) => NameGen (NameGenM m) where
     nextName k = do
         mi <- gets (M.lookup k)
         case mi of
