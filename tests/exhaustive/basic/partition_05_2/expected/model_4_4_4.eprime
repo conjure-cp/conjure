@@ -9,19 +9,19 @@ such that
               or([x_PartitionOccurrence_WhichPart[q21] = q15 /\ q21 = 2 | q21 : int(1..4)]),
               x_PartitionOccurrence_WhichPart[q17] = q15;
                   int(1..3)])
-         -> 2 = q17 \/ 4 = q17
+         -> 4 = q17 \/ 2 = q17
              | q15 : int(1..4), q17 : int(1..4)]),
     or([and([q27 <= x_PartitionOccurrence_NumParts,
              or([x_PartitionOccurrence_WhichPart[q31] = q27 /\ q31 = 2 | q31 : int(1..4)]),
              x_PartitionOccurrence_WhichPart[q29] = q27;
                  int(1..3)])
-        /\ q29 = 2
+        /\ q29 = 4
             | q27 : int(1..4), q29 : int(1..4)]),
     or([and([q35 <= x_PartitionOccurrence_NumParts,
              or([x_PartitionOccurrence_WhichPart[q39] = q35 /\ q39 = 2 | q39 : int(1..4)]),
              x_PartitionOccurrence_WhichPart[q37] = q35;
                  int(1..3)])
-        /\ q37 = 4
+        /\ q37 = 2
             | q35 : int(1..4), q37 : int(1..4)]),
     and([q43 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q45] = q43 ->
          or([1 = q45, 2 = q45, 3 = q45, 4 = q45; int(1..4)])

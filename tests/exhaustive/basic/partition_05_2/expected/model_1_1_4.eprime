@@ -11,19 +11,19 @@ such that
               x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q55, 2],
               x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q55, q53];
                   int(1..3)])
-         -> 2 = q53 \/ 4 = q53
+         -> 4 = q53 \/ 2 = q53
              | q55 : int(1..16), q53 : int(1..4)]),
     or([and([q64 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q64, 2],
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q64, q62];
                  int(1..3)])
-        /\ q62 = 2
+        /\ q62 = 4
             | q64 : int(1..16), q62 : int(1..4)]),
     or([and([q69 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q69, 2],
              x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q69, q67];
                  int(1..3)])
-        /\ q67 = 4
+        /\ q67 = 2
             | q69 : int(1..16), q67 : int(1..4)]),
     and([q74 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q74, q72]
