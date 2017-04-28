@@ -1,13 +1,13 @@
-resolver: lts-6.30
+resolver: lts-6.31
 packages:
 - '.'
 system-ghc: true
 install-ghc: true
 extra-deps:
 - QuickCheck-2.9.2
-- generic-deriving-1.11.1
-- containers-0.5.9.1
-- aeson-1.1.0.0
+- generic-deriving-1.11.2
+- containers-0.5.10.2
+- aeson-1.2.0.0
 flags:
   generic-deriving:
     base-4-9: false

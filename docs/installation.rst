@@ -30,7 +30,7 @@ It comes with a Makefile which sets things up correctly before running cabal-ins
 It is known to work with
 `GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_,
 `GHC-7.10.3 <http://www.haskell.org/ghc/download_ghc_7_10_3>`_, and
-`GHC-8.0.1 <http://www.haskell.org/ghc/download_ghc_8.0.1>`_.
+`GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8.0.2>`_.
 
 
 Installing Savile Row
