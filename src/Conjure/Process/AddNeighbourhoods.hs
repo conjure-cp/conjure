@@ -33,6 +33,12 @@ addNeighbourhoods _ inpModel = do
                                                         ++ [(maxNeighbourhoodSizeVarName, DomainInt [])]
                                                    }
                             }
+    -- TODO: this is here only temporarily, remove!
+    traceM $ unlines [ "Added the following SNS Neighbourhoods"
+                     , show $ pretty (inpModel { mStatements = [maxNeighbourhoodSizeDecl] ++ neighbourhoods
+                                               , mInfo = def
+                                               })
+                     ]
     (resolveNames >=> typeCheckModel) outModel
 
 
