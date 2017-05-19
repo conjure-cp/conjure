@@ -6,6 +6,7 @@ module Conjure.Representations.Sequence.ExplicitBounded ( sequenceExplicitBounde
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
+import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
@@ -65,16 +66,22 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
             let injectiveCons values = do
-                    (iPat, i) <- quantifiedVar
-                    (jPat, j) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            and([ &values[&i] != &values[&j]
-                                | &iPat : int(1..&size)
-                                , &jPat : int(1..&size)
-                                , &i .< &j
-                                ])
-                        |]
+                    innerType <- typeOf innerDomain
+                    if typeUnify innerType TypeInt
+                        then do
+                            return $ return $ -- list
+                                [essence| allDiff(&values) |]
+                        else do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence|
+                                    and([ &values[&i] != &values[&j]
+                                        | &iPat : int(1..&size)
+                                        , &jPat : int(1..&size)
+                                        , &i .< &j
+                                        ])
+                                |]
 
             let surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
