@@ -44,6 +44,7 @@ import Conjure.UI.LogFollow ( logFollow, storeChoice )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( writeModel )
 import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
+import Conjure.UI.VariableStrengthening ( strengthenVariables )
 
 import Conjure.Representations
     ( downX1, downD, reprOptions, getStructurals
@@ -846,6 +847,7 @@ prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> 
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
+    >>= return . strengthenVariables  >>= logDebugId "[strengthenVariables]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
