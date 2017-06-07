@@ -13,7 +13,6 @@ module Conjure.Process.StrengthenVariables
   ) where
 
 import Control.Monad
-import Debug.Trace
 
 import Conjure.Prelude
 import Conjure.Language
@@ -83,4 +82,11 @@ functionAttributes m = case m of
 constrainFunctionDomain :: Domain () Expression             -- ^ Current domain of the function.
                         -> Model                            -- ^ Context of the model.
                         -> Modified (Domain () Expression)  -- ^ Possibly modified domain.
-constrainFunctionDomain d _ = trace ("function domain: " ++ show d) $ UnModified d
+constrainFunctionDomain d@(DomainFunction r attrs from to) _
+  = case attrs of
+         FunctionAttr s _ JectivityAttr_Surjective ->
+           if from == to
+              then Modified (DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to)
+              else UnModified d
+         _ -> UnModified d
+constrainFunctionDomain d _ = UnModified d
