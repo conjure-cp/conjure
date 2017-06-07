@@ -140,6 +140,7 @@ Library
                      , Conjure.Process.LettingsForComplexInDoms
                      , Conjure.Process.AttributeAsConstraints
                      , Conjure.Process.DealWithCuts
+                     , Conjure.Process.StrengthenVariables
 
                      -- definitions of representations: how to go down and up
                      , Conjure.Representations
@@ -225,7 +226,6 @@ Library
                      , Conjure.UI.ParameterGenerator
                      , Conjure.UI.NormaliseQuantified
                      , Conjure.UI.LogFollow
-                     , Conjure.UI.VariableStrengthening
 
     build-depends    : base
                      , aeson >= 1.0

@@ -26,6 +26,7 @@ import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
+import Conjure.Process.StrengthenVariables ( strengthenVariables )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
@@ -155,6 +156,10 @@ mainWithArgs ParameterGenerator{..} = do
     model  <- readModelFromFile essence
     output <- parameterGenerator model
     writeModel lineWidth outputFormat (Just essenceOut) output
+mainWithArgs StrengthenVariables{..} =
+    readModelFromFile essence >>=
+      strengthenVariables >>=
+        writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat"]) $
