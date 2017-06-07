@@ -47,3 +47,28 @@ functionAttributes' d@(DomainFunction _ a lb up)
   -- This will somehow need to reference domains, so it may need the full model or something,
   -- unless it takes some sort of expanded domain.
   = traceShow a d
+
+-- | Fetch a variable's declaration given a reference to it by name.
+variableDeclaration :: Name         -- ^ Name of the variable to fetch.
+                    -> Model        -- ^ Model in which to find the definition.
+                    -> Declaration  -- ^ Variable's definition.
+variableDeclaration v Model { mStatements = stmts }
+  -- There should be exactly one declaration of the variable
+  = head $ filter (\stmt -> case stmt of
+                                 -- Find declarations and compare their name to
+                                 -- the variable's name
+                                 Declaration (FindOrGiven _ n _) -> v == n
+                                 Declaration (Letting n _) -> v == n
+                                 -- Any other type of statement does not match
+                                 _ -> False)
+                  stmts
+
+-- | Fetch all constraints referencing a variable given its name.
+variableConstraints :: Name         -- ^ Name of the variable for which to fetch.
+                    -> Model        -- ^ Model from which to fetch the constraints.
+                    -> [Expression] -- ^ Constraints referencing the variable.
+
+-- | Fetch all variable declarations referencing a variable, that do not define it.
+otherVariableDeclarations :: Name           -- ^ Name of the variable for which to fetch.
+                          -> Model          -- ^ Model in which to fetch the declarations.
+                          -> [Declaration]  -- ^ Declarations referencing the variable.
