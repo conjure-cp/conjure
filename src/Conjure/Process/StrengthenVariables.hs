@@ -93,9 +93,10 @@ functionAttributes decl@(Declaration (Letting _ (Domain d@DomainFunction{})))
 functionAttributes s = \_ -> UnModified s
 
 -- | Constrain the domain of a function given the context of a model.
-constrainFunctionDomain :: Domain () Expression             -- ^ Current domain of the function.
-                        -> Model                            -- ^ Context of the model.
-                        -> Modified (Domain () Expression)  -- ^ Possibly modified domain.
+constrainFunctionDomain :: (Eq r, Pretty r)
+                        => Domain r Expression            -- ^ Current domain of the function.
+                        -> Model                          -- ^ Context of the model.
+                        -> Modified (Domain r Expression) -- ^ Possibly modified domain.
 constrainFunctionDomain d@(DomainFunction r attrs from to) _
   = case attrs of
          -- If a function is surjective and its domain and codomain are equal, then it is bijective
