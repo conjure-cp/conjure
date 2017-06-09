@@ -16,10 +16,13 @@ import Control.Monad
 
 import Conjure.Prelude
 import Conjure.Language
+-- The following two imports are required together
+import Conjure.Language.Expression.DomainSizeOf ()
+import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Language.NameResolution ( resolveNames )
 
 -- | Strengthen the variables in a model using type- and domain-inference.
-strengthenVariables :: (MonadLog m, MonadFail m, MonadUserError m)
+strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . resolveNames >=> core
   where core model = do
@@ -38,7 +41,7 @@ strengthenVariables = runNameGen . resolveNames >=> core
                   (reverse stmts)
 
 -- | Make the attributes of function variables as constrictive as possible.
-functionAttributes :: (MonadFail m)
+functionAttributes :: (MonadFail m, MonadLog m)
                    => Model       -- ^ Model as context.
                    -> Statement   -- ^ Statement to constrain.
                    -> m Statement -- ^ Possibly updated statement.
@@ -51,19 +54,22 @@ functionAttributes m (Declaration (Letting n (Domain d@DomainFunction{}))) = do
 functionAttributes _ s = return s
 
 -- | Constrain the domain of a function given the context of a model.
-constrainFunctionDomain :: (MonadFail m, Eq r, Pretty r)
+constrainFunctionDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         => Domain r Expression      -- ^ Current domain of the function.
                         -> Model                    -- ^ Context of the model.
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 constrainFunctionDomain d@(DomainFunction r attrs from to) _
   = case attrs of
-         -- If a function is surjective and its domain and codomain are equal, then it is bijective
-         FunctionAttr s p JectivityAttr_Surjective ->
-           if from == to
-              then return $ DomainFunction r (FunctionAttr s p JectivityAttr_Bijective) from to
-              else return d
-         -- If a function is bijective, then it is total
-         FunctionAttr s PartialityAttr_Partial j@JectivityAttr_Bijective ->
-           return $ DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
+         -- If a function is surjective and its domain and codomain are equal, then it is total and bijective
+         FunctionAttr s _ JectivityAttr_Surjective ->
+           case domainSizeOf from of
+                Left  e        -> logInfo e >> return d
+                Right fromSize ->
+                  case domainSizeOf to :: Either Doc Expression of
+                       Left  e      -> logInfo e >> return d
+                       Right toSize ->
+                         if fromSize == toSize
+                            then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
+                            else return d
          _ -> return d
 constrainFunctionDomain d _ = return d
