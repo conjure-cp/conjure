@@ -27,6 +27,7 @@ strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
 strengthenVariables = runNameGen . resolveNames >=> core
   where core model = do
           model' <- foldM folded model [ functionAttributes
+                                       , reduceDomains
                                        ]
           if model == model'
              then return model'
@@ -79,3 +80,31 @@ constrainFunctionDomain d@(DomainFunction r attrs from to) _
          _ -> return d
     where totalDomainFunction s j = DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
 constrainFunctionDomain d _ = return d
+
+-- | Reduce the domain of a variable used in arithmetic expressions.
+reduceDomains :: (MonadFail m, MonadLog m)
+              => Model        -- ^ Model as context.
+              -> Statement    -- ^ Statement to constraint.
+              -> m Statement  -- ^ Possibly updated statement.
+reduceDomains m (Declaration (FindOrGiven forg n d)) | isIntDomain d = do
+  d' <- arithmeticReduceDomain n d m
+  return $ Declaration (FindOrGiven forg n d')
+reduceDomains m (Declaration (Letting n (Domain d))) | isIntDomain d = do
+  d' <- arithmeticReduceDomain n d m
+  return $ Declaration (Letting n (Domain d'))
+reduceDomains _ s = return s
+
+-- | Determine whether a domain is ultimately an integer domain.
+isIntDomain :: Domain () Expression -> Bool
+isIntDomain (DomainIntE _)  = True
+isIntDomain DomainInt{}     = True
+isIntDomain (DomainReference _ (Just d)) = isIntDomain d
+isIntDomain _               = False
+
+-- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
+arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
+                        => Name                     -- ^ Name of the variable.
+                        -> Domain r Expression      -- ^ Current domain of the function.
+                        -> Model                    -- ^ Context of the model.
+                        -> m (Domain r Expression)  -- ^ Possibly modified domain.
+arithmeticReduceDomain n d m = logInfo (stringToDoc $ show n ++ " : " ++ show d) >> return d
