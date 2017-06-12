@@ -13,6 +13,7 @@ module Conjure.Process.StrengthenVariables
   ) where
 
 import Control.Monad
+import Control.Monad.Writer
 
 import Conjure.Prelude
 import Conjure.Language
@@ -101,10 +102,54 @@ isIntDomain DomainInt{}     = True
 isIntDomain (DomainReference _ (Just d)) = isIntDomain d
 isIntDomain _               = False
 
+-- | Arithmetic relation between constants or references, which can be nested.
+data ArithRelation = ArithEqual ArithRelation ArithRelation -- ^ Equality of relations.
+                   | ArithAdd   ArithRelation ArithRelation -- ^ Addition of relations.
+                   | ArithSub   ArithRelation ArithRelation -- ^ Subtraction of relations.
+                   | ArithMul   ArithRelation ArithRelation -- ^ Multiplication of relations.
+                   | ArithDiv   ArithRelation ArithRelation -- ^ Division of relations.
+                   | ArithMax   ArithRelation ArithRelation -- ^ Maximum of relations.
+                   | ArithMin   ArithRelation ArithRelation -- ^ Minimum of relations.
+                   | ArithConst Constant                    -- ^ Constant value.
+                   | ArithRef   Name                        -- ^ Reference to a value.
+                   deriving (Eq, Show)
+
 -- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
 arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         => Name                     -- ^ Name of the variable.
                         -> Domain r Expression      -- ^ Current domain of the function.
-                        -> Model                    -- ^ Context of the model.
+                        -> Model                    -- ^ Model for context.
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
-arithmeticReduceDomain n d m = logInfo (stringToDoc $ show n ++ " : " ++ show d) >> return d
+arithmeticReduceDomain n d m = do
+  logInfo (stringToDoc $ show n ++ " : " ++ show d)
+  es <- findCallingExpressions n m
+  logInfo (stringToDoc $ show n ++ " : " ++ show es)
+  return d
+
+-- | Find "such that" expressions in the model that reference the given variable.
+findCallingExpressions :: (MonadFail m, MonadLog m)
+                       => Name            -- ^ Variable name being referenced.
+                       -> Model           -- ^ Model for context.
+                       -> m [Expression]  -- ^ Expressions referencing the variable.
+findCallingExpressions n m
+  = let es = getExpressions $ head $ filter isSuchThat $ mStatements m
+        in return $ foldr (\e a -> a ++ varInExp e) [] es
+    where isSuchThat (SuchThat _) = True
+          isSuchThat _            = False
+          getExpressions (SuchThat es) = es
+          getExpressions _             = []
+          varInExp e = let (_, result) = Control.Monad.Writer.runWriter $ varInExp' n e
+                           in result
+
+-- | Find the highest level expression referencing a name in an expression tree.
+varInExp' :: Name                            -- ^ Variable name being referenced.
+          -> Expression                      -- ^ Expression at the root of the tree.
+          -> Writer [Expression] Expression  -- ^ Writer containing expressions referencing the variable.
+varInExp' n e@(Reference x _) | n == x = tell [e]  >> return e
+varInExp' _ e@(Constant _)             = return e
+varInExp' _ e@(ExpressionMetaVar _)    = return e
+varInExp' n e                          = let (_, result) = Control.Monad.Writer.runWriter $
+                                                           descendM (varInExp' n) e
+                                             in if null result
+                                                   then return e
+                                                   else tell [e] >> return e
