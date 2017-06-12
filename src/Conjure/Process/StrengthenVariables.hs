@@ -121,9 +121,9 @@ arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         -> Model                    -- ^ Model for context.
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 arithmeticReduceDomain n d m = do
-  logInfo (stringToDoc $ show n ++ " : " ++ show d)
   es <- findCallingExpressions n m
   logInfo (stringToDoc $ show n ++ " : " ++ show es)
+  logInfo (stringToDoc $ show n ++ " :\n\t" ++ concatMap (show . exprToArithRel) es)
   return d
 
 -- | Find "such that" expressions in the model that reference the given variable.
@@ -153,3 +153,20 @@ varInExp' n e                          = let (_, result) = Control.Monad.Writer.
                                              in if null result
                                                    then return e
                                                    else tell [e] >> return e
+
+-- | Attempt to convert an expression to an arithmetic relation.
+exprToArithRel :: Expression          -- ^ Expression to convert.
+               -> Maybe ArithRelation -- ^ Possible arithmetic relation representation.
+exprToArithRel (Op (MkOpEq (OpEq l r)))
+  = ArithEqual <$> exprToArithRel l <*> exprToArithRel r
+exprToArithRel (Op (MkOpSum     (OpSum     (AbstractLiteral (AbsLitMatrix _ [l, r])))))
+  = ArithAdd   <$> exprToArithRel l <*> exprToArithRel r
+exprToArithRel (Op (MkOpMinus   (OpMinus   l r)))
+  = ArithSub   <$> exprToArithRel l <*> exprToArithRel r
+exprToArithRel (Op (MkOpProduct (OpProduct (AbstractLiteral (AbsLitMatrix _ [l, r])))))
+  = ArithMul   <$> exprToArithRel l <*> exprToArithRel r
+exprToArithRel (Op (MkOpDiv     (OpDiv     l r)))
+  = ArithDiv   <$> exprToArithRel l <*> exprToArithRel r
+exprToArithRel (Constant  c)   = Just $ ArithConst c
+exprToArithRel (Reference n _) = Just $ ArithRef n
+exprToArithRel _               = Nothing
