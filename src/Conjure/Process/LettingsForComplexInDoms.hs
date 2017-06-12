@@ -55,7 +55,7 @@ inlineLettingDomainsForDecls m = do
                                 $ ("No value for:" <+> pretty name)
                                 : "Bindings in context:"
                                 : prettyContext ctxt
-        f d = descendM f d
+        f d = return d
 
     flip evalStateT ( []    -- name, domain pairs for letting domains.
                     , []    -- names for unnamed types. so they can be skipped.
@@ -69,7 +69,7 @@ inlineLettingDomainsForDecls m = do
                     modify (([], [name]) `mappend`)
                     return st
                 Declaration (FindOrGiven forg name domain) -> do
-                    domain' <- descendM f domain
+                    domain' <- transformM f domain
                     return (Declaration (FindOrGiven forg name domain'))
                 _ -> return st
         return m { mStatements = statements }
