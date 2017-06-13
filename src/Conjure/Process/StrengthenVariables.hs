@@ -122,8 +122,7 @@ arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 arithmeticReduceDomain n d m = do
   es <- findCallingExpressions n m
-  logInfo (stringToDoc $ show n ++ " : " ++ show es)
-  logInfo (stringToDoc $ show n ++ " :\n\t" ++ concatMap (show . exprToArithRel) es)
+  logInfo (stringToDoc $ show n ++ " : " ++ concatMap (show . exprToArithRel) es)
   return d
 
 -- | Find "such that" expressions in the model that reference the given variable.
@@ -131,9 +130,9 @@ findCallingExpressions :: (MonadFail m, MonadLog m)
                        => Name            -- ^ Variable name being referenced.
                        -> Model           -- ^ Model for context.
                        -> m [Expression]  -- ^ Expressions referencing the variable.
-findCallingExpressions n m
-  = let es = getExpressions $ head $ filter isSuchThat $ mStatements m
-        in return $ foldr (\e a -> a ++ execWriter (varInExp n e)) [] es
+findCallingExpressions n
+  = return . foldr (\e a -> a ++ execWriter (varInExp n e)) [] .
+             getExpressions . head . filter isSuchThat . mStatements
     where isSuchThat (SuchThat _) = True
           isSuchThat _            = False
           getExpressions (SuchThat es) = es
@@ -143,9 +142,12 @@ findCallingExpressions n m
 varInExp :: Name                            -- ^ Variable name being referenced.
          -> Expression                      -- ^ Expression at the root of the tree.
          -> Writer [Expression] Expression  -- ^ Writer containing expressions referencing the variable.
+-- When a reference to the variable is found, save it to the writer
 varInExp n e@(Reference x _) | n == x = tell [e]  >> return e
 varInExp _ e@(Constant _)             = return e
 varInExp _ e@(ExpressionMetaVar _)    = return e
+-- If the writer contains an expression from a lower level, replace the expression with
+-- the current one, in order to get the top-level expression containing the reference
 varInExp n e                          = if null (execWriter $ descendM (varInExp n) e)
                                            then return e
                                            else tell [e] >> return e
@@ -165,4 +167,5 @@ exprToArithRel (Op (MkOpDiv     (OpDiv     l r)))
   = ArithDiv   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Constant  c)   = Just $ ArithConst c
 exprToArithRel (Reference n _) = Just $ ArithRef n
+-- No support for other types of expressions
 exprToArithRel _               = Nothing
