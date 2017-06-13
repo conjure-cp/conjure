@@ -21,11 +21,12 @@ import Conjure.Language
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Language.NameResolution ( resolveNames )
+import Conjure.Compute.DomainOf ( domainOf )
 
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
-strengthenVariables = runNameGen . resolveNames >=> core
+strengthenVariables = runNameGen . (resolveNames >=> core)
   where core model = do
           model' <- foldM folded model [ functionAttributes
                                        , reduceDomains
@@ -83,7 +84,7 @@ constrainFunctionDomain d@(DomainFunction r attrs from to) _
 constrainFunctionDomain d _ = return d
 
 -- | Reduce the domain of a variable used in arithmetic expressions.
-reduceDomains :: (MonadFail m, MonadLog m)
+reduceDomains :: (MonadFail m, MonadLog m, NameGen m)
               => Model        -- ^ Model as context.
               -> Statement    -- ^ Statement to constraint.
               -> m Statement  -- ^ Possibly updated statement.
@@ -104,7 +105,7 @@ isIntDomain _               = False
 
 -- | Arithmetic relation of constants or references, which combine to form a tree.
 data ArithRelation = ArithConst    Constant       -- ^ Constant value.
-                   | ArithRef      Name           -- ^ Variable reference.
+                   | ArithRef      Expression     -- ^ Variable reference.
                    | ArithRelation ArithRelType
                                    ArithRelation
                                    ArithRelation  -- ^ Relation between relations.
@@ -116,14 +117,30 @@ data ArithRelType = ArithEqual
                   | ArithMin | ArithMax
                   deriving (Eq, Show)
 
+-- | Compare an 'ArithRef' relation to a 'Name' for equality.
+arithRefEq :: ArithRelation -- ^ An 'ArithRef' relation.
+           -> Name          -- ^ A name.
+           -> Bool          -- ^ Whether or not the name refers to the given reference.
+arithRefEq (ArithRef (Reference n _)) x = n == x
+arithRefEq _                          _ = False
+
 -- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
-arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
+arithmeticReduceDomain :: (MonadFail m, MonadLog m, NameGen m, Default r, Eq r, Pretty r)
                         => Name                     -- ^ Name of the variable.
                         -> Domain r Expression      -- ^ Current domain of the function.
                         -> Model                    -- ^ Model for context.
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 arithmeticReduceDomain n d m = do
   es <- findCallingExpressions n m
+  dom' <- foldM (\ds e -> do
+                  let start = ds ++ "\ndomain of " ++ show n ++ " is "
+                  end <- case exprToArithRel e >>= liftEqual n of
+                              Just (ArithRelation ArithEqual _ (ArithRef x)) -> do
+                                d' <- domainOf x
+                                return $ show d'
+                              _ -> return ""
+                  return $ start ++ end) "" es
+  logInfo $ stringToDoc dom'
   logInfo (stringToDoc $ show n ++ " : " ++ concatMap (show . (exprToArithRel >=> liftEqual n)) es)
   return d
 
@@ -145,7 +162,7 @@ varInExp :: Name                            -- ^ Variable name being referenced.
          -> Expression                      -- ^ Expression at the root of the tree.
          -> Writer [Expression] Expression  -- ^ Writer containing expressions referencing the variable.
 -- When a reference to the variable is found, save it to the writer
-varInExp n e@(Reference x _) | n == x = tell [e]  >> return e
+varInExp n e@(Reference x _) | x == n = tell [e]  >> return e
 varInExp _ e@(Constant _)             = return e
 varInExp _ e@(ExpressionMetaVar _)    = return e
 -- If the writer contains an expression from a lower level, replace the expression with
@@ -167,8 +184,8 @@ exprToArithRel (Op (MkOpProduct (OpProduct (AbstractLiteral (AbsLitMatrix _ [l, 
   = ArithRelation ArithMul   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Op (MkOpDiv     (OpDiv     l r)))
   = ArithRelation ArithDiv   <$> exprToArithRel l <*> exprToArithRel r
-exprToArithRel (Constant  c)   = Just $ ArithConst c
-exprToArithRel (Reference n _) = Just $ ArithRef n
+exprToArithRel (Constant  c) = Just $ ArithConst c
+exprToArithRel n@Reference{} = Just $ ArithRef n
 -- No support for other types of expressions
 exprToArithRel _               = Nothing
 
@@ -179,8 +196,8 @@ liftEqual :: Name                 -- ^ Name of the variable to appear on the rig
           -> ArithRelation        -- ^ Relation tree to transform.
           -> Maybe ArithRelation  -- ^ Possibly transformed relation tree with the variable alone on the right.
 liftEqual n = varToRight >=> liftEqual'
-  where liftEqual' a@(ArithRelation ArithEqual _ (ArithRef x)) | n == x = Just a
-        liftEqual' a@(ArithRef      x)                         | n == x = Just a
+  where liftEqual' a@(ArithRelation ArithEqual _ x@(ArithRef _)) | arithRefEq x n = Just a
+        liftEqual' a@(ArithRef      _)                           | arithRefEq a n = Just a
         liftEqual' (ArithRelation ArithEqual l r@(ArithRelation _ _ r'))
           = flip (ArithRelation ArithEqual) r' <$> transferBranchRL l r >>= liftEqual' 
         liftEqual' _ = Nothing
@@ -192,7 +209,7 @@ liftEqual n = varToRight >=> liftEqual'
         transferBranchRL a (ArithRelation t        l _) = Just $ ArithRelation (arithRelInverse t) a l
         transferBranchRL _ _                            = Nothing
         -- Attempt to transform the tree so that the variable in question ends up on the furthest right
-        varToRight a@(ArithRelation _ _ (ArithRef x)) | n == x = Just a
+        varToRight a@(ArithRelation _ _ x@(ArithRef _)) | arithRefEq x n = Just a
         varToRight (ArithRelation ArithMin _ _) = Nothing
         varToRight (ArithRelation ArithMax _ _) = Nothing
         varToRight (ArithRelation t l r)
@@ -202,10 +219,10 @@ liftEqual n = varToRight >=> liftEqual'
           -- It is in the left branch, so recurse on it and flip the children at this level
           | branchContainsVar l && not (branchContainsVar r)
             = flipArithRel . flip (ArithRelation t) r <$> varToRight l
-        varToRight a@(ArithRef x) | n == x = Just a
+        varToRight a@(ArithRef _) | arithRefEq a n = Just a
         varToRight _ = Nothing
 
-        branchContainsVar (ArithRef   x) | n == x = True
+        branchContainsVar x@(ArithRef   _) | arithRefEq x n = True
         branchContainsVar (ArithRelation _ l r)   = branchContainsVar l || branchContainsVar r
         branchContainsVar _                       = False
 
