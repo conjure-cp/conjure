@@ -102,17 +102,19 @@ isIntDomain DomainInt{}     = True
 isIntDomain (DomainReference _ (Just d)) = isIntDomain d
 isIntDomain _               = False
 
--- | Arithmetic relation between constants or references, which can be nested.
-data ArithRelation = ArithEqual ArithRelation ArithRelation -- ^ Equality of relations.
-                   | ArithAdd   ArithRelation ArithRelation -- ^ Addition of relations.
-                   | ArithSub   ArithRelation ArithRelation -- ^ Subtraction of relations.
-                   | ArithMul   ArithRelation ArithRelation -- ^ Multiplication of relations.
-                   | ArithDiv   ArithRelation ArithRelation -- ^ Division of relations.
-                   | ArithMax   ArithRelation ArithRelation -- ^ Maximum of relations.
-                   | ArithMin   ArithRelation ArithRelation -- ^ Minimum of relations.
-                   | ArithConst Constant                    -- ^ Constant value.
-                   | ArithRef   Name                        -- ^ Reference to a value.
+-- | Arithmetic relation of constants or references, which combine to form a tree.
+data ArithRelation = ArithConst    Constant       -- ^ Constant value.
+                   | ArithRef      Name           -- ^ Variable reference.
+                   | ArithRelation ArithRelType
+                                   ArithRelation
+                                   ArithRelation  -- ^ Relation between relations.
                    deriving (Eq, Show)
+
+-- | Type of parent arithmetic relation, which always has two children.
+data ArithRelType = ArithEqual
+                  | ArithAdd | ArithSub | ArithMul | ArithDiv
+                  | ArithMin | ArithMax
+                  deriving (Eq, Show)
 
 -- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
 arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
@@ -122,7 +124,7 @@ arithmeticReduceDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 arithmeticReduceDomain n d m = do
   es <- findCallingExpressions n m
-  logInfo (stringToDoc $ show n ++ " : " ++ concatMap (show . exprToArithRel) es)
+  logInfo (stringToDoc $ show n ++ " : " ++ concatMap (show . (exprToArithRel >=> liftEqual n)) es)
   return d
 
 -- | Find "such that" expressions in the model that reference the given variable.
@@ -156,16 +158,89 @@ varInExp n e                          = if null (execWriter $ descendM (varInExp
 exprToArithRel :: Expression          -- ^ Expression to convert.
                -> Maybe ArithRelation -- ^ Possible arithmetic relation representation.
 exprToArithRel (Op (MkOpEq (OpEq l r)))
-  = ArithEqual <$> exprToArithRel l <*> exprToArithRel r
+  = ArithRelation ArithEqual <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Op (MkOpSum     (OpSum     (AbstractLiteral (AbsLitMatrix _ [l, r])))))
-  = ArithAdd   <$> exprToArithRel l <*> exprToArithRel r
+  = ArithRelation ArithAdd   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Op (MkOpMinus   (OpMinus   l r)))
-  = ArithSub   <$> exprToArithRel l <*> exprToArithRel r
+  = ArithRelation ArithSub   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Op (MkOpProduct (OpProduct (AbstractLiteral (AbsLitMatrix _ [l, r])))))
-  = ArithMul   <$> exprToArithRel l <*> exprToArithRel r
+  = ArithRelation ArithMul   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Op (MkOpDiv     (OpDiv     l r)))
-  = ArithDiv   <$> exprToArithRel l <*> exprToArithRel r
+  = ArithRelation ArithDiv   <$> exprToArithRel l <*> exprToArithRel r
 exprToArithRel (Constant  c)   = Just $ ArithConst c
 exprToArithRel (Reference n _) = Just $ ArithRef n
 -- No support for other types of expressions
 exprToArithRel _               = Nothing
+
+-- | Lift the 'ArithEqual' node of a relation tree to the top level,
+--   with the reference to the given variable on the right side. If
+--   the tree is too complex to transform, 'Nothing' is returned.
+liftEqual :: Name                 -- ^ Name of the variable to appear on the right of the equality.
+          -> ArithRelation        -- ^ Relation tree to transform.
+          -> Maybe ArithRelation  -- ^ Possibly transformed relation tree with the variable alone on the right.
+liftEqual n = varToRight >=> liftEqual'
+  where liftEqual' a@(ArithRelation ArithEqual _ (ArithRef x)) | n == x = Just a
+        liftEqual' a@(ArithRef      x)                         | n == x = Just a
+        liftEqual' (ArithRelation ArithEqual l r@(ArithRelation _ _ r'))
+          = flip (ArithRelation ArithEqual) r' <$> transferBranchRL l r >>= liftEqual' 
+        liftEqual' _ = Nothing
+        -- Transfer a branch from the right side of the tree to the left side.
+        transferBranchRL a (ArithRef      _)            = Just a
+        transferBranchRL _ (ArithRelation ArithMin _ _) = Nothing
+        transferBranchRL _ (ArithRelation ArithMax _ _) = Nothing
+        -- Perform the inverse of the operation to both sides of the relation
+        transferBranchRL a (ArithRelation t        l _) = Just $ ArithRelation (arithRelInverse t) a l
+        transferBranchRL _ _                            = Nothing
+        -- Attempt to transform the tree so that the variable in question ends up on the furthest right
+        varToRight a@(ArithRelation _ _ (ArithRef x)) | n == x = Just a
+        varToRight (ArithRelation ArithMin _ _) = Nothing
+        varToRight (ArithRelation ArithMax _ _) = Nothing
+        varToRight (ArithRelation t l r)
+          -- Already in the right branch, so recurse and propagate 'Maybe'
+          | not (branchContainsVar l) && branchContainsVar r
+            = ArithRelation t l <$> varToRight r
+          -- It is in the left branch, so recurse on it and flip the children at this level
+          | branchContainsVar l && not (branchContainsVar r)
+            = flipArithRel . flip (ArithRelation t) r <$> varToRight l
+        varToRight a@(ArithRef x) | n == x = Just a
+        varToRight _ = Nothing
+
+        branchContainsVar (ArithRef   x) | n == x = True
+        branchContainsVar (ArithRelation _ l r)   = branchContainsVar l || branchContainsVar r
+        branchContainsVar _                       = False
+
+-- | Flip the terms of an arithmetic relation.
+flipArithRel :: ArithRelation -> ArithRelation
+-- Equality, addition and multiplication are commutative
+flipArithRel (ArithRelation t@ArithEqual l r)
+  = ArithRelation t r l
+flipArithRel (ArithRelation t@ArithAdd   l r)
+  = ArithRelation t r l
+flipArithRel (ArithRelation t@ArithMul   l r)
+  = ArithRelation t r l
+-- Flip the terms of a subtraction: a - b = -b + a
+flipArithRel (ArithRelation ArithSub l r)
+  = ArithRelation ArithAdd
+                  (ArithRelation ArithSub
+                                 (ArithConst $ ConstantInt 0)
+                                 r)
+                  l
+-- Flip the terms of a divison: a/b = 1/b * a
+flipArithRel (ArithRelation ArithDiv l r)
+  = ArithRelation ArithMul
+                  (ArithRelation ArithDiv
+                                 (ArithConst $ ConstantInt 1)
+                                 r)
+                  l
+-- Cannot flip other relations
+flipArithRel a = a
+
+-- | Get the inverse of an arithmetic relation type.
+arithRelInverse :: ArithRelType -> ArithRelType
+arithRelInverse ArithEqual = ArithEqual
+arithRelInverse ArithAdd   = ArithSub
+arithRelInverse ArithSub   = ArithAdd
+arithRelInverse ArithMul   = ArithDiv
+arithRelInverse ArithDiv   = ArithMul
+arithRelInverse ArithMin   = ArithMax
+arithRelInverse ArithMax   = ArithMin
