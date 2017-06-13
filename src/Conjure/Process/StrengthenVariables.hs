@@ -74,13 +74,7 @@ constrainFunctionDomain d@(DomainFunction r attrs from to) _
                          if fromSize == toSize
                             then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
                             else return d
-         -- If a function is injective or bijective, then it is total
-         FunctionAttr s PartialityAttr_Partial j@JectivityAttr_Injective ->
-           return $ totalDomainFunction s j
-         FunctionAttr s PartialityAttr_Partial j@JectivityAttr_Bijective ->
-           return $ totalDomainFunction s j
          _ -> return d
-    where totalDomainFunction s j = DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
 constrainFunctionDomain d _ = return d
 
 -- | Reduce the domain of a variable used in arithmetic expressions.
