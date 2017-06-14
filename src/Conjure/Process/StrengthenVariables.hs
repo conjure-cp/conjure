@@ -87,12 +87,10 @@ reduceDomains :: (MonadFail m, MonadLog m, NameGen m)
               => Model        -- ^ Model as context.
               -> Statement    -- ^ Statement to constraint.
               -> m Statement  -- ^ Possibly updated statement.
-reduceDomains m (Declaration (FindOrGiven forg n d)) | isIntDomain d = do
-  d' <- arithmeticReduceDomain n d m
-  return $ Declaration (FindOrGiven forg n d')
-reduceDomains m (Declaration (Letting n (Domain d))) | isIntDomain d = do
-  d' <- arithmeticReduceDomain n d m
-  return $ Declaration (Letting n (Domain d'))
+reduceDomains m (Declaration (FindOrGiven forg n d)) | isIntDomain d
+  = (Declaration . FindOrGiven forg n) <$> arithmeticReduceDomain n d m
+reduceDomains m (Declaration (Letting n (Domain d))) | isIntDomain d
+  = (Declaration . Letting n . Domain) <$> arithmeticReduceDomain n d m
 reduceDomains _ s = return s
 
 -- | Determine whether a domain is ultimately an integer domain.
