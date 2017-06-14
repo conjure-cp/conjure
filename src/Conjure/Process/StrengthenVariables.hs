@@ -192,6 +192,7 @@ liftEqual n = varToRight >=> liftEqual'
         -- Transfer a branch from the right side of the tree to the left side.
         transferBranchRL a (ArithRef      _)            = Just a
         -- Perform the inverse of the operation to both sides of the relation
+        -- FIXME: this is invalid behaviour for non-commutative operations (the caller also has a mistake)
         transferBranchRL a (ArithRelation t        l _) = Just $ ArithRelation (arithRelInverse t) a l
         transferBranchRL _ _                            = Nothing
         -- Attempt to transform the tree so that the variable in question ends up on the furthest right
