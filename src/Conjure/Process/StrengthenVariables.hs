@@ -26,9 +26,12 @@ import Conjure.Compute.DomainOf ( domainOf )
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . (resolveNames >=> core)
-  where core model = foldM folded model [ functionAttributes
-                                        , reduceDomains
-                                        ]
+  where core model = do model' <- foldM folded model [ functionAttributes
+                                                     , reduceDomains
+                                                     ]
+                        if model == model'
+                           then return model'
+                           else core model'
         -- Apply the function to every statement and fold it into the model
         folded m@Model { mStatements = stmts } f
           = foldM (\m' s -> do
@@ -316,16 +319,38 @@ type DomainOperation = Expression -> Expression -> Op Expression
 
 -- | Get the combination function of domain lower bounds for the given arithmetic relation type.
 mkDomOperLB :: ArithRelType -> DomainOperation
-mkDomOperLB ArithEqual = \lb1 lb2 -> MkOpMax     (OpMax     $ mkMatrix [ lb1, lb2 ])
-mkDomOperLB ArithAdd   = \b1 b2   -> MkOpSum     (OpSum     $ mkMatrix [ b1, b2 ])
-mkDomOperLB ArithSub   = \b1 b2   -> MkOpMinus   (OpMinus   b1 b2)
-mkDomOperLB ArithMul   = \b1 b2   -> MkOpProduct (OpProduct $ mkMatrix [ b1, b2 ])
-mkDomOperLB ArithDiv   = \b1 b2   -> MkOpDiv     (OpDiv     b1 b2)
+mkDomOperLB ArithEqual = \lb1 lb2 -> addBoundToMax lb1 lb2 (Just addBoundToMax)
+  -- When adding values to an OpMax, combine them into the same matrix,
+  -- and do not add them if they are already present
+  where addBoundToMax lb1 lb2 (Just fallback)
+          = case lb1 of
+                 Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))
+                   -> if lb2 `elem` es
+                         then MkOpMax (OpMax $ mkMatrix es)
+                         else MkOpMax (OpMax $ mkMatrix $ lb2 : es)
+                 _ -> fallback lb1 lb2 Nothing
+        addBoundToMax lb1 lb2 Nothing
+          = addBoundToMax lb2 lb1 (Just (\lb1' lb2' _ -> MkOpMax (OpMax $ mkMatrix [ lb1', lb2' ])))
+mkDomOperLB ArithAdd = \b1 b2 -> MkOpSum     (OpSum     $ mkMatrix [ b1, b2 ])
+mkDomOperLB ArithSub = \b1 b2 -> MkOpMinus   (OpMinus   b1 b2)
+mkDomOperLB ArithMul = \b1 b2 -> MkOpProduct (OpProduct $ mkMatrix [ b1, b2 ])
+mkDomOperLB ArithDiv = \b1 b2 -> MkOpDiv     (OpDiv     b1 b2)
 
 -- | Get the combination function of domain upper bounds for the given arithmetic relation type.
 mkDomOperUB :: ArithRelType -> DomainOperation
-mkDomOperUB ArithEqual = \ub1 ub2 -> MkOpMin (OpMin $ mkMatrix [ ub1, ub2 ])
-mkDomOperUB t          = mkDomOperLB t
+mkDomOperUB ArithEqual = \ub1 ub2 -> addBoundToMin ub1 ub2 (Just addBoundToMin)
+  -- When adding values to an OpMin, combine them into the same matrix,
+  -- and do not add them if they are already present
+  where addBoundToMin ub1 ub2 (Just fallback)
+          = case ub1 of
+                 Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es))))
+                   -> if ub2 `elem` es
+                         then MkOpMin (OpMin $ mkMatrix es)
+                         else MkOpMin (OpMin $ mkMatrix $ ub2 : es)
+                 _ -> fallback ub1 ub2 Nothing
+        addBoundToMin ub1 ub2 Nothing
+          = addBoundToMin ub2 ub1 (Just (\ub1' ub2' _ -> MkOpMin (OpMin $ mkMatrix [ ub1', ub2' ])))
+mkDomOperUB t = mkDomOperLB t
 
 -- | Make a matrix expression from a list of expressions.
 mkMatrix :: [Expression] -> Expression
