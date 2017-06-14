@@ -63,18 +63,23 @@ constrainFunctionDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
                         -> m (Domain r Expression)  -- ^ Possibly modified domain.
 constrainFunctionDomain d@(DomainFunction r attrs from to) _
   = case attrs of
-         -- If a function is surjective and its domain and codomain are equal, then it is total and bijective
-         FunctionAttr s _ JectivityAttr_Surjective ->
-           case domainSizeOf from of
-                Left  e        -> logInfo e >> return d
-                Right fromSize ->
-                  case domainSizeOf to :: Either Doc Expression of
-                       Left  e      -> logInfo e >> return d
-                       Right toSize ->
-                         if fromSize == toSize
-                            then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
-                            else return d
+         -- If a function is surjective or bijective and its domain and codomain
+         -- are of equal size, then it is total and bijective
+         FunctionAttr s PartialityAttr_Partial JectivityAttr_Surjective ->
+           totalAndBijectiveDomainComparison s
+         FunctionAttr s PartialityAttr_Partial JectivityAttr_Bijective  ->
+           totalAndBijectiveDomainComparison s
          _ -> return d
+    where totalAndBijectiveDomainComparison s
+            = case domainSizeOf from of
+                   Left  e        -> logInfo e >> return d
+                   Right fromSize ->
+                     case domainSizeOf to :: Either Doc Expression of
+                          Left  e      -> logInfo e >> return d
+                          Right toSize ->
+                            if fromSize == toSize
+                               then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
+                               else return d
 constrainFunctionDomain d _ = return d
 
 -- | Reduce the domain of a variable used in arithmetic expressions.
