@@ -27,13 +27,9 @@ import Conjure.Compute.DomainOf ( domainOf )
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . (resolveNames >=> core)
-  where core model = do
-          model' <- foldM folded model [ functionAttributes
-                                       , reduceDomains
-                                       ]
-          if model == model'
-             then return model'
-             else core   model'
+  where core model = foldM folded model [ functionAttributes
+                                        , reduceDomains
+                                        ]
         -- Apply the function to every statement and fold it into the model
         folded m@Model { mStatements = stmts } f
           = foldM (\m' s -> do
@@ -57,10 +53,10 @@ functionAttributes m (Declaration (Letting n (Domain d@DomainFunction{}))) = do
 functionAttributes _ s = return s
 
 -- | Constrain the domain of a function given the context of a model.
-constrainFunctionDomain :: (MonadFail m, MonadLog m, Default r, Eq r, Pretty r)
-                        => Domain r Expression      -- ^ Current domain of the function.
+constrainFunctionDomain :: (MonadFail m, MonadLog m)
+                        => Domain () Expression     -- ^ Current domain of the function.
                         -> Model                    -- ^ Context of the model.
-                        -> m (Domain r Expression)  -- ^ Possibly modified domain.
+                        -> m (Domain () Expression) -- ^ Possibly modified domain.
 constrainFunctionDomain d@(DomainFunction r attrs from to) _
   = case attrs of
          -- If a function is surjective or bijective and its domain and codomain
@@ -122,24 +118,18 @@ arithRefEq (ArithRef (Reference n _)) x = n == x
 arithRefEq _                          _ = False
 
 -- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
-arithmeticReduceDomain :: (MonadFail m, MonadLog m, NameGen m, Default r, Eq r, Pretty r)
+arithmeticReduceDomain :: (MonadFail m, MonadLog m, NameGen m)
                         => Name                     -- ^ Name of the variable.
-                        -> Domain r Expression      -- ^ Current domain of the function.
+                        -> Domain () Expression     -- ^ Current domain of the function.
                         -> Model                    -- ^ Model for context.
-                        -> m (Domain r Expression)  -- ^ Possibly modified domain.
-arithmeticReduceDomain n d m = do
-  es <- findCallingExpressions n m
-  dom' <- foldM (\ds e -> do
-                  let start = ds ++ "\ndomain of " ++ show n ++ " is "
-                  end <- case exprToArithRel e >>= liftEqual n of
-                              Just (ArithRelation ArithEqual _ (ArithRef x)) -> do
-                                d' <- domainOf x
-                                return $ show d'
-                              _ -> return ""
-                  return $ start ++ end) "" es
-  logInfo $ stringToDoc dom'
-  logInfo (stringToDoc $ show n ++ " : " ++ concatMap (show . (exprToArithRel >=> liftEqual n)) es)
-  return d
+                        -> m (Domain () Expression) -- ^ Possibly modified domain.
+arithmeticReduceDomain n d m
+  = findCallingExpressions n m >>=
+    foldM (\d' e ->
+           case exprToArithRel e >>= liftEqual n of
+                Just ar -> arithRelToDom ar >>= combineDomains d'
+                Nothing -> return d')
+    d
 
 -- | Find "such that" expressions in the model that reference the given variable.
 findCallingExpressions :: (MonadFail m, MonadLog m)
@@ -258,3 +248,57 @@ arithRelInverse ArithMul   = ArithDiv
 arithRelInverse ArithDiv   = ArithMul
 arithRelInverse ArithMin   = ArithMax
 arithRelInverse ArithMax   = ArithMin
+
+-- | Reduce an arithmetic relation onto the domain of the variable of interest.
+arithRelToDom :: (MonadFail m, MonadLog m, NameGen m)
+              => ArithRelation -> m (Domain () Expression)
+arithRelToDom (ArithRef   x) = domainOf x
+arithRelToDom (ArithConst x) = domainOf x
+-- FIXME: used only for testing purposes
+arithRelToDom _              = return $ DomainInt [RangeBounded (Constant (ConstantInt 0))
+                                                                (Constant (ConstantInt 5))]
+
+-- | Combine two domains into a third which encompasses both.
+combineDomains :: (MonadFail m, MonadLog m)
+               => Domain () Expression -> Domain () Expression -> m (Domain () Expression)
+-- RangeBounded - combine bounds with min and max
+combineDomains (DomainInt [RangeBounded lb1 ub1])
+               (DomainInt [RangeBounded lb2 ub2])
+  = return $ DomainInt [RangeBounded (Op (MkOpMax (OpMax $ mkMatrix [lb1, lb2])))
+                                     (Op (MkOpMin (OpMin $ mkMatrix [ub1, ub2])))]
+-- RangeLowerBounded - combine lower bounds and set upper bound if present
+combineDomains (DomainInt [RangeBounded lb1 ub])
+               (DomainInt [RangeLowerBounded lb2])
+  = return $ DomainInt [RangeBounded (Op (MkOpMax (OpMax $ mkMatrix [lb1, lb2]))) ub]
+combineDomains d1@(DomainInt [RangeLowerBounded _])
+               d2@(DomainInt [RangeBounded{}])
+  = combineDomains d2 d1
+combineDomains (DomainInt [RangeLowerBounded lb1])
+               (DomainInt [RangeLowerBounded lb2])
+  = return $ DomainInt [RangeLowerBounded (Op (MkOpMax (OpMax $ mkMatrix [lb1, lb2])))]
+-- RangeUpperBounded - combine upper bounds and set lower bound if present
+combineDomains (DomainInt [RangeBounded lb ub1])
+               (DomainInt [RangeUpperBounded ub2])
+  = return $ DomainInt [RangeBounded lb (Op (MkOpMin (OpMin $ mkMatrix [ub1, ub2])))]
+combineDomains d1@(DomainInt [RangeUpperBounded _])
+               d2@(DomainInt [RangeBounded{}])
+  = combineDomains d2 d1
+combineDomains (DomainInt [RangeUpperBounded ub1])
+               (DomainInt [RangeUpperBounded ub2])
+  = return $ DomainInt [RangeUpperBounded (Op (MkOpMin (OpMin $ mkMatrix [ub1, ub2])))]
+-- RangeOpen - use other domain
+combineDomains d1 (DomainInt [RangeOpen]) = return d1
+combineDomains (DomainInt [RangeOpen]) d2 = return d2
+-- RangeSingle - ignore other domain
+combineDomains d@(DomainInt [RangeSingle{}]) _ = return d
+combineDomains _ d@(DomainInt [RangeSingle{}]) = return d
+-- Cannot combine (for now)
+combineDomains d1 _ = return d1
+
+-- | Make a matrix expression from a list of expressions.
+mkMatrix :: [Expression] -> Expression
+mkMatrix es = AbstractLiteral
+                (AbsLitMatrix
+                  (DomainInt [RangeBounded (Constant (ConstantInt 1))
+                                           (Constant (ConstantInt $ toInteger $ length es))])
+                  es)
