@@ -118,6 +118,13 @@ arithRefEq :: ArithRelation -- ^ An 'ArithRef' relation.
 arithRefEq (ArithRef (Reference n _)) x = n == x
 arithRefEq _                          _ = False
 
+-- | Arithmetic Constant 0
+arithConst0 :: ArithRelation
+arithConst0 = ArithConst $ ConstantInt 0
+-- | Arithmetic Constant 1
+arithConst1 :: ArithRelation
+arithConst1 = ArithConst $ ConstantInt 1
+
 -- | Reduce the domain of a variable by constraining it with arithmetic relations with other variables in the model.
 arithmeticReduceDomain :: (MonadFail m, MonadLog m, NameGen m)
                         => Name                     -- ^ Name of the variable.
@@ -189,12 +196,6 @@ liftEqual n = varToRight >=> liftEqual'
         liftEqual' (ArithRelation ArithEqual l r@(ArithRelation _ _ r'))
           = flip (ArithRelation ArithEqual) r' <$> transferBranchRL l r >>= liftEqual' 
         liftEqual' _ = Nothing
-        -- Transfer a branch from the right side of the tree to the left side.
-        transferBranchRL a (ArithRef      _)            = Just a
-        -- Perform the inverse of the operation to both sides of the relation
-        -- FIXME: this is invalid behaviour for non-commutative operations (the caller also has a mistake)
-        transferBranchRL a (ArithRelation t        l _) = Just $ ArithRelation (arithRelInverse t) a l
-        transferBranchRL _ _                            = Nothing
         -- Attempt to transform the tree so that the variable in question ends up on the furthest right
         varToRight a@(ArithRelation _ _ x@(ArithRef _)) | arithRefEq x n = Just a
         varToRight (ArithRelation t l r)
@@ -211,6 +212,19 @@ liftEqual n = varToRight >=> liftEqual'
         branchContainsVar (ArithRelation _ l r)   = branchContainsVar l || branchContainsVar r
         branchContainsVar _                       = False
 
+-- | Transfer a branch from the right side of the tree to the left side.
+transferBranchRL :: ArithRelation       -- ^ Left side to receive the branch.
+                 -> ArithRelation       -- ^ Right branch to be transferred.
+                 -> Maybe ArithRelation -- ^ Left branch after transferal of the right branch.
+-- Subtraction and division are special cases
+-- c = a - b -> c - a = -b -> 0 - (c - a) = b -> a - c = b
+transferBranchRL a (ArithRelation ArithSub l _) = Just $ ArithRelation ArithSub arithConst0 (ArithRelation ArithSub a l)
+-- c = a / b -> c / a = 1 / b -> 1 / (c / a) = b -> a / c = b
+transferBranchRL a (ArithRelation ArithDiv l _) = Just $ ArithRelation ArithDiv arithConst1 (ArithRelation ArithDiv a l)
+-- If it's commutative, perform the inverse of the operation on the left
+transferBranchRL a (ArithRelation t        l _) = Just $ ArithRelation (arithRelInverse t) a l
+transferBranchRL _ _                            = Nothing
+
 -- | Flip the terms of an arithmetic relation.
 flipArithRel :: ArithRelation -> ArithRelation
 -- Equality, addition and multiplication are commutative
@@ -224,14 +238,14 @@ flipArithRel (ArithRelation t@ArithMul   l r)
 flipArithRel (ArithRelation ArithSub l r)
   = ArithRelation ArithAdd
                   (ArithRelation ArithSub
-                                 (ArithConst $ ConstantInt 0)
+                                 arithConst0
                                  r)
                   l
 -- Flip the terms of a divison: a/b = 1/b * a
 flipArithRel (ArithRelation ArithDiv l r)
   = ArithRelation ArithMul
                   (ArithRelation ArithDiv
-                                 (ArithConst $ ConstantInt 1)
+                                 arithConst1
                                  r)
                   l
 -- Cannot flip other relations
