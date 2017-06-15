@@ -283,52 +283,55 @@ combineDomains :: (MonadFail m, MonadLog m)
                -> Domain () Expression
                -> Domain () Expression
                -> m (Domain () Expression)
+-- Special case, simplification
+combineDomains ArithEqual d1 d2 | d1 == d2 = return d1
 -- RangeBounded - combine both bounds
 combineDomains op (DomainInt [RangeBounded lb1 ub1])
                   (DomainInt [RangeBounded lb2 ub2])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 lb2) (Op $ mkDomOperUB op ub1 ub2)]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 ub1 lb2 ub2)
+                                     (Op $ mkDomOperUB op lb1 ub1 lb2 ub2)]
 -- RangeLowerBounded - combine lower bounds and set upper bound if present
 combineDomains op (DomainInt [RangeBounded lb1 ub])
                   (DomainInt [RangeLowerBounded lb2])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 lb2) ub]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 ub lb2 (exprIdentity op)) ub]
 combineDomains op (DomainInt [RangeLowerBounded lb1])
                   (DomainInt [RangeBounded lb2 ub])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 lb2) ub]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb1 (exprIdentity op) lb2 ub) ub]
 combineDomains op (DomainInt [RangeLowerBounded lb1])
                   (DomainInt [RangeLowerBounded lb2])
-  = return $ DomainInt [RangeLowerBounded (Op $ mkDomOperLB op lb1 lb2)]
+  = return $ DomainInt [RangeLowerBounded (Op $ mkDomOperLB op lb1 (exprIdentity op) lb2 (exprIdentity op))]
 -- RangeUpperBounded - combine upper bounds and set lower bound if present
 combineDomains op (DomainInt [RangeBounded lb ub1])
                   (DomainInt [RangeUpperBounded ub2])
-  = return $ DomainInt [RangeBounded lb (Op $ mkDomOperUB op ub1 ub2)]
+  = return $ DomainInt [RangeBounded lb (Op $ mkDomOperUB op lb ub1 (exprIdentity op) ub2)]
 combineDomains op (DomainInt [RangeUpperBounded ub1])
                   (DomainInt [RangeBounded lb ub2])
-  = return $ DomainInt [RangeBounded lb (Op $ mkDomOperUB op ub1 ub2)]
+  = return $ DomainInt [RangeBounded lb (Op $ mkDomOperUB op (exprIdentity op) ub1 lb ub2)]
 combineDomains op (DomainInt [RangeUpperBounded ub1])
                   (DomainInt [RangeUpperBounded ub2])
-  = return $ DomainInt [RangeUpperBounded (Op $ mkDomOperUB op ub1 ub2)]
+  = return $ DomainInt [RangeUpperBounded (Op $ mkDomOperUB op (exprIdentity op) ub1 (exprIdentity op) ub2)]
 -- RangeOpen - use other domain
 combineDomains _ d1 (DomainInt [RangeOpen]) = return d1
 combineDomains _ (DomainInt [RangeOpen]) d2 = return d2
 -- RangeSingle - combine with bounds
 combineDomains op (DomainInt [RangeSingle x])
                   (DomainInt [RangeBounded lb ub])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op x lb) (Op $ mkDomOperUB op x ub)]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op x x lb ub) (Op $ mkDomOperUB op x x lb ub)]
 combineDomains op (DomainInt [RangeSingle x])
                   (DomainInt [RangeLowerBounded lb])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op x lb) x]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op x x lb (exprIdentity op)) x]
 combineDomains op (DomainInt [RangeSingle x])
                   (DomainInt [RangeUpperBounded ub])
-  = return $ DomainInt [RangeBounded x (Op $ mkDomOperUB op x ub)]
+  = return $ DomainInt [RangeBounded x (Op $ mkDomOperUB op x x (exprIdentity op) ub)]
 combineDomains op (DomainInt [RangeBounded lb ub])
                   (DomainInt [RangeSingle x])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb x) (Op $ mkDomOperUB op ub x)]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb ub x x) (Op $ mkDomOperUB op lb ub x x)]
 combineDomains op (DomainInt [RangeLowerBounded lb])
                   (DomainInt [RangeSingle x])
-  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb x) x]
+  = return $ DomainInt [RangeBounded (Op $ mkDomOperLB op lb (exprIdentity op) x x) x]
 combineDomains op (DomainInt [RangeUpperBounded ub])
                   (DomainInt [RangeSingle x])
-  = return $ DomainInt [RangeBounded x (Op $ mkDomOperUB op ub x)]
+  = return $ DomainInt [RangeBounded x (Op $ mkDomOperUB op (exprIdentity op) ub x x)]
 -- Cannot combine (for now)
 combineDomains op d1 d2 = fail $
   stringToDoc "cannot combine domains " <>
@@ -337,12 +340,21 @@ combineDomains op d1 d2 = fail $
   pretty d2 <>
   stringToDoc (" with arithmetic relation " ++ show op)
 
--- | Operation on the lower or upper bound of two domains.
-type DomainOperation = Expression -> Expression -> Op Expression
+-- | Get the expression value of the identity for an operation.
+exprIdentity :: ArithRelType -> Expression
+exprIdentity t = let ArithConst c = arithRelIdentity t
+                     in Constant c
 
--- | Get the combination function of domain lower bounds for the given arithmetic relation type.
+-- | Operation on the lower and upper bounds of two domains.
+type DomainOperation = Expression     -- ^ Lower bound of the lhs domain.
+                    -> Expression     -- ^ Upper bound of the lhs domain.
+                    -> Expression     -- ^ Lower bound of the rhs domain.
+                    -> Expression     -- ^ Upper bound of the rhs domain.
+                    -> Op Expression  -- ^ Expression operating on two of the bounds.
+
+-- | Get the combination function to calculate the lower bound for the given arithmetic relation type.
 mkDomOperLB :: ArithRelType -> DomainOperation
-mkDomOperLB ArithEqual = \lb1 lb2 -> addBoundToMax lb1 lb2 (Just addBoundToMax)
+mkDomOperLB ArithEqual = \lb1 _ lb2 _ -> addBoundToMax lb1 lb2 (Just addBoundToMax)
   -- When adding values to an OpMax, combine them into the same matrix,
   -- and do not add them if they are already present
   where addBoundToMax lb1 lb2 (Just fallback)
@@ -354,14 +366,14 @@ mkDomOperLB ArithEqual = \lb1 lb2 -> addBoundToMax lb1 lb2 (Just addBoundToMax)
                  _ -> fallback lb1 lb2 Nothing
         addBoundToMax lb1 lb2 Nothing
           = addBoundToMax lb2 lb1 (Just (\lb1' lb2' _ -> MkOpMax (OpMax $ mkMatrix [ lb1', lb2' ])))
-mkDomOperLB ArithAdd = \b1 b2 -> MkOpSum     (OpSum     $ mkMatrix [ b1, b2 ])
-mkDomOperLB ArithSub = \b1 b2 -> MkOpMinus   (OpMinus   b1 b2)
-mkDomOperLB ArithMul = \b1 b2 -> MkOpProduct (OpProduct $ mkMatrix [ b1, b2 ])
-mkDomOperLB ArithDiv = \b1 b2 -> MkOpDiv     (OpDiv     b1 b2)
+mkDomOperLB ArithAdd = \lb1 _ lb2 _   -> MkOpSum     (OpSum     $ mkMatrix [ lb1, lb2 ])
+mkDomOperLB ArithSub = \lb1 _ _   ub2 -> MkOpMinus   (OpMinus   lb1 ub2)
+mkDomOperLB ArithMul = \lb1 _ lb2 _   -> MkOpProduct (OpProduct $ mkMatrix [ lb1, lb2 ])
+mkDomOperLB ArithDiv = \lb1 _ _   ub2 -> MkOpDiv     (OpDiv     lb1 ub2)
 
--- | Get the combination function of domain upper bounds for the given arithmetic relation type.
+-- | Get the combination function to calculate the upper bound for the given arithmetic relation type.
 mkDomOperUB :: ArithRelType -> DomainOperation
-mkDomOperUB ArithEqual = \ub1 ub2 -> addBoundToMin ub1 ub2 (Just addBoundToMin)
+mkDomOperUB ArithEqual = \_ ub1 _ ub2 -> addBoundToMin ub1 ub2 (Just addBoundToMin)
   -- When adding values to an OpMin, combine them into the same matrix,
   -- and do not add them if they are already present
   where addBoundToMin ub1 ub2 (Just fallback)
@@ -373,7 +385,10 @@ mkDomOperUB ArithEqual = \ub1 ub2 -> addBoundToMin ub1 ub2 (Just addBoundToMin)
                  _ -> fallback ub1 ub2 Nothing
         addBoundToMin ub1 ub2 Nothing
           = addBoundToMin ub2 ub1 (Just (\ub1' ub2' _ -> MkOpMin (OpMin $ mkMatrix [ ub1', ub2' ])))
-mkDomOperUB t = mkDomOperLB t
+mkDomOperUB ArithAdd = \_ ub1 _   ub2 -> MkOpSum     (OpSum     $ mkMatrix [ ub1, ub2 ])
+mkDomOperUB ArithSub = \_ ub1 lb2 _   -> MkOpMinus   (OpMinus   ub1 lb2)
+mkDomOperUB ArithMul = \_ ub1 _   ub2 -> MkOpProduct (OpProduct $ mkMatrix [ ub1, ub2 ])
+mkDomOperUB ArithDiv = \_ ub1 lb2 _   -> MkOpDiv     (OpDiv     ub1 lb2)
 
 -- | Make a matrix expression from a list of expressions.
 mkMatrix :: [Expression] -> Expression
