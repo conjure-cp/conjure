@@ -31,7 +31,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
                                                      ]
                         if model == model'
                            then return model'
-                           else core model'
+                           else core $ propagateDomains model'
         -- Apply the function to every statement and fold it into the model
         folded m@Model { mStatements = stmts } f
           = foldM (\m' s -> do
@@ -40,6 +40,41 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
                     return m' { mStatements = s' : mStatements m' })
                   m { mStatements = [] }
                   (reverse stmts)
+
+-- | Propagate domain definitions to their references.
+propagateDomains :: Model -- ^ Model with updated domain definitions.
+                 -> Model -- ^ Model with updated domains propagated.
+propagateDomains m = foldr propagateDeclaration m (mStatements m)
+
+-- | Propagate only domains in variable declarations.
+propagateDeclaration :: Statement -> Model -> Model
+propagateDeclaration (Declaration (FindOrGiven Find n d)) m
+  = propagateVariable n d m
+propagateDeclaration (Declaration (Letting n (Domain d))) m
+  = propagateVariable n d m
+propagateDeclaration _  m = m
+
+-- | Propagate the updated domain of a variable over the model.
+propagateVariable :: Name -> Domain () Expression -> Model -> Model
+propagateVariable n d m@Model { mStatements = stmts }
+  = m { mStatements = map applyDomToStmt stmts }
+    where applyDomToStmt (SuchThat es) = SuchThat $ map (applyDomToExpr n d) es
+          -- Do not propagate into domain bounds for now
+          applyDomToStmt s = s
+
+-- | Apply an updated domain to an expression.
+applyDomToExpr :: Name                  -- ^ Name of the variable to have its domain updated.
+               -> Domain () Expression  -- ^ Updated domain to replace the old one with.
+               -> Expression            -- ^ Expression to update
+               -> Expression            -- ^ Expression with updated domain for the variable.
+applyDomToExpr n d e@(Reference n' (Just ref)) | n == n'
+  = case ref of
+         Alias e'              -> Reference n (Just $ Alias $ applyDomToExpr n d e')
+         DeclNoRepr Find _ _ r -> Reference n (Just $ DeclNoRepr Find n d r)
+         _                     -> e
+applyDomToExpr _ _ e@(Constant          _) = e
+applyDomToExpr _ _ e@(ExpressionMetaVar _) = e
+applyDomToExpr n d e                       = descend (applyDomToExpr n d) e
 
 -- | Make the attributes of function variables as constrictive as possible.
 functionAttributes :: (MonadFail m, MonadLog m)
