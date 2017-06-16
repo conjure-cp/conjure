@@ -16,6 +16,8 @@ import Conjure.Language.AdHoc
 import Conjure.Language.Pretty
 import Conjure.Language.Lenses
 
+import Data.List as L ( union )
+
 -- containers
 import Data.Set as S ( union )
 
@@ -25,14 +27,15 @@ class DomainUnion a where
 domainUnions
     :: ( Applicative m, Monad m
        , Pretty r, Default r
-       , Pretty x, ExpressionLike x, Op x :< x
+       , Eq x, Pretty x, ExpressionLike x, Op x :< x
        ) => [Domain r x] -> m (Domain r x)
 domainUnions [] = return $ DomainAny "domainUnions []" TypeAny
 domainUnions [a] = return a
 domainUnions (a:as) = do b <- domainUnions as ; domainUnion a b
 
 instance
-    ( ExpressionLike x
+    ( Eq x
+    , ExpressionLike x
     , Op x :< x
     , Pretty x
     , Pretty r
@@ -41,7 +44,7 @@ instance
     domainUnion DomainAny{} d = return d
     domainUnion d DomainAny{} = return d
     domainUnion DomainBool DomainBool = return DomainBool
-    domainUnion (DomainInt r1) (DomainInt r2) = return $ DomainInt (r1 ++ r2)
+    domainUnion (DomainInt r1) (DomainInt r2) = return $ DomainInt (r1 `L.union` r2)
     domainUnion (DomainTuple []) d@DomainTuple{} = return d
     domainUnion d@DomainTuple{} (DomainTuple []) = return d
     domainUnion (DomainTuple xs) (DomainTuple ys)
