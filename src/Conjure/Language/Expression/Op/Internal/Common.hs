@@ -75,9 +75,9 @@ prettyPrecBinOp envPrec op a b =
                                                        , opPretty op
                                                        , prettyPrec (prec+1) b
                                                        ]
-            FRight -> parensIf (envPrec > prec) $ fsep [ prettyPrec  prec    a
+            FRight -> parensIf (envPrec > prec) $ fsep [ prettyPrec (prec+1) a
                                                        , opPretty op
-                                                       , prettyPrec (prec+1) b
+                                                       , prettyPrec  prec    b
                                                        ]
 
 intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
