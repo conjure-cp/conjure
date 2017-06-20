@@ -199,7 +199,7 @@ Constraints
 
     SuchThatStatement := "such that" list(Expression, ",")
 
-Constraints are declared using the keyword sequence "such that", followed by a comma separated list of boolean expressions.
+Constraints are declared using the keyword sequence "such that", followed by a comma separated list of Boolean expressions.
 The syntax for expressions is explained in the later sections.
 
 
