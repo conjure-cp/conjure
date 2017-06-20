@@ -55,23 +55,29 @@ constrainFunctionDomain :: (MonadFail m, MonadLog m)
                         => Domain () Expression     -- ^ Current domain of the function.
                         -> Model                    -- ^ Context of the model.
                         -> m (Domain () Expression) -- ^ Possibly modified domain.
-constrainFunctionDomain d@(DomainFunction r attrs from to) _
-  = case attrs of
-         -- If a function is surjective or bijective and its domain and codomain
-         -- are of equal size, then it is total and bijective
-         FunctionAttr s PartialityAttr_Partial JectivityAttr_Surjective ->
-           totalAndBijectiveDomainComparison s
-         FunctionAttr s PartialityAttr_Partial JectivityAttr_Bijective  ->
-           totalAndBijectiveDomainComparison s
-         _ -> return d
-    where totalAndBijectiveDomainComparison s
-            = case domainSizeOf from of
-                   Left  e        -> logInfo e >> return d
-                   Right fromSize ->
-                     case domainSizeOf to :: Either Doc Expression of
-                          Left  e      -> logInfo e >> return d
-                          Right toSize ->
-                            if fromSize == toSize
-                               then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
-                               else return d
+constrainFunctionDomain d@DomainFunction{} _
+  = surjectiveIsTotalBijective d
 constrainFunctionDomain d _ = return d
+
+-- | If a function is surjective or bijective and its domain and codomain
+--   are of equal size, then it is total and bijective.
+surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
+                           => Domain () Expression      -- Domain of the function.
+                           -> m (Domain () Expression)  -- Possibly modified domain.
+surjectiveIsTotalBijective d@(DomainFunction r (FunctionAttr s PartialityAttr_Partial j) from to)
+  | j == JectivityAttr_Surjective || j == JectivityAttr_Bijective = do
+    (fromSize, toSize) <- functionDomainSizes from to
+    if fromSize == toSize
+       then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
+       else return d
+surjectiveIsTotalBijective d = return d
+
+-- | Calculate the sizes of the domain and codomain of a function.
+functionDomainSizes :: (MonadFail m)
+                    => Domain () Expression       -- The function's domain.
+                    -> Domain () Expression       -- The function's codomain.
+                    -> m (Expression, Expression) -- The sizes of the two.
+functionDomainSizes from to = do
+  fromSize <- domainSizeOf from
+  toSize   <- domainSizeOf to
+  return (fromSize, toSize)
