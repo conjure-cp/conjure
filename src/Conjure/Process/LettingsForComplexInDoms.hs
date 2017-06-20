@@ -48,7 +48,7 @@ inlineLettingDomainsForDecls m = do
         f (DomainReference name Nothing) = do
             (ctxt, unnameds) <- gets id
             case name `lookup` ctxt of
-                Just d -> f d
+                Just d -> transformM f d
                 _ -> if name `elem` unnameds
                         then return (DomainReference name Nothing)
                         else fail $ vcat

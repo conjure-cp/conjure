@@ -235,6 +235,7 @@ resolveD
        , NameGen m
        , Data r
        , Pretty r
+       , Default r
        )
     => Domain r Expression
     -> m (Domain r Expression)
@@ -243,7 +244,7 @@ resolveD (DomainReference nm Nothing) = do
     mval <- gets (lookup nm)
     case mval of
         Nothing -> userErr1 ("Undefined reference to a domain:" <+> pretty nm)
-        Just (Alias (Domain r)) -> resolveD (changeRepr (bug "resolveD Alias Domain") r)
+        Just (Alias (Domain r)) -> resolveD (changeRepr def r)
         Just x -> userErr1 ("Expected a domain, but got an expression:" <+> pretty x)
 resolveD (DomainRecord ds) = fmap DomainRecord $ forM ds $ \ (n, d) -> do
     d' <- resolveD d
