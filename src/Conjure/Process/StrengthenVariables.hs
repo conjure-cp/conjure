@@ -12,7 +12,8 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( union )
+import Data.List ( intersect, union )
+import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
 import Conjure.Language
@@ -102,24 +103,46 @@ definedForAllIsTotal n cs (DomainFunction r (FunctionAttr s PartialityAttr_Parti
   | any definedForAll cs
     = return $ DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
   where
+        -- Is there at least one forAll expression that uses the variable?
         definedForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
-          = e `containsReference` n &&
-            gorcs `containsGenerator` from &&
-            hasNoConditions gorcs
+          = functionCalledWithParam e n gorcs from && -- the function in question is called with the correct generated parameter
+            hasNoImplications e &&                    -- no implications to ignore domain values
+            hasNoConditions gorcs                     -- no conditions to ignore domain values
         definedForAll _ = False
+        -- Make sure that there are no implications in an expression
+        hasNoImplications = not . any isImplies . universe
+        isImplies (Op (MkOpImply OpImply{})) = True
+        isImplies _                          = False
+        -- Make sure that there are no conditions in a list of generators or conditions
         hasNoConditions = not . any isCondition
         isCondition Condition{} = True
         isCondition _           = False
 definedForAllIsTotal _ _ d = return d
 
--- | Determine whether an expression contains a reference to a variable.
-containsReference :: Expression -> Name -> Bool
-containsReference e n = any nameEqual $ universe e
-  where nameEqual (Reference n' _) = n == n'
-        nameEqual _                = False
-
--- | Determine whether a list of generators or conditions contains a generator for a given domain.
-containsGenerator :: [GeneratorOrCondition] -> Domain () Expression -> Bool
-containsGenerator gorcs d = any containsGenerator' gorcs
-  where containsGenerator' (Generator (GenDomainNoRepr  _ d')) = d == d'
-        containsGenerator' _ = False
+-- | Determine whether the given function is called with a value generated from its domain.
+functionCalledWithParam :: Expression             -- ^ Expression being checked for the function call.
+                        -> Name                   -- ^ Name of the function being called.
+                        -> [GeneratorOrCondition] -- ^ Generated variables and conditions of the comprehension.
+                        -> Domain () Expression   -- ^ Domain of the function.
+                        -> Bool                   -- ^ Whether or not the function is called with a value generated from the domain.
+functionCalledWithParam e n gorcs from = let funCalls = filter isFunctionCall $ universe e
+                                             in any (functionCallsWithParam generatedVariables) funCalls
+  where
+        -- Get the names of the generated variables
+        generatedVariables = mapMaybe getGeneratedName $ filter isGenerator gorcs
+        isGenerator (Generator GenDomainNoRepr{}) = True
+        isGenerator _                             = False
+        getGeneratedName (Generator (GenDomainNoRepr (Single n') _)) = Just n'
+        getGeneratedName _                                           = Nothing
+        isFunctionCall (Op (MkOpRelationProj OpRelationProj{})) = True
+        isFunctionCall _                                        = False
+        -- Determine whether the function is called with a generated parameter
+        functionCallsWithParam ps (Op (MkOpRelationProj (OpRelationProj (Reference n' _) args)))
+          | n' == n = not $ null $ ps `intersect` mapMaybe getArgName (filter domainArg args)
+        functionCallsWithParam _  _ = False
+        domainArg (Just (Reference _ d)) = d `domainEquals` from
+        domainArg _                      = False
+        domainEquals (Just (DeclNoRepr _ _ d1 _)) d2 = d1 == d2
+        domainEquals _                            _  = False
+        getArgName (Just (Reference n' _)) = Just n'
+        getArgName _                       = Nothing
