@@ -1,0 +1,21 @@
+
+find a : int(3,4)
+find b : int(2,3)
+find x, y, z, t : int(-10000 .. 10000)
+
+such that
+    x = -a**b,
+    y = -(a**b),
+    z = (-a)**b,
+
+    $ this is the intended parsing
+    x = y,
+
+    $ test parsing "double negation"
+    x = --t
+
+
+$ test parsing "double logical-not"
+find b1, b2 : bool
+such that b1 = !!b2, b1 = true
+
