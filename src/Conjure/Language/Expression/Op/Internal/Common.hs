@@ -10,6 +10,7 @@ module Conjure.Language.Expression.Op.Internal.Common
 
     , prettyPrecBinOp
     , Fixity(..), operators, functionals
+    , EssenceOperatorParsingDescr(..)
 
     , raiseTypeError
 
@@ -57,7 +58,7 @@ opPretty = lexemeFace . opLexeme
 
 opFixityPrec :: BinaryOperator op => proxy op -> (Fixity, Int)
 opFixityPrec op =
-    case [ (f,p) | (l,f,p) <- operators, l == opLexeme op ] of
+    case [ (f,p) | (Binary l f, p) <- operators, l == opLexeme op ] of
         [x] -> x
         _ -> bug "opFixityPrec"
 
@@ -172,49 +173,52 @@ sameToSameToSame p a b tys = do
 data Fixity = FNone | FLeft | FRight
     deriving Show
 
-operators :: [(Lexeme,Fixity,Int)]
+data EssenceOperatorParsingDescr = Binary Lexeme Fixity | UnaryPrefix Lexeme
+
+operators :: [(EssenceOperatorParsingDescr, Int)]
 operators =
-    [ ( L_Plus        , FLeft  ,  600 )
-    , ( L_Minus       , FLeft  ,  600 )
-    , ( L_Times       , FLeft  ,  700 )
-    , ( L_Div         , FLeft  ,  700 )
-    , ( L_Mod         , FLeft  ,  700 )
-    , ( L_Pow         , FRight ,  800 )
-    , ( L_Lt          , FNone  ,  400 )
-    , ( L_Leq         , FNone  ,  400 )
-    , ( L_Gt          , FNone  ,  400 )
-    , ( L_Geq         , FNone  ,  400 )
-    , ( L_Neq         , FNone  ,  400 )
-    , ( L_Eq          , FNone  ,  400 )
-    , ( L_Or          , FLeft  ,  110 )
-    , ( L_And         , FLeft  ,  120 )
-    , ( L_Imply       , FNone  ,   50 )
-    , ( L_Iff         , FNone  ,   50 )
-    , ( L_union       , FLeft  ,  600 )
-    , ( L_intersect   , FLeft  ,  700 )
-    , ( L_subset      , FNone  ,  400 )
-    , ( L_subsetEq    , FNone  ,  400 )
-    , ( L_supset      , FNone  ,  400 )
-    , ( L_supsetEq    , FNone  ,  400 )
-    , ( L_subsequence , FNone  ,  400 )
-    , ( L_substring   , FNone  ,  400 )
-    , ( L_in          , FNone  ,  550 )
-    -- , ( L_Colon     , FNone  ,   10 )
-    , ( L_HasRepr     , FNone  ,   10 )
-    , ( L_HasType     , FNone  ,   10 )
-    , ( L_HasDomain   , FNone  ,   10 )
-    , ( L_LexLt       , FNone  ,  400 )
-    , ( L_LexLeq      , FNone  ,  400 )
-    , ( L_LexGt       , FNone  ,  400 )
-    , ( L_LexGeq      , FNone  ,  400 )
-    , ( L_DotLt       , FNone  ,  400 )
-    , ( L_DotLeq      , FNone  ,  400 )
-    , ( L_DotGt       , FNone  ,  400 )
-    , ( L_DotGeq      , FNone  ,  400 )
-    , ( L_TildeLt     , FNone  ,  400 )
-    , ( L_TildeLeq    , FNone  ,  400 )
-    , ( L_TildeGt     , FNone  ,  400 )
-    , ( L_TildeGeq    , FNone  ,  400 )
+    [ ( Binary L_Plus         FLeft   ,  600 )
+    , ( Binary L_Minus        FLeft   ,  600 )
+    , ( Binary L_Times        FLeft   ,  700 )
+    , ( Binary L_Div          FLeft   ,  700 )
+    , ( Binary L_Mod          FLeft   ,  700 )
+    , ( Binary L_Pow          FRight  ,  800 )
+    , ( Binary L_Lt           FNone   ,  400 )
+    , ( Binary L_Leq          FNone   ,  400 )
+    , ( Binary L_Gt           FNone   ,  400 )
+    , ( Binary L_Geq          FNone   ,  400 )
+    , ( Binary L_Neq          FNone   ,  400 )
+    , ( Binary L_Eq           FNone   ,  400 )
+    , ( Binary L_Or           FLeft   ,  110 )
+    , ( Binary L_And          FLeft   ,  120 )
+    , ( Binary L_Imply        FNone   ,   50 )
+    , ( Binary L_Iff          FNone   ,   50 )
+    , ( Binary L_union        FLeft   ,  600 )
+    , ( Binary L_intersect    FLeft   ,  700 )
+    , ( Binary L_subset       FNone   ,  400 )
+    , ( Binary L_subsetEq     FNone   ,  400 )
+    , ( Binary L_supset       FNone   ,  400 )
+    , ( Binary L_supsetEq     FNone   ,  400 )
+    , ( Binary L_subsequence  FNone   ,  400 )
+    , ( Binary L_substring    FNone   ,  400 )
+    , ( Binary L_in           FNone   ,  550 )
+    , ( Binary L_HasRepr      FNone   ,   10 )
+    , ( Binary L_HasType      FNone   ,   10 )
+    , ( Binary L_HasDomain    FNone   ,   10 )
+    , ( Binary L_LexLt        FNone   ,  400 )
+    , ( Binary L_LexLeq       FNone   ,  400 )
+    , ( Binary L_LexGt        FNone   ,  400 )
+    , ( Binary L_LexGeq       FNone   ,  400 )
+    , ( Binary L_DotLt        FNone   ,  400 )
+    , ( Binary L_DotLeq       FNone   ,  400 )
+    , ( Binary L_DotGt        FNone   ,  400 )
+    , ( Binary L_DotGeq       FNone   ,  400 )
+    , ( Binary L_TildeLt      FNone   ,  400 )
+    , ( Binary L_TildeLeq     FNone   ,  400 )
+    , ( Binary L_TildeGt      FNone   ,  400 )
+    , ( Binary L_TildeGeq     FNone   ,  400 )
+    , ( UnaryPrefix L_Minus           ,  750 )
+    , ( UnaryPrefix L_ExclamationMark ,  900 )
     ]
 
 functionals :: [Lexeme]

@@ -28,6 +28,7 @@ import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
 import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
 import Text.Megaparsec.Combinator ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
 import Text.Megaparsec.ShowToken ( showToken )
+import Text.Megaparsec.Expr ( makeExprParser, Operator(..) )
 import qualified Text.Megaparsec.Prim as P ( runParser )
 
 -- text
@@ -221,26 +222,24 @@ parseDomain :: Parser (Domain () Expression)
 parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr = shuntingYardDomain parseBeforeShuntD
+parseDomainWithRepr =
+    let
+        mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
+
+    in
+        makeExprParser (pDomainAtom <?> "domain")
+            [ [ InfixL $ do lexeme L_Minus
+                            return $ mergeOp L_Minus
+              , InfixL $ do lexeme L_union
+                            return $ mergeOp L_union
+              ]
+            , [ InfixL $ do lexeme L_intersect
+                            return $ mergeOp L_intersect
+              ]
+            ]
 
     where
 
-        -- parse a domain and continue to parseBeforeShuntO
-        parseBeforeShuntD :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
-        parseBeforeShuntD =
-            (:) <$> (Right <$> pDomainAtom <?> "domain")
-                <*> parseBeforeShuntO
-
-        -- either parse an operator and continue to parseBeforeShuntD
-        -- or return []
-        parseBeforeShuntO :: Parser [Either Lexeme (Domain HasRepresentation Expression)]
-        parseBeforeShuntO =
-            (:) <$> (Left <$> parseOp')
-                <*> parseBeforeShuntD
-            <|>
-            return []
-
-        parseOp' = msum [ do lexeme x; return x | x <- [L_Minus, L_union, L_intersect] ] <?> "operator"
         pDomainAtom = msum
             [ pBool, try pIntFromExpr, pInt, try pEnum, try pReference
             , pMatrix, try pTupleWithout, pTupleWith
@@ -625,36 +624,49 @@ metaVarInE :: String -> Expression
 metaVarInE = ExpressionMetaVar
 
 parseExpr :: Parser Expression
-parseExpr = shuntingYardExpr parseBeforeShuntE
-    where
-        -- parse an expression and continue to parseBeforeShuntO
-        parseBeforeShuntE :: Parser [Either Lexeme Expression]
-        parseBeforeShuntE =
-            (:) <$> (Right <$> parseAtomicExpr)
-                <*> parseBeforeShuntO
+parseExpr =
+    let
+        mergeOp op = mkBinOp (lexemeText op)
 
-        -- either parse an operator and continue to parseBeforeShuntE
-        -- or return []
-        parseBeforeShuntO :: Parser [Either Lexeme Expression]
-        parseBeforeShuntO =
-            (:) <$> (Left <$> parseOp)
-                <*> parseBeforeShuntE
-            <|>
-            return []
+        operatorsGrouped = operators
+            |> sortBy  (\ (_,a) (_,b) -> compare a b )
+            |> groupBy (\ (_,a) (_,b) -> a == b )
+            |> reverse
+
+        parseUnaryNegate = do
+            lexeme L_Minus
+            return $ \ x -> mkOp "negate" [x]
+
+        parseUnaryNot = do
+            lexeme L_ExclamationMark
+            return $ \ x -> mkOp "not" [x]
+
+    in
+        makeExprParser (parseAtomicExpr <?> "expression")
+            [ [ case descr of
+                    Binary op FLeft               -> InfixL $ do lexeme op
+                                                                 return $ mergeOp op
+                    Binary op FNone               -> InfixN $ do lexeme op
+                                                                 return $ mergeOp op
+                    Binary op FRight              -> InfixR $ do lexeme op
+                                                                 return $ mergeOp op
+                    UnaryPrefix L_Minus           -> Prefix $ foldr1 (.) <$> some parseUnaryNegate
+                    UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
+                    UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
+              | (descr, _) <- operatorsInGroup
+              ] 
+            | operatorsInGroup <- operatorsGrouped
+            ]
 
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do
     let
-        prefixes = do
-            fs <- some $ msum parsePrefixes
-            return $ foldr1 (.) fs
         postfixes = do
             fs <- some $ msum parsePostfixes
             return $ foldr1 (.) (reverse fs)
-        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
         withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
                                                                                  Just f  -> f i
-    withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
+    withPostfix parseAtomicExprNoPrePost <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
 parseAtomicExprNoPrePost = msum $ map try $ concat
@@ -702,16 +714,6 @@ parseComprehension = brackets $ do
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain
-
-parsePrefixes :: [Parser (Expression -> Expression)]
-parsePrefixes = [parseUnaryMinus, parseUnaryNot]
-    where
-        parseUnaryMinus = do
-            lexeme L_Minus
-            return $ \ x -> mkOp "negate" [x]
-        parseUnaryNot = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "not" [x]
 
 parsePostfixes :: [Parser (Expression -> Expression)]
 parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
@@ -805,10 +807,6 @@ parseName = Name <$> identifierText
 
 parseReference :: Parser Expression
 parseReference = Reference <$> parseName <*> pure Nothing
-
-parseOp :: Parser Lexeme
-parseOp = msum [ do lexeme x; return x | (x,_,_) <- operators ]
-    <?> "operator"
 
 parseQuantifiedExpr :: Parser Expression
 parseQuantifiedExpr = do
@@ -954,7 +952,6 @@ parseLiteral = label "value" $ msum
             lexeme L_relation
             xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
             return (AbsLitRelation [is | AbsLitTuple is <- xs])
-            -- return [xMake| value.relation.values := xs |]
 
         pPartition = do
             lexeme L_partition
@@ -962,86 +959,6 @@ parseLiteral = label "value" $ msum
             return (AbsLitPartition xs)
             where
                 inner = braces (commaSeparated0 parseExpr)
-
-shuntingYardExpr :: Parser [Either Lexeme Expression] -> Parser Expression
-shuntingYardExpr p = do
-    let mergeOp = mkBinOp . lexemeText
-    beforeShunt <- fixNegate <$> p
-    checkAlternating beforeShunt
-    shunt mergeOp beforeShunt
-
-shuntingYardDomain :: (Eq a, Eq r) => Parser [Either Lexeme (Domain r a)] -> Parser (Domain r a)
-shuntingYardDomain p = do
-    let mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
-    beforeShunt <- p
-    checkAlternating beforeShunt
-    shunt mergeOp beforeShunt
-
-fixNegate :: [Either Lexeme Expression] -> [Either Lexeme Expression]
-fixNegate ( Right a
-          : Right (Op (MkOpNegate (OpNegate b)))
-          : cs
-          ) = fixNegate $ Right a : Left L_Minus : Right b : cs
-fixNegate (a:bs) = a : fixNegate bs
-fixNegate [] = []
-
--- "Left"s are operators, "Right"s are expressions
-checkAlternating :: MonadFail m => [Either a b] -> m ()
-checkAlternating (Right{} : Right{} : _) = fail "Malformed expression."
-checkAlternating (Left{}  : Left{}  : _) = fail "Malformed expression."
-checkAlternating (_:xs) = checkAlternating xs
-checkAlternating [] = return ()
-
-shunt :: Eq a => (Lexeme -> a -> a -> a) -> [Either Lexeme a] -> Parser a
-shunt mergeOp xs = do
-    result <- findPivotOp xs
-    case result of
-        Left x -> return x
-        Right (before, op, after) -> do
-            b <- shunt mergeOp before
-            a <- shunt mergeOp after
-            return (mergeOp op b a)
-
-findPivotOp :: Eq a => [Either Lexeme a] -> Parser (Either a ([Either Lexeme a], Lexeme, [Either Lexeme a]))
-findPivotOp [Right x] = return $ Left x
-findPivotOp xs = do
-    let
-        pivotPrec :: Int
-        pivotFixity :: Fixity
-        (pivotPrec,pivotFixity) = minimumBy (comparing fst)
-                        [ (p, f) | Left l <- xs, (l',f,p) <- operators, l == l' ]
-
-        chck op = case [ p | (l,_,p) <- operators, l == op ] of
-                    [p] -> p == pivotPrec
-                    _ -> False
-
-        findFirst :: Eq a => [Either Lexeme a] -> Parser ([Either Lexeme a], Lexeme, [Either Lexeme a])
-        findFirst [] = fail "findPivotOp.findFirst"
-        findFirst (Left i:is) | chck i = return ([], i, is)
-        findFirst (i:is) = do
-            (before, op, after) <- findFirst is
-            return (i:before, op, after)
-
-        findLast :: Eq a => [Either Lexeme a] -> Parser ([Either Lexeme a], Lexeme, [Either Lexeme a])
-        findLast is = do
-            (before, op, after) <- findFirst (reverse is)
-            return (reverse after, op, reverse before)
-
-        findOnly :: Eq a => [Either Lexeme a] -> Parser ([Either Lexeme a], Lexeme, [Either Lexeme a])
-        findOnly is = do
-            f <- findFirst is
-            l <- findLast  is
-            if f == l
-                then return f
-                else fail "Ambiguous use of non-associative operator."
-
-    let
-        finder = case pivotFixity of
-                    FLeft  -> findLast
-                    FNone  -> findOnly
-                    FRight -> findFirst
-    Right <$> finder xs
-
 
 
 
@@ -1070,7 +987,6 @@ runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserS
             in  ( if file `isPrefixOf` show e
                     then                       pretty (show e)
                     else pretty file <> ":" <> pretty (show e)
-            -- in  ( pretty file <> ":" <> pretty (show e)
                 , sourceLine   pos
                 , sourceColumn pos
                 )
