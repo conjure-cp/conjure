@@ -402,6 +402,8 @@ There are three groups of function attributes:
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Function domains are partial by default, and using the "total" attribute makes them total.
 
+To explicitly specify a sequence, use a parenthesized set of assignments, each of the form `input --> value``.
+
 Sequence domains
 ~~~~~~~~~~~~~~~~
 
@@ -418,6 +420,9 @@ There are 2 groups of sequence attributes:
 
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Sequence domains are total by default, hence they do not take a separate "total" attribute.
+
+Sequences are indexed by a contiguous list of increasing integers, beginning at 1.
+To explicitly specify a sequence, use a parenthesized list of tuples, each tuple being a pair (index,value).
 
 Relation domains
 ~~~~~~~~~~~~~~~~
@@ -437,6 +442,7 @@ There are 2 groups of relation attributes:
                              , "transitive", "total", "connex", "Euclidean", "serial", "equivalence", "partialOrder".
 
 The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
+To explicitly specify a relation, use a parenthesized list of tuples.
 
 Partition domains
 ~~~~~~~~~~~~~~~~~
@@ -492,7 +498,252 @@ Expressions
 
 (In preparation)
 
+``{}:t`` denotes the empty set of type ``t``.
+
+``image(f,x) = f(x)``
+
+``imageSet(f,x)`` is a set ``{f(x)}`` if ``f(x)`` is defined, or is empty if ``f(x)`` is not defined.  This is especially useful for partial functions.
+
+Some operators supported in Essence do not have corresponding inverse operators in the language.
+For instance, to turn a set of tuples ``{(0,0),(1,1)}`` into a function, the following idiom can be used:
+
+.. code-block:: essence
+
+   find f : function int(0..1) --> int(0..1)
+   such that toSet(f) = {(0,0),(1,1)}
+
+The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
+Conjure does not currently support taking the image with respect to a set of elements.
+
 Matrix indexing
+~~~~~~~~~~~~~~~
+
+A 1D matrix is indexed by an integer.
+Matrices of dimension k are implemented by 1D matrices of dimension k-1.
+
 
 Tuple indexing
+~~~~~~~~~~~~~~
+
+
+Inline binary operators
+~~~~~~~~~~~~~~~~~~~~~~~
+
+
+Arithmetic operators
+^^^^^^^^^^^^^^^^^^^^
+
+As well as the four usual binary inline arithmetic operations
+
+ |  ``+``  ``-``  ``*``  ``/``
+
+Essence also supports the modulo operator ``%`` and exponentiation ``**``.
+Division returns an integer (?), and the following relationship holds when ``x`` and ``y`` are integers:
+
+ |  ``(x % y) + y*(x / y) = x``
+
+whenever ``y`` is not zero; if ``y`` is zero then ``x / y`` and ``x % y`` are flagged as errors?
+
+When ``n`` is an integer, ``|n|`` denotes the absolute value of ``n`` and ``n!`` denotes the product of all positive integers up to ``n``, with ``0! = 1`` and ``n!`` being undefined for negative ``n``. (?)
+
+
+Comparisons
+^^^^^^^^^^^
+
+The inline binary comparison operators
+
+ | ``=``  ``!=``  ``<``  ``<=``  ``>``  ``<=``
+
+can be applied to integer and enumerated types.
+Sets/multisets/relations/functions/domains?
+
+The inline binary comparison operators
+
+ | ``<lex`` ``<=lex`` ``>lex`` ``>=lex``
+
+test whether their arguments have the specified relative lexicographic order.
+
+
+Logical operators
+^^^^^^^^^^^^^^^^^
+
++--------------------+------------------------------------+
+| ``/\``             | and                                |
++--------------------+------------------------------------+
+| ``\/``             | or                                 |
++--------------------+------------------------------------+
+| ``->``             | implication                        |
++--------------------+------------------------------------+
+| ``<->``            | if and only if                     |
++--------------------+------------------------------------+
+| ``!``              | negation                           |
++--------------------+------------------------------------+
+
+Logical operators operate on Boolean valued expressions, returning a Boolean value ``false`` or ``true``.
+Negation is unary prefix, the others are binary inline.
+
+
+Set operations
+^^^^^^^^^^^^^^
+
+These set operations return Boolean values indicating whether a specific relationship holds.
+
++--------------------+---------------------------------------------------------+
+| ``in``             | test if element is in set                               |
++--------------------+---------------------------------------------------------+
+| ``subset``         | test if set is strictly contained in second set         |
++--------------------+---------------------------------------------------------+
+| ``subsetEq``       | test if set is contained in second set                  |
++--------------------+---------------------------------------------------------+
+| ``supset``         | test if first set strictly contains second set          |
++--------------------+---------------------------------------------------------+
+| ``supsetEq``       | test if first set contains second set                   |
++--------------------+---------------------------------------------------------+
+
+These binary inline operations operate on sets or domains and return a set:
+
++--------------------+---------------------------------------------------------+
+| ``intersect``      | set of elements in both sets/domains                    |
++--------------------+---------------------------------------------------------+
+| ``union``          | set of elements in either of the sets                   |
++--------------------+---------------------------------------------------------+
+
+When ``S`` is a set, then ``|S|`` denotes the non-negative integer that is the cardinality of ``S`` (the number of elements in ``S``).
+
+
+Sequence operators
+^^^^^^^^^^^^^^^^^^
+
+For two sequences ``s`` and ``t``, ``subsequence(s,t)`` tests whether there is a function ``f`` such that the list of values taken by ``s`` occurs in the same order in the list of values taken by ``t``, and ``substring(s,t)`` tests whether the list of values taken by ``s`` occurs in the same order and contiguously in the list of values taken by ``t``.
+
+
+Operators taking one argument
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``allDiff``        | test if all entries of 1D matrix are different          |
++--------------------+---------------------------------------------------------+
+| ``defined``        | set of values for which function is defined             |
++--------------------+---------------------------------------------------------+
+| ``factorial``      | ``factorial(n)`` is the same as ``n!``                  |
++--------------------+---------------------------------------------------------+
+| ``hist``           | histogram of ?                                          |
++--------------------+---------------------------------------------------------+
+| ``max``            | largest element in set/multiset/domain, if ordered      |
++--------------------+---------------------------------------------------------+
+| ``min``            | smallest element in set/multiset/domain, if ordered     |
++--------------------+---------------------------------------------------------+
+| ``parts``          | partition to its set of parts                           |
++--------------------+---------------------------------------------------------+
+| ``participants``   | union of all parts of a partition                       |
++--------------------+---------------------------------------------------------+
+| ``powerSet``       | set of all subsets of a set (including the empty set)   |
++--------------------+---------------------------------------------------------+
+| ``pred``           | predecessor of this element in an enumerated type       |
++--------------------+---------------------------------------------------------+
+| ``range``          | set of values of function                               |
++--------------------+---------------------------------------------------------+
+| ``succ``           | successor of this element in an enumerated type         |
++--------------------+---------------------------------------------------------+
+
+
+Type conversion
+~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``toInt``          | maps ``true`` to 1, ``false`` to 0                      |
++--------------------+---------------------------------------------------------+
+| ``toMSet``         | set/relation/function to multiset                       |
++--------------------+---------------------------------------------------------+
+| ``toRelation``     | function to relation; `{a --> b}` becomes `((a,b))`     |
++--------------------+---------------------------------------------------------+
+| ``toSet``          | multiset/relation/function to set                       |
++--------------------+---------------------------------------------------------+
+
+It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
+Although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
+
+It is always possible to use the declarative form
+
+.. code-block:: essence
+
+   find R : relation int(0..1) --> int(0..1)
+   such that toSet(R) = {(0,0),(0,1),(1,1)}
+
+to recover the relation, multiset, or function that corresponds to a set of tuples.
+Note that this will fail if the function corresponding to the set of tuples is sought, but the set of tuples is not a function. (how?)
+
+
+Operators with two arguments
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``active``         | ?                                                       |
++--------------------+---------------------------------------------------------+
+| ``allDiffExcept``  | test if all entries of 1D matrix differ, possibly       |
+|                    | excepting the value specified in the second argument    |
++--------------------+---------------------------------------------------------+
+| ``apart``          | test if two elements are in different parts of          |
+|                    | the partition                                           |
++--------------------+---------------------------------------------------------+
+| ``catchUndef``     | ?                                                       |
++--------------------+---------------------------------------------------------+
+| ``inverse``        | test if two functions are inverses of each other        |
++--------------------+---------------------------------------------------------+
+| ``freq``           | counts occurrences of element in multiset               |
++--------------------+---------------------------------------------------------+
+| ``image``          | ``image(f,x)`` is the same as ``f(x)``                  |
++--------------------+---------------------------------------------------------+
+| ``party``          | part of partition that contains specified element       |
++--------------------+---------------------------------------------------------+
+| ``preImage``       | set of elements mapped by function to set               |
++--------------------+---------------------------------------------------------+
+| ``restrict``       | function restricted to a set of values                  |
++--------------------+---------------------------------------------------------+
+| ``together``       | test if two elements are in the same part of the        |
+|                    | partition                                               |
++--------------------+---------------------------------------------------------+
+
++--------------------+---------------------------------------------------------+
+| ``concatenate``    | ?                                                       |
++--------------------+---------------------------------------------------------+
+| ``flatten``        | 1D matrix of entries from matrix                        |
++--------------------+---------------------------------------------------------+
+
+``flatten`` takes 1 or 2 arguments.  For the 2-argument form, the first argument must be a constant integer.
+With one argument, ``flatten`` returns a 1D matrix containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
+With two arguments ``flatten(n,M)``, the first argument n indicates the depth of flattening: the first n+1 dimensions are flattened into one dimension.
+The one-argument form works like an unbounded-depth flattening.
+Note that ``flatten(0,M) = M`` always holds?
+
+
+List combining operators
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each of these operators applies a combining operator to elements of a list.
+
+The following operators are all behave of this form, taking a list as argument and computing the operation over all the elements.  Each element appears once but the ordering of elements is not specified: no reliance should be placed on a particular ordering.
+
+ | ``sum``  ``product``  ``and``  ``or``  ``xor``
+
+The following equivalences hold:
+
+ | ``sum(x,y) = x + y``
+ | ``product(x,y) = x * y``
+ | ``and(a,b) = a /\ b``
+ | ``or(a,b) = a \/ b``
+ | ``xor(a,b) = (a \/ b) /\ !(a /\ b)``
+
+The preferred syntax is comprehension style, providing a list as the argument to the operator.
+The list may be specified by means of a comprehension, as the elements of a set or domain that satisfy a given condition.
+The following are examples of valid syntax:
+
+ | ``sum( [P(i) | i <- I] )``
+ | ``sum( [P(i) \/ Q(j) | i in I, j : D] )``
+
+An alternative quantifier-like syntax
+
+ | ``sum i in I . P(i)``
+
+is supported for ``sum`` and ``product``.
 
