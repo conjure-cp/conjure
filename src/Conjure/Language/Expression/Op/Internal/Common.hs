@@ -182,7 +182,7 @@ operators =
     , ( Binary L_Times        FLeft   ,  700 )
     , ( Binary L_Div          FLeft   ,  700 )
     , ( Binary L_Mod          FLeft   ,  700 )
-    , ( Binary L_Pow          FRight  ,  800 )
+    , ( Binary L_Pow          FRight  , 2001 )
     , ( Binary L_Lt           FNone   ,  400 )
     , ( Binary L_Leq          FNone   ,  400 )
     , ( Binary L_Gt           FNone   ,  400 )
@@ -217,8 +217,8 @@ operators =
     , ( Binary L_TildeLeq     FNone   ,  400 )
     , ( Binary L_TildeGt      FNone   ,  400 )
     , ( Binary L_TildeGeq     FNone   ,  400 )
-    , ( UnaryPrefix L_Minus           ,  750 )
-    , ( UnaryPrefix L_ExclamationMark ,  900 )
+    , ( UnaryPrefix L_Minus           , 2000 )
+    , ( UnaryPrefix L_ExclamationMark , 2000 )
     ]
 
 functionals :: [Lexeme]

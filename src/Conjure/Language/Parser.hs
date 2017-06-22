@@ -661,12 +661,17 @@ parseExpr =
 parseAtomicExpr :: Parser Expression
 parseAtomicExpr = do
     let
+        prefixes = do
+            fs <- some $ msum parsePrefixes
+            return $ foldr1 (.) fs
         postfixes = do
             fs <- some $ msum parsePostfixes
             return $ foldr1 (.) (reverse fs)
+        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
         withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
                                                                                  Just f  -> f i
-    withPostfix parseAtomicExprNoPrePost <?> "expression"
+    withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
+
 
 parseAtomicExprNoPrePost :: Parser Expression
 parseAtomicExprNoPrePost = msum $ map try $ concat
@@ -714,6 +719,16 @@ parseComprehension = brackets $ do
 
 parseDomainAsExpr :: Parser Expression
 parseDomainAsExpr = Domain <$> betweenTicks parseDomain
+
+parsePrefixes :: [Parser (Expression -> Expression)]
+parsePrefixes = [parseUnaryMinus, parseUnaryNot]
+    where
+        parseUnaryMinus = do
+            lexeme L_Minus
+            return $ \ x -> mkOp "negate" [x]
+        parseUnaryNot = do
+            lexeme L_ExclamationMark
+            return $ \ x -> mkOp "not" [x]
 
 parsePostfixes :: [Parser (Expression -> Expression)]
 parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]

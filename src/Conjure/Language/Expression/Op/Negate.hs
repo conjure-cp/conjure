@@ -29,7 +29,7 @@ instance SimplifyOp OpNegate x where
     simplifyOp _ = na "simplifyOp{OpNegate}"
 
 instance Pretty x => Pretty (OpNegate x) where
-    prettyPrec prec (OpNegate a) = parensIf (prec > 750) ("-" <> prettyPrec 751 a)
+    prettyPrec prec (OpNegate a) = parensIf (prec > 2000) ("-" <> prettyPrec 2000 a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpNegate x) where
     varSymBreakingDescription (OpNegate a) = JSON.Object $ M.fromList
