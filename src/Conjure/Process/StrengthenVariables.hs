@@ -60,7 +60,8 @@ constrainFunctionDomain :: (MonadFail m, MonadLog m)
                         -> Model                    -- ^ Context of the model.
                         -> m (Domain () Expression) -- ^ Possibly modified domain.
 constrainFunctionDomain n d@DomainFunction{} m
-  = surjectiveIsTotalBijective d >>=
+  = surjectiveIsTotalBijective d  >>=
+    totalInjectiveIsBijective     >>=
     definedForAllIsTotal n (suchThat m)
 constrainFunctionDomain _ d _ = return d
 
@@ -82,6 +83,18 @@ surjectiveIsTotalBijective d@(DomainFunction r (FunctionAttr s PartialityAttr_Pa
        then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
        else return d
 surjectiveIsTotalBijective d = return d
+
+-- | If a function is total and injective, and its domain and codomain
+--   are of equal size, then it is bijective.
+totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
+                          => Domain () Expression
+                          -> m (Domain () Expression)
+totalInjectiveIsBijective d@(DomainFunction r (FunctionAttr s p@PartialityAttr_Total JectivityAttr_Injective) from to) = do
+  (fromSize, toSize) <- functionDomainSizes from to
+  if fromSize == toSize
+     then return $ DomainFunction r (FunctionAttr s p JectivityAttr_Bijective) from to
+     else return d
+totalInjectiveIsBijective d = return d
 
 -- | Calculate the sizes of the domain and codomain of a function.
 functionDomainSizes :: (MonadFail m)
