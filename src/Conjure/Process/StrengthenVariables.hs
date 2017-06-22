@@ -12,7 +12,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( intersect, union )
+import Data.List ( delete, intersect, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -26,32 +26,48 @@ import Conjure.Language.DomainSizeOf ( domainSizeOf )
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . (resolveNames >=> core)
-  where core model = do model' <- foldM folded model [ functionAttributes
+  where core :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
+        core model = do model' <- foldM folder model [ functionAttributes
+                                                     , functionConstraints
                                                      ]
                         if model == model'
                            then return model'
                            else core model'
         -- Apply the function to every statement and fold it into the model
-        folded m@Model { mStatements = stmts } f
-          = foldM (\m' s -> do
-                    s' <- f m s
-                    -- This is map, but unwraps the value from the monad
-                    return m' { mStatements = s' : mStatements m' })
-                  m { mStatements = [] }
-                  (reverse stmts)
+        folder :: (MonadFail m, MonadLog m)
+               => Model -> (Model -> Declaration -> m Model) -> m Model
+        folder m@Model { mStatements = stmts } f = foldM (applyToDecl f) m stmts
+        -- Apply the function only to declarations
+        applyToDecl f m (Declaration d) = f m d
+        applyToDecl _ m _               = return m
+
+-- | Update a declaration in a model.
+updateDeclaration :: Declaration  -- ^ Old declaration to be removed.
+                  -> Declaration  -- ^ New declaration to be inserted.
+                  -> Model        -- ^ Model to be updated.
+                  -> Model        -- ^ Updated model.
+updateDeclaration d d' m@Model { mStatements = stmts }
+  = m { mStatements = Declaration d' : delete (Declaration d) stmts }
+
+-- | Merge a list of constraints into a model.
+mergeConstraints :: [Expression]  -- ^ Constraints to merge into the model.
+                 -> Model         -- ^ Model to be updated.
+                 -> Model         -- ^ Updated model with new constraints.
+mergeConstraints cs m@Model { mStatements = stmts }
+  = m { mStatements = map mergeConstraints' stmts }
+  where mergeConstraints' (SuchThat cs') = SuchThat $ cs' `union` cs
+        mergeConstraints' s              = s
 
 -- | Make the attributes of function variables as constrictive as possible.
 functionAttributes :: (MonadFail m, MonadLog m)
                    => Model       -- ^ Model as context.
-                   -> Statement   -- ^ Statement to constrain.
-                   -> m Statement -- ^ Possibly updated statement.
-functionAttributes m (Declaration (FindOrGiven forg n d@DomainFunction{})) = do
+                   -> Declaration -- ^ Statement to constrain.
+                   -> m Model     -- ^ Possibly updated model.
+functionAttributes m f@(FindOrGiven forg n d@DomainFunction{}) = do
   d' <- constrainFunctionDomain n d m
-  return $ Declaration (FindOrGiven forg n d')
-functionAttributes m (Declaration (Letting n (Domain d@DomainFunction{}))) = do
-  d' <- constrainFunctionDomain n d m
-  return $ Declaration (Letting n (Domain d'))
-functionAttributes _ s = return s
+  let f' = FindOrGiven forg n d'
+  return $ updateDeclaration f f' m
+functionAttributes m _ = return m
 
 -- | Constrain the domain of a function given the context of a model.
 constrainFunctionDomain :: (MonadFail m, MonadLog m)
@@ -159,3 +175,26 @@ functionCalledWithParam e n gorcs from = let funCalls = filter isFunctionCall $ 
         domainEquals _                            _  = False
         getArgName (Just (Reference n' _)) = Just n'
         getArgName _                       = Nothing
+
+-- | Add constraints that apply to a function variable.
+functionConstraints :: (MonadFail m, MonadLog m)
+                    => Model        -- ^ Model as context.
+                    -> Declaration  -- ^ Statement to constrain.
+                    -> m Model      -- ^ Possibly updated constraints.
+functionConstraints m f@(FindOrGiven _ _ DomainFunction{}) = do
+  cs <- addFunctionConstraints f m
+  return $ mergeConstraints cs m
+functionConstraints m _ = return m
+
+-- | Add constraints on a function.
+addFunctionConstraints :: (MonadFail m, MonadLog m)
+                       => Declaration     -- ^ Function being constrained.
+                       -> Model           -- ^ Model for context.
+                       -> m [Expression]  -- ^ New constraints to add to the model.
+addFunctionConstraints (FindOrGiven forg n d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _)) _
+  = return [ Op (MkOpGeq (OpGeq
+                           (Op (MkOpTwoBars (OpTwoBars
+                             (Op (MkOpRange (OpRange
+                               (Reference n (Just $ DeclNoRepr forg n d NoRegion))))))))
+                           (Constant (ConstantInt 1)))) ]
+addFunctionConstraints _ _ = return []
