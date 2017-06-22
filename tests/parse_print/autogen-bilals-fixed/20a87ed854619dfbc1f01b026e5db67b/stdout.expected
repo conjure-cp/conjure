@@ -17,14 +17,17 @@ such that
                    int(3..4)]),
              (inverse(function(relation((false, false, true)) --> tuple (true),
                                relation((true, false, true), (false, false, false), (true, true, false),
-                                        (false, false, true)) --> tuple (true),
+                                        (false, false, true))
+                                   --> tuple (true),
                                relation((true, false, true), (false, true, false), (true, false, true),
-                                        (false, true, false), (false, true, false)) --> tuple (true),
-                               relation((true, false, false), (false, false, false),
-                                        (true, true, true)) --> tuple (true)),
+                                        (false, true, false), (false, true, false))
+                                   --> tuple (true),
+                               relation((true, false, false), (false, false, false), (true, true, true))
+                                   --> tuple (true)),
                       function(tuple (false) --> relation((false, false, false)),
-                               tuple (true) --> relation((false, true, true), (true, true, true), (true, true, true),
-                                                         (true, false, true)),
+                               tuple (true)
+                                   --> relation((false, true, true), (true, true, true), (true, true, true),
+                                                (true, false, true)),
                                tuple (false) --> relation((true, true, false), (true, false, false)))),
               [relation((([] : `matrix indexed by [int] of bool`),
                          partition({false, false, false}, {false, true}, {true, true}), mset(false, false)),
@@ -41,13 +44,14 @@ such that
                                                              mset of bool)`)),
              (inverse(function(relation(tuple (true)) --> (false, true, true, false),
                                relation(tuple (false)) --> (true, false, false, false),
-                               relation(tuple (false), tuple (true), tuple (false), tuple (true),
-                                        tuple (true)) --> (true, false, true, true),
-                               relation(tuple (true), tuple (false), tuple (false), tuple (false),
-                                        tuple (false)) --> (false, false, true, true)),
+                               relation(tuple (false), tuple (true), tuple (false), tuple (true), tuple (true))
+                                   --> (true, false, true, true),
+                               relation(tuple (true), tuple (false), tuple (false), tuple (false), tuple (false))
+                                   --> (false, false, true, true)),
                       function((true, false, false, true) --> (relation() : `relation of (bool)`),
-                               (false, false, true, true) --> relation(tuple (false), tuple (false), tuple (false),
-                                                                       tuple (false), tuple (true)))),
+                               (false, false, true, true)
+                                   --> relation(tuple (false), tuple (false), tuple (false), tuple (false),
+                                                tuple (true)))),
               [relation(([false, true, false; int(9, 6, 3)], partition({false, true, false, true, true}),
                          mset(false, false)),
                         ([false, true, false, false; int(8..11)],

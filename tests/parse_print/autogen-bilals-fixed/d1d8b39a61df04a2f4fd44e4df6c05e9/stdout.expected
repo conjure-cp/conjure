@@ -7,18 +7,17 @@ find var4: set of int(-1)
 find var5: (tuple (bool), partition from int(5, 1))
 such that
     function(partition({partition({true}, {true}), partition({false}), partition({true}, {false}),
-                        partition({true, false})}) --> partition({-9 + -5}, {var1, -2 % -1}),
-             partition({partition({true})}, {partition({true}), partition({true})}) --> partition({-5}, {var1},
-                                                                                                  {toInt(false),
-                                                                                                   toInt(false)}),
+                        partition({true, false})})
+                 --> partition({-9 + -5}, {var1, -2 % -1}),
+             partition({partition({true})}, {partition({true}), partition({true})})
+                 --> partition({-5}, {var1}, {toInt(false), toInt(false)}),
              partition({partition({false})}) --> partition({-8 + 1}, {-3 * -5}, {1 ** 9}))
     !=
     function(partition({partition({true}, {false})},
-                       {partition({true, false}), partition({true}, {true}),
-                        partition({false, true})}) --> partition({var2(true -> true)}),
-             partition({partition({false})}, {partition({true}, {false})}, {partition({true})}) --> partition({var1,
-                                                                                                               var2(false)},
-                                                                                                              {toInt(true)}),
-             partition({partition({false, true}), partition({true})}, {partition({true})},
-                       {partition({false, true})}) --> partition({toInt(true)}, {-2 ** (-10)}, {5})),
+                       {partition({true, false}), partition({true}, {true}), partition({false, true})})
+                 --> partition({var2(true -> true)}),
+             partition({partition({false})}, {partition({true}, {false})}, {partition({true})})
+                 --> partition({var1, var2(false)}, {toInt(true)}),
+             partition({partition({false, true}), partition({true})}, {partition({true})}, {partition({false, true})})
+                 --> partition({toInt(true)}, {-2 ** (-10)}, {5})),
     and([false | q_6 : int(-3..0), |toSet(mset(5, 1))| <= q_6])

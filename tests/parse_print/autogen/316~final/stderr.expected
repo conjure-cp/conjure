@@ -1,26 +1,15 @@
 Error:
     In a 'such that' statement:
-        function([tuple (true), tuple (false), tuple (true); int(5, 4, 1)] --> partition({false, false, true}, {true},
-                                                                                         {false, true, false, false,
-                                                                                          true},
-                                                                                         {true}, {true, true, false}),
-                 [tuple (true), tuple (false); int(3..4)] --> partition({true <= true, false > true, false < false,
-                                                                         true < false, false < true},
-                                                                        {true, false >= true, true < true,
-                                                                         false -> true}),
-                 [tuple (false), tuple (false), tuple (true), tuple (true); int(1..4)] --> partition({false, true,
-                                                                                                      true},
-                                                                                                     {false, false},
-                                                                                                     {true, true, false,
-                                                                                                      false})
-                                                                                           -
-                                                                                           partition({false, false,
-                                                                                                      true, true, true},
-                                                                                                     {false, true,
-                                                                                                      true},
-                                                                                                     {false, false,
-                                                                                                      true, true},
-                                                                                                     {true, true}))
+        function([tuple (true), tuple (false), tuple (true); int(5, 4, 1)]
+                     --> partition({false, false, true}, {true}, {false, true, false, false, true}, {true},
+                                   {true, true, false}),
+                 [tuple (true), tuple (false); int(3..4)]
+                     --> partition({true <= true, false > true, false < false, true < false, false < true},
+                                   {true, false >= true, true < true, false -> true}),
+                 [tuple (false), tuple (false), tuple (true), tuple (true); int(1..4)]
+                     --> partition({false, true, true}, {false, false}, {true, true, false, false}) -
+                         partition({false, false, true, true, true}, {false, true, true}, {false, false, true, true},
+                                   {true, true}))
         supset function([tuple (true), tuple (false); int(1, 0)] --> partition({true, false, true, true, true}))
     Error:
         When type checking: partition({false, true, true}, {false, false}, {true, true, false, false}) -
