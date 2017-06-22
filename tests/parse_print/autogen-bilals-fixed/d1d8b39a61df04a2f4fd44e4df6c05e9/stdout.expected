@@ -20,5 +20,5 @@ such that
                                                                                                                var2(false)},
                                                                                                               {toInt(true)}),
              partition({partition({false, true}), partition({true})}, {partition({true})},
-                       {partition({false, true})}) --> partition({toInt(true)}, {-2 ** -10}, {5})),
+                       {partition({false, true})}) --> partition({toInt(true)}, {-2 ** (-10)}, {5})),
     and([false | q_6 : int(-3..0), |toSet(mset(5, 1))| <= q_6])
