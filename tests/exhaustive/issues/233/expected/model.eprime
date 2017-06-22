@@ -6,14 +6,17 @@ find x: int(-10000..10000)
 find y: int(-10000..10000)
 find z: int(-10000..10000)
 find t: int(-10000..10000)
+find k: int(-10000..10000)
+find l: int(-2, -3)
 find b1: bool
 find b2: bool
 such that
     x = -a ** b,
     y = -a ** b,
     z = (-a) ** b,
+    k = 1 ** (-l),
     x = y,
-    x = -(-t),
-    b1 = !(!b2),
+    x = --t,
+    b1 = !!b2,
     b1
 

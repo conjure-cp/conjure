@@ -1,12 +1,16 @@
 
 find a : int(3,4)
 find b : int(2,3)
-find x, y, z, t : int(-10000 .. 10000)
+find x, y, z, t, k : int(-10000 .. 10000)
+
+find l : int(-2, -3)
 
 such that
     x = -a**b,
     y = -(a**b),
     z = (-a)**b,
+
+    k = 1**-l,
 
     $ this is the intended parsing
     x = y,
