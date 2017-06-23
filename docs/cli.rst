@@ -39,6 +39,8 @@ solve
     This is a combined mode, and it is available for convenience.
     It runs conjure in the modelling mode followed by parameter refinement if required, then Savile Row + Minion to solve, and then solution translation.
 
+If no primary command is provided, ``modelling`` is assumed.
+
 Conjure also supports a few additional commands on top of the primary commands listed above.
 These commands are not required for the normal operation of the tool.
 They are implemented to aid development and testing.
