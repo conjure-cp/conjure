@@ -192,9 +192,21 @@ addFunctionConstraints :: (MonadFail m, MonadLog m)
                        -> Model           -- ^ Model for context.
                        -> m [Expression]  -- ^ New constraints to add to the model.
 addFunctionConstraints (FindOrGiven forg n d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _)) _
-  = return [ Op (MkOpGeq (OpGeq
-                           (Op (MkOpTwoBars (OpTwoBars
-                             (Op (MkOpRange (OpRange
-                               (Reference n (Just $ DeclNoRepr forg n d NoRegion))))))))
-                           (Constant (ConstantInt 1)))) ]
+  = return [ functionRangeGeqOne forg n d
+           ]
 addFunctionConstraints _ _ = return []
+
+-- | Expression constraining the range of a function to be >= 1.
+functionRangeGeqOne :: FindOrGiven          -- ^ Whether the function is a find or a given.
+                    -> Name                 -- ^ Function name.
+                    -> Domain () Expression -- ^ Domain of the function.
+                    -> Expression           -- ^ Generated constraint.
+functionRangeGeqOne forg n d
+  = Op (MkOpGeq (OpGeq
+      -- size of
+      (Op (MkOpTwoBars (OpTwoBars
+        -- range of
+        (Op (MkOpRange (OpRange
+          -- function
+          (Reference n (Just $ DeclNoRepr forg n d NoRegion))))))))
+      (Constant (ConstantInt 1)))) 
