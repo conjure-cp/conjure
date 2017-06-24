@@ -143,7 +143,7 @@ The letting-enum syntax can be used to declare an enumerated type directly in a 
 
 In the example fragment above ``direction`` is declared as an enumerated type with 4 members.
 Two decision variables are declared using ``direction`` as their domain and a constraint is posted on the values they can take.
-Enumerated types only support equality and ordering operators; they do not support arithmetic operators.
+Enumerated types support equality, ordering and successor/predecessor operators; they do not support arithmetic operators.
 
 
 Declaring unnamed types
@@ -639,12 +639,20 @@ Operators taking one argument
 +--------------------+---------------------------------------------------------+
 | ``powerSet``       | set of all subsets of a set (including the empty set)   |
 +--------------------+---------------------------------------------------------+
-| ``pred``           | predecessor of this element in an enumerated type       |
-+--------------------+---------------------------------------------------------+
 | ``range``          | set of values of function                               |
++--------------------+---------------------------------------------------------+
+
+
+Enumerated type operators
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``pred``           | predecessor of this element in an enumerated type       |
 +--------------------+---------------------------------------------------------+
 | ``succ``           | successor of this element in an enumerated type         |
 +--------------------+---------------------------------------------------------+
+
+Enumerated types are ordered, so they support comparisons and the operators `max` and `min`.
 
 
 Type conversion
