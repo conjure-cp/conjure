@@ -235,7 +235,7 @@ Domains
             | "record" list(NameDomain, ",", "{}")
             | "variant" list(NameDomain, ",", "{}")
             | "matrix indexed by" list(Domain, ",", "[]") "of" Domain
-            | "set" list(Attribute, ",", "{}") "of" Domain
+            | "set" list(Attribute, ",", "()") "of" Domain
             | "mset" list(Attribute, ",", "()") "of" Domain
             | "function" list(Attribute, ",", "()") Domain "-->" Domain
             | "sequence" list(Attribute, ",", "()") "of" Domain
