@@ -539,9 +539,9 @@ The relationship
 
 holds for all integers ``x`` and positive integers ``y``.
 
-The unary operator ``-`` denotes negation; when ``n`` is an integer then ``--n = n`` is always true.
+The unary operator ``-`` denotes negation; when ``x`` is an integer then ``--x = x`` is always true.
 
-When ``n`` is an integer, ``|n|`` denotes the absolute value of ``n``.
+When ``x`` is an integer, ``|x|`` denotes the absolute value of ``x``.
 The relationship
 
  | ``(2*toInt(x >= 0) - 1)*x = |x|``
