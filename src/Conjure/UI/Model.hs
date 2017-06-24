@@ -623,7 +623,17 @@ updateDeclarations model = do
                     concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
-                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
+                Declaration (Letting nm x)             -> do
+                    let usedAfter = nbUses nm afters > 0
+                    let isRefined = (0 :: Int) == sum
+                                            [ case y of 
+                                                Constant (ConstantAbstract AbsLitMatrix{}) -> 0
+                                                Constant ConstantAbstract{} -> 1
+                                                AbstractLiteral AbsLitMatrix{} -> 0
+                                                AbstractLiteral{} -> 1
+                                                _ -> 0
+                                            | y <- universe x ]
+                    return [inStatement | and [usedAfter, isRefined]]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
                 SearchOrder orders -> do
