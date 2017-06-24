@@ -677,32 +677,32 @@ Note that this will fail if the function corresponding to the set of tuples is s
 Operators with two arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-+--------------------+---------------------------------------------------------+
-| ``active``         | ?                                                       |
-+--------------------+---------------------------------------------------------+
-| ``allDiffExcept``  | test if all entries of 1D matrix differ, possibly       |
-|                    | excepting the value specified in the second argument    |
-+--------------------+---------------------------------------------------------+
-| ``apart``          | test if two elements are in different parts of          |
-|                    | the partition                                           |
-+--------------------+---------------------------------------------------------+
-| ``catchUndef``     | ?                                                       |
-+--------------------+---------------------------------------------------------+
-| ``inverse``        | test if two functions are inverses of each other        |
-+--------------------+---------------------------------------------------------+
-| ``freq``           | counts occurrences of element in multiset               |
-+--------------------+---------------------------------------------------------+
-| ``image``          | ``image(f,x)`` is the same as ``f(x)``                  |
-+--------------------+---------------------------------------------------------+
-| ``party``          | part of partition that contains specified element       |
-+--------------------+---------------------------------------------------------+
-| ``preImage``       | set of elements mapped by function to set               |
-+--------------------+---------------------------------------------------------+
-| ``restrict``       | function restricted to a set of values                  |
-+--------------------+---------------------------------------------------------+
-| ``together``       | test if two elements are in the same part of the        |
-|                    | partition                                               |
-+--------------------+---------------------------------------------------------+
++-------------------------+----------------------------------------------------+
+| ``active``              | ?                                                  |
++-------------------------+----------------------------------------------------+
+| ``alldifferent_except`` | test if all entries of 1D matrix differ,           |
+|                         | possibly except value specified in second argument |
++-------------------------+----------------------------------------------------+
+| ``apart``               | test if two elements are in different parts of     |
+|                         | the partition                                      |
++-------------------------+----------------------------------------------------+
+| ``catchUndef``          | ?                                                  |
++-------------------------+----------------------------------------------------+
+| ``inverse``             | test if two functions are inverses of each other   |
++-------------------------+----------------------------------------------------+
+| ``freq``                | counts occurrences of element in multiset          |
++-------------------------+----------------------------------------------------+
+| ``image``               | ``image(f,x)`` is the same as ``f(x)``             |
++-------------------------+----------------------------------------------------+
+| ``party``               | part of partition that contains specified element  |
++-------------------------+----------------------------------------------------+
+| ``preImage``            | set of elements mapped by function to an element   |
++-------------------------+----------------------------------------------------+
+| ``restrict``            | function restricted to a set of values             |
++-------------------------+----------------------------------------------------+
+| ``together``            | test if two elements are in the same part of the   |
+|                         | partition                                          |
++-------------------------+----------------------------------------------------+
 
 +--------------------+---------------------------------------------------------+
 | ``concatenate``    | ?                                                       |
