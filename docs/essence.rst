@@ -512,11 +512,11 @@ Tuple indexing
 
 
 Arithmetic operators
-^^^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~~~
 
 As well as the four usual binary inline arithmetic operations
 
- |  ``+``  ``-``  ``*``  ``/``
+ |  ``+    -    *    /``
 
 Essence also supports the modulo operator ``%`` and exponentiation ``**``.
 There is also the unary prefix operation ``-``, the unary postfix operation ``!``, and the absolute value operator.
@@ -550,11 +550,11 @@ holds for all integers ``x`` such that ``|x| <= 2**30-2``.
 
 
 Comparisons
-^^^^^^^^^^^
+~~~~~~~~~~~
 
 The inline binary comparison operators
 
- | ``=``  ``!=``  ``<``  ``<=``  ``>``  ``<=``
+ | ``=    !=    <    <=    >    <=``
 
 can be applied to integer and enumerated types.
 Sets/multisets/relations/functions/domains?
@@ -567,7 +567,7 @@ test whether their arguments have the specified relative lexicographic order.
 
 
 Logical operators
-^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~
 
 +--------------------+------------------------------------+
 | ``/\``             | and                                |
@@ -586,7 +586,7 @@ Negation is unary prefix, the others are binary inline.
 
 
 Set operations
-^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~
 
 These set operations return Boolean values indicating whether a specific relationship holds.
 
@@ -615,13 +615,72 @@ When ``S`` and ``T`` are sets, ``S - T`` denotes their set difference, the set o
 
 
 Sequence operators
-^^^^^^^^^^^^^^^^^^
+~~~~~~~~~~~~~~~~~~
 
 For two sequences ``s`` and ``t``, ``subsequence(s,t)`` tests whether there is a function ``f`` such that the list of values taken by ``s`` occurs in the same order in the list of values taken by ``t``, and ``substring(s,t)`` tests whether the list of values taken by ``s`` occurs in the same order and contiguously in the list of values taken by ``t``.
 
 
+Enumerated type operators
+~~~~~~~~~~~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``pred``           | predecessor of this element in an enumerated type       |
++--------------------+---------------------------------------------------------+
+| ``succ``           | successor of this element in an enumerated type         |
++--------------------+---------------------------------------------------------+
+
+Enumerated types are ordered, so they support comparisons and the operators `max` and `min`.
+
+
+Type conversion
+~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``toInt``          | maps ``true`` to 1, ``false`` to 0                      |
++--------------------+---------------------------------------------------------+
+| ``toMSet``         | set/relation/function to multiset                       |
++--------------------+---------------------------------------------------------+
+| ``toRelation``     | function to relation; ``{a --> b}`` becomes ``((a,b))`` |
++--------------------+---------------------------------------------------------+
+| ``toSet``          | multiset/relation/function to set                       |
++--------------------+---------------------------------------------------------+
+
+It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
+For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
+However, it is possible to use the declarative forms
+
+.. code-block:: essence
+
+   find R : relation int(0..1) --> int(0..1)
+   such that toSet(R) = {(0,0),(0,1),(1,1)}
+
+   find f : function int(0..1) --> int(0..1)
+   such that toSet(f) = {(0,0),(1,1)}
+
+to refer to the relation, multiset, or function that corresponds to a set of tuples.
+This will fail to yield a solution if a function corresponding to a set of tuples is sought, but that set of tuples does not actually determine a function.
+
+
+Matrix operations
+~~~~~~~~~~~~~~~~~
+
++--------------------+---------------------------------------------------------+
+| ``concatenate``    | ?                                                       |
++--------------------+---------------------------------------------------------+
+| ``flatten``        | 1D matrix of entries from matrix                        |
++--------------------+---------------------------------------------------------+
+
+``flatten`` takes 1 or 2 arguments.  For the 2-argument form, the first argument must be a constant integer.
+With one argument, ``flatten`` returns a 1D matrix containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
+With two arguments ``flatten(n,M)``, the first argument n indicates the depth of flattening: the first n+1 dimensions are flattened into one dimension.
+The one-argument form works like an unbounded-depth flattening.
+Note that ``flatten(0,M) = M`` always holds?
+
+
 Operators taking one argument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(To be discussed in a more appropriate place.)
 
 +--------------------+---------------------------------------------------------+
 | ``allDiff``        | test if all entries of 1D matrix are different          |
@@ -646,49 +705,10 @@ Operators taking one argument
 +--------------------+---------------------------------------------------------+
 
 
-Enumerated type operators
-~~~~~~~~~~~~~~~~~~~~~~~~~
-
-+--------------------+---------------------------------------------------------+
-| ``pred``           | predecessor of this element in an enumerated type       |
-+--------------------+---------------------------------------------------------+
-| ``succ``           | successor of this element in an enumerated type         |
-+--------------------+---------------------------------------------------------+
-
-Enumerated types are ordered, so they support comparisons and the operators `max` and `min`.
-
-
-Type conversion
-~~~~~~~~~~~~~~~
-
-+--------------------+---------------------------------------------------------+
-| ``toInt``          | maps ``true`` to 1, ``false`` to 0                      |
-+--------------------+---------------------------------------------------------+
-| ``toMSet``         | set/relation/function to multiset                       |
-+--------------------+---------------------------------------------------------+
-| ``toRelation``     | function to relation; `{a --> b}` becomes `((a,b))`     |
-+--------------------+---------------------------------------------------------+
-| ``toSet``          | multiset/relation/function to set                       |
-+--------------------+---------------------------------------------------------+
-
-It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
-For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
-However, it is possible to use the declarative forms
-
-.. code-block:: essence
-
-   find R : relation int(0..1) --> int(0..1)
-   such that toSet(R) = {(0,0),(0,1),(1,1)}
-
-   find f : function int(0..1) --> int(0..1)
-   such that toSet(f) = {(0,0),(1,1)}
-
-to refer to the relation, multiset, or function that corresponds to a set of tuples.
-This will fail to yield a solution if a function corresponding to a set of tuples is sought, but that set of tuples does not actually determine a function.
-
-
 Operators with two arguments
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+(To be discussed in a more appropriate place.)
 
 +-------------------------+----------------------------------------------------+
 | ``active``              | ?                                                  |
@@ -724,18 +744,6 @@ Operators with two arguments
 The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
 Conjure does not currently support taking the image with respect to a set of elements.
 
-+--------------------+---------------------------------------------------------+
-| ``concatenate``    | ?                                                       |
-+--------------------+---------------------------------------------------------+
-| ``flatten``        | 1D matrix of entries from matrix                        |
-+--------------------+---------------------------------------------------------+
-
-``flatten`` takes 1 or 2 arguments.  For the 2-argument form, the first argument must be a constant integer.
-With one argument, ``flatten`` returns a 1D matrix containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
-With two arguments ``flatten(n,M)``, the first argument n indicates the depth of flattening: the first n+1 dimensions are flattened into one dimension.
-The one-argument form works like an unbounded-depth flattening.
-Note that ``flatten(0,M) = M`` always holds?
-
 
 List combining operators
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -744,7 +752,7 @@ Each of these operators applies a combining operator to elements of a list.
 
 The following operators are all behave of this form, taking a list as argument and computing the operation over all the elements.  Each element appears once but the ordering of elements is not specified: no reliance should be placed on a particular ordering.
 
- | ``sum``  ``product``  ``and``  ``or``  ``xor``
+ | ``sum    product    and    or    xor``
 
 The following equivalences hold:
 
