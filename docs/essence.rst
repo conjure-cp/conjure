@@ -498,22 +498,7 @@ Expressions
 
 (In preparation)
 
-``{}:t`` denotes the empty set of type ``t``.
 
-``image(f,x) = f(x)``
-
-``imageSet(f,x)`` is a set ``{f(x)}`` if ``f(x)`` is defined, or is empty if ``f(x)`` is not defined.  This is especially useful for partial functions.
-
-Some operators supported in Essence do not have corresponding inverse operators in the language.
-For instance, to turn a set of tuples ``{(0,0),(1,1)}`` into a function, the following idiom can be used:
-
-.. code-block:: essence
-
-   find f : function int(0..1) --> int(0..1)
-   such that toSet(f) = {(0,0),(1,1)}
-
-The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
-Conjure does not currently support taking the image with respect to a set of elements.
 
 Matrix indexing
 ~~~~~~~~~~~~~~~
@@ -526,10 +511,6 @@ Tuple indexing
 ~~~~~~~~~~~~~~
 
 
-Inline binary operators
-~~~~~~~~~~~~~~~~~~~~~~~
-
-
 Arithmetic operators
 ^^^^^^^^^^^^^^^^^^^^
 
@@ -538,13 +519,34 @@ As well as the four usual binary inline arithmetic operations
  |  ``+``  ``-``  ``*``  ``/``
 
 Essence also supports the modulo operator ``%`` and exponentiation ``**``.
-Division returns an integer (?), and the following relationship holds when ``x`` and ``y`` are integers:
+There is also the unary prefix operation ``-``, the unary postfix operation ``!``, and the absolute value operator.
+
+Division returns an integer, and the following relationship holds when ``x`` and ``y`` are integers and ``y`` is not zero:
 
  |  ``(x % y) + y*(x / y) = x``
 
-whenever ``y`` is not zero; if ``y`` is zero then ``x / y`` and ``x % y`` are flagged as errors?
+whenever ``y`` is not zero.
+``x / 0`` and ``x % 0`` are expressions that do not have a defined value.
+Note that division by zero is not flagged as an error.
 
-When ``n`` is an integer, ``|n|`` denotes the absolute value of ``n`` and ``n!`` denotes the product of all positive integers up to ``n``, with ``0! = 1`` and ``n!`` being undefined for negative ``n``. (?)
+Both ``fact(x)`` and ``x!`` denote the product of all positive integers up to ``x``, with ``x! = 1`` whenever ``x <= 0``.
+When ``x`` is an integer and ``y`` is a positive integer, then ``x**y`` denotes ``x`` raised to the ``y``-th power.
+``x**0`` is always 1.
+When ``y`` is a negative integer, ``x**y`` is not defined and is flagged by Savile Row as an error (this includes ``1**(-1)``).
+The relationship
+
+ |  ``x ** y = x*(x**(y-1))``
+
+holds for all integers ``x`` and positive integers ``y``.
+
+The unary operator ``-`` denotes negation; when ``n`` is an integer then ``--n = n`` is always true.
+
+When ``n`` is an integer, ``|n|`` denotes the absolute value of ``n``.
+The relationship
+
+ | ``(2*toInt(x >= 0) - 1)*x = |x|``
+
+holds for all integers ``x`` such that ``|x| <= 2**30-2``.
 
 
 Comparisons
@@ -609,6 +611,7 @@ These binary inline operations operate on sets or domains and return a set:
 +--------------------+---------------------------------------------------------+
 
 When ``S`` is a set, then ``|S|`` denotes the non-negative integer that is the cardinality of ``S`` (the number of elements in ``S``).
+When ``S`` and ``T`` are sets, ``S - T`` denotes their set difference, the set of elements of ``S`` that do not occur in ``T``.
 
 
 Sequence operators
@@ -623,8 +626,6 @@ Operators taking one argument
 +--------------------+---------------------------------------------------------+
 | ``allDiff``        | test if all entries of 1D matrix are different          |
 +--------------------+---------------------------------------------------------+
-| ``defined``        | set of values for which function is defined             |
-+--------------------+---------------------------------------------------------+
 | ``factorial``      | ``factorial(n)`` is the same as ``n!``                  |
 +--------------------+---------------------------------------------------------+
 | ``hist``           | histogram of ?                                          |
@@ -638,6 +639,8 @@ Operators taking one argument
 | ``participants``   | union of all parts of a partition                       |
 +--------------------+---------------------------------------------------------+
 | ``powerSet``       | set of all subsets of a set (including the empty set)   |
++--------------------+---------------------------------------------------------+
+| ``defined``        | set of values for which function is defined             |
 +--------------------+---------------------------------------------------------+
 | ``range``          | set of values of function                               |
 +--------------------+---------------------------------------------------------+
@@ -669,17 +672,19 @@ Type conversion
 +--------------------+---------------------------------------------------------+
 
 It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
-Although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
-
-It is always possible to use the declarative form
+For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
+However, it is possible to use the declarative forms
 
 .. code-block:: essence
 
    find R : relation int(0..1) --> int(0..1)
    such that toSet(R) = {(0,0),(0,1),(1,1)}
 
-to recover the relation, multiset, or function that corresponds to a set of tuples.
-Note that this will fail if the function corresponding to the set of tuples is sought, but the set of tuples is not a function. (how?)
+   find f : function int(0..1) --> int(0..1)
+   such that toSet(f) = {(0,0),(1,1)}
+
+to refer to the relation, multiset, or function that corresponds to a set of tuples.
+This will fail to yield a solution if a function corresponding to a set of tuples is sought, but that set of tuples does not actually determine a function.
 
 
 Operators with two arguments
@@ -688,19 +693,23 @@ Operators with two arguments
 +-------------------------+----------------------------------------------------+
 | ``active``              | ?                                                  |
 +-------------------------+----------------------------------------------------+
+| ``catchUndef``          | ?                                                  |
++-------------------------+----------------------------------------------------+
 | ``alldifferent_except`` | test if all entries of 1D matrix differ,           |
 |                         | possibly except value specified in second argument |
 +-------------------------+----------------------------------------------------+
 | ``apart``               | test if two elements are in different parts of     |
 |                         | the partition                                      |
 +-------------------------+----------------------------------------------------+
-| ``catchUndef``          | ?                                                  |
-+-------------------------+----------------------------------------------------+
 | ``inverse``             | test if two functions are inverses of each other   |
 +-------------------------+----------------------------------------------------+
 | ``freq``                | counts occurrences of element in multiset          |
 +-------------------------+----------------------------------------------------+
 | ``image``               | ``image(f,x)`` is the same as ``f(x)``             |
++-------------------------+----------------------------------------------------+
+| ``imageSet``            | ``imageSet(f,x)`` is ``{f(x)}`` if ``f(x)`` is     |
+|                         | defined, or empty if ``f(x)`` is not defined:      |
+|                         | especially useful for partial functions            |
 +-------------------------+----------------------------------------------------+
 | ``party``               | part of partition that contains specified element  |
 +-------------------------+----------------------------------------------------+
@@ -711,6 +720,9 @@ Operators with two arguments
 | ``together``            | test if two elements are in the same part of the   |
 |                         | partition                                          |
 +-------------------------+----------------------------------------------------+
+
+The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
+Conjure does not currently support taking the image with respect to a set of elements.
 
 +--------------------+---------------------------------------------------------+
 | ``concatenate``    | ?                                                       |
