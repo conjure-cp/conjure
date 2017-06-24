@@ -1,5 +1,4 @@
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -355,8 +354,7 @@ strategyToDriver config questions = do
             , let doc =
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
                          : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                           | i <- allNats
-                           | c <- qAscendants q
+                           | (i,c) <- zip allNats (qAscendants q)
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
@@ -663,8 +661,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
             $ ""
             : ("Not refined:" <+> pretty (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | i <- allNats
-              | c <- tail (ascendants x)
+              | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
@@ -675,8 +672,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                : ("Not refined:" <+> pretty (hole x))
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                 | i <- allNats
-                                 | c <- tail (ascendants x)
+                                 | (i, c) <- zip allNats (tail (ascendants x))
                                  ]
                     Constant (ConstantAbstract AbsLitMatrix{}) -> return []
                     Constant ConstantAbstract{} -> returnMsg x
@@ -707,8 +703,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                             Just msg' -> return $ msg'
                                                 ++ [ nest 4 (pretty (hole x)) ]
                                                 ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                                   | i <- allNats
-                                                   | c <- tail (ascendants x)
+                                                   | (i, c) <- zip allNats (tail (ascendants x))
                                                    ]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
@@ -723,8 +718,7 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
             $ ""
             : ("Undefined value in the final model:" <+> pretty (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | i <- allNats
-              | c <- tail (ascendants x)
+              | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
