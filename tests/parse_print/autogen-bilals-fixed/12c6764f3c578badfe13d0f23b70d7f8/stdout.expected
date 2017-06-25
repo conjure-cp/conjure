@@ -10,27 +10,26 @@ such that
                        partition({-6}, {|partition({true})|, 5, -3, toInt(true) % toInt(false)}, {-1})),
                       (toMSet(toSet(mset(true)) union ({} : `set of bool`)),
                        (tuple (true) = tuple (true), true != true \/ 6 != 6),
-                       partition({-8, |{0}|}, {2}, {1 / -6 + 2}, {-8}))) --> [mset(tuple (5), tuple (-5), tuple (-4)),
-                                                                              (mset() : `mset of tuple(int)`),
-                                                                              mset(tuple (-6), tuple (0));
-                                                                                  int(-1..1)],
+                       partition({-8, |{0}|}, {2}, {1 / -6 + 2}, {-8})))
+                 --> [mset(tuple (5), tuple (-5), tuple (-4)), (mset() : `mset of tuple(int)`),
+                      mset(tuple (-6), tuple (0));
+                          int(-1..1)],
              relation((mset(toInt(true) != toInt(false)), (false in {true, false}, true in {true}),
                        partition({0, -6}, {-10 % -9 / 9, -4}, {2}, {1})),
                       (mset(function(1 --> false, -5 --> true) != function(-8 --> false)),
                        (0 in mset(-10), {-2} != {-5}), partition({9})),
-                      (toMSet(toSet(mset(true, true))), ((true -> true) in {false, true}, var3 != var3),
-                       var3[1])) --> [mset(tuple (2), tuple (10), tuple (-6), tuple (8)), mset(tuple (4), tuple (5));
-                                          int(-3, -4)],
+                      (toMSet(toSet(mset(true, true))), ((true -> true) in {false, true}, var3 != var3), var3[1]))
+                 --> [mset(tuple (2), tuple (10), tuple (-6), tuple (8)), mset(tuple (4), tuple (5)); int(-3, -4)],
              relation((mset(var1 = var1, mset(true, true) = mset(false)),
                        (partition({-9, 3}) = partition({-7}, {6}), false -> false),
                        partition({0}, {-1}, {9, |(mset() : `mset of bool`)|})),
                       (mset(false, true) intersect mset(true) - toMSet({true}), (true, true),
                        partition({|partition({5, 7})|}, {0}, {|partition({true})|, |function(3 --> 1)|})),
-                      (toMSet(party(true /\ true \/ (false \/ false), partition({false}))), (false, false),
-                       var3[1])) --> [mset(tuple (6), tuple (-3), tuple (-6)), mset(tuple (-1), tuple (7)),
-                                      (mset() : `mset of tuple(int)`), mset(tuple (1), tuple (-10), tuple (-8)),
-                                      mset(tuple (7), tuple (-8), tuple (10), tuple (-3));
-                                          int(-4..0)],
+                      (toMSet(party(true /\ true \/ (false \/ false), partition({false}))), (false, false), var3[1]))
+                 --> [mset(tuple (6), tuple (-3), tuple (-6)), mset(tuple (-1), tuple (7)),
+                      (mset() : `mset of tuple(int)`), mset(tuple (1), tuple (-10), tuple (-8)),
+                      mset(tuple (7), tuple (-8), tuple (10), tuple (-3));
+                          int(-4..0)],
              relation((toMSet({true -> true}),
                        (function(true --> 7, true --> 9) != function(true --> 5, true --> 1),
                         (true <-> false) -> true /\ true),
@@ -40,18 +39,16 @@ such that
                             ({} : `set of int`) != {3}),
                        (var3 = var3, var1 = var1), var3[1]),
                       (toMSet(toSet((mset() : `mset of bool`))),
-                       (partition({true}) != partition({false}), toInt(false) in {-6, 3}),
-                       var3[1])) --> [mset(tuple (7), tuple (-9)), mset(tuple (-4), tuple (7)); int(-3..-2)],
+                       (partition({true}) != partition({false}), toInt(false) in {-6, 3}), var3[1]))
+                 --> [mset(tuple (7), tuple (-9)), mset(tuple (-4), tuple (7)); int(-3..-2)],
              relation((mset(false, var2 != var2, function(8 --> 5, 5 --> -3) = function(7 --> -10, -5 --> -3),
                             -1 % -1 in mset(10, 4), (false -> true) <-> 0 = -1, -4 / 10 in {-7}),
                        (true, var1 = var1), var3[1]),
                       (mset(var1 != var1, true <-> false /\ true, false), (var2 != var2, var2 = var2), var3[1]),
                       (toMSet({false, false} - {false}),
                        (({} : `set of bool`) != {true, false}, -6 != -7 -> true = false),
-                       partition({-2}, {8}, {|mset(1, 2)|}, {4},
-                                 {toInt(false) * 6, -10}))) --> [(mset() : `mset of tuple(int)`),
-                                                                 mset(tuple (-10), tuple (7));
-                                                                     int(2..3)])
+                       partition({-2}, {8}, {|mset(1, 2)|}, {4}, {toInt(false) * 6, -10})))
+                 --> [(mset() : `mset of tuple(int)`), mset(tuple (-10), tuple (7)); int(2..3)])
     =
     function(relation((mset(false, false <-> true, false <-> true), (false \/ true, -3 != 4), partition({6})),
                       (toMSet({false, false}), (true <-> false, false), partition({-1})),
@@ -61,9 +58,8 @@ such that
              relation((toMSet({false, true}), (false \/ true, false), partition({toInt(false), -2 / 5, -9})),
                       (toMSet(({} : `set of bool`)), (true, false), partition({1, -7 + 6})),
                       (mset(false -> false, true <-> true, true = true, 1 = -10), (false = true, true <-> false),
-                       partition({3}, {toInt(true), toInt(false)}))) --> [mset(tuple (-4), tuple (6)),
-                                                                          mset(tuple (-5), tuple (-2)), mset(tuple (8));
-                                                                              int(3..5)]),
+                       partition({3}, {toInt(true), toInt(false)})))
+                 --> [mset(tuple (-4), tuple (6)), mset(tuple (-5), tuple (-2)), mset(tuple (8)); int(3..5)]),
     {({} : `set of function function int --> bool --> tuple(int)`),
      {function(function(2 --> false) --> tuple (7), function(-9 --> false, 0 --> false) --> tuple (9),
                function(1 --> false) --> tuple (-3), function(-8 --> true, 10 --> true) --> tuple (5)),

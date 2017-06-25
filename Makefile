@@ -61,7 +61,7 @@ ghci:
 	    -fwarn-unused-matches                      \
 	    -Wall                                      \
 	    -Werror                                    \
-	    `find src -name *.hs | grep -v Main.hs | grep -v '\.#'`
+	    `find src -name '*.hs' | grep -v 'Main.hs' | grep -v '\.#'`
 
 .PHONY: hlint
 hlint:

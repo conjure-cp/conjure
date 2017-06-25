@@ -13,14 +13,14 @@ such that
     supset
     function((true, true, true) --> function(true --> true, false --> true, true --> true),
              (true, true, false) --> function(true --> true, true --> true, false --> false),
-             (true, true, false) --> function(false --> false, false --> true, true --> false, false --> true,
-                                              true --> false)),
-    function(mset(false, false, true) --> relation((true, true, true, true), (true, false, true, false),
-                                                   (false, true, true, true)),
-             (mset() : `mset of bool`) --> relation((true, false, true, false), (true, true, false, true),
-                                                    (false, false, false, false), (true, true, false, false),
-                                                    (true, true, false, false)),
+             (true, true, false)
+                 --> function(false --> false, false --> true, true --> false, false --> true, true --> false)),
+    function(mset(false, false, true)
+                 --> relation((true, true, true, true), (true, false, true, false), (false, true, true, true)),
+             (mset() : `mset of bool`)
+                 --> relation((true, false, true, false), (true, true, false, true), (false, false, false, false),
+                              (true, true, false, false), (true, true, false, false)),
              mset(true) --> relation((true, false, true, false), (false, false, true, true)),
-             mset(true) --> relation((false, true, false, false), (true, true, false, false),
-                                     (true, false, false, false)))
+             mset(true)
+                 --> relation((false, true, false, false), (true, true, false, false), (true, false, false, false)))
     subsetEq function((mset() : `mset of bool`) --> relation((false, false, true, true), (false, false, false, false)))
