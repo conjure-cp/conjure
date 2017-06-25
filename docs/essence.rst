@@ -402,7 +402,7 @@ There are three groups of function attributes:
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Function domains are partial by default, and using the "total" attribute makes them total.
 
-To explicitly specify a sequence, use a parenthesized set of assignments, each of the form `input --> value``.
+To explicitly specify a sequence, use a parenthesized set of assignments, each of the form ``input --> value``.
 
 Sequence domains
 ~~~~~~~~~~~~~~~~
@@ -514,12 +514,18 @@ Tuple indexing
 Arithmetic operators
 ~~~~~~~~~~~~~~~~~~~~
 
-As well as the four usual binary inline arithmetic operations
+Essence supports the four usual arithmetic operators
 
  |  ``+    -    *    /``
 
-Essence also supports the modulo operator ``%`` and exponentiation ``**``.
-There is also the unary prefix operation ``-``, the unary postfix operation ``!``, and the absolute value operator.
+and also the modulo operator ``%``, exponentiation ``**``.
+These all take two arguments and are expressed in infix notation.
+
+There is also the unary prefix operator ``-``, the unary postfix operator ``!``, and the absolute value operator ``|x|``.
+
+
+Division
+^^^^^^^^
 
 Division returns an integer, and the following relationship holds when ``x`` and ``y`` are integers and ``y`` is not zero:
 
@@ -527,19 +533,47 @@ Division returns an integer, and the following relationship holds when ``x`` and
 
 whenever ``y`` is not zero.
 ``x / 0`` and ``x % 0`` are expressions that do not have a defined value.
-Note that division by zero is not flagged as an error.
+Division by zero may lead to unsatisfiability but is not flagged by either Conjure or Savile Row as an error.
 
-Both ``fact(x)`` and ``x!`` denote the product of all positive integers up to ``x``, with ``x! = 1`` whenever ``x <= 0``.
+Factorial
+^^^^^^^^^
+
+Both ``factorial(x)`` and ``x!`` denote the product of all positive integers up to ``x``, with ``x! = 1`` whenever ``x <= 0``.
+The factorial operator cannot be used directly in expressions involving decision variables, so the following
+
+.. code-block:: essence
+
+   find z : int(-1..13)
+   such that (z! > 2**28)
+
+is flagged as an error.
+However, the following does work:
+
+.. code-block:: essence
+
+   find z : int(-1..13)
+   such that (exists x : int(-1..13) . (x! > 2**28) /\ (z=x))
+
+Powers
+^^^^^^
+
 When ``x`` is an integer and ``y`` is a positive integer, then ``x**y`` denotes ``x`` raised to the ``y``-th power.
-``x**0`` is always 1.
-When ``y`` is a negative integer, ``x**y`` is not defined and is flagged by Savile Row as an error (this includes ``1**(-1)``).
+When ``y`` is a negative integer, ``x**y`` is flagged by Savile Row as an error (this includes ``1**(-1)``).
+Conjure does not flag negative powers as errors.
 The relationship
 
  |  ``x ** y = x*(x**(y-1))``
 
 holds for all integers ``x`` and positive integers ``y``.
+This means that ``x**0`` is always 1, whatever the value of ``x``.
+
+Negation
+^^^^^^^^
 
 The unary operator ``-`` denotes negation; when ``x`` is an integer then ``--x = x`` is always true.
+
+Absolute value
+^^^^^^^^^^^^^^
 
 When ``x`` is an integer, ``|x|`` denotes the absolute value of ``x``.
 The relationship
@@ -547,6 +581,7 @@ The relationship
  | ``(2*toInt(x >= 0) - 1)*x = |x|``
 
 holds for all integers ``x`` such that ``|x| <= 2**30-2``.
+Integers outside this range are flagged as an error by Savile Row.
 
 
 Comparisons
@@ -557,7 +592,8 @@ The inline binary comparison operators
  | ``=    !=    <    <=    >    <=``
 
 can be applied to integer and enumerated types.
-Sets/multisets/relations/functions/domains?
+
+(Sets/multisets/relations/functions/domains?)
 
 The inline binary comparison operators
 
@@ -583,31 +619,38 @@ Logical operators
 
 Logical operators operate on Boolean valued expressions, returning a Boolean value ``false`` or ``true``.
 Negation is unary prefix, the others are binary inline.
+The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see the discussion on list combining operators).
 
 
-Set operations
-~~~~~~~~~~~~~~
+Set operators
+~~~~~~~~~~~~~
 
-These set operations return Boolean values indicating whether a specific relationship holds.
+The following set operators return Boolean values indicating whether a specific relationship holds:
 
 +--------------------+---------------------------------------------------------+
 | ``in``             | test if element is in set                               |
 +--------------------+---------------------------------------------------------+
-| ``subset``         | test if set is strictly contained in second set         |
+| ``subset``         | test if first set is strictly contained in second set   |
 +--------------------+---------------------------------------------------------+
-| ``subsetEq``       | test if set is contained in second set                  |
+| ``subsetEq``       | test if first set is contained in second set            |
 +--------------------+---------------------------------------------------------+
 | ``supset``         | test if first set strictly contains second set          |
 +--------------------+---------------------------------------------------------+
 | ``supsetEq``       | test if first set contains second set                   |
 +--------------------+---------------------------------------------------------+
 
-These binary inline operations operate on sets or domains and return a set:
+These binary inline operators operate on sets and return a set:
 
 +--------------------+---------------------------------------------------------+
-| ``intersect``      | set of elements in both sets/domains                    |
+| ``intersect``      | set of elements in both sets                            |
 +--------------------+---------------------------------------------------------+
 | ``union``          | set of elements in either of the sets                   |
++--------------------+---------------------------------------------------------+
+
+The following unary operator operates on a set and returns a set:
+
++--------------------+---------------------------------------------------------+
+| ``powerSet``       | set of all subsets of a set (including the empty set)   |
 +--------------------+---------------------------------------------------------+
 
 When ``S`` is a set, then ``|S|`` denotes the non-negative integer that is the cardinality of ``S`` (the number of elements in ``S``).
@@ -646,7 +689,7 @@ Type conversion
 +--------------------+---------------------------------------------------------+
 
 It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
-For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operation to turn the tuples back into a function.
+For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operator to turn the tuples back into a function.
 However, it is possible to use the declarative forms
 
 .. code-block:: essence
@@ -661,8 +704,52 @@ to refer to the relation, multiset, or function that corresponds to a set of tup
 This will fail to yield a solution if a function corresponding to a set of tuples is sought, but that set of tuples does not actually determine a function.
 
 
-Matrix operations
-~~~~~~~~~~~~~~~~~
+Function operators
+~~~~~~~~~~~~~~~~~~
+
++-------------------------+----------------------------------------------------+
+| ``defined``             | set of values for which function is defined        |
++-------------------------+----------------------------------------------------+
+| ``image``               | ``image(f,x)`` is the same as ``f(x)``             |
++-------------------------+----------------------------------------------------+
+| ``imageSet``            | ``imageSet(f,x)`` is ``{f(x)}`` if ``f(x)`` is     |
+|                         | defined, or empty if ``f(x)`` is not defined       |
++-------------------------+----------------------------------------------------+
+| ``inverse``             | test if two functions are inverses of each other   |
++-------------------------+----------------------------------------------------+
+| ``preImage``            | set of elements mapped by function to an element   |
++-------------------------+----------------------------------------------------+
+| ``range``               | set of values of function                          |
++-------------------------+----------------------------------------------------+
+| ``restrict``            | function restricted to a domain                    |
++-------------------------+----------------------------------------------------+
+
+Operators ``defined`` and ``range`` yield the sets of values that a function maps between.
+For all functions ``f``, the set ``toSet(f)`` is contained in the Cartesian product of sets ``defined(f)`` and ``range(f)``.
+
+For a function ``f`` and a literal domain specifier ``D`` that corresponds to a set of values ``S`` in the domain, the expression ``restrict(f,D)`` denotes the function ``g`` such that ``defined(g) = S intersect defined(f)`` and ``g(x) = f(x)`` for all values ``x in defined(g)``.
+The literal domain specifier is delimited by backquotes.
+
+.. code-block:: essence
+
+   find g : function int(0..1)-->int(0..1)
+   such that g = restrict(function(0-->1,3-->4), `int(0..1)`) $ function(0-->1)
+
+Applying ``image`` to values for which the function is not defined may lead to unintended unsatisfiability.
+The Conjure specific ``imageSet`` operator is useful for partial functions to avoid unsatisfiability in these cases.
+The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
+Conjure does not currently support taking the ``image`` or ``preImage`` of a function with respect to a set of elements.
+
+The ``inverse`` operator tests whether its function arguments are inverses of each other.
+
+.. code-block:: essence
+
+   find x : bool such that x = inverse(function(0-->1),function(1-->0)) $ true
+   find x : bool such that x = inverse(function(0-->1),function(1-->1)) $ false
+
+
+Matrix operators
+~~~~~~~~~~~~~~~~
 
 +--------------------+---------------------------------------------------------+
 | ``concatenate``    | ?                                                       |
@@ -676,6 +763,67 @@ With two arguments ``flatten(n,M)``, the first argument n indicates the depth of
 The one-argument form works like an unbounded-depth flattening.
 Note that ``flatten(0,M) = M`` always holds?
 
+The following operators yield Boolean values:
+
++-------------------------+----------------------------------------------------+
+| ``allDiff``             | test if all entries of 1D matrix are different     |
++-------------------------+----------------------------------------------------+
+| ``alldifferent_except`` | test if all entries of 1D matrix differ,           |
+|                         | possibly except value specified in second argument |
++-------------------------+----------------------------------------------------+
+
+The following illustrate ``allDiff`` and ``alldifferent_except``:
+
+.. code-block:: essence
+
+   find a : bool such that a = allDiff([1,2,3,5,1]) $ false
+   find a : bool such that a = alldifferent_except([1,2,3,5,1], 1) $ true
+
+
+List combining operators
+~~~~~~~~~~~~~~~~~~~~~~~~
+
+Each of the operators
+
+ | ``sum    product    and    or    xor``
+
+applies an associative combining operator to elements of a list.
+The list may be specified by means of a 1D matrix or a set.
+A list may also be given as a comprehension that specifies the elements of a set or domain that satisfy a given condition.
+
+The following relationships hold for all integers ``x`` and ``y``:
+
+ | ``sum([x,y]) = x + y``
+ | ``product([x,y]) = x * y``
+
+The following relationships hold for all Booleans ``a`` and ``b``:
+
+ | ``and([a,b]) = a /\ b``
+ | ``or([a,b]) = a \/ b``
+ | ``xor([a,b]) = (a \/ b) /\ !(a /\ b)``
+
+The following are all valid syntax:
+
+ | ``sum( [f(i) | i <- I] )``
+ | ``sum( [toInt((i=j) /\ (M[j]>0)) | i in I, j : D] )``
+ | ``sum( {1,2,3} )``
+
+Quantification over a finite set or finite domain of values is supported by ``forAll`` and ``exists``.
+These quantifiers yield Boolean values and are internally treated as ``and`` and ``or``, respectively, applied to the lists of values corresponding to the set or domain.
+The following snippets illustrate the use of quantifiers.
+
+.. code-block:: essence
+
+   find a : bool such that a = forAll i in {0,1,2} . i=i*i $ false
+   find a : bool such that a = exists i : int(0..4) . i*i=i $ true
+
+An alternative quantifier-like syntax
+
+ | ``sum i in I . f(i)``
+
+is supported for the ``sum`` and ``product`` operators.
+
+
 
 Operators taking one argument
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -683,25 +831,11 @@ Operators taking one argument
 (To be discussed in a more appropriate place.)
 
 +--------------------+---------------------------------------------------------+
-| ``allDiff``        | test if all entries of 1D matrix are different          |
-+--------------------+---------------------------------------------------------+
-| ``factorial``      | ``factorial(n)`` is the same as ``n!``                  |
-+--------------------+---------------------------------------------------------+
 | ``hist``           | histogram of ?                                          |
 +--------------------+---------------------------------------------------------+
 | ``max``            | largest element in set/multiset/domain, if ordered      |
 +--------------------+---------------------------------------------------------+
 | ``min``            | smallest element in set/multiset/domain, if ordered     |
-+--------------------+---------------------------------------------------------+
-| ``parts``          | partition to its set of parts                           |
-+--------------------+---------------------------------------------------------+
-| ``participants``   | union of all parts of a partition                       |
-+--------------------+---------------------------------------------------------+
-| ``powerSet``       | set of all subsets of a set (including the empty set)   |
-+--------------------+---------------------------------------------------------+
-| ``defined``        | set of values for which function is defined             |
-+--------------------+---------------------------------------------------------+
-| ``range``          | set of values of function                               |
 +--------------------+---------------------------------------------------------+
 
 
@@ -715,63 +849,24 @@ Operators with two arguments
 +-------------------------+----------------------------------------------------+
 | ``catchUndef``          | ?                                                  |
 +-------------------------+----------------------------------------------------+
-| ``alldifferent_except`` | test if all entries of 1D matrix differ,           |
-|                         | possibly except value specified in second argument |
+| ``freq``                | counts occurrences of element in multiset          |
++-------------------------+----------------------------------------------------+
+
+Partition operators
+^^^^^^^^^^^^^^^^^^^
+
 +-------------------------+----------------------------------------------------+
 | ``apart``               | test if two elements are in different parts of     |
 |                         | the partition                                      |
 +-------------------------+----------------------------------------------------+
-| ``inverse``             | test if two functions are inverses of each other   |
-+-------------------------+----------------------------------------------------+
-| ``freq``                | counts occurrences of element in multiset          |
-+-------------------------+----------------------------------------------------+
-| ``image``               | ``image(f,x)`` is the same as ``f(x)``             |
-+-------------------------+----------------------------------------------------+
-| ``imageSet``            | ``imageSet(f,x)`` is ``{f(x)}`` if ``f(x)`` is     |
-|                         | defined, or empty if ``f(x)`` is not defined:      |
-|                         | especially useful for partial functions            |
+| ``participants``        | union of all parts of a partition                  |
 +-------------------------+----------------------------------------------------+
 | ``party``               | part of partition that contains specified element  |
 +-------------------------+----------------------------------------------------+
-| ``preImage``            | set of elements mapped by function to an element   |
-+-------------------------+----------------------------------------------------+
-| ``restrict``            | function restricted to a set of values             |
+| ``parts``               | partition to its set of parts                      |
 +-------------------------+----------------------------------------------------+
 | ``together``            | test if two elements are in the same part of the   |
 |                         | partition                                          |
 +-------------------------+----------------------------------------------------+
 
-The original Essence definition allows ``image`` to represent the image of a function with respect to either an element or a set.
-Conjure does not currently support taking the image with respect to a set of elements.
-
-
-List combining operators
-~~~~~~~~~~~~~~~~~~~~~~~~
-
-Each of these operators applies a combining operator to elements of a list.
-
-The following operators are all behave of this form, taking a list as argument and computing the operation over all the elements.  Each element appears once but the ordering of elements is not specified: no reliance should be placed on a particular ordering.
-
- | ``sum    product    and    or    xor``
-
-The following equivalences hold:
-
- | ``sum(x,y) = x + y``
- | ``product(x,y) = x * y``
- | ``and(a,b) = a /\ b``
- | ``or(a,b) = a \/ b``
- | ``xor(a,b) = (a \/ b) /\ !(a /\ b)``
-
-The preferred syntax is comprehension style, providing a list as the argument to the operator.
-The list may be specified by means of a comprehension, as the elements of a set or domain that satisfy a given condition.
-The following are examples of valid syntax:
-
- | ``sum( [P(i) | i <- I] )``
- | ``sum( [P(i) \/ Q(j) | i in I, j : D] )``
-
-An alternative quantifier-like syntax
-
- | ``sum i in I . P(i)``
-
-is supported for ``sum`` and ``product``.
 
