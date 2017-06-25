@@ -422,7 +422,8 @@ Cardinality attributes take arguments, but the rest of the arguments do not.
 Sequence domains are total by default, hence they do not take a separate "total" attribute.
 
 Sequences are indexed by a contiguous list of increasing integers, beginning at 1.
-To explicitly specify a sequence, use a parenthesized list of tuples, each tuple being a pair (index,value).
+
+To explicitly specify a sequence, use a parenthesized list of values preceded by the keyword ``sequence``.
 
 Relation domains
 ~~~~~~~~~~~~~~~~
@@ -442,7 +443,8 @@ There are 2 groups of relation attributes:
                              , "transitive", "total", "connex", "Euclidean", "serial", "equivalence", "partialOrder".
 
 The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
-To explicitly specify a relation, use a parenthesized list of tuples.
+
+To explicitly specify a relation, use a parenthesized list of tuples preceded by the keyword ``relation``.
 
 Partition domains
 ~~~~~~~~~~~~~~~~~
@@ -675,8 +677,32 @@ Enumerated type operators
 Enumerated types are ordered, so they support comparisons and the operators `max` and `min`.
 
 
-Type conversion
-~~~~~~~~~~~~~~~
+Multiset operators
+~~~~~~~~~~~~~~~~~~
+
+The following operators take a single argument:
+
++--------------------+---------------------------------------------------------+
+| ``hist``           | histogram of multiset/matrix                            |
++--------------------+---------------------------------------------------------+
+| ``max``            | largest element in set/multiset/domain, if ordered      |
++--------------------+---------------------------------------------------------+
+| ``min``            | smallest element in set/multiset/domain, if ordered     |
++--------------------+---------------------------------------------------------+
+
+The following operators take two arguments:
+
++-------------------------+----------------------------------------------------+
+| ``active``              | ?                                                  |
++-------------------------+----------------------------------------------------+
+| ``catchUndef``          | ?                                                  |
++-------------------------+----------------------------------------------------+
+| ``freq``                | counts occurrences of element in multiset/matrix   |
++-------------------------+----------------------------------------------------+
+
+
+Type conversion operators
+~~~~~~~~~~~~~~~~~~~~~~~~~
 
 +--------------------+---------------------------------------------------------+
 | ``toInt``          | maps ``true`` to 1, ``false`` to 0                      |
@@ -688,20 +714,22 @@ Type conversion
 | ``toSet``          | multiset/relation/function to set                       |
 +--------------------+---------------------------------------------------------+
 
-It is currently not possible to directly invert ``toMSet``, ``toRelation``, and ``toSet``.
-For instance, although it is possible to describe the set of tuples of a function ``f`` by means of ``toSet(f)``, there is currently no inverse operator to turn the tuples back into a function.
-However, it is possible to use the declarative forms
+It is currently not possible to use an operator to directly invert ``toRelation`` or ``toSet`` when applied to a function, or ``toSet`` when applied to a relation.
+By referring to the set of tuples of a function ``f`` indirectly by means of ``toSet(f)``, the set of tuples of a relation ``R`` by means of ``toSet(R)``, or the relation corresponding to a function ``g`` by ``toRelation(g)``, it is possible to use the declarative forms
 
 .. code-block:: essence
 
-   find R : relation int(0..1) --> int(0..1)
+   find R : relation of (int(0..1) * int(0..1))
    such that toSet(R) = {(0,0),(0,1),(1,1)}
 
    find f : function int(0..1) --> int(0..1)
    such that toSet(f) = {(0,0),(1,1)}
 
-to refer to the relation, multiset, or function that corresponds to a set of tuples.
-This will fail to yield a solution if a function corresponding to a set of tuples is sought, but that set of tuples does not actually determine a function.
+   find g : function int(0..1) --> int(0..1)
+   such that toRelation(g) = relation((0,0),(1,1))
+
+to indirectly recover the relation or function that corresponds to a set of tuples, or the function that corresponds to a relation.
+This will fail to yield a solution if a function corresponding to a set of tuples or relation is sought, but that set of tuples or relation does not actually determine a function.
 
 
 Function operators
@@ -776,8 +804,26 @@ The following illustrate ``allDiff`` and ``alldifferent_except``:
 
 .. code-block:: essence
 
-   find a : bool such that a = allDiff([1,2,3,5,1]) $ false
-   find a : bool such that a = alldifferent_except([1,2,3,5,1], 1) $ true
+   find a : bool such that a = allDiff([1,2,4,1]) $ false
+   find a : bool such that a = alldifferent_except([1,2,4,1], 1) $ true
+
+
+Partition operators
+~~~~~~~~~~~~~~~~~~~
+
++-------------------------+----------------------------------------------------+
+| ``apart``               | test if two elements are in different parts of     |
+|                         | the partition                                      |
++-------------------------+----------------------------------------------------+
+| ``participants``        | union of all parts of a partition                  |
++-------------------------+----------------------------------------------------+
+| ``party``               | part of partition that contains specified element  |
++-------------------------+----------------------------------------------------+
+| ``parts``               | partition to its set of parts                      |
++-------------------------+----------------------------------------------------+
+| ``together``            | test if two elements are in the same part of the   |
+|                         | partition                                          |
++-------------------------+----------------------------------------------------+
 
 
 List combining operators
@@ -793,20 +839,22 @@ A list may also be given as a comprehension that specifies the elements of a set
 
 The following relationships hold for all integers ``x`` and ``y``:
 
- | ``sum([x,y]) = x + y``
- | ``product([x,y]) = x * y``
+ | ``sum([x,y]) = (x + y)``
+ | ``product([x,y]) = (x * y)``
 
 The following relationships hold for all Booleans ``a`` and ``b``:
 
- | ``and([a,b]) = a /\ b``
- | ``or([a,b]) = a \/ b``
- | ``xor([a,b]) = (a \/ b) /\ !(a /\ b)``
+ | ``and([a,b]) = (a /\ b)``
+ | ``or([a,b]) = (a \/ b)``
+ | ``xor([a,b]) = ((a \/ b) /\ !(a /\ b))``
 
 The following are all valid syntax:
 
- | ``sum( [f(i) | i <- I] )``
- | ``sum( [toInt((i=j) /\ (M[j]>0)) | i in I, j : D] )``
- | ``sum( {1,2,3} )``
+.. code-block:: essence
+
+   find x : int(0..9) such that x = sum( [f(i) | i <- I] )
+   find y : int(0..9) such that y = sum( [toInt((i=j) /\ (M[j]>0)) | i <- I, j : D] )
+   find z : int(0..9) such that z = sum( {1,2,3} ) $ 6
 
 Quantification over a finite set or finite domain of values is supported by ``forAll`` and ``exists``.
 These quantifiers yield Boolean values and are internally treated as ``and`` and ``or``, respectively, applied to the lists of values corresponding to the set or domain.
@@ -822,51 +870,5 @@ An alternative quantifier-like syntax
  | ``sum i in I . f(i)``
 
 is supported for the ``sum`` and ``product`` operators.
-
-
-
-Operators taking one argument
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-(To be discussed in a more appropriate place.)
-
-+--------------------+---------------------------------------------------------+
-| ``hist``           | histogram of ?                                          |
-+--------------------+---------------------------------------------------------+
-| ``max``            | largest element in set/multiset/domain, if ordered      |
-+--------------------+---------------------------------------------------------+
-| ``min``            | smallest element in set/multiset/domain, if ordered     |
-+--------------------+---------------------------------------------------------+
-
-
-Operators with two arguments
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-(To be discussed in a more appropriate place.)
-
-+-------------------------+----------------------------------------------------+
-| ``active``              | ?                                                  |
-+-------------------------+----------------------------------------------------+
-| ``catchUndef``          | ?                                                  |
-+-------------------------+----------------------------------------------------+
-| ``freq``                | counts occurrences of element in multiset          |
-+-------------------------+----------------------------------------------------+
-
-Partition operators
-^^^^^^^^^^^^^^^^^^^
-
-+-------------------------+----------------------------------------------------+
-| ``apart``               | test if two elements are in different parts of     |
-|                         | the partition                                      |
-+-------------------------+----------------------------------------------------+
-| ``participants``        | union of all parts of a partition                  |
-+-------------------------+----------------------------------------------------+
-| ``party``               | part of partition that contains specified element  |
-+-------------------------+----------------------------------------------------+
-| ``parts``               | partition to its set of parts                      |
-+-------------------------+----------------------------------------------------+
-| ``together``            | test if two elements are in the same part of the   |
-|                         | partition                                          |
-+-------------------------+----------------------------------------------------+
 
 
