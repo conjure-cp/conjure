@@ -28,7 +28,7 @@ class EssenceLexer(RegexLexer):
             (r'\b(%s)(?!\')\b' % '|'.join(reserved), Keyword.Type),
             (r'list', Keyword),
 
-            (r'(:=|\||\*|\(|\))', Operator),
+            (r'(:=|\||\*|\(|\)|\{|\})', Operator),
 
             # Strings
             (r"'", String.Char, 'character'),
