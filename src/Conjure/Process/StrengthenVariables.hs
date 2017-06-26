@@ -21,6 +21,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 -- These two are needed together
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
+import Conjure.Compute.DomainOf ( domainOf )
 
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
@@ -231,7 +232,7 @@ mkForAll ns rs e = let mkGen n r = Generator $ GenInExpr (Single n) r
                        in Op (MkOpAnd (OpAnd (Comprehension e gs)))
 
 -- | Make the attributes of a set as constrictive as possible.
-setAttributes :: (MonadFail m, MonadLog m)
+setAttributes :: (MonadFail m, MonadLog m, NameGen m)
               => Model        -- ^ Model as context.
               -> Declaration  -- ^ Statement to constrain.
               -> m Model      -- ^ Possibly updated model.
@@ -242,12 +243,12 @@ setAttributes m f@(FindOrGiven forg n d@DomainSet{}) = do
 setAttributes m _ = return m
 
 -- | Constrain the size of a set from constraints on it.
-setSizeFromConstraint :: (MonadFail m, MonadLog m)
+setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
                       => Name                     -- ^ Name of the set being worked on.
                       -> Domain () Expression     -- ^ Domain of the set to possibly modify.
                       -> Model                    -- ^ Model for context.
                       -> m (Domain () Expression) -- ^ Possibly modified set domain.
-setSizeFromConstraint n d = foldM subsetMinSize d . filter isSubsetOfN . suchThat
+setSizeFromConstraint n d = foldM subsetMinSize d . filter isSubsetOfN . concatMap universe . suchThat
   where isSubsetOfN (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
         isSubsetOfN (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
         isSubsetOfN _ = False
@@ -256,20 +257,28 @@ setSizeFromConstraint n d = foldM subsetMinSize d . filter isSubsetOfN . suchTha
         subsetMinSize d' _ = return d'
 
 -- | Set the minimum size of a set based on it being a superset of the range of a total function
-minSizeFromFunction :: (MonadFail m, MonadLog m)
+minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
                     => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
                     -> Expression               -- ^ Expression from which the minimum size is being inferred.
                     -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
-minSizeFromFunction d r = do
-  range <- match opRange r
-  case range of
-       Reference _ (Just (DeclNoRepr _ _ f _))
-         -> if isTotalFunction f
-               then return $ setSetMinSize (Constant $ ConstantInt 1) d
-               else return d
+minSizeFromFunction d (Op (MkOpRange (OpRange r))) = do
+  f <- getFunDom r
+  case f of
+       DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
+         -> return $ setSetMinSize (Constant $ ConstantInt 1) d
        _ -> return d
-  where isTotalFunction (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _) = True
-        isTotalFunction _ = False
+minSizeFromFunction d _ = return d
+
+-- | Look for a function domain, allowing it to be generated in a comprehension.
+getFunDom :: (MonadFail m, MonadLog m, NameGen m)
+          => Expression
+          -> m (Domain () Expression)
+getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainFunction{} _))) = return d
+getFunDom (Reference _ (Just (InComprehension (GenInExpr _ e))))     = getFunDom e
+getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainSet{} _)))      = domFromSet d
+  where domFromSet (DomainSet _ _ d') = return d'
+        domFromSet d'                 = return d'
+getFunDom e = domainOf e
 
 -- | Set the minSize attribute of a set.
 setSetMinSize :: Expression           -- ^ New minimum size to apply.
