@@ -356,6 +356,8 @@ Matrix domains are the most basic container-like domains in Essence.
 They are used when the decision variable or the problem parameter does not have any further relevant structure.
 Using another kind of domain is more appropriate for most problem specifications in Essence.
 
+To explicitly specify a matrix, use a list of values enclosed in square brackets.
+
 Set domains
 ~~~~~~~~~~~
 
@@ -366,6 +368,8 @@ followed by an optional comma separated list of set attributes,
 followed by the keyword "of", and the domain for members of the set.
 
 Set attributes are all related to cardinality: "size", "minSize", and "maxSize".
+
+To explicitly specify a set, use a list of values enclosed in braces.
 
 Multi-set domains
 ~~~~~~~~~~~~~~~~~
@@ -382,6 +386,8 @@ There are two groups of multi-set attributes:
 #. Related to number of occurrences of values in the multi-set: "minOccur", and "maxOccur".
 
 Since a multi-set domain is infinite without a "size", "maxSize", or "maxOccur" attribute, one of these attributes is mandatory to define a finite domain.
+
+To explicitly specify a multi-set, use a parenthesized list of values, preceded by the keyword ``mset``.
 
 Function domains
 ~~~~~~~~~~~~~~~~
@@ -402,7 +408,7 @@ There are three groups of function attributes:
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Function domains are partial by default, and using the "total" attribute makes them total.
 
-To explicitly specify a sequence, use a parenthesized set of assignments, each of the form ``input --> value``.
+To explicitly specify a function, use a set of assignments, each of the form ``input --> value``.
 
 Sequence domains
 ~~~~~~~~~~~~~~~~
@@ -594,6 +600,12 @@ The inline binary comparison operators
  | ``=    !=    <    <=    >    <=``
 
 can be applied to integer and enumerated types.
+Note that ``=`` has relatively low precedence as it is a declaration, not an imperative assignment:
+
+.. code-block:: essence
+
+   find a : bool such that a = false \/ true $ false
+   find b : bool such that b = (false \/ true) $ true
 
 (Sets/multisets/relations/functions/domains?)
 
@@ -658,6 +670,21 @@ The following unary operator operates on a set and returns a set:
 When ``S`` is a set, then ``|S|`` denotes the non-negative integer that is the cardinality of ``S`` (the number of elements in ``S``).
 When ``S`` and ``T`` are sets, ``S - T`` denotes their set difference, the set of elements of ``S`` that do not occur in ``T``.
 
+Examples:
+
+.. code-block:: essence
+
+   find a : bool such that a = (1 in {0,1}) $ true
+   find b : bool such that b = ({0,1} subset {0,1}) $ false
+   find c : bool such that c = ({0,1} subsetEq {0,1}) $ true
+   find d : bool such that d = ({0,1} supset {}) $ true
+   find e : bool such that e = ({0,1} supsetEq {1,0}) $ true
+   find A : set of int(0..6) such that A = {1,2,3} intersect {3,4} $ {3}
+   find B : set of int(0..6) such that B = {1,2,3} union {3,4} $ {1,2,3,4}
+   find S : set of set of int(0..2) such that S = powerSet({0}) $ {{},{0}}
+   find x : int(0..9) such that x = |{0,1,2,1,2,1}| $ 3
+   find T : set of int(0..9) such that T = {0,1,2} - {2,3} $ {0,1}
+
 
 Sequence operators
 ~~~~~~~~~~~~~~~~~~
@@ -683,11 +710,11 @@ Multiset operators
 The following operators take a single argument:
 
 +--------------------+---------------------------------------------------------+
-| ``hist``           | histogram of multiset/matrix                            |
+| ``hist``           | histogram of multi-set/matrix                           |
 +--------------------+---------------------------------------------------------+
-| ``max``            | largest element in set/multiset/domain, if ordered      |
+| ``max``            | largest element in set/multi-set/domain, if ordered     |
 +--------------------+---------------------------------------------------------+
-| ``min``            | smallest element in set/multiset/domain, if ordered     |
+| ``min``            | smallest element in set/multi-set/domain, if ordered    |
 +--------------------+---------------------------------------------------------+
 
 The following operators take two arguments:
@@ -697,7 +724,7 @@ The following operators take two arguments:
 +-------------------------+----------------------------------------------------+
 | ``catchUndef``          | ?                                                  |
 +-------------------------+----------------------------------------------------+
-| ``freq``                | counts occurrences of element in multiset/matrix   |
+| ``freq``                | counts occurrences of element in multi-set/matrix  |
 +-------------------------+----------------------------------------------------+
 
 
@@ -707,11 +734,11 @@ Type conversion operators
 +--------------------+---------------------------------------------------------+
 | ``toInt``          | maps ``true`` to 1, ``false`` to 0                      |
 +--------------------+---------------------------------------------------------+
-| ``toMSet``         | set/relation/function to multiset                       |
+| ``toMSet``         | set/relation/function to multi-set                      |
 +--------------------+---------------------------------------------------------+
 | ``toRelation``     | function to relation; ``{a --> b}`` becomes ``((a,b))`` |
 +--------------------+---------------------------------------------------------+
-| ``toSet``          | multiset/relation/function to set                       |
+| ``toSet``          | multi-set/relation/function to set                      |
 +--------------------+---------------------------------------------------------+
 
 It is currently not possible to use an operator to directly invert ``toRelation`` or ``toSet`` when applied to a function, or ``toSet`` when applied to a relation.
