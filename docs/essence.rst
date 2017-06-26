@@ -317,6 +317,13 @@ The keyword "tuple" is optional for tuples of arity greater or equal to 2.
 When needed, domains inside a tuple are referred to using their positions.
 In an n-arity tuple, the position of the first domain is 1, and the position of the last domain is n.
 
+To explicitly specify a tuple, use a parenthesized list of values, preceded by the keyword ``tuple``.
+
+.. code-block:: essence
+
+   letting s be tuple()
+   letting t be tuple(0,1,1,1)
+
 Record domains
 ~~~~~~~~~~~~~~
 
@@ -358,6 +365,11 @@ Using another kind of domain is more appropriate for most problem specifications
 
 To explicitly specify a matrix, use a list of values enclosed in square brackets.
 
+.. code-block:: essence
+
+   letting M be [0,1,0,-1]
+   letting N be [[0,1],[0,-1]]
+
 Set domains
 ~~~~~~~~~~~
 
@@ -370,6 +382,11 @@ followed by the keyword "of", and the domain for members of the set.
 Set attributes are all related to cardinality: "size", "minSize", and "maxSize".
 
 To explicitly specify a set, use a list of values enclosed in braces.
+Values only appear once in the set; if repeated values are specified then they are ignored.
+
+.. code-block:: essence
+
+   letting S be {1,0,1}
 
 Multi-set domains
 ~~~~~~~~~~~~~~~~~
@@ -388,6 +405,11 @@ There are two groups of multi-set attributes:
 Since a multi-set domain is infinite without a "size", "maxSize", or "maxOccur" attribute, one of these attributes is mandatory to define a finite domain.
 
 To explicitly specify a multi-set, use a parenthesized list of values, preceded by the keyword ``mset``.
+Values may appear multiple times in a multi-set.
+
+.. code-block:: essence
+
+   letting S be mset(0,1,1,1)
 
 Function domains
 ~~~~~~~~~~~~~~~~
@@ -408,7 +430,11 @@ There are three groups of function attributes:
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Function domains are partial by default, and using the "total" attribute makes them total.
 
-To explicitly specify a function, use a set of assignments, each of the form ``input --> value``.
+To explicitly specify a function, use a parenthesized list of assignments, each of the form ``input --> value``, preceded by the keyword ``function``.
+
+.. code-block:: essence
+
+   letting f be function(0-->1,1-->0)
 
 Sequence domains
 ~~~~~~~~~~~~~~~~
@@ -431,6 +457,10 @@ Sequences are indexed by a contiguous list of increasing integers, beginning at 
 
 To explicitly specify a sequence, use a parenthesized list of values preceded by the keyword ``sequence``.
 
+.. code-block:: essence
+
+   letting s be sequence(1,0,-1,2)
+
 Relation domains
 ~~~~~~~~~~~~~~~~
 
@@ -451,6 +481,11 @@ There are 2 groups of relation attributes:
 The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
 
 To explicitly specify a relation, use a parenthesized list of tuples preceded by the keyword ``relation``.
+All the tuples must be of the same type.
+
+.. code-block:: essence
+
+   letting R be relation((1,1,0),(1,0,1),(0,1,1))
 
 Partition domains
 ~~~~~~~~~~~~~~~~~
@@ -524,7 +559,7 @@ Arithmetic operators
 
 Essence supports the four usual arithmetic operators
 
- |  ``+    -    *    /``
+ |  ``+``  ``-``  ``*``  ``/``
 
 and also the modulo operator ``%``, exponentiation ``**``.
 These all take two arguments and are expressed in infix notation.
@@ -597,7 +632,7 @@ Comparisons
 
 The inline binary comparison operators
 
- | ``=    !=    <    <=    >    <=``
+ | ``=``  ``!=``  ``<``  ``<=``  ``>``  ``<=``
 
 can be applied to integer and enumerated types.
 Note that ``=`` has relatively low precedence as it is a declaration, not an imperative assignment:
@@ -727,6 +762,13 @@ The following operators take two arguments:
 | ``freq``                | counts occurrences of element in multi-set/matrix  |
 +-------------------------+----------------------------------------------------+
 
+Examples:
+
+.. code-block:: essence
+
+   letting S be mset(0,1,-1,1)
+   find x : int(0..1) such that freq(S,x) = 2 $ 1
+   find y : int(-2..2) such that y = max(S) - min(S) $ 2
 
 Type conversion operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -782,13 +824,17 @@ Function operators
 Operators ``defined`` and ``range`` yield the sets of values that a function maps between.
 For all functions ``f``, the set ``toSet(f)`` is contained in the Cartesian product of sets ``defined(f)`` and ``range(f)``.
 
-For a function ``f`` and a literal domain specifier ``D`` that corresponds to a set of values ``S`` in the domain, the expression ``restrict(f,D)`` denotes the function ``g`` such that ``defined(g) = S intersect defined(f)`` and ``g(x) = f(x)`` for all values ``x in defined(g)``.
-The literal domain specifier is delimited by backquotes.
+For a function ``f`` and a domain ``D``, the expression ``restrict(f,D)`` denotes the function that is defined on the values in ``D`` for which ``f`` is defined, and that also coincides with ``f`` where it is defined.
 
 .. code-block:: essence
 
-   find g : function int(0..1)-->int(0..1)
-   such that g = restrict(function(0-->1,3-->4), `int(0..1)`) $ function(0-->1)
+   letting f be function(0-->1,3-->4)
+   letting D be domain int(0,2)
+   find g : function int(0..4)-->int(0..4) such that
+     g = restrict(f, D) $ function(0-->1)
+   find a : bool such that $ true
+     a = ( (defined(g) = defined(f) intersect toSet([i | i : D]))
+       /\ (forAll x in defined(g) . g(x) = f(x)) )
 
 Applying ``image`` to values for which the function is not defined may lead to unintended unsatisfiability.
 The Conjure specific ``imageSet`` operator is useful for partial functions to avoid unsatisfiability in these cases.
@@ -812,11 +858,11 @@ Matrix operators
 | ``flatten``        | 1D matrix of entries from matrix                        |
 +--------------------+---------------------------------------------------------+
 
-``flatten`` takes 1 or 2 arguments.  For the 2-argument form, the first argument must be a constant integer.
+``flatten`` takes 1 or 2 arguments.
 With one argument, ``flatten`` returns a 1D matrix containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
-With two arguments ``flatten(n,M)``, the first argument n indicates the depth of flattening: the first n+1 dimensions are flattened into one dimension.
+With two arguments ``flatten(n,M)``, the first argument ``n`` is a constant integer that indicates the depth of flattening: the first ``n+1`` dimensions are flattened into one dimension.
+Note that ``flatten(0,M) = M`` always holds.
 The one-argument form works like an unbounded-depth flattening.
-Note that ``flatten(0,M) = M`` always holds?
 
 The following operators yield Boolean values:
 
