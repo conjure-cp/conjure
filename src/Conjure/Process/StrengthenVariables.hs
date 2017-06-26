@@ -12,7 +12,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, intersect, union )
+import Data.List ( delete, intersect, sort, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -47,13 +47,13 @@ updateDeclaration :: Declaration  -- ^ Old declaration to be removed.
                   -> Model        -- ^ Model to be updated.
                   -> Model        -- ^ Updated model.
 updateDeclaration d d' m@Model { mStatements = stmts }
-  = m { mStatements = Declaration d' : delete (Declaration d) stmts }
+  = m { mStatements = sort $ Declaration d' : delete (Declaration d) stmts }
 
 -- | Merge a list of constraints into a model.
-mergeConstraints :: [Expression]  -- ^ Constraints to merge into the model.
-                 -> Model         -- ^ Model to be updated.
+mergeConstraints :: Model         -- ^ Model to be updated.
+                 -> [Expression]  -- ^ Constraints to merge into the model.
                  -> Model         -- ^ Updated model with new constraints.
-mergeConstraints cs m@Model { mStatements = stmts }
+mergeConstraints m@Model { mStatements = stmts } cs
   = m { mStatements = map mergeConstraints' stmts }
   where mergeConstraints' (SuchThat cs') = SuchThat $ cs' `union` cs
         mergeConstraints' s              = s
@@ -181,9 +181,8 @@ functionConstraints :: (MonadFail m, MonadLog m, NameGen m)
                     => Model        -- ^ Model as context.
                     -> Declaration  -- ^ Statement to constrain.
                     -> m Model      -- ^ Possibly updated constraints.
-functionConstraints m f = do
-  cs <- addFunctionConstraints f m
-  return $ mergeConstraints cs m
+functionConstraints m f = addFunctionConstraints f m >>=
+                          return . mergeConstraints m
 
 -- | Add constraints on a function.
 addFunctionConstraints :: (MonadFail m, MonadLog m, NameGen m)
