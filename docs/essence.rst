@@ -546,7 +546,7 @@ Expressions
 Matrix indexing
 ~~~~~~~~~~~~~~~
 
-A 1D matrix is indexed by an integer.
+A 1D matrix is indexed by an integer, starting at 1.
 Matrices of dimension k are implemented by 1D matrices of dimension k-1.
 
 
@@ -668,7 +668,7 @@ Logical operators
 
 Logical operators operate on Boolean valued expressions, returning a Boolean value ``false`` or ``true``.
 Negation is unary prefix, the others are binary inline.
-The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see the discussion on list combining operators).
+The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see the discussion on `List combining operators`_).
 
 
 Set operators
