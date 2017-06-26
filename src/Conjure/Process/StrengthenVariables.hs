@@ -29,6 +29,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
   where core :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , functionConstraints
+                                                     , setAttributes
                                                      ]
                         if model == model'
                            then return model'
@@ -228,3 +229,74 @@ mkForAll :: [Name]        -- ^ Names to be used for the generated variables.
 mkForAll ns rs e = let mkGen n r = Generator $ GenInExpr (Single n) r
                        gs = zipWith mkGen ns rs
                        in Op (MkOpAnd (OpAnd (Comprehension e gs)))
+
+-- | Make the attributes of a set as constrictive as possible.
+setAttributes :: (MonadFail m, MonadLog m)
+              => Model        -- ^ Model as context.
+              -> Declaration  -- ^ Statement to constrain.
+              -> m Model      -- ^ Possibly updated model.
+setAttributes m f@(FindOrGiven forg n d@DomainSet{}) = do
+  d' <- setSizeFromConstraint n d m
+  let f' = FindOrGiven forg n d'
+  return $ updateDeclaration f f' m
+setAttributes m _ = return m
+
+-- | Constrain the size of a set from constraints on it.
+setSizeFromConstraint :: (MonadFail m, MonadLog m)
+                      => Name                     -- ^ Name of the set being worked on.
+                      -> Domain () Expression     -- ^ Domain of the set to possibly modify.
+                      -> Model                    -- ^ Model for context.
+                      -> m (Domain () Expression) -- ^ Possibly modified set domain.
+setSizeFromConstraint n d = foldM subsetMinSize d . filter isSubsetOfN . suchThat
+  where isSubsetOfN (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
+        isSubsetOfN (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
+        isSubsetOfN _ = False
+        subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
+        subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
+        subsetMinSize d' _ = return d'
+
+-- | Set the minimum size of a set based on it being a superset of the range of a total function
+minSizeFromFunction :: (MonadFail m, MonadLog m)
+                    => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
+                    -> Expression               -- ^ Expression from which the minimum size is being inferred.
+                    -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
+minSizeFromFunction d r = do
+  range <- match opRange r
+  case range of
+       Reference _ (Just (DeclNoRepr _ _ f _))
+         -> if isTotalFunction f
+               then return $ setSetMinSize (Constant $ ConstantInt 1) d
+               else return d
+       _ -> return d
+  where isTotalFunction (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _) = True
+        isTotalFunction _ = False
+
+-- | Set the minSize attribute of a set.
+setSetMinSize :: Expression           -- ^ New minimum size to apply.
+              -> Domain () Expression -- ^ Set domain to modify.
+              -> Domain () Expression -- ^ Possibly modified set domain.
+setSetMinSize n (DomainSet r (SetAttr s) d) = DomainSet r (minSetSize s) d
+  where minSetSize :: SizeAttr Expression -> SetAttr Expression
+        minSetSize SizeAttr_None                   = SetAttr $ SizeAttr_MinSize n
+        minSetSize (SizeAttr_MinSize    s')        = SetAttr $ SizeAttr_MinSize $ mkMax n s'
+        minSetSize (SizeAttr_MaxSize    s')        = SetAttr $ SizeAttr_MinMaxSize n s'
+        minSetSize (SizeAttr_MinMaxSize minS maxS) = SetAttr $ SizeAttr_MinMaxSize (mkMax n minS) maxS
+        minSetSize a                               = SetAttr a
+setSetMinSize _ d = d
+
+-- | Make a maximum expression between two expressions.
+--   Two max expressions are merged into one.
+--   The max between a value and a max adds the value to the max (if not present).
+--   If the expressions are the same, no max is made and the value is returned.
+mkMax :: Expression -> Expression -> Expression
+mkMax (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es1)))))
+      (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es2)))))
+        = make opMax $ fromList $ es1 `union` es2
+mkMax i m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es)))))
+          | i `elem` es = m
+          | otherwise   = make opMax $ fromList $ i : es
+mkMax m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))) i
+          | i `elem` es = m
+          | otherwise   = make opMax $ fromList $ i : es
+mkMax i e | i == e      = e
+          | otherwise   = make opMax $ fromList [ i, e ]
