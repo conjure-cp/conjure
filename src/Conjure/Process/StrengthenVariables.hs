@@ -12,7 +12,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, intersect, sort, union )
+import Data.List ( delete, intersect, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -47,7 +47,8 @@ updateDeclaration :: Declaration  -- ^ Old declaration to be removed.
                   -> Model        -- ^ Model to be updated.
                   -> Model        -- ^ Updated model.
 updateDeclaration d d' m@Model { mStatements = stmts }
-  = m { mStatements = sort $ Declaration d' : delete (Declaration d) stmts }
+  | d == d'   = m
+  | otherwise = m { mStatements = Declaration d' : delete (Declaration d) stmts }
 
 -- | Merge a list of constraints into a model.
 mergeConstraints :: Model         -- ^ Model to be updated.
