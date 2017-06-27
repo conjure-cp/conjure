@@ -1,9 +1,10 @@
 
+.. _zreferences:
+
 .. only:: html
 
-  .. rubric:: References
-
-.. _zreferences:
+  References
+  ==========
 
 .. bibliography:: refs.bib
     :all:
