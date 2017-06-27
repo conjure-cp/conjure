@@ -195,13 +195,17 @@ setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
                       -> Domain () Expression     -- ^ Domain of the set to possibly modify.
                       -> Model                    -- ^ Model for context.
                       -> m (Domain () Expression) -- ^ Possibly modified set domain.
-setSizeFromConstraint n d = foldM subsetMinSize d . filter isSubsetOfN . concatMap universe . suchThat
+setSizeFromConstraint n d = foldM subsetMinSize d . subsetsOf n
+  where subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
+        subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
+        subsetMinSize d' _ = return d'
+
+-- | Get all expressions constraining something to be a subset of the named variable.
+subsetsOf :: Name -> Model -> [Expression]
+subsetsOf n = filter isSubsetOfN . concatMap universe . suchThat
   where isSubsetOfN (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
         isSubsetOfN (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
         isSubsetOfN _ = False
-        subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
-        subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
-        subsetMinSize d' _ = return d'
 
 -- | Set the minimum size of a set based on it being a superset of the range of a total function
 minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
