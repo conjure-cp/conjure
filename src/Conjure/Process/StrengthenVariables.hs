@@ -30,6 +30,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
   where core :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
+                                                     , setConstraints
                                                      ]
                         if model == model'
                            then return model'
@@ -265,3 +266,64 @@ mkMax m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))) i
           | otherwise   = make opMax $ fromList $ i : es
 mkMax i e | i == e      = e
           | otherwise   = make opMax $ fromList [ i, e ]
+
+-- | Add constraints on a set.
+setConstraints :: (MonadFail m, MonadLog m)
+               => Model        -- ^ Model as context.
+               -> Declaration  -- ^ Statement to constrain.
+               -> m Model      -- ^ Possibly updated model.
+setConstraints m (FindOrGiven _ n DomainSet{}) = do
+  cs <- funcRangeEqSet n m
+  return $ mergeConstraints m cs
+setConstraints m _ = return m
+
+-- | Equate the range of a function to a set of the former is a subset of the latter
+--   and all values in the set are results of the function.
+funcRangeEqSet :: (MonadFail m, MonadLog m)
+               => Name            -- ^ Name of the set.
+               -> Model           -- ^ Model for context.
+               -> m [Expression]  -- ^ Equality constraints between range and set.
+funcRangeEqSet n m = return $ map (uncurry (make opEq)) $
+                     mapMaybe (forAllForSubset m) (subsetsOf n m)
+
+-- | Find a forAll expressions generating from a variable and equating a function
+--   call result to the generated values.
+forAllForSubset :: Model                          -- ^ Model for context.
+                -> Expression                     -- ^ Subset expression.
+                -> Maybe (Expression, Expression) -- ^ Values to be equated.
+forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
+                                                s@(Reference n _))))
+  -- Return the function range and set that are to be equated if:
+  | any (funcCallEqGenerated f) $ -- The function call is equated to generated values
+        mapMaybe (forAllFrom n) $ -- There are forAlls generated from the set
+        suchThat m
+    = Just (r, s)
+forAllForSubset _ _ = Nothing
+
+-- | Try getting a forAll expression that generates from the variable.
+forAllFrom :: Name                        -- ^ Name of the variable being generated from.
+           -> Expression                  -- ^ Expression that may be a forAll.
+           -> Maybe (Expression, [Name])  -- ^ ForAll body and a list of generated variables of
+                                          --   interest in the case that it is a forAll.
+forAllFrom n (Op (MkOpAnd (OpAnd (Comprehension x gs))))
+  = Just (x, mapMaybe generatedFrom gs)
+    -- Name of the generated variable generated from the given variable
+    where generatedFrom (Generator (GenInExpr (Single s) (Reference n' _)))
+            | n == n' = Just s
+          generatedFrom _ = Nothing
+forAllFrom _ _ = Nothing
+
+-- | Does a function call result equal a generated value?
+funcCallEqGenerated :: Expression           -- ^ Reference to function being called.
+                    -> (Expression, [Name]) -- ^ Expression that may contain the call
+                                            --   and names of the generated variables.
+                    -> Bool                 -- ^ Where there is a function call being
+                                            --   equated to a generated variable.
+funcCallEqGenerated f (Op (MkOpEq (OpEq e (Reference n _))), ns)
+  -- If the variable being equated to is generated from the source
+  | n `elem` ns = case e of
+                       -- Is it the desired function call
+                       Op (MkOpRelationProj (OpRelationProj f' _))
+                         -> f == f'
+                       _ -> False
+funcCallEqGenerated _ _ = False
