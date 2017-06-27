@@ -29,7 +29,6 @@ strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
 strengthenVariables = runNameGen . (resolveNames >=> core)
   where core :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
-                                                     , functionConstraints
                                                      , setAttributes
                                                      ]
                         if model == model'
@@ -178,58 +177,6 @@ functionCalledWithParam e n gorcs from = let funCalls = filter isFunctionCall $ 
         domainEquals _                            _  = False
         getArgName (Just (Reference n' _)) = Just n'
         getArgName _                       = Nothing
-
--- | Add constraints that apply to function variables.
-functionConstraints :: (MonadFail m, MonadLog m, NameGen m)
-                    => Model        -- ^ Model as context.
-                    -> Declaration  -- ^ Statement to constrain.
-                    -> m Model      -- ^ Possibly updated constraints.
-functionConstraints m f = addFunctionConstraints f m >>=
-                          return . mergeConstraints m
-
--- | Add constraints on a function.
-addFunctionConstraints :: (MonadFail m, MonadLog m, NameGen m)
-                       => Declaration     -- ^ Function being constrained.
-                       -> Model           -- ^ Model for context.
-                       -> m [Expression]  -- ^ New constraints to add to the model.
-addFunctionConstraints (FindOrGiven forg n d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _)) _
-  = return [ functionRangeGeqOne (mkReference forg n d)
-           ]
-addFunctionConstraints (FindOrGiven forg n d@(DomainSet _ _ f)) _
-  = case f of
-         -- Make sure that the nested function is total.
-         DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
-           -> let name = "addFunctionConstraints_name"
-                  setRef = mkReference forg n d
-                  in return [ mkForAll [ name ] [ setRef ]
-                              (functionRangeGeqOne $ mkReference forg name f)
-                            ]
-         _ -> return []
-addFunctionConstraints _ _ = return []
-
--- | Expression constraining the range of a function to be >= 1.
-functionRangeGeqOne :: Expression -- ^ Reference to the function
-                    -> Expression -- ^ Generated constraint.
-functionRangeGeqOne r
-  = Op (MkOpGeq (OpGeq
-      -- size of
-      (Op (MkOpTwoBars (OpTwoBars
-        -- range of function
-        (Op (MkOpRange (OpRange r))))))
-      (Constant (ConstantInt 1)))) 
-
--- | Make a reference to a given variable.
-mkReference :: FindOrGiven -> Name -> Domain () Expression -> Expression
-mkReference forg n d = Reference n (Just $ DeclNoRepr forg n d NoRegion)
-
--- | Make a forAll expression and place an expression inside it.
-mkForAll :: [Name]        -- ^ Names to be used for the generated variables.
-         -> [Expression]  -- ^ References to the domains for generating variables.
-         -> Expression    -- ^ Expression to place in the forAll.
-         -> Expression    -- ^ Generated forAll expression.
-mkForAll ns rs e = let mkGen n r = Generator $ GenInExpr (Single n) r
-                       gs = zipWith mkGen ns rs
-                       in Op (MkOpAnd (OpAnd (Comprehension e gs)))
 
 -- | Make the attributes of a set as constrictive as possible.
 setAttributes :: (MonadFail m, MonadLog m, NameGen m)
