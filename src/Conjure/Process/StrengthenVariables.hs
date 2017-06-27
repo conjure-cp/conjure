@@ -275,10 +275,15 @@ getFunDom :: (MonadFail m, MonadLog m, NameGen m)
           -> m (Domain () Expression)
 getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainFunction{} _))) = return d
 getFunDom (Reference _ (Just (InComprehension (GenInExpr _ e))))     = getFunDom e
-getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainSet{} _)))      = domFromSet d
-  where domFromSet (DomainSet _ _ d') = return d'
-        domFromSet d'                 = return d'
+getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainSet{}  _)))     = return $ domFromContainer d
+getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainMSet{} _)))     = return $ domFromContainer d
 getFunDom e = domainOf e
+
+-- | Extract a "leaf" domain from a container domain.
+domFromContainer :: Domain () Expression -> Domain () Expression
+domFromContainer (DomainSet  _ _ d') = d'
+domFromContainer (DomainMSet _ _ d') = d'
+domFromContainer d'                  = d'
 
 -- | Set the minSize attribute of a set.
 setSetMinSize :: Expression           -- ^ New minimum size to apply.
