@@ -290,13 +290,12 @@ funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
 --   a forAll, and a set.
 equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
                       -> Maybe Expression         -- Possible constraint equating the two.
-equateFuncRangeAndSet (r@(Op (MkOpRange (OpRange f))), s)
-  = case f of
-         Reference _ (Just DeclNoRepr{})
-           -> Just $ make opEq r s
-         Reference _ (Just (InComprehension g))
-           -> Just $ make opAnd $ Comprehension (make opEq r s) [Generator g]
-         _ -> Nothing
+equateFuncRangeAndSet (r@(Op (MkOpRange (OpRange f))), s) = nestReference f (make opEq r s)
+  where nestReference :: Expression -> Expression -> Maybe Expression
+        nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
+        nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
+          = nestReference r' $ make opAnd $ Comprehension e [Generator g]
+        nestReference _ _ = Nothing
 equateFuncRangeAndSet _ = Nothing
 
 -- | Find a forAll expressions generating from a variable and equating a function
