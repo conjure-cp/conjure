@@ -196,17 +196,27 @@ setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
                       -> Domain () Expression     -- ^ Domain of the set to possibly modify.
                       -> Model                    -- ^ Model for context.
                       -> m (Domain () Expression) -- ^ Possibly modified set domain.
-setSizeFromConstraint n d = foldM subsetMinSize d . subsetsOf n
-  where subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
-        subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
-        subsetMinSize d' _ = return d'
+setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetOf
+  where
+    subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
+    subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
+    subsetMinSize d' _ = return d'
 
--- | Get all expressions constraining something to be a subset of the named variable.
-subsetsOf :: Name -> Model -> [Expression]
-subsetsOf n = filter isSubsetOfN . concatMap universe . suchThat
-  where isSubsetOfN (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
-        isSubsetOfN (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
-        isSubsetOfN _ = False
+    isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) | n == n' = True
+    isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) | n == n' = True
+    isSubsetOf _ = False
+
+-- | Find an expression at any depth of unconditional forAll expressions.
+findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
+findInUncondForAll p = mapMaybe findInForAll . suchThat
+  where
+    findInForAll e | p e = Just e
+    findInForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
+                   | all (not . isCondition) gorcs = findInForAll e
+    findInForAll _ = Nothing
+
+    isCondition Condition{} = True
+    isCondition _           = False
 
 -- | Set the minimum size of a set based on it being a superset of the range of a total function
 minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
@@ -284,7 +294,11 @@ funcRangeEqSet :: (MonadFail m, MonadLog m)
                -> Model           -- ^ Model for context.
                -> m [Expression]  -- ^ Equality constraints between range and set.
 funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
-                     mapMaybe (forAllForSubset m) (subsetsOf n m)
+                     mapMaybe (forAllForSubset m) $
+                     findInUncondForAll isSubsetEqOf m
+  where
+    isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) | n == n' = True
+    isSubsetEqOf _ = False
 
 -- | Create an expression that equates the range of a function which may come from
 --   a forAll, and a set.
