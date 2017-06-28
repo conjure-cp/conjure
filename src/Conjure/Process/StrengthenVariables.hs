@@ -283,8 +283,21 @@ funcRangeEqSet :: (MonadFail m, MonadLog m)
                => Name            -- ^ Name of the set.
                -> Model           -- ^ Model for context.
                -> m [Expression]  -- ^ Equality constraints between range and set.
-funcRangeEqSet n m = return $ map (uncurry (make opEq)) $
+funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
                      mapMaybe (forAllForSubset m) (subsetsOf n m)
+
+-- | Create an expression that equates the range of a function which may come from
+--   a forAll, and a set.
+equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
+                      -> Maybe Expression         -- Possible constraint equating the two.
+equateFuncRangeAndSet (r@(Op (MkOpRange (OpRange f))), s)
+  = case f of
+         Reference _ (Just DeclNoRepr{})
+           -> Just $ make opEq r s
+         Reference _ (Just (InComprehension g))
+           -> Just $ make opAnd $ Comprehension (make opEq r s) [Generator g]
+         _ -> Nothing
+equateFuncRangeAndSet _ = Nothing
 
 -- | Find a forAll expressions generating from a variable and equating a function
 --   call result to the generated values.
@@ -296,6 +309,7 @@ forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
   -- Return the function range and set that are to be equated if:
   | any (funcCallEqGenerated f) $ -- The function call is equated to generated values
         mapMaybe (forAllFrom n) $ -- There are forAlls generated from the set
+        concatMap universe $      -- Apply to any level of nesting
         suchThat m
     = Just (r, s)
 forAllForSubset _ _ = Nothing
