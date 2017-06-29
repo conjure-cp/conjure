@@ -208,12 +208,14 @@ setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetO
 
 -- | Find an expression at any depth of unconditional forAll expressions.
 findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
-findInUncondForAll p = mapMaybe findInForAll . suchThat
+findInUncondForAll p = concatMap findInForAll . suchThat
   where
-    findInForAll e | p e = Just e
+    findInForAll e | p e = [e]
     findInForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
                    | all (not . isCondition) gorcs = findInForAll e
-    findInForAll _ = Nothing
+    findInForAll (Op (MkOpAnd (OpAnd (AbstractLiteral (AbsLitMatrix _ es)))))
+                   = concatMap findInForAll es
+    findInForAll _ = []
 
     isCondition Condition{} = True
     isCondition _           = False
