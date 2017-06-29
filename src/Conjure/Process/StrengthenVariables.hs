@@ -305,11 +305,12 @@ funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
 equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
                       -> Maybe Expression         -- Possible constraint equating the two.
 equateFuncRangeAndSet (r@(Op (MkOpRange (OpRange f))), s) = nestReference f (make opEq r s)
-  where nestReference :: Expression -> Expression -> Maybe Expression
-        nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
-        nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
-          = nestReference r' $ make opAnd $ Comprehension e [Generator g]
-        nestReference _ _ = Nothing
+  where
+    nestReference :: Expression -> Expression -> Maybe Expression
+    nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
+    nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
+      = nestReference r' $ make opAnd $ Comprehension e [Generator g]
+    nestReference _ _ = Nothing
 equateFuncRangeAndSet _ = Nothing
 
 -- | Find a forAll expressions generating from a variable and equating a function
@@ -318,39 +319,23 @@ forAllForSubset :: Model                          -- ^ Model for context.
                 -> Expression                     -- ^ Subset expression.
                 -> Maybe (Expression, Expression) -- ^ Values to be equated.
 forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
-                                                s@(Reference n _))))
-  -- Return the function range and set that are to be equated if:
-  | any (funcCallEqGenerated f) $ -- The function call is equated to generated values
-        mapMaybe (forAllFrom n) $ -- There are forAlls generated from the set
-        concatMap universe $      -- Apply to any level of nesting
-        suchThat m
-    = Just (r, s)
+                                                s@Reference{})))
+  | not $ null $ findInUncondForAll (funcCallEqGenerated f s) m = Just (r, s)
 forAllForSubset _ _ = Nothing
 
--- | Try getting a forAll expression that generates from the variable.
-forAllFrom :: Name                        -- ^ Name of the variable being generated from.
-           -> Expression                  -- ^ Expression that may be a forAll.
-           -> Maybe (Expression, [Name])  -- ^ ForAll body and a list of generated variables of
-                                          --   interest in the case that it is a forAll.
-forAllFrom n (Op (MkOpAnd (OpAnd (Comprehension x gs))))
-  = Just (x, mapMaybe generatedFrom gs)
-    -- Name of the generated variable generated from the given variable
-    where generatedFrom (Generator (GenInExpr (Single s) (Reference n' _)))
-            | n == n' = Just s
-          generatedFrom _ = Nothing
-forAllFrom _ _ = Nothing
-
--- | Does a function call result equal a generated value?
-funcCallEqGenerated :: Expression           -- ^ Reference to function being called.
-                    -> (Expression, [Name]) -- ^ Expression that may contain the call
-                                            --   and names of the generated variables.
-                    -> Bool                 -- ^ Where there is a function call being
-                                            --   equated to a generated variable.
-funcCallEqGenerated f (Op (MkOpEq (OpEq e (Reference n _))), ns)
-  -- If the variable being equated to is generated from the source
-  | n `elem` ns = case e of
-                       -- Is it the desired function call
-                       Op (MkOpRelationProj (OpRelationProj f' _))
-                         -> f == f'
-                       _ -> False
-funcCallEqGenerated _ _ = False
+-- | Determine whether a function is a called and has its result equated to a value generated
+--   from the set of interest.
+funcCallEqGenerated :: Expression -- ^ Function reference.
+                    -> Expression -- ^ Variable to generate from.
+                    -> Expression -- ^ Expression to check.
+                    -> Bool       -- ^ Does the equation have the desired terms.
+funcCallEqGenerated f s (Op (MkOpEq (OpEq e (Reference _ d))))
+  = isFuncCall e && isGenerated d
+  where
+    -- Is the left side a call to the function of interest?
+    isFuncCall (Op (MkOpRelationProj (OpRelationProj f' _))) = f == f'
+    isFuncCall _ = False
+    -- Is the right side variable generated from the set of interest?
+    isGenerated (Just (InComprehension (GenInExpr _ g))) = s == g
+    isGenerated _ = False
+funcCallEqGenerated _ _ _ = False
