@@ -8,17 +8,15 @@ find var5: int(2, 0..4)
 such that
     function(relation(((7 + -7) * toInt(true), mset(false, false) != mset(false, true), var5),
                       (toInt(var4), (5, -1) != (8, 10), |function(9 --> 2, 7 --> -6)|),
-                      (toInt(false) ** (-5 + -10), (-9 = 9) = (true = true), -5)) --> partition({partition({false,
-                                                                                                            false})}),
+                      (toInt(false) ** (-5 + -10), (-9 = 9) = (true = true), -5))
+                 --> partition({partition({false, false})}),
              relation((|{true}|, (-2, true) = (4, false), -1),
                       (|(mset() : `mset of int`)|, -6 = 1 -> (true <-> false), 5),
-                      (var5, tuple (true) != tuple (false), |mset(false)|)) --> partition({partition({false})},
-                                                                                          {partition({true})},
-                                                                                          {partition({true}, {true})},
-                                                                                          {partition({true, false})}))
+                      (var5, tuple (true) != tuple (false), |mset(false)|))
+                 --> partition({partition({false})}, {partition({true})}, {partition({true}, {true})},
+                               {partition({true, false})}))
     =
     function(relation((toInt(var2), false, -7 ** var5), (toInt(var4), (false <-> true) in {true, false}, toInt(var2)),
-                      (5, function(5 --> -8) != function(7 --> 8), -7)) --> partition({partition({true}),
-                                                                                       partition({false, false}),
-                                                                                       partition({false})})),
+                      (5, function(5 --> -8) != function(7 --> 8), -7))
+                 --> partition({partition({true}), partition({false, false}), partition({false})})),
     and([7 != 8 | q_6 : int(2, 0..4), q_6 > -5 % (q_6 + q_6)])

@@ -40,8 +40,9 @@ such that
       ((mset() : `mset of int`), var2, mset(false, true), {8, 5});
           int(5, -2..2)],
      [((mset() : `mset of int`), var2, (mset() : `mset of bool`), {-6}); int(-5)],
-     [((mset() : `mset of int`), var2, (mset() : `mset of bool`), {-5}), (mset(-4, -9), 10 ** -4, mset(true), {3, -10}),
-      (mset(-3), toInt(true), mset(true), {-8, 4}), ((mset() : `mset of int`), var2, (mset() : `mset of bool`), {-5}),
+     [((mset() : `mset of int`), var2, (mset() : `mset of bool`), {-5}),
+      (mset(-4, -9), 10 ** (-4), mset(true), {3, -10}), (mset(-3), toInt(true), mset(true), {-8, 4}),
+      ((mset() : `mset of int`), var2, (mset() : `mset of bool`), {-5}),
       ((mset() : `mset of int`), var2, mset(true, true), {-10, -5});
           int(-2, -1..2)]}
     !=
@@ -51,4 +52,4 @@ such that
       (mset(-10), 3, mset(true), ({} : `set of int`)),
       (mset(6), toInt(true), (mset() : `mset of bool`), ({} : `set of int`));
           int(4, -2..0)],
-     [(mset(9, 5), 5 ** -4, (mset() : `mset of bool`), {8}); int(-3)]}
+     [(mset(9, 5), 5 ** (-4), (mset() : `mset of bool`), {8}); int(-3)]}

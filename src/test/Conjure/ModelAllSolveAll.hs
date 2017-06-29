@@ -14,6 +14,7 @@ import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
 import Conjure.UI.MainHelper ( savilerowScriptName )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
+import Conjure.UserError ( runUserErrorT )
 
 -- base
 import System.Environment ( getEnvironment )
@@ -203,9 +204,9 @@ savileRowNoParam srOptions TestDirFiles{..} modelPath =
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
+                    res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
                     case res of
-                        Left err -> assertFailure $ renderNormal err
+                        Left errs -> assertFailure $ renderNormal $ vcat errs
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                             writeFile filename (renderNormal s)
@@ -248,9 +249,9 @@ savileRowWithParams srOptions TestDirFiles{..} modelPath paramPath =
                 forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                     let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
                     eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    res <- runExceptT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
+                    res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
                     case res of
-                        Left err -> assertFailure $ renderNormal err
+                        Left errs -> assertFailure $ renderNormal $ vcat errs
                         Right s  -> do
                             let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
                             writeFile filename (renderNormal s)
@@ -269,11 +270,11 @@ validateSolutionNoParam TestDirFiles{..} solutionPaths =
             step (unwords ["Validating solution:", solutionPath])
             fileShouldExist (outputsDir </> solutionPath)
             solution <- readModelFromFile (outputsDir </> solutionPath)
-            result   <- runExceptT $ ignoreLogs $ runNameGen $ do
+            result   <- runUserErrorT $ ignoreLogs $ runNameGen $ do
                 [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
                 validateSolution essence2 param2 solution2
             case result of
-                Left err -> assertFailure $ renderNormal err
+                Left errs -> assertFailure $ renderNormal $ vcat errs
                 Right () -> return ()
 
 
@@ -288,11 +289,11 @@ validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
                 step (unwords ["Validating solution:", paramPath, solutionPath])
                 fileShouldExist (outputsDir </> solutionPath)
                 solution <- readModelFromFile (outputsDir </> solutionPath)
-                result   <- runExceptT $ ignoreLogs $ runNameGen $ do
+                result   <- runUserErrorT $ ignoreLogs $ runNameGen $ do
                     [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
                     validateSolution essence2 param2 solution2
                 case result of
-                    Left err -> assertFailure $ renderNormal err
+                    Left errs -> assertFailure $ renderNormal $ vcat errs
                     Right () -> return ()
 
 

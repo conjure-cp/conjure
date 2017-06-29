@@ -8,35 +8,29 @@ find var5: function set of int(-5..-3) --> partition from int(-3..3, 5)
 such that
     function({relation((true, false, 9), (true, true, -10), (true, false, -6)),
               relation((true, true, -7), (false, true, 10), (true, true, -8)),
-              relation((true, false, 1), (false, false, -4), (false, false, 1))} --> {partition({1 * 2}),
-                                                                                      var5({4, 8} union {-8}),
-                                                                                      var5(toSet(mset(0, 4)))},
+              relation((true, false, 1), (false, false, -4), (false, false, 1))}
+                 --> {partition({1 * 2}), var5({4, 8} union {-8}), var5(toSet(mset(0, 4)))},
              {relation((false, true, 0), (true, true, -10), (false, false, -5))} --> {partition({6, -8})},
              {relation((false, false, 0), (false, true, -2), (true, false, -10))} --> {var5({var2(true -> true)})},
              {relation((true, true, 9), (true, true, -4), (false, false, 2)),
               relation((false, true, 0), (true, false, 7), (false, false, -5)),
               relation((true, true, -7), (false, true, 7), (false, false, -7)),
-              relation((true, true, -10), (true, false, 2), (false, false, 7))} --> toSet(mset(partition({-2, 2}),
-                                                                                               partition({2}),
-                                                                                               partition({-10}))),
+              relation((true, true, -10), (true, false, 2), (false, false, 7))}
+                 --> toSet(mset(partition({-2, 2}), partition({2}), partition({-10}))),
              {relation((true, true, 5), (true, false, -4), (true, true, -4)),
               relation((false, false, -8), (true, true, 2), (true, true, 10)),
-              relation((true, true, 5), (false, true, 6),
-                       (false, false, -6))} --> participants(partition({partition({3})},
-                                                                       {partition({-5}), partition({-8, 3})},
-                                                                       {partition({9})})),
-             {relation((true, false, -5), (true, true, 2), (true, false, 4))} --> {var5(participants(partition({-9,
-                                                                                                                0})))})
+              relation((true, true, 5), (false, true, 6), (false, false, -6))}
+                 --> participants(partition({partition({3})}, {partition({-5}), partition({-8, 3})}, {partition({9})})),
+             {relation((true, false, -5), (true, true, 2), (true, false, 4))}
+                 --> {var5(participants(partition({-9, 0})))})
     !=
     function({relation((true, false, 3), (true, false, 2), (true, false, 6)),
               relation((true, true, 8), (true, false, 8), (false, false, -10)),
               relation((true, true, -8), (false, true, -6), (false, true, -5)),
               relation((true, true, 0), (true, true, -10), (false, true, 6)),
-              relation((false, false, -1), (true, true, -6), (false, false, -8))} --> {var5({5} union {-4, -7}),
-                                                                                       var5(party(9 ** 4,
-                                                                                                  partition({2}))),
-                                                                                       partition({toInt(false)}),
-                                                                                       partition({toInt(false)})}),
+              relation((false, false, -1), (true, true, -6), (false, false, -8))}
+                 --> {var5({5} union {-4, -7}), var5(party(9 ** 4, partition({2}))), partition({toInt(false)}),
+                      partition({toInt(false)})}),
     relation((relation((true, -7, 3, -4), (true, -5, 0, 5), (false, -9, -9, -8)),
               function(({} : `set of int`) --> {true}, ({} : `set of int`) --> {false}, {4} --> ({} : `set of bool`),
                        {10} --> {false}),
@@ -63,19 +57,20 @@ such that
               function((mset() : `mset of bool`) --> (true, -5), mset(true, false) --> (true, 0),
                        (mset() : `mset of bool`) --> (true, 1), mset(false) --> (true, -7)))),
     function((partition({(mset() : `mset of bool`)}, {(mset() : `mset of bool`), mset(false, true), mset(true)}),
-              relation((-3, false, -10, true), (-10, false, -6, false), (4, false, 4, false))) --> 1,
+              relation((-3, false, -10, true), (-10, false, -6, false), (4, false, 4, false)))
+                 --> 1,
              (partition({(mset() : `mset of bool`)}, {mset(true)}),
-              relation((-9, false, 4, true), (-1, true, 4, true), (-6, true, -8, false))) --> 8,
+              relation((-9, false, 4, true), (-1, true, 4, true), (-6, true, -8, false)))
+                 --> 8,
              (partition({mset(true, false)}, {mset(false)}),
-              relation((-5, false, 1, true), (5, false, -6, false), (6, true, -3, false))) --> var4((false != true) in
-                                                                                                    {false, true})
-                                                                                               * |mset(10, -10)|,
+              relation((-5, false, 1, true), (5, false, -6, false), (6, true, -3, false)))
+                 --> var4((false != true) in {false, true}) * |mset(10, -10)|,
              (partition({(mset() : `mset of bool`)}),
-              relation((8, true, 2, true), (0, true, -4, true), (-2, true, 9, true))) --> toInt(true \/ true) / -7,
-             (partition({mset(false)}),
-              relation((7, false, -5, false), (-9, false, -6, false), (9, false, 7, true))) --> 2)
+              relation((8, true, 2, true), (0, true, -4, true), (-2, true, 9, true)))
+                 --> toInt(true \/ true) / -7,
+             (partition({mset(false)}), relation((7, false, -5, false), (-9, false, -6, false), (9, false, 7, true)))
+                 --> 2)
     =
     function((partition({mset(true, false), mset(false), mset(true, true), (mset() : `mset of bool`)}),
-              relation((3, false, -5, true), (1, false, 10, false), (1, false, 5, false))) --> toInt(true) **
-                                                                                               var4(false \/ false) **
-                                                                                               var2(true))
+              relation((3, false, -5, true), (1, false, 10, false), (1, false, 5, false)))
+                 --> toInt(true) ** var4(false \/ false) ** var2(true))

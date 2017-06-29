@@ -9,48 +9,53 @@ find var6: partition from bool
 find var7: relation of (bool * partition from bool * function bool --> bool)
 find var8: function function bool --> int(-2..-1, -2..3) --> bool
 such that
-    function([((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (0)); int(3)] --> partition({{var6}, {var6},
-                                                                                                        {var6}}),
+    function([((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (0)); int(3)]
+                 --> partition({{var6}, {var6}, {var6}}),
              [(mset(true), mset(true, false), tuple (-3)); int(-3)] --> partition({{var6}}),
              [(mset(true, false), (mset() : `mset of bool`), tuple (-4)), (mset(false), mset(false, false), tuple (-6)),
               (mset(true), (mset() : `mset of bool`), tuple (7)), ((mset() : `mset of bool`), mset(false), tuple (-6)),
               (mset(true, true), mset(true, true), tuple (8)), (mset(false), (mset() : `mset of bool`), tuple (0));
-                  int(0..5)] --> partition({{partition({true}), partition({true})}},
-                                           {{var6, partition({true}, {false}), var6}}),
+                  int(0..5)]
+                 --> partition({{partition({true}), partition({true})}}, {{var6, partition({true}, {false}), var6}}),
              [(mset(false, false), mset(false, true), tuple (10)), ((mset() : `mset of bool`), mset(true), tuple (-9));
-                  int(-3..-2)] --> partition({var5}, {{var6}}),
-             [((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (9));
-                  int(-1)] --> partition({({} : `set of partition from bool`)}, {{var6, var6}},
-                                         {{partition({true, true}), partition({false}), var6}}, {var5}),
+                  int(-3..-2)]
+                 --> partition({var5}, {{var6}}),
+             [((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (9)); int(-1)]
+                 --> partition({({} : `set of partition from bool`)}, {{var6, var6}},
+                               {{partition({true, true}), partition({false}), var6}}, {var5}),
              [(mset(true), (mset() : `mset of bool`), tuple (9)), (mset(true, false), mset(false), tuple (2)),
               (mset(true, false), mset(false), tuple (-5)), ((mset() : `mset of bool`), mset(true), tuple (-2)),
               ((mset() : `mset of bool`), mset(true), tuple (-4)), (mset(false), (mset() : `mset of bool`), tuple (7));
-                  int(-1..1, 0..4)] --> partition({{partition({true}), var6, partition({true}, {false})}}, {var5}))
+                  int(-1..1, 0..4)]
+                 --> partition({{partition({true}), var6, partition({true}, {false})}}, {var5}))
     !=
     function([((mset() : `mset of bool`), mset(false, false), tuple (8)),
               ((mset() : `mset of bool`), mset(true, false), tuple (9)),
               (mset(false, true), mset(false, true), tuple (-1)),
               ((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (-3)),
               (mset(false), mset(false), tuple (-4)), ((mset() : `mset of bool`), mset(true), tuple (4));
-                  int(-2, -3..2)] --> partition({var5, {partition({true}), var6, var6}},
-                                                {{var6}, ({} : `set of partition from bool`)}, {{var6}}),
+                  int(-2, -3..2)]
+                 --> partition({var5, {partition({true}), var6, var6}}, {{var6}, ({} : `set of partition from bool`)},
+                               {{var6}}),
              [(mset(false, false), mset(true), tuple (7)), (mset(true), (mset() : `mset of bool`), tuple (-8));
-                  int(-5, 0)] --> partition({{var6, partition({true}), partition({true})},
-                                             ({} : `set of partition from bool`)}),
+                  int(-5, 0)]
+                 --> partition({{var6, partition({true}), partition({true})}, ({} : `set of partition from bool`)}),
              [(mset(false, false), mset(true, true), tuple (-4)), (mset(true), mset(true, false), tuple (-2)),
               ((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (-5)),
               ((mset() : `mset of bool`), mset(false), tuple (0)), ((mset() : `mset of bool`), mset(true), tuple (7)),
               (mset(true, false), mset(false), tuple (-7)), ((mset() : `mset of bool`), mset(true, true), tuple (-8));
-                  int(-1..5)] --> partition({var5}),
+                  int(-1..5)]
+                 --> partition({var5}),
              [(mset(false, true), mset(true), tuple (8)),
               ((mset() : `mset of bool`), (mset() : `mset of bool`), tuple (5)),
               (mset(false, false), mset(false, false), tuple (-4)), ((mset() : `mset of bool`), mset(true), tuple (-7));
-                  int(2..5)] --> partition({{partition({false, false})}}),
-             [(mset(true, false), mset(true), tuple (10)), (mset(true, true), mset(true, true), tuple (-9));
-                  int(5, -1)] --> partition({var5}, {({} : `set of partition from bool`)},
-                                            {{var6}, ({} : `set of partition from bool`)}, {{var6}},
-                                            {{partition({true}, {true})}}),
+                  int(2..5)]
+                 --> partition({{partition({false, false})}}),
+             [(mset(true, false), mset(true), tuple (10)), (mset(true, true), mset(true, true), tuple (-9)); int(5, -1)]
+                 --> partition({var5}, {({} : `set of partition from bool`)},
+                               {{var6}, ({} : `set of partition from bool`)}, {{var6}}, {{partition({true}, {true})}}),
              [((mset() : `mset of bool`), mset(false), tuple (6)), (mset(true), mset(false), tuple (0)),
               (mset(true), mset(false, true), tuple (8)), ((mset() : `mset of bool`), mset(true), tuple (-8)),
               ((mset() : `mset of bool`), mset(false, true), tuple (-7)), (mset(true), mset(true), tuple (-5));
-                  int(-1..4, 2)] --> partition({{partition({false}, {true}), var6}}, {{var6}}))
+                  int(-1..4, 2)]
+                 --> partition({{partition({false}, {true}), var6}}, {{var6}}))

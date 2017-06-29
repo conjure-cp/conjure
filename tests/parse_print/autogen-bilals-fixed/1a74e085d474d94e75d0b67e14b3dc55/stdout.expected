@@ -18,8 +18,8 @@ such that
     =
     function({var8} --> partition({mset(-8), mset(-3, -7)}),
              ({} : `set of partition from int`) --> partition({mset(-9)}, {mset(2), mset(6, 10)}),
-             ({} : `set of partition from int`) --> partition({mset(3)},
-                                                              {mset(-10), mset(2), (mset() : `mset of int`)})),
+             ({} : `set of partition from int`)
+                 --> partition({mset(3)}, {mset(-10), mset(2), (mset() : `mset of int`)})),
     relation((partition({mset(6, -3), mset(-9, 6)}), mset(tuple (true), tuple (true)),
               relation((0, 3, true), (7, 5, false), (5, -10, true))),
              (partition({mset(-4, -2), (mset() : `mset of int`), mset(-6, 7)}), (mset() : `mset of tuple(bool)`),

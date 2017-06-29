@@ -1,14 +1,14 @@
 Error 1:
     In a 'such that' statement:
-        or([sum([[[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
-                 [[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
+        or([sum([[[-8 ** (-7), 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
+                 [[-8 ** (-7), 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
                      | q8 : int(1..2)])
             != 0
                 | q9 : int(1..2)])
         <-> var4
     Error:
-        Type error in sum([[[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
-                           [[-8 ** -7, 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
+        Type error in sum([[[-8 ** (-7), 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q8, ..] =
+                           [[-8 ** (-7), 0; int(-1, 0)], [var2, 0; int(4..5, 5)]; int(1..2)][q9, ..]
                                | q8 : int(1..2)])
                       The argument has type: [bool]
 Error 2:

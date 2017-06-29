@@ -250,7 +250,7 @@ instantiateD (DomainFunction  r attrs innerFr innerTo) = DomainFunction r <$> in
 instantiateD (DomainSequence  r attrs inner) = DomainSequence r <$> instantiateSequenceAttr attrs <*> instantiateD inner
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateRelationAttr attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
-instantiateD DomainOp{} = bug "instantiateD DomainOp"
+instantiateD (DomainOp nm ds) = DomainOp nm <$> mapM instantiateD ds
 instantiateD (DomainReference _ (Just d)) = instantiateD d
 instantiateD (DomainReference name Nothing) = do
     ctxt <- gets id

@@ -10,24 +10,23 @@ such that
                         tuple (relation(tuple (1), tuple (2), tuple (0), tuple (5))),
                         tuple (relation(tuple (5), tuple (0), tuple (2), tuple (1), tuple (4))),
                         tuple (relation(tuple (1), tuple (3), tuple (0)))})),
-    function([{1, 1}; int(1)] --> ((partition() : `partition from bool`), (mset() : `mset of int`), (true, 5, 4, true),
-                                   (2, 2)),
-             [{3, 3, 0}, ({} : `set of int`); int(3, 4)] --> (partition({true, true}, {false, true, false, true}),
-                                                              mset(1, 1), (false, 4, 1, true), (1, 0)),
-             [{1}, {2, 0}, {1}, ({} : `set of int`); int(2, 4, 5, 11)] --> (partition({false}), mset(0, 1),
-                                                                            (false, 3, 1, true), (4, 4)),
-             [({} : `set of int`), {1, 1}, {2, 5, 3}, {3, 0};
-                  int(11, 1, 7, 5)] --> ((partition() : `partition from bool`), mset(0, 0, 4), (true, 5, 4, false),
-                                         (0, 2)))
+    function([{1, 1}; int(1)]
+                 --> ((partition() : `partition from bool`), (mset() : `mset of int`), (true, 5, 4, true), (2, 2)),
+             [{3, 3, 0}, ({} : `set of int`); int(3, 4)]
+                 --> (partition({true, true}, {false, true, false, true}), mset(1, 1), (false, 4, 1, true), (1, 0)),
+             [{1}, {2, 0}, {1}, ({} : `set of int`); int(2, 4, 5, 11)]
+                 --> (partition({false}), mset(0, 1), (false, 3, 1, true), (4, 4)),
+             [({} : `set of int`), {1, 1}, {2, 5, 3}, {3, 0}; int(11, 1, 7, 5)]
+                 --> ((partition() : `partition from bool`), mset(0, 0, 4), (true, 5, 4, false), (0, 2)))
     supsetEq
-    function([{3, 3, 0}, {2, 3}, {5, 1}, {0, 2, 5}; int(11, 2..3, 1)] --> (partition({false, true, true, false},
-                                                                                     {true, false}),
-                                                                           mset(5, 4), (false, 1, 1, true), (1, 5)),
-             [{0}, {0}, {4, 2}, {2, 1}, {2}; int(0, 4..7)] --> (partition({true, true, true, false}, {true, false},
-                                                                          {true, false}, {true, true, false, true},
-                                                                          {false}),
-                                                                mset(5, 2, 4), (false, 1, 0, false), (5, 1)),
-             [{0}, {0}, {4, 3}; int(3, 1..2)] --> (partition({true, false}, {false}, {true, true, false},
-                                                             {true, false, false}, {true, true, false, false}),
-                                                   mset(0, 2), (false, 4, 1, false), (5, 1))),
+    function([{3, 3, 0}, {2, 3}, {5, 1}, {0, 2, 5}; int(11, 2..3, 1)]
+                 --> (partition({false, true, true, false}, {true, false}), mset(5, 4), (false, 1, 1, true), (1, 5)),
+             [{0}, {0}, {4, 2}, {2, 1}, {2}; int(0, 4..7)]
+                 --> (partition({true, true, true, false}, {true, false}, {true, false}, {true, true, false, true},
+                                {false}),
+                      mset(5, 2, 4), (false, 1, 0, false), (5, 1)),
+             [{0}, {0}, {4, 3}; int(3, 1..2)]
+                 --> (partition({true, false}, {false}, {true, true, false}, {true, false, false},
+                                {true, true, false, false}),
+                      mset(0, 2), (false, 4, 1, false), (5, 1))),
     var1

@@ -19,46 +19,38 @@ such that
               (tuple (-10), (mset() : `mset of bool`), function(false --> -1, false --> -4)),
               (tuple (5), mset(false, false), function(false --> -1)))
              | q_9 <- var5, q_9 = (9, true)]),
-    and([function(function(function(false --> true) --> function(-7 --> false)) --> relation((4, -5, -8), (2, 6, -9),
-                                                                                             (10, -4, -1)),
+    and([function(function(function(false --> true) --> function(-7 --> false))
+                      --> relation((4, -5, -8), (2, 6, -9), (10, -4, -1)),
                   function(function(true --> true, true --> false) --> function(10 --> false, 10 --> false),
                            function(false --> true) --> function(-7 --> false),
-                           function(true --> true) --> function(-4 --> false, 10 --> true)) --> relation((-7, 2, -8),
-                                                                                                         (6, 10, 0),
-                                                                                                         (-6, -9, 8)),
-                  function(function(true --> false) --> function(0 --> false)) --> relation((3, 6, -7), (-5, -6, 9),
-                                                                                            (-4, -9, 4)),
-                  function(function(false --> true, true --> true) --> function(-10 --> true)) --> relation((-4, -3,
-                                                                                                             -4),
-                                                                                                            (-4, 9, 5),
-                                                                                                            (-4, 5, 5)),
-                  function(function(true --> true) --> function(5 --> false, -10 --> false)) --> relation((-10, -5, -5),
-                                                                                                          (-5, -9, 5),
-                                                                                                          (-4, -8, 7)),
-                  function(function(true --> true, true --> false) --> function(8 --> false)) --> relation((-3, 0, -5),
-                                                                                                           (-3, -8, 1),
-                                                                                                           (-6, -3, 7)))
+                           function(true --> true) --> function(-4 --> false, 10 --> true))
+                      --> relation((-7, 2, -8), (6, 10, 0), (-6, -9, 8)),
+                  function(function(true --> false) --> function(0 --> false))
+                      --> relation((3, 6, -7), (-5, -6, 9), (-4, -9, 4)),
+                  function(function(false --> true, true --> true) --> function(-10 --> true))
+                      --> relation((-4, -3, -4), (-4, 9, 5), (-4, 5, 5)),
+                  function(function(true --> true) --> function(5 --> false, -10 --> false))
+                      --> relation((-10, -5, -5), (-5, -9, 5), (-4, -8, 7)),
+                  function(function(true --> true, true --> false) --> function(8 --> false))
+                      --> relation((-3, 0, -5), (-3, -8, 1), (-6, -3, 7)))
          =
          function(function(function(true --> false, true --> true) --> function(10 --> false),
                            function(false --> true, false --> false) --> function(10 --> false, -6 --> true),
                            function(true --> true, true --> false) --> function(-5 --> true, -1 --> true),
-                           function(false --> true, true --> true) --> function(-8 --> false)) --> relation((2, 5, 2),
-                                                                                                            (-2, 0, -2),
-                                                                                                            (-4, 2, 5)),
+                           function(false --> true, true --> true) --> function(-8 --> false))
+                      --> relation((2, 5, 2), (-2, 0, -2), (-4, 2, 5)),
                   function(function(false --> true, true --> true) --> function(-2 --> false),
-                           function(true --> false) --> function(7 --> false, 10 --> true)) --> relation((6, 6, -10),
-                                                                                                         (3, 5, -6),
-                                                                                                         (-1, -8, -2)),
-                  function(function(true --> true) --> function(-8 --> false)) --> relation((9, -1, 4), (9, 5, -3),
-                                                                                            (4, -7, 6)),
+                           function(true --> false) --> function(7 --> false, 10 --> true))
+                      --> relation((6, 6, -10), (3, 5, -6), (-1, -8, -2)),
+                  function(function(true --> true) --> function(-8 --> false))
+                      --> relation((9, -1, 4), (9, 5, -3), (4, -7, 6)),
                   function(function(false --> true, true --> true) --> function(-1 --> true),
                            function(true --> false, false --> false) --> function(-1 --> true),
-                           function(true --> true) --> function(9 --> true)) --> relation((3, 1, -7), (4, 5, 4),
-                                                                                          (-10, -6, -5)),
+                           function(true --> true) --> function(9 --> true))
+                      --> relation((3, 1, -7), (4, 5, 4), (-10, -6, -5)),
                   function(function(true --> true, true --> true) --> function(1 --> true),
-                           function(false --> false, false --> true) --> function(6 --> true)) --> relation((-8, -6, 8),
-                                                                                                            (1, -2, 5),
-                                                                                                            (6, 5, 0)))
+                           function(false --> false, false --> true) --> function(6 --> true))
+                      --> relation((-8, -6, 8), (1, -2, 5), (6, 5, 0)))
              | q_10 : set of (int(3), bool)]),
     and([toInt(true \/ (true <-> false)) = 10
              | q_11 : set of (int(3), bool),

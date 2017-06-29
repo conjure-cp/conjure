@@ -150,7 +150,11 @@ typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf 
 typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
 typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
 typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
-typeOfDomain DomainOp{} = bug "typeOf DomainOp"
+typeOfDomain p@(DomainOp _ ds) = do
+    ts <- mapM typeOfDomain ds
+    if typesUnify ts
+        then return (mostDefined ts)
+        else fail ("Type error in" <+> pretty p)
 typeOfDomain (DomainReference _ (Just d)) = typeOf d
 typeOfDomain (DomainReference nm Nothing) = bug $ "typeOf: DomainReference" <+> pretty nm
 typeOfDomain (DomainMetaVar nm) = bug $ "typeOf: DomainMetaVar &" <> pretty nm
