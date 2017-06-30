@@ -7,6 +7,8 @@
  Processing step that attempts to strengthen variables at the Essence class level, using methods described in the "Reformulating Essence Specifications for Robustness" paper.
 -}
 
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Process.StrengthenVariables
   (
     strengthenVariables
@@ -144,9 +146,9 @@ definedForAllIsTotal n m (DomainFunction r (FunctionAttr s PartialityAttr_Partia
                   not (hasImpliesOrOrs e)
     -- Implies or Or may ignore a function call, making it undefined for the domain value
     hasImpliesOrOrs = any isImplyOrOr . universe
-    isImplyOrOr (Op MkOpImply{}) = True
-    isImplyOrOr (Op MkOpOr{})    = True
-    isImplyOrOr _                = False
+    isImplyOrOr [essence| &_ -> &_ |] = True
+    isImplyOrOr [essence| &_ \/ &_ |] = True
+    isImplyOrOr _                     = False
 definedForAllIsTotal _ _ d = return d
 
 -- | Determine whether a function is called with values generated from its domain.
@@ -185,12 +187,12 @@ setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
                       -> m (Domain () Expression) -- ^ Possibly modified set domain.
 setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetOf
   where
-    subsetMinSize d' (Op (MkOpSubset   (OpSubset   l _))) = minSizeFromFunction d' l
-    subsetMinSize d' (Op (MkOpSubsetEq (OpSubsetEq l _))) = minSizeFromFunction d' l
+    subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromFunction d' l
+    subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromFunction d' l
     subsetMinSize d' _ = return d'
 
-    isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) | n == n' = True
-    isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) | n == n' = True
+    isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
+    isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
     isSubsetOf _ = False
 
 -- | Find an expression at any depth of unconditional forAll expressions.
@@ -200,8 +202,8 @@ findInUncondForAll p = concatMap findInForAll . suchThat
     findInForAll e | p e = [e]
     findInForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
                    | all (not . isCondition) gorcs = findInForAll e
-    findInForAll (Op (MkOpAnd (OpAnd (AbstractLiteral (AbsLitMatrix _ es)))))
-                   = concatMap findInForAll es
+    findInForAll [essence| &x /\ &y |]
+                   = findInForAll x `union` findInForAll y
     findInForAll _ = []
 
     isCondition Condition{} = True
@@ -212,7 +214,7 @@ minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
                     => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
                     -> Expression               -- ^ Expression from which the minimum size is being inferred.
                     -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
-minSizeFromFunction d (Op (MkOpRange (OpRange r))) = do
+minSizeFromFunction d [essence| range(&r) |] = do
   f <- getFunDom r
   case f of
        DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
@@ -286,14 +288,14 @@ funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
                      mapMaybe (forAllForSubset m) $
                      findInUncondForAll isSubsetEqOf m
   where
-    isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) | n == n' = True
+    isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
     isSubsetEqOf _ = False
 
 -- | Create an expression that equates the range of a function which may come from
 --   a forAll, and a set.
 equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
                       -> Maybe Expression         -- Possible constraint equating the two.
-equateFuncRangeAndSet (r@(Op (MkOpRange (OpRange f))), s) = nestReference f (make opEq r s)
+equateFuncRangeAndSet (r@[essence| range(&f) |], s) = nestReference f (make opEq r s)
   where
     nestReference :: Expression -> Expression -> Maybe Expression
     nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
@@ -318,13 +320,13 @@ funcCallEqGenerated :: Expression -- ^ Function reference.
                     -> Expression -- ^ Variable to generate from.
                     -> Expression -- ^ Expression to check.
                     -> Bool       -- ^ Does the equation have the desired terms.
-funcCallEqGenerated f s (Op (MkOpEq (OpEq e (Reference _ d))))
-  = isFuncCall e && isGenerated d
+funcCallEqGenerated f s [essence| &e = &x |]
+  = isFuncCall e && isGenerated x
   where
     -- Is the left side a call to the function of interest?
     isFuncCall (Op (MkOpRelationProj (OpRelationProj f' _))) = f == f'
     isFuncCall _ = False
     -- Is the right side variable generated from the set of interest?
-    isGenerated (Just (InComprehension (GenInExpr _ g))) = s == g
+    isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
     isGenerated _ = False
 funcCallEqGenerated _ _ _ = False
