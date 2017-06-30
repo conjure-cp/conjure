@@ -12,7 +12,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, intersect, union )
+import Data.List ( delete, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -81,7 +81,7 @@ constrainFunctionDomain :: (MonadFail m, MonadLog m)
 constrainFunctionDomain n d@DomainFunction{} m
   = surjectiveIsTotalBijective d  >>=
     totalInjectiveIsBijective     >>=
-    definedForAllIsTotal n (suchThat m)
+    definedForAllIsTotal n m
 constrainFunctionDomain _ d _ = return d
 
 -- | Extract the such that expressions from a model.
@@ -128,56 +128,43 @@ functionDomainSizes from to = do
 -- | If a function is defined for all values in its domain, then it is total.
 definedForAllIsTotal :: (MonadFail m, MonadLog m)
                      => Name                      -- ^ Name of the function.
-                     -> [Expression]              -- ^ Such that constraints.
+                     -> Model                     -- ^ Model for context.
                      -> Domain () Expression      -- ^ Domain of the function.
                      -> m (Domain () Expression)  -- ^ Possibly modified domain.
-definedForAllIsTotal n cs (DomainFunction r (FunctionAttr s PartialityAttr_Partial j) from to)
-  | any definedForAll cs
+definedForAllIsTotal n m (DomainFunction r (FunctionAttr s PartialityAttr_Partial j) from to)
+  | any definedIn $ findInUncondForAll isOp m
     = return $ DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
   where
-        -- Is there at least one forAll expression that uses the variable?
-        definedForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
-          = functionCalledWithParam e n gorcs from && -- the function in question is called with the correct generated parameter
-            hasNoImplications e &&                    -- no implications to ignore domain values
-            hasNoConditions gorcs                     -- no conditions to ignore domain values
-        definedForAll _ = False
-        -- Make sure that there are no implications in an expression
-        hasNoImplications = not . any isImplies . universe
-        isImplies (Op (MkOpImply OpImply{})) = True
-        isImplies _                          = False
-        -- Make sure that there are no conditions in a list of generators or conditions
-        hasNoConditions = not . any isCondition
-        isCondition Condition{} = True
-        isCondition _           = False
+    -- Look for operator expressions but leave comprehensions up to findInUncondForAll
+    isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
+    isOp Op{} = True
+    isOp _    = False
+    -- Is the function called with parameters generated from its domain in an expression?
+    definedIn e = any (funcCalledWithGenParams n from) (universe e) &&
+                  not (hasImpliesOrOrs e)
+    -- Implies or Or may ignore a function call, making it undefined for the domain value
+    hasImpliesOrOrs = any isImplyOrOr . universe
+    isImplyOrOr (Op MkOpImply{}) = True
+    isImplyOrOr (Op MkOpOr{})    = True
+    isImplyOrOr _                = False
 definedForAllIsTotal _ _ d = return d
 
--- | Determine whether the given function is called with a value generated from its domain.
-functionCalledWithParam :: Expression             -- ^ Expression being checked for the function call.
-                        -> Name                   -- ^ Name of the function being called.
-                        -> [GeneratorOrCondition] -- ^ Generated variables and conditions of the comprehension.
-                        -> Domain () Expression   -- ^ Domain of the function.
-                        -> Bool                   -- ^ Whether or not the function is called with a value generated from the domain.
-functionCalledWithParam e n gorcs from = let funCalls = filter isFunctionCall $ universe e
-                                             in any (functionCallsWithParam generatedVariables) funCalls
-  where
-        -- Get the names of the generated variables
-        generatedVariables = mapMaybe getGeneratedName $ filter isGenerator gorcs
-        isGenerator (Generator GenDomainNoRepr{}) = True
-        isGenerator _                             = False
-        getGeneratedName (Generator (GenDomainNoRepr (Single n') _)) = Just n'
-        getGeneratedName _                                           = Nothing
-        isFunctionCall (Op (MkOpRelationProj OpRelationProj{})) = True
-        isFunctionCall _                                        = False
-        -- Determine whether the function is called with a generated parameter
-        functionCallsWithParam ps (Op (MkOpRelationProj (OpRelationProj (Reference n' _) args)))
-          | n' == n = not $ null $ ps `intersect` mapMaybe getArgName (filter domainArg args)
-        functionCallsWithParam _  _ = False
-        domainArg (Just (Reference _ d)) = d `domainEquals` from
-        domainArg _                      = False
-        domainEquals (Just (DeclNoRepr _ _ d1 _)) d2 = d1 == d2
-        domainEquals _                            _  = False
-        getArgName (Just (Reference n' _)) = Just n'
-        getArgName _                       = Nothing
+-- | Determine whether a function is called with values generated from its domain.
+funcCalledWithGenParams :: Name                 -- ^ Name of the function being called.
+                        -> Domain () Expression -- ^ Function domain.
+                        -> Expression           -- ^ Expression which may be the function call.
+                        -> Bool
+funcCalledWithGenParams n d (Op (MkOpRelationProj (OpRelationProj (Reference n' _) ps)))
+  = n' == n && all genArgMatchesDom ps
+    where
+      -- Is a function argument generated from its domain?
+      genArgMatchesDom (Just (Reference _ (Just refDom)))
+        = case refDom of
+               DeclNoRepr Quantified _ d' _           -> d == d'
+               InComprehension (GenDomainNoRepr _ d') -> d == d'
+               _                                      -> False
+      genArgMatchesDom _ = False
+funcCalledWithGenParams _ _ _ = False
 
 -- | Make the attributes of a set as constrictive as possible.
 setAttributes :: (MonadFail m, MonadLog m, NameGen m)
