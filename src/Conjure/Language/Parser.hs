@@ -222,21 +222,22 @@ parseDomain :: Parser (Domain () Expression)
 parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
-parseDomainWithRepr =
-    let
-        mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
-
-    in
-        makeExprParser (pDomainAtom <?> "domain")
-            [ [ InfixL $ do lexeme L_Minus
-                            return $ mergeOp L_Minus
-              , InfixL $ do lexeme L_union
-                            return $ mergeOp L_union
-              ]
-            , [ InfixL $ do lexeme L_intersect
-                            return $ mergeOp L_intersect
-              ]
-            ]
+parseDomainWithRepr = pDomainAtom
+    -- TODO: uncomment the following to parse (union, intersect and minus) for domains
+    -- let
+    --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
+    --
+    -- in
+    --     makeExprParser (pDomainAtom <?> "domain")
+    --         [ [ InfixL $ do lexeme L_Minus
+    --                         return $ mergeOp L_Minus
+    --           , InfixL $ do lexeme L_union
+    --                         return $ mergeOp L_union
+    --           ]
+    --         , [ InfixL $ do lexeme L_intersect
+    --                         return $ mergeOp L_intersect
+    --           ]
+    --         ]
 
     where
 
