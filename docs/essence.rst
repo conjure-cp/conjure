@@ -10,8 +10,9 @@ Conjure's input language: Essence
 
 Conjure works on problem specifications written in Essence.
 
-This section gives a description of Essence, a more thorough description can be found in the reference paper on Essence
-is :cite:`frisch2008essence`.
+This section gives a description of Essence.
+A more thorough description can be found in the reference paper on Essence
+:cite:`frisch2008essence`.
 
 We adopt a BNF-style format to describe all the constructs of the language.
 In the BNF format,
@@ -286,6 +287,9 @@ Integer domains can also be constructed using a single set expression inside the
 The integer domain contains all members of the set in this case.
 Note that the set expression cannot contain references to decision variables if this syntax is used.
 
+Values in an integer domain should be in the range -2**62+1 to 2**62-1 as values outside this range may trigger errors in Savile Row or Minion, and lead to Conjure unexpectedly but silently deducing unsatisfiability.
+Intermediate values in an integer expression must also be inside this range.
+
 Enumerated domains
 ~~~~~~~~~~~~~~~~~~
 
@@ -317,7 +321,7 @@ The keyword "tuple" is optional for tuples of arity greater or equal to 2.
 When needed, domains inside a tuple are referred to using their positions.
 In an n-arity tuple, the position of the first domain is 1, and the position of the last domain is n.
 
-To explicitly specify a tuple, use a parenthesized list of values, preceded by the keyword ``tuple``.
+To explicitly specify a tuple, use a list of values inside round brackets, preceded by the keyword ``tuple``.
 
 .. code-block:: essence
 
@@ -363,7 +367,7 @@ Matrix domains are the most basic container-like domains in Essence.
 They are used when the decision variable or the problem parameter does not have any further relevant structure.
 Using another kind of domain is more appropriate for most problem specifications in Essence.
 
-To explicitly specify a matrix, use a list of values enclosed in square brackets.
+To explicitly specify a matrix, use a list of values inside square brackets.
 
 .. code-block:: essence
 
@@ -381,7 +385,7 @@ followed by the keyword "of", and the domain for members of the set.
 
 Set attributes are all related to cardinality: "size", "minSize", and "maxSize".
 
-To explicitly specify a set, use a list of values enclosed in braces.
+To explicitly specify a set, use a list of values inside curly brackets.
 Values only appear once in the set; if repeated values are specified then they are ignored.
 
 .. code-block:: essence
@@ -404,7 +408,7 @@ There are two groups of multi-set attributes:
 
 Since a multi-set domain is infinite without a "size", "maxSize", or "maxOccur" attribute, one of these attributes is mandatory to define a finite domain.
 
-To explicitly specify a multi-set, use a parenthesized list of values, preceded by the keyword ``mset``.
+To explicitly specify a multi-set, use a list of values inside round brackets, preceded by the keyword ``mset``.
 Values may appear multiple times in a multi-set.
 
 .. code-block:: essence
@@ -430,7 +434,7 @@ There are three groups of function attributes:
 Cardinality attributes take arguments, but the rest of the arguments do not.
 Function domains are partial by default, and using the "total" attribute makes them total.
 
-To explicitly specify a function, use a parenthesized list of assignments, each of the form ``input --> value``, preceded by the keyword ``function``.
+To explicitly specify a function, use a list of assignments, each of the form ``input --> value``, inside round brackets and preceded by the keyword ``function``.
 
 .. code-block:: essence
 
@@ -455,7 +459,7 @@ Sequence domains are total by default, hence they do not take a separate "total"
 
 Sequences are indexed by a contiguous list of increasing integers, beginning at 1.
 
-To explicitly specify a sequence, use a parenthesized list of values preceded by the keyword ``sequence``.
+To explicitly specify a sequence, use a list of values inside round brackets, preceded by the keyword ``sequence``.
 
 .. code-block:: essence
 
@@ -480,7 +484,7 @@ There are 2 groups of relation attributes:
 
 The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
 
-To explicitly specify a relation, use a parenthesized list of tuples preceded by the keyword ``relation``.
+To explicitly specify a relation, use a list of tuples, enclosed by round brackets and preceded by the keyword ``relation``.
 All the tuples must be of the same type.
 
 .. code-block:: essence
@@ -623,8 +627,8 @@ The relationship
 
  | ``(2*toInt(x >= 0) - 1)*x = |x|``
 
-holds for all integers ``x`` such that ``|x| <= 2**30-2``.
-Integers outside this range are flagged as an error by Savile Row.
+holds for all integers ``x`` such that ``|x| <= 2**62-2``.
+Integers outside this range may be flagged as an error by Savile Row and/or Minion.
 
 
 Comparisons
