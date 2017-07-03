@@ -349,26 +349,44 @@ variableSize :: (MonadFail m, MonadLog m)
              => Model        -- ^ Model as context.
              -> Declaration  -- ^ Statement to give attribute.
              -> m Model      -- ^ Possibly updated model.
-variableSize m decl@(FindOrGiven forg n dom@DomainSet{}) = do
-  let exprs = nub $ mapMaybe (sizeConstraint n) $ suchThat m
-  case mapMaybe getSizeExpr exprs of
-       [s] -> do
-         dom' <- addAttributesToDomain dom [ ("size", Just s) ]
+variableSize m decl@(FindOrGiven forg n dom) | validDom dom = do
+  let exprs = mapMaybe (sizeConstraint n) $ suchThat m
+  case mapMaybe sizeAttrFromConstr (nub exprs) of
+       -- Only one size attribute is valid
+       attr@[_] -> do
+         dom' <- addAttributesToDomain dom attr
          return $ updateDeclaration decl (FindOrGiven forg n dom') $
                   removeConstraints m exprs
-       _   -> return m
+       _        -> return m
   where
-    getSizeExpr [essence| &_ = &size |] = Just size
-    getSizeExpr _ = Nothing
+    validDom DomSet{}       = True
+    validDom DomMSet{}      = True
+    validDom DomFunction{}  = True
+    validDom DomSequence{}  = True
+    validDom DomPartition{} = True
+    validDom _              = False
 variableSize m _ = return m
 
 -- | Find an expression constraining the size of a variable.
 sizeConstraint :: Name              -- ^ Name of the variable with a constrained size.
                -> Expression        -- ^ Expression in which to look for the size constraint.
                -> Maybe Expression  -- ^ The expression constraining the size of the variable.
-sizeConstraint n e@[essence| |&var| = &_ |]
-  = case var of
-         Reference n' _ | n == n'
-           -> Just e
-         _ -> Nothing
-sizeConstraint _ _ = Nothing
+sizeConstraint n e = let v = case e of
+                                  [essence| |&var| =  &_ |] -> Just var
+                                  [essence| |&var| <  &_ |] -> Just var
+                                  [essence| |&var| <= &_ |] -> Just var
+                                  [essence| |&var| >  &_ |] -> Just var
+                                  [essence| |&var| >= &_ |] -> Just var
+                                  _                         -> Nothing
+                         in case v of
+                                 Just (Reference n' _) | n == n' -> Just e
+                                 _                               -> Nothing
+
+-- | Make a size attribute from a constraint on the size of a variable.
+sizeAttrFromConstr :: Expression -> Maybe (AttrName, Maybe Expression)
+sizeAttrFromConstr [essence| |&_| =  &s |] = Just ("size", Just s)
+sizeAttrFromConstr [essence| |&_| <  &s |] = Just ("maxSize", Just (s - 1))
+sizeAttrFromConstr [essence| |&_| <= &s |] = Just ("maxSize", Just s)
+sizeAttrFromConstr [essence| |&_| >  &s |] = Just ("minSize", Just (s + 1))
+sizeAttrFromConstr [essence| |&_| >= &s |] = Just ("minSize", Just s)
+sizeAttrFromConstr _ = Nothing
