@@ -126,7 +126,7 @@ totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
 totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
   (fromSize, toSize) <- functionDomainSizes from to
   if fromSize == toSize
-       then addAttributesToDomain d [ ("bijective", Nothing) ]
+     then addAttributesToDomain d [ ("bijective", Nothing) ]
      else return d
 totalInjectiveIsBijective d = return d
 
@@ -359,11 +359,11 @@ variableSize m decl@(FindOrGiven forg n dom) | validDom dom = do
                   removeConstraints m exprs
        _        -> return m
   where
-    validDom DomSet{}       = True
-    validDom DomMSet{}      = True
-    validDom DomFunction{}  = True
-    validDom DomSequence{}  = True
-    validDom DomPartition{} = True
+    validDom DomainSet{}       = True
+    validDom DomainMSet{}      = True
+    validDom DomainFunction{}  = True
+    validDom DomainSequence{}  = True
+    validDom DomainPartition{} = True
     validDom _              = False
 variableSize m _ = return m
 
@@ -371,16 +371,29 @@ variableSize m _ = return m
 sizeConstraint :: Name              -- ^ Name of the variable with a constrained size.
                -> Expression        -- ^ Expression in which to look for the size constraint.
                -> Maybe Expression  -- ^ The expression constraining the size of the variable.
-sizeConstraint n e = let v = case e of
-                                  [essence| |&var| =  &_ |] -> Just var
-                                  [essence| |&var| <  &_ |] -> Just var
-                                  [essence| |&var| <= &_ |] -> Just var
-                                  [essence| |&var| >  &_ |] -> Just var
-                                  [essence| |&var| >= &_ |] -> Just var
-                                  _                         -> Nothing
-                         in case v of
-                                 Just (Reference n' _) | n == n' -> Just e
-                                 _                               -> Nothing
+sizeConstraint n e
+  = let v = case e of
+                 -- Check both sides of the operator, but ignore (in)equations
+                 -- of two find variables
+                 [essence| |&var| =  &e' |] | not (hasFind e') -> Just var
+                 [essence| |&var| <  &e' |] | not (hasFind e') -> Just var
+                 [essence| |&var| <= &e' |] | not (hasFind e') -> Just var
+                 [essence| |&var| >  &e' |] | not (hasFind e') -> Just var
+                 [essence| |&var| >= &e' |] | not (hasFind e') -> Just var
+                 [essence| &e' =  |&var| |] | not (hasFind e') -> Just var
+                 [essence| &e' <  |&var| |] | not (hasFind e') -> Just var
+                 [essence| &e' <= |&var| |] | not (hasFind e') -> Just var
+                 [essence| &e' >  |&var| |] | not (hasFind e') -> Just var
+                 [essence| &e' >= |&var| |] | not (hasFind e') -> Just var
+                 _ -> Nothing
+        in case v of
+                Just (Reference n' _) | n == n' -> Just e
+                _                               -> Nothing
+  where
+    hasFind = any isFind . universe
+    isFind (Reference _ (Just (DeclNoRepr Find _ _ _))) = True
+    isFind (Reference _ (Just (DeclHasRepr Find _ _)))  = True
+    isFind _ = False
 
 -- | Make a size attribute from a constraint on the size of a variable.
 sizeAttrFromConstr :: Expression -> Maybe (AttrName, Maybe Expression)
@@ -389,4 +402,9 @@ sizeAttrFromConstr [essence| |&_| <  &s |] = Just ("maxSize", Just (s - 1))
 sizeAttrFromConstr [essence| |&_| <= &s |] = Just ("maxSize", Just s)
 sizeAttrFromConstr [essence| |&_| >  &s |] = Just ("minSize", Just (s + 1))
 sizeAttrFromConstr [essence| |&_| >= &s |] = Just ("minSize", Just s)
+sizeAttrFromConstr [essence| &e =  |&s| |] = sizeAttrFromConstr [essence| |&s| =  &e |]
+sizeAttrFromConstr [essence| &e <  |&s| |] = sizeAttrFromConstr [essence| |&s| >  &e |]
+sizeAttrFromConstr [essence| &e <= |&s| |] = sizeAttrFromConstr [essence| |&s| >= &e |]
+sizeAttrFromConstr [essence| &e >  |&s| |] = sizeAttrFromConstr [essence| |&s| <  &e |]
+sizeAttrFromConstr [essence| &e >= |&s| |] = sizeAttrFromConstr [essence| |&s| <= &e |]
 sizeAttrFromConstr _ = Nothing
