@@ -14,7 +14,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, union )
+import Data.List ( delete, nub, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -34,6 +34,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
                                                      , setConstraints
+                                                     , variableSize
                                                      ]
                         if model == model'
                            then return model'
@@ -61,8 +62,19 @@ mergeConstraints :: Model         -- ^ Model to be updated.
                  -> Model         -- ^ Updated model with new constraints.
 mergeConstraints m@Model { mStatements = stmts } cs
   = m { mStatements = map mergeConstraints' stmts }
-  where mergeConstraints' (SuchThat cs') = SuchThat $ cs' `union` cs
-        mergeConstraints' s              = s
+  where
+    mergeConstraints' (SuchThat cs') = SuchThat $ cs' `union` cs
+    mergeConstraints' s              = s
+
+-- | Remove a list of constraints from a model.
+removeConstraints :: Model        -- ^ Model to have the constraint removed.
+                  -> [Expression] -- ^ Constraints to remove.
+                  -> Model        -- ^ Updated model with constraints removed.
+removeConstraints m@Model { mStatements = stmts } cs
+  = m { mStatements = map removeConstraints' stmts }
+  where
+    removeConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
+    removeConstraints' s              = s
 
 -- | Make the attributes of function variables as constrictive as possible.
 functionAttributes :: (MonadFail m, MonadLog m)
@@ -331,3 +343,32 @@ funcCallEqGenerated f s [essence| &e = &x |]
     isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
     isGenerated _ = False
 funcCallEqGenerated _ _ _ = False
+
+-- | Lift a variable size constraint to an attribute.
+variableSize :: (MonadFail m, MonadLog m)
+             => Model        -- ^ Model as context.
+             -> Declaration  -- ^ Statement to give attribute.
+             -> m Model      -- ^ Possibly updated model.
+variableSize m decl@(FindOrGiven forg n dom@DomainSet{}) = do
+  let exprs = nub $ mapMaybe (sizeConstraint n) $ suchThat m
+  case mapMaybe getSizeExpr exprs of
+       [s] -> do
+         dom' <- addAttributesToDomain dom [ ("size", Just s) ]
+         return $ updateDeclaration decl (FindOrGiven forg n dom') $
+                  removeConstraints m exprs
+       _   -> return m
+  where
+    getSizeExpr [essence| &_ = &size |] = Just size
+    getSizeExpr _ = Nothing
+variableSize m _ = return m
+
+-- | Find an expression constraining the size of a variable.
+sizeConstraint :: Name              -- ^ Name of the variable with a constrained size.
+               -> Expression        -- ^ Expression in which to look for the size constraint.
+               -> Maybe Expression  -- ^ The expression constraining the size of the variable.
+sizeConstraint n e@[essence| |&var| = &_ |]
+  = case var of
+         Reference n' _ | n == n'
+           -> Just e
+         _ -> Nothing
+sizeConstraint _ _ = Nothing
