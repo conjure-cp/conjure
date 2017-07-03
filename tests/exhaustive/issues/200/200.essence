@@ -1,0 +1,6 @@
+letting n be 5
+find quasigroup : set (size n) of int (0..n-1)
+
+such that
+forAll {a,b} subsetEq quasigroup .
+    (a*b) * (b*a) = a,

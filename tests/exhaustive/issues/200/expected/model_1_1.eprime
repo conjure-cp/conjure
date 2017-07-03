@@ -1,0 +1,10 @@
+language ESSENCE' 1.0
+
+letting n be 5
+letting let1 be 4
+find quasigroup_Occurrence: matrix indexed by [int(0..4)] of bool
+such that
+    and([quasigroup_Occurrence[a] /\ quasigroup_Occurrence[b] -> a * b * (b * a) = a
+             | a : int(0..4), b : int(0..4), b > a]),
+    5 = sum([toInt(quasigroup_Occurrence[q1]) | q1 : int(0..4)])
+
