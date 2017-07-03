@@ -1,0 +1,16 @@
+language Essence 1.3
+$ prob024.essence: Langford's Number Problem
+$ Problem details available at http://www.csplib.org/prob/prob024
+
+given k : int $ (2..5)
+given n : int(1..30)
+letting seqLength be k * n
+
+letting seqIndex be domain int(1..seqLength)
+
+find seq : function (total, surjective) seqIndex --> int(1..n)
+
+such that
+    forAll i,j : seqIndex , i < j .
+        seq(i) = seq(j) -> seq(i) = j - i - 1
+        
