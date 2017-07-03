@@ -19,6 +19,7 @@ import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
 import Conjure.Language
+import Conjure.Language.Domain.AddAttributes
 import Conjure.Language.NameResolution ( resolveNames )
 -- These two are needed together
 import Conjure.Language.Expression.DomainSizeOf ()
@@ -29,14 +30,14 @@ import Conjure.Compute.DomainOf ( domainOf )
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . (resolveNames >=> core)
-  where core :: (MonadFail m, MonadLog m, NameGen m) => Model -> m Model
+  where core :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
                                                      , setConstraints
                                                      ]
                         if model == model'
                            then return model'
-                           else core model'
+                           else resolveNames model' >>= core
         -- Apply the function to every statement and fold it into the model
         folder :: (MonadFail m, MonadLog m)
                => Model -> (Model -> Declaration -> m Model) -> m Model
@@ -97,11 +98,11 @@ suchThat = foldr fromSuchThat [] . mStatements
 surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
                            => Domain () Expression      -- ^ Domain of the function.
                            -> m (Domain () Expression)  -- ^ Possibly modified domain.
-surjectiveIsTotalBijective d@(DomainFunction r (FunctionAttr s PartialityAttr_Partial j) from to)
+surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial j) from to)
   | j == JectivityAttr_Surjective || j == JectivityAttr_Bijective = do
     (fromSize, toSize) <- functionDomainSizes from to
     if fromSize == toSize
-       then return $ DomainFunction r (FunctionAttr s PartialityAttr_Total JectivityAttr_Bijective) from to
+       then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
        else return d
 surjectiveIsTotalBijective d = return d
 
@@ -110,10 +111,10 @@ surjectiveIsTotalBijective d = return d
 totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
                           => Domain () Expression
                           -> m (Domain () Expression)
-totalInjectiveIsBijective d@(DomainFunction r (FunctionAttr s p@PartialityAttr_Total JectivityAttr_Injective) from to) = do
+totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
   (fromSize, toSize) <- functionDomainSizes from to
   if fromSize == toSize
-     then return $ DomainFunction r (FunctionAttr s p JectivityAttr_Bijective) from to
+       then addAttributesToDomain d [ ("bijective", Nothing) ]
      else return d
 totalInjectiveIsBijective d = return d
 
@@ -133,9 +134,9 @@ definedForAllIsTotal :: (MonadFail m, MonadLog m)
                      -> Model                     -- ^ Model for context.
                      -> Domain () Expression      -- ^ Domain of the function.
                      -> m (Domain () Expression)  -- ^ Possibly modified domain.
-definedForAllIsTotal n m (DomainFunction r (FunctionAttr s PartialityAttr_Partial j) from to)
+definedForAllIsTotal n m d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _)
   | any definedIn $ findInUncondForAll isOp m
-    = return $ DomainFunction r (FunctionAttr s PartialityAttr_Total j) from to
+    = addAttributesToDomain d [ ("total", Nothing) ]
   where
     -- Look for operator expressions but leave comprehensions up to findInUncondForAll
     isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
