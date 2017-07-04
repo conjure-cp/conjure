@@ -1,5 +1,6 @@
 #!/bin/sh
 F=conjure-help.txt
+CONJURE=conjure
 SED=sed
 if [ 'xfoo' != "x$(echo 'foo' | $SED -ne '/o/p')" ]; then
 	echo "Cannot find $SED, quitting"
@@ -8,19 +9,11 @@ fi
 
 echo '::' > $F
 echo >> $F
-conjure --help | $SED -ne '1,$s/^/ /p' >> $F
+# start with top level help message
+$CONJURE --help | $SED -ne '1,$s/^/ /p' >> $F
+# now extract help topics and append them in order
 for C in \
-modelling \
-translate-parameter \
-translate-solution \
-validate-solution \
-solve \
-pretty \
-diff \
-type-check \
-split \
-symmetry-detection \
-parameter-generator; do
-	conjure $C --help | $SED -ne '/^Common flags:/,$d' -e '/^$/,$s/^/ /p' >> $F
+$($CONJURE --help | $SED -ne '1,/^Commands:/d' -e '/^   /d' -e '/^$/d' -e '/^Common/,$d' -e 's/]//' -e 's/\[//' -e '/^  \([a-z-]\{1,\}\) .*/s//\1/' -e 'p'); do
+	$CONJURE $C --help | $SED -ne '/^Common flags:/,$d' -e '/^$/,$s/^/ /p' >> $F
 done
 echo >> $F
