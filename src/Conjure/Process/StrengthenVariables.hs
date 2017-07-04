@@ -35,6 +35,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
                                                      , setAttributes
                                                      , setConstraints
                                                      , variableSize
+                                                     , mSetSizeOccur
                                                      ]
                         if model == model'
                            then return model'
@@ -255,13 +256,7 @@ domFromContainer d'                  = d'
 setSetMinSize :: Expression           -- ^ New minimum size to apply.
               -> Domain () Expression -- ^ Set domain to modify.
               -> Domain () Expression -- ^ Possibly modified set domain.
-setSetMinSize n (DomainSet r (SetAttr s) d) = DomainSet r (minSetSize s) d
-  where minSetSize :: SizeAttr Expression -> SetAttr Expression
-        minSetSize SizeAttr_None                   = SetAttr $ SizeAttr_MinSize n
-        minSetSize (SizeAttr_MinSize    s')        = SetAttr $ SizeAttr_MinSize $ mkMax n s'
-        minSetSize (SizeAttr_MaxSize    s')        = SetAttr $ SizeAttr_MinMaxSize n s'
-        minSetSize (SizeAttr_MinMaxSize minS maxS) = SetAttr $ SizeAttr_MinMaxSize (mkMax n minS) maxS
-        minSetSize a                               = SetAttr a
+setSetMinSize n (DomainSet r (SetAttr s) d) = DomainSet r (SetAttr $ mergeMinSize n s) d
 setSetMinSize _ d = d
 
 -- | Make a maximum expression between two expressions.
@@ -280,6 +275,23 @@ mkMax m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))) i
           | otherwise   = make opMax $ fromList $ i : es
 mkMax i e | i == e      = e
           | otherwise   = make opMax $ fromList [ i, e ]
+
+-- | Make a minimum expression between two expressions.
+--   Two min expressions are merged into one.
+--   The min between a value and a min adds the value to the min (if not present).
+--   If the expressions are the same, no min is made and the value is returned.
+mkMin :: Expression -> Expression -> Expression
+mkMin (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es1)))))
+      (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es2)))))
+        = make opMin $ fromList $ es1 `union` es2
+mkMin i m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es)))))
+          | i `elem` es = m
+          | otherwise   = make opMin $ fromList $ i : es
+mkMin m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es))))) i
+          | i `elem` es = m
+          | otherwise   = make opMin $ fromList $ i : es
+mkMin i e | i == e      = e
+          | otherwise   = make opMin $ fromList [ i, e ]
 
 -- | Add constraints on a set.
 setConstraints :: (MonadFail m, MonadLog m)
@@ -347,7 +359,7 @@ funcCallEqGenerated _ _ _ = False
 -- | Lift a variable size constraint to an attribute.
 variableSize :: (MonadFail m, MonadLog m)
              => Model        -- ^ Model as context.
-             -> Declaration  -- ^ Statement to give attribute.
+             -> Declaration  -- ^ Declaration to give attribute.
              -> m Model      -- ^ Possibly updated model.
 variableSize m decl@(FindOrGiven forg n dom) | validDom dom = do
   let exprs = mapMaybe (sizeConstraint n) $ suchThat m
@@ -408,3 +420,78 @@ sizeAttrFromConstr [essence| &e <= |&s| |] = sizeAttrFromConstr [essence| |&s| >
 sizeAttrFromConstr [essence| &e >  |&s| |] = sizeAttrFromConstr [essence| |&s| <  &e |]
 sizeAttrFromConstr [essence| &e >= |&s| |] = sizeAttrFromConstr [essence| |&s| <= &e |]
 sizeAttrFromConstr _ = Nothing
+
+-- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
+mSetSizeOccur :: (MonadFail m, MonadLog m)
+              => Model        -- ^ Model as context.
+              -> Declaration  -- ^ Declaration to give attribute.
+              -> m Model      -- ^ Possibly updated model.
+mSetSizeOccur m decl@(FindOrGiven forg n d@DomainMSet{})
+  = case d of
+         -- Ordering is important here, as there is a rule that applies
+         -- to maxSize and minOccur, but none that applies to minSize
+         -- and maxOccur. size uses the maxSize rule, but can ignore a
+         -- minOccur because it cannot have its minSize changed.
+         -- size -> maxOccur
+         d'@(DomainMSet _ (MSetAttr (SizeAttr_Size mx) _) _)
+           -> updateDomain $ mkMaxOccur d' mx
+         -- minOccur -> minSize
+         d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinOccur mn)) _)
+           -> updateDomain $ mkMinSize d' mn
+         d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinMaxOccur mn _)) _)
+           -> updateDomain $ mkMinSize d' mn
+         -- maxSize -> maxOccur
+         d'@(DomainMSet _ (MSetAttr (SizeAttr_MaxSize mx) _) _)
+           -> updateDomain $ mkMaxOccur d' mx
+         d'@(DomainMSet _ (MSetAttr (SizeAttr_MinMaxSize _ mx) _) _)
+           -> updateDomain $ mkMaxOccur d' mx
+         _ -> return m
+  where
+    mkMinSize (DomainMSet r (MSetAttr s o) d') mn
+      = let sizeAttr = mergeMinSize mn s
+            in DomainMSet r (MSetAttr sizeAttr o) d'
+    mkMinSize dom _ = dom
+
+    mkMaxOccur (DomainMSet r (MSetAttr s o) d') mx
+      = let occAttr = mergeMaxOccur mx o
+            in DomainMSet r (MSetAttr s occAttr) d'
+    mkMaxOccur dom _ = dom
+
+    updateDomain dom = do
+      let decl' = FindOrGiven forg n dom
+      return $ updateDeclaration decl decl' m
+mSetSizeOccur m _ = return m
+
+-- | Merge an expression into the min field of a 'SizeAttr'.
+mergeMinSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
+mergeMinSize e SizeAttr_None = SizeAttr_MinSize e
+mergeMinSize e (SizeAttr_MinSize mn) = SizeAttr_MinSize $ mkMax e mn
+mergeMinSize e (SizeAttr_MaxSize mx)
+  | e == mx   = SizeAttr_Size e
+  | otherwise = SizeAttr_MinMaxSize e mx
+mergeMinSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize (mkMax e mn) mx
+mergeMinSize _ s = s
+
+-- | Merge an expression into the max field of a 'SizeAttr'.
+mergeMaxSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
+mergeMaxSize e SizeAttr_None = SizeAttr_MaxSize e
+mergeMaxSize e (SizeAttr_MinSize mn)
+  | e == mn   = SizeAttr_Size e
+  | otherwise = SizeAttr_MinMaxSize e mn
+mergeMaxSize e (SizeAttr_MaxSize mx) = SizeAttr_MaxSize $ mkMin e mx
+mergeMaxSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize mn (mkMin e mx)
+mergeMaxSize _ s = s
+
+-- | Merge an expression into the min field of an 'OccurAttr'.
+mergeMinOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
+mergeMinOccur e OccurAttr_None = OccurAttr_MaxOccur e
+mergeMinOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinOccur $ mkMax mn e
+mergeMinOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MinMaxOccur e mx
+mergeMinOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur (mkMax e mn) mx
+
+-- | Merge an expression into the max field of an 'OccurAttr'.
+mergeMaxOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
+mergeMaxOccur e OccurAttr_None = OccurAttr_MaxOccur e
+mergeMaxOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinMaxOccur mn e
+mergeMaxOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MaxOccur $ mkMin e mx
+mergeMaxOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur mn (mkMin e mx)
