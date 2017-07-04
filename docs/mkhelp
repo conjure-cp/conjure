@@ -1,0 +1,26 @@
+#!/bin/sh
+F=conjure-help.txt
+SED=sed
+if [ 'xfoo' != "x$(echo 'foo' | $SED -ne '/o/p')" ]; then
+	echo "Cannot find $SED, quitting"
+	exit 1
+fi
+
+echo '::' > $F
+echo >> $F
+conjure --help | $SED -ne '1,$s/^/ /p' >> $F
+for C in \
+modelling \
+translate-parameter \
+translate-solution \
+validate-solution \
+solve \
+pretty \
+diff \
+type-check \
+split \
+symmetry-detection \
+parameter-generator; do
+	conjure $C --help | $SED -ne '/^Common flags:/,$d' -e '/^$/,$s/^/ /p' >> $F
+done
+echo >> $F
