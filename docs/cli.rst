@@ -68,5 +68,4 @@ Help output
 
 Following is Conjure's full help message, provided for reference.
 
-.. raw:: html
-    :file: conjure-help.html
+.. include:: conjure-help.txt
