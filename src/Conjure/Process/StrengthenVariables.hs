@@ -36,6 +36,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
                                                      , setConstraints
                                                      , variableSize
                                                      , mSetSizeOccur
+                                                     , mSetOccur
                                                      ]
                         if model == model'
                            then return model'
@@ -484,7 +485,7 @@ mergeMaxSize _ s = s
 
 -- | Merge an expression into the min field of an 'OccurAttr'.
 mergeMinOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
-mergeMinOccur e OccurAttr_None = OccurAttr_MaxOccur e
+mergeMinOccur e OccurAttr_None = OccurAttr_MinOccur e
 mergeMinOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinOccur $ mkMax mn e
 mergeMinOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MinMaxOccur e mx
 mergeMinOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur (mkMax e mn) mx
@@ -495,3 +496,53 @@ mergeMaxOccur e OccurAttr_None = OccurAttr_MaxOccur e
 mergeMaxOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinMaxOccur mn e
 mergeMaxOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MaxOccur $ mkMin e mx
 mergeMaxOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur mn (mkMin e mx)
+
+-- | Infer multiset occurrence attributes from constraints.
+mSetOccur :: (MonadFail m, MonadLog m)
+          => Model        -- ^ Model for context.
+          -> Declaration  -- ^ Multiset declaration to update.
+          -> m Model      -- ^ Updated model.
+mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
+  = let freqs = nub $ findInUncondForAll isFreq m
+        dom' = foldr (\f d' ->
+                      case d' of
+                           DomainMSet _ (MSetAttr _ o') _
+                             -> DomainMSet r (MSetAttr s (inferOccur f o')) d
+                           _ -> d')
+                     dom freqs
+        decl' = FindOrGiven Find n dom'
+        in return $ updateDeclaration decl decl' m
+  where
+    isFreq [essence| freq(&x, &v) =  &e |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| freq(&x, &v) <  &e |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| freq(&x, &v) <= &e |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| freq(&x, &v) >  &e |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| freq(&x, &v) >= &e |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| &e =  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| &e <  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| &e <= freq(&x, &v) |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| &e >  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
+    isFreq [essence| &e >= freq(&x, &v) |] = isRefTo x && isGen v && isConst e
+    isFreq _ = False
+    -- Make sure that the correct variable is referred to
+    isRefTo (Reference n' _) = n == n'
+    isRefTo _ = False
+    -- Make sure that the value is generated from the mset's domain
+    isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
+    isGen _ = False
+    -- Make sure that the mset is being equated to a constant
+    isConst (Constant ConstantInt{}) = True
+    isConst _ = False
+    -- Convert the constraint into an occurrence attribute
+    inferOccur [essence| freq(&_, &_) =  &e |] o'
+      = mergeMinOccur e $ mergeMaxOccur e o'
+    inferOccur [essence| freq(&_, &_) <  &e |] o'
+      = mergeMaxOccur (e - 1) o'
+    inferOccur [essence| freq(&_, &_) <= &e |] o'
+      = mergeMaxOccur e o'
+    inferOccur [essence| freq(&_, &_) >  &e |] o'
+      = mergeMinOccur (e + 1) o'
+    inferOccur [essence| freq(&_, &_) >= &e |] o'
+      = mergeMinOccur e o'
+    inferOccur _ o' = o'
+mSetOccur m _ = return m
