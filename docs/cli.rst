@@ -12,15 +12,16 @@ Some command line arguments to Conjure are positional, for example the command n
 Another example of positional arguments is the path to a file required by the ``conjure pretty`` command.
 This argument can just be provided after the command name, like: ``conjure pretty myfile.essence``.
 
-Non-positional arguments are provided using switches.
-Some switches require an additional value to be provided.
-Other switches are flags and do not expect additional values.
+Non-positional arguments are provided using options.
+Some options require an additional value to be provided.
+Other options are flags and do not expect additional values.
 For example the ``conjure pretty`` command takes a flag called ``--remove-unused``, which removes unused decision variables from the model before pretty printing it.
-However, the ``conjure modelling`` command takes a switch called ``--output-directory``, which specifies the directory under which Conjure places its output files.
-This switch requires a value.
+This option is a flag that takes no values.
+However, the ``conjure modelling`` command takes an option called ``--output-directory``, which specifies the directory under which Conjure places its output files.
+This option requires a value.
 
-Switches can have short or long names. Following the common convention, short option names are preceded by a single dash and long options names are preceded by two dashes.
-For example ``--output-directory`` is a long name for a switch, and ``-o`` is a short name for the same switch.
+Options can have short or long names. Following the common convention, short option names are preceded by a single dash and long options names are preceded by two dashes.
+For example ``--output-directory`` is a long name for an option, and ``-o`` is a short name for the same option.
 
 The general form of a Conjure run is as follows: ``conjure [COMMAND] ... [OPTIONS]``.
 
