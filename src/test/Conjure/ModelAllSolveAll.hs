@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
+module Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) ) where
 
 -- conjure
 import Conjure.Prelude
@@ -50,25 +50,26 @@ srOptionsMk srExtraOptions =
 
 
 -- | Which tests are we running?
-data QuickOrSlow = Quick | Slow | BothQuickAndSlow
+data TestTimeLimit = TestTimeLimit Int          -- in seconds, default 10
     deriving (Eq, Ord, Typeable)
 
-instance IsOption QuickOrSlow where
-    defaultValue = Quick
+instance IsOption TestTimeLimit where
+    defaultValue = TestTimeLimit 10
 
-    parseValue "quick" = return Quick
-    parseValue "slow" = return Slow
-    parseValue "all" = return BothQuickAndSlow
-    parseValue _ = Nothing
+    parseValue i =
+        case readMay i of
+            Nothing -> Nothing
+            Just n  -> Just (TestTimeLimit n)
 
-    optionName = return "select-tests"
-    optionHelp = return "Select which tests to run (quick/slow/all). Default is quick."
+    optionName = return "limit-time"
+    optionHelp = return $ unlines [ "Select which tests to run by their expected times."
+                                  , "Only tests which take less than the given value will be run."
+                                  , "See `expected-time.txt` files in the `tests/exhaustive` directory."
+                                  , "Default is 10."
+                                  ]
 
-data TestKind = TK_Invalid | TK_Slow | TK_Quick
-  deriving (Eq, Show)
 
-
-tests :: IO (QuickOrSlow -> TestTree)
+tests :: IO (TestTimeLimit -> TestTree)
 tests = do
     srExtraOptions <- do
         env <- getEnvironment
@@ -78,12 +79,12 @@ tests = do
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
     let testCases = map (testSingleDir srOptions) (catMaybes dirs)
-    return (\ quickOrSlow -> testGroup "exhaustive" (map ($ quickOrSlow) testCases) )
+    return (\ tl -> testGroup "exhaustive" (map ($ tl) testCases) )
 
 
 data TestDirFiles = TestDirFiles
     { name           :: String          -- a name for the test case
-    , testKind       :: TestKind
+    , expectedTime   :: Int             -- how long do we expect this test to run (in seconds)
     , tBaseDir       :: FilePath        -- dir
     , outputsDir     :: FilePath        -- dir
     , expectedsDir   :: FilePath        -- dir
@@ -99,10 +100,10 @@ data TestDirFiles = TestDirFiles
 isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
     dirContents <- getDirectoryContents dir
-    let testKind
-            | "invalid" `elem` dirContents = TK_Invalid
-            | "slow"    `elem` dirContents = TK_Slow
-            | otherwise                    = TK_Quick
+    expectedTime <-
+        if "expected-time.txt" `elem` dirContents
+            then fromMaybe 0 . readMay . textToString <$> T.readFile (dir ++ "/expected-time.txt")
+            else return 0
     let essenceFiles = filter (".essence" `isSuffixOf`) dirContents
     case essenceFiles of
         [f] -> Just <$> do
@@ -122,7 +123,7 @@ isTestDir baseDir dir = do
                 , paramFiles     = params
                 , expectedModels = filter (".eprime"   `isSuffixOf`) expecteds
                 , expectedSols   = filter (".solution" `isSuffixOf`) expecteds
-                , testKind       = testKind
+                , expectedTime   = expectedTime
                 }
         _ -> return Nothing
 
@@ -135,8 +136,8 @@ type Step = String -> Assertion
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: [Text] -> TestDirFiles -> QuickOrSlow -> TestTree
-testSingleDir srOptions t@TestDirFiles{..} quickOrSlow =
+testSingleDir :: [Text] -> TestDirFiles -> TestTimeLimit -> TestTree
+testSingleDir srOptions t@TestDirFiles{..} (TestTimeLimit timeLimit) =
     if shouldRun
         then
             testCaseSteps name $ \ step -> do
@@ -150,11 +151,9 @@ testSingleDir srOptions t@TestDirFiles{..} quickOrSlow =
             testCaseSteps name $ \ step -> void (step "Skip")
     where
 
-        shouldRun
-            | testKind == TK_Invalid                                               = False
-            | testKind == TK_Quick && quickOrSlow `elem` [Quick, BothQuickAndSlow] = True
-            | testKind == TK_Slow  && quickOrSlow `elem` [Slow , BothQuickAndSlow] = True
-            | otherwise                                                            = False
+        shouldRun = or [ timeLimit == 0
+                       , expectedTime <= timeLimit
+                       ]
 
         conjuring step = do
             void (step "Conjuring")
