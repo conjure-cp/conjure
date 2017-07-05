@@ -79,7 +79,7 @@ tests = do
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
     let testCases = map (testSingleDir srOptions) (catMaybes dirs)
-    return (\ tl -> testGroup "exhaustive" (map ($ tl) testCases) )
+    return (\ tl -> testGroup "exhaustive" (concatMap ($ tl) testCases) )
 
 
 data TestDirFiles = TestDirFiles
@@ -136,19 +136,17 @@ type Step = String -> Assertion
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: [Text] -> TestDirFiles -> TestTimeLimit -> TestTree
+testSingleDir :: [Text] -> TestDirFiles -> TestTimeLimit -> [TestTree]
 testSingleDir srOptions t@TestDirFiles{..} (TestTimeLimit timeLimit) =
     if shouldRun
-        then
-            testCaseSteps name $ \ step -> do
+        then return $ testCaseSteps name $ \ step -> do
                 conjuring step
                 sequence_ (savileRows step)
                 validating step
                 checkExpectedAndExtraFiles step srOptions t
                 equalNumberOfSolutions step t
                 noDuplicateSolutions step t
-        else
-            testCaseSteps name $ \ step -> void (step "Skip")
+        else []
     where
 
         shouldRun = or [ timeLimit == 0
