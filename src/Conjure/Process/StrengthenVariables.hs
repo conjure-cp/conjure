@@ -98,7 +98,8 @@ constrainFunctionDomain :: (MonadFail m, MonadLog m)
 constrainFunctionDomain n d@DomainFunction{} m
   = surjectiveIsTotalBijective d  >>=
     totalInjectiveIsBijective     >>=
-    definedForAllIsTotal n m
+    definedForAllIsTotal n m      >>=
+    fullRangeIsSurjective n m
 constrainFunctionDomain _ d _ = return d
 
 -- | Extract the such that expressions from a model.
@@ -112,8 +113,9 @@ suchThat = foldr fromSuchThat [] . mStatements
 surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
                            => Domain () Expression      -- ^ Domain of the function.
                            -> m (Domain () Expression)  -- ^ Possibly modified domain.
-surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial j) from to)
-  | j == JectivityAttr_Surjective || j == JectivityAttr_Bijective = do
+surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ p j) from to)
+  | (p == PartialityAttr_Partial && j == JectivityAttr_Bijective) ||
+    j == JectivityAttr_Surjective = do
     (fromSize, toSize) <- functionDomainSizes from to
     if fromSize == toSize
        then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
@@ -182,6 +184,53 @@ funcCalledWithGenParams n d (Op (MkOpRelationProj (OpRelationProj (Reference n' 
                _                                      -> False
       genArgMatchesDom _ = False
 funcCalledWithGenParams _ _ _ = False
+
+-- | If all values in the range of a function are mapped to, then it is surjective.
+fullRangeIsSurjective :: (MonadFail m, MonadLog m)
+                      => Name                     -- ^ The function's name.
+                      -> Model                    -- ^ Model for context.
+                      -> Domain () Expression     -- ^ The function's domain.
+                      -> m (Domain () Expression) -- ^ Possibly modified function domain.
+fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
+  | (ject == JectivityAttr_None || ject == JectivityAttr_Injective) &&
+    -- Are the variables generated from the domain and codomain respectively?
+    any (uncurry varsAreGen)
+      -- Extract the function parameter and function value
+      (mapMaybe existsEqVals
+        -- Find the desired pattern being matched
+        (findInUncondForAll isExistsEq m))
+      = addAttributesToDomain d [ ("surjective", Nothing) ]
+  where
+    -- Get the domain value and codomain value used in the function call
+    existsEqVals [essence| exists &i :  &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
+    existsEqVals [essence| exists &i in &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
+    existsEqVals _ = Nothing
+    funcEqCoVal (Reference n' _) i i' j | n == n' = flip (,) j <$> checkVarsEq i i'
+    funcEqCoVal _ _ _ _ = Nothing
+    isExistsEq = isJust . existsEqVals
+    -- Try equating the variables references and return the reference if they are equal
+    checkVarsEq :: AbstractPattern -> Expression -> Maybe Expression
+    checkVarsEq (Single i) e@(Reference i' _) | i == i' = Just e
+    checkVarsEq _ _ = Nothing
+    -- Make sure that the variables are generated from the domain and codomain of the function
+    varsAreGen (Reference _ (Just (DeclNoRepr Quantified _ from' _)))
+               (Reference _ (Just (DeclNoRepr Quantified _ to'   _)))
+                 = from == from' && to == to'
+    varsAreGen iDom jDom = case domInCompRef iDom of
+                                Just from'
+                                  -> case domInCompRef jDom of
+                                          Just to' -> from == from' && to == to'
+                                          _ -> False
+                                _ -> False
+    -- Extract an InComprehension domain
+    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
+    domInComprehension _ = Nothing
+    -- Extract a from a reference in a comprehension
+    domInCompRef dom = case domInComprehension dom of
+                            Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom')))))
+                              -> Just dom'
+                            _ -> Nothing
+fullRangeIsSurjective _ _ d = return d
 
 -- | Make the attributes of a set as constrictive as possible.
 setAttributes :: (MonadFail m, MonadLog m, NameGen m)
