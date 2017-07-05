@@ -99,7 +99,8 @@ constrainFunctionDomain n d@DomainFunction{} m
   = surjectiveIsTotalBijective d  >>=
     totalInjectiveIsBijective     >>=
     definedForAllIsTotal n m      >>=
-    fullRangeIsSurjective n m
+    fullRangeIsSurjective n m     >>=
+    diffArgResultIsInjective n m
 constrainFunctionDomain _ d _ = return d
 
 -- | Extract the such that expressions from a model.
@@ -222,15 +223,48 @@ fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
                                           Just to' -> from == from' && to == to'
                                           _ -> False
                                 _ -> False
-    -- Extract an InComprehension domain
-    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
-    domInComprehension _ = Nothing
-    -- Extract a from a reference in a comprehension
+    -- Extract a domain from a reference in a comprehension
     domInCompRef dom = case domInComprehension dom of
                             Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom')))))
                               -> Just dom'
                             _ -> Nothing
+    -- Extract an InComprehension domain
+    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
+    domInComprehension _ = Nothing
 fullRangeIsSurjective _ _ d = return d
+
+-- | If all distinct inputs to a function have distinct results, then it is injective.
+--   It will also be total if there are no conditions other than the disequality between
+--   the two inputs.
+diffArgResultIsInjective :: (MonadFail m, MonadLog m)
+                         => Name                     -- ^ The function's name.
+                         -> Model                    -- ^ Model for context.
+                         -> Domain () Expression     -- ^ The function's domain.
+                         -> m (Domain () Expression) -- ^ Possibly modified function domain.
+diffArgResultIsInjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from _)
+  | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
+    not (null $ findInUncondForAll isDistinctDisequality m)
+    = addAttributesToDomain d [ ("injective", Nothing)
+                              -- It is known that no inputs are ignored
+                              , ("total", Nothing) ]
+  where
+    -- Match a very specific pattern, which will also add the total attribute
+    isDistinctDisequality [essence| &i != &j -> &f(&i') != &f'(&j') |]
+      | f == f' && i == i' && j == j'
+        = case f of
+               Reference n' _ | n == n'
+                 -> domIsGen i && domIsGen j
+               _ -> False
+    isDistinctDisequality _ = False
+    -- Extract a domain reference from a comprehension
+    domIsGen (Reference _ (Just (DeclNoRepr Quantified _ dom _))) = from == dom
+    domIsGen d' = case domInComprehension d' of
+                       Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom))))) -> from == dom
+                       _ -> False
+    -- Extract an InComprehension domain
+    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
+    domInComprehension _ = Nothing
+diffArgResultIsInjective _ _ d = return d
 
 -- | Make the attributes of a set as constrictive as possible.
 setAttributes :: (MonadFail m, MonadLog m, NameGen m)
