@@ -638,15 +638,23 @@ The inline binary comparison operators
 
  | ``=``  ``!=``  ``<``  ``<=``  ``>``  ``<=``
 
-can be applied to integer and enumerated types.
-Note that ``=`` has relatively low precedence as it is a declaration, not an imperative assignment:
+can be used to compare two expressions.
+The expressions must both be integer, both Boolean or both enumerated types.
+
+When an enumerated type is declared, the elements of the type are listed in increasing order.
+
+.. code-block:: essence
+
+    letting direction be new type enum {North, East, South, West}
+    find a : bool such that a = ((North < South)/\(South < West))  $ true
+    find b : bool such that b = (false <= true) $ true
+
+Note that the declaration of equality ``=`` has relatively high precedence:
 
 .. code-block:: essence
 
    find a : bool such that a = false \/ true $ false
    find b : bool such that b = (false \/ true) $ true
-
-(Sets/multisets/relations/functions/domains?)
 
 The inline binary comparison operators
 
@@ -672,7 +680,7 @@ Logical operators
 
 Logical operators operate on Boolean valued expressions, returning a Boolean value ``false`` or ``true``.
 Negation is unary prefix, the others are binary inline.
-The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see the discussion on `List combining operators`_).
+The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see `List combining operators`_ for details).
 
 
 Set operators
