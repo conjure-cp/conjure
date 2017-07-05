@@ -764,12 +764,8 @@ The following operators take a single argument:
 | ``min``            | smallest element in set/multi-set/domain, if ordered    |
 +--------------------+---------------------------------------------------------+
 
-The following operators take two arguments:
+The following operator takes two arguments:
 
-+-------------------------+----------------------------------------------------+
-| ``active``              | ?                                                  |
-+-------------------------+----------------------------------------------------+
-| ``catchUndef``          | ?                                                  |
 +-------------------------+----------------------------------------------------+
 | ``freq``                | counts occurrences of element in multi-set/matrix  |
 +-------------------------+----------------------------------------------------+
@@ -781,6 +777,7 @@ Examples:
    letting S be mset(0,1,-1,1)
    find x : int(0..1) such that freq(S,x) = 2 $ 1
    find y : int(-2..2) such that y = max(S) - min(S) $ 2
+
 
 Type conversion operators
 ~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -864,8 +861,8 @@ The ``inverse`` operator tests whether its function arguments are inverses of ea
 Matrix operators
 ~~~~~~~~~~~~~~~~
 
-+--------------------+---------------------------------------------------------+
-| ``concatenate``    | ?                                                       |
+The following operator returns a matrix:
+
 +--------------------+---------------------------------------------------------+
 | ``flatten``        | 1D matrix of entries from matrix                        |
 +--------------------+---------------------------------------------------------+
