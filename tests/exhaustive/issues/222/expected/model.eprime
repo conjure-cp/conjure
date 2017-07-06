@@ -1,0 +1,9 @@
+language ESSENCE' 1.0
+
+find s_Explicit_1: matrix indexed by [int(1..2)] of int(4, 6)
+find s_Explicit_2: matrix indexed by [int(1..2)] of int(4, 6)
+such that
+    and([s_Explicit_1[q3] = s_Explicit_1[q4] \/ s_Explicit_2[q3] = s_Explicit_2[q4]
+             | q3 : int(1..2), q4 : int(1..2), q4 > q3]),
+    s_Explicit_1[1] < s_Explicit_1[2] \/ s_Explicit_1[1] = s_Explicit_1[2] /\ s_Explicit_2[1] < s_Explicit_2[2]
+
