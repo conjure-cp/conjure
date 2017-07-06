@@ -620,7 +620,7 @@ updateDeclarations model = do
                     let
                         -- the refined domains for the high level declaration
                         domains = [ d | (n, d) <- representations, n == nm ]
-                    concatMapM (onEachDomain forg nm) domains
+                    nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
                 Declaration (Letting nm x)             -> do
