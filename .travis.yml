@@ -124,9 +124,9 @@ script:
   - touch conjure-testing.stdout
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
   - echo "Time elapsed so far is ${ELAPSED} seconds."
-  - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --time-limit 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking") 2> >(tee conjure-testing.stderr >&2)) || true; fi
+  - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking") 2> >(tee conjure-testing.stderr >&2)) || true; fi
   - if ! grep FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
-  # - if [ ${ELAPSED} -gt 1800 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else time dist/build/conjure-testing/conjure-testing --time-limit 10 -p parse_print +RTS -s; fi
+  # - if [ ${ELAPSED} -gt 1800 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else time dist/build/conjure-testing/conjure-testing --limit-time 10 -p parse_print +RTS -s; fi
   - cabal sdist   # tests that a source-distribution can be generated
 
 after_success:
