@@ -26,6 +26,10 @@ import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Compute.DomainOf ( domainOf )
 
+import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, right, up, fromZipper, hole, replaceHole )
+
+type ExpressionZ = Zipper Expression Expression
+
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
@@ -37,6 +41,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core)
                                                      , variableSize
                                                      , mSetSizeOccur
                                                      , mSetOccur
+                                                     , forAllIneqToIneqSum
                                                      ]
                         if model == model'
                            then return model'
@@ -629,3 +634,64 @@ mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
       = mergeMinOccur e o'
     inferOccur _ o' = o'
 mSetOccur m _ = return m
+
+-- | An (in)equality in a forAll implies that the (in)equality also applies to
+--   the sums of both terms.
+forAllIneqToIneqSum :: (MonadFail m, MonadLog m)
+                    => Model
+                    -> Declaration
+                    -> m Model
+forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
+  = let es = findInUncondForAllZ (isJust . matchParts . zipper) m
+        cstrs = mapMaybe mkConstraint (nub $ mapMaybe matchParts es)
+        in return $ mergeConstraints m $ map fromZipper cstrs
+  where
+    matchParts z
+      = case hole z of
+             [essence| forAll &h in &s . &e1 <= &e2 |]
+               -> case s of
+                       Reference n' _ | n == n'
+                         -> case h of
+                                 Single name | refInExpr name e1 && refInExpr name e2
+                                   -> Just (h, s, down z >>= down)
+                                 _ -> Nothing
+                       _ -> Nothing
+             _ -> Nothing
+    -- Is a name referred to in an expression?
+    refInExpr name = any (hasName name) . universe
+    hasName name (Reference name' _) = name == name'
+    hasName _ _ = False
+    -- Replace the forAll with the (in)equality between sums
+    mkConstraint :: (AbstractPattern, Expression, Maybe ExpressionZ) -> Maybe ExpressionZ
+    mkConstraint (var, gen, Just z)
+      = case hole z of
+             [essence| &e1 <= &e2 |] ->
+               let e1' = mkSumOf var gen e1
+                   e2' = mkSumOf var gen e2
+                   -- Two steps to get out of the forAll, and replace it with the constraint
+                   in replaceHole [essence| &e1' <= &e2' |] <$> (up z >>= up)
+             _ -> Nothing
+    mkConstraint _ = Nothing
+
+    mkSumOf var gen e = [essence| sum &var in &gen . &e |]
+forAllIneqToIneqSum m _ = return m
+
+-- | Find an expression at any depth of unconditional forAll expressions,
+--   returning a Zipper containing the expression's context.
+findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
+findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
+  where
+    findInForAll e | p (hole e) = [e]
+    findInForAll z
+      = case hole z of
+             Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
+               | all (not . isCondition) gorcs
+                 -> maybe [] findInForAll (down z >>= down)
+             [essence| &_ /\ &_ |]
+                 -> maybe [] findInForAll (down z)
+                    `union`
+                    maybe [] findInForAll (right z >>= down)
+             _   -> []
+
+    isCondition Condition{} = True
+    isCondition _           = False
