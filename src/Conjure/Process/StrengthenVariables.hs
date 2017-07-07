@@ -300,15 +300,24 @@ setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetO
 
 -- | Find an expression at any depth of unconditional forAll expressions.
 findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
-findInUncondForAll p = concatMap findInForAll . suchThat
-  where
-    findInForAll e | p e = [e]
-    findInForAll (Op (MkOpAnd (OpAnd (Comprehension e gorcs))))
-                   | all (not . isCondition) gorcs = findInForAll e
-    findInForAll [essence| &x /\ &y |]
-                   = findInForAll x `union` findInForAll y
-    findInForAll _ = []
+findInUncondForAll p = map hole . findInUncondForAllZ p
 
+-- | Find an expression at any depth of unconditional forAll expressions,
+--   returning a Zipper containing the expression's context.
+findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
+findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
+  where
+    findInForAll e | p (hole e) = [e]
+    findInForAll z
+      = case hole z of
+             Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
+               | all (not . isCondition) gorcs
+                 -> maybe [] findInForAll (down z >>= down)
+             [essence| &_ /\ &_ |]
+                 -> maybe [] findInForAll (down z)
+                    `union`
+                    maybe [] findInForAll (right z >>= down)
+             _   -> []
     isCondition Condition{} = True
     isCondition _           = False
 
@@ -473,19 +482,13 @@ sizeConstraint :: Name              -- ^ Name of the variable with a constrained
                -> Expression        -- ^ Expression in which to look for the size constraint.
                -> Maybe Expression  -- ^ The expression constraining the size of the variable.
 sizeConstraint n e
-  = let v = case e of
+  = let v = case matching e ineqOps of
                  -- Check both sides of the operator, but ignore (in)equations
                  -- of two find variables
-                 [essence| |&var| =  &e' |] | not (hasFind e') -> Just var
-                 [essence| |&var| <  &e' |] | not (hasFind e') -> Just var
-                 [essence| |&var| <= &e' |] | not (hasFind e') -> Just var
-                 [essence| |&var| >  &e' |] | not (hasFind e') -> Just var
-                 [essence| |&var| >= &e' |] | not (hasFind e') -> Just var
-                 [essence| &e' =  |&var| |] | not (hasFind e') -> Just var
-                 [essence| &e' <  |&var| |] | not (hasFind e') -> Just var
-                 [essence| &e' <= |&var| |] | not (hasFind e') -> Just var
-                 [essence| &e' >  |&var| |] | not (hasFind e') -> Just var
-                 [essence| &e' >= |&var| |] | not (hasFind e') -> Just var
+                 Just (_, ([essence| |&var| |], e'))
+                   | not (hasFind e') -> Just var
+                 Just (_, (e', [essence| |&var| |]))
+                   | not (hasFind e') -> Just var
                  _ -> Nothing
         in case v of
                 Just (Reference n' _) | n == n' -> Just e
@@ -503,12 +506,13 @@ sizeAttrFromConstr [essence| |&_| <  &s |] = Just ("maxSize", Just (s - 1))
 sizeAttrFromConstr [essence| |&_| <= &s |] = Just ("maxSize", Just s)
 sizeAttrFromConstr [essence| |&_| >  &s |] = Just ("minSize", Just (s + 1))
 sizeAttrFromConstr [essence| |&_| >= &s |] = Just ("minSize", Just s)
-sizeAttrFromConstr [essence| &e =  |&s| |] = sizeAttrFromConstr [essence| |&s| =  &e |]
-sizeAttrFromConstr [essence| &e <  |&s| |] = sizeAttrFromConstr [essence| |&s| >  &e |]
-sizeAttrFromConstr [essence| &e <= |&s| |] = sizeAttrFromConstr [essence| |&s| >= &e |]
-sizeAttrFromConstr [essence| &e >  |&s| |] = sizeAttrFromConstr [essence| |&s| <  &e |]
-sizeAttrFromConstr [essence| &e >= |&s| |] = sizeAttrFromConstr [essence| |&s| <= &e |]
-sizeAttrFromConstr _ = Nothing
+sizeAttrFromConstr e = case matching e oppIneqOps of
+                            -- Try again with the terms swapped
+                            Just (f, (e', s@(Op (MkOpTwoBars (OpTwoBars _)))))
+                              -> sizeAttrFromConstr $ make f s e'
+                            _ -> Nothing
+  where
+    oppIneqOps = [ (opEq, opEq), (opLt, opGt), (opLeq, opGeq), (opGt, opLt), (opGeq, opLeq) ]
 
 -- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
 mSetSizeOccur :: (MonadFail m, MonadLog m)
@@ -561,16 +565,6 @@ mergeMinSize e (SizeAttr_MaxSize mx)
 mergeMinSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize (mkMax e mn) mx
 mergeMinSize _ s = s
 
--- | Merge an expression into the max field of a 'SizeAttr'.
-mergeMaxSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
-mergeMaxSize e SizeAttr_None = SizeAttr_MaxSize e
-mergeMaxSize e (SizeAttr_MinSize mn)
-  | e == mn   = SizeAttr_Size e
-  | otherwise = SizeAttr_MinMaxSize e mn
-mergeMaxSize e (SizeAttr_MaxSize mx) = SizeAttr_MaxSize $ mkMin e mx
-mergeMaxSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize mn (mkMin e mx)
-mergeMaxSize _ s = s
-
 -- | Merge an expression into the min field of an 'OccurAttr'.
 mergeMinOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
 mergeMinOccur e OccurAttr_None = OccurAttr_MinOccur e
@@ -591,7 +585,7 @@ mSetOccur :: (MonadFail m, MonadLog m)
           -> Declaration  -- ^ Multiset declaration to update.
           -> m Model      -- ^ Updated model.
 mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
-  = let freqs = nub $ findInUncondForAll isFreq m
+  = let freqs = findInUncondForAll isFreq m
         dom' = foldr (\f d' ->
                       case d' of
                            DomainMSet _ (MSetAttr _ o') _
@@ -601,17 +595,11 @@ mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
         decl' = FindOrGiven Find n dom'
         in return $ updateDeclaration decl decl' m
   where
-    isFreq [essence| freq(&x, &v) =  &e |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| freq(&x, &v) <  &e |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| freq(&x, &v) <= &e |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| freq(&x, &v) >  &e |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| freq(&x, &v) >= &e |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| &e =  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| &e <  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| &e <= freq(&x, &v) |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| &e >  freq(&x, &v) |] = isRefTo x && isGen v && isConst e
-    isFreq [essence| &e >= freq(&x, &v) |] = isRefTo x && isGen v && isConst e
-    isFreq _ = False
+    isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
+                   in case matching e ineqOps of
+                           Just (_, ([essence| freq(&x, &v) |], e')) -> valid x v e'
+                           Just (_, (e', [essence| freq(&x, &v) |])) -> valid x v e'
+                           _ -> False
     -- Make sure that the correct variable is referred to
     isRefTo (Reference n' _) = n == n'
     isRefTo _ = False
@@ -642,56 +630,58 @@ forAllIneqToIneqSum :: (MonadFail m, MonadLog m)
                     -> Declaration
                     -> m Model
 forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
-  = let es = findInUncondForAllZ (isJust . matchParts . zipper) m
-        cstrs = mapMaybe mkConstraint (nub $ mapMaybe matchParts es)
-        in return $ mergeConstraints m $ map fromZipper cstrs
+  = return $ mergeConstraints m $ map fromZipper $
+             mapMaybe (matchParts >=> mkConstraint) $
+             findInUncondForAllZ (isJust . matchParts . zipper) m
   where
     matchParts z
       = case hole z of
-             [essence| forAll &h in &s . &e1 <= &e2 |]
-               -> case s of
-                       Reference n' _ | n == n'
-                         -> case h of
-                                 Single name | refInExpr name e1 && refInExpr name e2
-                                   -> Just (h, s, down z >>= down)
-                                 _ -> Nothing
-                       _ -> Nothing
+             [essence| forAll &h in &s . &e |]
+               -> case matching e (tail ineqOps) of
+                       Just (_, (e1, e2)) -> matchComponents z h s e1 e2
+                       _                  -> Nothing
              _ -> Nothing
+    -- Match the components of the expression of interest
+    matchComponents z h@(Single name) s@(Reference n' _) e1 e2
+      | n == n' && refInExpr name e1 && refInExpr name e2
+        = Just (h, s, down z >>= down)
+    matchComponents _ _ _ _ _ = Nothing
     -- Is a name referred to in an expression?
     refInExpr name = any (hasName name) . universe
     hasName name (Reference name' _) = name == name'
     hasName _ _ = False
+
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (AbstractPattern, Expression, Maybe ExpressionZ) -> Maybe ExpressionZ
     mkConstraint (var, gen, Just z)
-      = case hole z of
-             [essence| &e1 <= &e2 |] ->
-               let e1' = mkSumOf var gen e1
-                   e2' = mkSumOf var gen e2
+      = case matching (hole z) (tail ineqOps) of
+             Just (f, (e1, e2)) ->
+               let mkSumOf e = [essence| sum &var in &gen . &e |]
+                   e1' = mkSumOf e1
+                   e2' = mkSumOf e2
                    -- Two steps to get out of the forAll, and replace it with the constraint
-                   in replaceHole [essence| &e1' <= &e2' |] <$> (up z >>= up)
-             _ -> Nothing
+                   in replaceHole (make f e1' e2') <$> (up z >>= up)
+             Nothing -> Nothing
     mkConstraint _ = Nothing
-
-    mkSumOf var gen e = [essence| sum &var in &gen . &e |]
 forAllIneqToIneqSum m _ = return m
 
--- | Find an expression at any depth of unconditional forAll expressions,
---   returning a Zipper containing the expression's context.
-findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
-findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
-  where
-    findInForAll e | p (hole e) = [e]
-    findInForAll z
-      = case hole z of
-             Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
-               | all (not . isCondition) gorcs
-                 -> maybe [] findInForAll (down z >>= down)
-             [essence| &_ /\ &_ |]
-                 -> maybe [] findInForAll (down z)
-                    `union`
-                    maybe [] findInForAll (right z >>= down)
-             _   -> []
+-- | Lens function over a binary expression.
+type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
+                                 Expression -> m (Expression, Expression))
 
-    isCondition Condition{} = True
-    isCondition _           = False
+-- | Get the lens for an expression and the values it matches.
+matching :: Expression
+         -> [(BinExprLens Maybe, BinExprLens Identity)]
+         -> Maybe (BinExprLens Identity, (Expression, Expression))
+matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
+                      [x] -> Just x
+                      _   -> Nothing
+
+-- | (In)equality operator lens pairs.
+ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+ineqOps = [ (opEq,  opEq)
+          , (opLt,  opLt)
+          , (opLeq, opLeq)
+          , (opGt,  opGt)
+          , (opGeq, opGeq)
+          ]
