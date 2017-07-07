@@ -1,0 +1,151 @@
+language ESSENCE' 1.0
+
+find y_1_1: matrix indexed by [int(1, 2)] of int(10, 11)
+find y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of bool
+find y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2)
+find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
+find y_1_2_Function1DR2_Occurrence: matrix indexed by [int(1, 2), int(1..3), int(1, 2)] of bool
+such that
+    and([and([y_1_1[q11] = [10, 11; int(1..2)][q11],
+              and([and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q22] /\
+                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q22] = 1
+                                | q22 : int(1..2)])
+                            | 1 = q11, 1 = q14])
+                   /\
+                   and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q24] /\
+                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q24] = 2
+                                | q24 : int(1..2)])
+                            | 1 = q11, 1 = q14])
+                   /\
+                   and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q27] /\
+                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q27] = 1
+                                | q27 : int(1..2)])
+                            | 1 = q11, 2 = q14])
+                   /\
+                   (and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q32] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q32] = 1
+                                 | q32 : int(1..2)])
+                             | 2 = q11, 1 = q14])
+                    /\
+                    and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q34] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q34] = 2
+                                 | q34 : int(1..2)])
+                             | 2 = q11, 1 = q14])
+                    /\
+                    and([or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q37] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q37] = 1
+                                 | q37 : int(1..2)])
+                             | 2 = q11, 2 = q14]))
+                   /\
+                   and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, q14, q39] ->
+                        or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 1 = q11, 1 = q14])
+                        \/
+                        or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 1 = q11, 1 = q14])
+                        \/
+                        or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 1 = q11, 2 = q14])
+                        \/
+                        (or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 2 = q11, 1 = q14])
+                         \/
+                         or([2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 2 = q11, 1 = q14])
+                         \/
+                         or([1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, q14, q39] | 2 = q11, 2 = q14]))
+                            | q39 : int(1..2)])
+                       | q14 : int(1..3)])
+              /\
+              (and([and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q52] ->
+                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q52] \/
+                              2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q52]
+                                  | q52 : int(1..2)])
+                         /\
+                         (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q56] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q56] = 1
+                                  | q56 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q56] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q56] = 2
+                                  | q56 : int(1..2)]))
+                             | 1 = q11]),
+                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 2, q52] ->
+                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 2, q52]
+                                  | q52 : int(1..2)])
+                         /\
+                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 2, q56] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 2, q56] = 1
+                                 | q56 : int(1..2)])
+                             | 1 = q11]),
+                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 3, q52] -> false
+                                  | q52 : int(1..2)])
+                             | 1 = q11]);
+                        int(1..3)])
+               /\
+               and([and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q58] ->
+                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q58] \/
+                              2 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q58]
+                                  | q58 : int(1..2)])
+                         /\
+                         (or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q62] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q62] = 1
+                                  | q62 : int(1..2)])
+                          /\
+                          or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 1, q62] /\
+                              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 1, q62] = 2
+                                  | q62 : int(1..2)]))
+                             | 2 = q11]),
+                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 2, q58] ->
+                              1 = y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 2, q58]
+                                  | q58 : int(1..2)])
+                         /\
+                         or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 2, q62] /\
+                             y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q11, 2, q62] = 1
+                                 | q62 : int(1..2)])
+                             | 2 = q11]),
+                    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q11, 3, q58] -> false
+                                  | q58 : int(1..2)])
+                             | 2 = q11]);
+                        int(1..3)])),
+              y_1_3[q11] = [33, 55; int(1..2)][q11];
+                  int(1..3)])
+             | q11 : int(1, 2)]),
+    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q1, q2, 2] ->
+              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q1, q2, 1] <
+              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q1, q2, 2]
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q1, q2, q4] = false ->
+                   y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q1, q2, q4] = 1
+                       | q4 : int(1..2)])
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q1, q2, 2] ->
+              y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q1, q2, 1]
+                  | q2 : int(1..3)])
+             | q1 : int(1, 2)]),
+    and([and([y_1_1[q73] = y_1_1[q73],
+              and([and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q73, q76, q78] ->
+                        y_1_2_Function1DR2_Occurrence
+                            [q73, q76, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q73, q76, q78]]
+                            | q78 : int(1..2)])
+                   /\
+                   and([y_1_2_Function1DR2_Occurrence[q73, q76, q79] ->
+                        or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q73, q76, q81] /\
+                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q73, q76, q81] = q79
+                                | q81 : int(1..2)])
+                            | q79 : int(1, 2)])
+                       | q76 : int(1..3)])
+              /\
+              and([and([y_1_2_Function1DR2_Occurrence[q73, q82, q83] ->
+                        or([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q73, q82, q85] /\
+                            y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q73, q82, q85] = q83
+                                | q85 : int(1..2)])
+                            | q83 : int(1, 2)])
+                   /\
+                   and([y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Flags[q73, q82, q87] ->
+                        y_1_2_Function1DR2_Occurrence
+                            [q73, q82, y_1_2_Function1DR4_ExplicitVarSizeWithFlags_Values[q73, q82, q87]]
+                            | q87 : int(1..2)])
+                       | q82 : int(1..3)]),
+              y_1_3[q73] = y_1_3[q73];
+                  int(1..3)])
+             | q73 : int(1, 2)])
+

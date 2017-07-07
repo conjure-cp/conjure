@@ -1,0 +1,135 @@
+language ESSENCE' 1.0
+
+letting HORIZON be 10
+find actions_ExplicitBounded_Length: int(0..10)
+find actions_ExplicitBounded_Values_1: matrix indexed by [int(1..10)] of int(3, 5, 8)
+find actions_ExplicitBounded_Values_2: matrix indexed by [int(1..10)] of int(3, 5, 8)
+find actions_ExplicitBounded_Values_3: matrix indexed by [int(1..10)] of int(1..8)
+letting let1 be 8
+find states_ExplicitBoundedR9_Length: int(0..10)
+find states_ExplicitBoundedR9_Values_Function1D: matrix indexed by [int(1..10), int(3, 5, 8)] of int(0..8)
+find nbActions: int(7)
+such that
+    actions_ExplicitBounded_Length = states_ExplicitBoundedR9_Length - 1,
+    and([q82 <= actions_ExplicitBounded_Length ->
+         actions_ExplicitBounded_Values_1[q82] != actions_ExplicitBounded_Values_2[q82]
+             | q82 : int(1..10)]),
+    and([q16 <= actions_ExplicitBounded_Length ->
+         actions_ExplicitBounded_Values_3[q16] <=
+         sum([toInt(q14 = actions_ExplicitBounded_Values_1[q16]) *
+              catchUndef(toInt(q16 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q16, q14], 0),
+                         0)
+                  | q14 : int(3, 5, 8)])
+         /\
+         or([q16 <= states_ExplicitBoundedR9_Length /\ q13 = actions_ExplicitBounded_Values_1[q16]
+                 | q13 : int(3, 5, 8)])
+             | q16 : int(1..10)]),
+    and([q84 <= states_ExplicitBoundedR9_Length ->
+         and([sum([states_ExplicitBoundedR9_Values_Function1D[q84, q85] | q85 : int(3, 5, 8), q85 = b]) <= b /\
+              or([q86 = b | q86 : int(3, 5, 8)])
+                  | b : int(3, 5, 8)])
+             | q84 : int(1..10)]),
+    and([q28 <= actions_ExplicitBounded_Length ->
+         sum([toInt(q21 = actions_ExplicitBounded_Values_1[q28]) *
+              catchUndef(toInt(q28 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q28, q21], 0),
+                         0)
+                  | q21 : int(3, 5, 8)])
+         - actions_ExplicitBounded_Values_3[q28]
+         =
+         sum([toInt(q26 = actions_ExplicitBounded_Values_1[q28]) *
+              catchUndef(toInt(q28 + 1 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q28 + 1, q26], 0),
+                         0)
+                  | q26 : int(3, 5, 8)])
+         /\
+         or([q28 <= states_ExplicitBoundedR9_Length /\ q20 = actions_ExplicitBounded_Values_1[q28]
+                 | q20 : int(3, 5, 8)])
+         /\
+         or([q28 + 1 <= states_ExplicitBoundedR9_Length /\ q25 = actions_ExplicitBounded_Values_1[q28]
+                 | q25 : int(3, 5, 8)])
+             | q28 : int(1..10)]),
+    and([q40 <= actions_ExplicitBounded_Length ->
+         sum([toInt(q33 = actions_ExplicitBounded_Values_2[q40]) *
+              catchUndef(toInt(q40 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q40, q33], 0),
+                         0)
+                  | q33 : int(3, 5, 8)])
+         + actions_ExplicitBounded_Values_3[q40]
+         =
+         sum([toInt(q38 = actions_ExplicitBounded_Values_2[q40]) *
+              catchUndef(toInt(q40 + 1 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q40 + 1, q38], 0),
+                         0)
+                  | q38 : int(3, 5, 8)])
+         /\
+         or([q40 <= states_ExplicitBoundedR9_Length /\ q32 = actions_ExplicitBounded_Values_2[q40]
+                 | q32 : int(3, 5, 8)])
+         /\
+         or([q40 + 1 <= states_ExplicitBoundedR9_Length /\ q37 = actions_ExplicitBounded_Values_2[q40]
+                 | q37 : int(3, 5, 8)])
+             | q40 : int(1..10)]),
+    and([q54 <= actions_ExplicitBounded_Length ->
+         and([!(actions_ExplicitBounded_Values_1[q54] = b \/ actions_ExplicitBounded_Values_2[q54] = b) ->
+              and([sum([toInt(q54 <= states_ExplicitBoundedR9_Length) *
+                        catchUndef(states_ExplicitBoundedR9_Values_Function1D[q54, q50], 0)
+                            | q50 : int(3, 5, 8), q50 = b])
+                   =
+                   sum([toInt(q54 + 1 <= states_ExplicitBoundedR9_Length) *
+                        catchUndef(states_ExplicitBoundedR9_Values_Function1D[q54 + 1, q45], 0)
+                            | q45 : int(3, 5, 8), q45 = b]),
+                   or([q54 <= states_ExplicitBoundedR9_Length /\ q49 = b | q49 : int(3, 5, 8)]),
+                   or([q54 + 1 <= states_ExplicitBoundedR9_Length /\ q44 = b | q44 : int(3, 5, 8)]);
+                       int(1..3)])
+                  | b : int(3, 5, 8)])
+             | q54 : int(1..10)]),
+    and([q66 <= actions_ExplicitBounded_Length ->
+         sum([toInt(q59 = actions_ExplicitBounded_Values_1[q66]) *
+              catchUndef(toInt(q66 + 1 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q66 + 1, q59], 0),
+                         0)
+                  | q59 : int(3, 5, 8)])
+         = 0
+         /\
+         or([q66 + 1 <= states_ExplicitBoundedR9_Length /\ q58 = actions_ExplicitBounded_Values_1[q66]
+                 | q58 : int(3, 5, 8)])
+         \/
+         sum([toInt(q64 = actions_ExplicitBounded_Values_2[q66]) *
+              catchUndef(toInt(q66 + 1 <= states_ExplicitBoundedR9_Length) *
+                         catchUndef(states_ExplicitBoundedR9_Values_Function1D[q66 + 1, q64], 0),
+                         0)
+                  | q64 : int(3, 5, 8)])
+         = actions_ExplicitBounded_Values_2[q66]
+         /\
+         or([q66 + 1 <= states_ExplicitBoundedR9_Length /\ q63 = actions_ExplicitBounded_Values_2[q66]
+                 | q63 : int(3, 5, 8)])
+             | q66 : int(1..10)]),
+    and([sum([sum([0 | 3 = q68]), sum([0 | 5 = q68]), sum([8 | 8 = q68]); int(1..3)]) =
+         states_ExplicitBoundedR9_Values_Function1D[1, q68]
+         /\ or([3 = q68, 5 = q68, 8 = q68; int(1..3)])
+             | q68 : int(3, 5, 8)]),
+    states_ExplicitBoundedR9_Values_Function1D[1, 3] = 0,
+    states_ExplicitBoundedR9_Values_Function1D[1, 5] = 0,
+    states_ExplicitBoundedR9_Values_Function1D[1, 8] = 8,
+    1 <= states_ExplicitBoundedR9_Length,
+    and([sum([sum([0 | 3 = q75]), sum([4 | 5 = q75]), sum([4 | 8 = q75]); int(1..3)]) =
+         states_ExplicitBoundedR9_Values_Function1D[states_ExplicitBoundedR9_Length, q75]
+         /\ or([3 = q75, 5 = q75, 8 = q75; int(1..3)])
+             | q75 : int(3, 5, 8)]),
+    states_ExplicitBoundedR9_Values_Function1D[states_ExplicitBoundedR9_Length, 3] = 0,
+    states_ExplicitBoundedR9_Values_Function1D[states_ExplicitBoundedR9_Length, 5] = 4,
+    states_ExplicitBoundedR9_Values_Function1D[states_ExplicitBoundedR9_Length, 8] = 4,
+    states_ExplicitBoundedR9_Length <= states_ExplicitBoundedR9_Length,
+    7 = actions_ExplicitBounded_Length,
+    and([q1 > states_ExplicitBoundedR9_Length ->
+         and([states_ExplicitBoundedR9_Values_Function1D[q1, q4] = 0 | q4 : int(3, 5, 8)])
+             | q1 : int(1..10)]),
+    states_ExplicitBoundedR9_Length <= 10,
+    and([q5 > actions_ExplicitBounded_Length ->
+         and([actions_ExplicitBounded_Values_1[q5] = 3, actions_ExplicitBounded_Values_2[q5] = 3,
+              actions_ExplicitBounded_Values_3[q5] = 1;
+                  int(1..3)])
+             | q5 : int(1..10)]),
+    actions_ExplicitBounded_Length <= 10
+

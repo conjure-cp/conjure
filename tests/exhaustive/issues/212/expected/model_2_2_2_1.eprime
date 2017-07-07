@@ -1,0 +1,24 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
+find x_Occurrence: matrix indexed by [int(0..5)] of bool
+such that
+    and([x_ExplicitVarSizeWithDummy[q7] != 6 ->
+         or([a_Explicit[q9] = x_ExplicitVarSizeWithDummy[q7]
+                 | q9 : int(1..fin1), or([b_Explicit[q11] = a_Explicit[q9] | q11 : int(1..fin2)])])
+             | q7 : int(1..6)]),
+    and([or([x_ExplicitVarSizeWithDummy[q15] != 6 /\ x_ExplicitVarSizeWithDummy[q15] = a_Explicit[q13]
+                 | q15 : int(1..6)])
+             | q13 : int(1..fin1), or([b_Explicit[q17] = a_Explicit[q13] | q17 : int(1..fin2)])]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = 6
+             | q1 : int(1..5)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = 6 -> x_ExplicitVarSizeWithDummy[q2 + 1] = 6 | q2 : int(1..5)]),
+    and([x_Occurrence[q18] ->
+         or([x_ExplicitVarSizeWithDummy[q20] != 6 /\ x_ExplicitVarSizeWithDummy[q20] = q18 | q20 : int(1..6)])
+             | q18 : int(0..5)]),
+    and([x_ExplicitVarSizeWithDummy[q22] != 6 -> x_Occurrence[x_ExplicitVarSizeWithDummy[q22]] | q22 : int(1..6)])
+

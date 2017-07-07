@@ -153,6 +153,7 @@ instance Pretty Declaration where
             extract (viewConstantTuple    -> Just rows     ) = Just rows
             extract (viewConstantSet      -> Just rows     ) = Just rows
             extract (viewConstantMSet     -> Just rows     ) = Just rows
+            extract (viewConstantFunction -> Just rows     ) = Just (map snd rows)
             extract (viewConstantSequence -> Just rows     ) = Just rows
             extract _ = Nothing
 

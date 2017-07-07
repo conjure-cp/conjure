@@ -161,41 +161,33 @@ opDontCare _ =
 
 
 opDefined
-    :: ( Op x :< x
-       , Pretty x
-       , MonadFail m
-       )
+    :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( x -> x
-       , x -> m x
+    -> ( Expression -> Expression
+       , Expression -> m Expression
        )
 opDefined _ =
     ( inject . MkOpDefined . OpDefined
-    , \ p -> do
-            op <- project p
-            case op of
-                MkOpDefined (OpDefined x) -> return x
-                _ -> na ("Lenses.opDefined:" <++> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Op (MkOpDefined (OpDefined x))) = return x
+        extract p = na ("Lenses.opDefined:" <++> pretty p)
 
 
 opRange
-    :: ( Op x :< x
-       , Pretty x
-       , MonadFail m
-       )
+    :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( x -> x
-       , x -> m x
+    -> ( Expression -> Expression
+       , Expression -> m Expression
        )
 opRange _ =
     ( inject . MkOpRange . OpRange
-    , \ p -> do
-            op <- project p
-            case op of
-                MkOpRange (OpRange x) -> return x
-                _ -> na ("Lenses.opRange:" <++> pretty p)
+    , followAliases extract
     )
+    where
+        extract (Op (MkOpRange (OpRange x))) = return x
+        extract p = na ("Lenses.opRange:" <++> pretty p)
 
 
 opDefinedOrRange
