@@ -33,7 +33,7 @@ type ExpressionZ = Zipper Expression Expression
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
-strengthenVariables = runNameGen . (resolveNames >=> core)
+strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
   where core :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
@@ -179,11 +179,11 @@ funcCalledWithGenParams :: Name                 -- ^ Name of the function being 
                         -> Domain () Expression -- ^ Function domain.
                         -> Expression           -- ^ Expression which may be the function call.
                         -> Bool
-funcCalledWithGenParams n d (Op (MkOpRelationProj (OpRelationProj (Reference n' _) ps)))
-  = n' == n && all genArgMatchesDom ps
+funcCalledWithGenParams n d (Op (MkOpImage (OpImage (Reference n' _) param)))
+  = n' == n && genArgMatchesDom param
     where
-      -- Is a function argument generated from its domain?
-      genArgMatchesDom (Just (Reference _ (Just refDom)))
+      -- Is a function argument generated from the function's domain?
+      genArgMatchesDom (Reference _ (Just refDom))
         = case refDom of
                DeclNoRepr Quantified _ d' _           -> d == d'
                InComprehension (GenDomainNoRepr _ d') -> d == d'
@@ -447,7 +447,7 @@ funcCallEqGenerated f s [essence| &e = &x |]
   = isFuncCall e && isGenerated x
   where
     -- Is the left side a call to the function of interest?
-    isFuncCall (Op (MkOpRelationProj (OpRelationProj f' _))) = f == f'
+    isFuncCall (Op (MkOpImage (OpImage f' _))) = f == f'
     isFuncCall _ = False
     -- Is the right side variable generated from the set of interest?
     isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
@@ -625,19 +625,21 @@ mSetOccur m _ = return m
 
 -- | An (in)equality in a forAll implies that the (in)equality also applies to
 --   the sums of both terms.
-forAllIneqToIneqSum :: (MonadFail m, MonadLog m)
+forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
                     => Model
                     -> Declaration
                     -> m Model
 forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
-  = return $ mergeConstraints m $ map fromZipper $
-             mapMaybe (matchParts >=> mkConstraint) $
-             findInUncondForAllZ (isJust . matchParts . zipper) m
+  = fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
+          filterM partsAreNumeric $
+          mapMaybe matchParts $
+          findInUncondForAllZ (isJust . matchParts . zipper) m
+    
   where
     matchParts z
       = case hole z of
              [essence| forAll &h in &s . &e |]
-               -> case matching e (tail ineqOps) of
+               -> case matching e ineqOps of
                        Just (_, (e1, e2)) -> matchComponents z h s e1 e2
                        _                  -> Nothing
              _ -> Nothing
@@ -651,10 +653,25 @@ forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
     hasName name (Reference name' _) = name == name'
     hasName _ _ = False
 
+    partsAreNumeric :: (MonadFail m, NameGen m) => (AbstractPattern, Expression, Maybe ExpressionZ) -> m Bool
+    partsAreNumeric (_, _, Just z)
+      = case matching (hole z) ineqOps of
+             Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
+             Nothing            -> return False
+    partsAreNumeric _ = return False
+
+    domainIsNumeric :: (MonadFail m, NameGen m) => Expression -> m Bool
+    domainIsNumeric e = do
+      d <- domainOf e
+      case d of
+           DomainInt{}         -> return True
+           DomainAny _ TypeInt -> return True
+           _                   -> return False
+
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (AbstractPattern, Expression, Maybe ExpressionZ) -> Maybe ExpressionZ
     mkConstraint (var, gen, Just z)
-      = case matching (hole z) (tail ineqOps) of
+      = case matching (hole z) ineqOps of
              Just (f, (e1, e2)) ->
                let mkSumOf e = [essence| sum &var in &gen . &e |]
                    e1' = mkSumOf e1
