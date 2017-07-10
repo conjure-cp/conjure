@@ -67,11 +67,13 @@ updateDeclaration d d' m@Model { mStatements = stmts }
 mergeConstraints :: Model         -- ^ Model to be updated.
                  -> [Expression]  -- ^ Constraints to merge into the model.
                  -> Model         -- ^ Updated model with new constraints.
+mergeConstraints m [] = m
 mergeConstraints m@Model { mStatements = stmts } cs
-  = m { mStatements = map mergeConstraints' stmts }
+  = m { mStatements = mergeConstraints' stmts }
   where
-    mergeConstraints' (SuchThat cs') = SuchThat $ cs' `union` cs
-    mergeConstraints' s              = s
+    mergeConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
+    mergeConstraints' (s:ss) = s : mergeConstraints' ss
+    mergeConstraints' [] = [SuchThat cs]
 
 -- | Remove a list of constraints from a model.
 removeConstraints :: Model        -- ^ Model to have the constraint removed.
