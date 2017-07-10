@@ -78,10 +78,13 @@ removeConstraints :: Model        -- ^ Model to have the constraint removed.
                   -> [Expression] -- ^ Constraints to remove.
                   -> Model        -- ^ Updated model with constraints removed.
 removeConstraints m@Model { mStatements = stmts } cs
-  = m { mStatements = map removeConstraints' stmts }
+  = m { mStatements = filter (not . emptySuchThat) $ map removeConstraints' stmts }
   where
     removeConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
     removeConstraints' s              = s
+
+    emptySuchThat (SuchThat []) = True
+    emptySuchThat _             = False
 
 -- | Make the attributes of function variables as constrictive as possible.
 functionAttributes :: (MonadFail m, MonadLog m)
