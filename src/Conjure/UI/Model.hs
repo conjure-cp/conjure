@@ -1099,6 +1099,7 @@ horizontalRules =
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
+    , Horizontal.Set.rule_PowerSet_Comprehension
     , Horizontal.Set.rule_PowerSet_Difference
     , Horizontal.Set.rule_MaxMin
 
