@@ -296,7 +296,7 @@ mainWithArgs config@Solve{..} = do
             return eprimes
 
         getEprimes :: m [FilePath]
-        getEprimes = filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
+        getEprimes = sort . filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
 
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
