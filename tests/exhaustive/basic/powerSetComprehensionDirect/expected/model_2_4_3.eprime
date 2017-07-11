@@ -1,0 +1,48 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (b - a))] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
+such that
+    and([and([or([x_ExplicitVarSizeWithDummy[q24] != b + 1 /\
+                  x_ExplicitVarSizeWithDummy[q24] = t_ExplicitVarSizeWithMarker_Values[q22]
+                      | q24 : int(1..1 + (b - a))])
+                  | q22 : int(1..1 + (b - a)), q22 <= t_ExplicitVarSizeWithMarker_Marker])
+         ->
+         sum([t_ExplicitVarSizeWithMarker_Values[q25]
+                  | q25 : int(1..1 + (b - a)), q25 <= t_ExplicitVarSizeWithMarker_Marker])
+         <= 6
+             | t_ExplicitVarSizeWithMarker_Marker : int(0..1 + (b - a)),
+               t_ExplicitVarSizeWithMarker_Values : matrix indexed by [int(1..1 + (b - a))] of int(a..b),
+               and([q18 + 1 <= t_ExplicitVarSizeWithMarker_Marker ->
+                    t_ExplicitVarSizeWithMarker_Values[q18] < t_ExplicitVarSizeWithMarker_Values[q18 + 1]
+                        | q18 : int(1..1 + (b - a) - 1)]),
+               and([q19 > t_ExplicitVarSizeWithMarker_Marker -> t_ExplicitVarSizeWithMarker_Values[q19] = a
+                        | q19 : int(1..1 + (b - a))])]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = b + 1
+             | q1 : int(1..1 + (b - a) - 1)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = b + 1 -> x_ExplicitVarSizeWithDummy[q2 + 1] = b + 1
+             | q2 : int(1..1 + (b - a) - 1)]),
+    n <= sum([toInt(x_ExplicitVarSizeWithDummy[q3] != b + 1) | q3 : int(1..1 + (b - a))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q5 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values[q5] < x_ExplicitVarSizeWithFlags_Values[q5 + 1]
+             | q5 : int(1..1 + (b - a) - 1)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q6] = false -> x_ExplicitVarSizeWithFlags_Values[q6] = a
+             | q6 : int(1..1 + (b - a))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q7 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q7]
+             | q7 : int(1..1 + (b - a) - 1)]),
+    n <= sum([toInt(x_ExplicitVarSizeWithFlags_Flags[q8]) | q8 : int(1..1 + (b - a))]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q11] ->
+         or([x_ExplicitVarSizeWithDummy[q13] != b + 1 /\
+             x_ExplicitVarSizeWithDummy[q13] = x_ExplicitVarSizeWithFlags_Values[q11]
+                 | q13 : int(1..1 + (b - a))])
+             | q11 : int(1..1 + (b - a))]),
+    and([x_ExplicitVarSizeWithDummy[q15] != b + 1 ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q17] /\
+             x_ExplicitVarSizeWithFlags_Values[q17] = x_ExplicitVarSizeWithDummy[q15]
+                 | q17 : int(1..1 + (b - a))])
+             | q15 : int(1..1 + (b - a))])
+
