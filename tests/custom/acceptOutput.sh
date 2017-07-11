@@ -5,7 +5,7 @@ set -o nounset
 
 TESTCASE="$1"
 
-if [ -d "${TESTCASE}" ]; then
+if [ -d "${TESTCASE}" ] && [ -f "${TESTCASE}/run.sh" ] ; then
     echo "Accepting the output of ${TESTCASE}"
     touch "${TESTCASE}"/stdout "${TESTCASE}"/stderr
     cp "${TESTCASE}"/stdout "${TESTCASE}"/stdout.expected

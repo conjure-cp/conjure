@@ -34,6 +34,6 @@ main = do
             , modelAllSolveAllTests testTimeLimit
             , typeCheckAllTests
             , parsePrintTests
-            , customTests
+            , customTests testTimeLimit
             , Golden.tests
             ]

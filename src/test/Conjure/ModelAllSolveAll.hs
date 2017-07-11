@@ -78,8 +78,8 @@ tests = do
     putStrLn $ "Using Savile Row options: " ++ unwords (map textToString srOptions)
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
-    let testCases = map (testSingleDir srOptions) (catMaybes dirs)
-    return (\ tl -> testGroup "exhaustive" (concatMap ($ tl) testCases) )
+    let testCases tl = concatMap (testSingleDir tl srOptions) (catMaybes dirs)
+    return $ \ tl -> testGroup "exhaustive" (testCases tl)
 
 
 data TestDirFiles = TestDirFiles
@@ -136,8 +136,8 @@ type Step = String -> Assertion
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: [Text] -> TestDirFiles -> TestTimeLimit -> [TestTree]
-testSingleDir srOptions t@TestDirFiles{..} (TestTimeLimit timeLimit) =
+testSingleDir :: TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
+testSingleDir (TestTimeLimit timeLimit) srOptions t@TestDirFiles{..} =
     if shouldRun
         then return $ testCaseSteps name $ \ step -> do
                 conjuring step
