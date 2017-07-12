@@ -10,7 +10,7 @@ fi
 echo '::' > $F
 echo >> $F
 # start with top level help message
-$CONJURE --help | $SED -ne '1,$s/^/ /p' >> $F
+$CONJURE --help | $SED -ne '/^Repository version /c \ Repository version xxxxxxx (20xx-xx-xx xx:xx:xx xxxxx)' -e '1,$s/^/ /p' >> $F
 # now extract help topics and append them in order
 for C in \
 $($CONJURE --help | $SED -ne '1,/^Commands:/d' -e '/^   /d' -e '/^$/d' -e '/^Common/,$d' -e 's/]//' -e 's/\[//' -e '/^  \([a-z-]\{1,\}\) .*/s//\1/' -e 'p'); do
