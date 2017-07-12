@@ -20,5 +20,6 @@ chmod +x savilerow
 popd
 
 # using an unreleased version of savilerow
+# NOTE: don't forget to update the version check in the travis file!
 wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-03--ad9229da27ca/savilerow.jar
 cp savilerow.jar ${BIN_DIR}/savilerow.jar
