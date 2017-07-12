@@ -295,13 +295,15 @@ setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
                       -> m (Domain () Expression) -- ^ Possibly modified set domain.
 setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetOf
   where
-    subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromFunction d' l
-    subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromFunction d' l
-    subsetMinSize d' _ = return d'
-
     isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
     isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
     isSubsetOf _ = False
+
+    subsetMinSize d' [essence| range(&l) subset   &_ |] = minSizeFromFunction d' l
+    subsetMinSize d' [essence| range(&l) subsetEq &_ |] = minSizeFromFunction d' l
+    subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromSet d' l -- could be more precise
+    subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromSet d' l
+    subsetMinSize d' _ = return d'
 
 -- | Find an expression at any depth of unconditional forAll expressions.
 findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
@@ -326,18 +328,43 @@ findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
     isCondition Condition{} = True
     isCondition _           = False
 
--- | Set the minimum size of a set based on it being a superset of the range of a total function
+-- | Set the minimum size of a set based on it being a superset of another.
+minSizeFromSet :: (MonadFail m, MonadLog m, NameGen m)
+               => Domain () Expression      -- ^ Domain of the set for which to change the minimum size.
+               -> Expression                -- ^ Expression from which the minimum size is being inferred.
+               -> m (Domain () Expression)  -- ^ Set domain with a possible change of its minimum size.
+minSizeFromSet d@(DomainSet r (SetAttr size) dom) sub = do
+  subDom <- domainOf sub
+  case subDom of
+       DomainSet _ (SetAttr subSize) _
+         -> return $ DomainSet r (SetAttr $ mergeSizeOnMin size subSize) dom
+       _ -> return d
+  where
+    -- Merge the minSize of the right SizeAttr into the left
+    mergeSizeOnMin :: SizeAttr Expression -> SizeAttr Expression -> SizeAttr Expression
+    mergeSizeOnMin SizeAttr_None (SizeAttr_Size s) = SizeAttr_MinSize s
+    mergeSizeOnMin SizeAttr_None s@(SizeAttr_MinSize _) = s
+    mergeSizeOnMin SizeAttr_None (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize s
+    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_Size s) = SizeAttr_MinSize $ mkMax mn s
+    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinSize s) = SizeAttr_MinSize $ mkMax mn s
+    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize $ mkMax mn s
+    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_Size s) = SizeAttr_MinMaxSize (mkMax mn s) mx
+    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinSize s) = SizeAttr_MinMaxSize (mkMax mn s) mx
+    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinMaxSize s _) = SizeAttr_MinMaxSize (mkMax mn s) mx
+    mergeSizeOnMin s _ = s
+minSizeFromSet d _ = return d
+
+-- | Set the minimum size of a set based on it being a superset of the range of a total function.
 minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
                     => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
                     -> Expression               -- ^ Expression from which the minimum size is being inferred.
                     -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
-minSizeFromFunction d [essence| range(&r) |] = do
+minSizeFromFunction d r = do
   f <- getFunDom r
   case f of
        DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
          -> return $ setSetMinSize (Constant $ ConstantInt 1) d
        _ -> return d
-minSizeFromFunction d _ = return d
 
 -- | Look for a function domain, allowing it to be generated in a comprehension.
 getFunDom :: (MonadFail m, MonadLog m, NameGen m)
