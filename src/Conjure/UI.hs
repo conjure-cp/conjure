@@ -1093,6 +1093,8 @@ ui = modes
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
     ]      &= program "conjure"
+           &= helpArg [explicit, name "help"]
+           &= versionArg [explicit, name "version"]
            &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
                                , "Release version " ++ showVersion version
                                , "Repository version " ++ repositoryVersion
