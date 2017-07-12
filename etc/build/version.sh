@@ -3,7 +3,7 @@
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-"no"}
 
 if [ $DEVELOPMENT_MODE = "yes" ]; then
-    echo "Not touching the version file: DEVELEOPMENT_MODE = yes"
+    echo "Not touching the version file: DEVELOPMENT_MODE = yes"
 else
     if ! [ -d .git ] && [ -f src/Conjure/RepositoryVersion.hs ] ; then
         echo "This is not a git repository, but it contains repository information. Reusing."
