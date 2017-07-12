@@ -324,6 +324,13 @@ findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
                  -> maybe [] findInForAll (down z)
                     `union`
                     maybe [] findInForAll (right z >>= down)
+             -- Only accept OR cases if both sides contain a match
+             [essence| &_ \/ &_ |]
+                 -> let leftResult  = maybe [] findInForAll (down z)
+                        rightResult = maybe [] findInForAll (right z >>= down)
+                        in if not (null leftResult) && not (null rightResult)
+                              then leftResult `union` rightResult
+                              else []
              _   -> []
     isCondition Condition{} = True
     isCondition _           = False
