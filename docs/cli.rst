@@ -70,4 +70,11 @@ Help output
 The following is Conjure's full help message for each command, provided for reference.
 These messages may change between releases of Conjure.
 
-.. include:: conjure-help.txt
+.. only:: html
+
+ .. raw:: html
+     :file: conjure-help.html
+
+.. only:: not html
+
+ .. include:: conjure-help.txt

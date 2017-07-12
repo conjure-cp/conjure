@@ -217,7 +217,17 @@ pseudoxml:
 
 .PHONY: conjure-help
 conjure-help:
-	@./mkhelp
+	@echo '<div style="background-color: #eeeeee; padding: 20px;">'                     >  conjure-help.html
+	@conjure --help=all,html | grep -v "Release version" | grep -v "Repository version" >> conjure-help.html
+	@echo "</div>"                                                                      >> conjure-help.html
+	@echo "<br />"                                                                      >> conjure-help.html
+	@echo '::'          >  conjure-help.txt
+	@echo               >> conjure-help.txt
+	@conjure --help=all,text \
+	| sed -ne '/Release version/d' \
+	 -e '/Repository version/d' \
+	 -e 's/^/ /p'       >> conjure-help.txt
+	@echo               >> conjure-help.txt
 
 auto-html:
 	watchmedo shell-command --patterns="*.rst" --ignore-pattern='_build/*' --recursive --command='make html'
