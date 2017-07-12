@@ -1,0 +1,19 @@
+Error:
+    In a 'such that' statement:
+        and([or([or([or([or([and([sum([(v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 1]
+                                           | v__6 <- path_AsReln_RelationAsSet[v__0]])
+                                  = image(function((v__1, v__2) --> (v__3, v__4)), v__5[1])[1]
+                                  /\
+                                  sum([(v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2]) * v__6[2, 2]
+                                           | v__6 <- path_AsReln_RelationAsSet[v__0]])
+                                  = image(function((v__1, v__2) --> (v__3, v__4)), v__5[1])[2]
+                                      | v__5 <- path_AsReln_RelationAsSet[v__0]])
+                                 | v__4 : int(0..6)])
+                             | v__3 : int(0..6)])
+                         | v__2 : int(0..6)])
+                     | v__1 : int(0..6)])
+                 | v__0 : int(0..30)])
+    Error:
+        Not uniformly typed: [v__6[1, 1] = v__5[1, 1] /\ v__6[1, 2] = v__5[1, 2], v__6[2, 1]; int(1..2)]
+        Involved types are: bool
+                            int
