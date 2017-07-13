@@ -668,32 +668,35 @@ forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
                     => Model
                     -> Declaration
                     -> m Model
-forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
+forAllIneqToIneqSum m _
   = fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
           filterM partsAreNumeric $
           mapMaybe matchParts $
           findInUncondForAllZ (isJust . matchParts . zipper) m
-    
   where
+    matchParts :: ExpressionZ -> Maybe (Generator, Maybe ExpressionZ)
     matchParts z
       = case hole z of
-             [essence| forAll &h in &s . &e |]
+             Op (MkOpAnd (OpAnd (Comprehension e [Generator g])))
                -> case matching e ineqOps of
-                       Just (_, (e1, e2)) -> matchComponents z h s e1 e2
+                       Just (_, (e1, e2)) -> matchComponents z g e1 e2
                        _                  -> Nothing
              _ -> Nothing
     -- Match the components of the expression of interest
-    matchComponents z h@(Single name) s@(Reference n' _) e1 e2
-      | n == n' && refInExpr name e1 && refInExpr name e2
-        = Just (h, s, down z >>= down)
-    matchComponents _ _ _ _ _ = Nothing
-    -- Is a name referred to in an expression?
-    refInExpr name = any (hasName name) . universe
-    hasName name (Reference name' _) = name == name'
-    hasName _ _ = False
+    matchComponents :: ExpressionZ -> Generator -> Expression -> Expression
+                    -> Maybe (Generator, Maybe ExpressionZ)
+    matchComponents z g e1 e2
+      | refInExpr (namesFromGenerator g) e1 && refInExpr (namesFromGenerator g) e2
+        = Just (g, down z >>= down)
+    matchComponents _ _ _ _ = Nothing
 
-    partsAreNumeric :: (MonadFail m, NameGen m) => (AbstractPattern, Expression, Maybe ExpressionZ) -> m Bool
-    partsAreNumeric (_, _, Just z)
+    -- Is a name referred to in an expression?
+    refInExpr names = any (hasName names) . universe
+    hasName names (Reference name _) = name `elem` names
+    hasName _     _                  = False
+
+    partsAreNumeric :: (MonadFail m, NameGen m) => (Generator, Maybe ExpressionZ) -> m Bool
+    partsAreNumeric (_, Just z)
       = case matching (hole z) ineqOps of
              Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
              Nothing            -> return False
@@ -708,18 +711,31 @@ forAllIneqToIneqSum m (FindOrGiven Find n DomainSet{})
            _                   -> return False
 
     -- Replace the forAll with the (in)equality between sums
-    mkConstraint :: (AbstractPattern, Expression, Maybe ExpressionZ) -> Maybe ExpressionZ
-    mkConstraint (var, gen, Just z)
+    mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
+    mkConstraint (gen, Just z)
       = case matching (hole z) ineqOps of
              Just (f, (e1, e2)) ->
-               let mkSumOf e = [essence| sum &var in &gen . &e |]
+               let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
                    e1' = mkSumOf e1
                    e2' = mkSumOf e2
                    -- Two steps to get out of the forAll, and replace it with the constraint
                    in replaceHole (make f e1' e2') <$> (up z >>= up)
              Nothing -> Nothing
     mkConstraint _ = Nothing
-forAllIneqToIneqSum m _ = return m
+
+-- | Get the list of names from a generator.
+namesFromGenerator :: Generator -> [Name]
+namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
+namesFromGenerator (GenDomainHasRepr n _) = [n]
+namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
+
+-- | Get the list of names from an abstract pattern.
+namesFromAbstractPattern :: AbstractPattern -> [Name]
+namesFromAbstractPattern (Single n)        = [n]
+namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern _                 = []
 
 -- | Lens function over a binary expression.
 type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
