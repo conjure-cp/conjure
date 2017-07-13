@@ -104,7 +104,7 @@ The following model ``gc3.essence`` uses additional decision variables to more p
 There are now multiple reachability matrices.
 Each corresponds to a specific maximum distance.
 The first matrix ``reach[0]`` expresses reachability in one step.
-The entry ``reach[k,u,v]`` expresses whether v is reachable from v via a path of length at most 2**k.
+The entry ``reach[k,u,v]`` expresses whether v is reachable from u via a path of length at most 2**k.
 
 .. code-block:: essence
 
@@ -122,7 +122,7 @@ The entry ``reach[k,u,v]`` expresses whether v is reachable from v via a path of
    such that
      connected = (forAll u,v : vertices . reach[m,u,v])
 
-This is the fastest yet, but it does generate large intermediate models with many variables.
+This model is the fastest yet, but it does generate large intermediate models with many variables.
 
 Finally, there is a simple model ``gc4.essence`` that is faster still than any of the three previous ones.
 This model relies on the fact that a graph is disconnected if, and only if, its vertices can be partitioned into two sets, with no edges between vertices in the two different sets.
