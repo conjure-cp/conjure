@@ -459,11 +459,11 @@ We also hardcode n, so no parameter file is needed.
        (reach[i,u,v] \/ (exists w : vertices . (reach[i,u,w] /\ reach[i,w,v]))),
      forAll u,v : vertices . reach[m,u,v]
 
-If this model is in the file ``gce04.essence``, then we now need to explicitly ask Conjure to generate all the possible graphs:
+If this model is in the file ``gce2.essence``, then we now need to explicitly ask Conjure to generate all the possible graphs:
 
 .. code-block:: bash
 
-    conjure solve -ac --number-of-solutions=all gce.essence
+    conjure solve -ac --number-of-solutions=all gce2.essence
 
 In this case Conjure generates 38 solutions, one solution per file.
 

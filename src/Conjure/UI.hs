@@ -383,8 +383,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -441,8 +441,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -506,8 +506,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -560,8 +560,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -818,8 +818,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -871,8 +871,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -915,8 +915,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -983,8 +983,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -1031,8 +1031,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
@@ -1078,8 +1078,8 @@ ui = modes
                     \    plain : The default\n\
                     \    binary: A binary encoding of the Essence output.\n\
                     \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
+                    \    json  : A json encoding of the Essence output,\n\
+                    \            for tools integrating with Conjure\n\
                     \            to avoid parsing textual Essence."
         , lineWidth
             = 120
