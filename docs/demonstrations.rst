@@ -144,7 +144,7 @@ Labelled connected graphs
 -------------------------
 
 We now illustrate the use of Conjure for a more realistic modelling task, to enumerate all labelled connected graphs.
-There are 2**(2n) labelled connected graphs over a fixed set of n distinct labels.
+The number of labelled connected graphs over a fixed set of n distinct labels grows quickly; this is `OEIS sequence A001187 <http://oeis.org/A001187>`_.
 
 We first need to decide how to represent graphs.
 A standard representation is to list the edges.
@@ -305,8 +305,9 @@ This model takes about half as long as the previous one.
 The following model ``gc3.essence`` uses additional decision variables to more precisely control how the reachability matrix should be computed.
 There are now multiple reachability matrices.
 Each corresponds to a specific maximum distance.
-The first matrix ``reach[0]`` expresses reachability in one step, and is simply the adjacency matrix of the graph.
+The first n by n matrix ``reach[0]`` expresses reachability in one step, and is simply the adjacency matrix of the graph.
 The entry ``reach[k,u,v]`` expresses whether v is reachable from u via a path of length at most 2**k.
+(Note: in this model a vertex cannot reach itself in zero steps, so a graph with a single vertex is not regarded as connected.)
 
 .. code-block:: essence
 
@@ -317,8 +318,8 @@ The entry ``reach[k,u,v]`` expresses whether v is reachable from u via a path of
    find reach : matrix indexed by [int(0..m), vertices, vertices] of bool
    such that
      forAll u,v : vertices . reach[0,u,v] = ({u,v} in G),
-     forAll i : int(0..(m-1)) . forAll u,v : vertices .
-       A[i+1,u,v] = (A[i,u,v] \/ (exists w : vertices . (A[i,u,w]/\A[i,w,v])))
+     forAll i : int(0..(m-1)) . forAll u,v : vertices . reach[i+1,u,v] =
+       (reach[i,u,v] \/ (exists w : vertices . (reach[i,u,w] /\ reach[i,w,v]))),
    find connected : bool
    such that
      connected = (forAll u,v : vertices . reach[m,u,v])
@@ -352,49 +353,122 @@ The third is that the value of ``connected`` is determined by whether it is poss
    find connected : bool
    such that
      exists u : vertices . u in C,
-     forAll e : G . (min(e) in C) = (max(e) in C),
+     forAll e in G . (min(e) in C) = (max(e) in C),
      connected = !(exists u : vertices . !(u in C))
 
-This is not only the simplest model, but it also generates the smallest input files for the back-end constraint or SAT solver, and tends to be the fastest.
+This is the solution for ``disconnected-4.param``:
 
-It should be clear from these four example models that the process of modelling requires careful thought and that the choices made may drastically affect the performance of the solver.
-(It is actually possible to improve performance yet more, using relations and matrices instead of sets.
-This may change in future as the Conjure/Savile Row toolchain is improved.)
+.. code-block:: essence
 
-We now have four models that determine whether a graph is connected, and the last one seems best.
+   letting C be {1, 2}
+   letting connected be false
 
-We use this last model of connectivity to enumerate the graphs that are connected over vertices ``{1,2,3,4}``.
-Instead of expecting the graph G to be given, we ask the solver to find G, specifying that it be connected.
-We do this by asking for the same set C as before, but in addition asking for the graph G.
+Model ``gc4.essence`` yields a solution quickly, but unfortunately it can also give incorrect results.
+Letting C be the set of all vertices and letting ``connected`` be true is always a solution, whether the graph is connected or not.
+This can be confirmed by asking Conjure to generate all solutions:
+
+.. code-block:: essence
+
+   conjure solve -ac --number-of-solutions=all gc4.essence
+
+This gives two solutions, the one above and the following one:
+
+.. code-block:: essence
+
+   letting C be {1, 2, 3, 4}
+   letting connected be true
+
+It is actually possible to ensure that this "solution" is never the first one generated, and then to ask Conjure to only look for the first solution; if the graph is not connected then the first solution will correctly indicate its status.
+However, this relies on precise knowledge of the ordering heuristics being employed at each stage of the toolchain, which is not a robust approach.
+
+Let's look for a robust approach that won't unexpectedly fail if parts of the toolchain change which optimisations they perform or the order in which evaluations occur.
+
+One option could be to look for solutions of a more restrictive model which includes an additional constraint that requires some vertex to not be in C.
+This model would have a solution precisely if the graph is not connected.
+Failure to find solutions to this model would then indicate connectivity.
+It is possible to call Conjure from a script that uses the failure to find solutions, but the Conjure toolchain currently does not support testing for the presence of solutions directly.
+
+In place of the missing "if-has-solution" directive, we could instead quantify over all possible subsets of vertices.
+Such an approach quickly becomes infeasible as n grows (and is much worse than the models considered so far), because it attempts to check 2**n subsets.
+
+Instead, we can make use of the optimisation features of Essence, to find a solution with a C of minimal cardinality.
+Choosing a minimal C ensures that when there is more than one solution, then the one that is generated always indicates the failure of connectivity.
+Since we don't care about the minimal C, as long as it is smaller than the set of all vertices if possible, we also replace the general requirement for non-emptiness by a constraint that always forces the set C to contain the vertex labelled 1.
+
+.. code-block:: essence
+
+   given n : int(1..)
+   letting vertices be domain int(1..n)
+   given G : set of set (size 2) of vertices
+   find C : set of vertices
+   find connected : bool
+   such that
+     1 in C,
+     forAll e in G . (min(e) in C) = (max(e) in C)
+   minimising |C|
+
+This model ``gc5.essence`` is still straightforward, even with the additional complication to rule out incorrect solutions.
+Out of the correct models so far, this tends to generate the smallest input files for the back-end constraint or SAT solver, and also tends to be the fastest.
+
+We now have a fast model for graph connectivity.
+Let's modify it as ``gce1.essence`` hardcoding n to be 4 and asking the solver to find G as well.
 
 .. code-block:: essence
 
    letting n be 4
    letting vertices be domain int(1..n)
    find G : set of set (size 2) of vertices
-   find C : matrix indexed by [vertices] of bool
+   find C : set of vertices
+   find connected : bool
    such that
-     exists u : vertices . C[u],
-     forAll e : G . (min(e) in C) = (max(e) in C),
-     !(exists u : vertices . !C[u])
+     1 in C,
+     forAll e in G . (min(e) in C) = (max(e) in C)
+   minimising |C|
 
-This model is in the file ``gce.essence``.
-In this model we hardcode n, so no parameter file is supplied.
+We now ask for all solutions:
 
 .. code-block:: bash
 
-    conjure solve -ac gce.essence
+    conjure solve -ac --number-of-solutions=all gce1.essence
 
-This just gives one solution out of many!
-We need to explicitly ask Conjure to generate all the possible graphs:
+However, this finds only one solution.
+The solver finds one solution that minimises ``|C|``.
+This minimisation is performed over all possible solutions.
+This is acceptable if G is given, but this clashes with our goal to generate *all* connected graphs.
+Currently there is no way to tell Conjure that minimisation should be restricted to C, producing one solution for each G, rather than C and G together.
+
+We now have several models that determine whether a graph is connected.
+Checking whether there is a nontrivial connected component seems to be the best model, but it doesn't always work in our setting of generating all connected graphs.
+We therefore need to choose one of the other models to start with, say the iterated adjacency matrix representation.
+
+We now use this model of connectivity to enumerate the labelled connected graphs over the vertices ``{1,2,3,4}``.
+Instead of expecting the graph G to be given, we ask the solver to find G, specifying that it be connected.
+We do this by asking for the same adjacency matrix ``reach`` as before, but in addition asking for the graph G.
+We also hardcode n, so no parameter file is needed.
+
+.. code-block:: essence
+
+   letting n be 4
+   letting vertices be domain int(1..n)
+   find G : set of set (size 2) of vertices
+   letting m be sum([1 | i : int(0..64), 2**i <= n])
+   find reach : matrix indexed by [int(0..m), vertices, vertices] of bool
+   such that
+     forAll u,v : vertices . reach[0,u,v] = ({u,v} in G),
+     forAll i : int(0..(m-1)) . forAll u,v : vertices . reach[i+1,u,v] =
+       (reach[i,u,v] \/ (exists w : vertices . (reach[i,u,w] /\ reach[i,w,v]))),
+     forAll u,v : vertices . reach[m,u,v]
+
+If this model is in the file ``gce04.essence``, then we now need to explicitly ask Conjure to generate all the possible graphs:
 
 .. code-block:: bash
 
     conjure solve -ac --number-of-solutions=all gce.essence
 
-That's it!
-In this case there are 256 solutions.
+In this case Conjure generates 38 solutions, one solution per file.
 
-It is also possible to use an adjacency matrix representation for graphs.
-It is an instructive exercise to modify the four models of connectivity to use the adjacency matrix representation instead of the set of edges representation.
+It should be clear from these example models that the process of modelling requires careful thought and that the choices made may drastically affect the performance of the solver.
+
+Instead of listing the edges of a graph, and then deriving the adjacency matrix as necessary, it is also possible to use the adjacency matrix representation.
+It is an instructive exercise to modify the models of connectivity to use the adjacency matrix representation instead of the set of edges representation.
 
