@@ -3,7 +3,7 @@
 <tr><td colspan='3'>Conjure: The Automated Constraint Modelling Tool</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure [COMMAND] ... [OPTIONS] </td></tr>
-<tr><td colspan='3' style='padding-left:2ex;'>The command line interface of Conjure takes a command name as the first argument followed by more arguments depending on the command.<br />This help text gives a list of the available commands.<br />For details of a specific command, pass the --help flag after the command name.<br />For example: 'conjure translate-solution --help'</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>The command line interface of Conjure takes a command name as the first argument followed by more arguments depending on the command.<br />This help text gives a list of the available commands.<br />For details of a command, pass the --help flag after the command name.<br />For example: 'conjure translate-solution --help'</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Common flags:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--help</td><td style='padding-left:2ex;'>Display help message</td></tr>
@@ -13,140 +13,140 @@
 <tr><td colspan='3' style='padding-left:2ex;'>The main act. Given a problem specification in Essence, produce constraint programming models in Essence'.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Output directory. Generated models will be saved here.<br />Default value: 'conjure-output'</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--numbering-start=INT</td><td style='padding-left:2ex;'>Starting value to output files.<br />Default value: 1</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--smart-filenames</td><td style='padding-left:2ex;'>Use "smart names" for the models.<br />Turned off by default.<br />Caution: With this flag, Conjure will use the answers when producing a filename. It will ignore the order of questions. This will become a problem if anything other than 'f' is used for questions.</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Where to save generated models.<br />Default value: 'conjure-output'</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--numbering-start=INT</td><td style='padding-left:2ex;'>Starting value for output files.<br />Default value: 1</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--smart-filenames</td><td style='padding-left:2ex;'>Use "smart names" for models.<br />Directs Conjure to use the answers when producing a filename and to ignore the order of questions. Only useful if 'f' is used for questions.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Whether to generate verbose trails or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Whether to generate trails about the applied rewritings or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: these can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Generate verbose trails.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Generate trails about the applied rewritings.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: these can be a lot!)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused be by -al</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused by -al</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). The letter a (for auto) can be prepended to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when selecting an answer. Same options as strategy-q.<br />Moreover, c (for compact) can be used to pick the most 'compact' option at every decision point.<br />And, s (for sparse) can be used to pick the most 'sparse' option at every decision point. This can be particularly useful for --representations-givens<br /> l (for follow log) tries to pick the given choices as far as possible<br />Default value: ai</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation.<br />Default value: same as --strategy-a</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-finds=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a decision variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-givens=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a parameter.<br />Default value: s (for sparse)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-auxiliaries=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for an auxiliary variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-quantifieds=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a quantified variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-cuts=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for cuts in 'branching on'.<br />Default value: same as --representations-cuts</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--channelling</td><td style='padding-left:2ex;'>Whether to produce channelled models or not.<br />Can be true or false. (true by default)<br />    false: Do not produce channelled models.<br />    true : Produce channelled models.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representation-levels</td><td style='padding-left:2ex;'>Whether to use built-in precedence levels when choosing representations.<br />These levels are used to cut down the number of generated models.<br />Can be true or false. (true by default)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--seed=INT</td><td style='padding-left:2ex;'>The seed for the random number generator.</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). Prepend a (for auto) to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting an answer. Same options as strategy-q.<br /> c picks the most 'compact' option at every decision point.<br /> s picks the 'sparsest' option at every decision point: useful for --representations-givens<br /> l (for follow log) tries to pick given choices as far as possible<br />Default value: ai</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation.<br />Default value: same as --strategy-a</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-finds=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a decision variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-givens=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a parameter.<br />Default value: s (for sparse)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-auxiliaries=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for an auxiliary variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-quantifieds=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a quantified variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-cuts=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for cuts in 'branching on'.<br />Default value: same as --representations-cuts</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--channelling</td><td style='padding-left:2ex;'>Whether to produce channelled models (true by default).<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representation-levels</td><td style='padding-left:2ex;'>Whether to use built-in precedence levels when choosing representations. Used to cut down the number of generated models.<br />Default: true</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--seed=INT</td><td style='padding-left:2ex;'>Random number generator seed.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-models=INT</td><td style='padding-left:2ex;'>Maximum number of models to generate.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--choices=FILE</td><td style='padding-left:2ex;'>Choices to use if possible for -al can either be a eprime file (created by --logChoices), or a json file </td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--choices=FILE</td><td style='padding-left:2ex;'>Choices to use for -al, either an eprime file (created by --log-choices), or a json file.</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure translate-parameter [OPTIONS]</td></tr>
-<tr><td colspan='3' style='padding-left:2ex;'>Refinement of parameter files written in Essence for a particular Essence' model.<br />The model needs to be generated by Conjure.</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>Refinement of Essence parameter files for a particular Essence' model.<br />The model needs to be generated by Conjure.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Flags:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime=FILE</td><td style='padding-left:2ex;'>An Essence' model generated by Conjure.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-param=FILE</td><td style='padding-left:2ex;'>An Essence parameter for the original problem specification.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime-param=FILE</td><td style='padding-left:2ex;'>An Essence' parameter matching the Essence' model.<br />This field is optional.<br />By default, its value will be 'foo.eprime-param'<br />if the Essence parameter file is named 'foo.param'</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime-param=FILE</td><td style='padding-left:2ex;'>An Essence' parameter matching the Essence' model.<br />Default is 'foo.eprime-param' if the Essence parameter file is named 'foo.param'.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure translate-solution [OPTIONS]</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Translation of solutions back to Essence.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Flags:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime=FILE</td><td style='padding-left:2ex;'>An Essence' model generated by Conjure.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-param=FILE</td><td style='padding-left:2ex;'>An Essence parameter for the original problem specification.<br />This field is optional.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-param=FILE</td><td style='padding-left:2ex;'>An Essence parameter for the original problem specification.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--eprime-solution=FILE</td><td style='padding-left:2ex;'>An Essence' solution for the corresponding Essence' model.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-solution=FILE</td><td style='padding-left:2ex;'>An Essence solution for the original problem specification.<br />This field is optional.<br />By default, its value will be the value of --eprime-solution, with all extensions dropped the extension '.solution' is added instead.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-solution=FILE</td><td style='padding-left:2ex;'>An Essence solution for the original problem specification.<br />By default, its value is the value of --eprime-solution with extensions replaced by '.solution'.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure validate-solution [OPTIONS]</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Validating a solution.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Flags:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence=FILE</td><td style='padding-left:2ex;'>A problem specification in Essence</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--param=FILE</td><td style='padding-left:2ex;'>An Essence parameter.<br />This field is optional.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solution=FILE</td><td style='padding-left:2ex;'>An Essence solution.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence=FILE</td><td style='padding-left:2ex;'>Problem specification in Essence.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--param=FILE</td><td style='padding-left:2ex;'>Essence parameter file.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solution=FILE</td><td style='padding-left:2ex;'>Essence solution.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]</td></tr>
-<tr><td colspan='3' style='padding-left:2ex;'>This is a combined mode, and it is available for convenience.<br />It runs Conjure in the modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and then solution translation.</td></tr>
+<tr><td colspan='3' style='padding-left:2ex;'>A combined mode for convenience.<br />Runs Conjure in modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and then solution translation.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--validate-solutions</td><td style='padding-left:2ex;'>Enable/disable solution validation. Off by default.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--number-of-solutions=ITEM</td><td style='padding-left:2ex;'>Number of solutions to find.<br />Pass the string "all" to enumerate all solutions.<br />Default: 1</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--validate-solutions</td><td style='padding-left:2ex;'>Enable solution validation.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--number-of-solutions=ITEM</td><td style='padding-left:2ex;'>Number of solutions to find; "all" enumerates all solutions.<br />Default: 1</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--copy-solutions</td><td style='padding-left:2ex;'>Whether to place a copy of solution(s) next to the Essence file or not.<br />Default: on</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Output directory. Generated models will be saved here.<br />Default value: 'conjure-output'</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--numbering-start=INT</td><td style='padding-left:2ex;'>Starting value to output files.<br />Default value: 1</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--smart-filenames</td><td style='padding-left:2ex;'>Use "smart names" for the models.<br />Turned off by default.<br />Caution: With this flag, Conjure will use the answers when producing a filename. It will ignore the order of questions. This will become a problem if anything other than 'f' is used for questions.</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Where to save generated models.<br />Default value: 'conjure-output'</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--numbering-start=INT</td><td style='padding-left:2ex;'>Starting value for output files.<br />Default value: 1</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--smart-filenames</td><td style='padding-left:2ex;'>Use "smart names" for models.<br />Directs Conjure to use the answers when producing a filename and to ignore the order of questions. Only useful if 'f' is used for questions.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Whether to generate verbose trails or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Whether to generate trails about the applied rewritings or not.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: these can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--verbose-trail</td><td style='padding-left:2ex;'>Generate verbose trails.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--rewrites-trail</td><td style='padding-left:2ex;'>Generate trails about the applied rewritings.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-fails</td><td style='padding-left:2ex;'>Generate logs for rule failures. (Caution: can be a lot!)</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-successes</td><td style='padding-left:2ex;'>Generate logs for rule applications.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: these can be a lot!)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused be by -al</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-rule-attempts</td><td style='padding-left:2ex;'>Generate logs for rule attempts. (Caution: can be a lot!)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-choices</td><td style='padding-left:2ex;'>Store the choices in a way that can be reused by -al</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>Model generation:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). The letter a (for auto) can be prepended to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when selecting an answer. Same options as strategy-q.<br />Moreover, c (for compact) can be used to pick the most 'compact' option at every decision point.<br />And, s (for sparse) can be used to pick the most 'sparse' option at every decision point. This can be particularly useful for --representations-givens<br /> l (for follow log) tries to pick the given choices as far as possible<br />Default value: c</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation.<br />Default value: same as --strategy-a</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-finds=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a decision variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-givens=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a parameter.<br />Default value: s (for sparse)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-auxiliaries=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for an auxiliary variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-quantifieds=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for a quantified variable.<br />Default value: same as --representations</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-cuts=STRATEGY</td><td style='padding-left:2ex;'>Strategy to use when choosing a representation for cuts in 'branching on'.<br />Default value: same as --representations-cuts</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--channelling</td><td style='padding-left:2ex;'>Whether to produce channelled models or not.<br />Can be true or false. (true by default)<br />    false: Do not produce channelled models.<br />    true : Produce channelled models.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representation-levels</td><td style='padding-left:2ex;'>Whether to use built-in precedence levels when choosing representations.<br />These levels are used to cut down the number of generated models.<br />Can be true or false. (true by default)</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--seed=INT</td><td style='padding-left:2ex;'>The seed for the random number generator.</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-q</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-q=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting the next question to answer. Options: f (for first), i (for interactive), r (for random), x (for all). Prepend a (for auto) to automatically skip when there is only one option at any point.<br />Default value: f</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-a</td><td style='padding-left:1ex; white-space:nowrap;'>--strategy-a=STRATEGY</td><td style='padding-left:2ex;'>Strategy for selecting an answer. Same options as strategy-q.<br /> c picks the most 'compact' option at every decision point.<br /> s picks the 'sparsest' option at every decision point: useful for --representations-givens<br /> l (for follow log) tries to pick given choices as far as possible<br />Default value: c</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation.<br />Default value: same as --strategy-a</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-finds=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a decision variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-givens=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a parameter.<br />Default value: s (for sparse)</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-auxiliaries=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for an auxiliary variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-quantifieds=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for a quantified variable.<br />Default value: same as --representations</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representations-cuts=STRATEGY</td><td style='padding-left:2ex;'>Strategy for choosing a representation for cuts in 'branching on'.<br />Default value: same as --representations-cuts</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--channelling</td><td style='padding-left:2ex;'>Whether to produce channelled models (true by default).<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--representation-levels</td><td style='padding-left:2ex;'>Whether to use built-in precedence levels when choosing representations. Used to cut down the number of generated models.<br />Default: true</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--seed=INT</td><td style='padding-left:2ex;'>Random number generator seed.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-models=INT</td><td style='padding-left:2ex;'>Maximum number of models to generate.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--use-existing-models=FILE</td><td style='padding-left:2ex;'>Takes paths of Essence' models generated beforehand.<br />If given, Conjure will skip the modelling phase and use the existing models for solving.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--use-existing-models=FILE</td><td style='padding-left:2ex;'>Paths of Essence' models generated beforehand. If given, Conjure skips the modelling phase and uses existing models for solving.</td></tr>
 <tr><td colspan='3'>Options for other tools:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--savilerow-options=ITEM</td><td style='padding-left:2ex;'>Options to be passed to Savile Row.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver-options=ITEM</td><td style='padding-left:2ex;'>Options to be passed to the backend solver.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver to use.<br />Possible values: minion/lingeling/minisat<br />Default: minion</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--savilerow-options=ITEM</td><td style='padding-left:2ex;'>Options passed to Savile Row.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver-options=ITEM</td><td style='padding-left:2ex;'>Options passed to the backend solver.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--solver=ITEM</td><td style='padding-left:2ex;'>Backend solver. Possible values: minion/lingeling/minisat<br />Default: minion</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure pretty [OPTIONS] FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Pretty print as Essence file to stdout.<br />This mode can be used to view a binary Essence file in textual form.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Flags:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--normalise-quantified</td><td style='padding-left:2ex;'>Whether to normalise the names of quantified variables or not. Off by default.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--remove-unused</td><td style='padding-left:2ex;'>Whether to remove unused declarations or not. Off by default.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--normalise-quantified</td><td style='padding-left:2ex;'>Normalise the names of quantified variables.</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--remove-unused</td><td style='padding-left:2ex;'>Remove unused declarations.</td></tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure diff [OPTIONS] FILE FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Diff on two Essence files. Works on models, parameters, and solutions.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure type-check [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Type-checking a single Essence file.</td></tr>
@@ -154,29 +154,29 @@
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure split [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Split an Essence file to various smaller files. Useful for testing.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
-<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Output directory. Generated models will be saved here.<br />Default value: 'conjure-output'</td></tr>
+<tr><td style='padding-left:2ex; white-space:nowrap;'>-o</td><td style='padding-left:1ex; white-space:nowrap;'>--output-directory=DIR</td><td style='padding-left:2ex;'>Where to save generated models.<br />Default value: 'conjure-output'</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure symmetry-detection [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Dump some JSON to be used as input to ferret for symmetry detection.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--json=JSON_FILE</td><td style='padding-left:2ex;'>Output JSON file.<br />By default, its value will be 'foo.essence-json'<br />if the Essence file is named 'foo.essence'</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--json=JSON_FILE</td><td style='padding-left:2ex;'>Output JSON file.<br />Default is 'foo.essence-json'<br />if the Essence file is named 'foo.essence'</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 <tr><td colspan='3'>&nbsp;</tr>
 <tr><td colspan='3'>conjure parameter-generator [OPTIONS] ESSENCE_FILE</td></tr>
 <tr><td colspan='3' style='padding-left:2ex;'>Generate an Essence model describing the instances of the problem class defined in the input Essence model.<br />An error will be printed if the model has infinitely many instances.</td></tr>
@@ -184,10 +184,10 @@
 <tr><td colspan='3'>Logging &amp; Output:</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--essence-out=FILE</td><td style='padding-left:2ex;'>Output file path.</td></tr>
 <tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--log-level=LOGLEVEL</td><td style='padding-left:2ex;'>Log level.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Conjure's output can be in multiple formats.<br />    plain : The default<br />    binary: A binary encoding of the Essence output.<br />            It can be read back in by Conjure.<br />    json  : A json encoding of the Essence output,<br />            for tools integrating with Conjure<br />            to avoid parsing textual Essence.</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width to use during pretty printing.<br />Default: 120</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--output-format=FORMAT</td><td style='padding-left:2ex;'>Format to use for output.<br />    plain : default<br />    binary: can be read by Conjure<br />    json  : use to avoid parsing<br /></td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--line-width=INT</td><td style='padding-left:2ex;'>Line width for pretty printing.<br />Default: 120</td></tr>
 <tr><td colspan='3'>General:</td></tr>
-<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Time limit in seconds (real time).</td></tr>
+<tr><td style='padding-left:2ex;'>&nbsp;<td style='padding-left:1ex; white-space:nowrap;'>--limit-time=INT</td><td style='padding-left:2ex;'>Limit in seconds of real time.</td></tr>
 </table>
 </div>
 <br />
