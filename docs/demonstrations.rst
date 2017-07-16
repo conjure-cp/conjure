@@ -21,6 +21,9 @@ This is a small toy example, but already illustrates some interesting features o
 
 Here each letter represents a numeric digit in an addition, and we are asked to find an assignment of digits to letters so that the number represented by the digits SEND when added to the number represented by MORE yields the number represented by MONEY.
 
+Initial model
+~~~~~~~~~~~~~
+
 We are looking for a mapping (a function) from letters to digits.
 We can represent the different letters as an enumerated type, with each letter appearing only once.
 We then need to express what it means for the digits of the sum to behave as we expect; a natural approach is to introduce carry digits and use those to express the sum digit-wise.
@@ -63,6 +66,10 @@ Unless we specify what to call the solution, it is saved as ``sm1.solution``.
 This is clearly not what we wanted.
 We haven't specified all the constraints in the problem!
 
+
+Identifying a missing constraint
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 In these kinds of puzzles, usually we need each letter to map to a different digit: we need an injective function.
 Let's replace the line
 
@@ -94,7 +101,11 @@ This time the solution ``sm2.solution`` looks more like what we wanted:
    letting f be function(S --> 2, E --> 8, N --> 1, D --> 7, M --> 0,
      O --> 3, R --> 6, Y --> 5)
 
-There is still something strange: we usually do not allow a number to begin with a zero digit, but the solution maps M to 0.
+Final model
+~~~~~~~~~~~
+
+There is still something strange with ``sm2.essence``.
+We usually do not allow a number to begin with a zero digit, but the solution maps M to 0.
 Let's add the missing constraints to file ``sm3.essence``:
 
 .. code-block:: essence
@@ -135,8 +146,8 @@ Finally, let's check that there are no more solutions:
 
    conjure solve -ac sm3.essence --number-of-solutions=all
 
-This confirms that there is only one solution.
-Try verifying that the first two models have multiple solutions, and that the solution given by the third model is among these.
+This confirms that there is indeed only one solution.
+As an exercise, verify that the first two models have multiple solutions, and that the solution given by the third model is among these.
 (The first has 1155 solutions, the second 25.)
 
 
@@ -171,6 +182,10 @@ We should also have a different graph that is not connected:
 which is saved in file ``disconnected-4.param``.
 
 We now need to express what it means for a graph to be connected.
+
+
+Model 1: distance matrix
+~~~~~~~~~~~~~~~~~~~~~~~~
 
 In our first attempt, we use a matrix of distances.
 Each entry ``reach[u,v]`` represents the length of a shortest path from u to v, or n if there is no path from u to v.
@@ -250,6 +265,10 @@ This is quite round-about!
 We can now try to improve the model by asking the system to do less work.
 After all, we don't actually need all the pairwise distances.
 
+
+Model 2: reachability matrix
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 In the following model, stored as file ``gc2.essence``, the reachability matrix uses Boolean values for the distances rather than integers, with ``true`` representing reachable and ``false`` unreachable.
 Each entry ``reach[u,v]`` represents whether it is possible to reach v by some path that starts at u.
 This is modelled as the disjunction of three conditions: u is reachable from itself, any neighbour of u is reachable from it, and if v is not a neighbour of u then there should be a neighbour w of u so that v is reachable from w.
@@ -300,13 +319,20 @@ In contrast, in the disconnected graph there are some false entries:
    $ _ _ T T
    $ _ _ T T
 
-This model takes about half as long as the previous one.
+This model takes about half as long as the previous one, but is still rather slow for large graphs.
 
-The following model ``gc3.essence`` uses additional decision variables to more precisely control how the reachability matrix should be computed.
-There are now multiple reachability matrices.
+
+Model 3: structured reachability matrices
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+In the previous two models the solver may spend a long time early in the search process looking for ways to reach vertices that are far away, even though it would be more efficient to focus the early stages of search on vertices close by.
+It is possible to improve performance by guiding the search to consider nearby vertices before vertices that are far from each other.
+The following model ``gc3.essence`` uses additional decision variables to more precisely control how the desired reachability matrix should be computed.
+There are multiple reachability matrices.
 Each corresponds to a specific maximum distance.
 The first n by n matrix ``reach[0]`` expresses reachability in one step, and is simply the adjacency matrix of the graph.
 The entry ``reach[k,u,v]`` expresses whether v is reachable from u via a path of length at most 2**k.
+If a vertex v is reachable from some vertex u, then it can be reached in at most n-1 steps.
 (Note: in this model a vertex cannot reach itself in zero steps, so a graph with a single vertex is not regarded as connected.)
 
 .. code-block:: essence
@@ -329,12 +355,16 @@ The variable m is used to compute the number of matrices that are required; this
 The value of ``connected`` is then based on whether whether ``reach[m]`` contains any false entries.
 
 This model is the fastest yet, but it generates intermediate distance matrices, each containing n**2 variables.
-We omit the solutions here, but they show how the true values spread until reaching a fixed point.
+We omit the solutions here, but they show how the number of true values increases, until reaching a fixed point.
+
+
+Model 4: connected component
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Each of the three models so far deals with all possible pairs of vertices.
 The number of possible pairs of vertices is quadratic in the number of vertices.
-However, many graphs are actually sparse, with a number of edges that is bounded by a linear function of the number of vertices.
-For sparse graphs, and especially those with many vertices, it is important to only consider the edges that are present rather than all possible pairs of vertices.
+However, many graphs are sparse, with a number of edges that is bounded by a linear function of the number of vertices.
+For sparse graphs, and especially those with many vertices, it is therefore important to only consider the edges that are present rather than all possible pairs of vertices.
 The next model ``gc4.essence`` uses this insight, and is indeed faster than any of the three previous ones.
 
 The model builds on the fact that a graph is disconnected if, and only if, its vertices can be partitioned into two sets, with no edges between vertices in the two different sets.
@@ -379,14 +409,18 @@ This gives two solutions, the one above and the following one:
    letting connected be true
 
 It is actually possible to ensure that this "solution" is never the first one generated, and then to ask Conjure to only look for the first solution; if the graph is not connected then the first solution will correctly indicate its status.
-However, this relies on precise knowledge of the ordering heuristics being employed at each stage of the toolchain, which is not a robust approach.
+However, this relies on precise knowledge of the ordering heuristics being employed at each stage of the toolchain.
+
+
+Model 5: minimal connected component
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Let's look for a robust approach that won't unexpectedly fail if parts of the toolchain change which optimisations they perform or the order in which evaluations occur.
 
 One option could be to look for solutions of a more restrictive model which includes an additional constraint that requires some vertex to not be in C.
-This model would have a solution precisely if the graph is not connected.
+This model would have a solution precisely if the graph is *not* connected.
 Failure to find solutions to this model would then indicate connectivity.
-It is possible to call Conjure from a script that uses the failure to find solutions, but the Conjure toolchain currently does not support testing for the presence of solutions directly.
+It is possible to call Conjure from a script that uses the failure to find solutions to conclude connectivity, but the Conjure toolchain currently does not support testing for the presence of solutions directly.
 
 In place of the missing "if-has-solution" directive, we could instead quantify over all possible subsets of vertices.
 Such an approach quickly becomes infeasible as n grows (and is much worse than the models considered so far), because it attempts to check 2**n subsets.
@@ -410,8 +444,12 @@ Since we don't care about the minimal C, as long as it is smaller than the set o
 This model ``gc5.essence`` is still straightforward, even with the additional complication to rule out incorrect solutions.
 Out of the correct models so far, this tends to generate the smallest input files for the back-end constraint or SAT solver, and also tends to be the fastest.
 
+
+Generating all connected graphs
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
 We now have a fast model for graph connectivity.
-Let's modify it as ``gce1.essence`` hardcoding n to be 4 and asking the solver to find G as well.
+Let's modify it as ``gce1.essence``, hardcoding n to be 4 and asking the solver to find G as well as C.
 
 .. code-block:: essence
 
@@ -419,7 +457,6 @@ Let's modify it as ``gce1.essence`` hardcoding n to be 4 and asking the solver t
    letting vertices be domain int(1..n)
    find G : set of set (size 2) of vertices
    find C : set of vertices
-   find connected : bool
    such that
      1 in C,
      forAll e in G . (min(e) in C) = (max(e) in C)
@@ -431,20 +468,21 @@ We now ask for all solutions:
 
     conjure solve -ac --number-of-solutions=all gce1.essence
 
-However, this finds only one solution.
-The solver finds one solution that minimises ``|C|``.
-This minimisation is performed over all possible solutions.
-This is acceptable if G is given, but this clashes with our goal to generate *all* connected graphs.
-Currently there is no way to tell Conjure that minimisation should be restricted to C, producing one solution for each G, rather than C and G together.
+However, this finds only one solution!
 
-We now have several models that determine whether a graph is connected.
-Checking whether there is a nontrivial connected component seems to be the best model, but it doesn't always work in our setting of generating all connected graphs.
+The solver finds one solution that minimises ``|C|``; this minimisation is performed globally over all possible solutions.
+This is what we intended when G was given, but is not what we want if our goal is to generate *all* connected graphs.
+We want to minimise C for each choice of G, producing one solution for each G.
+Currently there is no way to tell Conjure that minimisation should be restricted to the decision variable C.
+
+Checking whether there is a nontrivial connected component seems to be the most efficient model for graph connectivity, but it doesn't work in the setting of generating all connected graphs.
 We therefore need to choose one of the other models to start with, say the iterated adjacency matrix representation.
 
 We now use this model of connectivity to enumerate the labelled connected graphs over the vertices ``{1,2,3,4}``.
-Instead of expecting the graph G to be given, we ask the solver to find G, specifying that it be connected.
+Previously we checked connectivity of a given graph G.
+We now instead ask the solver to find G, specifying that it be connected.
 We do this by asking for the same adjacency matrix ``reach`` as before, but in addition asking for the graph G.
-We also hardcode n, so no parameter file is needed.
+We also hardcode n, so no parameter file is needed, and add the condition that previously determined the value of the ``connected`` decision variable as a constraint.
 
 .. code-block:: essence
 
@@ -467,8 +505,7 @@ If this model is in the file ``gce2.essence``, then we now need to explicitly as
 
 In this case Conjure generates 38 solutions, one solution per file.
 
-It should be clear from these example models that the process of modelling requires careful thought and that the choices made may drastically affect the performance of the solver.
-
 Instead of listing the edges of a graph, and then deriving the adjacency matrix as necessary, it is also possible to use the adjacency matrix representation.
-It is an instructive exercise to modify the models of connectivity to use the adjacency matrix representation instead of the set of edges representation.
+As an exercise, modify the models of connectivity to use the adjacency matrix representation instead of the set of edges representation.
 
+It should be clear from these example models that the process of modelling requires careful thought and that the choices made may drastically affect the performance of the solver.
