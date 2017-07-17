@@ -14,7 +14,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, nub, union )
+import Data.List ( (\\), delete, nub, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -33,7 +33,7 @@ type ExpressionZ = Zipper Expression Expression
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
                     => Model -> m Model
-strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
+strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fixRelationProj)
   where core :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
@@ -53,6 +53,12 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
         -- Apply the function only to declarations
         applyToDecl f m (Declaration d) = f m d
         applyToDecl _ m _               = return m
+        -- Push all of the constraints to a single statement at the back
+        suchThatToBack m@Model { mStatements = stmts }
+          = m { mStatements = suchThatToBack' stmts [] }
+        suchThatToBack' [] es = [SuchThat es]
+        suchThatToBack' (SuchThat cs:ss) es = suchThatToBack' ss (es `union` cs)
+        suchThatToBack' (s:ss) es = s : suchThatToBack' ss es
 
 -- | Update a declaration in a model.
 updateDeclaration :: Declaration  -- ^ Old declaration to be removed.
@@ -116,8 +122,8 @@ constrainFunctionDomain _ d _ = return d
 -- | Extract the such that expressions from a model.
 suchThat :: Model -> [Expression]
 suchThat = foldr fromSuchThat [] . mStatements
-  where fromSuchThat (SuchThat es) a = a `union` es
-        fromSuchThat _             a = a
+  where fromSuchThat (SuchThat es) = (`union` es)
+        fromSuchThat _             = id
 
 -- | If a function is surjective or bijective and its domain and codomain
 --   are of equal size, then it is total and bijective.
@@ -129,7 +135,9 @@ surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ p j) from to)
     j == JectivityAttr_Surjective = do
     (fromSize, toSize) <- functionDomainSizes from to
     if fromSize == toSize
-       then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
+       then do
+         logInfo "attr.01"
+         addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
        else return d
 surjectiveIsTotalBijective d = return d
 
@@ -141,7 +149,9 @@ totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
 totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
   (fromSize, toSize) <- functionDomainSizes from to
   if fromSize == toSize
-     then addAttributesToDomain d [ ("bijective", Nothing) ]
+     then do
+       logInfo "attr.03"
+       addAttributesToDomain d [ ("bijective", Nothing) ]
      else return d
 totalInjectiveIsBijective d = return d
 
@@ -163,7 +173,9 @@ definedForAllIsTotal :: (MonadFail m, MonadLog m)
                      -> m (Domain () Expression)  -- ^ Possibly modified domain.
 definedForAllIsTotal n m d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _)
   | any definedIn $ findInUncondForAll isOp m
-    = addAttributesToDomain d [ ("total", Nothing) ]
+    = do
+      logInfo "attr.02"
+      addAttributesToDomain d [ ("total", Nothing) ]
   where
     -- Look for operator expressions but leave comprehensions up to findInUncondForAll
     isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
@@ -210,7 +222,9 @@ fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
       (mapMaybe existsEqVals
         -- Find the desired pattern being matched
         (findInUncondForAll isExistsEq m))
-      = addAttributesToDomain d [ ("surjective", Nothing) ]
+      = do
+        logInfo "attr.09"
+        addAttributesToDomain d [ ("surjective", Nothing) ]
   where
     -- Get the domain value and codomain value used in the function call
     existsEqVals [essence| exists &i :  &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
@@ -254,7 +268,9 @@ diffArgResultIsInjective :: (MonadFail m, MonadLog m)
 diffArgResultIsInjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from _)
   | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
     not (null $ findInUncondForAll isDistinctDisequality m)
-    = addAttributesToDomain d [ ("injective", Nothing)
+    = do
+      logInfo "attr.10"
+      addAttributesToDomain d [ ("injective", Nothing)
                               -- It is known that no inputs are ignored
                               , ("total", Nothing) ]
   where
@@ -344,7 +360,9 @@ minSizeFromSet d@(DomainSet r (SetAttr size) dom) sub = do
   subDom <- domainOf sub
   case subDom of
        DomainSet _ (SetAttr subSize) _
-         -> return $ DomainSet r (SetAttr $ mergeSizeOnMin size subSize) dom
+         -> do
+           logInfo "attr.05"
+           return $ DomainSet r (SetAttr $ mergeSizeOnMin size subSize) dom
        _ -> return d
   where
     -- Merge the minSize of the right SizeAttr into the left
@@ -370,7 +388,9 @@ minSizeFromFunction d r = do
   f <- getFunDom r
   case f of
        DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
-         -> return $ setSetMinSize (Constant $ ConstantInt 1) d
+         -> do
+           logInfo "attr.04"
+           return $ setSetMinSize (Constant $ ConstantInt 1) d
        _ -> return d
 
 -- | Look for a function domain, allowing it to be generated in a comprehension.
@@ -437,6 +457,8 @@ setConstraints :: (MonadFail m, MonadLog m)
                -> m Model      -- ^ Possibly updated model.
 setConstraints m (FindOrGiven _ n DomainSet{}) = do
   cs <- funcRangeEqSet n m
+  unless (null cs)
+         (logInfo "cstr.01")
   return $ mergeConstraints m cs
 setConstraints m _ = return m
 
@@ -504,6 +526,8 @@ variableSize m decl@(FindOrGiven forg n dom) | validDom dom = do
        -- Only one size attribute is valid
        attr@[_] -> do
          dom' <- addAttributesToDomain dom attr
+         unless (dom == dom')
+                (logInfo "attr.06")
          return $ updateDeclaration decl (FindOrGiven forg n dom') $
                   removeConstraints m exprs
        _        -> return m
@@ -591,6 +615,8 @@ mSetSizeOccur m decl@(FindOrGiven forg n d@DomainMSet{})
 
     updateDomain dom = do
       let decl' = FindOrGiven forg n dom
+      unless (decl' == decl)
+             (logInfo "attr.07")
       return $ updateDeclaration decl decl' m
 mSetSizeOccur m _ = return m
 
@@ -632,7 +658,10 @@ mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
                            _ -> d')
                      dom freqs
         decl' = FindOrGiven Find n dom'
-        in return $ updateDeclaration decl decl' m
+        in do
+          unless (decl == decl')
+                 (logInfo "attr.08")
+          return $ updateDeclaration decl decl' m
   where
     isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
                    in case matching e ineqOps of
@@ -668,11 +697,14 @@ forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
                     => Model
                     -> Declaration
                     -> m Model
-forAllIneqToIneqSum m _
-  = fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
+forAllIneqToIneqSum m _ = do
+    m' <- fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
           filterM partsAreNumeric $
           mapMaybe matchParts $
           findInUncondForAllZ (isJust . matchParts . zipper) m
+    unless (m == m')
+           (logInfo "cstr.02" >> logInfo (vcat $ map pretty $ suchThat m' \\ suchThat m))
+    return m'
   where
     matchParts :: ExpressionZ -> Maybe (Generator, Maybe ExpressionZ)
     matchParts z
@@ -695,20 +727,20 @@ forAllIneqToIneqSum m _
     hasName names (Reference name _) = name `elem` names
     hasName _     _                  = False
 
-    partsAreNumeric :: (MonadFail m, NameGen m) => (Generator, Maybe ExpressionZ) -> m Bool
+    partsAreNumeric :: (MonadFail m, MonadLog m, NameGen m)
+                    => (Generator, Maybe ExpressionZ) -> m Bool
     partsAreNumeric (_, Just z)
       = case matching (hole z) ineqOps of
              Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
              Nothing            -> return False
     partsAreNumeric _ = return False
 
-    domainIsNumeric :: (MonadFail m, NameGen m) => Expression -> m Bool
-    domainIsNumeric e = do
-      d <- domainOf e
-      case d of
-           DomainInt{}         -> return True
-           DomainAny _ TypeInt -> return True
-           _                   -> return False
+    domainIsNumeric :: (MonadFail m, MonadLog m, NameGen m)
+                    => Expression -> m Bool
+    domainIsNumeric e = case domainOf e of
+                             Right DomainInt{}           -> return True
+                             Right (DomainAny _ TypeInt) -> return True
+                             _                           -> return False
 
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
