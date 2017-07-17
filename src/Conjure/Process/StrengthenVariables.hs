@@ -724,14 +724,22 @@ forAllIneqToIneqSum m _
     mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
     mkConstraint (gen, Just z)
       = case matching (hole z) ineqOps of
-             Just (f, (e1, e2)) ->
-               let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
-                   e1' = mkSumOf e1
-                   e2' = mkSumOf e2
-                   -- Two steps to get out of the forAll, and replace it with the constraint
-                   in replaceHole (make f e1' e2') <$> (up z >>= up)
-             Nothing -> Nothing
+             -- Machine names can cause infinite loops due to shadow names
+             Just (f, (e1, e2)) | not (containsMachineName e1) &&
+                                  not (containsMachineName e2)
+               -> let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
+                      e1' = mkSumOf e1
+                      e2' = mkSumOf e2
+                      -- Two steps to get out of the forAll, and replace it with the constraint
+                      in replaceHole (make f e1' e2') <$> (up z >>= up)
+             _ -> Nothing
     mkConstraint _ = Nothing
+
+-- | Does an expression contain a reference with a machine name?
+containsMachineName :: Expression -> Bool
+containsMachineName = any isMachineName . universe
+  where isMachineName (Reference MachineName{} _) = True
+        isMachineName _                           = False
 
 -- | Get the list of names from a generator.
 namesFromGenerator :: Generator -> [Name]
