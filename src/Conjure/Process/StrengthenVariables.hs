@@ -42,10 +42,11 @@ strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fix
                                                      , mSetSizeOccur
                                                      , mSetOccur
                                                      , forAllIneqToIneqSum
-                                                     ]
+                                                     , fasterIteration
+                                                     ] >>= resolveNames
                         if model == model'
                            then return model'
-                           else resolveNames model' >>= core
+                           else core model'
         -- Apply the function to every statement and fold it into the model
         folder :: (MonadFail m, MonadLog m)
                => Model -> (Model -> Declaration -> m Model) -> m Model
@@ -775,3 +776,47 @@ ineqOps = [ (opEq,  opEq)
           , (opGt,  opGt)
           , (opGeq, opGeq)
           ]
+
+-- | Iterate slightly faster over a domain if generating two distinct variables.
+fasterIteration :: (MonadFail m, MonadLog m)
+                => Model       -- ^ Model as context.
+                -> Declaration -- ^ Ignored declaration.
+                -> m Model     -- ^ Possibly updated model.
+fasterIteration m _
+  = let matches = findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m
+        -- Remove the old constraint
+        in return $ flip removeConstraints (map fromZipper matches) $
+                    -- Add the new constraint
+                    mergeConstraints m $ map fromZipper $ mapMaybe changeIterator $
+                    -- test whether they are interchangeable (do they need to be?)
+                    mapMaybe doubleDistinctIter matches
+  where
+    -- Match the elemenents of interest in the constraint
+    doubleDistinctIter z
+      = case hole z of
+             [essence| forAll &x, &y in &v, &x' != &y' . &_ |]
+               | areDiffed x y x' y' -> Just (x, y, v, down z >>= down)
+             [essence| forAll &x, &y : &d, &x' != &y' . &_ |]
+               | areDiffed x y x' y' -> Just (x, y, Domain d, down z >>= down)
+             _ -> Nothing
+    -- Are the two generated variables constrained to be different
+    -- in the condition on the forAll?
+    areDiffed x y (Reference nx' _) (Reference ny' _)
+      = case map namesFromAbstractPattern [x, y] of
+             [[nx], [ny]] -> nx == nx' && ny == ny'
+             _            -> False
+    areDiffed _ _ _ _ = False
+    -- Change the iterator to use the new, faster notation
+    changeIterator (x, y, v, Just z)
+      = let e = hole z
+            in case v of
+                    Reference _ (Just (DeclNoRepr _ _ DomainSet{} _))
+                      -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+                         (up z >>= up)
+                    Reference _ (Just (InComprehension (GenDomainNoRepr _ DomainSet{})))
+                      -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+                         (up z >>= up)
+                    Domain _
+                      -> Nothing
+                    _ -> Nothing
+    changeIterator _ = Nothing
