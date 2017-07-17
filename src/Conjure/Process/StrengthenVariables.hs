@@ -784,20 +784,21 @@ fasterIteration :: (MonadFail m, MonadLog m)
                 -> m Model     -- ^ Possibly updated model.
 fasterIteration m _
   = let matches = findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m
+        -- Pair up matches with the updated constraint
+        pairs = zip matches (map changeIterator $ mapMaybe doubleDistinctIter matches)
+        newConstraints = map (fromZipper *** fromZipper) $ foldr fromMaybePairs [] pairs
         -- Remove the old constraint
-        in return $ flip removeConstraints (map fromZipper matches) $
-                    -- Add the new constraint
-                    mergeConstraints m $ map fromZipper $ mapMaybe changeIterator $
-                    -- test whether they are interchangeable (do they need to be?)
-                    mapMaybe doubleDistinctIter matches
+        in return $ flip removeConstraints (map fst newConstraints) $
+                    -- Add the new constraints
+                    mergeConstraints m (map snd newConstraints)
   where
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
       = case hole z of
              [essence| forAll &x, &y in &v, &x' != &y' . &_ |]
-               | areDiffed x y x' y' -> Just (x, y, v, down z >>= down)
+               | areDiffed x y x' y' -> Just ((x, x'), (y, y'), v, down z >>= down)
              [essence| forAll &x, &y : &d, &x' != &y' . &_ |]
-               | areDiffed x y x' y' -> Just (x, y, Domain d, down z >>= down)
+               | areDiffed x y x' y' -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
     -- Are the two generated variables constrained to be different
     -- in the condition on the forAll?
@@ -807,16 +808,26 @@ fasterIteration m _
              _            -> False
     areDiffed _ _ _ _ = False
     -- Change the iterator to use the new, faster notation
-    changeIterator (x, y, v, Just z)
+    changeIterator ((x, x'), (y, y'), v, Just z)
       = let e = hole z
             in case v of
-                    Reference _ (Just (DeclNoRepr _ _ DomainSet{} _))
-                      -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+                    r@Reference{}
+                      -> case domainOf r of
+                              Left _ -> Nothing
+                              Right DomainSet{}
+                                -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+                                   (up z >>= up)
+                              Right _
+                                -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
+                                   (up z >>= up)
+                    Op MkOpDefined{}
+                      -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
                          (up z >>= up)
-                    Reference _ (Just (InComprehension (GenDomainNoRepr _ DomainSet{})))
-                      -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+                    Domain d
+                      -> replaceHole [essence| forAll &x, &y : &d, &y' > &x' . &e |] <$>
                          (up z >>= up)
-                    Domain _
-                      -> Nothing
                     _ -> Nothing
     changeIterator _ = Nothing
+    -- Only keep pairs that have a Just on the right hand side
+    fromMaybePairs (x, Just y) ps = (x, y) : ps
+    fromMaybePairs _ ps = ps
