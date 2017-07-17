@@ -787,10 +787,13 @@ fasterIteration m _
         -- Pair up matches with the updated constraint
         pairs = zip matches (map changeIterator $ mapMaybe doubleDistinctIter matches)
         newConstraints = map (fromZipper *** fromZipper) $ foldr fromMaybePairs [] pairs
-        -- Remove the old constraint
-        in return $ flip removeConstraints (map fst newConstraints) $
-                    -- Add the new constraints
-                    mergeConstraints m (map snd newConstraints)
+        -- Do not resolve names if there are any machine names in the model
+        in if any containsMachineName (suchThat m)
+              then return m
+              -- Remove the old constraint
+              else resolveNames $ flip removeConstraints (map fst newConstraints) $
+                                  -- Add the new constraints
+                                  mergeConstraints m (map snd newConstraints)
   where
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
