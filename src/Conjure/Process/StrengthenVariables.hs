@@ -14,7 +14,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( delete, nub, union )
+import Data.List ( nub, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -55,13 +55,17 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
         applyToDecl _ m _               = return m
 
 -- | Update a declaration in a model.
-updateDeclaration :: Declaration  -- ^ Old declaration to be removed.
-                  -> Declaration  -- ^ New declaration to be inserted.
+updateDeclaration :: Declaration  -- ^ New declaration value.
                   -> Model        -- ^ Model to be updated.
                   -> Model        -- ^ Updated model.
-updateDeclaration d d' m@Model { mStatements = stmts }
-  | d == d'   = m
-  | otherwise = m { mStatements = Declaration d' : delete (Declaration d) stmts }
+updateDeclaration d@(FindOrGiven _ n' _) m@Model { mStatements = stmts }
+  = m { mStatements = map updateDeclaration' stmts }
+  where
+    -- Replace the declaration in-place
+    updateDeclaration' (Declaration (FindOrGiven _ n _))
+      | n == n' = Declaration d
+    updateDeclaration' s = s
+updateDeclaration _ m = m
 
 -- | Merge a list of constraints into a model.
 mergeConstraints :: Model         -- ^ Model to be updated.
@@ -93,10 +97,10 @@ functionAttributes :: (MonadFail m, MonadLog m)
                    => Model       -- ^ Model as context.
                    -> Declaration -- ^ Statement to constrain.
                    -> m Model     -- ^ Possibly updated model.
-functionAttributes m f@(FindOrGiven forg n d@DomainFunction{}) = do
+functionAttributes m (FindOrGiven forg n d@DomainFunction{}) = do
   d' <- constrainFunctionDomain n d m
   let f' = FindOrGiven forg n d'
-  return $ updateDeclaration f f' m
+  return $ updateDeclaration f' m
 functionAttributes m _ = return m
 
 -- | Constrain the domain of a function given the context of a model.
@@ -281,10 +285,10 @@ setAttributes :: (MonadFail m, MonadLog m, NameGen m)
               => Model        -- ^ Model as context.
               -> Declaration  -- ^ Statement to constrain.
               -> m Model      -- ^ Possibly updated model.
-setAttributes m f@(FindOrGiven forg n d@DomainSet{}) = do
+setAttributes m (FindOrGiven forg n d@DomainSet{}) = do
   d' <- setSizeFromConstraint n d m
   let f' = FindOrGiven forg n d'
-  return $ updateDeclaration f f' m
+  return $ updateDeclaration f' m
 setAttributes m _ = return m
 
 -- | Constrain the size of a set from constraints on it.
@@ -498,13 +502,13 @@ variableSize :: (MonadFail m, MonadLog m)
              => Model        -- ^ Model as context.
              -> Declaration  -- ^ Declaration to give attribute.
              -> m Model      -- ^ Possibly updated model.
-variableSize m decl@(FindOrGiven forg n dom) | validDom dom = do
+variableSize m (FindOrGiven forg n dom) | validDom dom = do
   let exprs = mapMaybe (sizeConstraint n) $ suchThat m
   case mapMaybe sizeAttrFromConstr (nub exprs) of
        -- Only one size attribute is valid
        attr@[_] -> do
          dom' <- addAttributesToDomain dom attr
-         return $ updateDeclaration decl (FindOrGiven forg n dom') $
+         return $ updateDeclaration (FindOrGiven forg n dom') $
                   removeConstraints m exprs
        _        -> return m
   where
@@ -558,7 +562,7 @@ mSetSizeOccur :: (MonadFail m, MonadLog m)
               => Model        -- ^ Model as context.
               -> Declaration  -- ^ Declaration to give attribute.
               -> m Model      -- ^ Possibly updated model.
-mSetSizeOccur m decl@(FindOrGiven forg n d@DomainMSet{})
+mSetSizeOccur m (FindOrGiven forg n d@DomainMSet{})
   = case d of
          -- Ordering is important here, as there is a rule that applies
          -- to maxSize and minOccur, but none that applies to minSize
@@ -591,7 +595,7 @@ mSetSizeOccur m decl@(FindOrGiven forg n d@DomainMSet{})
 
     updateDomain dom = do
       let decl' = FindOrGiven forg n dom
-      return $ updateDeclaration decl decl' m
+      return $ updateDeclaration decl' m
 mSetSizeOccur m _ = return m
 
 -- | Merge an expression into the min field of a 'SizeAttr'.
@@ -623,7 +627,7 @@ mSetOccur :: (MonadFail m, MonadLog m)
           => Model        -- ^ Model for context.
           -> Declaration  -- ^ Multiset declaration to update.
           -> m Model      -- ^ Updated model.
-mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
+mSetOccur m (FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
   = let freqs = findInUncondForAll isFreq m
         dom' = foldr (\f d' ->
                       case d' of
@@ -632,7 +636,7 @@ mSetOccur m decl@(FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
                            _ -> d')
                      dom freqs
         decl' = FindOrGiven Find n dom'
-        in return $ updateDeclaration decl decl' m
+        in return $ updateDeclaration decl' m
   where
     isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
                    in case matching e ineqOps of
