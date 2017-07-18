@@ -331,9 +331,15 @@ findInUncondForAll p = map hole . findInUncondForAllZ p
 findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
 findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
   where
-    findInForAll e | p (hole e) = [e]
+    findInForAll z | p (hole z) = [z]
     findInForAll z
       = case hole z of
+             [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
+               | refersTo x x' && refersTo y y'
+                 -> maybe [] findInForAll (down z >>= down)
+             [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
+               | refersTo x x' && refersTo y y'
+                 -> maybe [] findInForAll (down z >>= down)
              Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
                | all (not . isCondition) gorcs
                  -> maybe [] findInForAll (down z >>= down)
@@ -351,6 +357,19 @@ findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
              _   -> []
     isCondition Condition{} = True
     isCondition _           = False
+
+-- | Does a reference refer to an abstract pattern?
+refersTo :: AbstractPattern -> Expression -> Bool
+refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
+refersTo _ _               = False
+
+-- | Get the list of names from an abstract pattern.
+namesFromAbstractPattern :: AbstractPattern -> [Name]
+namesFromAbstractPattern (Single n)        = [n]
+namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern _                 = []
 
 -- | Set the minimum size of a set based on it being a superset of another.
 minSizeFromSet :: (MonadFail m, MonadLog m, NameGen m)
@@ -743,14 +762,6 @@ namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
 namesFromGenerator (GenDomainHasRepr n _) = [n]
 namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
 
--- | Get the list of names from an abstract pattern.
-namesFromAbstractPattern :: AbstractPattern -> [Name]
-namesFromAbstractPattern (Single n)        = [n]
-namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern _                 = []
-
 -- | Lens function over a binary expression.
 type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
                                  Expression -> m (Expression, Expression))
@@ -790,18 +801,11 @@ fasterIteration m _
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
       = case hole z of
-             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | areDiffed x y x' y'
+             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
                -> Just ((x, x'), (y, y'), v, down z >>= down)
-             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | areDiffed x y x' y'
+             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
                -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
-    -- Are the two generated variables constrained to be different
-    -- in the condition on the forAll?
-    areDiffed x y (Reference nx' _) (Reference ny' _)
-      = case map namesFromAbstractPattern [x, y] of
-             [[nx], [ny]] -> nx == nx' && ny == ny'
-             _            -> False
-    areDiffed _ _ _ _ = False
     -- Only perform the modification if the variables are equivalent in the expression
     onlyEquivalent = Just
     -- Change the iterator to use the new, faster notation
