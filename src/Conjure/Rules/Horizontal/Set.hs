@@ -258,6 +258,44 @@ rule_PowerSet_Difference = "set-powerSet-difference" `namedRule` theRule where
     theRule _ = na "rule_PowerSet_Difference"
 
 
+rule_PowerSet_Comprehension :: Rule
+rule_PowerSet_Comprehension = "set-powerSet-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (patName, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr (Single patName) expr) -> return (patName, expr)
+            _ -> na "rule_PowerSet_Comprehension"
+        s                             <- match opPowerSet expr
+        sDom                          <- domainOf s
+        let sDom' =
+                -- only keep the maxsize attribute
+                case sDom of
+                    DomainSet () (SetAttr sAttr) sInner ->
+                        let
+                            sAttr' =
+                                case sAttr of
+                                    SizeAttr_None -> SizeAttr_None
+                                    SizeAttr_Size x -> SizeAttr_MaxSize x
+                                    SizeAttr_MinSize _ -> SizeAttr_None
+                                    SizeAttr_MaxSize x -> SizeAttr_MaxSize x
+                                    SizeAttr_MinMaxSize _ x -> SizeAttr_MaxSize x
+                        in
+                            DomainSet () (SetAttr sAttr') sInner
+                    _ -> sDom
+        let pat = Single patName
+        let patAsExpr = Reference patName Nothing
+        return
+            ( "Horizontal rule for set-comprehension over powerSet"
+            , return $
+                Comprehension body
+                    $  gocBefore
+                    ++ [ Generator (GenDomainNoRepr pat sDom')
+                       , Condition [essence| &patAsExpr subsetEq &s |]
+                       ]
+                    ++ gocAfter
+            )
+    theRule _ = na "rule_PowerSet_Comprehension"
+
+
 rule_MaxMin :: Rule
 rule_MaxMin = "set-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do

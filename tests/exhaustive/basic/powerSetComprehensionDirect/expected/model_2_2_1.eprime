@@ -1,0 +1,18 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
+such that
+    and([and([or([x_ExplicitVarSizeWithDummy[q8] != b + 1 /\ x_ExplicitVarSizeWithDummy[q8] = q6
+                      | q8 : int(1..1 + (b - a))])
+                  | q6 : int(a..b), t_Occurrence[q6]])
+         -> sum([i | i : int(a..b), t_Occurrence[i]]) <= 6
+             | t_Occurrence : matrix indexed by [int(a..b)] of bool]),
+    and([x_ExplicitVarSizeWithDummy[q1] < x_ExplicitVarSizeWithDummy[q1 + 1] \/ x_ExplicitVarSizeWithDummy[q1] = b + 1
+             | q1 : int(1..1 + (b - a) - 1)]),
+    and([x_ExplicitVarSizeWithDummy[q2] = b + 1 -> x_ExplicitVarSizeWithDummy[q2 + 1] = b + 1
+             | q2 : int(1..1 + (b - a) - 1)]),
+    n <= sum([toInt(x_ExplicitVarSizeWithDummy[q3] != b + 1) | q3 : int(1..1 + (b - a))])
+

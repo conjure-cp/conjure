@@ -18,8 +18,16 @@ instance Hashable  x => Hashable  (OpNot x)
 instance ToJSON    x => ToJSON    (OpNot x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpNot x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpNot x) where
-    typeOf (OpNot a) = do TypeBool <- typeOf a ; return TypeBool
+instance (TypeOf x, Pretty x) => TypeOf (OpNot x) where
+    typeOf p@(OpNot a) = do
+        aTy <- typeOf a
+        case aTy of
+            TypeBool -> return TypeBool
+            _        -> raiseTypeError $ vcat [ pretty p
+                                              , "Expected type: bool"
+                                              , "But got:" <+> pretty aTy
+                                              ]
+
 
 instance EvaluateOp OpNot where
     evaluateOp (OpNot x) = ConstantBool . not <$> boolOut x

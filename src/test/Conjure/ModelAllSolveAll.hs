@@ -1,7 +1,7 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
 
-module Conjure.ModelAllSolveAll ( tests, QuickOrSlow(..) ) where
+module Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) ) where
 
 -- conjure
 import Conjure.Prelude
@@ -21,7 +21,7 @@ import System.Environment ( getEnvironment )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
-import Test.Tasty.HUnit ( testCase, testCaseSteps, assertFailure )
+import Test.Tasty.HUnit ( Assertion, testCaseSteps, assertFailure )
 import Test.Tasty.Options ( IsOption(..) )
 
 -- shelly
@@ -50,25 +50,26 @@ srOptionsMk srExtraOptions =
 
 
 -- | Which tests are we running?
-data QuickOrSlow = Quick | Slow | BothQuickAndSlow
+data TestTimeLimit = TestTimeLimit Int          -- in seconds, default 10
     deriving (Eq, Ord, Typeable)
 
-instance IsOption QuickOrSlow where
-    defaultValue = Quick
+instance IsOption TestTimeLimit where
+    defaultValue = TestTimeLimit 10
 
-    parseValue "quick" = return Quick
-    parseValue "slow" = return Slow
-    parseValue "all" = return BothQuickAndSlow
-    parseValue _ = Nothing
+    parseValue i =
+        case readMay i of
+            Nothing -> Nothing
+            Just n  -> Just (TestTimeLimit n)
 
-    optionName = return "select-tests"
-    optionHelp = return "Select which tests to run (quick/slow/all). Default is quick."
+    optionName = return "limit-time"
+    optionHelp = return $ unlines [ "Select which tests to run by their expected times."
+                                  , "Only tests which take less than the given value will be run."
+                                  , "See `expected-time.txt` files in the `tests/exhaustive` directory."
+                                  , "Default is 10."
+                                  ]
 
-data TestKind = TK_Invalid | TK_Slow | TK_Quick
-  deriving (Eq, Show)
 
-
-tests :: IO (QuickOrSlow -> TestTree)
+tests :: IO (TestTimeLimit -> TestTree)
 tests = do
     srExtraOptions <- do
         env <- getEnvironment
@@ -77,13 +78,13 @@ tests = do
     putStrLn $ "Using Savile Row options: " ++ unwords (map textToString srOptions)
     let baseDir = "tests/exhaustive"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
-    let testCases = map (testSingleDir srOptions) (catMaybes dirs)
-    return (\ quickOrSlow -> testGroup "exhaustive" (map ($ quickOrSlow) testCases) )
+    let testCases tl = concatMap (testSingleDir tl srOptions) (catMaybes dirs)
+    return $ \ tl -> testGroup "exhaustive" (testCases tl)
 
 
 data TestDirFiles = TestDirFiles
     { name           :: String          -- a name for the test case
-    , testKind       :: TestKind
+    , expectedTime   :: Int             -- how long do we expect this test to run (in seconds)
     , tBaseDir       :: FilePath        -- dir
     , outputsDir     :: FilePath        -- dir
     , expectedsDir   :: FilePath        -- dir
@@ -99,10 +100,10 @@ data TestDirFiles = TestDirFiles
 isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
     dirContents <- getDirectoryContents dir
-    let testKind
-            | "invalid" `elem` dirContents = TK_Invalid
-            | "slow"    `elem` dirContents = TK_Slow
-            | otherwise                    = TK_Quick
+    expectedTime <-
+        if "expected-time.txt" `elem` dirContents
+            then fromMaybe 0 . readMay . textToString <$> T.readFile (dir ++ "/expected-time.txt")
+            else return 0
     let essenceFiles = filter (".essence" `isSuffixOf`) dirContents
     case essenceFiles of
         [f] -> Just <$> do
@@ -122,9 +123,12 @@ isTestDir baseDir dir = do
                 , paramFiles     = params
                 , expectedModels = filter (".eprime"   `isSuffixOf`) expecteds
                 , expectedSols   = filter (".solution" `isSuffixOf`) expecteds
-                , testKind       = testKind
+                , expectedTime   = expectedTime
                 }
         _ -> return Nothing
+
+
+type Step = String -> Assertion
 
 
 -- the first FilePath is the base directory for the exhaustive tests
@@ -132,173 +136,169 @@ isTestDir baseDir dir = do
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: [Text] -> TestDirFiles -> QuickOrSlow -> TestTree
-testSingleDir srOptions t@TestDirFiles{..} quickOrSlow =
+testSingleDir :: TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
+testSingleDir (TestTimeLimit timeLimit) srOptions t@TestDirFiles{..} =
     if shouldRun
-        then
-            testGroup name $ concat
-                [ [conjuring]
-                , savileRows
-                , [validating]
-                , [checkExpectedAndExtraFiles srOptions t]
-                , [equalNumberOfSolutions t]
-                , [noDuplicateSolutions t]
-                ]
-        else
-            testGroup name [testCase "Skip" (return ())]
+        then return $ testCaseSteps name $ \ step -> do
+                conjuring step
+                sequence_ (savileRows step)
+                validating step
+                checkExpectedAndExtraFiles step srOptions t
+                equalNumberOfSolutions step t
+                noDuplicateSolutions step t
+        else []
     where
 
-        shouldRun
-            | testKind == TK_Invalid                                               = False
-            | testKind == TK_Quick && quickOrSlow `elem` [Quick, BothQuickAndSlow] = True
-            | testKind == TK_Slow  && quickOrSlow `elem` [Slow , BothQuickAndSlow] = True
-            | otherwise                                                            = False
+        shouldRun = or [ timeLimit == 0
+                       , expectedTime <= timeLimit
+                       ]
 
-        conjuring =
-            testCase "Conjuring" $ do
-                removeDirectoryIfExists outputsDir
-                -- read in the essence, generate the eprimes
-                essence <- ignoreLogs $ readModelFromFile essenceFile
-                modelAll outputsDir essence
+        conjuring step = do
+            void (step "Conjuring")
+            removeDirectoryIfExists outputsDir
+            -- read in the essence, generate the eprimes
+            essence <- ignoreLogs $ readModelFromFile essenceFile
+            modelAll outputsDir essence
 
-        savileRows =
+        savileRows step =
             if null paramFiles
-                then [ savileRowNoParam    srOptions t m   | m <- expectedModels ]
-                else [ savileRowWithParams srOptions t m p | m <- expectedModels
-                                                           , p <- paramFiles     ]
+                then [ savileRowNoParam    step srOptions t m   | m <- expectedModels ]
+                else [ savileRowWithParams step srOptions t m p | m <- expectedModels
+                                                                , p <- paramFiles     ]
 
-        validating =
+        validating step =
             if null paramFiles
-                then validateSolutionNoParam t expectedSols
-                else validateSolutionWithParams t [ ( p
-                                                    , [ s | s <- expectedSols
-                                                          , dropExtension p `isInfixOf` dropExtension s
-                                                          ]
-                                                    )
-                                                  | p <- paramFiles
-                                                  ]
-
-
-savileRowNoParam :: [Text] -> TestDirFiles -> FilePath -> TestTree
-savileRowNoParam srOptions TestDirFiles{..} modelPath =
-    testCase (unwords ["Savile Row:", modelPath]) $ do
-        let outBase = dropExtension modelPath
-        fileShouldExist (outputsDir </> outBase ++ ".eprime")
-        (stdoutSR, stderrSR, exitCodeSR) <-
-            sh $ errExit False $ do
-                stdoutSR <- run savilerowScriptName $
-                    [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
-                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
-                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
-                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
-                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-                    ] ++ srOptions
-                stderrSR   <- lastStderr
-                exitCodeSR <- lastExitCode
-                return (stdoutSR, stderrSR, exitCodeSR)
-        if
-            | exitCodeSR == 0 -> do
-                eprimeModel       <- readModelInfoFromFile (outputsDir </> modelPath)
-                nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> getDirectoryContents outputsDir
-                forM_ (take nbEprimeSolutions allNats) $ \ i -> do
-                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
-                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
-                    case res of
-                        Left errs -> assertFailure $ renderNormal $ vcat errs
-                        Right s  -> do
-                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
-                            writeFile filename (renderNormal s)
-                    
-            | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
-            | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                               , "Savile Row stderr:"    <+> pretty stderrSR
-                                                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                then validateSolutionNoParam    step t expectedSols
+                else validateSolutionWithParams step t [ ( p
+                                                         , [ s | s <- expectedSols
+                                                               , dropExtension p `isInfixOf` dropExtension s
                                                                ]
+                                                         )
+                                                       | p <- paramFiles
+                                                       ]
 
 
-savileRowWithParams :: [Text] -> TestDirFiles -> FilePath -> FilePath -> TestTree
-savileRowWithParams srOptions TestDirFiles{..} modelPath paramPath =
-    testCase (unwords ["Savile Row:", modelPath, paramPath]) $ do
-        fileShouldExist (outputsDir </> modelPath)
-        fileShouldExist (tBaseDir   </> paramPath)
-        eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
-        param       <- readModelFromFile (tBaseDir   </> paramPath)
-        eprimeParam <- ignoreLogs $ runNameGen $ translateParameter eprimeModel param
-        let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
-        writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
-        (stdoutSR, stderrSR, exitCodeSR) <-
-            sh $ errExit False $ do
-                stdoutSR <- run savilerowScriptName $
-                    [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
-                    , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
-                    , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
-                    , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
-                    , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
-                    , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
-                    ] ++ srOptions
-                stderrSR   <- lastStderr
-                exitCodeSR <- lastExitCode
-                return (stdoutSR, stderrSR, exitCodeSR)
-        let stdouterrSR = T.unlines [stdoutSR, stderrSR]
-        if
-            | exitCodeSR == 0 && not (T.isInfixOf "Exception" stdouterrSR) -> do
-                nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
-                                          <$> getDirectoryContents outputsDir
-                forM_ (take nbEprimeSolutions allNats) $ \ i -> do
-                    let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
-                    eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                    res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
-                    case res of
-                        Left errs -> assertFailure $ renderNormal $ vcat errs
-                        Right s  -> do
-                            let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
-                            writeFile filename (renderNormal s)
-            | T.isInfixOf "where false" stdouterrSR -> return ()
-            | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                               , "Savile Row stderr:"    <+> pretty stderrSR
-                                                               , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                                               ]
+savileRowNoParam :: Step -> [Text] -> TestDirFiles -> FilePath -> Assertion
+savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
+    step (unwords ["Savile Row:", modelPath])
+    let outBase = dropExtension modelPath
+    fileShouldExist (outputsDir </> outBase ++ ".eprime")
+    (stdoutSR, stderrSR, exitCodeSR) <-
+        sh $ errExit False $ do
+            stdoutSR <- run savilerowScriptName $
+                [ "-in-eprime"      , stringToText $ outputsDir </> outBase ++ ".eprime"
+                , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+                , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+                , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+                , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
+                ] ++ srOptions
+            stderrSR   <- lastStderr
+            exitCodeSR <- lastExitCode
+            return (stdoutSR, stderrSR, exitCodeSR)
+    if
+        | exitCodeSR == 0 -> do
+            eprimeModel       <- readModelInfoFromFile (outputsDir </> modelPath)
+            nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                      <$> getDirectoryContents outputsDir
+            forM_ (take nbEprimeSolutions allNats) $ \ i -> do
+                let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
+                eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel def eprimeSolution
+                case res of
+                    Left errs -> assertFailure $ renderNormal $ vcat errs
+                    Right s  -> do
+                        let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
+                        writeFile filename (renderNormal s)
+                
+        | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
+        | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                                           , "Savile Row stderr:"    <+> pretty stderrSR
+                                                           , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                                           ]
 
 
-validateSolutionNoParam :: TestDirFiles -> [FilePath] -> TestTree
-validateSolutionNoParam TestDirFiles{..} solutionPaths =
-    testCaseSteps "Validating solutions" $ \ step -> do
-        essence <- readModelFromFile essenceFile
+savileRowWithParams :: Step -> [Text] -> TestDirFiles -> FilePath -> FilePath -> Assertion
+savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
+    step (unwords ["Savile Row:", modelPath, paramPath])
+    fileShouldExist (outputsDir </> modelPath)
+    fileShouldExist (tBaseDir   </> paramPath)
+    eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
+    param       <- readModelFromFile (tBaseDir   </> paramPath)
+    eprimeParam <- ignoreLogs $ runNameGen $ translateParameter eprimeModel param
+    let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
+    writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
+    (stdoutSR, stderrSR, exitCodeSR) <-
+        sh $ errExit False $ do
+            stdoutSR <- run savilerowScriptName $
+                [ "-in-eprime"      , stringToText $ outputsDir </> modelPath
+                , "-in-param"       , stringToText $ outputsDir </> outBase ++ ".eprime-param"
+                , "-out-minion"     , stringToText $ outputsDir </> outBase ++ ".eprime-minion"
+                , "-out-aux"        , stringToText $ outputsDir </> outBase ++ ".eprime-aux"
+                , "-out-info"       , stringToText $ outputsDir </> outBase ++ ".eprime-info"
+                , "-out-solution"   , stringToText $ outputsDir </> outBase ++ ".eprime-solution"
+                ] ++ srOptions
+            stderrSR   <- lastStderr
+            exitCodeSR <- lastExitCode
+            return (stdoutSR, stderrSR, exitCodeSR)
+    let stdouterrSR = T.unlines [stdoutSR, stderrSR]
+    if
+        | exitCodeSR == 0 && not (T.isInfixOf "Exception" stdouterrSR) -> do
+            nbEprimeSolutions <- length . filter ((outBase ++ ".eprime-solution.") `isPrefixOf`)
+                                      <$> getDirectoryContents outputsDir
+            forM_ (take nbEprimeSolutions allNats) $ \ i -> do
+                let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ paddedNum 6 '0' i
+                eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
+                res <- runUserErrorT $ ignoreLogs $ runNameGen $ translateSolution eprimeModel param eprimeSolution
+                case res of
+                    Left errs -> assertFailure $ renderNormal $ vcat errs
+                    Right s  -> do
+                        let filename = outputsDir </> outBase ++ "-solution" ++ paddedNum 6 '0' i ++ ".solution"
+                        writeFile filename (renderNormal s)
+        | T.isInfixOf "where false" stdouterrSR -> return ()
+        | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                                           , "Savile Row stderr:"    <+> pretty stderrSR
+                                                           , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                                           ]
+
+
+validateSolutionNoParam :: Step -> TestDirFiles -> [FilePath] -> Assertion
+validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
+    step "Validating solutions"
+    essence <- readModelFromFile essenceFile
+    forM_ solutionPaths $ \ solutionPath -> do
+        step (unwords ["Validating solution:", solutionPath])
+        fileShouldExist (outputsDir </> solutionPath)
+        solution <- readModelFromFile (outputsDir </> solutionPath)
+        result   <- runUserErrorT $ ignoreLogs $ runNameGen $ do
+            [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
+            validateSolution essence2 param2 solution2
+        case result of
+            Left errs -> assertFailure $ renderNormal $ vcat errs
+            Right () -> return ()
+
+
+validateSolutionWithParams :: Step -> TestDirFiles -> [(FilePath, [FilePath])] -> Assertion
+validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
+    step "Validating solutions"
+    essence <- readModelFromFile essenceFile
+    forM_ paramSolutionPaths $ \ (paramPath, solutionPaths) -> do
+        fileShouldExist (tBaseDir </> paramPath)
+        param <- readModelFromFile (tBaseDir </> paramPath)
         forM_ solutionPaths $ \ solutionPath -> do
-            step (unwords ["Validating solution:", solutionPath])
+            step (unwords ["Validating solution:", paramPath, solutionPath])
             fileShouldExist (outputsDir </> solutionPath)
             solution <- readModelFromFile (outputsDir </> solutionPath)
             result   <- runUserErrorT $ ignoreLogs $ runNameGen $ do
-                [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
+                [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
                 validateSolution essence2 param2 solution2
             case result of
                 Left errs -> assertFailure $ renderNormal $ vcat errs
                 Right () -> return ()
 
 
-validateSolutionWithParams :: TestDirFiles -> [(FilePath, [FilePath])] -> TestTree
-validateSolutionWithParams TestDirFiles{..} paramSolutionPaths =
-    testCaseSteps "Validating solutions" $ \ step -> do
-        essence <- readModelFromFile essenceFile
-        forM_ paramSolutionPaths $ \ (paramPath, solutionPaths) -> do
-            fileShouldExist (tBaseDir </> paramPath)
-            param <- readModelFromFile (tBaseDir </> paramPath)
-            forM_ solutionPaths $ \ solutionPath -> do
-                step (unwords ["Validating solution:", paramPath, solutionPath])
-                fileShouldExist (outputsDir </> solutionPath)
-                solution <- readModelFromFile (outputsDir </> solutionPath)
-                result   <- runUserErrorT $ ignoreLogs $ runNameGen $ do
-                    [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
-                    validateSolution essence2 param2 solution2
-                case result of
-                    Left errs -> assertFailure $ renderNormal $ vcat errs
-                    Right () -> return ()
-
-
-checkExpectedAndExtraFiles :: [Text] -> TestDirFiles -> TestTree
-checkExpectedAndExtraFiles srOptions TestDirFiles{..} = testCaseSteps "Checking" $ \ step -> do
+checkExpectedAndExtraFiles :: Step -> [Text] -> TestDirFiles -> Assertion
+checkExpectedAndExtraFiles step srOptions TestDirFiles{..} = do
+    step "Checking"
     let
         relevantExts :: [String]
         relevantExts = [".eprime", ".eprime-param"]
@@ -350,125 +350,125 @@ checkExpectedAndExtraFiles srOptions TestDirFiles{..} = testCaseSteps "Checking"
             else assertFailure $ "file doesn't exist: " ++ generatedPath
 
 
-equalNumberOfSolutions :: TestDirFiles -> TestTree
-equalNumberOfSolutions TestDirFiles{..} =
-    testCase "Checking number of solutions" $ do
-        dirShouldExist outputsDir
-        models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
-        params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
-        solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
-        let
-            grouped :: [ ( Maybe String             -- the parameter
-                         , [(String, Int)]          -- model, number of solutions
-                         ) ]
-            grouped =
-                (if null params
-                    then
-                        [ (Nothing, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
-                        | model' <- models
-                        , let model = splitOn "." model' |> head
-                        , let solnPrefix = model
-                        ]
-                    else
-                        [ (Just param, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
-                        | model          <- map (head . splitOn ".") models
-                        , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
-                        , model == model2
-                        , let solnPrefix = model ++ "-" ++ param
-                        ])
-                |> sortBy  (comparing fst)
-                |> groupBy ((==) `on` fst)
-                |> map (\ grp -> (fst (head grp), map snd grp) )
-        let
-            differentOnes :: [(Maybe String, [(String, Int)])]
-            differentOnes =
-                [ this
-                | this@(_, modelSols) <- grouped
-                , let nbSols = map snd modelSols |> nub
-                , length nbSols > 1
-                ]
+equalNumberOfSolutions :: Step -> TestDirFiles -> Assertion
+equalNumberOfSolutions step TestDirFiles{..} = do
+    step "Checking number of solutions"
+    dirShouldExist outputsDir
+    models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+    params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+    solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
+    let
+        grouped :: [ ( Maybe String             -- the parameter
+                     , [(String, Int)]          -- model, number of solutions
+                     ) ]
+        grouped =
+            (if null params
+                then
+                    [ (Nothing, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                    | model' <- models
+                    , let model = splitOn "." model' |> head
+                    , let solnPrefix = model
+                    ]
+                else
+                    [ (Just param, (model, length $ filter (solnPrefix `isPrefixOf`) solutions))
+                    | model          <- map (head . splitOn ".") models
+                    , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                    , model == model2
+                    , let solnPrefix = model ++ "-" ++ param
+                    ])
+            |> sortBy  (comparing fst)
+            |> groupBy ((==) `on` fst)
+            |> map (\ grp -> (fst (head grp), map snd grp) )
+    let
+        differentOnes :: [(Maybe String, [(String, Int)])]
+        differentOnes =
+            [ this
+            | this@(_, modelSols) <- grouped
+            , let nbSols = map snd modelSols |> nub
+            , length nbSols > 1
+            ]
 
-        unless (null differentOnes) $
-            assertFailure $ show $ vcat
-                [ maybe
-                    id
-                    (\ p -> hang ("For parameter" <+> pretty p) 4 )
-                    param
-                    $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
-                           | (model, nbSols) <- modelSols
-                           ]
-                | (param, modelSols) <- differentOnes
-                ]
-
-
-noDuplicateSolutions :: TestDirFiles -> TestTree
-noDuplicateSolutions TestDirFiles{..} =
-    testCase "Checking duplicate solutions" $ do
-        dirShouldExist outputsDir
-        models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
-        params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
-        solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
-        solutionContents <- forM solutions $ \ s -> do m <- readModelFromFile (outputsDir </> s)
-                                                       return (s, m)
-        let
-            grouped :: [ ( Maybe String             -- the parameter
-                         , [(String, [String])]     -- model, duplicate solutions
-                         ) ]
-            grouped =
-                (if null params
-                    then
-                        [ (Nothing, (model, duplicateSolutions))
-                        | model' <- models
-                        , let model = splitOn "." model' |> head
-                        , let solnPrefix = model
-                        , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
-                        , let duplicateSolutions =
-                                [ s1name
-                                | (s1name, s1) <- thisSolutions
-                                , not $ null [ s2name | (s2name, s2) <- thisSolutions
-                                             , s1name /= s2name && s1 == s2
-                                             ]
-                                ]
-                        , not (null duplicateSolutions)
-                        ]
-                    else
-                        [ (Just param, (model, duplicateSolutions))
-                        | model          <- map (head . splitOn ".") models
-                        , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
-                        , model == model2
-                        , let solnPrefix = model ++ "-" ++ param
-                        , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
-                        , let duplicateSolutions =
-                                [ s1name
-                                | (s1name, s1) <- thisSolutions
-                                , not $ null [ s2name | (s2name, s2) <- thisSolutions
-                                             , s1name /= s2name && s1 == s2
-                                             ]
-                                ]
-                        , not (null duplicateSolutions)
-                        ])
-                |> sortBy  (comparing fst)
-                |> groupBy ((==) `on` fst)
-                |> map (\ grp -> (fst (head grp), map snd grp) )
-
-        unless (null grouped) $
-            assertFailure $ show $ vcat
-                [ case param of
-                    Nothing -> "For model" <+> pretty model <++> rest
-                    Just p  -> "For parameter" <+> pretty p <> ", for model" <+> pretty model <++> rest
-                | (param, duplicateSols) <- grouped
-                , (model, sols) <- duplicateSols
-                , let rest = "Duplicate solutions:" <++> prettyList id "," sols
-                ]
+    unless (null differentOnes) $
+        assertFailure $ show $ vcat
+            [ maybe
+                id
+                (\ p -> hang ("For parameter" <+> pretty p) 4 )
+                param
+                $ vcat [ "Model" <+> pretty model <+> "has" <+> pretty nbSols <+> "solutions."
+                       | (model, nbSols) <- modelSols
+                       ]
+            | (param, modelSols) <- differentOnes
+            ]
 
 
-dirShouldExist :: FilePath -> IO ()
+noDuplicateSolutions :: Step -> TestDirFiles -> Assertion
+noDuplicateSolutions step TestDirFiles{..} = do
+    step "Checking duplicate solutions"
+    dirShouldExist outputsDir
+    models    <- filter (".eprime"       `isSuffixOf`) <$> getDirectoryContents outputsDir
+    params    <- filter (".eprime-param" `isSuffixOf`) <$> getDirectoryContents outputsDir
+    solutions <- filter (".solution"     `isSuffixOf`) <$> getDirectoryContents outputsDir
+    solutionContents <- forM solutions $ \ s -> do m <- readModelFromFile (outputsDir </> s)
+                                                   return (s, m)
+    let
+        grouped :: [ ( Maybe String             -- the parameter
+                     , [(String, [String])]     -- model, duplicate solutions
+                     ) ]
+        grouped =
+            (if null params
+                then
+                    [ (Nothing, (model, duplicateSolutions))
+                    | model' <- models
+                    , let model = splitOn "." model' |> head
+                    , let solnPrefix = model
+                    , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
+                    , let duplicateSolutions =
+                            [ s1name
+                            | (s1name, s1) <- thisSolutions
+                            , not $ null [ s2name | (s2name, s2) <- thisSolutions
+                                         , s1name /= s2name && s1 == s2
+                                         ]
+                            ]
+                    , not (null duplicateSolutions)
+                    ]
+                else
+                    [ (Just param, (model, duplicateSolutions))
+                    | model          <- map (head . splitOn ".") models
+                    , [model2,param] <- map (splitOn "-" . head . splitOn ".") params
+                    , model == model2
+                    , let solnPrefix = model ++ "-" ++ param
+                    , let thisSolutions = filter ((solnPrefix `isPrefixOf`) . fst) solutionContents
+                    , let duplicateSolutions =
+                            [ s1name
+                            | (s1name, s1) <- thisSolutions
+                            , not $ null [ s2name | (s2name, s2) <- thisSolutions
+                                         , s1name /= s2name && s1 == s2
+                                         ]
+                            ]
+                    , not (null duplicateSolutions)
+                    ])
+            |> sortBy  (comparing fst)
+            |> groupBy ((==) `on` fst)
+            |> map (\ grp -> (fst (head grp), map snd grp) )
+
+    unless (null grouped) $
+        assertFailure $ show $ vcat
+            [ case param of
+                Nothing -> "For model" <+> pretty model <++> rest
+                Just p  -> "For parameter" <+> pretty p <> ", for model" <+> pretty model <++> rest
+            | (param, duplicateSols) <- grouped
+            , (model, sols) <- duplicateSols
+            , let rest = "Duplicate solutions:" <++> prettyList id "," sols
+            ]
+
+
+dirShouldExist :: FilePath -> Assertion
 dirShouldExist d = do
     b <- doesDirectoryExist d
     unless b $
         assertFailure $ "dir does not exist: " ++ d
 
-fileShouldExist :: FilePath -> IO ()
+fileShouldExist :: FilePath -> Assertion
 fileShouldExist f = do
     b <- doesFileExist f
     unless b $

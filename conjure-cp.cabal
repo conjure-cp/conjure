@@ -329,8 +329,9 @@ Executable conjure
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -rtsopts
         -threaded
+        -rtsopts
+        -with-rtsopts=-N1
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
@@ -378,8 +379,9 @@ Test-Suite conjure-testing
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -rtsopts
         -threaded
+        -rtsopts
+        -with-rtsopts=-N1
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:

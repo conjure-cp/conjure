@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+given k: int
+given n: int(1..30)
+letting seqLength be k * n
+find seq_Function1D: matrix indexed by [int(1..seqLength)] of int(1..n)
+such that
+    and([seq_Function1D[i] = seq_Function1D[j] -> seq_Function1D[i] = j - i - 1
+             | i : int(1..seqLength), j : int(1..seqLength), i < j]),
+    and([or([seq_Function1D[q2] = q1 | q2 : int(1..seqLength)]) | q1 : int(1..n)])
+

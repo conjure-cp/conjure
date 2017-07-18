@@ -14,6 +14,7 @@ import Conjure.Representations ( downC, up, downC1, up1 )
 -- tasty
 import Test.Tasty
 import Test.Tasty.HUnit
+import Test.Tasty.HUnit ( Assertion, testCase, assertFailure )
 -- import Test.Tasty.QuickCheck as QC
 -- import Test.Tasty.SmallCheck as SC
 
@@ -21,42 +22,42 @@ import Test.Tasty.HUnit
 tests :: TestTree
 tests = testGroup "representations"
 
-    [ testGroup "bool #1" $
+    [ testCase "bool #1" $
         let
             highDomain = DomainBool
             highConstant = ConstantBool False
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "bool #2" $
+    , testCase "bool #2" $
         let
             highDomain = DomainBool
             highConstant = ConstantBool True
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "int #1" $
+    , testCase "int #1" $
         let
             highDomain = intDomain 1 4
             highConstant = ConstantInt 3
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "matrix of bool" $
+    , testCase "matrix of bool" $
         let
             highDomain = DomainMatrix (intDomain 1 3) DomainBool
             highConstant = ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "matrix of int" $
+    , testCase "matrix of int" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (intDomain 1 5)
             highConstant = ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 3, ConstantInt 5]
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "matrix 2d of bool" $
+    , testCase "matrix 2d of bool" $
         let
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) DomainBool)
@@ -69,7 +70,7 @@ tests = testGroup "representations"
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "matrix 2d of int" $
+    , testCase "matrix 2d of int" $
         let
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
@@ -82,7 +83,7 @@ tests = testGroup "representations"
             low = [("x", highDomain, highConstant)]
         in  testCases "x" highDomain highConstant (const Nothing) low low
 
-    , testGroup "(bool, int)" $
+    , testCase "(bool, int)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2]
@@ -91,7 +92,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "(bool, int, bool)" $
+    , testCase "(bool, int, bool)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3, DomainBool]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True]
@@ -101,7 +102,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "((bool, int), bool)" $
+    , testCase "((bool, int), bool)" $
         let
             highDomain = DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True]
@@ -114,7 +115,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, (int, bool))" $
+    , testCase "(bool, (int, bool))" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool]]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True]]
@@ -127,7 +128,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, int, bool, int)" $
+    , testCase "(bool, int, bool, int)" $
         let
             highDomain = DomainTuple [DomainBool, intDomain 1 3, DomainBool, intDomain 2 5]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2, ConstantBool True, ConstantInt 4]
@@ -138,7 +139,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "((bool, int), (bool, int))" $
+    , testCase "((bool, int), (bool, int))" $
         let
             highDomain = DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainTuple [DomainBool, intDomain 2 5]]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantAbstract $ AbsLitTuple [ConstantBool True, ConstantInt 4]]
@@ -152,7 +153,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, (int, (bool, int)))" $
+    , testCase "(bool, (int, (bool, int)))" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantAbstract $ AbsLitTuple [ConstantBool True, ConstantInt 4]]]
@@ -167,7 +168,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, (int, bool), int)" $
+    , testCase "(bool, (int, bool), int)" $
         let
             highDomain = DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantAbstract $ AbsLitTuple [ConstantInt 2, ConstantBool True], ConstantInt 4]
@@ -182,7 +183,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(((bool, int), bool), int)" $
+    , testCase "(((bool, int), bool), int)" $
         let
             highDomain = DomainTuple [DomainTuple [ DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5]
             highConstant = ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantInt 2], ConstantBool True], ConstantInt 4]
@@ -197,7 +198,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (bool, int)" $
+    , testCase "matrix of (bool, int)" $
         let
             highDomain =
                 DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 0 9])
@@ -214,7 +215,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "matrix of (bool, int, bool)" $
+    , testCase "matrix of (bool, int, bool)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3, DomainBool])
             highConstant =
@@ -229,7 +230,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "matrix of ((bool, int), bool)" $
+    , testCase "matrix of ((bool, int), bool)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool])
             highConstant =
@@ -253,7 +254,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (bool, (int, bool))" $
+    , testCase "matrix of (bool, (int, bool))" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 0 9, DomainBool]])
             highConstant =
@@ -280,7 +281,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (bool, int, bool, int)" $
+    , testCase "matrix of (bool, int, bool, int)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, intDomain 1 3, DomainBool, intDomain 2 5])
             highConstant =
@@ -296,7 +297,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "matrix of ((bool, int), (bool, int))" $
+    , testCase "matrix of ((bool, int), (bool, int))" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainTuple [DomainBool, intDomain 2 5]])
             highConstant =
@@ -331,7 +332,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (bool, (int, (bool, int)))" $
+    , testCase "matrix of (bool, (int, (bool, int)))" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainTuple [DomainBool, intDomain 2 5]]])
             highConstant =
@@ -356,7 +357,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (bool, (int, bool), int)" $
+    , testCase "matrix of (bool, (int, bool), int)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainBool, DomainTuple [intDomain 1 3, DomainBool], intDomain 2 5])
             highConstant =
@@ -384,7 +385,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix of (((bool, int), bool), int)" $
+    , testCase "matrix of (((bool, int), bool), int)" $
         let
             highDomain = DomainMatrix (intDomain 1 3) (DomainTuple [DomainTuple [DomainTuple [DomainBool, intDomain 1 3], DomainBool], intDomain 2 5])
             highConstant =
@@ -410,7 +411,7 @@ tests = testGroup "representations"
                   ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "matrix 2d of (((bool, int), bool), int)" $
+    , testCase "matrix 2d of (((bool, int), bool), int)" $
         let
             highDomain =
                 DomainMatrix (intDomain 1 2)
@@ -477,11 +478,11 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, bool, bool)" $ testCasesAuto "x"
+    , testCase "(bool, bool, bool)" $ testCasesAuto "x"
         ( DomainTuple [DomainBool, DomainBool, DomainBool] )
         ( ConstantAbstract $ AbsLitTuple [ConstantBool False, ConstantBool False, ConstantBool True] )
 
-    , testGroup "(bool, matrix of int) {auto}" $ testCasesAuto "x"
+    , testCase "(bool, matrix of int) {auto}" $ testCasesAuto "x"
         ( DomainTuple
             [ DomainBool
             , DomainMatrix (intDomain 1 3) (intDomain 0 9)
@@ -491,7 +492,7 @@ tests = testGroup "representations"
             , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantInt 2, ConstantInt 4, ConstantInt 5]
             ] )
 
-    , testGroup "(bool, matrix of int)" $
+    , testCase "(bool, matrix of int)" $
         let
             highDomain =
                 DomainTuple
@@ -510,7 +511,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "(bool, matrix of (int, bool)) {auto}" $ testCasesAuto "x"
+    , testCase "(bool, matrix of (int, bool)) {auto}" $ testCasesAuto "x"
         ( DomainTuple
             [ DomainBool
             , DomainMatrix (intDomain 1 3) (DomainTuple [intDomain 0 9, DomainBool])
@@ -524,7 +525,7 @@ tests = testGroup "representations"
                 ]
             ] )
 
-    , testGroup "(bool, matrix of (int, bool))" $
+    , testCase "(bool, matrix of (int, bool))" $
         let
             highDomain =
                 DomainTuple
@@ -556,7 +557,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "(bool, matrix of (int, matrix of int)) {auto}" $ testCasesAuto "x"
+    , testCase "(bool, matrix of (int, matrix of int)) {auto}" $ testCasesAuto "x"
         ( DomainTuple
             [ DomainBool
             , DomainMatrix (intDomain 1 3) (DomainTuple
@@ -573,7 +574,7 @@ tests = testGroup "representations"
                 ]
             ] )
 
-    , testGroup "(bool, matrix of (int, matrix of int))" $
+    , testCase "(bool, matrix of (int, matrix of int))" $
         let
             highDomain =
                 DomainTuple
@@ -615,7 +616,7 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just mid low
 
 -- Explicit
-    , testGroup "Explicit: set (size 4) of int {auto}" $ testCasesAuto "x"
+    , testCase "Explicit: set (size 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             Set_Explicit
             (SetAttr (SizeAttr_Size (ConstantInt 4)))
@@ -623,7 +624,7 @@ tests = testGroup "representations"
         ( ConstantAbstract $ AbsLitSet
             [ConstantInt 2, ConstantInt 3, ConstantInt 5, ConstantInt 6] )
 
-    , testGroup "Explicit: set (size 4) of int" $
+    , testCase "Explicit: set (size 4) of int" $
         let
             highDomain =
                 DomainSet
@@ -641,7 +642,7 @@ tests = testGroup "representations"
                   ) ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "Explicit: set (size 4) of set (size 2) of int {auto}" $ testCasesAuto "x"
+    , testCase "Explicit: set (size 4) of set (size 2) of int {auto}" $ testCasesAuto "x"
         ( DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 4)))
             ( DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 2)))
                 (intDomain 0 9)
@@ -654,7 +655,7 @@ tests = testGroup "representations"
             , ConstantAbstract $ AbsLitSet [ConstantInt 5, ConstantInt 8]
             ] )
 
-    , testGroup "Explicit: set (size 4) of set (size 2) of int" $
+    , testCase "Explicit: set (size 4) of set (size 2) of int" $
         let
             highDomain =
                 DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 4)))
@@ -689,7 +690,7 @@ tests = testGroup "representations"
                   ) ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "Explicit: set (size 4) of set (size 2) of (int, bool) {auto}" $ testCasesAuto "x"
+    , testCase "Explicit: set (size 4) of set (size 2) of (int, bool) {auto}" $ testCasesAuto "x"
         ( DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 4)))
             ( DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 2)))
                 (DomainTuple [intDomain 0 9, DomainBool])
@@ -710,7 +711,7 @@ tests = testGroup "representations"
                           ]
             ] )
 
-    , testGroup "Explicit: set (size 4) of (int, set (size 2) of (int, bool)) {auto}" $ testCasesAuto "x"
+    , testCase "Explicit: set (size 4) of (int, set (size 2) of (int, bool)) {auto}" $ testCasesAuto "x"
         ( DomainSet Set_Explicit (SetAttr (SizeAttr_Size (ConstantInt 4)))
             ( DomainTuple
                 [ intDomain 0 8
@@ -751,14 +752,14 @@ tests = testGroup "representations"
             ] )
 
 -- ExplicitVarSizeWithMarker
-    , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithMarker: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             Set_ExplicitVarSizeWithMarker
             (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
-    , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of int" $
+    , testCase "ExplicitVarSizeWithMarker: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
@@ -776,7 +777,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
         ( DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             ( DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
@@ -789,7 +790,7 @@ tests = testGroup "representations"
             ]
         )
 
-    , testGroup "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int" $
+    , testCase "ExplicitVarSizeWithMarker: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
@@ -838,14 +839,14 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just mid low
 
 -- ExplicitVarSizeWithFlags
-    , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithFlags: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             Set_ExplicitVarSizeWithFlags
             (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
-    , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of int" $
+    , testCase "ExplicitVarSizeWithFlags: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
@@ -863,7 +864,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
         ( DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             ( DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
@@ -876,7 +877,7 @@ tests = testGroup "representations"
             ]
         )
 
-    , testGroup "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int" $
+    , testCase "ExplicitVarSizeWithFlags: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
@@ -929,14 +930,14 @@ tests = testGroup "representations"
         in  testCases "x" highDomain highConstant Just mid low
 
 -- Occurrence
-    , testGroup "Occurrence: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
+    , testCase "Occurrence: set (maxSize 4) of int {auto}" $ testCasesAuto "x"
         ( DomainSet
             Set_Occurrence
             (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             (intDomain 0 9) )
         ( ConstantAbstract $ AbsLitSet [ConstantInt 2, ConstantInt 5] )
 
-    , testGroup "Occurrence: set (maxSize 4) of int" $
+    , testCase "Occurrence: set (maxSize 4) of int" $
         let
             highDomain =
                 DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize (ConstantInt 4))) (intDomain 0 9)
@@ -961,7 +962,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just low low
 
-    , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
         ( DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             ( DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
@@ -974,7 +975,7 @@ tests = testGroup "representations"
             ]
         )
 
-    , testGroup "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
+    , testCase "ExplicitVarSizeWithMarker & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithMarker (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
@@ -1026,7 +1027,7 @@ tests = testGroup "representations"
                 ]
         in  testCases "x" highDomain highConstant Just mid low
 
-    , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
+    , testCase "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int {auto}" $ testCasesAuto "x"
         ( DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
             ( DomainSet Set_Occurrence (SetAttr (SizeAttr_MaxSize (ConstantInt 3)))
                 (intDomain 0 9)
@@ -1039,7 +1040,7 @@ tests = testGroup "representations"
             ]
         )
 
-    , testGroup "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
+    , testCase "ExplicitVarSizeWithFlags & Occurrence: set (maxSize 4) of set (maxSize 3) int" $
         let
             highDomain =
                 DomainSet Set_ExplicitVarSizeWithFlags (SetAttr (SizeAttr_MaxSize (ConstantInt 4)))
@@ -1102,15 +1103,14 @@ testCases
                                                                  -- `Just`          -- if going one level downC produces (Just mid)
     -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "mid" result, if we go one level down
     -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "low" result, if we go all the way down
-    -> [TestTree]
-testCases highName highDomain highConstant mkMid mid low =
-    [ testCase "downC1"  $ downC1Test  (highName, highDomain, highConstant) (mkMid mid)
-    , testCase "down"    $ downTest    (highName, highDomain, highConstant) low
-    , testCase "up1"     $ up1Test     (highName, highDomain) (map dropDomain mid) (highName, highConstant)
-    , testCase "up"      $ upTest      (highName, highDomain) (map dropDomain low) (highName, highConstant)
-    , testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
-    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
-    ]
+    -> Assertion
+testCases highName highDomain highConstant mkMid mid low = do
+    downC1Test  (highName, highDomain, highConstant) (mkMid mid)
+    downTest    (highName, highDomain, highConstant) low
+    up1Test     (highName, highDomain) (map dropDomain mid) (highName, highConstant)
+    upTest      (highName, highDomain) (map dropDomain low) (highName, highConstant)
+    downUp1Test (highName, highDomain, highConstant)
+    downUpTest  (highName, highDomain, highConstant)
 
 downC1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
@@ -1159,11 +1159,11 @@ testCasesAuto
     :: Name                                                      -- high level variable name
     -> Domain HasRepresentation Constant                         -- high level domain
     -> Constant                                                  -- high level value (constant)
-    -> [TestTree]
-testCasesAuto highName highDomain highConstant =
-    [ testCase "downUp1" $ downUp1Test (highName, highDomain, highConstant)
-    , testCase "downUp"  $ downUpTest  (highName, highDomain, highConstant)
-    ]
+    -> Assertion
+testCasesAuto highName highDomain highConstant = do
+    downUp1Test (highName, highDomain, highConstant)
+    downUpTest  (highName, highDomain, highConstant)
+
 
 downUp1Test
     :: (Name, Domain HasRepresentation Constant, Constant)
