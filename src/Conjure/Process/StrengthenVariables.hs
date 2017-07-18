@@ -780,7 +780,7 @@ fasterIteration :: (MonadFail m, MonadLog m)
 fasterIteration m _
   = let matches = findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m
         -- Pair up matches with the updated constraint
-        pairs = zip matches (map changeIterator $ mapMaybe doubleDistinctIter matches)
+        pairs = zip matches (map (onlyEquivalent >=> changeIterator) $ mapMaybe doubleDistinctIter matches)
         newConstraints = map (fromZipper *** fromZipper) $ foldr fromMaybePairs [] pairs
         -- Remove the old constraint
         in return $ flip removeConstraints (map fst newConstraints) $
@@ -790,10 +790,10 @@ fasterIteration m _
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
       = case hole z of
-             [essence| forAll &x, &y in &v, &x' != &y' . &_ |]
-               | areDiffed x y x' y' -> Just ((x, x'), (y, y'), v, down z >>= down)
-             [essence| forAll &x, &y : &d, &x' != &y' . &_ |]
-               | areDiffed x y x' y' -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
+             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | areDiffed x y x' y'
+               -> Just ((x, x'), (y, y'), v, down z >>= down)
+             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | areDiffed x y x' y'
+               -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
     -- Are the two generated variables constrained to be different
     -- in the condition on the forAll?
@@ -802,6 +802,8 @@ fasterIteration m _
              [[nx], [ny]] -> nx == nx' && ny == ny'
              _            -> False
     areDiffed _ _ _ _ = False
+    -- Only perform the modification if the variables are equivalent in the expression
+    onlyEquivalent = Just
     -- Change the iterator to use the new, faster notation
     changeIterator ((x, x'), (y, y'), v, Just z)
       = let e = hole z
