@@ -42,10 +42,12 @@ strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fix
                                                      , mSetSizeOccur
                                                      , mSetOccur
                                                      , forAllIneqToIneqSum
-                                                     ]
-                        if model == model'
+                                                     ] >>= resolveNames
+                        -- Make another pass if there were changes, but ignore models
+                        -- with machine names, as they don't play well with resolveNames
+                        if model == model' || any containsMachineName (suchThat model)
                            then return model'
-                           else resolveNames model' >>= core
+                           else core model'
         -- Apply the function to every statement and fold it into the model
         folder :: (MonadFail m, MonadLog m)
                => Model -> (Model -> Declaration -> m Model) -> m Model
@@ -59,6 +61,10 @@ strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fix
         suchThatToBack' [] es = [SuchThat es]
         suchThatToBack' (SuchThat cs:ss) es = suchThatToBack' ss (es `union` cs)
         suchThatToBack' (s:ss) es = s : suchThatToBack' ss es
+        -- | Does an expression contain a reference with a machine name?
+        containsMachineName = any isMachineName . universe
+        isMachineName (Reference MachineName{} _) = True
+        isMachineName _                           = False
 
 -- | Update a declaration in a model.
 updateDeclaration :: Declaration  -- ^ New declaration value.
@@ -699,12 +705,11 @@ forAllIneqToIneqSum m _
       | refInExpr (namesFromGenerator g) e1 && refInExpr (namesFromGenerator g) e2
         = Just (g, down z >>= down)
     matchComponents _ _ _ _ = Nothing
-
     -- Is a name referred to in an expression?
     refInExpr names = any (hasName names) . universe
     hasName names (Reference name _) = name `elem` names
     hasName _     _                  = False
-
+    -- Are the parts of the matched expression numeric?
     partsAreNumeric :: (MonadFail m, MonadLog m, NameGen m)
                     => (Generator, Maybe ExpressionZ) -> m Bool
     partsAreNumeric (_, Just z)
@@ -712,21 +717,17 @@ forAllIneqToIneqSum m _
              Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
              Nothing            -> return False
     partsAreNumeric _ = return False
-
     domainIsNumeric :: (MonadFail m, MonadLog m, NameGen m)
                     => Expression -> m Bool
     domainIsNumeric e = case domainOf e of
                              Right DomainInt{}           -> return True
                              Right (DomainAny _ TypeInt) -> return True
                              _                           -> return False
-
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
     mkConstraint (gen, Just z)
       = case matching (hole z) ineqOps of
-             -- Machine names can cause infinite loops due to shadow names
-             Just (f, (e1, e2)) | not (containsMachineName e1) &&
-                                  not (containsMachineName e2)
+             Just (f, (e1, e2))
                -> let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
                       e1' = mkSumOf e1
                       e2' = mkSumOf e2
@@ -734,12 +735,6 @@ forAllIneqToIneqSum m _
                       in replaceHole (make f e1' e2') <$> (up z >>= up)
              _ -> Nothing
     mkConstraint _ = Nothing
-
--- | Does an expression contain a reference with a machine name?
-containsMachineName :: Expression -> Bool
-containsMachineName = any isMachineName . universe
-  where isMachineName (Reference MachineName{} _) = True
-        isMachineName _                           = False
 
 -- | Get the list of names from a generator.
 namesFromGenerator :: Generator -> [Name]
