@@ -18,8 +18,11 @@ Compiling from source
 ---------------------
 
 In order to compile Conjure on your computer, please download the source code from `GitHub <https://github.com/conjure-cp/conjure>`_.
-Conjure is implemented in Haskell, it can be compiled using the standard `cabal-install <http://wiki.haskell.org/Cabal-Install>`_ tool.
-It comes with a Makefile which sets things up correctly before running cabal-install.
+Conjure is implemented in Haskell, it can be compiled using either `cabal-install <http://wiki.haskell.org/Cabal-Install>`_ or `stack <https://docs.haskellstack.org/en/stable/README/>`_.
+
+It comes with a Makefile which will use Stack by default.
+The default target in the Makefile will install Stack using the standard procedures (which involves downloading and running a script).
+For more precise control, you might want to consider installing the Haskell tools beforehand instead of using the Makefile.
 
 .. code-block:: bash
 
@@ -27,7 +30,7 @@ It comes with a Makefile which sets things up correctly before running cabal-ins
     cd conjure
     make
 
-It is known to work with
+Installation is known to work with
 `GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_,
 `GHC-7.10.3 <http://www.haskell.org/ghc/download_ghc_7_10_3>`_, and
 `GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8.0.2>`_.

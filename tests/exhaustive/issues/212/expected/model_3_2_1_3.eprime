@@ -1,0 +1,20 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Occurrence: matrix indexed by [int(0..5)] of bool
+find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
+such that
+    and([q5 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([a_Explicit[q7] = x_ExplicitVarSizeWithMarker_Values[q5] | q7 : int(1..fin1), b_Occurrence[a_Explicit[q7]]])
+             | q5 : int(1..6)]),
+    and([or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q11] = a_Explicit[q9]
+                 | q11 : int(1..6)])
+             | q9 : int(1..fin1), b_Occurrence[a_Explicit[q9]]]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+             | q1 : int(1..5)]),
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = 0 | q2 : int(1..6)])
+

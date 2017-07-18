@@ -202,25 +202,24 @@ ui = modes
             &= name "o"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Output directory. Generated models will be saved here.\n\
+            &= help "Where to save generated models.\n\
                     \Default value: 'conjure-output'"
         , numberingStart
             = 1
             &= name "numbering-start"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Starting value to output files.\n\
+            &= help "Starting value for output files.\n\
                     \Default value: 1"
         , smartFilenames
             = False
             &= name "smart-filenames"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Use \"smart names\" for the models.\n\
-                    \Turned off by default.\n\
-                    \Caution: With this flag, Conjure will use the answers when producing \
-                    \a filename. It will ignore the order of questions. \
-                    \This will become a problem if anything other than 'f' is used for questions."
+            &= help "Use \"smart names\" for models.\n\
+                    \Directs Conjure to use the answers when producing \
+                    \a filename and to ignore the order of questions. \
+                    \Only useful if 'f' is used for questions."
         , logLevel
             = def
             &= name "log-level"
@@ -232,19 +231,19 @@ ui = modes
             &= name "verbose-trail"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Whether to generate verbose trails or not."
+            &= help "Generate verbose trails."
         , rewritesTrail
             = False
             &= name "rewrites-trail"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Whether to generate trails about the applied rewritings or not."
+            &= help "Generate trails about the applied rewritings."
         , logRuleFails
             = False
             &= name "log-rule-fails"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
+            &= help "Generate logs for rule failures. (Caution: can be a lot!)"
         , logRuleSuccesses
             = False
             &= name "log-rule-successes"
@@ -256,13 +255,13 @@ ui = modes
             &= name "log-rule-attempts"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
+            &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
         , logChoices
             = False
             &= name "log-choices"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Store the choices in a way that can be reused be by -al"
+            &= help "Store the choices in a way that can be reused by -al"
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -270,9 +269,9 @@ ui = modes
             &= name "q"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when selecting the next question to answer. \
+            &= help "Strategy for selecting the next question to answer. \
                     \Options: f (for first), i (for interactive), r (for random), x (for all). \
-                    \The letter a (for auto) can be prepended to automatically skip \
+                    \Prepend a (for auto) to automatically skip \
                     \when there is only one option at any point.\n\
                     \Default value: f"
         , strategyA
@@ -282,13 +281,13 @@ ui = modes
             &= name "a"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
-                    \Moreover, c (for compact) can be used to pick the most 'compact' option \
+            &= help "Strategy for selecting an answer. Same options as strategy-q.\n\
+                    \ c picks the most 'compact' option \
                     \at every decision point.\n\
-                    \And, s (for sparse) can be used to pick the most 'sparse' option \
-                    \at every decision point. \
-                    \This can be particularly useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick the given choices as far as possible\n\
+                    \ s picks the 'sparsest' option \
+                    \at every decision point: \
+                    \useful for --representations-givens\n\
+                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: ai"
         , representations
             = Nothing
@@ -296,7 +295,7 @@ ui = modes
             &= name "representations"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation.\n\
+            &= help "Strategy for choosing a representation.\n\
                     \Default value: same as --strategy-a"
         , representationsFinds
             = Nothing
@@ -304,7 +303,7 @@ ui = modes
             &= name "representations-finds"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a decision variable.\n\
+            &= help "Strategy for choosing a representation for a decision variable.\n\
                     \Default value: same as --representations"
         , representationsGivens
             = Nothing
@@ -312,7 +311,7 @@ ui = modes
             &= name "representations-givens"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a parameter.\n\
+            &= help "Strategy for choosing a representation for a parameter.\n\
                     \Default value: s (for sparse)"
         , representationsAuxiliaries
             = Nothing
@@ -320,7 +319,7 @@ ui = modes
             &= name "representations-auxiliaries"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
+            &= help "Strategy for choosing a representation for an auxiliary variable.\n\
                     \Default value: same as --representations"
         , representationsQuantifieds
             = Nothing
@@ -328,7 +327,7 @@ ui = modes
             &= name "representations-quantifieds"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a quantified variable.\n\
+            &= help "Strategy for choosing a representation for a quantified variable.\n\
                     \Default value: same as --representations"
         , representationsCuts
             = Nothing
@@ -336,31 +335,29 @@ ui = modes
             &= name "representations-cuts"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
+            &= help "Strategy for choosing a representation for cuts in 'branching on'.\n\
                     \Default value: same as --representations-cuts"
         , channelling
             = True
             &= name "channelling"
             &= groupname "Model generation"
             &= explicit
-            &= help "Whether to produce channelled models or not.\n\
-                    \Can be true or false. (true by default)\n\
-                    \    false: Do not produce channelled models.\n\
-                    \    true : Produce channelled models."
+            &= help "Whether to produce channelled models \
+                    \(true by default).\n"
         , representationLevels
             = True
             &= name "representation-levels"
             &= groupname "Model generation"
             &= explicit
-            &= help "Whether to use built-in precedence levels when choosing representations.\n\
-                    \These levels are used to cut down the number of generated models.\n\
-                    \Can be true or false. (true by default)"
+            &= help "Whether to use built-in precedence levels when choosing representations. \
+                    \Used to cut down the number of generated models.\n\
+                    \Default: true"
         , seed
             = Nothing
             &= name "seed"
             &= groupname "Model generation"
             &= explicit
-            &= help "The seed for the random number generator."
+            &= help "Random number generator seed."
         , limitModels
             = Nothing
             &= name "limit-models"
@@ -372,34 +369,31 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , savedChoices
             = def
             &= typFile
             &= name "choices"
             &= groupname "Model generation"
             &= explicit
-            &= help "Choices to use if possible for -al \
-                     \can either be a eprime file (created by --logChoices), or a json file "
+            &= help "Choices to use for -al, \
+                     \either an eprime file (created by --log-choices), or a json file."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "modelling"
             &= explicit
             &= help "The main act. Given a problem specification in Essence, \
@@ -424,9 +418,8 @@ ui = modes
             &= name "eprime-param"
             &= explicit
             &= help "An Essence' parameter matching the Essence' model.\n\
-                    \This field is optional.\n\
-                    \By default, its value will be 'foo.eprime-param'\n\
-                    \if the Essence parameter file is named 'foo.param'"
+                    \Default is 'foo.eprime-param' \
+                    \if the Essence parameter file is named 'foo.param'."
         , logLevel
             = def
             &= name "log-level"
@@ -438,29 +431,26 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "translate-parameter"
             &= explicit
-            &= help "Refinement of parameter files written in Essence for a \
+            &= help "Refinement of Essence parameter files for a \
                     \particular Essence' model.\n\
                     \The model needs to be generated by Conjure."
     , TranslateSolution
@@ -469,14 +459,15 @@ ui = modes
             &= typFile
             &= name "eprime"
             &= explicit
-            &= help "An Essence' model generated by Conjure."
+            &= help "An Essence' model generated by Conjure.\n\
+                     \Mandatory."
         , essenceParamO
             = def
             &= typFile
             &= name "essence-param"
             &= explicit
             &= help "An Essence parameter for the original problem specification.\n\
-                    \This field is optional."
+                     \Mandatory."
         , eprimeSolution
             = def
             &= typFile
@@ -489,9 +480,8 @@ ui = modes
             &= name "essence-solution"
             &= explicit
             &= help "An Essence solution for the original problem specification.\n\
-                    \This field is optional.\n\
-                    \By default, its value will be the value of --eprime-solution, \
-                    \with all extensions dropped the extension '.solution' is added instead."
+                    \By default, its value is the value of --eprime-solution \
+                    \with extensions replaced by '.solution'."
         , logLevel
             = def
             &= name "log-level"
@@ -503,26 +493,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "translate-solution"
             &= explicit
             &= help "Translation of solutions back to Essence."
@@ -532,20 +519,19 @@ ui = modes
             &= typFile
             &= name "essence"
             &= explicit
-            &= help "A problem specification in Essence"
+            &= help "Problem specification in Essence."
         , essenceParamO
             = def
             &= typFile
             &= name "param"
             &= explicit
-            &= help "An Essence parameter.\n\
-                    \This field is optional."
+            &= help "Essence parameter file."
         , essenceSolution
             = def
             &= typFile
             &= name "solution"
             &= explicit
-            &= help "An Essence solution."
+            &= help "Essence solution."
         , logLevel
             = def
             &= name "log-level"
@@ -557,26 +543,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "validate-solution"
             &= explicit
             &= help "Validating a solution."
@@ -594,7 +577,7 @@ ui = modes
             &= name "validate-solutions"
             &= groupname "General"
             &= explicit
-            &= help "Enable/disable solution validation. Off by default."
+            &= help "Enable solution validation."
         , outputDirectory
             = "conjure-output"
             &= typDir
@@ -602,25 +585,24 @@ ui = modes
             &= name "o"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Output directory. Generated models will be saved here.\n\
+            &= help "Where to save generated models.\n\
                     \Default value: 'conjure-output'"
         , numberingStart
             = 1
             &= name "numbering-start"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Starting value to output files.\n\
+            &= help "Starting value for output files.\n\
                     \Default value: 1"
         , smartFilenames
             = False
             &= name "smart-filenames"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Use \"smart names\" for the models.\n\
-                    \Turned off by default.\n\
-                    \Caution: With this flag, Conjure will use the answers when producing \
-                    \a filename. It will ignore the order of questions. \
-                    \This will become a problem if anything other than 'f' is used for questions."
+            &= help "Use \"smart names\" for models.\n\
+                    \Directs Conjure to use the answers when producing \
+                    \a filename and to ignore the order of questions. \
+                    \Only useful if 'f' is used for questions."
         , logLevel
             = def
             &= name "log-level"
@@ -632,19 +614,19 @@ ui = modes
             &= name "verbose-trail"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Whether to generate verbose trails or not."
+            &= help "Generate verbose trails."
         , rewritesTrail
             = False
             &= name "rewrites-trail"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Whether to generate trails about the applied rewritings or not."
+            &= help "Generate trails about the applied rewritings."
         , logRuleFails
             = False
             &= name "log-rule-fails"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Generate logs for rule failures. (Caution: these can be a lot!)"
+            &= help "Generate logs for rule failures. (Caution: can be a lot!)"
         , logRuleSuccesses
             = False
             &= name "log-rule-successes"
@@ -656,13 +638,13 @@ ui = modes
             &= name "log-rule-attempts"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Generate logs for rule attempts. (Caution: these can be a lot!)"
+            &= help "Generate logs for rule attempts. (Caution: can be a lot!)"
         , logChoices
             = False
             &= name "log-choices"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Store the choices in a way that can be reused be by -al"
+            &= help "Store the choices in a way that can be reused by -al"
         , strategyQ
             = "f"
             &= typ "STRATEGY"
@@ -670,9 +652,9 @@ ui = modes
             &= name "q"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when selecting the next question to answer. \
+            &= help "Strategy for selecting the next question to answer. \
                     \Options: f (for first), i (for interactive), r (for random), x (for all). \
-                    \The letter a (for auto) can be prepended to automatically skip \
+                    \Prepend a (for auto) to automatically skip \
                     \when there is only one option at any point.\n\
                     \Default value: f"
         , strategyA
@@ -682,13 +664,13 @@ ui = modes
             &= name "a"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when selecting an answer. Same options as strategy-q.\n\
-                    \Moreover, c (for compact) can be used to pick the most 'compact' option \
+            &= help "Strategy for selecting an answer. Same options as strategy-q.\n\
+                    \ c picks the most 'compact' option \
                     \at every decision point.\n\
-                    \And, s (for sparse) can be used to pick the most 'sparse' option \
-                    \at every decision point. \
-                    \This can be particularly useful for --representations-givens\n\
-                    \ l (for follow log) tries to pick the given choices as far as possible\n\
+                    \ s picks the 'sparsest' option \
+                    \at every decision point: \
+                    \useful for --representations-givens\n\
+                    \ l (for follow log) tries to pick given choices as far as possible\n\
                     \Default value: c"
         , representations
             = Nothing
@@ -696,7 +678,7 @@ ui = modes
             &= name "representations"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation.\n\
+            &= help "Strategy for choosing a representation.\n\
                     \Default value: same as --strategy-a"
         , representationsFinds
             = Nothing
@@ -704,7 +686,7 @@ ui = modes
             &= name "representations-finds"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a decision variable.\n\
+            &= help "Strategy for choosing a representation for a decision variable.\n\
                     \Default value: same as --representations"
         , representationsGivens
             = Nothing
@@ -712,7 +694,7 @@ ui = modes
             &= name "representations-givens"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a parameter.\n\
+            &= help "Strategy for choosing a representation for a parameter.\n\
                     \Default value: s (for sparse)"
         , representationsAuxiliaries
             = Nothing
@@ -720,7 +702,7 @@ ui = modes
             &= name "representations-auxiliaries"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for an auxiliary variable.\n\
+            &= help "Strategy for choosing a representation for an auxiliary variable.\n\
                     \Default value: same as --representations"
         , representationsQuantifieds
             = Nothing
@@ -728,7 +710,7 @@ ui = modes
             &= name "representations-quantifieds"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for a quantified variable.\n\
+            &= help "Strategy for choosing a representation for a quantified variable.\n\
                     \Default value: same as --representations"
         , representationsCuts
             = Nothing
@@ -736,31 +718,29 @@ ui = modes
             &= name "representations-cuts"
             &= groupname "Model generation"
             &= explicit
-            &= help "Strategy to use when choosing a representation for cuts in 'branching on'.\n\
+            &= help "Strategy for choosing a representation for cuts in 'branching on'.\n\
                     \Default value: same as --representations-cuts"
         , channelling
             = True
             &= name "channelling"
             &= groupname "Model generation"
             &= explicit
-            &= help "Whether to produce channelled models or not.\n\
-                    \Can be true or false. (true by default)\n\
-                    \    false: Do not produce channelled models.\n\
-                    \    true : Produce channelled models."
+            &= help "Whether to produce channelled models \
+                    \(true by default).\n"
         , representationLevels
             = True
             &= name "representation-levels"
             &= groupname "Model generation"
             &= explicit
-            &= help "Whether to use built-in precedence levels when choosing representations.\n\
-                    \These levels are used to cut down the number of generated models.\n\
-                    \Can be true or false. (true by default)"
+            &= help "Whether to use built-in precedence levels when choosing representations. \
+                    \Used to cut down the number of generated models.\n\
+                    \Default: true"
         , seed
             = Nothing
             &= name "seed"
             &= groupname "Model generation"
             &= explicit
-            &= help "The seed for the random number generator."
+            &= help "Random number generator seed."
         , limitModels
             = Nothing
             &= name "limit-models"
@@ -772,33 +752,33 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , useExistingModels
             = []
             &= name "use-existing-models"
             &= groupname "Model generation"
             &= explicit
             &= typFile
-            &= help "Takes paths of Essence' models generated beforehand.\n\
-                    \If given, Conjure will skip the modelling phase and use the existing models for solving."
+            &= help "Paths of Essence' models generated beforehand. \
+                    \If given, Conjure skips the modelling phase and uses existing models for solving."
         , savilerowOptions
             = def
             &= name "savilerow-options"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Options to be passed to Savile Row."
+            &= help "Options passed to Savile Row."
         , solverOptions
             = def
             &= name "solver-options"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Options to be passed to the backend solver."
+            &= help "Options passed to the backend solver."
         , solver
             = "minion"
             &= name "solver"
             &= groupname "Options for other tools"
             &= explicit
-            &= help "Backend solver to use.\n\
+            &= help "Backend solver. \
                     \Possible values: minion/lingeling/minisat\n\
                     \Default: minion"
         , nbSolutions
@@ -806,8 +786,8 @@ ui = modes
             &= name "number-of-solutions"
             &= groupname "General"
             &= explicit
-            &= help "Number of solutions to find.\n\
-                    \Pass the string \"all\" to enumerate all solutions.\n\
+            &= help "Number of solutions to find; \
+                    \\"all\" enumerates all solutions.\n\
                     \Default: 1"
         , copySolutions
             = True
@@ -822,23 +802,20 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "solve"
             &= explicit
-            &= help "This is a combined mode, and it is available for convenience.\n\
-                    \It runs Conjure in the modelling mode followed by \
+            &= help "A combined mode for convenience.\n\
+                    \Runs Conjure in modelling mode followed by \
                     \parameter translation if required, \
                     \then Savile Row + Minion to solve, and \
                     \then solution translation."
@@ -857,37 +834,34 @@ ui = modes
             = False
             &= name "normalise-quantified"
             &= explicit
-            &= help "Whether to normalise the names of quantified variables or not. Off by default."
+            &= help "Normalise the names of quantified variables."
         , removeUnused
             = False
             &= name "remove-unused"
             &= explicit
-            &= help "Whether to remove unused declarations or not. Off by default."
+            &= help "Remove unused declarations."
         , limitTime
             = Nothing
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "pretty"
             &= explicit
             &= help "Pretty print as Essence file to stdout.\n\
@@ -912,26 +886,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "diff"
             &= explicit
             &= help "Diff on two Essence files. Works on models, parameters, and solutions."
@@ -951,7 +922,7 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         }   &= name "type-check"
             &= explicit
             &= help "Type-checking a single Essence file."
@@ -967,7 +938,7 @@ ui = modes
             &= name "o"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Output directory. Generated models will be saved here.\n\
+            &= help "Where to save generated models.\n\
                     \Default value: 'conjure-output'"
         , logLevel
             = def
@@ -980,26 +951,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "split"
             &= explicit
             &= help "Split an Essence file to various smaller files. Useful for testing."
@@ -1015,7 +983,7 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Output JSON file.\n\
-                    \By default, its value will be 'foo.essence-json'\n\
+                    \Default is 'foo.essence-json'\n\
                     \if the Essence file is named 'foo.essence'"
         , logLevel
             = def
@@ -1028,26 +996,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "symmetry-detection"
             &= explicit
             &= help "Dump some JSON to be used as input to ferret for symmetry detection."
@@ -1075,26 +1040,23 @@ ui = modes
             &= name "limit-time"
             &= groupname "General"
             &= explicit
-            &= help "Time limit in seconds (real time)."
+            &= help "Limit in seconds of real time."
         , outputFormat
             = def
             &= name "output-format"
             &= groupname "Logging & Output"
             &= explicit
             &= typ "FORMAT"
-            &= help "Conjure's output can be in multiple formats.\n\
-                    \    plain : The default\n\
-                    \    binary: A binary encoding of the Essence output.\n\
-                    \            It can be read back in by Conjure.\n\
-                    \    json  : A json encoding of the Essence output.\n\
-                    \            It can be used by other tools integrating with Conjure\n\
-                    \            in order to avoid having to parse textual Essence."
+            &= help "Format to use for output.\n\
+                    \    plain : default\n\
+                    \    binary: can be read by Conjure\n\
+                    \    json  : use to avoid parsing\n"
         , lineWidth
             = 120
             &= name "line-width"
             &= groupname "Logging & Output"
             &= explicit
-            &= help "Line width to use during pretty printing.\nDefault: 120"
+            &= help "Line width for pretty printing.\nDefault: 120"
         }   &= name "parameter-generator"
             &= explicit
             &= help "Generate an Essence model describing the instances of the problem class \
@@ -1150,6 +1112,8 @@ ui = modes
                      \described in the \"Reformulating Essence Specifications for Robustness\" \
                      \paper, which aims to make search faster."
     ]      &= program "conjure"
+           &= helpArg [explicit, name "help"]
+           &= versionArg [explicit, name "version"]
            &= summary (unlines [ "Conjure: The Automated Constraint Modelling Tool"
                                , "Release version " ++ showVersion version
                                , "Repository version " ++ repositoryVersion
@@ -1157,6 +1121,6 @@ ui = modes
            &= help "The command line interface of Conjure takes a command name as the first argument \
                    \followed by more arguments depending on the command.\n\
                    \This help text gives a list of the available commands.\n\
-                   \For details of a specific command, pass the --help flag after the command name.\n\
+                   \For details of a command, pass the --help flag after the command name.\n\
                    \For example: 'conjure translate-solution --help'"
 

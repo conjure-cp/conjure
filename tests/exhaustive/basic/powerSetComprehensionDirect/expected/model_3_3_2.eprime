@@ -1,0 +1,27 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + (b - a))
+find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
+such that
+    and([and([or([q11 <= x_ExplicitVarSizeWithMarker_Marker /\
+                  x_ExplicitVarSizeWithMarker_Values[q11] = t_ExplicitVarSizeWithDummy[q9]
+                      | q11 : int(1..1 + (b - a))])
+                  | q9 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q9] != b + 1])
+         ->
+         sum([t_ExplicitVarSizeWithDummy[q12] | q12 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q12] != b + 1]) <=
+         6   | t_ExplicitVarSizeWithDummy : matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1),
+               and([t_ExplicitVarSizeWithDummy[q4] < t_ExplicitVarSizeWithDummy[q4 + 1] \/
+                    t_ExplicitVarSizeWithDummy[q4] = b + 1
+                        | q4 : int(1..1 + (b - a) - 1)]),
+               and([t_ExplicitVarSizeWithDummy[q5] = b + 1 -> t_ExplicitVarSizeWithDummy[q5 + 1] = b + 1
+                        | q5 : int(1..1 + (b - a) - 1)])]),
+    and([q1 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
+         x_ExplicitVarSizeWithMarker_Values[q1] < x_ExplicitVarSizeWithMarker_Values[q1 + 1]
+             | q1 : int(1..1 + (b - a) - 1)]),
+    and([q2 > x_ExplicitVarSizeWithMarker_Marker -> x_ExplicitVarSizeWithMarker_Values[q2] = a
+             | q2 : int(1..1 + (b - a))]),
+    n <= x_ExplicitVarSizeWithMarker_Marker
+

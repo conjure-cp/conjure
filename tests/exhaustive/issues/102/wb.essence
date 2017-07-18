@@ -1,0 +1,64 @@
+language Essence 1.3
+
+$ You are given an 8 pint bucket of water, and
+$ two empty buckets which can contain 5 and 3 pints respectively.
+$ You are required to divide the water into two by pouring water between buckets
+$ (that is, to end up with 4 pints in the 8 pint bucket, and
+$                          4 pints in the 5 pint bucket).
+
+letting buckets be domain int(3,5,8)
+
+letting initialState be function(3 --> 0, 5 --> 0, 8 --> 8)
+letting finalState   be function(3 --> 0, 5 --> 4, 8 --> 4)
+
+letting HORIZON be 10
+
+
+find actions : sequence (maxSize HORIZON) of (buckets, buckets, int(1..8))
+find states  : sequence (maxSize HORIZON) of function (total) buckets --> int(0..max(`buckets`))
+
+$ action i transforms state i to state i+1
+such that |actions| = |states| - 1
+
+$ cannot pour from the a bucket to itself
+such that forAll (i, (bFrom, bTo, amount)) in actions . bFrom != bTo
+
+$ can only pour if there is enough water
+such that forAll (i, (bFrom, bTo, amount)) in actions . amount <= states(i)(bFrom)
+
+$ bucket capacity
+such that forAll (i, f) in states . forAll b : buckets . f(b) <= b
+
+$ preservation of water
+such that forAll (i, (bFrom, bTo, amount)) in actions . states(i)(bFrom) - amount = states(i+1)(bFrom)
+such that forAll (i, (bFrom, bTo, amount)) in actions . states(i)(bTo) + amount = states(i+1)(bTo)
+such that forAll (i, (bFrom, bTo, amount)) in actions .
+            forAll b : buckets . !(b in {bFrom, bTo}) -> states(i)(b) = states(i+1)(b)
+
+$ after an action, either the source bucket is empty
+$                      or the target bucket is full
+such that forAll (i, (bFrom, bTo, amount)) in actions . states(i+1)(bFrom) = 0 \/
+                                                        states(i+1)(bTo) = bTo
+
+$ initial and final state
+such that states(1) = initialState
+such that states(|states|) = finalState
+
+$ minimise the number of actions
+$ find nbActions : int(0..HORIZON)
+$ such that nbActions = |actions|
+$ minimising nbActions
+
+$ the optimal solution has 7 actions
+$ setting it to 7 for the tests
+find nbActions : int(7)
+such that nbActions = |actions|
+
+$ such that states(1) = function(3 --> 0, 5 --> 0, 8 --> 8)
+$ such that states(2) = function(3 --> 0, 5 --> 5, 8 --> 3)
+$ such that states(3) = function(3 --> 3, 5 --> 2, 8 --> 3)
+$ such that states(4) = function(3 --> 0, 5 --> 2, 8 --> 6)
+$ such that states(5) = function(3 --> 2, 5 --> 0, 8 --> 6)
+$ such that states(6) = function(3 --> 2, 5 --> 5, 8 --> 1)
+$ such that states(7) = function(3 --> 3, 5 --> 4, 8 --> 1)
+$ such that states(8) = function(3 --> 0, 5 --> 4, 8 --> 4)

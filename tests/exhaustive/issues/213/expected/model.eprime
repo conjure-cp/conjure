@@ -1,0 +1,15 @@
+language ESSENCE' 1.0
+
+given n: int(1..)
+letting let1 be n - 1
+find s_Function1D: matrix indexed by [int(1..n)] of int(0..let1)
+letting let2 be n - 1
+letting let3 be n - 1
+find v_Function1D: matrix indexed by [int(1..let2)] of int(1..let3)
+such that
+    and([v_Function1D[i] = |s_Function1D[i + 1] - s_Function1D[i]| | i : int(1..n - 1)]),
+    allDiff(v_Function1D),
+    and([or([v_Function1D[q2] = q1 | q2 : int(1..let2)]) | q1 : int(1..let3)]),
+    allDiff(s_Function1D),
+    and([or([s_Function1D[q5] = q4 | q5 : int(1..n)]) | q4 : int(0..let1)])
+

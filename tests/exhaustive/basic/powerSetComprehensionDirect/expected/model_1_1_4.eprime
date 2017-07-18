@@ -1,0 +1,23 @@
+language ESSENCE' 1.0
+
+given n: int
+given a: int
+given b: int
+find x_Occurrence: matrix indexed by [int(a..b)] of bool
+such that
+    and([and([x_Occurrence[t_ExplicitVarSizeWithFlags_Values[q8]]
+                  | q8 : int(1..1 + (b - a)), t_ExplicitVarSizeWithFlags_Flags[q8]])
+         ->
+         sum([t_ExplicitVarSizeWithFlags_Values[q9] | q9 : int(1..1 + (b - a)), t_ExplicitVarSizeWithFlags_Flags[q9]])
+         <= 6
+             | t_ExplicitVarSizeWithFlags_Flags : matrix indexed by [int(1..1 + (b - a))] of bool,
+               t_ExplicitVarSizeWithFlags_Values : matrix indexed by [int(1..1 + (b - a))] of int(a..b),
+               and([t_ExplicitVarSizeWithFlags_Flags[q2 + 1] ->
+                    t_ExplicitVarSizeWithFlags_Values[q2] < t_ExplicitVarSizeWithFlags_Values[q2 + 1]
+                        | q2 : int(1..1 + (b - a) - 1)]),
+               and([t_ExplicitVarSizeWithFlags_Flags[q3] = false -> t_ExplicitVarSizeWithFlags_Values[q3] = a
+                        | q3 : int(1..1 + (b - a))]),
+               and([t_ExplicitVarSizeWithFlags_Flags[q4 + 1] -> t_ExplicitVarSizeWithFlags_Flags[q4]
+                        | q4 : int(1..1 + (b - a) - 1)])]),
+    n <= sum([toInt(x_Occurrence[q1]) | q1 : int(a..b)])
+
