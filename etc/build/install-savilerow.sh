@@ -7,7 +7,7 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 
 wget -c http://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-linux.tgz
 tar zxvf savilerow-1.6.5-linux.tgz
-# cp savilerow-1.6.5-linux/savilerow.jar ${BIN_DIR}/savilerow.jar
+cp savilerow-1.6.5-linux/savilerow.jar ${BIN_DIR}/savilerow.jar
 mkdir -p ${BIN_DIR}/lib
 cp savilerow-1.6.5-linux/lib/trove.jar ${BIN_DIR}/lib/trove.jar
 rm -rf savilerow-1.6.5-linux.tgz savilerow-1.6.5-linux
