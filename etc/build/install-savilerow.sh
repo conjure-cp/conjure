@@ -19,6 +19,6 @@ echo 'java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" "$@"'   
 chmod +x savilerow
 popd
 
-using an unreleased version of savilerow
+# using an unreleased version of savilerow
 wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-18--1bfd9d6728ce/savilerow.jar
 cp savilerow.jar ${BIN_DIR}/savilerow.jar
