@@ -9,7 +9,7 @@ wget -c http://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-linux.tgz
 tar zxvf savilerow-1.6.5-linux.tgz
 cp savilerow-1.6.5-linux/savilerow.jar ${BIN_DIR}/savilerow.jar
 mkdir -p ${BIN_DIR}/lib
-cp savilerow-1.6.5-linux/lib/trove.jar ${BIN_DIR}/lib/trove.jar
+# cp savilerow-1.6.5-linux/lib/trove.jar ${BIN_DIR}/lib/trove.jar
 rm -rf savilerow-1.6.5-linux.tgz savilerow-1.6.5-linux
 
 pushd ${BIN_DIR}
@@ -19,6 +19,6 @@ echo 'java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" "$@"'   
 chmod +x savilerow
 popd
 
-# using an unreleased version of savilerow
-# wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-03--ad9229da27ca/savilerow.jar
-# cp savilerow.jar ${BIN_DIR}/savilerow.jar
+using an unreleased version of savilerow
+wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-03--ad9229da27ca/savilerow.jar
+cp savilerow.jar ${BIN_DIR}/savilerow.jar
