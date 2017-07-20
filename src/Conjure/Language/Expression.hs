@@ -157,17 +157,17 @@ instance Pretty Declaration where
             extract (viewConstantSequence -> Just rows     ) = Just rows
             extract _ = Nothing
 
-            isPrim2D (extract -> Just rows) = mapM isPrim1D rows
-            isPrim2D (viewConstantRelation -> Just table) = mapM (mapM isPrim) table
-            isPrim2D _ = Nothing
-
-            isPrim1D (extract -> Just cells) = mapM isPrim cells
-            isPrim1D _ = Nothing
-
             isPrim (ConstantBool val) = Just (Left val)
             isPrim (ConstantInt  val) = Just (Right (Left val))
             isPrim (ConstantEnum _ _ val) = Just (Right (Right val))
             isPrim _ = Nothing
+
+            isPrim1D (extract -> Just cells) = mapM isPrim cells
+            isPrim1D _ = Nothing
+
+            isPrim2D (extract -> Just rows) = mapM isPrim1D rows
+            isPrim2D (viewConstantRelation -> Just table) = mapM (mapM isPrim) table
+            isPrim2D _ = Nothing
 
             showPrim _ (Left True)  = "T"
             showPrim _ (Left False) = "_"
@@ -178,17 +178,18 @@ instance Pretty Declaration where
                 maximum (0 : [ length (show i)          | i <- universeBi primTable :: [Integer] ]
                           ++ [ length (show (pretty i)) | ConstantEnum _ _ i <- universeBi primTable ])
 
+            -- comment1D width primTable =
+            --     unlines
+            --         [ "$ Here is a simple \"visualisation\" for the value above."
+            --         , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
+            --         ]
+
             comment2D width primTable =
                 unlines
                     $ ( "$ Visualisation for " ++ show (pretty nm))
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
-            -- comment1D width primTable =
-            --     unlines
-            --         [ "$ Here is a simple \"visualisation\" for the value above."
-            --         , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
-            --         ]
 
             modifierX =
                 case x of
