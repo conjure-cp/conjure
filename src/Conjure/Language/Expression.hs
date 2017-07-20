@@ -165,15 +165,18 @@ instance Pretty Declaration where
             isPrim1D _ = Nothing
 
             isPrim (ConstantBool val) = Just (Left val)
-            isPrim (ConstantInt  val) = Just (Right val)
+            isPrim (ConstantInt  val) = Just (Right (Left val))
+            isPrim (ConstantEnum _ _ val) = Just (Right (Right val))
             isPrim _ = Nothing
 
             showPrim _ (Left True)  = "T"
             showPrim _ (Left False) = "_"
-            showPrim n (Right i) = paddedNum n ' ' i
+            showPrim n (Right (Left  i)) = paddedNum n ' ' i
+            showPrim n (Right (Right i)) = paddedNum n ' ' (pretty i)
 
             maxIntWidth primTable =
-                maximum (0 : [ length (show i) | i <- universeBi primTable :: [Integer] ])
+                maximum (0 : [ length (show i)          | i <- universeBi primTable :: [Integer] ]
+                          ++ [ length (show (pretty i)) | ConstantEnum _ _ i <- universeBi primTable ])
 
             comment2D width primTable =
                 unlines
