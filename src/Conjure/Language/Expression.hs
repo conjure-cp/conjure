@@ -158,6 +158,7 @@ instance Pretty Declaration where
             extract _ = Nothing
 
             isPrim2D (extract -> Just rows) = mapM isPrim1D rows
+            isPrim2D (viewConstantRelation -> Just table) = mapM (mapM isPrim) table
             isPrim2D _ = Nothing
 
             isPrim1D (extract -> Just cells) = mapM isPrim cells
