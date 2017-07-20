@@ -20,5 +20,5 @@ chmod +x savilerow
 popd
 
 using an unreleased version of savilerow
-wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-03--ad9229da27ca/savilerow.jar
+wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-18--1bfd9d6728ce/savilerow.jar
 cp savilerow.jar ${BIN_DIR}/savilerow.jar

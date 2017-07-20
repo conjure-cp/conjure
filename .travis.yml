@@ -105,7 +105,7 @@ install:
   - conjure --version                        # print version
 
   # Savile Row
-  - (savilerow -help | grep '51450f820439') || etc/build/install-savilerow.sh
+  - (savilerow -help | grep '1bfd9d6728ce') || etc/build/install-savilerow.sh
   - savilerow -help | head -n1               # print version
 
   # Lingeling
