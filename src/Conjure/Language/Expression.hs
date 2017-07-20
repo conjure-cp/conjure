@@ -216,7 +216,7 @@ instance Pretty Declaration where
                         if null (concat (concat primTable))
                             then id
                             else \ s -> vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]
-                    Nothing -> id
+                    _ -> id
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
