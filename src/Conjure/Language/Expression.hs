@@ -169,6 +169,9 @@ instance Pretty Declaration where
             isPrim2D (viewConstantRelation -> Just table) = mapM (mapM isPrim) table
             isPrim2D _ = Nothing
 
+            isPrim3D (extract -> Just table) = mapM isPrim2D table
+            isPrim3D _ = Nothing
+
             showPrim _ (Left True)  = "T"
             showPrim _ (Left False) = "_"
             showPrim n (Right (Left  i)) = paddedNum n ' ' i
@@ -190,6 +193,13 @@ instance Pretty Declaration where
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
+            comment3D width primTable =
+                unlines
+                    $ ( "$ Visualisation for " ++ show (pretty nm))
+                    : concat [ [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
+                                  | row <- table
+                               ] ++ ["$ "]
+                             | table <- primTable ]
 
             modifierX =
                 case x of
@@ -197,12 +207,16 @@ instance Pretty Declaration where
                     _          -> id
 
             modifierC c =
-                case isPrim2D c of
-                    Nothing        -> id
-                    Just primTable ->
+                case (isPrim2D c, isPrim3D c) of
+                    (Just primTable, _) ->
                         if null (concat primTable)
                             then id
                             else \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
+                    (_, Just primTable) ->
+                        if null (concat (concat primTable))
+                            then id
+                            else \ s -> vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]
+                    Nothing -> id
         in
             modifierX $ hang ("letting" <+> pretty nm <+> "be") 8 (pretty x)
     pretty (GivenDomainDefnEnum name) =
