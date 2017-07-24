@@ -841,9 +841,11 @@ Type conversion operators
 +--------------------+---------------------------------------------------------+
 | ``toMSet``         | set/relation/function to multi-set                      |
 +--------------------+---------------------------------------------------------+
-| ``toRelation``     | function to relation; ``{a --> b}`` becomes ``((a,b))`` |
+| ``toRelation``     | function to relation; ``function(a --> b)`` becomes     |
+|                    | ``relation((a,b))``                                     |
 +--------------------+---------------------------------------------------------+
-| ``toSet``          | multi-set/relation/function to set                      |
+| ``toSet``          | multi-set/relation/function to set; ``mset(0,0,1)``     |
+|                    | becomes ``{0,1}``                                       |
 +--------------------+---------------------------------------------------------+
 
 It is currently not possible to use an operator to directly invert ``toRelation`` or ``toSet`` when applied to a function, or ``toSet`` when applied to a relation.
@@ -862,6 +864,7 @@ By referring to the set of tuples of a function ``f`` indirectly by means of ``t
 
 to indirectly recover the relation or function that corresponds to a set of tuples, or the function that corresponds to a relation.
 This will fail to yield a solution if a function corresponding to a set of tuples or relation is sought, but that set of tuples or relation does not actually determine a function.
+An error results if a relation corresponding to a set of tuples is sought, but not all tuples have the same number of elements.
 
 
 Function operators
@@ -908,8 +911,8 @@ The ``inverse`` operator tests whether its function arguments are inverses of ea
 
 .. code-block:: essence
 
-   find x : bool such that x = inverse(function(0-->1),function(1-->0)) $ true
-   find x : bool such that x = inverse(function(0-->1),function(1-->1)) $ false
+   find a : bool such that a = inverse(function(0-->1),function(1-->0)) $ true
+   find b : bool such that b = inverse(function(0-->1),function(1-->1)) $ false
 
 
 Matrix operators
@@ -918,11 +921,11 @@ Matrix operators
 The following operator returns a matrix:
 
 +--------------------+---------------------------------------------------------+
-| ``flatten``        | 1D matrix of entries from matrix                        |
+| ``flatten``        | list of entries from matrix                             |
 +--------------------+---------------------------------------------------------+
 
 ``flatten`` takes 1 or 2 arguments.
-With one argument, ``flatten`` returns a 1D matrix containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
+With one argument, ``flatten`` returns a list containing the entries of a matrix with any number of dimensions, listed in the lexicographic order of the tuples of indices specifying each entry.
 With two arguments ``flatten(n,M)``, the first argument ``n`` is a constant integer that indicates the depth of flattening: the first ``n+1`` dimensions are flattened into one dimension.
 Note that ``flatten(0,M) = M`` always holds.
 The one-argument form works like an unbounded-depth flattening.
@@ -930,9 +933,9 @@ The one-argument form works like an unbounded-depth flattening.
 The following operators yield Boolean values:
 
 +-------------------------+----------------------------------------------------+
-| ``allDiff``             | test if all entries of 1D matrix are different     |
+| ``allDiff``             | test if all entries of a list are different        |
 +-------------------------+----------------------------------------------------+
-| ``alldifferent_except`` | test if all entries of 1D matrix differ,           |
+| ``alldifferent_except`` | test if all entries of a list differ,              |
 |                         | possibly except value specified in second argument |
 +-------------------------+----------------------------------------------------+
 
@@ -941,7 +944,7 @@ The following illustrate ``allDiff`` and ``alldifferent_except``:
 .. code-block:: essence
 
    find a : bool such that a = allDiff([1,2,4,1]) $ false
-   find a : bool such that a = alldifferent_except([1,2,4,1], 1) $ true
+   find b : bool such that b = alldifferent_except([1,2,4,1], 1) $ true
 
 
 Partition operators
@@ -998,10 +1001,10 @@ The following snippets illustrate the use of quantifiers.
 .. code-block:: essence
 
    find a : bool such that a = forAll i in {0,1,2} . i=i*i $ false
-   find a : bool such that a = exists i : int(0..4) . i*i=i $ true
+   find b : bool such that b = exists i : int(0..4) . i*i=i $ true
 
 The same variable can be reused for multiple quantifications, as a quantified variable has scope that is local to its quantifier.
-Avoid using the same name both as a global decision variable in a ``find``, and for quantification, as this is treated as an error by Savile Row.
+However, avoid using the same name both for quantification and as a global decision variable in a ``find``, as this is treated as an error by Savile Row.
 
 An alternative quantifier-like syntax
 
