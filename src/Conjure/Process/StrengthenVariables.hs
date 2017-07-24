@@ -15,6 +15,8 @@ module Conjure.Process.StrengthenVariables
   ) where
 
 import Data.List ( nub, union )
+import Data.Map.Strict ( Map )
+import qualified Data.Map.Strict as M ( (!?), empty, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
@@ -25,16 +27,26 @@ import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Compute.DomainOf ( domainOf )
+import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 
+-- aeson
+import qualified Data.Aeson as JSON ( decodeStrict )
+-- shelly
+import Shelly ( run, shelly, silently )
+-- directory
+import System.Directory ( removeFile )
+-- text
+import qualified Data.Text.Encoding as T ( encodeUtf8 )
+-- uniplate zipper
 import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, right, up, fromZipper, hole, replaceHole )
 
 type ExpressionZ = Zipper Expression Expression
 
 -- | Strengthen the variables in a model using type- and domain-inference.
-strengthenVariables :: (MonadFail m, MonadLog m, MonadUserError m)
+strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
                     => Model -> m Model
 strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fixRelationProj)
-  where core :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
+  where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
         core model = do model' <- foldM folder model [ functionAttributes
                                                      , setAttributes
                                                      , setConstraints
@@ -848,19 +860,24 @@ ineqOps = [ (opEq,  opEq)
           ]
 
 -- | Iterate slightly faster over a domain if generating two distinct variables.
-fasterIteration :: (MonadFail m, MonadLog m)
+fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
                 => Model       -- ^ Model as context.
                 -> Declaration -- ^ Ignored declaration.
                 -> m Model     -- ^ Possibly updated model.
 fasterIteration m _
-  = let matches = findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m
-        -- Pair up matches with the updated constraint
-        pairs = zip matches (map (onlyEquivalent >=> changeIterator) $ mapMaybe doubleDistinctIter matches)
-        newConstraints = map (fromZipper *** fromZipper) $ foldr fromMaybePairs [] pairs
-        -- Remove the old constraint
-        in return $ flip removeConstraints (map fst newConstraints) $
-                    -- Add the new constraints
-                    mergeConstraints m (map snd newConstraints)
+  = foldM (\m' z -> do
+          -- Find the equivalent variables
+          equivs <- head <$> sequence [ findEquivVars (hole z) ]
+          case doubleDistinctIter z of
+               Nothing -> return m'
+               -- Only apply to equivalent variables and make the new constraint
+               Just v  -> case onlyEquivalent (equivs, v) >>= changeIterator of
+                               Nothing -> return m'
+                               -- Remove the old constraint
+                               Just z' -> return $ flip removeConstraints [hole z] $
+                                                   -- Add the new constraint
+                                                   mergeConstraints m' [fromZipper z'])
+          m $ findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m 
   where
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
@@ -870,8 +887,32 @@ fasterIteration m _
              [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
                -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
+    -- Find which variables are equivalent in an expression
+    findEquivVars :: (MonadIO m) => Expression -> m (Map Text Text)
+    findEquivVars e = case e of
+                           [essence| forAll &_, &_ : &_, &_ . &e' |]  -> liftIO $ findSyms e'
+                           [essence| forAll &_, &_ in &_, &_ . &e' |] -> liftIO $ findSyms e'
+                           _ -> return M.empty
+    -- Find the symmetries in an expression
+    findSyms :: Expression -> IO (Map Text Text)
+    findSyms e = do
+      let m' = flip mergeConstraints [e] $ removeConstraints m $ suchThat m
+      let filename = ".tmp-variable-strengthening.json"
+      outputVarSymBreaking filename m'
+      symmetries <- ferret $ stringToText filename
+      removeFile filename
+      case (JSON.decodeStrict $ T.encodeUtf8 symmetries) :: Maybe [Map Text Text] of
+           Nothing -> return M.empty
+           Just ss -> return $ foldr M.union M.empty ss
     -- Only perform the modification if the variables are equivalent in the expression
-    onlyEquivalent = Just
+    onlyEquivalent (es, v@((x, _), (y, _), _, _))
+      = case namesFromAbstractPattern x of
+             [Name nx] -> case namesFromAbstractPattern y of
+                               [Name ny] -> case es M.!? nx of
+                                                 Just ny' | ny == ny' -> Just v
+                                                 _ -> Nothing
+                               _         -> Nothing
+             _         -> Nothing
     -- Change the iterator to use the new, faster notation
     changeIterator ((x, x'), (y, y'), v, Just z)
       = let e = hole z
@@ -893,6 +934,7 @@ fasterIteration m _
                          (up z >>= up)
                     _ -> Nothing
     changeIterator _ = Nothing
-    -- Only keep pairs that have a Just on the right hand side
-    fromMaybePairs (x, Just y) ps = (x, y) : ps
-    fromMaybePairs _ ps = ps
+
+-- | Call ferret's symmetry detection on a JSON file
+ferret :: Text -> IO Text
+ferret path = shelly $ silently $ run "symmetry_detect" [ "--json", path ]
