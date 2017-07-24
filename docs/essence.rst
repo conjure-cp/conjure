@@ -1000,6 +1000,9 @@ The following snippets illustrate the use of quantifiers.
    find a : bool such that a = forAll i in {0,1,2} . i=i*i $ false
    find a : bool such that a = exists i : int(0..4) . i*i=i $ true
 
+The same variable can be reused for multiple quantifications, as a quantified variable has scope that is local to its quantifier.
+Avoid using the same name both as a global decision variable in a ``find``, and for quantification, as this is treated as an error by Savile Row.
+
 An alternative quantifier-like syntax
 
  | ``sum i in I . f(i)``
