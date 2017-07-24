@@ -497,9 +497,7 @@ followed by the keyword ``of``, and a list of domains separated by the ``*`` sym
 There are 2 groups of relation attributes:
 
 #. Related to cardinality: ``size``, ``minSize``, and ``maxSize``.
-#. Binary relation attributes: ``reflexive``, ``irreflexive``, ``coreflexive``
-                             , ``symmetric`` , ``antiSymmetric`` , ``aSymmetric``
-                             , ``transitive``, ``total``, ``connex``, ``Euclidean``, ``serial``, ``equivalence``, ``partialOrder``.
+#. Binary relation attributes: ``reflexive``, ``irreflexive``, ``coreflexive``, ``symmetric``, ``antiSymmetric``, ``aSymmetric``, ``transitive``, ``total``, ``connex``, ``Euclidean``, ``serial``, ``equivalence``, ``partialOrder``.
 
 The binary relation attributes are only applicable to relations of arity 2, and are between two identical domains.
 
@@ -520,7 +518,7 @@ A partition is denoted by the keyword ``partition``,
 followed by an optional comma separated list of partition attributes,
 followed by the keyword ``from``, and the domain for the members in the partition.
 
-There are N groups of partition attributes:
+There are 3 groups of partition attributes:
 
 #. Related to the number of parts in the partition: ``numParts``, ``minNumParts``, and ``maxNumParts``.
 #. Related to the cardinality of each part in the partition: ``partSize``, ``minPartSize``, and ``maxPartSize``.
@@ -541,7 +539,7 @@ A type is obtained from a domain by
 removing attributes (from set, multi-set, function, sequence, relation, and partition domains),
 and removing bounds (from integer and enumerated domains).
 
-In the expression language of Essence, each operator has a typing rules associated with it.
+In the expression language of Essence, each operator has a typing rule associated with it.
 These typing rules are used to both type check expression fragments and to calculate the types of resulting expressions.
 
 For example, the arithmetic operator ``+`` requires two arguments both of which are integers, and the resulting expression is also an integer.
@@ -688,6 +686,20 @@ Comparisons
 ~~~~~~~~~~~
 
 The inline binary comparison operators ``=``  ``!=``  ``<``  ``<=``  ``>``  ``<=`` can be used to compare two expressions.
+
+The equality operators ``=`` and ``!=`` can be applied to compare two expressions, both taking values in the same domain.
+Equality operators are supported for all types.
+
+The equality operators have the same precedence as other logical operators.
+This may lead to unintended unsatisfiability or introducing inadvertent solutions.
+This is illustrated in the following example, where there are two possible solutions.
+
+.. code-block:: essence
+
+   find a : bool such that a = false  \/ true  $ true or false
+   find b : bool such that b = (false \/ true) $ true
+
+The inline binary comparison operators ``<``  ``<=``  ``>``  ``<=`` can be used to compare expressions taking values in an ordered domain.
 The expressions must both be integer, both Boolean or both enumerated types.
 
 .. code-block:: essence
@@ -695,14 +707,6 @@ The expressions must both be integer, both Boolean or both enumerated types.
     letting direction be new type enum {North, East, South, West}
     find a : bool such that a = ((North < South) /\ (South < West))  $ true
     find b : bool such that b = (false <= true) $ true
-
-Note that the equality operators ``=`` and ``!=`` have relatively high precedence.
-This is illustrated in the following example, where there are two possible solutions.
-
-.. code-block:: essence
-
-   find a : bool such that a = false  \/ true  $ true or false
-   find b : bool such that b = (false \/ true) $ true
 
 The inline binary comparison operators
 
@@ -729,6 +733,7 @@ Logical operators
 Logical operators operate on Boolean valued expressions, returning a Boolean value ``false`` or ``true``.
 Negation is unary prefix, the others are binary inline.
 The ``and``, ``or`` and ``xor`` operators can be applied to sets or lists of Boolean values (see `List combining operators`_ for details).
+Note that ``<-`` is not a logical operator, but is used in list comprehension syntax.
 
 
 Set operators
@@ -973,7 +978,7 @@ Each of the operators
  | ``sum    product    and    or    xor``
 
 applies an associative combining operator to elements of a list or set.
-A list may also be given as a comprehension that specifies the elements of a set or domain that satisfy a given condition.
+A list may also be given as a comprehension that specifies the elements of a set or domain that satisfy some conditions.
 
 The following relationships hold for all integers ``x`` and ``y``:
 
@@ -986,13 +991,13 @@ The following relationships hold for all Booleans ``a`` and ``b``:
  | ``or([a,b]) = (a \/ b)``
  | ``xor([a,b]) = ((a \/ b) /\ !(a /\ b))``
 
-The following are all valid syntax:
+Examples:
 
 .. code-block:: essence
 
-   find x : int(0..9) such that x = sum( [f(i) | i <- I] )
-   find y : int(0..9) such that y = sum( [toInt((i=j) /\ (M[j]>0)) | i <- I, j : D] )
-   find z : int(0..9) such that z = sum( {1,2,3} ) $ 6
+   find x : int(0..9) such that x = sum( {1,2,3} ) $ 6
+   find y : int(0..9) such that y = product( [1,2,4] ) $ 8
+   find a : bool such that a = and([xor([true,false]),or([false,true])]) $ true
 
 Quantification over a finite set or finite domain of values is supported by ``forAll`` and ``exists``.
 These quantifiers yield Boolean values and are internally treated as ``and`` and ``or``, respectively, applied to the lists of values corresponding to the set or domain.
@@ -1011,5 +1016,25 @@ An alternative quantifier-like syntax
  | ``sum i in I . f(i)``
 
 is supported for the ``sum`` and ``product`` operators.
+
+
+Comprehensions
+~~~~~~~~~~~~~~
+
+A list can be constructed by means of a comprehension.
+A list comprehension is declared by using the usual square brackets ``[`` and ``]``, inside which is a generator expression possibly involving some parameter variables, followed by ``|``, followed by a comma (``,``) separated sequence of conditions defining the values that all the parameter variables may take, or Boolean expressions.
+The value of a list comprehension is a list containing all the values of the generator expression corresponding to those values of the parameter variables for which all the Boolean expressions evaluate to ``true``.
+
+In a Boolean expression controlling a comprehension, if ``L`` is a list then ``v <- L`` behaves similarly to how the expression ``v in toMSet(L)`` is treated in a quantification.
+
+Examples of list comprehensions:
+
+.. code-block:: essence
+
+   find x : int(0..999) such that x = product( [i-1 | i <- [5,6,7]] ) $ 120
+   letting M be [1,0,0,1,0]
+   letting I be domain int(1..5)
+   find y : int(0..9) such that y = sum( [toInt((i=j) /\ (M[j]>0)) | i : I, j <- M] ) $ 2
+   find a : bool such that a = and([u<v | (u,v) <- [(0,1),(2**10,2**11),(-1,1)] ]) $ true
 
 
