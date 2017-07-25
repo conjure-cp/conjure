@@ -175,8 +175,8 @@ instance Pretty Declaration where
 
             showPrim _ (Left True)  = "T"
             showPrim _ (Left False) = "_"
-            showPrim n (Right (Left  i)) = paddedNum n ' ' i
-            showPrim n (Right (Right i)) = paddedNum n ' ' (pretty i)
+            showPrim n (Right (Left  i)) = padLeft n ' ' (show i)
+            showPrim n (Right (Right i)) = padLeft n ' ' (show (pretty i))
 
             maxIntWidth primTable =
                 maximum (0 : [ length (show i)          | i <- universeBi primTable :: [Integer] ]
