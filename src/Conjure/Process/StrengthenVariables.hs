@@ -547,123 +547,74 @@ variableSize :: (MonadFail m, MonadLog m)
              -> Declaration  -- ^ Declaration to give attribute.
              -> m Model      -- ^ Possibly updated model.
 variableSize m (FindOrGiven Find n dom) | acceptedDom dom = do
-  let exprs = mapMaybe (forAllContents >=> sizeConstraint n) $
-              findInUncondForAll (isJust . forAllContents) m
-  logInfo $ stringToDoc $ show exprs
-  -- logInfo $ vcat $ map pretty exprs
-  return m
+  let attrs = mapMaybe (\e -> do
+                -- The size of l is constrained by r
+                ((attr, modifier), (l, r)) <- sizeConstraint e
+                -- Act differently for different types of r
+                if not (isFind r)
+                   then case r of
+                             [essence| image(&f, &_) |]
+                               -> pure (l, attr, Just $ modifier [essence| max(range(&f)) |])
+                             _ -> pure (l, attr, Just $ modifier r)
+                   else fail $ "expression " <+> pretty r <+> " not a valid size attribute")
+                $ findInUncondForAll (isJust . sizeConstraint) m
+  -- addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
+  foldM (\m' (l, attr, val) ->
+         case domainOf l of
+              Right DomainSet{}  -> pure $ declWithSizeAttr (attr, val) l m'
+              Right DomainMSet{} -> pure $ declWithSizeAttr (attr, val) l m'
+              Right (DomainAny _ (TypeSet _))  -> pure $ declWithSizeAttr (attr, val) l m'
+              Right (DomainAny _ (TypeMSet _)) -> pure $ declWithSizeAttr (attr, val) l m'
+              Right d   -> fail $ "unexpected size of domain: " <+> stringToDoc (show d)
+              Left  msg -> fail msg)
+        m attrs
   where
     acceptedDom DomainSet{}       = True
     acceptedDom DomainMSet{}      = True
     acceptedDom DomainFunction{}  = True
-    acceptedDom DomainSequence{}  = True
-    acceptedDom DomainPartition{} = True
     acceptedDom _                 = False
-
-    forAllContents :: (MonadFail m) => Expression -> m Expression
-    forAllContents [essence| forAll &_ : &_ . &e |]         = return e
-    forAllContents [essence| forAll &_ in &_ . &e |]        = return e
-    forAllContents e = fail $ "cannot extract forAll contents from: " <+> pretty e
-variableSize m _ = return m
--- variableSize m (FindOrGiven Find n (DomainFunction r attrs from to@DomainSet{})) = do
---   let fs = findInUncondForAllZ funcResultIneq m
---   let es = map hole $ mapMaybe (down >=> down) $ nub fs
---   let as = mapMaybe (\(attrn, a) ->
---                      case a of
---                           Just [essence| image(&f, &_) |]
---                             -> Just (attrn, Just [essence| max(range(&f)) |])
---                           _ -> Nothing) $
---            mapMaybe sizeAttrFromConstr es
---   -- Ignore failures in adding the attribute to the domain
---   return $ case addAttributesToDomain to as of
---        Nothing  -> m
---        Just to' -> updateDeclaration (FindOrGiven Find n (DomainFunction r attrs from to')) m
---   where
---     funcResultIneq [essence| forAll &_ in defined(&g) . |image(&f, &_)| <= &_ |]
---       -- Is the function being called the one under consideration?
---       = case f of
---              Reference n' _ | n == n'
---                -- Do f and g have the same sized domains?
---                -> case functionDomains g of
---                        Nothing -> False
---                        Just (dom, _)
---                                -> case functionDomainSizes from dom of
---                                        Nothing       -> False
---                                        Just (sf, sg) -> sf == sg
---              _ -> False
---     funcResultIneq _ = False
--- variableSize m (FindOrGiven forg n dom) | validDom dom = do
---   let exprs = mapMaybe (sizeConstraint n) $ suchThat m
---   case mapMaybe sizeAttrFromConstr (nub exprs) of
---        -- Only one size attribute is valid
---        attr@[_] -> do
---          dom' <- addAttributesToDomain dom attr
---          return $ updateDeclaration (FindOrGiven forg n dom') $
---                   removeConstraints m exprs
---        _        -> return m
---   where
---     validDom DomainSet{}       = True
---     validDom DomainMSet{}      = True
---     validDom DomainFunction{}  = True
---     validDom DomainSequence{}  = True
---     validDom DomainPartition{} = True
---     validDom _                 = False
--- variableSize m _ = return m
-
--- | Get the domain and codomain of an expression referring to a function.
-functionDomains :: (MonadFail m) => Expression -> m (Domain () Expression, Domain () Expression)
-functionDomains f = case f of
-                         Reference _ (Just (Alias (Domain dom)))
-                           -> funDoms dom
-                         Reference _ (Just (InComprehension (GenDomainNoRepr _ dom)))
-                           -> funDoms dom
-                         Reference _ (Just (InComprehension (GenInExpr _ (Domain dom))))
-                           -> funDoms dom
-                         Reference _ (Just (DeclNoRepr _ _ dom _))
-                           -> funDoms dom
-                         [essence| image(&r, &_) |]
-                           -> functionDomains r
-                         _ -> fail $ "could not get function domain from expression " <+> pretty f
-  where
-    funDoms (DomainFunction _ _ dom codom) = return (dom, codom)
-    funDoms d = fail $ "domain reference " <+> pretty d <+> " not a function domain"
-
--- | Find an expression constraining the size of a variable.
-sizeConstraint :: Name              -- ^ Name of the variable with a constrained size.
-               -> Expression        -- ^ Expression in which to look for the size constraint.
-               -> Maybe Expression  -- ^ The expression constraining the size of the variable.
-sizeConstraint n e
-  = let v = case matching e ineqOps of
-                 -- Check both sides of the operator, but ignore (in)equations
-                 -- of two find variables
-                 Just (_, ([essence| |&var| |], e'))
-                   | not (hasFind e') -> Just var
-                 Just (_, (e', [essence| |&var| |]))
-                   | not (hasFind e') -> Just var
-                 _ -> Nothing
-        in case v of
-                Just (Reference n' _) | n == n' -> Just e
-                _                               -> Nothing
-  where
-    hasFind = any isFind . universe
+    -- Is the interesting part of an expression a find variable?
+    isFind Constant{}                                   = False
     isFind (Reference _ (Just (DeclNoRepr Find _ _ _))) = True
     isFind (Reference _ (Just (DeclHasRepr Find _ _)))  = True
-    isFind _ = False
+    isFind [essence| image(&f, &_) |]                   = isFind f
+    isFind [essence| &f(&_) |]                          = isFind f
+    isFind e                                            = any isFind (children e)
+    -- Update the declaration with a new size attribute
+    declWithSizeAttr attr e m' = case FindOrGiven Find n <$> addSizeAttr attr e of
+                                      Just decl -> updateDeclaration decl m'
+                                      Nothing   -> m'
+    -- Add a size attribute to a possibly nested domain
+    addSizeAttr attr (Op (MkOpImage (OpImage (Reference n' _) _))) | n' == n
+      = case dom of
+             DomainFunction r as from d
+               -> DomainFunction r as from <$> addAttributesToDomain d [ attr ]
+             _ -> fail $ "find variable " <+> pretty n <+> " is not a function"
+    addSizeAttr attr (Reference n' _) | n' == n
+      = case dom of
+             d@DomainSet{}  -> addAttributesToDomain d [ attr ]
+             d@DomainMSet{} -> addAttributesToDomain d [ attr ]
+             _ -> fail $ "find variable " <+> pretty n <+> " is not a set or multiset"
+    addSizeAttr _ e = fail $ "unexpected expression: " <+> pretty e
+variableSize m _ = return m
 
--- | Make a size attribute from a constraint on the size of a variable.
-sizeAttrFromConstr :: Expression -> Maybe (AttrName, Maybe Expression)
-sizeAttrFromConstr [essence| |&_| =  &s |] = Just ("size", Just s)
-sizeAttrFromConstr [essence| |&_| <  &s |] = Just ("maxSize", Just (s - 1))
-sizeAttrFromConstr [essence| |&_| <= &s |] = Just ("maxSize", Just s)
-sizeAttrFromConstr [essence| |&_| >  &s |] = Just ("minSize", Just (s + 1))
-sizeAttrFromConstr [essence| |&_| >= &s |] = Just ("minSize", Just s)
-sizeAttrFromConstr e = case matching e oppIneqOps of
-                            -- Try again with the terms swapped
-                            Just (f, (e', s@(Op (MkOpTwoBars (OpTwoBars _)))))
-                              -> sizeAttrFromConstr $ make f s e'
-                            _ -> Nothing
-  where
-    oppIneqOps = [ (opEq, opEq), (opLt, opGt), (opLeq, opGeq), (opGt, opLt), (opGeq, opLeq) ]
+-- | Find an expression constraining the size of a variable and return the size attribute related
+--   to it and the terms in the expression.
+sizeConstraint :: (MonadFail m)
+               => Expression  -- ^ Expression in which to look for the size constraint.
+               -> m ((AttrName, Expression -> Expression),  -- ^ The size attribute modifier to apply
+                     (Expression, Expression))              -- ^ and the terms of the constraint.
+sizeConstraint e = do
+  let failMsg = "expression " <+> pretty e <+> " not a constraint on variable size"
+  case matching e oppIneqOps of
+       Just (_, ([essence| |&_| |], _))
+         -> case matching e ineqSizeAttrs of
+                 Just (attrMod, ([essence| |&l| |], r)) -> pure (attrMod, (l, r))
+                 _                                      -> fail failMsg
+        -- If the terms are switched, try again with the reversed expression
+       Just (oper, (l, r@[essence| |&_| |]))
+         -> sizeConstraint (make oper r l)
+       _ -> fail failMsg
 
 -- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
 mSetSizeOccur :: (MonadFail m, MonadLog m)
@@ -844,11 +795,11 @@ type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
 
 -- | Get the lens for an expression and the values it matches.
 matching :: Expression
-         -> [(BinExprLens Maybe, BinExprLens Identity)]
-         -> Maybe (BinExprLens Identity, (Expression, Expression))
+         -> [(BinExprLens Maybe, a)]
+         -> Maybe (a, (Expression, Expression))
 matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
-                      [x] -> Just x
-                      _   -> Nothing
+                      [x] -> pure x
+                      _   -> fail $ "no matching operator for expression: " <+> pretty e
 
 -- | (In)equality operator lens pairs.
 ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
@@ -858,6 +809,24 @@ ineqOps = [ (opEq,  opEq)
           , (opGt,  opGt)
           , (opGeq, opGeq)
           ]
+
+-- | Opposites of (in)equality operator lens pairs.
+oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+oppIneqOps = [ (opEq, opEq)
+             , (opLt, opGt)
+             , (opLeq, opGeq)
+             , (opGt, opLt)
+             , (opGeq, opLeq)
+             ]
+
+-- | (In)equality operator to size attribute modifier pairs.
+ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Expression))]
+ineqSizeAttrs = [ (opEq,  (AttrName_size, id))
+                , (opLt,  (AttrName_maxSize, \x -> x - 1))
+                , (opLeq, (AttrName_maxSize, id))
+                , (opGt,  (AttrName_minSize, (+1)))
+                , (opGeq, (AttrName_minSize, id))
+                ]
 
 -- | Iterate slightly faster over a domain if generating two distinct variables.
 fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
