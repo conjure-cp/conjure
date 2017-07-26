@@ -14,896 +14,975 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( nub, union )
-import Data.Map.Strict ( Map )
-import qualified Data.Map.Strict as M ( (!?), empty, union )
+import Data.List ( union )
+-- import Data.Map.Strict ( Map )
+-- import qualified Data.Map.Strict as M ( (!?), empty, union )
 import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Domain.AddAttributes
 import Conjure.Language.NameResolution ( resolveNames )
--- These two are needed together
-import Conjure.Language.Expression.DomainSizeOf ()
-import Conjure.Language.DomainSizeOf ( domainSizeOf )
-import Conjure.Compute.DomainOf ( domainOf )
-import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
+-- -- These two are needed together
+-- import Conjure.Language.Expression.DomainSizeOf ()
+-- import Conjure.Language.DomainSizeOf ( domainSizeOf )
+-- import Conjure.Compute.DomainOf ( domainOf )
+-- import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 
--- aeson
-import qualified Data.Aeson as JSON ( decodeStrict )
--- shelly
-import Shelly ( run, shelly, silently )
--- directory
-import System.Directory ( removeFile )
--- text
-import qualified Data.Text.Encoding as T ( encodeUtf8 )
--- uniplate zipper
-import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, right, up, fromZipper, hole, replaceHole )
+-- -- aeson
+-- import qualified Data.Aeson as JSON ( decodeStrict )
+-- -- shelly
+-- import Shelly ( run, shelly, silently )
+-- -- directory
+-- import System.Directory ( removeFile )
+-- -- text
+-- import qualified Data.Text.Encoding as T ( encodeUtf8 )
+-- -- uniplate zipper
+-- import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, right, up, fromZipper, hole, replaceHole )
 
-type ExpressionZ = Zipper Expression Expression
+-- type ExpressionZ = Zipper Expression Expression
 
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
                     => Model -> m Model
-strengthenVariables = runNameGen . (resolveNames >=> core . suchThatToBack . fixRelationProj)
-  where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
-        core model = do model' <- foldM folder model [ functionAttributes
-                                                     , setAttributes
-                                                     , setConstraints
-                                                     , variableSize
-                                                     , mSetSizeOccur
-                                                     , mSetOccur
-                                                     , forAllIneqToIneqSum
-                                                     , fasterIteration
-                                                     ] >>= resolveNames
-                        -- Make another pass if there were changes, but ignore models
-                        -- with machine names, as they don't play well with resolveNames
-                        if model == model' || any containsMachineName (suchThat model)
-                           then return model'
-                           else core model'
-        -- Apply the function to every statement and fold it into the model
-        folder :: (MonadFail m, MonadLog m)
-               => Model -> (Model -> Declaration -> m Model) -> m Model
-        folder m@Model { mStatements = stmts } f = foldM (applyToDecl f) m stmts
-        -- Apply the function only to declarations
-        applyToDecl f m (Declaration d) = f m d
-        applyToDecl _ m _               = return m
-        -- Push all of the constraints to a single statement at the back
-        suchThatToBack m@Model { mStatements = stmts }
-          = m { mStatements = suchThatToBack' stmts [] }
-        suchThatToBack' [] es = [SuchThat es]
-        suchThatToBack' (SuchThat cs:ss) es = suchThatToBack' ss (es `union` cs)
-        suchThatToBack' (s:ss) es = s : suchThatToBack' ss es
-        -- | Does an expression contain a reference with a machine name?
-        containsMachineName = any isMachineName . universe
-        isMachineName (Reference MachineName{} _) = True
-        isMachineName _                           = False
-
--- | Update a declaration in a model.
-updateDeclaration :: Declaration  -- ^ New declaration value.
-                  -> Model        -- ^ Model to be updated.
-                  -> Model        -- ^ Updated model.
-updateDeclaration d@(FindOrGiven _ n' _) m@Model { mStatements = stmts }
-  = m { mStatements = map updateDeclaration' stmts }
+strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
   where
-    -- Replace the declaration in-place
-    updateDeclaration' (Declaration (FindOrGiven _ n _))
-      | n == n' = Declaration d
-    updateDeclaration' s = s
-updateDeclaration _ m = m
+    core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
+    core model = do
+      -- Apply rules to each decision (find) variable
+      (model', toKeep) <- foldM (\modelAndToKeep findAndCstrs ->
+          -- Apply each rule to the variable and hold on to constraints to keep
+          foldM (\(m, tk) rule -> second (tk `union`) <$> rule m findAndCstrs)
+                modelAndToKeep [ varSize
+                               ])
+          (model, [])
+          (zip (collectFindVariables model)
+               (repeat $ collectConstraints model))
+      let model'' = replaceConstraints (sort toKeep) model'
+      -- Make another pass if the model was updated
+      if model == model''
+         then return model''
+         else core model''
 
--- | Merge a list of constraints into a model.
-mergeConstraints :: Model         -- ^ Model to be updated.
-                 -> [Expression]  -- ^ Constraints to merge into the model.
-                 -> Model         -- ^ Updated model with new constraints.
-mergeConstraints m [] = m
-mergeConstraints m@Model { mStatements = stmts } cs
-  = m { mStatements = mergeConstraints' stmts }
+-- | Collect decision (find) variables from a model, returning their name and domain.
+collectFindVariables :: Model -> [(Name, Domain () Expression)]
+collectFindVariables = mapMaybe collectFind . mStatements
   where
-    mergeConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
-    mergeConstraints' (s:ss) = s : mergeConstraints' ss
-    mergeConstraints' [] = [SuchThat cs]
+    collectFind (Declaration (FindOrGiven Find n d)) = Just (n, d)
+    collectFind _                                    = Nothing
 
--- | Remove a list of constraints from a model.
-removeConstraints :: Model        -- ^ Model to have the constraint removed.
-                  -> [Expression] -- ^ Constraints to remove.
-                  -> Model        -- ^ Updated model with constraints removed.
-removeConstraints m@Model { mStatements = stmts } cs
-  = m { mStatements = filter (not . emptySuchThat) $ map removeConstraints' stmts }
+-- | Collect the constraints in a model.
+collectConstraints :: Model -> [Expression]
+collectConstraints = concatMap getSuchThat . mStatements
   where
-    removeConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
-    removeConstraints' s              = s
+    getSuchThat (SuchThat cs) = cs
+    getSuchThat _             = []
 
-    emptySuchThat (SuchThat []) = True
-    emptySuchThat _             = False
-
--- | Make the attributes of function variables as constrictive as possible.
-functionAttributes :: (MonadFail m, MonadLog m)
-                   => Model       -- ^ Model as context.
-                   -> Declaration -- ^ Statement to constrain.
-                   -> m Model     -- ^ Possibly updated model.
-functionAttributes m (FindOrGiven forg n d@DomainFunction{}) = do
-  d' <- constrainFunctionDomain n d m
-  let f' = FindOrGiven forg n d'
-  return $ updateDeclaration f' m
-functionAttributes m _ = return m
-
--- | Constrain the domain of a function given the context of a model.
-constrainFunctionDomain :: (MonadFail m, MonadLog m)
-                        => Name                     -- ^ Name of the function.
-                        -> Domain () Expression     -- ^ Current domain of the function.
-                        -> Model                    -- ^ Context of the model.
-                        -> m (Domain () Expression) -- ^ Possibly modified domain.
-constrainFunctionDomain n d@DomainFunction{} m
-  = surjectiveIsTotalBijective d  >>=
-    totalInjectiveIsBijective     >>=
-    definedForAllIsTotal n m      >>=
-    fullRangeIsSurjective n m     >>=
-    diffArgResultIsInjective n m
-constrainFunctionDomain _ d _ = return d
-
--- | Extract the such that expressions from a model.
-suchThat :: Model -> [Expression]
-suchThat = foldr fromSuchThat [] . mStatements
-  where fromSuchThat (SuchThat es) = (`union` es)
-        fromSuchThat _             = id
-
--- | If a function is surjective or bijective and its domain and codomain
---   are of equal size, then it is total and bijective.
-surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
-                           => Domain () Expression      -- ^ Domain of the function.
-                           -> m (Domain () Expression)  -- ^ Possibly modified domain.
-surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ p j) from to)
-  | (p == PartialityAttr_Partial && j == JectivityAttr_Bijective) ||
-    j == JectivityAttr_Surjective = do
-    (fromSize, toSize) <- functionDomainSizes from to
-    if fromSize == toSize
-       then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
-       else return d
-surjectiveIsTotalBijective d = return d
-
--- | If a function is total and injective, and its domain and codomain
---   are of equal size, then it is bijective.
-totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
-                          => Domain () Expression
-                          -> m (Domain () Expression)
-totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
-  (fromSize, toSize) <- functionDomainSizes from to
-  if fromSize == toSize
-     then addAttributesToDomain d [ ("bijective", Nothing) ]
-     else return d
-totalInjectiveIsBijective d = return d
-
--- | Calculate the sizes of the domain and codomain of a function.
-functionDomainSizes :: (MonadFail m)
-                    => Domain () Expression       -- ^ The function's domain.
-                    -> Domain () Expression       -- ^ The function's codomain.
-                    -> m (Expression, Expression) -- ^ The sizes of the two.
-functionDomainSizes from to = do
-  fromSize <- domainSizeOf from
-  toSize   <- domainSizeOf to
-  return (fromSize, toSize)
-
--- | If a function is defined for all values in its domain, then it is total.
-definedForAllIsTotal :: (MonadFail m, MonadLog m)
-                     => Name                      -- ^ Name of the function.
-                     -> Model                     -- ^ Model for context.
-                     -> Domain () Expression      -- ^ Domain of the function.
-                     -> m (Domain () Expression)  -- ^ Possibly modified domain.
-definedForAllIsTotal n m d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _)
-  | any definedIn $ findInUncondForAll isOp m
-    = addAttributesToDomain d [ ("total", Nothing) ]
+-- | Replace the constraints in a model.
+replaceConstraints :: [Expression] -> Model -> Model
+replaceConstraints cs m@Model { mStatements = stmts }
+  = m { mStatements = filter (not . isSuchThat) stmts ++ [SuchThat cs] }
   where
-    -- Look for operator expressions but leave comprehensions up to findInUncondForAll
-    isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
-    isOp Op{} = True
-    isOp _    = False
-    -- Is the function called with parameters generated from its domain in an expression?
-    definedIn e = any (funcCalledWithGenParams n from) (universe e) &&
-                  not (hasImpliesOrOrs e)
-    -- Implies or Or may ignore a function call, making it undefined for the domain value
-    hasImpliesOrOrs = any isImplyOrOr . universe
-    isImplyOrOr [essence| &_ -> &_ |] = True
-    isImplyOrOr [essence| &_ \/ &_ |] = True
-    isImplyOrOr _                     = False
-definedForAllIsTotal _ _ d = return d
+    isSuchThat SuchThat{} = True
+    isSuchThat _          = False
 
--- | Determine whether a function is called with values generated from its domain.
-funcCalledWithGenParams :: Name                 -- ^ Name of the function being called.
-                        -> Domain () Expression -- ^ Function domain.
-                        -> Expression           -- ^ Expression which may be the function call.
-                        -> Bool
-funcCalledWithGenParams n d (Op (MkOpImage (OpImage (Reference n' _) param)))
-  = n' == n && genArgMatchesDom param
-    where
-      -- Is a function argument generated from the function's domain?
-      genArgMatchesDom (Reference _ (Just refDom))
-        = case refDom of
-               DeclNoRepr Quantified _ d' _           -> d == d'
-               InComprehension (GenDomainNoRepr _ d') -> d == d'
-               _                                      -> False
-      genArgMatchesDom _ = False
-funcCalledWithGenParams _ _ _ = False
+-- | Does an expression directly reference a given name variable?
+nameExpEq :: Name -> Expression -> Bool
+nameExpEq n (Reference n' _)           = n == n'
+nameExpEq n [essence| image(&f, &_) |] = nameExpEq n f
+nameExpEq n [essence| &f(&_) |]        = nameExpEq n f
+nameExpEq _ _ = False
 
--- | If all values in the range of a function are mapped to, then it is surjective.
-fullRangeIsSurjective :: (MonadFail m, MonadLog m)
-                      => Name                     -- ^ The function's name.
-                      -> Model                    -- ^ Model for context.
-                      -> Domain () Expression     -- ^ The function's domain.
-                      -> m (Domain () Expression) -- ^ Possibly modified function domain.
-fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
-  | (ject == JectivityAttr_None || ject == JectivityAttr_Injective) &&
-    -- Are the variables generated from the domain and codomain respectively?
-    any (uncurry varsAreGen)
-        -- Extract the function parameter and function value
-        (mapMaybe existsEqVals
-        -- Find the desired pattern being matched
-        (findInUncondForAll isExistsEq m))
-      = addAttributesToDomain d [ ("surjective", Nothing) ]
+-- | Update the domain of a declaration in a model.
+updateDecl :: Name -> Domain () Expression -> Model -> Model
+updateDecl n d m@Model { mStatements = stmts } = m { mStatements = map updateDecl' stmts }
   where
-    -- Get the domain value and codomain value used in the function call
-    existsEqVals [essence| exists &i :  &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
-    existsEqVals [essence| exists &i in &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
-    existsEqVals _ = Nothing
-    funcEqCoVal (Reference n' _) i i' j | n == n' = flip (,) j <$> checkVarsEq i i'
-    funcEqCoVal _ _ _ _ = Nothing
-    isExistsEq = isJust . existsEqVals
-    -- Try equating the variables references and return the reference if they are equal
-    checkVarsEq :: AbstractPattern -> Expression -> Maybe Expression
-    checkVarsEq (Single i) e@(Reference i' _) | i == i' = Just e
-    checkVarsEq _ _ = Nothing
-    -- Make sure that the variables are generated from the domain and codomain of the function
-    varsAreGen (Reference _ (Just (DeclNoRepr Quantified _ from' _)))
-               (Reference _ (Just (DeclNoRepr Quantified _ to'   _)))
-                 = from == from' && to == to'
-    varsAreGen iDom jDom = case domInCompRef iDom of
-                                Just from'
-                                  -> case domInCompRef jDom of
-                                          Just to' -> from == from' && to == to'
-                                          _ -> False
-                                _ -> False
-    -- Extract a domain from a reference in a comprehension
-    domInCompRef dom = case domInComprehension dom of
-                            Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom')))))
-                              -> Just dom'
-                            _ -> Nothing
-    -- Extract an InComprehension domain
-    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
-    domInComprehension _ = Nothing
-fullRangeIsSurjective _ _ d = return d
+    updateDecl' (Declaration (FindOrGiven Find n' _))
+      | n == n' = Declaration (FindOrGiven Find n d)
+    updateDecl' decl = decl
 
--- | If all distinct inputs to a function have distinct results, then it is injective.
---   It will also be total if there are no conditions other than the disequality between
---   the two inputs.
-diffArgResultIsInjective :: (MonadFail m, MonadLog m)
-                         => Name                     -- ^ The function's name.
-                         -> Model                    -- ^ Model for context.
-                         -> Domain () Expression     -- ^ The function's domain.
-                         -> m (Domain () Expression) -- ^ Possibly modified function domain.
-diffArgResultIsInjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from _)
-  | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
-    not (null $ findInUncondForAll isDistinctDisequality m)
-    = addAttributesToDomain d [ ("injective", Nothing)
-                              -- It is known that no inputs are ignored
-                              , ("total", Nothing) ]
+-- | Set a size attribute on a variable.
+varSize :: (MonadFail m, MonadLog m)
+        => Model                                        -- ^ Model for context.
+        -> ((Name, Domain () Expression), [Expression]) -- ^ Variable and constraints.
+        -> m (Model, [Expression])                      -- ^ Updated model and constraints to keep.
+varSize model ((n, dom), cs)
+  = foldM (\(m, tk) c ->
+    case c of
+         [essence| |&x| =  &e |] | nameExpEq n x -> return (addAttr AttrName_size e m, tk)
+         [essence| |&x| <  &e |] | nameExpEq n x -> return (addAttr AttrName_maxSize (e - 1) m, tk)
+         [essence| |&x| <= &e |] | nameExpEq n x -> return (addAttr AttrName_maxSize e m, tk)
+         [essence| |&x| >  &e |] | nameExpEq n x -> return (addAttr AttrName_minSize (e + 1) m, tk)
+         [essence| |&x| >= &e |] | nameExpEq n x -> return (addAttr AttrName_minSize e m, tk)
+         _                                       -> return (m, c:tk))
+    (model, []) cs
   where
-    -- Match a very specific pattern, which will also add the total attribute
-    isDistinctDisequality [essence| &i != &j -> &f(&i') != &f'(&j') |]
-      | f == f' && i == i' && j == j'
-        = case f of
-               Reference n' _ | n == n'
-                 -> domIsGen i && domIsGen j
-               _ -> False
-    isDistinctDisequality _ = False
-    -- Extract a domain reference from a comprehension
-    domIsGen (Reference _ (Just (DeclNoRepr Quantified _ dom _))) = from == dom
-    domIsGen d' = case domInComprehension d' of
-                       Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom))))) -> from == dom
-                       _ -> False
-    -- Extract an InComprehension domain
-    domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
-    domInComprehension _ = Nothing
-diffArgResultIsInjective _ _ d = return d
+    addAttr attr e m = case addAttributesToDomain dom [ mkAttr attr e ] of
+                            Just dom' -> updateDecl n dom' m
+                            Nothing   -> m
+    mkAttr attr [essence| image(&f, &_) |]     = (attr, Just [essence| max(range(&f)) |])
+    mkAttr attr [essence| image(&f, &_) - 1 |] = (attr, Just [essence| max(range(&f)) - 1 |])
+    mkAttr attr [essence| image(&f, &_) + 1 |] = (attr, Just [essence| max(range(&f)) + 1 |])
+    mkAttr attr e                              = (attr, Just e)
 
--- | Make the attributes of a set as constrictive as possible.
-setAttributes :: (MonadFail m, MonadLog m, NameGen m)
-              => Model        -- ^ Model as context.
-              -> Declaration  -- ^ Statement to constrain.
-              -> m Model      -- ^ Possibly updated model.
-setAttributes m (FindOrGiven forg n d@DomainSet{}) = do
-  d' <- setSizeFromConstraint n d m
-  let f' = FindOrGiven forg n d'
-  return $ updateDeclaration f' m
-setAttributes m _ = return m
+  -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
+  --       core model = do model' <- foldM folder model [ functionAttributes
+  --                                                    , setAttributes
+  --                                                    , setConstraints
+  --                                                    , variableSize
+  --                                                    , mSetSizeOccur
+  --                                                    , mSetOccur
+  --                                                    , forAllIneqToIneqSum
+  --                                                    , fasterIteration
+  --                                                    ] >>= resolveNames
+  --                       -- Make another pass if there were changes, but ignore models
+  --                       -- with machine names, as they don't play well with resolveNames
+  --                       if model == model' || any containsMachineName (suchThat model)
+  --                          then return model'
+  --                          else core model'
+  --       -- Apply the function to every statement and fold it into the model
+  --       folder :: (MonadFail m, MonadLog m)
+  --              => Model -> (Model -> Declaration -> m Model) -> m Model
+  --       folder m@Model { mStatements = stmts } f = foldM (applyToDecl f) m stmts
+  --       -- Apply the function only to declarations
+  --       applyToDecl f m (Declaration d) = f m d
+  --       applyToDecl _ m _               = return m
+  --       -- Push all of the constraints to a single statement at the back
+  --       suchThatToBack m@Model { mStatements = stmts }
+  --         = m { mStatements = suchThatToBack' stmts [] }
+  --       suchThatToBack' [] es = [SuchThat es]
+  --       suchThatToBack' (SuchThat cs:ss) es = suchThatToBack' ss (es `union` cs)
+  --       suchThatToBack' (s:ss) es = s : suchThatToBack' ss es
+  --       -- | Does an expression contain a reference with a machine name?
+  --       containsMachineName = any isMachineName . universe
+  --       isMachineName (Reference MachineName{} _) = True
+  --       isMachineName _                           = False
 
--- | Constrain the size of a set from constraints on it.
-setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
-                      => Name                     -- ^ Name of the set being worked on.
-                      -> Domain () Expression     -- ^ Domain of the set to possibly modify.
-                      -> Model                    -- ^ Model for context.
-                      -> m (Domain () Expression) -- ^ Possibly modified set domain.
-setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetOf
-  where
-    isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
-    isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
-    isSubsetOf _ = False
+-- -- | Update a declaration in a model.
+-- updateDeclaration :: Declaration  -- ^ New declaration value.
+  --                 -> Model        -- ^ Model to be updated.
+  --                 -> Model        -- ^ Updated model.
+-- updateDeclaration d@(FindOrGiven _ n' _) m@Model { mStatements = stmts }
+  -- = m { mStatements = map updateDeclaration' stmts }
+  -- where
+  --   -- Replace the declaration in-place
+  --   updateDeclaration' (Declaration (FindOrGiven _ n _))
+  --     | n == n' = Declaration d
+  --   updateDeclaration' s = s
+-- updateDeclaration _ m = m
 
-    subsetMinSize d' [essence| range(&l) subset   &_ |] = minSizeFromFunction d' l
-    subsetMinSize d' [essence| range(&l) subsetEq &_ |] = minSizeFromFunction d' l
-    subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromSet d' l -- could be more precise
-    subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromSet d' l
-    subsetMinSize d' _ = return d'
+-- -- | Merge a list of constraints into a model.
+-- mergeConstraints :: Model         -- ^ Model to be updated.
+  --                -> [Expression]  -- ^ Constraints to merge into the model.
+  --                -> Model         -- ^ Updated model with new constraints.
+-- mergeConstraints m [] = m
+-- mergeConstraints m@Model { mStatements = stmts } cs
+  -- = m { mStatements = mergeConstraints' stmts }
+  -- where
+  --   mergeConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
+  --   mergeConstraints' (s:ss) = s : mergeConstraints' ss
+  --   mergeConstraints' [] = [SuchThat cs]
 
--- | Find an expression at any depth of unconditional forAll expressions.
-findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
-findInUncondForAll p = map hole . findInUncondForAllZ p
+-- -- | Remove a list of constraints from a model.
+-- removeConstraints :: Model        -- ^ Model to have the constraint removed.
+  --                 -> [Expression] -- ^ Constraints to remove.
+  --                 -> Model        -- ^ Updated model with constraints removed.
+-- removeConstraints m@Model { mStatements = stmts } cs
+  -- = m { mStatements = filter (not . emptySuchThat) $ map removeConstraints' stmts }
+  -- where
+  --   removeConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
+  --   removeConstraints' s              = s
 
--- | Find an expression at any depth of unconditional forAll expressions,
---   returning a Zipper containing the expression's context.
-findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
-findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
-  where
-    findInForAll z | p (hole z) = [z]
-    findInForAll z
-      = case hole z of
-             [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
-               | refersTo x x' && refersTo y y'
-                 -> maybe [] findInForAll (down z >>= down)
-             [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
-               | refersTo x x' && refersTo y y'
-                 -> maybe [] findInForAll (down z >>= down)
-             Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
-               | all (not . isCondition) gorcs
-                 -> maybe [] findInForAll (down z >>= down)
-             [essence| &_ /\ &_ |]
-                 -> maybe [] findInForAll (down z)
-                    `union`
-                    maybe [] findInForAll (right z >>= down)
-             -- Only accept OR cases if both sides contain a match
-             [essence| &_ \/ &_ |]
-                 -> let leftResult  = maybe [] findInForAll (down z)
-                        rightResult = maybe [] findInForAll (right z >>= down)
-                        in if not (null leftResult) && not (null rightResult)
-                              then leftResult `union` rightResult
-                              else []
-             _   -> []
-    isCondition Condition{} = True
-    isCondition _           = False
+  --   emptySuchThat (SuchThat []) = True
+  --   emptySuchThat _             = False
 
--- | Does a reference refer to an abstract pattern?
-refersTo :: AbstractPattern -> Expression -> Bool
-refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
-refersTo _ _               = False
+-- -- | Make the attributes of function variables as constrictive as possible.
+-- functionAttributes :: (MonadFail m, MonadLog m)
+  --                  => Model       -- ^ Model as context.
+  --                  -> Declaration -- ^ Statement to constrain.
+  --                  -> m Model     -- ^ Possibly updated model.
+-- functionAttributes m (FindOrGiven forg n d@DomainFunction{}) = do
+  -- d' <- constrainFunctionDomain n d m
+  -- let f' = FindOrGiven forg n d'
+  -- return $ updateDeclaration f' m
+-- functionAttributes m _ = return m
 
--- | Get the list of names from an abstract pattern.
-namesFromAbstractPattern :: AbstractPattern -> [Name]
-namesFromAbstractPattern (Single n)        = [n]
-namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
-namesFromAbstractPattern _                 = []
+-- -- | Constrain the domain of a function given the context of a model.
+-- constrainFunctionDomain :: (MonadFail m, MonadLog m)
+  --                       => Name                     -- ^ Name of the function.
+  --                       -> Domain () Expression     -- ^ Current domain of the function.
+  --                       -> Model                    -- ^ Context of the model.
+  --                       -> m (Domain () Expression) -- ^ Possibly modified domain.
+-- constrainFunctionDomain n d@DomainFunction{} m
+  -- = surjectiveIsTotalBijective d  >>=
+  --   totalInjectiveIsBijective     >>=
+  --   definedForAllIsTotal n m      >>=
+  --   fullRangeIsSurjective n m     >>=
+  --   diffArgResultIsInjective n m
+-- constrainFunctionDomain _ d _ = return d
 
--- | Set the minimum size of a set based on it being a superset of another.
-minSizeFromSet :: (MonadFail m, MonadLog m, NameGen m)
-               => Domain () Expression      -- ^ Domain of the set for which to change the minimum size.
-               -> Expression                -- ^ Expression from which the minimum size is being inferred.
-               -> m (Domain () Expression)  -- ^ Set domain with a possible change of its minimum size.
-minSizeFromSet d@(DomainSet r (SetAttr size) dom) sub = do
-  subDom <- domainOf sub
-  case subDom of
-       DomainSet _ (SetAttr subSize) _
-         -> return $ DomainSet r (SetAttr $ mergeSizeOnMin size subSize) dom
-       _ -> return d
-  where
-    -- Merge the minSize of the right SizeAttr into the left
-    mergeSizeOnMin :: SizeAttr Expression -> SizeAttr Expression -> SizeAttr Expression
-    mergeSizeOnMin SizeAttr_None (SizeAttr_Size s) = SizeAttr_MinSize s
-    mergeSizeOnMin SizeAttr_None s@(SizeAttr_MinSize _) = s
-    mergeSizeOnMin SizeAttr_None (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize s
-    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_Size s) = SizeAttr_MinSize $ mkMax mn s
-    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinSize s) = SizeAttr_MinSize $ mkMax mn s
-    mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize $ mkMax mn s
-    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_Size s) = SizeAttr_MinMaxSize (mkMax mn s) mx
-    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinSize s) = SizeAttr_MinMaxSize (mkMax mn s) mx
-    mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinMaxSize s _) = SizeAttr_MinMaxSize (mkMax mn s) mx
-    mergeSizeOnMin s _ = s
-minSizeFromSet d _ = return d
+-- -- | Extract the such that expressions from a model.
+-- suchThat :: Model -> [Expression]
+-- suchThat = foldr fromSuchThat [] . mStatements
+  -- where fromSuchThat (SuchThat es) = (`union` es)
+  --       fromSuchThat _             = id
 
--- | Set the minimum size of a set based on it being a superset of the range of a total function.
-minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
-                    => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
-                    -> Expression               -- ^ Expression from which the minimum size is being inferred.
-                    -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
-minSizeFromFunction d r = do
-  f <- getFunDom r
-  case f of
-       DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
-         -> return $ setSetMinSize (Constant $ ConstantInt 1) d
-       _ -> return d
+-- -- | If a function is surjective or bijective and its domain and codomain
+-- --   are of equal size, then it is total and bijective.
+-- surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
+  --                          => Domain () Expression      -- ^ Domain of the function.
+  --                          -> m (Domain () Expression)  -- ^ Possibly modified domain.
+-- surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ p j) from to)
+  -- | (p == PartialityAttr_Partial && j == JectivityAttr_Bijective) ||
+  --   j == JectivityAttr_Surjective = do
+  --   (fromSize, toSize) <- functionDomainSizes from to
+  --   if fromSize == toSize
+  --      then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
+  --      else return d
+-- surjectiveIsTotalBijective d = return d
 
--- | Look for a function domain, allowing it to be generated in a comprehension.
-getFunDom :: (MonadFail m, MonadLog m, NameGen m)
-          => Expression
-          -> m (Domain () Expression)
-getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainFunction{} _))) = return d
-getFunDom (Reference _ (Just (InComprehension (GenInExpr _ e))))     = getFunDom e
-getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainSet{}  _)))     = return $ domFromContainer d
-getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainMSet{} _)))     = return $ domFromContainer d
-getFunDom e = domainOf e
+-- -- | If a function is total and injective, and its domain and codomain
+-- --   are of equal size, then it is bijective.
+-- totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
+  --                         => Domain () Expression
+  --                         -> m (Domain () Expression)
+-- totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
+  -- (fromSize, toSize) <- functionDomainSizes from to
+  -- if fromSize == toSize
+  --    then addAttributesToDomain d [ ("bijective", Nothing) ]
+  --    else return d
+-- totalInjectiveIsBijective d = return d
 
--- | Extract a "leaf" domain from a container domain.
-domFromContainer :: Domain () Expression -> Domain () Expression
-domFromContainer (DomainSet  _ _ d') = d'
-domFromContainer (DomainMSet _ _ d') = d'
-domFromContainer d'                  = d'
+-- -- | Calculate the sizes of the domain and codomain of a function.
+-- functionDomainSizes :: (MonadFail m)
+  --                   => Domain () Expression       -- ^ The function's domain.
+  --                   -> Domain () Expression       -- ^ The function's codomain.
+  --                   -> m (Expression, Expression) -- ^ The sizes of the two.
+-- functionDomainSizes from to = do
+  -- fromSize <- domainSizeOf from
+  -- toSize   <- domainSizeOf to
+  -- return (fromSize, toSize)
 
--- | Set the minSize attribute of a set.
-setSetMinSize :: Expression           -- ^ New minimum size to apply.
-              -> Domain () Expression -- ^ Set domain to modify.
-              -> Domain () Expression -- ^ Possibly modified set domain.
-setSetMinSize n (DomainSet r (SetAttr s) d) = DomainSet r (SetAttr $ mergeMinSize n s) d
-setSetMinSize _ d = d
+-- -- | If a function is defined for all values in its domain, then it is total.
+-- definedForAllIsTotal :: (MonadFail m, MonadLog m)
+  --                    => Name                      -- ^ Name of the function.
+  --                    -> Model                     -- ^ Model for context.
+  --                    -> Domain () Expression      -- ^ Domain of the function.
+  --                    -> m (Domain () Expression)  -- ^ Possibly modified domain.
+-- definedForAllIsTotal n m d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _)
+  -- | any definedIn $ findInUncondForAll isOp m
+  --   = addAttributesToDomain d [ ("total", Nothing) ]
+  -- where
+  --   -- Look for operator expressions but leave comprehensions up to findInUncondForAll
+  --   isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
+  --   isOp Op{} = True
+  --   isOp _    = False
+  --   -- Is the function called with parameters generated from its domain in an expression?
+  --   definedIn e = any (funcCalledWithGenParams n from) (universe e) &&
+  --                 not (hasImpliesOrOrs e)
+  --   -- Implies or Or may ignore a function call, making it undefined for the domain value
+  --   hasImpliesOrOrs = any isImplyOrOr . universe
+  --   isImplyOrOr [essence| &_ -> &_ |] = True
+  --   isImplyOrOr [essence| &_ \/ &_ |] = True
+  --   isImplyOrOr _                     = False
+-- definedForAllIsTotal _ _ d = return d
 
--- | Make a maximum expression between two expressions.
---   Two max expressions are merged into one.
---   The max between a value and a max adds the value to the max (if not present).
---   If the expressions are the same, no max is made and the value is returned.
-mkMax :: Expression -> Expression -> Expression
-mkMax (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es1)))))
-      (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es2)))))
-        = make opMax $ fromList $ es1 `union` es2
-mkMax i m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es)))))
-          | i `elem` es = m
-          | otherwise   = make opMax $ fromList $ i : es
-mkMax m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))) i
-          | i `elem` es = m
-          | otherwise   = make opMax $ fromList $ i : es
-mkMax i e | i == e      = e
-          | otherwise   = make opMax $ fromList [ i, e ]
+-- -- | Determine whether a function is called with values generated from its domain.
+-- funcCalledWithGenParams :: Name                 -- ^ Name of the function being called.
+  --                       -> Domain () Expression -- ^ Function domain.
+  --                       -> Expression           -- ^ Expression which may be the function call.
+  --                       -> Bool
+-- funcCalledWithGenParams n d (Op (MkOpImage (OpImage (Reference n' _) param)))
+  -- = n' == n && genArgMatchesDom param
+  --   where
+  --     -- Is a function argument generated from the function's domain?
+  --     genArgMatchesDom (Reference _ (Just refDom))
+  --       = case refDom of
+  --              DeclNoRepr Quantified _ d' _           -> d == d'
+  --              InComprehension (GenDomainNoRepr _ d') -> d == d'
+  --              _                                      -> False
+  --     genArgMatchesDom _ = False
+-- funcCalledWithGenParams _ _ _ = False
 
--- | Make a minimum expression between two expressions.
---   Two min expressions are merged into one.
---   The min between a value and a min adds the value to the min (if not present).
---   If the expressions are the same, no min is made and the value is returned.
-mkMin :: Expression -> Expression -> Expression
-mkMin (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es1)))))
-      (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es2)))))
-        = make opMin $ fromList $ es1 `union` es2
-mkMin i m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es)))))
-          | i `elem` es = m
-          | otherwise   = make opMin $ fromList $ i : es
-mkMin m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es))))) i
-          | i `elem` es = m
-          | otherwise   = make opMin $ fromList $ i : es
-mkMin i e | i == e      = e
-          | otherwise   = make opMin $ fromList [ i, e ]
+-- -- | If all values in the range of a function are mapped to, then it is surjective.
+-- fullRangeIsSurjective :: (MonadFail m, MonadLog m)
+  --                     => Name                     -- ^ The function's name.
+  --                     -> Model                    -- ^ Model for context.
+  --                     -> Domain () Expression     -- ^ The function's domain.
+  --                     -> m (Domain () Expression) -- ^ Possibly modified function domain.
+-- fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
+  -- | (ject == JectivityAttr_None || ject == JectivityAttr_Injective) &&
+  --   -- Are the variables generated from the domain and codomain respectively?
+  --   any (uncurry varsAreGen)
+  --       -- Extract the function parameter and function value
+  --       (mapMaybe existsEqVals
+  --       -- Find the desired pattern being matched
+  --       (findInUncondForAll isExistsEq m))
+  --     = addAttributesToDomain d [ ("surjective", Nothing) ]
+  -- where
+  --   -- Get the domain value and codomain value used in the function call
+  --   existsEqVals [essence| exists &i :  &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
+  --   existsEqVals [essence| exists &i in &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
+  --   existsEqVals _ = Nothing
+  --   funcEqCoVal (Reference n' _) i i' j | n == n' = flip (,) j <$> checkVarsEq i i'
+  --   funcEqCoVal _ _ _ _ = Nothing
+  --   isExistsEq = isJust . existsEqVals
+  --   -- Try equating the variables references and return the reference if they are equal
+  --   checkVarsEq :: AbstractPattern -> Expression -> Maybe Expression
+  --   checkVarsEq (Single i) e@(Reference i' _) | i == i' = Just e
+  --   checkVarsEq _ _ = Nothing
+  --   -- Make sure that the variables are generated from the domain and codomain of the function
+  --   varsAreGen (Reference _ (Just (DeclNoRepr Quantified _ from' _)))
+  --              (Reference _ (Just (DeclNoRepr Quantified _ to'   _)))
+  --                = from == from' && to == to'
+  --   varsAreGen iDom jDom = case domInCompRef iDom of
+  --                               Just from'
+  --                                 -> case domInCompRef jDom of
+  --                                         Just to' -> from == from' && to == to'
+  --                                         _ -> False
+  --                               _ -> False
+  --   -- Extract a domain from a reference in a comprehension
+  --   domInCompRef dom = case domInComprehension dom of
+  --                           Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom')))))
+  --                             -> Just dom'
+  --                           _ -> Nothing
+  --   -- Extract an InComprehension domain
+  --   domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
+  --   domInComprehension _ = Nothing
+-- fullRangeIsSurjective _ _ d = return d
 
--- | Add constraints on a set.
-setConstraints :: (MonadFail m, MonadLog m)
-               => Model        -- ^ Model as context.
-               -> Declaration  -- ^ Statement to constrain.
-               -> m Model      -- ^ Possibly updated model.
-setConstraints m (FindOrGiven _ n DomainSet{}) = do
-  cs <- funcRangeEqSet n m
-  return $ mergeConstraints m cs
-setConstraints m _ = return m
+-- -- | If all distinct inputs to a function have distinct results, then it is injective.
+-- --   It will also be total if there are no conditions other than the disequality between
+-- --   the two inputs.
+-- diffArgResultIsInjective :: (MonadFail m, MonadLog m)
+  --                        => Name                     -- ^ The function's name.
+  --                        -> Model                    -- ^ Model for context.
+  --                        -> Domain () Expression     -- ^ The function's domain.
+  --                        -> m (Domain () Expression) -- ^ Possibly modified function domain.
+-- diffArgResultIsInjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from _)
+  -- | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
+  --   not (null $ findInUncondForAll isDistinctDisequality m)
+  --   = addAttributesToDomain d [ ("injective", Nothing)
+  --                             -- It is known that no inputs are ignored
+  --                             , ("total", Nothing) ]
+  -- where
+  --   -- Match a very specific pattern, which will also add the total attribute
+  --   isDistinctDisequality [essence| &i != &j -> &f(&i') != &f'(&j') |]
+  --     | f == f' && i == i' && j == j'
+  --       = case f of
+  --              Reference n' _ | n == n'
+  --                -> domIsGen i && domIsGen j
+  --              _ -> False
+  --   isDistinctDisequality _ = False
+  --   -- Extract a domain reference from a comprehension
+  --   domIsGen (Reference _ (Just (DeclNoRepr Quantified _ dom _))) = from == dom
+  --   domIsGen d' = case domInComprehension d' of
+  --                      Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom))))) -> from == dom
+  --                      _ -> False
+  --   -- Extract an InComprehension domain
+  --   domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
+  --   domInComprehension _ = Nothing
+-- diffArgResultIsInjective _ _ d = return d
 
--- | Equate the range of a function to a set of the former is a subset of the latter
---   and all values in the set are results of the function.
-funcRangeEqSet :: (MonadFail m, MonadLog m)
-               => Name            -- ^ Name of the set.
-               -> Model           -- ^ Model for context.
-               -> m [Expression]  -- ^ Equality constraints between range and set.
-funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
-                     mapMaybe (forAllForSubset m) $
-                     findInUncondForAll isSubsetEqOf m
-  where
-    isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
-    isSubsetEqOf _ = False
+-- -- | Make the attributes of a set as constrictive as possible.
+-- setAttributes :: (MonadFail m, MonadLog m, NameGen m)
+  --             => Model        -- ^ Model as context.
+  --             -> Declaration  -- ^ Statement to constrain.
+  --             -> m Model      -- ^ Possibly updated model.
+-- setAttributes m (FindOrGiven forg n d@DomainSet{}) = do
+  -- d' <- setSizeFromConstraint n d m
+  -- let f' = FindOrGiven forg n d'
+  -- return $ updateDeclaration f' m
+-- setAttributes m _ = return m
 
--- | Create an expression that equates the range of a function which may come from
---   a forAll, and a set.
-equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
-                      -> Maybe Expression         -- Possible constraint equating the two.
-equateFuncRangeAndSet (r@[essence| range(&f) |], s) = nestReference f (make opEq r s)
-  where
-    nestReference :: Expression -> Expression -> Maybe Expression
-    nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
-    nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
-      = nestReference r' $ make opAnd $ Comprehension e [Generator g]
-    nestReference _ _ = Nothing
-equateFuncRangeAndSet _ = Nothing
+-- -- | Constrain the size of a set from constraints on it.
+-- setSizeFromConstraint :: (MonadFail m, MonadLog m, NameGen m)
+  --                     => Name                     -- ^ Name of the set being worked on.
+  --                     -> Domain () Expression     -- ^ Domain of the set to possibly modify.
+  --                     -> Model                    -- ^ Model for context.
+  --                     -> m (Domain () Expression) -- ^ Possibly modified set domain.
+-- setSizeFromConstraint n d = foldM subsetMinSize d . findInUncondForAll isSubsetOf
+  -- where
+  --   isSubsetOf (Op (MkOpSubset   (OpSubset   _ (Reference n' _)))) = n == n'
+  --   isSubsetOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
+  --   isSubsetOf _ = False
 
--- | Find a forAll expressions generating from a variable and equating a function
---   call result to the generated values.
-forAllForSubset :: Model                          -- ^ Model for context.
-                -> Expression                     -- ^ Subset expression.
-                -> Maybe (Expression, Expression) -- ^ Values to be equated.
-forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
-                                                s@Reference{})))
-  | not $ null $ findInUncondForAll (funcCallEqGenerated f s) m = Just (r, s)
-forAllForSubset _ _ = Nothing
+  --   subsetMinSize d' [essence| range(&l) subset   &_ |] = minSizeFromFunction d' l
+  --   subsetMinSize d' [essence| range(&l) subsetEq &_ |] = minSizeFromFunction d' l
+  --   subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromSet d' l -- could be more precise
+  --   subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromSet d' l
+  --   subsetMinSize d' _ = return d'
 
--- | Determine whether a function is a called and has its result equated to a value generated
---   from the set of interest.
-funcCallEqGenerated :: Expression -- ^ Function reference.
-                    -> Expression -- ^ Variable to generate from.
-                    -> Expression -- ^ Expression to check.
-                    -> Bool       -- ^ Does the equation have the desired terms.
-funcCallEqGenerated f s [essence| &e = &x |]
-  = isFuncCall e && isGenerated x
-  where
-    -- Is the left side a call to the function of interest?
-    isFuncCall (Op (MkOpImage (OpImage f' _))) = f == f'
-    isFuncCall _ = False
-    -- Is the right side variable generated from the set of interest?
-    isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
-    isGenerated _ = False
-funcCallEqGenerated _ _ _ = False
+-- -- | Find an expression at any depth of unconditional forAll expressions.
+-- findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
+-- findInUncondForAll p = map hole . findInUncondForAllZ p
 
--- | Lift a variable size constraint to an attribute.
-variableSize :: (MonadFail m, MonadLog m)
-             => Model        -- ^ Model as context.
-             -> Declaration  -- ^ Declaration to give attribute.
-             -> m Model      -- ^ Possibly updated model.
-variableSize m (FindOrGiven Find n dom) | acceptedDom dom = do
-  let attrs = mapMaybe (\e -> do
-                -- The size of l is constrained by r
-                ((attr, modifier), (l, r)) <- sizeConstraint e
-                -- Act differently for different types of r
-                if not (isFind r)
-                   then case r of
-                             [essence| image(&f, &_) |]
-                               -> pure (l, attr, Just $ modifier [essence| max(range(&f)) |])
-                             _ -> pure (l, attr, Just $ modifier r)
-                   else fail $ "expression " <+> pretty r <+> " not a valid size attribute")
-                $ findInUncondForAll (isJust . sizeConstraint) m
-  -- addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
-  foldM (\m' (l, attr, val) ->
-         case domainOf l of
-              Right DomainSet{}  -> pure $ declWithSizeAttr (attr, val) l m'
-              Right DomainMSet{} -> pure $ declWithSizeAttr (attr, val) l m'
-              Right (DomainAny _ (TypeSet _))  -> pure $ declWithSizeAttr (attr, val) l m'
-              Right (DomainAny _ (TypeMSet _)) -> pure $ declWithSizeAttr (attr, val) l m'
-              Right d   -> fail $ "unexpected size of domain: " <+> stringToDoc (show d)
-              Left  msg -> fail msg)
-        m attrs
-  where
-    acceptedDom DomainSet{}       = True
-    acceptedDom DomainMSet{}      = True
-    acceptedDom DomainFunction{}  = True
-    acceptedDom _                 = False
-    -- Is the interesting part of an expression a find variable?
-    isFind Constant{}                                   = False
-    isFind (Reference _ (Just (DeclNoRepr Find _ _ _))) = True
-    isFind (Reference _ (Just (DeclHasRepr Find _ _)))  = True
-    isFind [essence| image(&f, &_) |]                   = isFind f
-    isFind [essence| &f(&_) |]                          = isFind f
-    isFind e                                            = any isFind (children e)
-    -- Update the declaration with a new size attribute
-    declWithSizeAttr attr e m' = case FindOrGiven Find n <$> addSizeAttr attr e of
-                                      Just decl -> updateDeclaration decl m'
-                                      Nothing   -> m'
-    -- Add a size attribute to a possibly nested domain
-    addSizeAttr attr (Op (MkOpImage (OpImage (Reference n' _) _))) | n' == n
-      = case dom of
-             DomainFunction r as from d
-               -> DomainFunction r as from <$> addAttributesToDomain d [ attr ]
-             _ -> fail $ "find variable " <+> pretty n <+> " is not a function"
-    addSizeAttr attr (Reference n' _) | n' == n
-      = case dom of
-             d@DomainSet{}  -> addAttributesToDomain d [ attr ]
-             d@DomainMSet{} -> addAttributesToDomain d [ attr ]
-             _ -> fail $ "find variable " <+> pretty n <+> " is not a set or multiset"
-    addSizeAttr _ e = fail $ "unexpected expression: " <+> pretty e
-variableSize m _ = return m
+-- -- | Find an expression at any depth of unconditional forAll expressions,
+-- --   returning a Zipper containing the expression's context.
+-- findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
+-- findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
+  -- where
+  --   findInForAll z | p (hole z) = [z]
+  --   findInForAll z
+  --     = case hole z of
+  --            [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
+  --              | refersTo x x' && refersTo y y'
+  --                -> maybe [] findInForAll (down z >>= down)
+  --            [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
+  --              | refersTo x x' && refersTo y y'
+  --                -> maybe [] findInForAll (down z >>= down)
+  --            Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
+  --              | all (not . isCondition) gorcs
+  --                -> maybe [] findInForAll (down z >>= down)
+  --            [essence| &_ /\ &_ |]
+  --                -> maybe [] findInForAll (down z)
+  --                   `union`
+  --                   maybe [] findInForAll (right z >>= down)
+  --            -- Only accept OR cases if both sides contain a match
+  --            [essence| &_ \/ &_ |]
+  --                -> let leftResult  = maybe [] findInForAll (down z)
+  --                       rightResult = maybe [] findInForAll (right z >>= down)
+  --                       in if not (null leftResult) && not (null rightResult)
+  --                             then leftResult `union` rightResult
+  --                             else []
+  --            _   -> []
+  --   isCondition Condition{} = True
+  --   isCondition _           = False
 
--- | Find an expression constraining the size of a variable and return the size attribute related
---   to it and the terms in the expression.
-sizeConstraint :: (MonadFail m)
-               => Expression  -- ^ Expression in which to look for the size constraint.
-               -> m ((AttrName, Expression -> Expression),  -- ^ The size attribute modifier to apply
-                     (Expression, Expression))              -- ^ and the terms of the constraint.
-sizeConstraint e = do
-  let failMsg = "expression " <+> pretty e <+> " not a constraint on variable size"
-  case matching e oppIneqOps of
-       Just (_, ([essence| |&_| |], _))
-         -> case matching e ineqSizeAttrs of
-                 Just (attrMod, ([essence| |&l| |], r)) -> pure (attrMod, (l, r))
-                 _                                      -> fail failMsg
-        -- If the terms are switched, try again with the reversed expression
-       Just (oper, (l, r@[essence| |&_| |]))
-         -> sizeConstraint (make oper r l)
-       _ -> fail failMsg
+-- -- | Does a reference refer to an abstract pattern?
+-- refersTo :: AbstractPattern -> Expression -> Bool
+-- refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
+-- refersTo _ _               = False
 
--- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
-mSetSizeOccur :: (MonadFail m, MonadLog m)
-              => Model        -- ^ Model as context.
-              -> Declaration  -- ^ Declaration to give attribute.
-              -> m Model      -- ^ Possibly updated model.
-mSetSizeOccur m (FindOrGiven forg n d@DomainMSet{})
-  = case d of
-         -- Ordering is important here, as there is a rule that applies
-         -- to maxSize and minOccur, but none that applies to minSize
-         -- and maxOccur. size uses the maxSize rule, but can ignore a
-         -- minOccur because it cannot have its minSize changed.
-         -- size -> maxOccur
-         d'@(DomainMSet _ (MSetAttr (SizeAttr_Size mx) _) _)
-           -> updateDomain $ mkMaxOccur d' mx
-         -- minOccur -> minSize
-         d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinOccur mn)) _)
-           -> updateDomain $ mkMinSize d' mn
-         d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinMaxOccur mn _)) _)
-           -> updateDomain $ mkMinSize d' mn
-         -- maxSize -> maxOccur
-         d'@(DomainMSet _ (MSetAttr (SizeAttr_MaxSize mx) _) _)
-           -> updateDomain $ mkMaxOccur d' mx
-         d'@(DomainMSet _ (MSetAttr (SizeAttr_MinMaxSize _ mx) _) _)
-           -> updateDomain $ mkMaxOccur d' mx
-         _ -> return m
-  where
-    mkMinSize (DomainMSet r (MSetAttr s o) d') mn
-      = let sizeAttr = mergeMinSize mn s
-            in DomainMSet r (MSetAttr sizeAttr o) d'
-    mkMinSize dom _ = dom
+-- -- | Get the list of names from an abstract pattern.
+-- namesFromAbstractPattern :: AbstractPattern -> [Name]
+-- namesFromAbstractPattern (Single n)        = [n]
+-- namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
+-- namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
+-- namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
+-- namesFromAbstractPattern _                 = []
 
-    mkMaxOccur (DomainMSet r (MSetAttr s o) d') mx
-      = let occAttr = mergeMaxOccur mx o
-            in DomainMSet r (MSetAttr s occAttr) d'
-    mkMaxOccur dom _ = dom
+-- -- | Set the minimum size of a set based on it being a superset of another.
+-- minSizeFromSet :: (MonadFail m, MonadLog m, NameGen m)
+  --              => Domain () Expression      -- ^ Domain of the set for which to change the minimum size.
+  --              -> Expression                -- ^ Expression from which the minimum size is being inferred.
+  --              -> m (Domain () Expression)  -- ^ Set domain with a possible change of its minimum size.
+-- minSizeFromSet d@(DomainSet r (SetAttr size) dom) sub = do
+  -- subDom <- domainOf sub
+  -- case subDom of
+  --      DomainSet _ (SetAttr subSize) _
+  --        -> return $ DomainSet r (SetAttr $ mergeSizeOnMin size subSize) dom
+  --      _ -> return d
+  -- where
+  --   -- Merge the minSize of the right SizeAttr into the left
+  --   mergeSizeOnMin :: SizeAttr Expression -> SizeAttr Expression -> SizeAttr Expression
+  --   mergeSizeOnMin SizeAttr_None (SizeAttr_Size s) = SizeAttr_MinSize s
+  --   mergeSizeOnMin SizeAttr_None s@(SizeAttr_MinSize _) = s
+  --   mergeSizeOnMin SizeAttr_None (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize s
+  --   mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_Size s) = SizeAttr_MinSize $ mkMax mn s
+  --   mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinSize s) = SizeAttr_MinSize $ mkMax mn s
+  --   mergeSizeOnMin (SizeAttr_MinSize mn) (SizeAttr_MinMaxSize s _) = SizeAttr_MinSize $ mkMax mn s
+  --   mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_Size s) = SizeAttr_MinMaxSize (mkMax mn s) mx
+  --   mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinSize s) = SizeAttr_MinMaxSize (mkMax mn s) mx
+  --   mergeSizeOnMin (SizeAttr_MinMaxSize mn mx) (SizeAttr_MinMaxSize s _) = SizeAttr_MinMaxSize (mkMax mn s) mx
+  --   mergeSizeOnMin s _ = s
+-- minSizeFromSet d _ = return d
 
-    updateDomain dom = do
-      let decl' = FindOrGiven forg n dom
-      return $ updateDeclaration decl' m
-mSetSizeOccur m _ = return m
+-- -- | Set the minimum size of a set based on it being a superset of the range of a total function.
+-- minSizeFromFunction :: (MonadFail m, MonadLog m, NameGen m)
+  --                   => Domain () Expression     -- ^ Domain of the set for which to change to minimum size.
+  --                   -> Expression               -- ^ Expression from which the minimum size is being inferred.
+  --                   -> m (Domain () Expression) -- ^ Set domain with a possible change of its minimum size.
+-- minSizeFromFunction d r = do
+  -- f <- getFunDom r
+  -- case f of
+  --      DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ _
+  --        -> return $ setSetMinSize (Constant $ ConstantInt 1) d
+  --      _ -> return d
 
--- | Merge an expression into the min field of a 'SizeAttr'.
-mergeMinSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
-mergeMinSize e SizeAttr_None = SizeAttr_MinSize e
-mergeMinSize e (SizeAttr_MinSize mn) = SizeAttr_MinSize $ mkMax e mn
-mergeMinSize e (SizeAttr_MaxSize mx)
-  | e == mx   = SizeAttr_Size e
-  | otherwise = SizeAttr_MinMaxSize e mx
-mergeMinSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize (mkMax e mn) mx
-mergeMinSize _ s = s
+-- -- | Look for a function domain, allowing it to be generated in a comprehension.
+-- getFunDom :: (MonadFail m, MonadLog m, NameGen m)
+  --         => Expression
+  --         -> m (Domain () Expression)
+-- getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainFunction{} _))) = return d
+-- getFunDom (Reference _ (Just (InComprehension (GenInExpr _ e))))     = getFunDom e
+-- getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainSet{}  _)))     = return $ domFromContainer d
+-- getFunDom (Reference _ (Just (DeclNoRepr _ _ d@DomainMSet{} _)))     = return $ domFromContainer d
+-- getFunDom e = domainOf e
 
--- | Merge an expression into the min field of an 'OccurAttr'.
-mergeMinOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
-mergeMinOccur e OccurAttr_None = OccurAttr_MinOccur e
-mergeMinOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinOccur $ mkMax mn e
-mergeMinOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MinMaxOccur e mx
-mergeMinOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur (mkMax e mn) mx
+-- -- | Extract a "leaf" domain from a container domain.
+-- domFromContainer :: Domain () Expression -> Domain () Expression
+-- domFromContainer (DomainSet  _ _ d') = d'
+-- domFromContainer (DomainMSet _ _ d') = d'
+-- domFromContainer d'                  = d'
 
--- | Merge an expression into the max field of an 'OccurAttr'.
-mergeMaxOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
-mergeMaxOccur e OccurAttr_None = OccurAttr_MaxOccur e
-mergeMaxOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinMaxOccur mn e
-mergeMaxOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MaxOccur $ mkMin e mx
-mergeMaxOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur mn (mkMin e mx)
+-- -- | Set the minSize attribute of a set.
+-- setSetMinSize :: Expression           -- ^ New minimum size to apply.
+  --             -> Domain () Expression -- ^ Set domain to modify.
+  --             -> Domain () Expression -- ^ Possibly modified set domain.
+-- setSetMinSize n (DomainSet r (SetAttr s) d) = DomainSet r (SetAttr $ mergeMinSize n s) d
+-- setSetMinSize _ d = d
 
--- | Infer multiset occurrence attributes from constraints.
-mSetOccur :: (MonadFail m, MonadLog m)
-          => Model        -- ^ Model for context.
-          -> Declaration  -- ^ Multiset declaration to update.
-          -> m Model      -- ^ Updated model.
-mSetOccur m (FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
-  = let freqs = findInUncondForAll isFreq m
-        dom' = foldr (\f d' ->
-                      case d' of
-                           DomainMSet _ (MSetAttr _ o') _
-                             -> DomainMSet r (MSetAttr s (inferOccur f o')) d
-                           _ -> d')
-                     dom freqs
-        decl' = FindOrGiven Find n dom'
-        in return $ updateDeclaration decl' m
-  where
-    isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
-                   in case matching e ineqOps of
-                           Just (_, ([essence| freq(&x, &v) |], e')) -> valid x v e'
-                           Just (_, (e', [essence| freq(&x, &v) |])) -> valid x v e'
-                           _ -> False
-    -- Make sure that the correct variable is referred to
-    isRefTo (Reference n' _) = n == n'
-    isRefTo _ = False
-    -- Make sure that the value is generated from the mset's domain
-    isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
-    isGen _ = False
-    -- Make sure that the mset is being equated to a constant
-    isConst (Constant ConstantInt{}) = True
-    isConst _ = False
-    -- Convert the constraint into an occurrence attribute
-    inferOccur [essence| freq(&_, &_) =  &e |] o'
-      = mergeMinOccur e $ mergeMaxOccur e o'
-    inferOccur [essence| freq(&_, &_) <  &e |] o'
-      = mergeMaxOccur (e - 1) o'
-    inferOccur [essence| freq(&_, &_) <= &e |] o'
-      = mergeMaxOccur e o'
-    inferOccur [essence| freq(&_, &_) >  &e |] o'
-      = mergeMinOccur (e + 1) o'
-    inferOccur [essence| freq(&_, &_) >= &e |] o'
-      = mergeMinOccur e o'
-    inferOccur _ o' = o'
-mSetOccur m _ = return m
+-- -- | Make a maximum expression between two expressions.
+-- --   Two max expressions are merged into one.
+-- --   The max between a value and a max adds the value to the max (if not present).
+-- --   If the expressions are the same, no max is made and the value is returned.
+-- mkMax :: Expression -> Expression -> Expression
+-- mkMax (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es1)))))
+  --     (Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es2)))))
+  --       = make opMax $ fromList $ es1 `union` es2
+-- mkMax i m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es)))))
+  --         | i `elem` es = m
+  --         | otherwise   = make opMax $ fromList $ i : es
+-- mkMax m@(Op (MkOpMax (OpMax (AbstractLiteral (AbsLitMatrix _ es))))) i
+  --         | i `elem` es = m
+  --         | otherwise   = make opMax $ fromList $ i : es
+-- mkMax i e | i == e      = e
+  --         | otherwise   = make opMax $ fromList [ i, e ]
 
--- | An (in)equality in a forAll implies that the (in)equality also applies to
---   the sums of both terms.
-forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
-                    => Model
-                    -> Declaration
-                    -> m Model
-forAllIneqToIneqSum m _
-  = fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
-          filterM partsAreNumeric $
-          mapMaybe matchParts $
-          findInUncondForAllZ (isJust . matchParts . zipper) m
-  where
-    matchParts :: ExpressionZ -> Maybe (Generator, Maybe ExpressionZ)
-    matchParts z
-      = case hole z of
-             Op (MkOpAnd (OpAnd (Comprehension e [Generator g])))
-               -> case matching e ineqOps of
-                       Just (_, (e1, e2)) -> matchComponents z g e1 e2
-                       _                  -> Nothing
-             _ -> Nothing
-    -- Match the components of the expression of interest
-    matchComponents :: ExpressionZ -> Generator -> Expression -> Expression
-                    -> Maybe (Generator, Maybe ExpressionZ)
-    matchComponents z g e1 e2
-      | refInExpr (namesFromGenerator g) e1 && refInExpr (namesFromGenerator g) e2
-        = Just (g, down z >>= down)
-    matchComponents _ _ _ _ = Nothing
-    -- Is a name referred to in an expression?
-    refInExpr names = any (hasName names) . universe
-    hasName names (Reference name _) = name `elem` names
-    hasName _     _                  = False
-    -- Are the parts of the matched expression numeric?
-    partsAreNumeric :: (MonadFail m, MonadLog m, NameGen m)
-                    => (Generator, Maybe ExpressionZ) -> m Bool
-    partsAreNumeric (_, Just z)
-      = case matching (hole z) ineqOps of
-             Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
-             Nothing            -> return False
-    partsAreNumeric _ = return False
-    domainIsNumeric :: (MonadFail m, MonadLog m, NameGen m)
-                    => Expression -> m Bool
-    domainIsNumeric e = case domainOf e of
-                             Right DomainInt{}           -> return True
-                             Right (DomainAny _ TypeInt) -> return True
-                             _                           -> return False
-    -- Replace the forAll with the (in)equality between sums
-    mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
-    mkConstraint (gen, Just z)
-      = case matching (hole z) ineqOps of
-             Just (f, (e1, e2))
-               -> let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
-                      e1' = mkSumOf e1
-                      e2' = mkSumOf e2
-                      -- Two steps to get out of the forAll, and replace it with the constraint
-                      in replaceHole (make f e1' e2') <$> (up z >>= up)
-             _ -> Nothing
-    mkConstraint _ = Nothing
+-- -- | Make a minimum expression between two expressions.
+-- --   Two min expressions are merged into one.
+-- --   The min between a value and a min adds the value to the min (if not present).
+-- --   If the expressions are the same, no min is made and the value is returned.
+-- mkMin :: Expression -> Expression -> Expression
+-- mkMin (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es1)))))
+  --     (Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es2)))))
+  --       = make opMin $ fromList $ es1 `union` es2
+-- mkMin i m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es)))))
+  --         | i `elem` es = m
+  --         | otherwise   = make opMin $ fromList $ i : es
+-- mkMin m@(Op (MkOpMin (OpMin (AbstractLiteral (AbsLitMatrix _ es))))) i
+  --         | i `elem` es = m
+  --         | otherwise   = make opMin $ fromList $ i : es
+-- mkMin i e | i == e      = e
+  --         | otherwise   = make opMin $ fromList [ i, e ]
 
--- | Get the list of names from a generator.
-namesFromGenerator :: Generator -> [Name]
-namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
-namesFromGenerator (GenDomainHasRepr n _) = [n]
-namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
+-- -- | Add constraints on a set.
+-- setConstraints :: (MonadFail m, MonadLog m)
+  --              => Model        -- ^ Model as context.
+  --              -> Declaration  -- ^ Statement to constrain.
+  --              -> m Model      -- ^ Possibly updated model.
+-- setConstraints m (FindOrGiven _ n DomainSet{}) = do
+  -- cs <- funcRangeEqSet n m
+  -- return $ mergeConstraints m cs
+-- setConstraints m _ = return m
 
--- | Lens function over a binary expression.
-type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
-                                 Expression -> m (Expression, Expression))
+-- -- | Equate the range of a function to a set of the former is a subset of the latter
+-- --   and all values in the set are results of the function.
+-- funcRangeEqSet :: (MonadFail m, MonadLog m)
+  --              => Name            -- ^ Name of the set.
+  --              -> Model           -- ^ Model for context.
+  --              -> m [Expression]  -- ^ Equality constraints between range and set.
+-- funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
+  --                    mapMaybe (forAllForSubset m) $
+  --                    findInUncondForAll isSubsetEqOf m
+  -- where
+  --   isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
+  --   isSubsetEqOf _ = False
 
--- | Get the lens for an expression and the values it matches.
-matching :: Expression
-         -> [(BinExprLens Maybe, a)]
-         -> Maybe (a, (Expression, Expression))
-matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
-                      [x] -> pure x
-                      _   -> fail $ "no matching operator for expression: " <+> pretty e
+-- -- | Create an expression that equates the range of a function which may come from
+-- --   a forAll, and a set.
+-- equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
+  --                     -> Maybe Expression         -- Possible constraint equating the two.
+-- equateFuncRangeAndSet (r@[essence| range(&f) |], s) = nestReference f (make opEq r s)
+  -- where
+  --   nestReference :: Expression -> Expression -> Maybe Expression
+  --   nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
+  --   nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
+  --     = nestReference r' $ make opAnd $ Comprehension e [Generator g]
+  --   nestReference _ _ = Nothing
+-- equateFuncRangeAndSet _ = Nothing
 
--- | (In)equality operator lens pairs.
-ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
-ineqOps = [ (opEq,  opEq)
-          , (opLt,  opLt)
-          , (opLeq, opLeq)
-          , (opGt,  opGt)
-          , (opGeq, opGeq)
-          ]
+-- -- | Find a forAll expressions generating from a variable and equating a function
+-- --   call result to the generated values.
+-- forAllForSubset :: Model                          -- ^ Model for context.
+  --               -> Expression                     -- ^ Subset expression.
+  --               -> Maybe (Expression, Expression) -- ^ Values to be equated.
+-- forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
+  --                                               s@Reference{})))
+  -- | not $ null $ findInUncondForAll (funcCallEqGenerated f s) m = Just (r, s)
+-- forAllForSubset _ _ = Nothing
 
--- | Opposites of (in)equality operator lens pairs.
-oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
-oppIneqOps = [ (opEq, opEq)
-             , (opLt, opGt)
-             , (opLeq, opGeq)
-             , (opGt, opLt)
-             , (opGeq, opLeq)
-             ]
+-- -- | Determine whether a function is a called and has its result equated to a value generated
+-- --   from the set of interest.
+-- funcCallEqGenerated :: Expression -- ^ Function reference.
+  --                   -> Expression -- ^ Variable to generate from.
+  --                   -> Expression -- ^ Expression to check.
+  --                   -> Bool       -- ^ Does the equation have the desired terms.
+-- funcCallEqGenerated f s [essence| &e = &x |]
+  -- = isFuncCall e && isGenerated x
+  -- where
+  --   -- Is the left side a call to the function of interest?
+  --   isFuncCall (Op (MkOpImage (OpImage f' _))) = f == f'
+  --   isFuncCall _ = False
+  --   -- Is the right side variable generated from the set of interest?
+  --   isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
+  --   isGenerated _ = False
+-- funcCallEqGenerated _ _ _ = False
 
--- | (In)equality operator to size attribute modifier pairs.
-ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Expression))]
-ineqSizeAttrs = [ (opEq,  (AttrName_size, id))
-                , (opLt,  (AttrName_maxSize, \x -> x - 1))
-                , (opLeq, (AttrName_maxSize, id))
-                , (opGt,  (AttrName_minSize, (+1)))
-                , (opGeq, (AttrName_minSize, id))
-                ]
+-- -- | Lift a variable size constraint to an attribute.
+-- variableSize :: (MonadFail m, MonadLog m)
+  --            => Model        -- ^ Model as context.
+  --            -> Declaration  -- ^ Declaration to give attribute.
+  --            -> m Model      -- ^ Possibly updated model.
+-- variableSize m (FindOrGiven Find n dom) | acceptedDom dom = do
+  -- let attrs = mapMaybe (\e -> do
+  --               -- The size of l is constrained by r
+  --               ((attr, modifier), (l, r)) <- sizeConstraint e
+  --               -- Act differently for different types of r
+  --               if not (isFind r)
+  --                  then case r of
+  --                            [essence| image(&f, &_) |]
+  --                              -> pure (l, attr, Just $ modifier [essence| max(range(&f)) |])
+  --                            _ -> pure (l, attr, Just $ modifier r)
+  --                  else fail $ "expression " <+> pretty r <+> " not a valid size attribute")
+  --               $ findInUncondForAll (isJust . sizeConstraint) m
+  -- -- addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
+  -- foldM (\m' (l, attr, val) ->
+  --        case domainOf l of
+  --             Right DomainSet{}  -> pure $ declWithSizeAttr (attr, val) l m'
+  --             Right DomainMSet{} -> pure $ declWithSizeAttr (attr, val) l m'
+  --             Right (DomainAny _ (TypeSet _))  -> pure $ declWithSizeAttr (attr, val) l m'
+  --             Right (DomainAny _ (TypeMSet _)) -> pure $ declWithSizeAttr (attr, val) l m'
+  --             Right d   -> fail $ "unexpected size of domain: " <+> stringToDoc (show d)
+  --             Left  msg -> fail msg)
+  --       m attrs
+  -- where
+  --   acceptedDom DomainSet{}       = True
+  --   acceptedDom DomainMSet{}      = True
+  --   acceptedDom DomainFunction{}  = True
+  --   acceptedDom _                 = False
+  --   -- Is the interesting part of an expression a find variable?
+  --   isFind Constant{}                                   = False
+  --   isFind (Reference _ (Just (DeclNoRepr Find _ _ _))) = True
+  --   isFind (Reference _ (Just (DeclHasRepr Find _ _)))  = True
+  --   isFind [essence| image(&f, &_) |]                   = isFind f
+  --   isFind [essence| &f(&_) |]                          = isFind f
+  --   isFind e                                            = any isFind (children e)
+  --   -- Update the declaration with a new size attribute
+  --   declWithSizeAttr attr e m' = case FindOrGiven Find n <$> addSizeAttr attr e of
+  --                                     Just decl -> updateDeclaration decl m'
+  --                                     Nothing   -> m'
+  --   -- Add a size attribute to a possibly nested domain
+  --   addSizeAttr attr (Op (MkOpImage (OpImage (Reference n' _) _))) | n' == n
+  --     = case dom of
+  --            DomainFunction r as from d
+  --              -> DomainFunction r as from <$> addAttributesToDomain d [ attr ]
+  --            _ -> fail $ "find variable " <+> pretty n <+> " is not a function"
+  --   addSizeAttr attr (Reference n' _) | n' == n
+  --     = case dom of
+  --            d@DomainSet{}  -> addAttributesToDomain d [ attr ]
+  --            d@DomainMSet{} -> addAttributesToDomain d [ attr ]
+  --            _ -> fail $ "find variable " <+> pretty n <+> " is not a set or multiset"
+  --   addSizeAttr _ e = fail $ "unexpected expression: " <+> pretty e
+-- variableSize m _ = return m
 
--- | Iterate slightly faster over a domain if generating two distinct variables.
-fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
-                => Model       -- ^ Model as context.
-                -> Declaration -- ^ Ignored declaration.
-                -> m Model     -- ^ Possibly updated model.
-fasterIteration m _
-  = foldM (\m' z -> do
-          -- Find the equivalent variables
-          equivs <- head <$> sequence [ findEquivVars (hole z) ]
-          case doubleDistinctIter z of
-               Nothing -> return m'
-               -- Only apply to equivalent variables and make the new constraint
-               Just v  -> case onlyEquivalent (equivs, v) >>= changeIterator of
-                               Nothing -> return m'
-                               -- Remove the old constraint
-                               Just z' -> return $ flip removeConstraints [hole z] $
-                                                   -- Add the new constraint
-                                                   mergeConstraints m' [fromZipper z'])
-          m $ findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m 
-  where
-    -- Match the elemenents of interest in the constraint
-    doubleDistinctIter z
-      = case hole z of
-             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
-               -> Just ((x, x'), (y, y'), v, down z >>= down)
-             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
-               -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
-             _ -> Nothing
-    -- Find which variables are equivalent in an expression
-    findEquivVars :: (MonadIO m) => Expression -> m (Map Text Text)
-    findEquivVars e = case e of
-                           [essence| forAll &_, &_ : &_, &_ . &e' |]  -> liftIO $ findSyms e'
-                           [essence| forAll &_, &_ in &_, &_ . &e' |] -> liftIO $ findSyms e'
-                           _ -> return M.empty
-    -- Find the symmetries in an expression
-    findSyms :: Expression -> IO (Map Text Text)
-    findSyms e = do
-      let m' = flip mergeConstraints [e] $ removeConstraints m $ suchThat m
-      let filename = ".tmp-variable-strengthening.json"
-      outputVarSymBreaking filename m'
-      symmetries <- ferret $ stringToText filename
-      removeFile filename
-      case (JSON.decodeStrict $ T.encodeUtf8 symmetries) :: Maybe [Map Text Text] of
-           Nothing -> return M.empty
-           Just ss -> return $ foldr M.union M.empty ss
-    -- Only perform the modification if the variables are equivalent in the expression
-    onlyEquivalent (es, v@((x, _), (y, _), _, _))
-      = case namesFromAbstractPattern x of
-             [Name nx] -> case namesFromAbstractPattern y of
-                               [Name ny] -> case es M.!? nx of
-                                                 Just ny' | ny == ny' -> Just v
-                                                 _ -> Nothing
-                               _         -> Nothing
-             _         -> Nothing
-    -- Change the iterator to use the new, faster notation
-    changeIterator ((x, x'), (y, y'), v, Just z)
-      = let e = hole z
-            in case v of
-                    r@Reference{}
-                      -> case domainOf r of
-                              Left _ -> Nothing
-                              Right DomainSet{}
-                                -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
-                                   (up z >>= up)
-                              Right _
-                                -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
-                                   (up z >>= up)
-                    Op MkOpDefined{}
-                      -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
-                         (up z >>= up)
-                    Domain d
-                      -> replaceHole [essence| forAll &x, &y : &d, &y' > &x' . &e |] <$>
-                         (up z >>= up)
-                    _ -> Nothing
-    changeIterator _ = Nothing
+-- -- | Find an expression constraining the size of a variable and return the size attribute related
+-- --   to it and the terms in the expression.
+-- sizeConstraint :: (MonadFail m)
+  --              => Expression  -- ^ Expression in which to look for the size constraint.
+  --              -> m ((AttrName, Expression -> Expression),  -- ^ The size attribute modifier to apply
+  --                    (Expression, Expression))              -- ^ and the terms of the constraint.
+-- sizeConstraint e = do
+  -- let failMsg = "expression " <+> pretty e <+> " not a constraint on variable size"
+  -- case matching e oppIneqOps of
+  --      Just (_, ([essence| |&_| |], _))
+  --        -> case matching e ineqSizeAttrs of
+  --                Just (attrMod, ([essence| |&l| |], r)) -> pure (attrMod, (l, r))
+  --                _                                      -> fail failMsg
+  --       -- If the terms are switched, try again with the reversed expression
+  --      Just (oper, (l, r@[essence| |&_| |]))
+  --        -> sizeConstraint (make oper r l)
+  --      _ -> fail failMsg
 
--- | Call ferret's symmetry detection on a JSON file
-ferret :: Text -> IO Text
-ferret path = shelly $ silently $ run "symmetry_detect" [ "--json", path ]
+-- -- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
+-- mSetSizeOccur :: (MonadFail m, MonadLog m)
+  --             => Model        -- ^ Model as context.
+  --             -> Declaration  -- ^ Declaration to give attribute.
+  --             -> m Model      -- ^ Possibly updated model.
+-- mSetSizeOccur m (FindOrGiven forg n d@DomainMSet{})
+  -- = case d of
+  --        -- Ordering is important here, as there is a rule that applies
+  --        -- to maxSize and minOccur, but none that applies to minSize
+  --        -- and maxOccur. size uses the maxSize rule, but can ignore a
+  --        -- minOccur because it cannot have its minSize changed.
+  --        -- size -> maxOccur
+  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_Size mx) _) _)
+  --          -> updateDomain $ mkMaxOccur d' mx
+  --        -- minOccur -> minSize
+  --        d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinOccur mn)) _)
+  --          -> updateDomain $ mkMinSize d' mn
+  --        d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinMaxOccur mn _)) _)
+  --          -> updateDomain $ mkMinSize d' mn
+  --        -- maxSize -> maxOccur
+  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_MaxSize mx) _) _)
+  --          -> updateDomain $ mkMaxOccur d' mx
+  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_MinMaxSize _ mx) _) _)
+  --          -> updateDomain $ mkMaxOccur d' mx
+  --        _ -> return m
+  -- where
+  --   mkMinSize (DomainMSet r (MSetAttr s o) d') mn
+  --     = let sizeAttr = mergeMinSize mn s
+  --           in DomainMSet r (MSetAttr sizeAttr o) d'
+  --   mkMinSize dom _ = dom
+
+  --   mkMaxOccur (DomainMSet r (MSetAttr s o) d') mx
+  --     = let occAttr = mergeMaxOccur mx o
+  --           in DomainMSet r (MSetAttr s occAttr) d'
+  --   mkMaxOccur dom _ = dom
+
+  --   updateDomain dom = do
+  --     let decl' = FindOrGiven forg n dom
+  --     return $ updateDeclaration decl' m
+-- mSetSizeOccur m _ = return m
+
+-- -- | Merge an expression into the min field of a 'SizeAttr'.
+-- mergeMinSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
+-- mergeMinSize e SizeAttr_None = SizeAttr_MinSize e
+-- mergeMinSize e (SizeAttr_MinSize mn) = SizeAttr_MinSize $ mkMax e mn
+-- mergeMinSize e (SizeAttr_MaxSize mx)
+  -- | e == mx   = SizeAttr_Size e
+  -- | otherwise = SizeAttr_MinMaxSize e mx
+-- mergeMinSize e (SizeAttr_MinMaxSize mn mx) = SizeAttr_MinMaxSize (mkMax e mn) mx
+-- mergeMinSize _ s = s
+
+-- -- | Merge an expression into the min field of an 'OccurAttr'.
+-- mergeMinOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
+-- mergeMinOccur e OccurAttr_None = OccurAttr_MinOccur e
+-- mergeMinOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinOccur $ mkMax mn e
+-- mergeMinOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MinMaxOccur e mx
+-- mergeMinOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur (mkMax e mn) mx
+
+-- -- | Merge an expression into the max field of an 'OccurAttr'.
+-- mergeMaxOccur :: Expression -> OccurAttr Expression -> OccurAttr Expression
+-- mergeMaxOccur e OccurAttr_None = OccurAttr_MaxOccur e
+-- mergeMaxOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinMaxOccur mn e
+-- mergeMaxOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MaxOccur $ mkMin e mx
+-- mergeMaxOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur mn (mkMin e mx)
+
+-- -- | Infer multiset occurrence attributes from constraints.
+-- mSetOccur :: (MonadFail m, MonadLog m)
+  --         => Model        -- ^ Model for context.
+  --         -> Declaration  -- ^ Multiset declaration to update.
+  --         -> m Model      -- ^ Updated model.
+-- mSetOccur m (FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
+  -- = let freqs = findInUncondForAll isFreq m
+  --       dom' = foldr (\f d' ->
+  --                     case d' of
+  --                          DomainMSet _ (MSetAttr _ o') _
+  --                            -> DomainMSet r (MSetAttr s (inferOccur f o')) d
+  --                          _ -> d')
+  --                    dom freqs
+  --       decl' = FindOrGiven Find n dom'
+  --       in return $ updateDeclaration decl' m
+  -- where
+  --   isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
+  --                  in case matching e ineqOps of
+  --                          Just (_, ([essence| freq(&x, &v) |], e')) -> valid x v e'
+  --                          Just (_, (e', [essence| freq(&x, &v) |])) -> valid x v e'
+  --                          _ -> False
+  --   -- Make sure that the correct variable is referred to
+  --   isRefTo (Reference n' _) = n == n'
+  --   isRefTo _ = False
+  --   -- Make sure that the value is generated from the mset's domain
+  --   isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
+  --   isGen _ = False
+  --   -- Make sure that the mset is being equated to a constant
+  --   isConst (Constant ConstantInt{}) = True
+  --   isConst _ = False
+  --   -- Convert the constraint into an occurrence attribute
+  --   inferOccur [essence| freq(&_, &_) =  &e |] o'
+  --     = mergeMinOccur e $ mergeMaxOccur e o'
+  --   inferOccur [essence| freq(&_, &_) <  &e |] o'
+  --     = mergeMaxOccur (e - 1) o'
+  --   inferOccur [essence| freq(&_, &_) <= &e |] o'
+  --     = mergeMaxOccur e o'
+  --   inferOccur [essence| freq(&_, &_) >  &e |] o'
+  --     = mergeMinOccur (e + 1) o'
+  --   inferOccur [essence| freq(&_, &_) >= &e |] o'
+  --     = mergeMinOccur e o'
+  --   inferOccur _ o' = o'
+-- mSetOccur m _ = return m
+
+-- -- | An (in)equality in a forAll implies that the (in)equality also applies to
+-- --   the sums of both terms.
+-- forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
+  --                   => Model
+  --                   -> Declaration
+  --                   -> m Model
+-- forAllIneqToIneqSum m _
+  -- = fmap (mergeConstraints m . map fromZipper . mapMaybe mkConstraint) $
+  --         filterM partsAreNumeric $
+  --         mapMaybe matchParts $
+  --         findInUncondForAllZ (isJust . matchParts . zipper) m
+  -- where
+  --   matchParts :: ExpressionZ -> Maybe (Generator, Maybe ExpressionZ)
+  --   matchParts z
+  --     = case hole z of
+  --            Op (MkOpAnd (OpAnd (Comprehension e [Generator g])))
+  --              -> case matching e ineqOps of
+  --                      Just (_, (e1, e2)) -> matchComponents z g e1 e2
+  --                      _                  -> Nothing
+  --            _ -> Nothing
+  --   -- Match the components of the expression of interest
+  --   matchComponents :: ExpressionZ -> Generator -> Expression -> Expression
+  --                   -> Maybe (Generator, Maybe ExpressionZ)
+  --   matchComponents z g e1 e2
+  --     | refInExpr (namesFromGenerator g) e1 && refInExpr (namesFromGenerator g) e2
+  --       = Just (g, down z >>= down)
+  --   matchComponents _ _ _ _ = Nothing
+  --   -- Is a name referred to in an expression?
+  --   refInExpr names = any (hasName names) . universe
+  --   hasName names (Reference name _) = name `elem` names
+  --   hasName _     _                  = False
+  --   -- Are the parts of the matched expression numeric?
+  --   partsAreNumeric :: (MonadFail m, MonadLog m, NameGen m)
+  --                   => (Generator, Maybe ExpressionZ) -> m Bool
+  --   partsAreNumeric (_, Just z)
+  --     = case matching (hole z) ineqOps of
+  --            Just (_, (e1, e2)) -> (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
+  --            Nothing            -> return False
+  --   partsAreNumeric _ = return False
+  --   domainIsNumeric :: (MonadFail m, MonadLog m, NameGen m)
+  --                   => Expression -> m Bool
+  --   domainIsNumeric e = case domainOf e of
+  --                            Right DomainInt{}           -> return True
+  --                            Right (DomainAny _ TypeInt) -> return True
+  --                            _                           -> return False
+  --   -- Replace the forAll with the (in)equality between sums
+  --   mkConstraint :: (Generator, Maybe ExpressionZ) -> Maybe ExpressionZ
+  --   mkConstraint (gen, Just z)
+  --     = case matching (hole z) ineqOps of
+  --            Just (f, (e1, e2))
+  --              -> let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
+  --                     e1' = mkSumOf e1
+  --                     e2' = mkSumOf e2
+  --                     -- Two steps to get out of the forAll, and replace it with the constraint
+  --                     in replaceHole (make f e1' e2') <$> (up z >>= up)
+  --            _ -> Nothing
+  --   mkConstraint _ = Nothing
+
+-- -- | Get the list of names from a generator.
+-- namesFromGenerator :: Generator -> [Name]
+-- namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
+-- namesFromGenerator (GenDomainHasRepr n _) = [n]
+-- namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
+
+-- -- | Lens function over a binary expression.
+-- type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
+  --                                Expression -> m (Expression, Expression))
+
+-- -- | Get the lens for an expression and the values it matches.
+-- matching :: Expression
+  --        -> [(BinExprLens Maybe, a)]
+  --        -> Maybe (a, (Expression, Expression))
+-- matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
+  --                     [x] -> pure x
+  --                     _   -> fail $ "no matching operator for expression: " <+> pretty e
+
+-- -- | (In)equality operator lens pairs.
+-- ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+-- ineqOps = [ (opEq,  opEq)
+  --         , (opLt,  opLt)
+  --         , (opLeq, opLeq)
+  --         , (opGt,  opGt)
+  --         , (opGeq, opGeq)
+  --         ]
+
+-- -- | Opposites of (in)equality operator lens pairs.
+-- oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+-- oppIneqOps = [ (opEq, opEq)
+  --            , (opLt, opGt)
+  --            , (opLeq, opGeq)
+  --            , (opGt, opLt)
+  --            , (opGeq, opLeq)
+  --            ]
+
+-- -- | (In)equality operator to size attribute modifier pairs.
+-- ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Expression))]
+-- ineqSizeAttrs = [ (opEq,  (AttrName_size, id))
+  --               , (opLt,  (AttrName_maxSize, \x -> x - 1))
+  --               , (opLeq, (AttrName_maxSize, id))
+  --               , (opGt,  (AttrName_minSize, (+1)))
+  --               , (opGeq, (AttrName_minSize, id))
+  --               ]
+
+-- -- | Iterate slightly faster over a domain if generating two distinct variables.
+-- fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
+  --               => Model       -- ^ Model as context.
+  --               -> Declaration -- ^ Ignored declaration.
+  --               -> m Model     -- ^ Possibly updated model.
+-- fasterIteration m _
+  -- = foldM (\m' z -> do
+  --         -- Find the equivalent variables
+  --         equivs <- head <$> sequence [ findEquivVars (hole z) ]
+  --         case doubleDistinctIter z of
+  --              Nothing -> return m'
+  --              -- Only apply to equivalent variables and make the new constraint
+  --              Just v  -> case onlyEquivalent (equivs, v) >>= changeIterator of
+  --                              Nothing -> return m'
+  --                              -- Remove the old constraint
+  --                              Just z' -> return $ flip removeConstraints [hole z] $
+  --                                                  -- Add the new constraint
+  --                                                  mergeConstraints m' [fromZipper z'])
+  --         m $ findInUncondForAllZ (isJust . doubleDistinctIter . zipper) m 
+  -- where
+  --   -- Match the elemenents of interest in the constraint
+  --   doubleDistinctIter z
+  --     = case hole z of
+  --            [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
+  --              -> Just ((x, x'), (y, y'), v, down z >>= down)
+  --            [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
+  --              -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
+  --            _ -> Nothing
+  --   -- Find which variables are equivalent in an expression
+  --   findEquivVars :: (MonadIO m) => Expression -> m (Map Text Text)
+  --   findEquivVars e = case e of
+  --                          [essence| forAll &_, &_ : &_, &_ . &e' |]  -> liftIO $ findSyms e'
+  --                          [essence| forAll &_, &_ in &_, &_ . &e' |] -> liftIO $ findSyms e'
+  --                          _ -> return M.empty
+  --   -- Find the symmetries in an expression
+  --   findSyms :: Expression -> IO (Map Text Text)
+  --   findSyms e = do
+  --     let m' = flip mergeConstraints [e] $ removeConstraints m $ suchThat m
+  --     let filename = ".tmp-variable-strengthening.json"
+  --     outputVarSymBreaking filename m'
+  --     symmetries <- ferret $ stringToText filename
+  --     removeFile filename
+  --     case (JSON.decodeStrict $ T.encodeUtf8 symmetries) :: Maybe [Map Text Text] of
+  --          Nothing -> return M.empty
+  --          Just ss -> return $ foldr M.union M.empty ss
+  --   -- Only perform the modification if the variables are equivalent in the expression
+  --   onlyEquivalent (es, v@((x, _), (y, _), _, _))
+  --     = case namesFromAbstractPattern x of
+  --            [Name nx] -> case namesFromAbstractPattern y of
+  --                              [Name ny] -> case es M.!? nx of
+  --                                                Just ny' | ny == ny' -> Just v
+  --                                                _ -> Nothing
+  --                              _         -> Nothing
+  --            _         -> Nothing
+  --   -- Change the iterator to use the new, faster notation
+  --   changeIterator ((x, x'), (y, y'), v, Just z)
+  --     = let e = hole z
+  --           in case v of
+  --                   r@Reference{}
+  --                     -> case domainOf r of
+  --                             Left _ -> Nothing
+  --                             Right DomainSet{}
+  --                               -> replaceHole [essence| forAll {&x, &y} subsetEq &v . &e |] <$>
+  --                                  (up z >>= up)
+  --                             Right _
+  --                               -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
+  --                                  (up z >>= up)
+  --                   Op MkOpDefined{}
+  --                     -> replaceHole [essence| forAll &x, &y in &v, &y' > &x' . &e |] <$>
+  --                        (up z >>= up)
+  --                   Domain d
+  --                     -> replaceHole [essence| forAll &x, &y : &d, &y' > &x' . &e |] <$>
+  --                        (up z >>= up)
+  --                   _ -> Nothing
+  --   changeIterator _ = Nothing
+
+-- -- | Call ferret's symmetry detection on a JSON file
+-- ferret :: Text -> IO Text
+-- ferret path = shelly $ silently $ run "symmetry_detect" [ "--json", path ]
