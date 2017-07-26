@@ -42,6 +42,8 @@ import Conjure.Language.NameResolution ( resolveNames )
 
 -- type ExpressionZ = Zipper Expression Expression
 
+type FindVar = (Name, Domain () Expression)
+
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
                     => Model -> m Model
@@ -52,7 +54,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
       -- Apply rules to each decision (find) variable
       (model', toKeep) <- foldM (\modelAndToKeep findAndCstrs ->
           -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tk) rule -> second (tk `union`) <$> rule m findAndCstrs)
+          foldM (\(m, tk) rule -> second (tk `union`) <$> nested rule m findAndCstrs)
                 modelAndToKeep [ varSize
                                ])
           (model, [])
@@ -65,7 +67,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
          else core model''
 
 -- | Collect decision (find) variables from a model, returning their name and domain.
-collectFindVariables :: Model -> [(Name, Domain () Expression)]
+collectFindVariables :: Model -> [FindVar]
 collectFindVariables = mapMaybe collectFind . mStatements
   where
     collectFind (Declaration (FindOrGiven Find n d)) = Just (n, d)
@@ -86,44 +88,69 @@ replaceConstraints cs m@Model { mStatements = stmts }
     isSuchThat SuchThat{} = True
     isSuchThat _          = False
 
--- | Does an expression directly reference a given name variable?
-nameExpEq :: Name -> Expression -> Bool
-nameExpEq n (Reference n' _)           = n == n'
-nameExpEq n [essence| image(&f, &_) |] = nameExpEq n f
-nameExpEq n [essence| &f(&_) |]        = nameExpEq n f
-nameExpEq _ _ = False
-
 -- | Update the domain of a declaration in a model.
-updateDecl :: Name -> Domain () Expression -> Model -> Model
-updateDecl n d m@Model { mStatements = stmts } = m { mStatements = map updateDecl' stmts }
+updateDecl :: FindVar -> Model -> Model
+updateDecl (n, d) m@Model { mStatements = stmts } = m { mStatements = map updateDecl' stmts }
   where
     updateDecl' (Declaration (FindOrGiven Find n' _))
       | n == n' = Declaration (FindOrGiven Find n d)
     updateDecl' decl = decl
 
--- | Set a size attribute on a variable.
-varSize :: (MonadFail m, MonadLog m)
-        => Model                                        -- ^ Model for context.
-        -> ((Name, Domain () Expression), [Expression]) -- ^ Variable and constraints.
-        -> m (Model, [Expression])                      -- ^ Updated model and constraints to keep.
-varSize model ((n, dom), cs)
-  = foldM (\(m, tk) c ->
-    case c of
-         [essence| |&x| =  &e |] | nameExpEq n x -> return (addAttr AttrName_size e m, tk)
-         [essence| |&x| <  &e |] | nameExpEq n x -> return (addAttr AttrName_maxSize (e - 1) m, tk)
-         [essence| |&x| <= &e |] | nameExpEq n x -> return (addAttr AttrName_maxSize e m, tk)
-         [essence| |&x| >  &e |] | nameExpEq n x -> return (addAttr AttrName_minSize (e + 1) m, tk)
-         [essence| |&x| >= &e |] | nameExpEq n x -> return (addAttr AttrName_minSize e m, tk)
-         _                                       -> return (m, c:tk))
-    (model, []) cs
+-- | Try adding an attribute to a model.
+addAttrToModel :: FindVar -> AttrName -> Maybe Expression -> Model -> Model
+addAttrToModel (n, dom) attr e m = case addAttributesToDomain dom [ mkAttr e ] of
+                                        Just dom' -> updateDecl (n, dom') m
+                                        Nothing   -> m
   where
-    addAttr attr e m = case addAttributesToDomain dom [ mkAttr attr e ] of
-                            Just dom' -> updateDecl n dom' m
-                            Nothing   -> m
-    mkAttr attr [essence| image(&f, &_) |]     = (attr, Just [essence| max(range(&f)) |])
-    mkAttr attr [essence| image(&f, &_) - 1 |] = (attr, Just [essence| max(range(&f)) - 1 |])
-    mkAttr attr [essence| image(&f, &_) + 1 |] = (attr, Just [essence| max(range(&f)) + 1 |])
-    mkAttr attr e                              = (attr, Just e)
+    -- Special treatment for functions
+    mkAttr (Just [essence| image(&f, &_) |])     = (attr, Just [essence| max(range(&f)) |])
+    mkAttr (Just [essence| image(&f, &_) - 1 |]) = (attr, Just [essence| max(range(&f)) - 1 |])
+    mkAttr (Just [essence| image(&f, &_) + 1 |]) = (attr, Just [essence| max(range(&f)) + 1 |])
+    mkAttr e'                                    = (attr, e')
+
+-- | Does an expression directly reference a given name variable?
+nameExpEq :: Name -> Expression -> Bool
+nameExpEq n (Reference n' _)           = n == n'
+nameExpEq n [essence| image(&f, &_) |] = nameExpEq n f
+nameExpEq n [essence| &f(&_) |]        = nameExpEq n f
+nameExpEq _ _                          = False
+
+-- | Unzip where the key is a 'Maybe' but the values should all be combined.
+unzipMaybeKWith :: (b -> [c] -> [c]) -> [(Maybe a, b)] -> ([a], [c])
+unzipMaybeKWith f = foldr (\(mx, y) (xs, ys) ->
+                           case mx of
+                                Just x  -> (x:xs, f y ys)
+                                Nothing -> (  xs, f y ys))
+                    ([], [])
+
+-- | Apply a rule to arbitrary levels of nested domains.
+nested :: (MonadFail m, MonadLog m)
+       => (Model -> (FindVar, [Expression])
+                 -> ([(AttrName, Maybe Expression)], [Expression]))
+       -> Model
+       -> (FindVar, [Expression])
+       -> m (Model, [Expression])
+nested rule m fc@(fv, _) = do
+  (as, tk) <- case rule m fc of
+                   -- The rule did not fire at this level, so look deeper
+                   ([], toKeep)    -> return ([], toKeep)
+                   -- The rule fired, so try applying it
+                   (attrs, toKeep) -> return ([ (a, e, 0 :: Int) | (a, e) <- attrs ], toKeep)
+  let m' = foldr (\(attr, expr, _) model -> addAttrToModel fv attr expr model) m as
+  return (m', tk)
+
+-- | Set a size attribute on a variable.
+varSize :: Model                                    -- ^ Model for context.
+        -> (FindVar, [Expression])                  -- ^ Variable and constraints.
+        -> ([(AttrName, Maybe Expression)], [Expression]) -- ^ Updated model and constraints to keep.
+varSize _ ((n, _), cs) = unzipMaybeKWith (++) $ flip map cs $ \c ->
+  case c of
+       [essence| |&x| =  &e |] | nameExpEq n x -> (Just (AttrName_size,    Just e),       [])
+       [essence| |&x| <  &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just $ e - 1), [])
+       [essence| |&x| <= &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just e),       [])
+       [essence| |&x| >  &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just $ e + 1), [])
+       [essence| |&x| >= &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just e),       [])
+       _                                       -> (Nothing, [c])
 
   -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
   --       core model = do model' <- foldM folder model [ functionAttributes
