@@ -17,8 +17,6 @@ language: generic
 
 sudo: false
 
-# superset of all addons
-# addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-7.8.4, ghc-7.10.3, ghc-8.0.2, ghc-head]}}
 
 # apparently explicitly setting the compiler here forces travis to
 # use separate caches for different compiler versions.
@@ -39,26 +37,26 @@ matrix:
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
 
     - os: linux
-      env: GHC=8.0.2 SR="-O0" SOL=minion
-      compiler: ": # GHC 8.0.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.0.2]}}
+      env: GHC=8.2.1 SR="-O0" SOL=minion
+      compiler: ": # GHC 8.2.1"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.2.1]}}
     - os: linux
-      env: GHC=8.0.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.0.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.0.2]}}
+      env: GHC=8.2.1 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.2.1"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.2.1]}}
     - os: linux
-      env: GHC=8.0.2 SR="-O0" SOL=lingeling
-      compiler: ": # GHC 8.0.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.0.2]}}
+      env: GHC=8.2.1 SR="-O0" SOL=lingeling
+      compiler: ": # GHC 8.2.1"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.2.1]}}
     - os: linux
-      env: GHC=8.0.2 SR="-O2" SOL=lingeling
-      compiler: ": # GHC 8.0.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.0.2]}}
+      env: GHC=8.2.1 SR="-O2" SOL=lingeling
+      compiler: ": # GHC 8.2.1"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.2.1]}}
 
     - os: osx
       osx_image: xcode8.2
-      env: GHC=8.0.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.0.2"
+      env: GHC=8.2.1 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.2.1"
 
     - os: linux
       env: GHC=head SR="-O2" SOL=minion
@@ -68,9 +66,9 @@ matrix:
   allow_failures:
     - env: GHC=head SR="-O2" SOL=minion
     - os: osx
-      env: GHC=8.0.2 SR="-O2" SOL=minion
-    - env: GHC=8.0.2 SR="-O0" SOL=lingeling
-    - env: GHC=8.0.2 SR="-O2" SOL=lingeling
+      env: GHC=8.2.1 SR="-O2" SOL=minion
+    - env: GHC=8.2.1 SR="-O0" SOL=lingeling
+    - env: GHC=8.2.1 SR="-O2" SOL=lingeling
 
 before_install:
   - export STARTTIME=$(date +%s)
