@@ -235,8 +235,8 @@ fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
   | (ject == JectivityAttr_None || ject == JectivityAttr_Injective) &&
     -- Are the variables generated from the domain and codomain respectively?
     any (uncurry varsAreGen)
-      -- Extract the function parameter and function value
-      (mapMaybe existsEqVals
+        -- Extract the function parameter and function value
+        (mapMaybe existsEqVals
         -- Find the desired pattern being matched
         (findInUncondForAll isExistsEq m))
       = addAttributesToDomain d [ ("surjective", Nothing) ]
