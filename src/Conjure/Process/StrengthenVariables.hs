@@ -14,7 +14,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-import Data.List ( union )
+import Data.List ( find, union )
 -- import Data.Map.Strict ( Map )
 -- import qualified Data.Map.Strict as M ( (!?), empty, union )
 import Data.Maybe ( mapMaybe )
@@ -26,7 +26,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 -- -- These two are needed together
 -- import Conjure.Language.Expression.DomainSizeOf ()
 -- import Conjure.Language.DomainSizeOf ( domainSizeOf )
--- import Conjure.Compute.DomainOf ( domainOf )
+import Conjure.Compute.DomainOf ( domainOf )
 -- import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 
 -- -- aeson
@@ -43,6 +43,7 @@ import Conjure.Language.NameResolution ( resolveNames )
 -- type ExpressionZ = Zipper Expression Expression
 
 type FindVar = (Name, Domain () Expression)
+type ToAddToRem = ([Expression], [Expression])
 
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
@@ -52,19 +53,27 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
     core model = do
       -- Apply rules to each decision (find) variable
-      (model', toKeep) <- foldM (\modelAndToKeep findAndCstrs ->
+      (model', toAddToRem) <- foldM (\modelAndToKeep findAndCstrs ->
           -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tk) rule -> second (tk `union`) <$> nested rule m findAndCstrs)
+          foldM (\(m, tatr) rule -> do
+                  (attrs, tatr') <- nested rule m findAndCstrs
+                  let m' = foldr (uncurry3 addAttrsToModel) m attrs
+                  return (m', toAddRem tatr' tatr))
                 modelAndToKeep [ varSize
                                ])
-          (model, [])
+          (model, ([], []))
           (zip (collectFindVariables model)
                (repeat $ collectConstraints model))
-      let model'' = replaceConstraints (sort toKeep) model'
+      let model'' = addConstraints (fst toAddToRem) $
+                    remConstraints (snd toAddToRem) model'
       -- Make another pass if the model was updated
       if model == model''
          then return model''
          else core model''
+
+-- | 'uncurry' for functions of three arguments and triples.
+uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
+uncurry3 f (x, y, z) = f x y z
 
 -- | Collect decision (find) variables from a model, returning their name and domain.
 collectFindVariables :: Model -> [FindVar]
@@ -80,13 +89,25 @@ collectConstraints = concatMap getSuchThat . mStatements
     getSuchThat (SuchThat cs) = cs
     getSuchThat _             = []
 
--- | Replace the constraints in a model.
-replaceConstraints :: [Expression] -> Model -> Model
-replaceConstraints cs m@Model { mStatements = stmts }
-  = m { mStatements = filter (not . isSuchThat) stmts ++ [SuchThat cs] }
+-- | Add constraints to a model.
+addConstraints :: [Expression] -> Model -> Model
+addConstraints [] m = m
+addConstraints cs m@Model { mStatements = stmts }
+  = m { mStatements = addConstraints' stmts }
   where
-    isSuchThat SuchThat{} = True
-    isSuchThat _          = False
+    addConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
+    addConstraints' (s:ss)            = s : addConstraints' ss
+    addConstraints' []                = [SuchThat cs]
+
+-- | Remove a list of constraints from a model.
+remConstraints :: [Expression] -> Model -> Model
+remConstraints cs m@Model { mStatements = stmts }
+  = m { mStatements = filter (not . emptySuchThat) $ map remConstraints' stmts }
+  where
+    remConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
+    remConstraints' s              = s
+    emptySuchThat (SuchThat []) = True
+    emptySuchThat _             = False
 
 -- | Update the domain of a declaration in a model.
 updateDecl :: FindVar -> Model -> Model
@@ -96,61 +117,116 @@ updateDecl (n, d) m@Model { mStatements = stmts } = m { mStatements = map update
       | n == n' = Declaration (FindOrGiven Find n d)
     updateDecl' decl = decl
 
--- | Try adding an attribute to a model.
-addAttrToModel :: FindVar -> AttrName -> Maybe Expression -> Model -> Model
-addAttrToModel (n, dom) attr e m = case addAttributesToDomain dom [ mkAttr e ] of
-                                        Just dom' -> updateDecl (n, dom') m
-                                        Nothing   -> m
+-- | Try adding an attribute at a given depth of a variable's domain, in a model.
+addAttrsToModel :: FindVar -> Int -> [(AttrName, Maybe Expression)] -> Model -> Model
+addAttrsToModel (n, _) depth attrs m
+  = let d = snd <$> find (\(n', _) -> n == n') (collectFindVariables m)
+        in case d >>= flip (addAttrsToDomain depth) attrs of
+                Just d' -> updateDecl (n, d') m
+                Nothing -> m
   where
+    addAttrsToDomain :: (MonadFail m) => Int -> Domain () Expression -> [(AttrName, Maybe Expression)] -> m (Domain () Expression)
+    addAttrsToDomain 0 dom = addAttributesToDomain dom . map mkAttr
+    addAttrsToDomain level (DomainSet r as inner)           = addAttrsToDomain (level - 1) inner >=> (pure . DomainSet r as)
+    addAttrsToDomain level (DomainMSet r as inner)          = addAttrsToDomain (level - 1) inner >=> (pure . DomainMSet r as)
+    addAttrsToDomain level (DomainMatrix index inner)       = addAttrsToDomain (level - 1) inner >=> (pure . DomainMatrix index)
+    addAttrsToDomain level (DomainFunction r as from inner) = addAttrsToDomain (level - 1) inner >=> (pure . DomainFunction r as from)
+    addAttrsToDomain level (DomainPartition r as inner)     = addAttrsToDomain (level - 1) inner >=> (pure . DomainPartition r as)
+    addAttrsToDomain _ _ = const (fail "[addAttrsToDomain] not a supported nested domain")
     -- Special treatment for functions
-    mkAttr (Just [essence| image(&f, &_) |])     = (attr, Just [essence| max(range(&f)) |])
-    mkAttr (Just [essence| image(&f, &_) - 1 |]) = (attr, Just [essence| max(range(&f)) - 1 |])
-    mkAttr (Just [essence| image(&f, &_) + 1 |]) = (attr, Just [essence| max(range(&f)) + 1 |])
-    mkAttr e'                                    = (attr, e')
+    mkAttr (attr, Just [essence| image(&f, &_) |])     = (attr, Just [essence| max(range(&f)) |])
+    mkAttr (attr, Just [essence| image(&f, &_) - 1 |]) = (attr, Just [essence| max(range(&f)) - 1 |])
+    mkAttr (attr, Just [essence| image(&f, &_) + 1 |]) = (attr, Just [essence| max(range(&f)) + 1 |])
+    mkAttr (attr, e')                                  = (attr, e')
 
 -- | Does an expression directly reference a given name variable?
 nameExpEq :: Name -> Expression -> Bool
 nameExpEq n (Reference n' _)           = n == n'
-nameExpEq n [essence| image(&f, &_) |] = nameExpEq n f
-nameExpEq n [essence| &f(&_) |]        = nameExpEq n f
+nameExpEq n [essence| image(&f, &x) |] = nameExpEq n f || nameExpEq n x
+nameExpEq n [essence| &f(&x) |]        = nameExpEq n f || nameExpEq n x
+nameExpEq n [essence| defined(&f) |]   = nameExpEq n f
+nameExpEq n [essence| range(&f) |]     = nameExpEq n f
 nameExpEq _ _                          = False
 
+-- | Get a single name from an abstract pattern.
+nameFromAbstractPattern :: (MonadFail m) => AbstractPattern -> m Name
+nameFromAbstractPattern a = case namesFromAbstractPattern a of
+                                 [n] -> pure n
+                                 []  -> fail "[nameFromAbstractPattern] no names in abstract pattern"
+                                 _   -> fail "[nameFromAbstractPattern] more than one name in abstract pattern"
+
+-- | Get the list of names from an abstract pattern.
+namesFromAbstractPattern :: AbstractPattern -> [Name]
+namesFromAbstractPattern (Single n)        = [n]
+namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
+namesFromAbstractPattern _                 = []
+
 -- | Unzip where the key is a 'Maybe' but the values should all be combined.
-unzipMaybeKWith :: (b -> [c] -> [c]) -> [(Maybe a, b)] -> ([a], [c])
-unzipMaybeKWith f = foldr (\(mx, y) (xs, ys) ->
-                           case mx of
-                                Just x  -> (x:xs, f y ys)
-                                Nothing -> (  xs, f y ys))
-                    ([], [])
+unzipMaybeK :: Monoid m => [(Maybe a, m)] -> ([a], m)
+unzipMaybeK = foldr (\(mx, y) (xs, z) ->
+                     case mx of
+                          Just x  -> (x:xs, y `mappend` z)
+                          Nothing -> (  xs, y `mappend` z))
+              ([], mempty)
+
+-- | Add expressions to the ToAdd list.
+toAdd :: [Expression] -> ToAddToRem -> ToAddToRem
+toAdd e = first (`union` e)
+
+-- | Add expressions to the ToRemove list.
+toRem :: [Expression] -> ToAddToRem -> ToAddToRem
+toRem e = second (`union` e)
+
+-- | Combine two 'ToAddToRem' values.
+toAddRem :: ToAddToRem -> ToAddToRem -> ToAddToRem
+toAddRem (ta, tr) = toAdd ta . toRem tr
 
 -- | Apply a rule to arbitrary levels of nested domains.
-nested :: (MonadFail m, MonadLog m)
+nested :: (MonadFail m, MonadLog m, NameGen m)
        => (Model -> (FindVar, [Expression])
-                 -> ([(AttrName, Maybe Expression)], [Expression]))
+                 -> ([(AttrName, Maybe Expression)], ToAddToRem))
        -> Model
        -> (FindVar, [Expression])
-       -> m (Model, [Expression])
-nested rule m fc@(fv, _) = do
-  (as, tk) <- case rule m fc of
-                   -- The rule did not fire at this level, so look deeper
-                   ([], toKeep)    -> return ([], toKeep)
-                   -- The rule fired, so try applying it
-                   (attrs, toKeep) -> return ([ (a, e, 0 :: Int) | (a, e) <- attrs ], toKeep)
-  let m' = foldr (\(attr, expr, _) model -> addAttrToModel fv attr expr model) m as
-  return (m', tk)
+       -> m ([(FindVar, Int, [(AttrName, Maybe Expression)])], ToAddToRem)
+nested rule m fc@(fv, cs)
+  -- Apply the rule at the top level
+  = let (attrs, toAddToRem) = rule m fc
+        -- Look deeper into the domain if possible, for forAll constraints involving it
+        in foldM (\(attrs', tatr) c -> do
+                 let failed = (attrs', tatr)
+                 case c of
+                      [essence| forAll &x in &gen . &body |] | nameExpEq (fst fv) gen -> do
+                        -- Create the new decision variable at this level
+                        fv' <- (,) <$> nameFromAbstractPattern x
+                                   <*> (domainOf gen >>= innerDomainOf)
+                        -- Apply the rule from here
+                        out <- nested rule m (fv', [body])
+                        case out of
+                             ([], _)     -> return failed
+                             -- The rule was applied, so unwrap the variable and increase the depth
+                             (vs, tatr') ->
+                               let vs' = [ (fv, d + 1, as) | (_, d, as) <- vs ]
+                                   liftCstr = map (\e -> [essence| forAll &x in &gen . &e |])
+                                   in return ( attrs' `union` vs'
+                                             , toAddRem ((liftCstr *** liftCstr) tatr') tatr
+                                             )
+                      _ -> return failed)
+                 ([(fv, 0, attrs)], toAddToRem) cs
 
 -- | Set a size attribute on a variable.
-varSize :: Model                                    -- ^ Model for context.
-        -> (FindVar, [Expression])                  -- ^ Variable and constraints.
-        -> ([(AttrName, Maybe Expression)], [Expression]) -- ^ Updated model and constraints to keep.
-varSize _ ((n, _), cs) = unzipMaybeKWith (++) $ flip map cs $ \c ->
+varSize :: Model
+        -> (FindVar, [Expression])
+        -> ([(AttrName, Maybe Expression)], ToAddToRem)
+varSize _ ((n, _), cs) = unzipMaybeK $ flip map cs $ \c ->
   case c of
-       [essence| |&x| =  &e |] | nameExpEq n x -> (Just (AttrName_size,    Just e),       [])
-       [essence| |&x| <  &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just $ e - 1), [])
-       [essence| |&x| <= &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just e),       [])
-       [essence| |&x| >  &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just $ e + 1), [])
-       [essence| |&x| >= &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just e),       [])
-       _                                       -> (Nothing, [c])
+       [essence| |&x| =  &e |] | nameExpEq n x -> (Just (AttrName_size,    Just e),       ([], [c]))
+       [essence| |&x| <  &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just $ e - 1), ([], [c]))
+       [essence| |&x| <= &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just e),       ([], [c]))
+       [essence| |&x| >  &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just $ e + 1), ([], [c]))
+       [essence| |&x| >= &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just e),       ([], [c]))
+       _                                       -> (Nothing, mempty)
 
   -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
   --       core model = do model' <- foldM folder model [ functionAttributes
@@ -480,14 +556,6 @@ varSize _ ((n, _), cs) = unzipMaybeKWith (++) $ flip map cs $ \c ->
 -- refersTo :: AbstractPattern -> Expression -> Bool
 -- refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
 -- refersTo _ _               = False
-
--- -- | Get the list of names from an abstract pattern.
--- namesFromAbstractPattern :: AbstractPattern -> [Name]
--- namesFromAbstractPattern (Single n)        = [n]
--- namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern ns
--- namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
--- namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
--- namesFromAbstractPattern _                 = []
 
 -- -- | Set the minimum size of a set based on it being a superset of another.
 -- minSizeFromSet :: (MonadFail m, MonadLog m, NameGen m)
