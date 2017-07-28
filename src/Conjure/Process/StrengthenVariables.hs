@@ -37,13 +37,12 @@ import Conjure.Compute.DomainOf ( domainOf )
 -- import System.Directory ( removeFile )
 -- -- text
 -- import qualified Data.Text.Encoding as T ( encodeUtf8 )
--- -- uniplate zipper
--- import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, right, up, fromZipper, hole, replaceHole )
+-- uniplate zipper
+import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, up, fromZipper, hole )
 
--- type ExpressionZ = Zipper Expression Expression
-
+type ExpressionZ = Zipper Expression Expression
 type FindVar = (Name, Domain () Expression)
-type ToAddToRem = ([Expression], [Expression])
+type ToAddToRem = ([ExpressionZ], [ExpressionZ])
 
 -- | Strengthen the variables in a model using type- and domain-inference.
 strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
@@ -63,7 +62,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
-               (repeat $ collectConstraints model))
+               (repeat $ map zipper $ collectConstraints model))
       let model'' = addConstraints (fst toAddToRem) $
                     remConstraints (snd toAddToRem) model'
       -- Make another pass if the model was updated
@@ -90,21 +89,21 @@ collectConstraints = concatMap getSuchThat . mStatements
     getSuchThat _             = []
 
 -- | Add constraints to a model.
-addConstraints :: [Expression] -> Model -> Model
+addConstraints :: [ExpressionZ] -> Model -> Model
 addConstraints [] m = m
 addConstraints cs m@Model { mStatements = stmts }
   = m { mStatements = addConstraints' stmts }
   where
-    addConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
+    addConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` map fromZipper cs) : ss
     addConstraints' (s:ss)            = s : addConstraints' ss
-    addConstraints' []                = [SuchThat cs]
+    addConstraints' []                = [SuchThat (map fromZipper cs)]
 
 -- | Remove a list of constraints from a model.
-remConstraints :: [Expression] -> Model -> Model
+remConstraints :: [ExpressionZ] -> Model -> Model
 remConstraints cs m@Model { mStatements = stmts }
   = m { mStatements = filter (not . emptySuchThat) $ map remConstraints' stmts }
   where
-    remConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
+    remConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` map fromZipper cs) cs'
     remConstraints' s              = s
     emptySuchThat (SuchThat []) = True
     emptySuchThat _             = False
@@ -172,11 +171,11 @@ unzipMaybeK = foldr (\(mx, y) (xs, z) ->
               ([], mempty)
 
 -- | Add expressions to the ToAdd list.
-toAdd :: [Expression] -> ToAddToRem -> ToAddToRem
+toAdd :: [ExpressionZ] -> ToAddToRem -> ToAddToRem
 toAdd e = first (`union` e)
 
 -- | Add expressions to the ToRemove list.
-toRem :: [Expression] -> ToAddToRem -> ToAddToRem
+toRem :: [ExpressionZ] -> ToAddToRem -> ToAddToRem
 toRem e = second (`union` e)
 
 -- | Combine two 'ToAddToRem' values.
@@ -185,10 +184,10 @@ toAddRem (ta, tr) = toAdd ta . toRem tr
 
 -- | Apply a rule to arbitrary levels of nested domains.
 nested :: (MonadFail m, MonadLog m, NameGen m)
-       => (Model -> (FindVar, [Expression])
+       => (Model -> (FindVar, [ExpressionZ])
                  -> ([(AttrName, Maybe Expression)], ToAddToRem))
        -> Model
-       -> (FindVar, [Expression])
+       -> (FindVar, [ExpressionZ])
        -> m ([(FindVar, Int, [(AttrName, Maybe Expression)])], ToAddToRem)
 nested rule m fc@(fv, cs)
   -- Apply the rule at the top level
@@ -196,31 +195,29 @@ nested rule m fc@(fv, cs)
         -- Look deeper into the domain if possible, for forAll constraints involving it
         in foldM (\(attrs', tatr) c -> do
                  let failed = (attrs', tatr)
-                 case c of
-                      [essence| forAll &x in &gen . &body |] | nameExpEq (fst fv) gen -> do
+                 case hole c of
+                      [essence| forAll &x in &gen . &_ |] | nameExpEq (fst fv) gen -> do
                         -- Create the new decision variable at this level
                         fv' <- (,) <$> nameFromAbstractPattern x
                                    <*> (domainOf gen >>= innerDomainOf)
                         -- Apply the rule from here
-                        out <- nested rule m (fv', [body])
+                        out <- nested rule m (fv', mapMaybe (down >=> down) [c])
                         case out of
                              ([], _)     -> return failed
                              -- The rule was applied, so unwrap the variable and increase the depth
                              (vs, tatr') ->
                                let vs' = [ (fv, d + 1, as) | (_, d, as) <- vs ]
-                                   liftCstr = map (\e -> [essence| forAll &x in &gen . &e |])
-                                   in return ( attrs' `union` vs'
-                                             , toAddRem ((liftCstr *** liftCstr) tatr') tatr
-                                             )
+                                   in return (attrs' `union` vs', toAddRem tatr' tatr)
                       _ -> return failed)
-                 ([(fv, 0, attrs)], toAddToRem) cs
+                 -- Do not add a modification if there are no attributes
+                 (if null attrs then [] else [(fv, 0, attrs)], toAddToRem) cs
 
 -- | Set a size attribute on a variable.
 varSize :: Model
-        -> (FindVar, [Expression])
+        -> (FindVar, [ExpressionZ])
         -> ([(AttrName, Maybe Expression)], ToAddToRem)
 varSize _ ((n, _), cs) = unzipMaybeK $ flip map cs $ \c ->
-  case c of
+  case hole c of
        [essence| |&x| =  &e |] | nameExpEq n x -> (Just (AttrName_size,    Just e),       ([], [c]))
        [essence| |&x| <  &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just $ e - 1), ([], [c]))
        [essence| |&x| <= &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just e),       ([], [c]))
