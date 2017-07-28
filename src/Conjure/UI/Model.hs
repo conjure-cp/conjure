@@ -151,7 +151,7 @@ outputModels config model = do
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
-                                else paddedNum 6 '0' i
+                                else padLeft 6 '0' (show i)
                     let filename = dir </> "model" ++ gen ++ ".eprime"
                     writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)

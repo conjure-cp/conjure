@@ -262,13 +262,20 @@ rule_Matrix_Eq = "matrix-eq" `namedRule` theRule where
             , do
                  (iPat, i) <- quantifiedVar
                  (jPat, j) <- quantifiedVar
-                 return [essence|
-                     (forAll &iPat : &indexX . &x[&i] = &y[&i])
-                     /\
-                     (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
-                     /\
-                     (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
-                                |]
+                 -- avoid generating the index equality constraint, if the indices are literally the same
+                 if indexX == indexY
+                     then
+                         return [essence|
+                             (forAll &iPat : &indexX . &x[&i] = &y[&i])
+                                        |]
+                    else
+                         return [essence|
+                             (forAll &iPat : &indexX . &x[&i] = &y[&i])
+                             /\
+                             (forAll &iPat : &indexX . exists &jPat : &indexY . &i = &j)
+                             /\
+                             (forAll &iPat : &indexY . exists &jPat : &indexX . &i = &j)
+                                        |]
             )
 
 
