@@ -38,10 +38,11 @@ import Conjure.Compute.DomainOf ( domainOf )
 -- -- text
 -- import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- uniplate zipper
-import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, up, fromZipper, hole )
+import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole )
 
 type ExpressionZ = Zipper Expression Expression
 type FindVar = (Name, Domain () Expression)
+type AttrPair = (AttrName, Maybe Expression)
 type ToAddToRem = ([ExpressionZ], [ExpressionZ])
 
 -- | Strengthen the variables in a model using type- and domain-inference.
@@ -117,14 +118,14 @@ updateDecl (n, d) m@Model { mStatements = stmts } = m { mStatements = map update
     updateDecl' decl = decl
 
 -- | Try adding an attribute at a given depth of a variable's domain, in a model.
-addAttrsToModel :: FindVar -> Int -> [(AttrName, Maybe Expression)] -> Model -> Model
+addAttrsToModel :: FindVar -> Int -> [AttrPair] -> Model -> Model
 addAttrsToModel (n, _) depth attrs m
   = let d = snd <$> find (\(n', _) -> n == n') (collectFindVariables m)
         in case d >>= flip (addAttrsToDomain depth) attrs of
                 Just d' -> updateDecl (n, d') m
                 Nothing -> m
   where
-    addAttrsToDomain :: (MonadFail m) => Int -> Domain () Expression -> [(AttrName, Maybe Expression)] -> m (Domain () Expression)
+    addAttrsToDomain :: (MonadFail m) => Int -> Domain () Expression -> [AttrPair] -> m (Domain () Expression)
     addAttrsToDomain 0 dom = addAttributesToDomain dom . map mkAttr
     addAttrsToDomain level (DomainSet r as inner)           = addAttrsToDomain (level - 1) inner >=> (pure . DomainSet r as)
     addAttrsToDomain level (DomainMSet r as inner)          = addAttrsToDomain (level - 1) inner >=> (pure . DomainMSet r as)
@@ -185,45 +186,47 @@ toAddRem (ta, tr) = toAdd ta . toRem tr
 -- | Apply a rule to arbitrary levels of nested domains.
 nested :: (MonadFail m, MonadLog m, NameGen m)
        => (Model -> (FindVar, [ExpressionZ])
-                 -> ([(AttrName, Maybe Expression)], ToAddToRem))
+                 -> m ([AttrPair], ToAddToRem))
        -> Model
        -> (FindVar, [ExpressionZ])
-       -> m ([(FindVar, Int, [(AttrName, Maybe Expression)])], ToAddToRem)
-nested rule m fc@(fv, cs)
+       -> m ([(FindVar, Int, [AttrPair])], ToAddToRem)
+nested rule m fc@(fv, cs) = do
   -- Apply the rule at the top level
-  = let (attrs, toAddToRem) = rule m fc
-        -- Look deeper into the domain if possible, for forAll constraints involving it
-        in foldM (\(attrs', tatr) c -> do
-                 let failed = (attrs', tatr)
-                 case hole c of
-                      [essence| forAll &x in &gen . &_ |] | nameExpEq (fst fv) gen -> do
-                        -- Create the new decision variable at this level
-                        fv' <- (,) <$> nameFromAbstractPattern x
-                                   <*> (domainOf gen >>= innerDomainOf)
-                        -- Apply the rule from here
-                        out <- nested rule m (fv', mapMaybe (down >=> down) [c])
-                        case out of
-                             ([], _)     -> return failed
-                             -- The rule was applied, so unwrap the variable and increase the depth
-                             (vs, tatr') ->
-                               let vs' = [ (fv, d + 1, as) | (_, d, as) <- vs ]
-                                   in return (attrs' `union` vs', toAddRem tatr' tatr)
-                      _ -> return failed)
-                 -- Do not add a modification if there are no attributes
-                 (if null attrs then [] else [(fv, 0, attrs)], toAddToRem) cs
+  (attrs, toAddToRem) <- rule m fc
+  -- Look deeper into the domain if possible, for forAll constraints involving it
+  nestedResults <- fmap mconcat $ forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in &gen . &_ |] | nameExpEq (fst fv) gen -> do
+           -- Create the new decision variable at this level
+           fv' <- (,) <$> nameFromAbstractPattern x
+                      <*> (domainOf gen >>= innerDomainOf)
+           -- Apply the rule from here
+           out <- nested rule m (fv', mapMaybe (down >=> down) [c])
+           case out of
+                ([], _)     -> return mempty
+                -- The rule was applied, so unwrap the variable and increase the depth
+                (vs, tatr') -> return ( [ (fv, d + 1, as) | (_, d, as) <- vs ]
+                                      , tatr')
+         _ -> return mempty
+  -- Do not add a modification if there are no attributes
+  let attrs' = if null attrs then [] else [(fv, 0, attrs)]
+  return $ mappend nestedResults (attrs', toAddToRem)
 
 -- | Set a size attribute on a variable.
-varSize :: Model
+varSize :: (MonadFail m, MonadLog m)
+        => Model
         -> (FindVar, [ExpressionZ])
-        -> ([(AttrName, Maybe Expression)], ToAddToRem)
-varSize _ ((n, _), cs) = unzipMaybeK $ flip map cs $ \c ->
-  case hole c of
-       [essence| |&x| =  &e |] | nameExpEq n x -> (Just (AttrName_size,    Just e),       ([], [c]))
-       [essence| |&x| <  &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just $ e - 1), ([], [c]))
-       [essence| |&x| <= &e |] | nameExpEq n x -> (Just (AttrName_maxSize, Just e),       ([], [c]))
-       [essence| |&x| >  &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just $ e + 1), ([], [c]))
-       [essence| |&x| >= &e |] | nameExpEq n x -> (Just (AttrName_minSize, Just e),       ([], [c]))
-       _                                       -> (Nothing, mempty)
+        -> m ([AttrPair], ToAddToRem)
+varSize _ ((n, _), cs) = do
+  results <- forM cs $ \c ->
+    case hole c of
+         [essence| |&x| =  &e |] | nameExpEq n x -> pure (Just ("size",    Just e),       ([], [c]))
+         [essence| |&x| <  &e |] | nameExpEq n x -> pure (Just ("maxSize", Just $ e - 1), ([], [c]))
+         [essence| |&x| <= &e |] | nameExpEq n x -> pure (Just ("maxSize", Just e),       ([], [c]))
+         [essence| |&x| >  &e |] | nameExpEq n x -> pure (Just ("minSize", Just $ e + 1), ([], [c]))
+         [essence| |&x| >= &e |] | nameExpEq n x -> pure (Just ("minSize", Just e),       ([], [c]))
+         _                                       -> pure (Nothing, mempty)
+  return $ unzipMaybeK results
 
   -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
   --       core model = do model' <- foldM folder model [ functionAttributes
