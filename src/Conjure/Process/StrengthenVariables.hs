@@ -23,9 +23,9 @@ import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Domain.AddAttributes
 import Conjure.Language.NameResolution ( resolveNames )
--- -- These two are needed together
--- import Conjure.Language.Expression.DomainSizeOf ()
--- import Conjure.Language.DomainSizeOf ( domainSizeOf )
+-- These two are needed together
+import Conjure.Language.Expression.DomainSizeOf ()
+import Conjure.Language.DomainSizeOf ( domainSizeOf )
 import Conjure.Compute.DomainOf ( domainOf )
 -- import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
 
@@ -38,7 +38,7 @@ import Conjure.Compute.DomainOf ( domainOf )
 -- -- text
 -- import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- uniplate zipper
-import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole )
+import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, right )
 
 type ExpressionZ = Zipper Expression Expression
 type FindVar = (Name, Domain () Expression)
@@ -60,6 +60,10 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                   let m' = foldr (uncurry3 addAttrsToModel) m attrs
                   return (m', toAddRem tatr' tatr))
                 modelAndToKeep [ varSize
+                               , surjectiveIsTotalBijective
+                               , totalInjectiveIsBijective
+                               , definedForAllIsTotal
+                               , diffArgResultIsInjective
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -148,6 +152,11 @@ nameExpEq n [essence| defined(&f) |]   = nameExpEq n f
 nameExpEq n [essence| range(&f) |]     = nameExpEq n f
 nameExpEq _ _                          = False
 
+-- | Does a reference refer to an abstract pattern?
+refersTo :: AbstractPattern -> Expression -> Bool
+refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
+refersTo _ _               = False
+
 -- | Get a single name from an abstract pattern.
 nameFromAbstractPattern :: (MonadFail m) => AbstractPattern -> m Name
 nameFromAbstractPattern a = case namesFromAbstractPattern a of
@@ -162,6 +171,42 @@ namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern 
 namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
 namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
 namesFromAbstractPattern _                 = []
+
+-- | Find an expression at any depth of unconditional forAll expressions.
+findInUncondForAll :: (Expression -> Bool) -> [ExpressionZ] -> [Expression]
+findInUncondForAll p = map hole . findInUncondForAllZ p
+
+-- | Find an expression at any depth of unconditional forAll expressions,
+--   returning a Zipper containing the expression's context.
+findInUncondForAllZ :: (Expression -> Bool) -> [ExpressionZ] -> [ExpressionZ]
+findInUncondForAllZ p = concatMap findInForAll
+  where
+    findInForAll z | p (hole z) = [z]
+    findInForAll z
+      = case hole z of
+             [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
+               | refersTo x x' && refersTo y y'
+                 -> maybe [] findInForAll (down z >>= down)
+             [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
+               | refersTo x x' && refersTo y y'
+                 -> maybe [] findInForAll (down z >>= down)
+             Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
+               | all (not . isCondition) gorcs
+                 -> maybe [] findInForAll (down z >>= down)
+             [essence| &_ /\ &_ |]
+                 -> maybe [] findInForAll (down z)
+                    `union`
+                    maybe [] findInForAll (right z >>= down)
+             -- Only accept OR cases if both sides contain a match
+             [essence| &_ \/ &_ |]
+                 -> let leftResult  = maybe [] findInForAll (down z)
+                        rightResult = maybe [] findInForAll (right z >>= down)
+                        in if not (null leftResult) && not (null rightResult)
+                              then leftResult `union` rightResult
+                              else []
+             _   -> []
+    isCondition Condition{} = True
+    isCondition _           = False
 
 -- | Unzip where the key is a 'Maybe' but the values should all be combined.
 unzipMaybeK :: Monoid m => [(Maybe a, m)] -> ([a], m)
@@ -228,6 +273,97 @@ varSize _ ((n, _), cs) = do
          _                                       -> pure (Nothing, mempty)
   return $ unzipMaybeK results
 
+-- | If a function is surjective or bijective, and its domain and codomain
+--   are of equal size, then it is total and bijective.
+surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
+                           => Model
+                           -> (FindVar, [ExpressionZ])
+                           -> m ([AttrPair], ToAddToRem)
+surjectiveIsTotalBijective _ ((_, dom), _)
+  = case dom of
+         DomainFunction _ (FunctionAttr _ p j) from to
+           | (p == PartialityAttr_Partial && j == JectivityAttr_Bijective) ||
+             j == JectivityAttr_Surjective -> do
+               (fromSize, toSize) <- functionDomainSizes from to
+               if fromSize == toSize
+                  then return ([("total", Nothing), ("bijective", Nothing)], mempty)
+                  else return mempty
+         _ -> return mempty
+
+-- | Calculate the sizes of the domain and codomain of a function.
+functionDomainSizes :: (MonadFail m)
+                    => Domain () Expression       -- ^ The function's domain.
+                    -> Domain () Expression       -- ^ The function's codomain.
+                    -> m (Expression, Expression) -- ^ The sizes of the two.
+functionDomainSizes from to = (,) <$> domainSizeOf from <*> domainSizeOf to
+
+-- | If a function is total and injective, and its domain and codomain
+--   are of equal size, then it is bijective.
+totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
+                          => Model
+                          -> (FindVar, [ExpressionZ])
+                          -> m ([AttrPair], ToAddToRem)
+totalInjectiveIsBijective _ ((_, dom), _)
+  = case dom of
+         DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to -> do
+           (fromSize, toSize) <- functionDomainSizes from to
+           if fromSize == toSize
+              then return ([("bijective", Nothing)], mempty)
+              else return mempty
+         _ -> return mempty
+
+-- | If a function is defined for all values in its domain, then it is total.
+definedForAllIsTotal :: (MonadFail m, MonadLog m)
+                     => Model
+                     -> (FindVar, [ExpressionZ])
+                     -> m ([AttrPair], ToAddToRem)
+definedForAllIsTotal _ ((n, dom), cs)
+  -- Is the function called with parameters generated from its domain in an expression?
+  = let definedIn from e = any (funcCalledWithGenParams from) (children e)
+        in case dom of
+                DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _
+                  | any (definedIn from) $ findInUncondForAll isOp cs
+                    -> return ([("total", Nothing)], mempty)
+                _ -> return mempty
+  where
+    -- Look for operator expressions but leave comprehensions, and ORs up to findInUncondForAll
+    isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
+    isOp [essence| &_ \/ &_ |]                  = False
+    -- Disallow implications which may remove some cases
+    isOp [essence| &_ -> &_ |]                  = False
+    isOp Op{}                                   = True
+    isOp _                                      = False
+    -- Determine whether a function is called with values generated from its domain
+    funcCalledWithGenParams d [essence| image(&f, &param) |]
+      = nameExpEq n f && case domainOf param of
+                              Right d' -> d' == d
+                              Left _   -> False
+    funcCalledWithGenParams _ _ = False
+
+-- | If all distinct inputs to a function have distinct results, then it is injective.
+--   It will also be total if there are no conditions other than the disequality between
+--   the two inputs.
+diffArgResultIsInjective :: (MonadFail m, MonadLog m)
+                         => Model
+                         -> (FindVar, [ExpressionZ])
+                         -> m ([AttrPair], ToAddToRem)
+diffArgResultIsInjective _ ((n, DomainFunction _ (FunctionAttr _ _ ject) from _), cs)
+  | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
+    not (null $ findInUncondForAll isDistinctDisequality cs)
+    -- It is known that no inputs are ignored
+    = return ([("injective", Nothing), ("total", Nothing)], mempty)
+  where
+    -- Match a very specific pattern, which will also add the total attribute
+    isDistinctDisequality [essence| &i != &j -> image(&f, &i') != image(&f', &j') |]
+      = f == f' && i == i' && j == j' &&
+        nameExpEq n f &&          -- the function is the one under consideration
+        domIsGen i && domIsGen j  -- the values are generated from the function's domain
+    isDistinctDisequality _ = False
+    domIsGen x = case domainOf x of
+                      Right dom -> dom == from
+                      Left _    -> False
+diffArgResultIsInjective _ _ = return mempty
+
   -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
   --       core model = do model' <- foldM folder model [ functionAttributes
   --                                                    , setAttributes
@@ -261,231 +397,6 @@ varSize _ ((n, _), cs) = do
   --       isMachineName (Reference MachineName{} _) = True
   --       isMachineName _                           = False
 
--- -- | Update a declaration in a model.
--- updateDeclaration :: Declaration  -- ^ New declaration value.
-  --                 -> Model        -- ^ Model to be updated.
-  --                 -> Model        -- ^ Updated model.
--- updateDeclaration d@(FindOrGiven _ n' _) m@Model { mStatements = stmts }
-  -- = m { mStatements = map updateDeclaration' stmts }
-  -- where
-  --   -- Replace the declaration in-place
-  --   updateDeclaration' (Declaration (FindOrGiven _ n _))
-  --     | n == n' = Declaration d
-  --   updateDeclaration' s = s
--- updateDeclaration _ m = m
-
--- -- | Merge a list of constraints into a model.
--- mergeConstraints :: Model         -- ^ Model to be updated.
-  --                -> [Expression]  -- ^ Constraints to merge into the model.
-  --                -> Model         -- ^ Updated model with new constraints.
--- mergeConstraints m [] = m
--- mergeConstraints m@Model { mStatements = stmts } cs
-  -- = m { mStatements = mergeConstraints' stmts }
-  -- where
-  --   mergeConstraints' (SuchThat cs':ss) = SuchThat (cs' `union` cs) : ss
-  --   mergeConstraints' (s:ss) = s : mergeConstraints' ss
-  --   mergeConstraints' [] = [SuchThat cs]
-
--- -- | Remove a list of constraints from a model.
--- removeConstraints :: Model        -- ^ Model to have the constraint removed.
-  --                 -> [Expression] -- ^ Constraints to remove.
-  --                 -> Model        -- ^ Updated model with constraints removed.
--- removeConstraints m@Model { mStatements = stmts } cs
-  -- = m { mStatements = filter (not . emptySuchThat) $ map removeConstraints' stmts }
-  -- where
-  --   removeConstraints' (SuchThat cs') = SuchThat $ filter (`notElem` cs) cs'
-  --   removeConstraints' s              = s
-
-  --   emptySuchThat (SuchThat []) = True
-  --   emptySuchThat _             = False
-
--- -- | Make the attributes of function variables as constrictive as possible.
--- functionAttributes :: (MonadFail m, MonadLog m)
-  --                  => Model       -- ^ Model as context.
-  --                  -> Declaration -- ^ Statement to constrain.
-  --                  -> m Model     -- ^ Possibly updated model.
--- functionAttributes m (FindOrGiven forg n d@DomainFunction{}) = do
-  -- d' <- constrainFunctionDomain n d m
-  -- let f' = FindOrGiven forg n d'
-  -- return $ updateDeclaration f' m
--- functionAttributes m _ = return m
-
--- -- | Constrain the domain of a function given the context of a model.
--- constrainFunctionDomain :: (MonadFail m, MonadLog m)
-  --                       => Name                     -- ^ Name of the function.
-  --                       -> Domain () Expression     -- ^ Current domain of the function.
-  --                       -> Model                    -- ^ Context of the model.
-  --                       -> m (Domain () Expression) -- ^ Possibly modified domain.
--- constrainFunctionDomain n d@DomainFunction{} m
-  -- = surjectiveIsTotalBijective d  >>=
-  --   totalInjectiveIsBijective     >>=
-  --   definedForAllIsTotal n m      >>=
-  --   fullRangeIsSurjective n m     >>=
-  --   diffArgResultIsInjective n m
--- constrainFunctionDomain _ d _ = return d
-
--- -- | Extract the such that expressions from a model.
--- suchThat :: Model -> [Expression]
--- suchThat = foldr fromSuchThat [] . mStatements
-  -- where fromSuchThat (SuchThat es) = (`union` es)
-  --       fromSuchThat _             = id
-
--- -- | If a function is surjective or bijective and its domain and codomain
--- --   are of equal size, then it is total and bijective.
--- surjectiveIsTotalBijective :: (MonadFail m, MonadLog m)
-  --                          => Domain () Expression      -- ^ Domain of the function.
-  --                          -> m (Domain () Expression)  -- ^ Possibly modified domain.
--- surjectiveIsTotalBijective d@(DomainFunction _ (FunctionAttr _ p j) from to)
-  -- | (p == PartialityAttr_Partial && j == JectivityAttr_Bijective) ||
-  --   j == JectivityAttr_Surjective = do
-  --   (fromSize, toSize) <- functionDomainSizes from to
-  --   if fromSize == toSize
-  --      then addAttributesToDomain d [ ("total", Nothing), ("bijective", Nothing) ]
-  --      else return d
--- surjectiveIsTotalBijective d = return d
-
--- -- | If a function is total and injective, and its domain and codomain
--- --   are of equal size, then it is bijective.
--- totalInjectiveIsBijective :: (MonadFail m, MonadLog m)
-  --                         => Domain () Expression
-  --                         -> m (Domain () Expression)
--- totalInjectiveIsBijective d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_Injective) from to) = do
-  -- (fromSize, toSize) <- functionDomainSizes from to
-  -- if fromSize == toSize
-  --    then addAttributesToDomain d [ ("bijective", Nothing) ]
-  --    else return d
--- totalInjectiveIsBijective d = return d
-
--- -- | Calculate the sizes of the domain and codomain of a function.
--- functionDomainSizes :: (MonadFail m)
-  --                   => Domain () Expression       -- ^ The function's domain.
-  --                   -> Domain () Expression       -- ^ The function's codomain.
-  --                   -> m (Expression, Expression) -- ^ The sizes of the two.
--- functionDomainSizes from to = do
-  -- fromSize <- domainSizeOf from
-  -- toSize   <- domainSizeOf to
-  -- return (fromSize, toSize)
-
--- -- | If a function is defined for all values in its domain, then it is total.
--- definedForAllIsTotal :: (MonadFail m, MonadLog m)
-  --                    => Name                      -- ^ Name of the function.
-  --                    -> Model                     -- ^ Model for context.
-  --                    -> Domain () Expression      -- ^ Domain of the function.
-  --                    -> m (Domain () Expression)  -- ^ Possibly modified domain.
--- definedForAllIsTotal n m d@(DomainFunction _ (FunctionAttr _ PartialityAttr_Partial _) from _)
-  -- | any definedIn $ findInUncondForAll isOp m
-  --   = addAttributesToDomain d [ ("total", Nothing) ]
-  -- where
-  --   -- Look for operator expressions but leave comprehensions up to findInUncondForAll
-  --   isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
-  --   isOp Op{} = True
-  --   isOp _    = False
-  --   -- Is the function called with parameters generated from its domain in an expression?
-  --   definedIn e = any (funcCalledWithGenParams n from) (universe e) &&
-  --                 not (hasImpliesOrOrs e)
-  --   -- Implies or Or may ignore a function call, making it undefined for the domain value
-  --   hasImpliesOrOrs = any isImplyOrOr . universe
-  --   isImplyOrOr [essence| &_ -> &_ |] = True
-  --   isImplyOrOr [essence| &_ \/ &_ |] = True
-  --   isImplyOrOr _                     = False
--- definedForAllIsTotal _ _ d = return d
-
--- -- | Determine whether a function is called with values generated from its domain.
--- funcCalledWithGenParams :: Name                 -- ^ Name of the function being called.
-  --                       -> Domain () Expression -- ^ Function domain.
-  --                       -> Expression           -- ^ Expression which may be the function call.
-  --                       -> Bool
--- funcCalledWithGenParams n d (Op (MkOpImage (OpImage (Reference n' _) param)))
-  -- = n' == n && genArgMatchesDom param
-  --   where
-  --     -- Is a function argument generated from the function's domain?
-  --     genArgMatchesDom (Reference _ (Just refDom))
-  --       = case refDom of
-  --              DeclNoRepr Quantified _ d' _           -> d == d'
-  --              InComprehension (GenDomainNoRepr _ d') -> d == d'
-  --              _                                      -> False
-  --     genArgMatchesDom _ = False
--- funcCalledWithGenParams _ _ _ = False
-
--- -- | If all values in the range of a function are mapped to, then it is surjective.
--- fullRangeIsSurjective :: (MonadFail m, MonadLog m)
-  --                     => Name                     -- ^ The function's name.
-  --                     -> Model                    -- ^ Model for context.
-  --                     -> Domain () Expression     -- ^ The function's domain.
-  --                     -> m (Domain () Expression) -- ^ Possibly modified function domain.
--- fullRangeIsSurjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from to)
-  -- | (ject == JectivityAttr_None || ject == JectivityAttr_Injective) &&
-  --   -- Are the variables generated from the domain and codomain respectively?
-  --   any (uncurry varsAreGen)
-  --       -- Extract the function parameter and function value
-  --       (mapMaybe existsEqVals
-  --       -- Find the desired pattern being matched
-  --       (findInUncondForAll isExistsEq m))
-  --     = addAttributesToDomain d [ ("surjective", Nothing) ]
-  -- where
-  --   -- Get the domain value and codomain value used in the function call
-  --   existsEqVals [essence| exists &i :  &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
-  --   existsEqVals [essence| exists &i in &_ . &f(&i') = &j |] = funcEqCoVal f i i' j
-  --   existsEqVals _ = Nothing
-  --   funcEqCoVal (Reference n' _) i i' j | n == n' = flip (,) j <$> checkVarsEq i i'
-  --   funcEqCoVal _ _ _ _ = Nothing
-  --   isExistsEq = isJust . existsEqVals
-  --   -- Try equating the variables references and return the reference if they are equal
-  --   checkVarsEq :: AbstractPattern -> Expression -> Maybe Expression
-  --   checkVarsEq (Single i) e@(Reference i' _) | i == i' = Just e
-  --   checkVarsEq _ _ = Nothing
-  --   -- Make sure that the variables are generated from the domain and codomain of the function
-  --   varsAreGen (Reference _ (Just (DeclNoRepr Quantified _ from' _)))
-  --              (Reference _ (Just (DeclNoRepr Quantified _ to'   _)))
-  --                = from == from' && to == to'
-  --   varsAreGen iDom jDom = case domInCompRef iDom of
-  --                               Just from'
-  --                                 -> case domInCompRef jDom of
-  --                                         Just to' -> from == from' && to == to'
-  --                                         _ -> False
-  --                               _ -> False
-  --   -- Extract a domain from a reference in a comprehension
-  --   domInCompRef dom = case domInComprehension dom of
-  --                           Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom')))))
-  --                             -> Just dom'
-  --                           _ -> Nothing
-  --   -- Extract an InComprehension domain
-  --   domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
-  --   domInComprehension _ = Nothing
--- fullRangeIsSurjective _ _ d = return d
-
--- -- | If all distinct inputs to a function have distinct results, then it is injective.
--- --   It will also be total if there are no conditions other than the disequality between
--- --   the two inputs.
--- diffArgResultIsInjective :: (MonadFail m, MonadLog m)
-  --                        => Name                     -- ^ The function's name.
-  --                        -> Model                    -- ^ Model for context.
-  --                        -> Domain () Expression     -- ^ The function's domain.
-  --                        -> m (Domain () Expression) -- ^ Possibly modified function domain.
--- diffArgResultIsInjective n m d@(DomainFunction _ (FunctionAttr _ _ ject) from _)
-  -- | (ject == JectivityAttr_None || ject == JectivityAttr_Surjective) &&
-  --   not (null $ findInUncondForAll isDistinctDisequality m)
-  --   = addAttributesToDomain d [ ("injective", Nothing)
-  --                             -- It is known that no inputs are ignored
-  --                             , ("total", Nothing) ]
-  -- where
-  --   -- Match a very specific pattern, which will also add the total attribute
-  --   isDistinctDisequality [essence| &i != &j -> &f(&i') != &f'(&j') |]
-  --     | f == f' && i == i' && j == j'
-  --       = case f of
-  --              Reference n' _ | n == n'
-  --                -> domIsGen i && domIsGen j
-  --              _ -> False
-  --   isDistinctDisequality _ = False
-  --   -- Extract a domain reference from a comprehension
-  --   domIsGen (Reference _ (Just (DeclNoRepr Quantified _ dom _))) = from == dom
-  --   domIsGen d' = case domInComprehension d' of
-  --                      Just (GenInExpr _ (Reference _ (Just (Alias (Domain dom))))) -> from == dom
-  --                      _ -> False
-  --   -- Extract an InComprehension domain
-  --   domInComprehension (Reference _ (Just (InComprehension dom))) = Just dom
-  --   domInComprehension _ = Nothing
--- diffArgResultIsInjective _ _ d = return d
 
 -- -- | Make the attributes of a set as constrictive as possible.
 -- setAttributes :: (MonadFail m, MonadLog m, NameGen m)
@@ -515,42 +426,6 @@ varSize _ ((n, _), cs) = do
   --   subsetMinSize d' [essence| &l subset   &_ |] = minSizeFromSet d' l -- could be more precise
   --   subsetMinSize d' [essence| &l subsetEq &_ |] = minSizeFromSet d' l
   --   subsetMinSize d' _ = return d'
-
--- -- | Find an expression at any depth of unconditional forAll expressions.
--- findInUncondForAll :: (Expression -> Bool) -> Model -> [Expression]
--- findInUncondForAll p = map hole . findInUncondForAllZ p
-
--- -- | Find an expression at any depth of unconditional forAll expressions,
--- --   returning a Zipper containing the expression's context.
--- findInUncondForAllZ :: (Expression -> Bool) -> Model -> [ExpressionZ]
--- findInUncondForAllZ p = concatMap (findInForAll . zipper) . suchThat
-  -- where
-  --   findInForAll z | p (hole z) = [z]
-  --   findInForAll z
-  --     = case hole z of
-  --            [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
-  --              | refersTo x x' && refersTo y y'
-  --                -> maybe [] findInForAll (down z >>= down)
-  --            [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
-  --              | refersTo x x' && refersTo y y'
-  --                -> maybe [] findInForAll (down z >>= down)
-  --            Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
-  --              | all (not . isCondition) gorcs
-  --                -> maybe [] findInForAll (down z >>= down)
-  --            [essence| &_ /\ &_ |]
-  --                -> maybe [] findInForAll (down z)
-  --                   `union`
-  --                   maybe [] findInForAll (right z >>= down)
-  --            -- Only accept OR cases if both sides contain a match
-  --            [essence| &_ \/ &_ |]
-  --                -> let leftResult  = maybe [] findInForAll (down z)
-  --                       rightResult = maybe [] findInForAll (right z >>= down)
-  --                       in if not (null leftResult) && not (null rightResult)
-  --                             then leftResult `union` rightResult
-  --                             else []
-  --            _   -> []
-  --   isCondition Condition{} = True
-  --   isCondition _           = False
 
 -- -- | Does a reference refer to an abstract pattern?
 -- refersTo :: AbstractPattern -> Expression -> Bool
