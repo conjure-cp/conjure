@@ -29,7 +29,6 @@ module Conjure.Prelude
     , Proxy(..)
     , MonadFail(..), failCheaply, na
     , allContexts, ascendants
-    , paddedNum
     , dropExtension, dropDirs
     , MonadLog(..), LogLevel(..), runLoggerPipeIO, ignoreLogs
     , logInfo, logWarn, logDebug, logDebugVerbose
@@ -433,11 +432,6 @@ allContexts z0 = concatMap subtreeOf (allSiblings z0)
 
 ascendants :: Zipper a b -> [b]
 ascendants z = hole z : maybe [] ascendants (Zipper.up z)
-
-
-paddedNum :: Show a => Int -> Char -> a -> String
-paddedNum n ch x = replicate (n - length s) ch ++ s
-    where s = show x
 
 
 -- | splits from the "."s, drops the last component, glues back together what's left

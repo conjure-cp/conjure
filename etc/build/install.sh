@@ -153,12 +153,16 @@ if [ "$(cabal --version | head -n 1 | grep ${CABAL_VERSION_CHECK})" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} found."
 elif [ $INSTALL_CABAL = "yes" ]; then
     echo "cabal-install version ${CABAL_VERSION_CHECK} not found. Installing version ${CABAL_VERSION}."
+    rm -rf cabal-install-tmp
+    mkdir cabal-install-tmp
+    pushd cabal-install-tmp
     wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
     tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
     EXTRA_CONFIGURE_OPTS="" bash bootstrap.sh --user --no-doc
     popd
-    rm -rf "cabal-install-${CABAL_VERSION}.tar.gz" "cabal-install-${CABAL_VERSION}"
+    popd
+    rm -rf cabal-install-tmp
 else
     echo "cabal-install version ${CABAL_VERSION_CHECK} not found."
     echo "Build will continue anyway."

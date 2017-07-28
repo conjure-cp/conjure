@@ -42,7 +42,7 @@ There are only at most two digits and a carry digit being added at each step, so
      carry3 + f(S) + f(M) = f(O) + 10*carry4,
      carry4 = f(M)
 
-Each snippet of Essence code can optionally contain a declaration of which dialect of Essence it is written in.
+Each Essence specification can optionally contain a declaration of which dialect of Essence it is written in.
 The current version of Essence is 1.3.
 We leave out this declaration in the remaining examples to avoid repetition.
 
@@ -167,11 +167,11 @@ Vertices of the graph are labelled with integers between 1 and n, and each verte
    letting n be 4
    letting G be {{1,2},{2,3},{3,4}}
 
-In this snippet, we declare two aliases.
+In this specification, we declare two aliases.
 The number of vertices n is first defined as 4.
 Then G is defined as a set of edges.
 
-This snippet is saved in a file ``path-4.param`` that we refer to later.
+This specification is saved in a file ``path-4.param`` that we refer to later.
 We should also have a different graph that is not connected:
 
 .. code-block:: essence
@@ -425,7 +425,7 @@ It is possible to call Conjure from a script that uses the failure to find solut
 In place of the missing "if-has-solution" directive, we could instead quantify over all possible subsets of vertices.
 Such an approach quickly becomes infeasible as n grows (and is much worse than the models considered so far), because it attempts to check 2**n subsets.
 
-Instead, we can make use of the optimisation features of Essence, to find a solution with a C of minimal cardinality.
+As another option, we can make use of the optimisation features of Essence to find a solution with a C of minimal cardinality.
 Choosing a minimal C ensures that when there is more than one solution, then the one that is generated always indicates the failure of connectivity.
 Since we don't care about the minimal C, as long as it is smaller than the set of all vertices if possible, we also replace the general requirement for non-emptiness by a constraint that always forces the set C to contain the vertex labelled 1.
 
@@ -508,4 +508,3 @@ In this case Conjure generates 38 solutions, one solution per file.
 Instead of listing the edges of a graph, and then deriving the adjacency matrix as necessary, it is also possible to use the adjacency matrix representation.
 As an exercise, modify the models of connectivity to use the adjacency matrix representation instead of the set of edges representation.
 
-It should be clear from these example models that the process of modelling requires careful thought and that the choices made may drastically affect the performance of the solver.

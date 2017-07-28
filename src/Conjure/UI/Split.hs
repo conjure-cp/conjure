@@ -18,7 +18,7 @@ outputSplittedModels outputDirectory model = do
     liftIO $ createDirectoryIfMissing True outputDirectory
     let
         each i eprime = do
-            let gen = paddedNum 6 '0' i
+            let gen = padLeft 6 '0' (show i)
             let filename = outputDirectory </> "splitted" ++ gen ++ ".essence"
             liftIO $ writeFile filename (renderNormal eprime)
             return (i+1)
