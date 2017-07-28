@@ -260,7 +260,7 @@ mainWithArgs config@Solve{..} = do
                                 _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
                                     copySolution solution (essenceDir
                                                             </> intercalate "-" [ essenceBasename
-                                                                                , paddedNum 6 '0' i
+                                                                                , padLeft 6 '0' (show i)
                                                                                 ]
                                                             <.> ".solution")
                         else forM_ essenceParams $ \ essenceParam -> do
@@ -280,7 +280,7 @@ mainWithArgs config@Solve{..} = do
                                     copySolution solution (essenceDir
                                                             </> intercalate "-" [ essenceBasename
                                                                                 , paramBasename
-                                                                                , paddedNum 6 '0' i
+                                                                                , padLeft 6 '0' (show i)
                                                                                 ]
                                                             <.> ".solution")
 
@@ -454,7 +454,7 @@ srStdoutHandler
             line <- hGetLine h
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
-                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum 6 '0' solutionNumber ++ ext
+                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
