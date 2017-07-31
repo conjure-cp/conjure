@@ -1,0 +1,7 @@
+language Essence 1.3
+letting n be 10
+letting vertices be domain int(1..n)
+letting edge be domain (vertices, vertices)
+given w : function edge --> int
+letting edges be defined(w)
+find b : bool such that b = ((1,2) in edges)

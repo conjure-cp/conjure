@@ -9,7 +9,7 @@ BUILDDIR      = _build
 
 # User-friendly check for sphinx-build
 ifeq ($(shell which $(SPHINXBUILD) >/dev/null 2>&1; echo $$?), 1)
-$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you don't have Sphinx installed, grab it from http://sphinx-doc.org/)
+$(error The '$(SPHINXBUILD)' command was not found. Make sure you have Sphinx installed, then set the SPHINXBUILD environment variable to point to the full path of the '$(SPHINXBUILD)' executable. Alternatively you can add the directory with the executable to your PATH. If you do not have Sphinx installed, grab it from http://sphinx-doc.org/)
 endif
 
 # Internal variables.
@@ -221,6 +221,13 @@ conjure-help:
 	@conjure --help=all,html | grep -v "Release version" | grep -v "Repository version" >> conjure-help.html
 	@echo "</div>"                                                                      >> conjure-help.html
 	@echo "<br />"                                                                      >> conjure-help.html
+	@echo '::'          >  conjure-help.txt
+	@echo               >> conjure-help.txt
+	@conjure --help=all,text \
+	| sed -ne '/Release version/d' \
+	 -e '/Repository version/d' \
+	 -e 's/^/ /p'       >> conjure-help.txt
+	@echo               >> conjure-help.txt
 
 auto-html:
 	watchmedo shell-command --patterns="*.rst" --ignore-pattern='_build/*' --recursive --command='make html'

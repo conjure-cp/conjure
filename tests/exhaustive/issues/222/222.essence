@@ -1,0 +1,10 @@
+language Essence 1.3
+letting Dom be domain int(4,6)
+letting Peg be domain (Dom,Dom)
+
+find s : set (size 2 ) of Peg
+
+such that 
+
+forAll { (x1, y1), (x2,y2) } subsetEq s .
+        (x1 = x2 \/ y1 = y2)

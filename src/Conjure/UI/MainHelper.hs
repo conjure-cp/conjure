@@ -32,6 +32,7 @@ import Conjure.Language.NameResolution ( resolveNamesMulti )
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
 import System.Info ( os )
+import GHC.Conc ( numCapabilities )
 import GHC.IO.Handle ( hIsEOF, hClose, hGetLine )
 import Data.Char ( isDigit )
 
@@ -257,7 +258,7 @@ mainWithArgs config@Solve{..} = do
                                 _ -> forM_ (zip allNats solutions') $ \ (i, solution) ->
                                     copySolution solution (essenceDir
                                                             </> intercalate "-" [ essenceBasename
-                                                                                , paddedNum 6 '0' i
+                                                                                , padLeft 6 '0' (show i)
                                                                                 ]
                                                             <.> ".solution")
                         else forM_ essenceParams $ \ essenceParam -> do
@@ -277,7 +278,7 @@ mainWithArgs config@Solve{..} = do
                                     copySolution solution (essenceDir
                                                             </> intercalate "-" [ essenceBasename
                                                                                 , paramBasename
-                                                                                , paddedNum 6 '0' i
+                                                                                , padLeft 6 '0' (show i)
                                                                                 ]
                                                             <.> ".solution")
 
@@ -299,7 +300,7 @@ mainWithArgs config@Solve{..} = do
             return eprimes
 
         getEprimes :: m [FilePath]
-        getEprimes = filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
+        getEprimes = sort . filter (".eprime" `isSuffixOf`) <$> liftIO (getDirectoryContents outputDirectory)
 
         combineResults :: [Either e [a]] -> Either e [a]
         combineResults = fmap concat . sequence
@@ -310,21 +311,21 @@ mainWithArgs config@Solve{..} = do
             -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
         savileRows eprimes params = fmap combineResults $
             if null params
-                then parallel [ savileRowNoParam config m
-                              | m <- eprimes
-                              ]
-                else parallel [ savileRowWithParams config m p
-                              | m <- eprimes
-                              , p <- params
-                              ]
+                then autoParallel [ savileRowNoParam config m
+                                  | m <- eprimes
+                                  ]
+                else autoParallel [ savileRowWithParams config m p
+                                  | m <- eprimes
+                                  , p <- params
+                                  ]
 
         validating :: [(FilePath, FilePath, FilePath)] -> IO ()
         validating solutions =
             if null essenceParams
-                then parallel_ [ validateSolutionNoParam config sol
-                               | (_, _, sol) <- solutions ]
-                else parallel_ [ validateSolutionWithParams config sol p
-                               | (_, p, sol) <- solutions ]
+                then autoParallel_ [ validateSolutionNoParam config sol
+                                   | (_, _, sol) <- solutions ]
+                else autoParallel_ [ validateSolutionWithParams config sol p
+                                   | (_, p, sol) <- solutions ]
 
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
@@ -451,7 +452,7 @@ srStdoutHandler
             line <- hGetLine h
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
-                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ paddedNum 6 '0' solutionNumber ++ ext
+                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
@@ -532,3 +533,12 @@ doIfNotCached (show . hash -> h) savedHashesFile getResult act = do
             res <- act
             liftIO $ writeFile savedHashesFile h
             return res
+
+
+autoParallel :: [IO a] -> IO [a]
+autoParallel = if numCapabilities > 1 then parallel else sequence
+
+
+autoParallel_ :: [IO ()] -> IO ()
+autoParallel_ = if numCapabilities > 1 then parallel_ else sequence_
+

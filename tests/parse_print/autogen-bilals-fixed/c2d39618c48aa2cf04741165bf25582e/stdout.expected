@@ -15,50 +15,47 @@ such that
          partition({{function(true --> 6), function(false --> -3), function(false --> 10, true --> -2)}},
                    {({} : `set of function bool --> int`)})
              | q_4 : int(3)]),
-    function(var1 --> [function(tuple (false) --> tuple (-5), tuple (true) --> tuple (-1), tuple (false) --> tuple (-4),
-                                tuple (false) --> tuple (9));
-                           int(-5)])
+    function(var1
+                 --> [function(tuple (false) --> tuple (-5), tuple (true) --> tuple (-1), tuple (false) --> tuple (-4),
+                               tuple (false) --> tuple (9));
+                          int(-5)])
     !=
-    function(2 --> [function(tuple (true) --> tuple (-8), tuple (true) --> tuple (-1), tuple (false) --> tuple (-4)),
-                    function(tuple (false) --> tuple (-8), tuple (true) --> tuple (-9), tuple (false) --> tuple (-4));
-                        int(-2, -2..-1)],
-             max(mset(toInt(false), toInt(true), var1, var1) -
-                 (mset() : `mset of int`)) --> [function(tuple (false) --> tuple (-5), tuple (false) --> tuple (0));
-                                                    int(4)],
-             min(mset(-3, 3 / 1, var1)) --> [function(tuple (false) --> tuple (-8), tuple (false) --> tuple (6)),
-                                             function(tuple (false) --> tuple (4), tuple (true) --> tuple (-5)),
-                                             function(tuple (true) --> tuple (1), tuple (true) --> tuple (-7),
-                                                      tuple (false) --> tuple (-5), tuple (false) --> tuple (9)),
-                                             function(tuple (true) --> tuple (-5)),
-                                             function(tuple (false) --> tuple (4), tuple (false) --> tuple (0),
-                                                      tuple (true) --> tuple (6)),
-                                             function(tuple (false) --> tuple (6), tuple (false) --> tuple (-8),
-                                                      tuple (true) --> tuple (4), tuple (false) --> tuple (4));
-                                                 int(-5..0)],
-             toInt(toInt(true) in {6, -5 / -6, 7}) --> [function(tuple (false) --> tuple (-3),
-                                                                 tuple (true) --> tuple (7)),
-                                                        function(tuple (false) --> tuple (-8)),
-                                                        function(tuple (true) --> tuple (6), tuple (true) --> tuple (4),
-                                                                 tuple (true) --> tuple (-2),
-                                                                 tuple (true) --> tuple (1)),
-                                                        function(tuple (true) --> tuple (-10),
-                                                                 tuple (false) --> tuple (-3)),
-                                                        function(tuple (false) --> tuple (-8),
-                                                                 tuple (false) --> tuple (-2),
-                                                                 tuple (false) --> tuple (-10));
-                                                            int(5, 0..3)],
-             -9 --> [function(tuple (true) --> tuple (-6), tuple (true) --> tuple (0), tuple (false) --> tuple (-2),
-                              tuple (true) --> tuple (-9)),
-                     function(tuple (false) --> tuple (-9), tuple (false) --> tuple (-3), tuple (true) --> tuple (1),
-                              tuple (true) --> tuple (-9)),
-                     function(tuple (false) --> tuple (-2), tuple (false) --> tuple (3), tuple (false) --> tuple (5),
-                              tuple (false) --> tuple (-10)),
-                     function(tuple (false) --> tuple (-9)), function(tuple (true) --> tuple (4)),
-                     function(tuple (false) --> tuple (9), tuple (true) --> tuple (8), tuple (true) --> tuple (-1)),
-                     function(tuple (false) --> tuple (-10)), function(tuple (false) --> tuple (6)),
-                     function(tuple (true) --> tuple (-5)),
-                     function(tuple (true) --> tuple (-3), tuple (false) --> tuple (-5), tuple (true) --> tuple (2));
-                         int(-5..4)]),
+    function(2   --> [function(tuple (true) --> tuple (-8), tuple (true) --> tuple (-1), tuple (false) --> tuple (-4)),
+                      function(tuple (false) --> tuple (-8), tuple (true) --> tuple (-9), tuple (false) --> tuple (-4));
+                          int(-2, -2..-1)],
+             max(mset(toInt(false), toInt(true), var1, var1) - (mset() : `mset of int`))
+                 --> [function(tuple (false) --> tuple (-5), tuple (false) --> tuple (0)); int(4)],
+             min(mset(-3, 3 / 1, var1))
+                 --> [function(tuple (false) --> tuple (-8), tuple (false) --> tuple (6)),
+                      function(tuple (false) --> tuple (4), tuple (true) --> tuple (-5)),
+                      function(tuple (true) --> tuple (1), tuple (true) --> tuple (-7), tuple (false) --> tuple (-5),
+                               tuple (false) --> tuple (9)),
+                      function(tuple (true) --> tuple (-5)),
+                      function(tuple (false) --> tuple (4), tuple (false) --> tuple (0), tuple (true) --> tuple (6)),
+                      function(tuple (false) --> tuple (6), tuple (false) --> tuple (-8), tuple (true) --> tuple (4),
+                               tuple (false) --> tuple (4));
+                          int(-5..0)],
+             toInt(toInt(true) in {6, -5 / -6, 7})
+                 --> [function(tuple (false) --> tuple (-3), tuple (true) --> tuple (7)),
+                      function(tuple (false) --> tuple (-8)),
+                      function(tuple (true) --> tuple (6), tuple (true) --> tuple (4), tuple (true) --> tuple (-2),
+                               tuple (true) --> tuple (1)),
+                      function(tuple (true) --> tuple (-10), tuple (false) --> tuple (-3)),
+                      function(tuple (false) --> tuple (-8), tuple (false) --> tuple (-2),
+                               tuple (false) --> tuple (-10));
+                          int(5, 0..3)],
+             -9  --> [function(tuple (true) --> tuple (-6), tuple (true) --> tuple (0), tuple (false) --> tuple (-2),
+                               tuple (true) --> tuple (-9)),
+                      function(tuple (false) --> tuple (-9), tuple (false) --> tuple (-3), tuple (true) --> tuple (1),
+                               tuple (true) --> tuple (-9)),
+                      function(tuple (false) --> tuple (-2), tuple (false) --> tuple (3), tuple (false) --> tuple (5),
+                               tuple (false) --> tuple (-10)),
+                      function(tuple (false) --> tuple (-9)), function(tuple (true) --> tuple (4)),
+                      function(tuple (false) --> tuple (9), tuple (true) --> tuple (8), tuple (true) --> tuple (-1)),
+                      function(tuple (false) --> tuple (-10)), function(tuple (false) --> tuple (6)),
+                      function(tuple (true) --> tuple (-5)),
+                      function(tuple (true) --> tuple (-3), tuple (false) --> tuple (-5), tuple (true) --> tuple (2));
+                          int(-5..4)]),
     and([false | q_5 : int(3), var1 % -9 * q_5 < q_5]),
     true,
     var1 in {var1} <-> true,

@@ -12,15 +12,16 @@ Some command line arguments to Conjure are positional, for example the command n
 Another example of positional arguments is the path to a file required by the ``conjure pretty`` command.
 This argument can just be provided after the command name, like: ``conjure pretty myfile.essence``.
 
-Non-positional arguments are provided using flags.
-A flag may or may not take a value.
+Non-positional arguments are provided using options.
+Some options require an additional value to be provided.
+Other options are flags and do not expect additional values.
 For example the ``conjure pretty`` command takes a flag called ``--remove-unused``, which removes unused decision variables from the model before pretty printing it.
-This flag does not require a value.
-However, the ``conjure modelling`` command takes a flag called ``--output-directory``, which specifies the directory under which Conjure places its output files.
-This flag requires a value.
+This option is a flag that takes no values.
+However, the ``conjure modelling`` command takes an option called ``--output-directory``, which specifies the directory under which Conjure places its output files.
+This option requires a value.
 
-Flags can have short or long names. Following the common convention, short option names are preceded by a single dash and long options names are preceded by two dashes.
-For example ``--output-directory`` a long name for a flag, and ``-o`` is a short name for the same flag.
+Options can have short or long names. Following the common convention, short option names are preceded by a single dash and long options names are preceded by two dashes.
+For example ``--output-directory`` is a long name for an option, and ``-o`` is a short name for the same option.
 
 The general form of a Conjure run is as follows: ``conjure [COMMAND] ... [OPTIONS]``.
 
@@ -38,6 +39,8 @@ validate-solution
 solve
     This is a combined mode, and it is available for convenience.
     It runs conjure in the modelling mode followed by parameter refinement if required, then Savile Row + Minion to solve, and then solution translation.
+
+If no primary command is provided, ``modelling`` is assumed.
 
 Conjure also supports a few additional commands on top of the primary commands listed above.
 These commands are not required for the normal operation of the tool.
@@ -64,7 +67,14 @@ To see the command specific help message, run: ``conjure COMMAND --help``.
 Help output
 -----------
 
-Following is Conjure's full help message, provided for reference.
+The following is Conjure's full help message for each command, provided for reference.
+These messages may change between releases of Conjure.
 
-.. raw:: html
-    :file: conjure-help.html
+.. only:: html
+
+ .. raw:: html
+     :file: conjure-help.html
+
+.. only:: not html
+
+ .. include:: conjure-help.txt

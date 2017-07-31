@@ -1,5 +1,4 @@
 {-# LANGUAGE Rank2Types #-}
-{-# LANGUAGE ParallelListComp #-}
 {-# LANGUAGE TupleSections #-}
 {-# LANGUAGE QuasiQuotes #-}
 {-# LANGUAGE ViewPatterns #-}
@@ -153,7 +152,7 @@ outputModels config model = do
                                      , numOptions > 1
                                      ] |> map (('_':) . show)
                                        |> concat
-                                else paddedNum 6 '0' i
+                                else padLeft 6 '0' (show i)
                     let filename = dir </> "model" ++ gen ++ ".eprime"
                     writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
@@ -356,8 +355,7 @@ strategyToDriver config questions = do
             , let doc =
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
                          : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                           | i <- allNats
-                           | c <- qAscendants q
+                           | (i,c) <- zip allNats (qAscendants q)
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
@@ -623,10 +621,20 @@ updateDeclarations model = do
                     let
                         -- the refined domains for the high level declaration
                         domains = [ d | (n, d) <- representations, n == nm ]
-                    concatMapM (onEachDomain forg nm) domains
+                    nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
                     [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
-                Declaration (Letting nm _)             -> return [ inStatement | nbUses nm afters > 0 ]
+                Declaration (Letting nm x)             -> do
+                    let usedAfter = nbUses nm afters > 0
+                    let isRefined = (0 :: Int) == sum
+                                            [ case y of 
+                                                Constant (ConstantAbstract AbsLitMatrix{}) -> 0
+                                                Constant ConstantAbstract{} -> 1
+                                                AbstractLiteral AbsLitMatrix{} -> 0
+                                                AbstractLiteral{} -> 1
+                                                _ -> 0
+                                            | y <- universe x ]
+                    return [inStatement | and [usedAfter, isRefined]]
                 Declaration LettingDomainDefnEnum{}    -> return []
                 Declaration LettingDomainDefnUnnamed{} -> return []
                 SearchOrder orders -> do
@@ -677,8 +685,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
             $ ""
             : ("Not refined:" <+> pretty (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | i <- allNats
-              | c <- tail (ascendants x)
+              | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
@@ -689,8 +696,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                : ("Not refined:" <+> pretty (hole x))
                                : ("Domain     :" <+> pretty dom)
                                : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                 | i <- allNats
-                                 | c <- tail (ascendants x)
+                                 | (i, c) <- zip allNats (tail (ascendants x))
                                  ]
                     Constant (ConstantAbstract AbsLitMatrix{}) -> return []
                     Constant ConstantAbstract{} -> returnMsg x
@@ -721,8 +727,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                             Just msg' -> return $ msg'
                                                 ++ [ nest 4 (pretty (hole x)) ]
                                                 ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                                   | i <- allNats
-                                                   | c <- tail (ascendants x)
+                                                   | (i, c) <- zip allNats (tail (ascendants x))
                                                    ]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
@@ -737,8 +742,7 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
             $ ""
             : ("Undefined value in the final model:" <+> pretty (hole x))
             : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-              | i <- allNats
-              | c <- tail (ascendants x)
+              | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
     fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
@@ -1149,6 +1153,7 @@ horizontalRules =
     , Horizontal.Set.rule_Intersect
     , Horizontal.Set.rule_Union
     , Horizontal.Set.rule_Difference
+    , Horizontal.Set.rule_PowerSet_Comprehension
     , Horizontal.Set.rule_PowerSet_Difference
     , Horizontal.Set.rule_MaxMin
 

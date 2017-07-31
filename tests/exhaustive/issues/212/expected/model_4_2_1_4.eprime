@@ -1,0 +1,21 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
+given fin2: int
+given b_Occurrence: matrix indexed by [int(0..5)] of bool
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..6)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..6)] of int(0..5)
+such that
+    and([x_ExplicitVarSizeWithFlags_Flags[q7] ->
+         or([a_Explicit[q9] = x_ExplicitVarSizeWithFlags_Values[q7] | q9 : int(1..fin1), b_Occurrence[a_Explicit[q9]]])
+             | q7 : int(1..6)]),
+    and([or([x_ExplicitVarSizeWithFlags_Flags[q13] /\ x_ExplicitVarSizeWithFlags_Values[q13] = a_Explicit[q11]
+                 | q13 : int(1..6)])
+             | q11 : int(1..fin1), b_Occurrence[a_Explicit[q11]]]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
+         x_ExplicitVarSizeWithFlags_Values[q1] < x_ExplicitVarSizeWithFlags_Values[q1 + 1]
+             | q1 : int(1..5)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values[q2] = 0 | q2 : int(1..6)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q3 + 1] -> x_ExplicitVarSizeWithFlags_Flags[q3] | q3 : int(1..5)])
+

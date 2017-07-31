@@ -46,7 +46,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitMatrix index xs) = let f i = prBrackets (i <> ";" <++> pretty index) in prettyList f "," xs
     pretty (AbsLitSet       xs ) =                prettyList prBraces "," xs
     pretty (AbsLitMSet      xs ) = "mset"      <> prettyList prParens "," xs
-    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <+> "-->" <+> pretty b | (a,b) <- xs ]
+    pretty (AbsLitFunction  xs ) = "function"  <> prettyListDoc prParens "," [ pretty a <++> "-->" <+> pretty b | (a,b) <- xs ]
     pretty (AbsLitSequence  xs ) = "sequence"  <> prettyList prParens "," xs
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]

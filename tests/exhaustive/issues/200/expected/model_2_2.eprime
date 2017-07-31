@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+letting n be 5
+letting let1 be 4
+find quasigroup_Explicit: matrix indexed by [int(1..5)] of int(0..4)
+such that
+    and([quasigroup_Explicit[q3] * quasigroup_Explicit[q4] * (quasigroup_Explicit[q4] * quasigroup_Explicit[q3]) =
+         quasigroup_Explicit[q3]
+             | q3 : int(1..5), q4 : int(1..5), q4 > q3]),
+    and([quasigroup_Explicit[q1] < quasigroup_Explicit[q1 + 1] | q1 : int(1..4)])
+

@@ -24,10 +24,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
     typeOf p@(OpIn a b) = do
         tyA      <- typeOf a
         tyB      <- typeOf b
-        tyBInner <- innerTypeOf tyB
-        if tyA `typeUnify` tyBInner
-            then return TypeBool
-            else raiseTypeError p
+        case innerTypeOf tyB of
+            Nothing -> raiseTypeError p
+            Just tyBInner ->
+                if tyA `typeUnify` tyBInner
+                    then return TypeBool
+                    else raiseTypeError p
 
 instance EvaluateOp OpIn where
     evaluateOp (OpIn c (viewConstantSet      -> Just cs)) = return $ ConstantBool $ elem c cs

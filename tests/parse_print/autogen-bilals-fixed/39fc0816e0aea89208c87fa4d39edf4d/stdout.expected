@@ -25,9 +25,11 @@ such that
                    (tuple (4), true = false, true, partition({false, true, true})) --> true > false,
                    (tuple (1), false, false,
                     partition({true, true}, {false, true}, {true, true, false, true, false},
-                              {false, false, false, true})) --> tuple (true)[1],
+                              {false, false, false, true}))
+                       --> tuple (true)[1],
                    (tuple (3), true, false < false, partition({false}, {false, true})) --> false,
                    (tuple (0), true -> false, false,
                     partition({false, false}, {true, false}, {false, false, true, false, false},
-                              {false, false, true, false})) --> false <= (true < true)),
+                              {false, false, true, false}))
+                       --> false <= (true < true)),
           (tuple (1), true, true, partition({false}, {false}, {true})))

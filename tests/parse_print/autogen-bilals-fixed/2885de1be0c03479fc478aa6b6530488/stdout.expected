@@ -15,10 +15,10 @@ such that
           {partition({false}), partition({false}, {false})}, {partition({false}, {false}), partition({true, false})}}
              | q_5 : int(3..4, 3), q_5 <= -9]),
     or([[q_6 < q_6, var4 -> var4; int(4, 1)] !=
-        [var4, var2 in {-4, 0}, true /\ true <-> true, (true -> false) \/ -4 != 5, 6 ** -10 in mset(-10, -8);
+        [var4, var2 in {-4, 0}, true /\ true <-> true, (true -> false) \/ -4 != 5, 6 ** (-10) in mset(-10, -8);
              int(-5..-3, -1..0)]
             | q_6 : int(3..4, 3), q_6 <= -7]),
-    mset([-8 ** -7, toInt(false); int(-1, 0)], [var2, 2 + -2; int(4..5, 5)]) !=
+    mset([-8 ** (-7), toInt(false); int(-1, 0)], [var2, 2 + -2; int(4..5, 5)]) !=
     (mset() : `mset of matrix indexed by [int] of int`)
     <-> var4,
     false

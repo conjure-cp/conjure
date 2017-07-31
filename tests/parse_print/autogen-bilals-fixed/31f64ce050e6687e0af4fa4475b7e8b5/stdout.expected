@@ -3,6 +3,5 @@ language Essence 1.3
 find unused: bool
 such that
     function([{0}; int(1)] --> (partition({true}), (mset() : `mset of int`), (false, 2, 5, false), (2, 0))) supsetEq
-    function([{3, 3, 0}, {2, 3}, {5, 1}, {0, 2, 5}; int(11, 2..3, 1)] --> (partition({false, true, true, false},
-                                                                                     {true, false}),
-                                                                           mset(5, 4), (false, 1, 1, true), (1, 5)))
+    function([{3, 3, 0}, {2, 3}, {5, 1}, {0, 2, 5}; int(11, 2..3, 1)]
+                 --> (partition({false, true, true, false}, {true, false}), mset(5, 4), (false, 1, 1, true), (1, 5)))

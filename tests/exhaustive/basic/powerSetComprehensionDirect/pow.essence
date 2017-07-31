@@ -1,0 +1,7 @@
+language Essence 1.3
+
+given n,a,b : int
+find x : set (minSize n) of int(a..b)
+
+such that
+    forAll t subsetEq x . (sum i in t . i) <= 6

@@ -281,6 +281,8 @@ Library
     if impl(ghc == 8.0.*)
         build-depends: template-haskell == 2.11.*
         ghc-options: -Wno-redundant-constraints
+    if impl(ghc >= 8.2)
+        build-depends: template-haskell == 2.12.*
 
     default-extensions:
         FlexibleContexts
@@ -330,8 +332,9 @@ Executable conjure
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -rtsopts
         -threaded
+        -rtsopts
+        -with-rtsopts=-N1
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:
@@ -379,8 +382,9 @@ Test-Suite conjure-testing
         -fwarn-unused-do-bind
         -fwarn-unused-matches
         -Wall
-        -rtsopts
         -threaded
+        -rtsopts
+        -with-rtsopts=-N1
         -with-rtsopts=-K200M
         -with-rtsopts=-M4G
     ghc-prof-options:

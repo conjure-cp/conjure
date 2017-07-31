@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+given fin1: int
+given a_Occurrence: matrix indexed by [int(0..5)] of bool
+given fin2: int
+given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
+find x_Occurrence: matrix indexed by [int(0..5)] of bool
+such that
+    and([x_Occurrence[q2] ->
+         or([q3 = q2 | q3 : int(0..5), a_Occurrence[q3], or([b_Explicit[q5] = q3 | q5 : int(1..fin2)])])
+             | q2 : int(0..5)]),
+    and([x_Occurrence[q6] | q6 : int(0..5), a_Occurrence[q6], or([b_Explicit[q8] = q6 | q8 : int(1..fin2)])])
+
