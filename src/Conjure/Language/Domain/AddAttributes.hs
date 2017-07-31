@@ -94,25 +94,25 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
         AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size s | val == s          -> return domain
-                SizeAttr_Size{}                     -> fails
-                SizeAttr_MinSize minS               -> return $ DomainSet r (SetAttr (SizeAttr_MinSize (mkMax minS val))) inner
-                SizeAttr_MaxSize maxS | val == maxS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
-                SizeAttr_MaxSize maxS               -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize val maxS)) inner
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS         -> return $ DomainSet r (SetAttr (SizeAttr_MinSize (mkMax minS val))) inner
+                SizeAttr_MaxSize maxS      | val == maxS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MaxSize maxS         -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize val maxS)) inner
                 SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
-                SizeAttr_MinMaxSize minS maxS       -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS)) inner
-                SizeAttr_None{}                     -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS)) inner
+                SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
         AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size s | val == s          -> return domain
-                SizeAttr_Size{}                     -> fails
-                SizeAttr_MinSize minS | val == minS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
-                SizeAttr_MinSize minS               -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS val)) inner
-                SizeAttr_MaxSize maxS               -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize (mkMin maxS val))) inner
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS      | val == minS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MinSize minS         -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS val)) inner
+                SizeAttr_MaxSize maxS         -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize (mkMin maxS val))) inner
                 SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
-                SizeAttr_MinMaxSize minS maxS       -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val))) inner
-                SizeAttr_None{}                     -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize val)) inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val))) inner
+                SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize val)) inner
         _ ->
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
@@ -132,49 +132,49 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
         AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size s | val == s          -> return domain
-                SizeAttr_Size{}                     -> fails
-                SizeAttr_MinSize minS               -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinSize (mkMax minS val))         occurAttr)
-                                                       inner
-                SizeAttr_MaxSize maxS | val == maxS -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_Size val)                         occurAttr)
-                                                       inner
-                SizeAttr_MaxSize maxS               -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinMaxSize val maxS)              occurAttr)
-                                                       inner
-                SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainMSet r
-                                                            (MSetAttr (SizeAttr_Size val)                    occurAttr)
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS         -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinSize (mkMax minS val))         occurAttr)
+                                                 inner
+                SizeAttr_MaxSize maxS      | val == maxS -> return $ DomainMSet r
+                                                            (MSetAttr (SizeAttr_Size val)              occurAttr)
                                                             inner
-                SizeAttr_MinMaxSize minS maxS       -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS) occurAttr)
-                                                       inner
-                SizeAttr_None{}                     -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinSize val)                      occurAttr)
-                                                       inner
+                SizeAttr_MaxSize maxS         -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinMaxSize val maxS)              occurAttr)
+                                                 inner
+                SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainMSet r
+                                                            (MSetAttr (SizeAttr_Size val)              occurAttr)
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS) occurAttr)
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinSize val)                      occurAttr)
+                                                 inner
         AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size s | val == s          -> return domain
-                SizeAttr_Size{}                     -> fails
-                SizeAttr_MinSize minS | val == minS -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_Size val)                         occurAttr)
-                                                       inner
-                SizeAttr_MinSize minS               -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinMaxSize minS val)              occurAttr)
-                                                       inner
-                SizeAttr_MaxSize maxS               -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MaxSize (mkMin maxS val))         occurAttr)
-                                                       inner
-                SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainMSet r
-                                                            (MSetAttr (SizeAttr_Size val)                    occurAttr)
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS      | val == minS -> return $ DomainMSet r
+                                                            (MSetAttr (SizeAttr_Size val)              occurAttr)
                                                             inner
-                SizeAttr_MinMaxSize minS maxS       -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val)) occurAttr)
-                                                       inner
-                SizeAttr_None{}                     -> return $ DomainMSet r
-                                                       (MSetAttr (SizeAttr_MaxSize val)                      occurAttr)
-                                                       inner
+                SizeAttr_MinSize minS         -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinMaxSize minS val)              occurAttr)
+                                                 inner
+                SizeAttr_MaxSize maxS         -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MaxSize (mkMin maxS val))         occurAttr)
+                                                 inner
+                SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainMSet r
+                                                            (MSetAttr (SizeAttr_Size val)              occurAttr)
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val)) occurAttr)
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainMSet r
+                                                 (MSetAttr (SizeAttr_MaxSize val)                      occurAttr)
+                                                 inner
         AttrName_minOccur ->
             case occurAttr of
                 OccurAttr_MinOccur minO         -> return $ DomainMSet r
@@ -435,9 +435,9 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                 SizeAttr_MinSize minS         -> return $ DomainPartition r
                                                  partitionAttr { partsNum = SizeAttr_MinSize (mkMax minS val) }
                                                  inner
-                SizeAttr_MaxSize maxS | val == maxS -> return $ DomainPartition r
-                                                       partitionAttr { partsNum = SizeAttr_Size val }
-                                                       inner
+                SizeAttr_MaxSize maxS      | val == maxS -> return $ DomainPartition r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
                 SizeAttr_MaxSize maxS         -> return $ DomainPartition r
                                                  partitionAttr { partsNum = SizeAttr_MinMaxSize val maxS }
                                                  inner
@@ -455,9 +455,9 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
             case partsNum partitionAttr of
                 SizeAttr_Size s | val == s    -> return domain
                 SizeAttr_Size{}               -> fails
-                SizeAttr_MinSize minS | val == minS -> return $ DomainPartition r
-                                                       partitionAttr { partsNum = SizeAttr_Size val }
-                                                       inner
+                SizeAttr_MinSize minS      | val == minS -> return $ DomainPartition r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
                 SizeAttr_MinSize minS         -> return $ DomainPartition r
                                                  partitionAttr { partsNum = SizeAttr_MinMaxSize minS val }
                                                  inner
