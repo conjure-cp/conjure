@@ -175,28 +175,34 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                 SizeAttr_None{}                     -> return $ DomainMSet r
                                                        (MSetAttr (SizeAttr_MaxSize val)                      occurAttr)
                                                        inner
-        AttrName_minOccur -> do
-            let fails = fail $ "Cannot add a minOccur attribute to this domain:" <++> pretty domain
+        AttrName_minOccur ->
             case occurAttr of
-                OccurAttr_MinOccur{}    -> fails
-                OccurAttr_MinMaxOccur{} -> fails
-                OccurAttr_None          -> return $ DomainMSet r
-                                            (MSetAttr sizeAttr (OccurAttr_MinOccur val))
-                                            inner
-                OccurAttr_MaxOccur maxO -> return $ DomainMSet r
-                                            (MSetAttr sizeAttr (OccurAttr_MinMaxOccur val maxO))
-                                            inner
-        AttrName_maxOccur -> do
-            let fails = fail $ "Cannot add a maxOccur attribute to this domain:" <++> pretty domain
+                OccurAttr_MinOccur minO         -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinOccur (mkMax minO val)))
+                                                   inner
+                OccurAttr_MaxOccur maxO         -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur val maxO))
+                                                   inner
+                OccurAttr_MinMaxOccur minO maxO -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttrMinMaxOccur (mkMax minO val) maxO))
+                                                   inner
+                OccurAttr_None                  -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinOccur val))
+                                                   inner
+        AttrName_maxOccur ->
             case occurAttr of
-                OccurAttr_MaxOccur{}    -> fails
-                OccurAttr_MinMaxOccur{} -> fails
-                OccurAttr_None          -> return $ DomainMSet r
-                                            (MSetAttr sizeAttr (OccurAttr_MaxOccur val))
-                                            inner
-                OccurAttr_MinOccur minO -> return $ DomainMSet r
-                                            (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO val))
-                                            inner
+                OccurAttr_MinOccur minO         -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO val))
+                                                   inner
+                OccurAttr_MaxOccur maxO         -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MaxOccur (mkMax maxO val)))
+                                                   inner
+                OccurAttr_MinMaxOccur minO maxO -> sreturn $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO (mkMax maxO val)))
+                                                   inner
+                OccurAttr_None                  -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MaxOccur val))
+                                                   inner
         _ ->
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
