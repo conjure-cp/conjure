@@ -93,19 +93,23 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
         AttrName_minSize -> do
             let fails = fail $ "Cannot add a minSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size{}               -> fails
-                SizeAttr_MinSize minS         -> return $ DomainSet r (SetAttr (SizeAttr_MinSize (mkMax minS val))) inner
-                SizeAttr_MaxSize maxS         -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize val maxS)) inner
-                SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS)) inner
-                SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
+                SizeAttr_Size{}                     -> fails
+                SizeAttr_MinSize minS               -> return $ DomainSet r (SetAttr (SizeAttr_MinSize (mkMax minS val))) inner
+                SizeAttr_MaxSize maxS | val == maxS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MaxSize maxS               -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize val maxS)) inner
+                SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MinMaxSize minS maxS       -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize (mkMax minS val) maxS)) inner
+                SizeAttr_None{}                     -> return $ DomainSet r (SetAttr (SizeAttr_MinSize val)) inner
         AttrName_maxSize -> do
             let fails = fail $ "Cannot add a maxSize attribute to this domain:" <++> pretty domain
             case sizeAttr of
-                SizeAttr_Size{}               -> fails
-                SizeAttr_MinSize minS         -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS val)) inner
-                SizeAttr_MaxSize maxS         -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize (mkMin maxS val))) inner
-                SizeAttr_MinMaxSize minS maxS -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val))) inner
-                SizeAttr_None{}               -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize val)) inner
+                SizeAttr_Size{}                     -> fails
+                SizeAttr_MinSize minS | val == minS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MinSize minS               -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS val)) inner
+                SizeAttr_MaxSize maxS               -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize (mkMin maxS val))) inner
+                SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainSet r (SetAttr (SizeAttr_Size val)) inner
+                SizeAttr_MinMaxSize minS maxS       -> return $ DomainSet r (SetAttr (SizeAttr_MinMaxSize minS (mkMin maxS val))) inner
+                SizeAttr_None{}                     -> return $ DomainSet r (SetAttr (SizeAttr_MaxSize val)) inner
         _ ->
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
