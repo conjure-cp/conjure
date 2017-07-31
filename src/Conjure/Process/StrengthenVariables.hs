@@ -38,7 +38,7 @@ import Conjure.Compute.DomainOf ( domainOf )
 -- -- text
 -- import qualified Data.Text.Encoding as T ( encodeUtf8 )
 -- uniplate zipper
-import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, right )
+import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, replaceHole, right, up )
 
 type ExpressionZ = Zipper Expression Expression
 type FindVar = (Name, Domain () Expression)
@@ -67,6 +67,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , setSize
                                , mSetSizeOccur
                                , mSetOccur
+                               , funcRangeEqSet
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -506,6 +507,41 @@ mSetOccur _ ((n, DomainMSet _ _ d), cs)
     isConst _ = False
 mSetOccur _ _ = return mempty
 
+-- | Equate the range of a function to a set of the former is a subset of the latter
+--   and all values in the set are results of the function.
+funcRangeEqSet :: (MonadFail m, MonadLog m)
+               => Model
+               -> (FindVar, [ExpressionZ])
+               -> m ([AttrPair], ToAddToRem)
+funcRangeEqSet _ ((n, DomainSet{}), cs)
+  -- Get references to the set and the function whose range it is a superset of
+  = let funcSubsets = mapMaybe funcSubsetEqOf $
+                      findInUncondForAllZ (isJust . funcSubsetEqOf . zipper) cs
+        -- Reduce the functions to those whose values are equated to the values in the set
+        fsToUse = flip filter funcSubsets $ \(_, f) ->
+                  not $ null $ findInUncondForAll (funcValEqSetVal (hole f)) cs
+        -- Transform the functions into new constraints, preserving structure
+        csToAdd = flip mapMaybe fsToUse $ \(s, f) ->
+                  let f' = hole f
+                      in replaceHole [essence| range(&f') = &s |] <$>
+                         (up f >>= up)
+        in return ([], (csToAdd, []))
+  where
+    -- Get the function whose range is a subsetEq of the set
+    funcSubsetEqOf z = case hole z of
+                            [essence| range(&_) subsetEq &s |] | nameExpEq n s
+                              -> (,) s <$> (down z >>= down)
+                            [essence| &s supsetEq range(&_) |] | nameExpEq n s
+                              -> (,) s <$> (down z >>= right >>= down)
+                            _ -> Nothing
+    -- Are the values of the function equal to the values of the set?
+    funcValEqSetVal f [essence| forAll &x in &s . image(&f', &_) = &x' |]
+      = nameExpEq n s && f == f' && refersTo x x'
+    funcValEqSetVal f [essence| forAll &x in &s . &x' = image(&f', &_) |]
+      = nameExpEq n s && f == f' && refersTo x x'
+    funcValEqSetVal _ _ = False
+funcRangeEqSet _ _ = return mempty
+
 -- | Lens function over a binary expression.
 type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
                                  Expression -> m (Expression, Expression))
@@ -620,69 +656,6 @@ ineqOccurAttrs = [ (opEq,  [ ("minOccur", Just), ("maxOccur", Just) ])
   --         | otherwise   = make opMin $ fromList $ i : es
 -- mkMin i e | i == e      = e
   --         | otherwise   = make opMin $ fromList [ i, e ]
-
--- -- | Add constraints on a set.
--- setConstraints :: (MonadFail m, MonadLog m)
-  --              => Model        -- ^ Model as context.
-  --              -> Declaration  -- ^ Statement to constrain.
-  --              -> m Model      -- ^ Possibly updated model.
--- setConstraints m (FindOrGiven _ n DomainSet{}) = do
-  -- cs <- funcRangeEqSet n m
-  -- return $ mergeConstraints m cs
--- setConstraints m _ = return m
-
--- -- | Equate the range of a function to a set of the former is a subset of the latter
--- --   and all values in the set are results of the function.
--- funcRangeEqSet :: (MonadFail m, MonadLog m)
-  --              => Name            -- ^ Name of the set.
-  --              -> Model           -- ^ Model for context.
-  --              -> m [Expression]  -- ^ Equality constraints between range and set.
--- funcRangeEqSet n m = return $ mapMaybe equateFuncRangeAndSet $
-  --                    mapMaybe (forAllForSubset m) $
-  --                    findInUncondForAll isSubsetEqOf m
-  -- where
-  --   isSubsetEqOf (Op (MkOpSubsetEq (OpSubsetEq _ (Reference n' _)))) = n == n'
-  --   isSubsetEqOf _ = False
-
--- -- | Create an expression that equates the range of a function which may come from
--- --   a forAll, and a set.
--- equateFuncRangeAndSet :: (Expression, Expression) -- (function range, set)
-  --                     -> Maybe Expression         -- Possible constraint equating the two.
--- equateFuncRangeAndSet (r@[essence| range(&f) |], s) = nestReference f (make opEq r s)
-  -- where
-  --   nestReference :: Expression -> Expression -> Maybe Expression
-  --   nestReference (Reference _ (Just DeclNoRepr{})) e = Just e
-  --   nestReference (Reference _ (Just (InComprehension g@(GenInExpr _ r')))) e
-  --     = nestReference r' $ make opAnd $ Comprehension e [Generator g]
-  --   nestReference _ _ = Nothing
--- equateFuncRangeAndSet _ = Nothing
-
--- -- | Find a forAll expressions generating from a variable and equating a function
--- --   call result to the generated values.
--- forAllForSubset :: Model                          -- ^ Model for context.
-  --               -> Expression                     -- ^ Subset expression.
-  --               -> Maybe (Expression, Expression) -- ^ Values to be equated.
--- forAllForSubset m (Op (MkOpSubsetEq (OpSubsetEq r@(Op (MkOpRange (OpRange f)))
-  --                                               s@Reference{})))
-  -- | not $ null $ findInUncondForAll (funcCallEqGenerated f s) m = Just (r, s)
--- forAllForSubset _ _ = Nothing
-
--- -- | Determine whether a function is a called and has its result equated to a value generated
--- --   from the set of interest.
--- funcCallEqGenerated :: Expression -- ^ Function reference.
-  --                   -> Expression -- ^ Variable to generate from.
-  --                   -> Expression -- ^ Expression to check.
-  --                   -> Bool       -- ^ Does the equation have the desired terms.
--- funcCallEqGenerated f s [essence| &e = &x |]
-  -- = isFuncCall e && isGenerated x
-  -- where
-  --   -- Is the left side a call to the function of interest?
-  --   isFuncCall (Op (MkOpImage (OpImage f' _))) = f == f'
-  --   isFuncCall _ = False
-  --   -- Is the right side variable generated from the set of interest?
-  --   isGenerated (Reference _ (Just (InComprehension (GenInExpr _ g)))) = s == g
-  --   isGenerated _ = False
--- funcCallEqGenerated _ _ _ = False
 
 -- -- | Lift a variable size constraint to an attribute.
 -- variableSize :: (MonadFail m, MonadLog m)
