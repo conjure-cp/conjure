@@ -184,7 +184,7 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                                                    (MSetAttr sizeAttr (OccurAttr_MinMaxOccur val maxO))
                                                    inner
                 OccurAttr_MinMaxOccur minO maxO -> return $ DomainMSet r
-                                                   (MSetAttr sizeAttr (OccurAttrMinMaxOccur (mkMax minO val) maxO))
+                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur (mkMax minO val) maxO))
                                                    inner
                 OccurAttr_None                  -> return $ DomainMSet r
                                                    (MSetAttr sizeAttr (OccurAttr_MinOccur val))
@@ -195,10 +195,10 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
                                                    (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO val))
                                                    inner
                 OccurAttr_MaxOccur maxO         -> return $ DomainMSet r
-                                                   (MSetAttr sizeAttr (OccurAttr_MaxOccur (mkMax maxO val)))
+                                                   (MSetAttr sizeAttr (OccurAttr_MaxOccur (mkMin maxO val)))
                                                    inner
-                OccurAttr_MinMaxOccur minO maxO -> sreturn $ DomainMSet r
-                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO (mkMax maxO val)))
+                OccurAttr_MinMaxOccur minO maxO -> return $ DomainMSet r
+                                                   (MSetAttr sizeAttr (OccurAttr_MinMaxOccur minO (mkMin maxO val)))
                                                    inner
                 OccurAttr_None                  -> return $ DomainMSet r
                                                    (MSetAttr sizeAttr (OccurAttr_MaxOccur val))
