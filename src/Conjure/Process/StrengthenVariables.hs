@@ -65,6 +65,8 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , definedForAllIsTotal
                                , diffArgResultIsInjective
                                , setSize
+                               , mSetSizeOccur
+                               , mSetOccur
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -435,7 +437,122 @@ setSize _ ((n, DomainSet{}), cs)
                               Nothing -> mempty
                        _ -> mempty
                        -- TODO: extend for Matrix, MSet, Partition and Sequence
-minSizeFromSet _ _ = return mempty
+setSize _ _ = return mempty
+
+-- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
+mSetSizeOccur :: (MonadFail m, MonadLog m)
+              => Model
+              -> (FindVar, [ExpressionZ])
+              -> m ([AttrPair], ToAddToRem)
+mSetSizeOccur _ ((_, d), _)
+  = case d of
+         -- Ordering is important here, as there is a rule that applies
+         -- to maxSize and minOccur, but none that applies to minSize
+         -- and maxOccur. size uses the maxSize rule, but can ignore a
+         -- minOccur because it cannot have its minSize changed.
+         -- size -> maxOccur
+         DomainMSet _ (MSetAttr (SizeAttr_Size mx) _) _
+           -> return ([("maxOccur", Just mx)], mempty)
+         -- minOccur -> minSize
+         DomainMSet _ (MSetAttr _ (OccurAttr_MinOccur mn)) _
+           -> return ([("minSize", Just mn)], mempty)
+         DomainMSet _ (MSetAttr _ (OccurAttr_MinMaxOccur mn _)) _
+           -> return ([("minSize", Just mn)], mempty)
+         -- maxSize -> maxOccur
+         DomainMSet _ (MSetAttr (SizeAttr_MaxSize mx) _) _
+           -> return ([("maxOccur", Just mx)], mempty)
+         DomainMSet _ (MSetAttr (SizeAttr_MinMaxSize _ mx) _) _
+           -> return ([("maxOccur", Just mx)], mempty)
+         _ -> return mempty
+
+-- | Infer multiset occurrence attributes from constraints.
+mSetOccur :: (MonadFail m, MonadLog m)
+          => Model
+          -> (FindVar, [ExpressionZ])
+          -> m ([AttrPair], ToAddToRem)
+mSetOccur _ ((n, DomainMSet _ _ d), cs)
+  = return $ mconcat $ flip mapMaybe (findInUncondForAllZ (not . null . isFreq) cs) $ \e ->
+      case isFreq (hole e) of
+           [] -> Nothing
+           -- Only remove constraints if they are all used up.
+           -- Because freq(a, b) = c adds two attributes, removing constraints
+           -- in an AND expression cannot work, in the case of freq(a, b) = c /\ e
+           -- because there are two attributes and two terms, but term e may not
+           -- be removed.
+           as -> let tattr = case hole e of
+                                  AbstractLiteral AbsLitMatrix{} -> mempty
+                                  _                              -> ([], [e])
+                     in Just (as, tattr)
+  where
+    isFreq :: Expression -> [AttrPair]
+    isFreq (AbstractLiteral (AbsLitMatrix _ es)) = concatMap isFreq es
+    isFreq e = case matching e oppIneqOps of
+                    Just (_, ([essence| freq(&x, &v) |], e'))
+                      | valid x v e' -> case matching e ineqOccurAttrs of
+                                             Just (as, _) -> map (second ($ e')) as
+                                             Nothing      -> []
+                    -- Flip the terms
+                    Just (oper, (l, r@[essence| freq(&x, &v) |]))
+                      | valid x v l -> isFreq $ make oper r l
+                    _               -> []
+    -- Make sure that the expression's components are valid
+    valid :: Expression -> Expression -> Expression -> Bool
+    valid x v e = nameExpEq n x && isGen v && isConst e
+    -- Make sure that the value is generated from the mset's domain
+    isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
+    isGen _ = False
+    -- Make sure that the mset is being equated to a constant
+    isConst (Constant ConstantInt{}) = True
+    isConst _ = False
+mSetOccur _ _ = return mempty
+
+-- | Lens function over a binary expression.
+type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
+                                 Expression -> m (Expression, Expression))
+
+-- | Get the lens for an expression and the values it matches.
+matching :: Expression
+         -> [(BinExprLens Maybe, a)]
+         -> Maybe (a, (Expression, Expression))
+matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
+                      [x] -> pure x
+                      _   -> fail $ "no matching operator for expression: " <+> pretty e
+
+-- -- | (In)equality operator lens pairs.
+-- ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+-- ineqOps = [ (opEq,  opEq)
+--           , (opLt,  opLt)
+--           , (opLeq, opLeq)
+--           , (opGt,  opGt)
+--           , (opGeq, opGeq)
+--           ]
+
+-- | Opposites of (in)equality operator lens pairs.
+oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+oppIneqOps = [ (opEq, opEq)
+             , (opLt, opGt)
+             , (opLeq, opGeq)
+             , (opGt, opLt)
+             , (opGeq, opLeq)
+             ]
+
+-- | (In)equality operator to size attribute modifier pairs.
+ineqOccurAttrs :: [(BinExprLens Maybe, [(AttrName, Expression -> Maybe Expression)])]
+ineqOccurAttrs = [ (opEq,  [ ("minOccur", Just), ("maxOccur", Just) ])
+                 , (opLt,  [ ("maxOccur", Just . \x -> x - 1) ])
+                 , (opLeq, [ ("maxOccur", Just) ])
+                 , (opGt,  [ ("minOccur", Just . (+ 1)) ])
+                 , (opGeq, [ ("minOccur", Just) ])
+                 ]
+
+-- -- | (In)equality operator to size attribute modifier pairs.
+-- ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Expression))]
+-- ineqSizeAttrs = [ (opEq,  (AttrName_size, id))
+--                 , (opLt,  (AttrName_maxSize, \x -> x - 1))
+--                 , (opLeq, (AttrName_maxSize, id))
+--                 , (opGt,  (AttrName_minSize, (+1)))
+--                 , (opGeq, (AttrName_minSize, id))
+--                 ]
 
   -- where core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
   --       core model = do model' <- foldM folder model [ functionAttributes
@@ -642,47 +759,6 @@ minSizeFromSet _ _ = return mempty
   --        -> sizeConstraint (make oper r l)
   --      _ -> fail failMsg
 
--- -- | The maxSize, and minOccur attributes of an mset affect its maxOccur and minSize attributes.
--- mSetSizeOccur :: (MonadFail m, MonadLog m)
-  --             => Model        -- ^ Model as context.
-  --             -> Declaration  -- ^ Declaration to give attribute.
-  --             -> m Model      -- ^ Possibly updated model.
--- mSetSizeOccur m (FindOrGiven forg n d@DomainMSet{})
-  -- = case d of
-  --        -- Ordering is important here, as there is a rule that applies
-  --        -- to maxSize and minOccur, but none that applies to minSize
-  --        -- and maxOccur. size uses the maxSize rule, but can ignore a
-  --        -- minOccur because it cannot have its minSize changed.
-  --        -- size -> maxOccur
-  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_Size mx) _) _)
-  --          -> updateDomain $ mkMaxOccur d' mx
-  --        -- minOccur -> minSize
-  --        d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinOccur mn)) _)
-  --          -> updateDomain $ mkMinSize d' mn
-  --        d'@(DomainMSet _ (MSetAttr _ (OccurAttr_MinMaxOccur mn _)) _)
-  --          -> updateDomain $ mkMinSize d' mn
-  --        -- maxSize -> maxOccur
-  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_MaxSize mx) _) _)
-  --          -> updateDomain $ mkMaxOccur d' mx
-  --        d'@(DomainMSet _ (MSetAttr (SizeAttr_MinMaxSize _ mx) _) _)
-  --          -> updateDomain $ mkMaxOccur d' mx
-  --        _ -> return m
-  -- where
-  --   mkMinSize (DomainMSet r (MSetAttr s o) d') mn
-  --     = let sizeAttr = mergeMinSize mn s
-  --           in DomainMSet r (MSetAttr sizeAttr o) d'
-  --   mkMinSize dom _ = dom
-
-  --   mkMaxOccur (DomainMSet r (MSetAttr s o) d') mx
-  --     = let occAttr = mergeMaxOccur mx o
-  --           in DomainMSet r (MSetAttr s occAttr) d'
-  --   mkMaxOccur dom _ = dom
-
-  --   updateDomain dom = do
-  --     let decl' = FindOrGiven forg n dom
-  --     return $ updateDeclaration decl' m
--- mSetSizeOccur m _ = return m
-
 -- -- | Merge an expression into the min field of a 'SizeAttr'.
 -- mergeMinSize :: Expression -> SizeAttr Expression -> SizeAttr Expression
 -- mergeMinSize e SizeAttr_None = SizeAttr_MinSize e
@@ -706,50 +782,6 @@ minSizeFromSet _ _ = return mempty
 -- mergeMaxOccur e (OccurAttr_MinOccur mn) = OccurAttr_MinMaxOccur mn e
 -- mergeMaxOccur e (OccurAttr_MaxOccur mx) = OccurAttr_MaxOccur $ mkMin e mx
 -- mergeMaxOccur e (OccurAttr_MinMaxOccur mn mx) = OccurAttr_MinMaxOccur mn (mkMin e mx)
-
--- -- | Infer multiset occurrence attributes from constraints.
--- mSetOccur :: (MonadFail m, MonadLog m)
-  --         => Model        -- ^ Model for context.
-  --         -> Declaration  -- ^ Multiset declaration to update.
-  --         -> m Model      -- ^ Updated model.
--- mSetOccur m (FindOrGiven Find n dom@(DomainMSet r (MSetAttr s _) d))
-  -- = let freqs = findInUncondForAll isFreq m
-  --       dom' = foldr (\f d' ->
-  --                     case d' of
-  --                          DomainMSet _ (MSetAttr _ o') _
-  --                            -> DomainMSet r (MSetAttr s (inferOccur f o')) d
-  --                          _ -> d')
-  --                    dom freqs
-  --       decl' = FindOrGiven Find n dom'
-  --       in return $ updateDeclaration decl' m
-  -- where
-  --   isFreq e = let valid x v e' = isRefTo x && isGen v && isConst e'
-  --                  in case matching e ineqOps of
-  --                          Just (_, ([essence| freq(&x, &v) |], e')) -> valid x v e'
-  --                          Just (_, (e', [essence| freq(&x, &v) |])) -> valid x v e'
-  --                          _ -> False
-  --   -- Make sure that the correct variable is referred to
-  --   isRefTo (Reference n' _) = n == n'
-  --   isRefTo _ = False
-  --   -- Make sure that the value is generated from the mset's domain
-  --   isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
-  --   isGen _ = False
-  --   -- Make sure that the mset is being equated to a constant
-  --   isConst (Constant ConstantInt{}) = True
-  --   isConst _ = False
-  --   -- Convert the constraint into an occurrence attribute
-  --   inferOccur [essence| freq(&_, &_) =  &e |] o'
-  --     = mergeMinOccur e $ mergeMaxOccur e o'
-  --   inferOccur [essence| freq(&_, &_) <  &e |] o'
-  --     = mergeMaxOccur (e - 1) o'
-  --   inferOccur [essence| freq(&_, &_) <= &e |] o'
-  --     = mergeMaxOccur e o'
-  --   inferOccur [essence| freq(&_, &_) >  &e |] o'
-  --     = mergeMinOccur (e + 1) o'
-  --   inferOccur [essence| freq(&_, &_) >= &e |] o'
-  --     = mergeMinOccur e o'
-  --   inferOccur _ o' = o'
--- mSetOccur m _ = return m
 
 -- -- | An (in)equality in a forAll implies that the (in)equality also applies to
 -- --   the sums of both terms.
@@ -814,45 +846,6 @@ minSizeFromSet _ _ = return mempty
 -- namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
 -- namesFromGenerator (GenDomainHasRepr n _) = [n]
 -- namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
-
--- -- | Lens function over a binary expression.
--- type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
-  --                                Expression -> m (Expression, Expression))
-
--- -- | Get the lens for an expression and the values it matches.
--- matching :: Expression
-  --        -> [(BinExprLens Maybe, a)]
-  --        -> Maybe (a, (Expression, Expression))
--- matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
-  --                     [x] -> pure x
-  --                     _   -> fail $ "no matching operator for expression: " <+> pretty e
-
--- -- | (In)equality operator lens pairs.
--- ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
--- ineqOps = [ (opEq,  opEq)
-  --         , (opLt,  opLt)
-  --         , (opLeq, opLeq)
-  --         , (opGt,  opGt)
-  --         , (opGeq, opGeq)
-  --         ]
-
--- -- | Opposites of (in)equality operator lens pairs.
--- oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
--- oppIneqOps = [ (opEq, opEq)
-  --            , (opLt, opGt)
-  --            , (opLeq, opGeq)
-  --            , (opGt, opLt)
-  --            , (opGeq, opLeq)
-  --            ]
-
--- -- | (In)equality operator to size attribute modifier pairs.
--- ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Expression))]
--- ineqSizeAttrs = [ (opEq,  (AttrName_size, id))
-  --               , (opLt,  (AttrName_maxSize, \x -> x - 1))
-  --               , (opLeq, (AttrName_maxSize, id))
-  --               , (opGt,  (AttrName_minSize, (+1)))
-  --               , (opGeq, (AttrName_minSize, id))
-  --               ]
 
 -- -- | Iterate slightly faster over a domain if generating two distinct variables.
 -- fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
