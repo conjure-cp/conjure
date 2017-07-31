@@ -117,8 +117,8 @@ addAttributeToDomain domain@(DomainSet r (SetAttr sizeAttr) inner) = updater whe
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater attr _ =
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+    updater attr Nothing =
+            fail $ vcat [ "Missing attribute value for" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
@@ -207,8 +207,8 @@ addAttributeToDomain domain@(DomainMSet r (MSetAttr sizeAttr occurAttr) inner) =
             fail $ vcat [ "Unsupported attribute" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
-    updater attr _ =
-            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+    updater attr Nothing =
+            fail $ vcat [ "Missing attribute value for" <+> pretty attr
                         , "For the domain:" <+> pretty domain
                         ]
 
