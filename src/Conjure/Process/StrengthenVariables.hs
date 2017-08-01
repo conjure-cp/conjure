@@ -57,7 +57,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
           -- Apply each rule to the variable and hold on to constraints to keep
           foldM (\(m, tatr) rule -> do
                   (attrs, tatr') <- nested rule m findAndCstrs
-                  let m' = foldr (uncurry3 addAttrsToModel) m attrs
+                  m' <- resolveNames $ foldr (uncurry3 addAttrsToModel) m attrs
                   return (m', toAddRem tatr' tatr))
                 modelAndToKeep [ surjectiveIsTotalBijective
                                , totalInjectiveIsBijective
