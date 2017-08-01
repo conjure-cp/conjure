@@ -68,6 +68,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , mSetSizeOccur
                                , mSetOccur
                                , funcRangeEqSet
+                               , forAllIneqToIneqSum
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -175,6 +176,12 @@ namesFromAbstractPattern (AbsPatTuple ns)  = concatMap namesFromAbstractPattern 
 namesFromAbstractPattern (AbsPatMatrix ns) = concatMap namesFromAbstractPattern ns
 namesFromAbstractPattern (AbsPatSet ns)    = concatMap namesFromAbstractPattern ns
 namesFromAbstractPattern _                 = []
+
+-- | Get the list of names from a generator.
+namesFromGenerator :: Generator -> [Name]
+namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
+namesFromGenerator (GenDomainHasRepr n _) = [n]
+namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
 
 -- | Find an expression at any depth of unconditional forAll expressions.
 findInUncondForAll :: (Expression -> Bool) -> [ExpressionZ] -> [Expression]
@@ -542,6 +549,52 @@ funcRangeEqSet _ ((n, DomainSet{}), cs)
     funcValEqSetVal _ _ = False
 funcRangeEqSet _ _ = return mempty
 
+
+-- | An (in)equality in a forAll implies that the (in)equality also applies to
+--   the sums of both terms.
+forAllIneqToIneqSum :: (MonadFail m, MonadLog m, NameGen m)
+                    => Model
+                    -> (FindVar, [ExpressionZ])
+                    -> m ([AttrPair], ToAddToRem)
+forAllIneqToIneqSum _ (_, cs) = do
+  let matches = mapMaybe matchParts $ findInUncondForAllZ (isJust . matchParts . zipper) cs
+  csToAdd <- mapMaybe mkConstraint <$> filterM partsAreNumeric matches
+  return ([], (csToAdd, []))
+  where
+    -- Match and extract the desired parts of the expression
+    matchParts :: ExpressionZ -> Maybe (Generator, Maybe ExpressionZ, Expression, Expression)
+    matchParts z = case hole z of
+                        Op (MkOpAnd (OpAnd (Comprehension e [Generator g])))
+                          -> matching e ineqOps >>=
+                             uncurry (matchComponents g z) . snd
+                        _ -> Nothing
+    -- Match the components of the expression of interest
+    matchComponents :: Generator -> ExpressionZ -> Expression -> Expression
+                    -> Maybe (Generator, Maybe ExpressionZ, Expression, Expression)
+    matchComponents g z e1 e2
+      | refInExpr (namesFromGenerator g) e1 && refInExpr (namesFromGenerator g) e2
+        = Just (g, down z >>= down, e1, e2)
+    matchComponents _ _ _ _ = Nothing
+    -- Is a name referred to in an expression?
+    refInExpr names = any (\e -> any (`nameExpEq` e) names) . universe
+    -- Are the parts of the matched expression numeric?
+    partsAreNumeric (_, _, e1, e2) = (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
+    domainIsNumeric e = case domainOf e of
+                             Right DomainInt{}           -> return True
+                             Right (DomainAny _ TypeInt) -> return True
+                             _                           -> return False
+    -- Replace the forAll with the (in)equality between sums
+    mkConstraint :: (Generator, Maybe ExpressionZ, Expression, Expression) -> Maybe ExpressionZ
+    mkConstraint (gen, Just z, _, _)
+      -- Use matching with ineqOps to get the operation that is used on the two expressions
+      = case matching (hole z) ineqOps of
+             Just (f, (e1, e2))
+               -> let mkSumOf = Op . MkOpSum . OpSum . flip Comprehension [Generator gen]
+                      -- Two steps to get out of the forAll, and replace it with the constraint
+                      in replaceHole (make f (mkSumOf e1) (mkSumOf e2)) <$> (up z >>= up)
+             _ -> Nothing
+    mkConstraint _ = Nothing
+
 -- | Lens function over a binary expression.
 type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
                                  Expression -> m (Expression, Expression))
@@ -554,14 +607,14 @@ matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
                       [x] -> pure x
                       _   -> fail $ "no matching operator for expression: " <+> pretty e
 
--- -- | (In)equality operator lens pairs.
--- ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
--- ineqOps = [ (opEq,  opEq)
---           , (opLt,  opLt)
---           , (opLeq, opLeq)
---           , (opGt,  opGt)
---           , (opGeq, opGeq)
---           ]
+-- | (In)equality operator lens pairs.
+ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+ineqOps = [ (opEq,  opEq)
+          , (opLt,  opLt)
+          , (opLeq, opLeq)
+          , (opGt,  opGt)
+          , (opGeq, opGeq)
+          ]
 
 -- | Opposites of (in)equality operator lens pairs.
 oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
@@ -813,12 +866,6 @@ ineqOccurAttrs = [ (opEq,  [ ("minOccur", Just), ("maxOccur", Just) ])
   --                     in replaceHole (make f e1' e2') <$> (up z >>= up)
   --            _ -> Nothing
   --   mkConstraint _ = Nothing
-
--- -- | Get the list of names from a generator.
--- namesFromGenerator :: Generator -> [Name]
--- namesFromGenerator (GenDomainNoRepr a _)  = namesFromAbstractPattern a
--- namesFromGenerator (GenDomainHasRepr n _) = [n]
--- namesFromGenerator (GenInExpr a _)        = namesFromAbstractPattern a
 
 -- -- | Iterate slightly faster over a domain if generating two distinct variables.
 -- fasterIteration :: (MonadFail m, MonadIO m, MonadLog m)
