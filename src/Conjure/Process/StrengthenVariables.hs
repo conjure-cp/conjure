@@ -381,8 +381,9 @@ definedForAllIsTotal _ ((n, dom), cs)
                     -> return ([("total", Nothing)], mempty)
                 _ -> return mempty
   where
-    -- Look for operator expressions but leave comprehensions, and ORs up to findInUncondForAll
+    -- Look for operator expressions but leave comprehensions, ANDs and ORs up to findInUncondForAll
     isOp (Op (MkOpAnd (OpAnd Comprehension{}))) = False
+    isOp [essence| &_ /\ &_ |]                  = False
     isOp [essence| &_ \/ &_ |]                  = False
     -- Disallow implications which may remove some cases
     isOp [essence| &_ -> &_ |]                  = False
