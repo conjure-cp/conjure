@@ -14,6 +14,7 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
+
 import Data.List ( find, union )
 import Data.Map.Strict ( Map )
 import qualified Data.Map.Strict as M ( (!?), empty, union )
@@ -446,7 +447,7 @@ setSize :: (MonadFail m, MonadLog m, NameGen m)
         -> (FindVar, [ExpressionZ])
         -> m ([AttrPair], ToAddToRem)
 setSize _ ((n, DomainSet{}), cs)
-  = fmap mconcat $ forM cs $ \c ->
+  = fmap mconcat $ forM (findInUncondForAllZ isSubSupSet cs) $ \c ->
     case hole c of
          -- subset(Eq)
          [essence| &l subset   &r |] | nameExpEq n r -> return (minSize l (+ 1), mempty)
@@ -460,6 +461,11 @@ setSize _ ((n, DomainSet{}), cs)
          [essence| &l supsetEq &r |] | nameExpEq n r -> return (maxSize l id, mempty)
          _                                           -> return mempty
   where
+    isSubSupSet [essence| &_ subset   &_ |] = True
+    isSubSupSet [essence| &_ subsetEq &_ |] = True
+    isSubSupSet [essence| &_ supset   &_ |] = True
+    isSubSupSet [essence| &_ supsetEq &_ |] = True
+    isSubSupSet _                           = False
     minSize [essence| defined(&g) |] f
       = case domainOf g of
              Right (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) from _) ->
@@ -469,10 +475,16 @@ setSize _ ((n, DomainSet{}), cs)
              _ -> mempty
     minSize [essence| range(&g) |] f
       = case domainOf g of
-             Right (DomainFunction _ (FunctionAttr _ PartialityAttr_Total _) _ to) ->
-               case domainSizeOf to of
-                    Just s  -> [("minSize", Just (f s))]
-                    Nothing -> mempty
+             Right (DomainFunction _ (FunctionAttr _ PartialityAttr_Total j) from to)
+               | j == JectivityAttr_Bijective || j == JectivityAttr_Surjective ->
+                 case domainSizeOf to of
+                      Just s  -> [("minSize", Just (f s))]
+                      Nothing -> mempty
+               | j == JectivityAttr_Injective ->
+                 case domainSizeOf from of
+                      Just s  -> [("minSize", Just (f s))]
+                      Nothing -> mempty
+               | otherwise    -> [("minSize", Just (f 1))]
              _ -> mempty
     minSize e f = case domainOf e of
                        Right (DomainSet _ (SetAttr (SizeAttr_Size mn)) _) ->
