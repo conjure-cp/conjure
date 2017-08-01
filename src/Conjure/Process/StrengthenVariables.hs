@@ -55,21 +55,23 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
       -- Apply rules to each decision (find) variable
       (model', toAddToRem) <- foldM (\modelAndToKeep findAndCstrs ->
           -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tatr) rule -> do
+          foldM (\(m, tatr) (rule, name) -> do
                   (attrs, tatr') <- nested rule m findAndCstrs
+                  when (not (null attrs) || tatr' /= mempty)
+                       (logInfo name)
                   m' <- resolveNames $ foldr (uncurry3 addAttrsToModel) m attrs
                   return (m', toAddRem tatr' tatr))
-                modelAndToKeep [ surjectiveIsTotalBijective
-                               , totalInjectiveIsBijective
-                               , definedForAllIsTotal
-                               , diffArgResultIsInjective
-                               , varSize
-                               , setSize
-                               , mSetSizeOccur
-                               , mSetOccur
-                               , funcRangeEqSet
-                               , forAllIneqToIneqSum
-                               , fasterIteration
+                modelAndToKeep [ (surjectiveIsTotalBijective, "#attr.01")
+                               , (totalInjectiveIsBijective,  "#attr.03")
+                               , (definedForAllIsTotal,       "#attr.02")
+                               , (diffArgResultIsInjective,   "#attr.10")
+                               , (varSize,                    "#attr.06")
+                               , (setSize,                    "#attr.04")
+                               , (mSetSizeOccur,              "#attr.07")
+                               , (mSetOccur,                  "#attr.08")
+                               , (funcRangeEqSet,             "#cstr.01")
+                               , (forAllIneqToIneqSum,        "#cstr.02")
+                               , (fasterIteration,            "#cstr.03")
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -77,8 +79,8 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
       -- Apply constraint additions and removals
       let model'' = addConstraints (fst toAddToRem) $
                     remConstraints (snd toAddToRem) model'
-      -- Make another pass if the model was updated and does not contain machine names
-      if model == model'' && not (any containsMachineName $ collectConstraints model'')
+      -- Make another pass if the model was updated or contains machine names
+      if model == model'' || any containsMachineName (collectConstraints model'')
          then return model''
          else core model''
     -- Does an expression contain a reference with a machine name?
@@ -307,17 +309,19 @@ nested rule m fc@(fv, cs) = do
   -- Look deeper into the domain if possible, for forAll constraints involving it
   nestedResults <- fmap mconcat $ forM cs $ \c ->
     case hole c of
-         [essence| forAll &x in &gen . &_ |] | nameExpEq (fst fv) gen -> do
+         [essence| forAll &x in &gen . &_ |] | nameExpEq (fst fv) gen ->
            -- Create the new decision variable at this level
-           fv' <- (,) <$> nameFromAbstractPattern x
-                      <*> (domainOf gen >>= innerDomainOf)
-           -- Apply the rule from here
-           out <- nested rule m (fv', mapMaybe (down >=> down) [c])
-           case out of
-                ([], _)     -> return mempty
-                -- The rule was applied, so unwrap the variable and increase the depth
-                (vs, tatr') -> return ( [ (fv, d + 1, as) | (_, d, as) <- vs ]
-                                      , tatr')
+           case (,) <$> nameFromAbstractPattern x
+                    <*> (domainOf gen >>= innerDomainOf) of
+                Left  _   -> return mempty
+                Right fv' -> do
+                            -- Apply the rule from here
+                            out <- nested rule m (fv', mapMaybe (down >=> down) [c])
+                            case out of
+                                 ([], _)     -> return mempty
+                                 -- The rule was applied, so unwrap the variable and increase the depth
+                                 (vs, tatr') -> return ( [ (fv, d + 1, as) | (_, d, as) <- vs ]
+                                                       , tatr')
          _ -> return mempty
   -- Do not add a modification if there are no attributes
   let attrs' = if null attrs then [] else [(fv, 0, attrs)]
