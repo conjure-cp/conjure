@@ -426,9 +426,19 @@ varSize :: (MonadFail m, MonadLog m)
 varSize _ ((n, _), cs) = do
   results <- forM cs $ \c ->
     case matching (hole c) ineqSizeAttrs of
-         Just ((attr, f), (x, e)) | nameExpEq n x -> pure (Just (attr, f e), ([], [c]))
-         _                                        -> pure (Nothing, mempty)
+         -- Do not allow find variables to be put in attributes
+         Just ((attr, f), ([essence| |&x| |], e)) | nameExpEq n x && not (isFind e)
+           -> pure (Just (attr, f e), ([], [c]))
+         _ -> pure (Nothing, mempty)
   return $ unzipMaybeK results
+  where
+    isFind (Reference _ (Just (DeclNoRepr  Find _ _ _))) = True
+    isFind (Reference _ (Just (DeclHasRepr Find _ _)))   = True
+    isFind Reference{}                                   = False
+    isFind Constant{}                                    = False
+    isFind [essence| &f(&_) |]                           = isFind f
+    isFind [essence| image(&f, &_) |]                    = isFind f
+    isFind e                                             = any isFind $ children e
 
 -- | Set the minimum size of a set based on it being a superset of another.
 setSize :: (MonadFail m, MonadLog m, NameGen m)
