@@ -6,23 +6,6 @@ build_script:
 - cmd: >-
 
 
-    REM download Savile Row and Minion
-
-    curl -sS -osr.zip -L --insecure http://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.4-windows.zip
-
-    7z x sr.zip
-
-    copy savilerow-1.6.4-windows\savilerow.jar .
-
-    REM using an unreleased version of savilerow
-
-    curl -sS -osavilerow.jar -L --insecure http://dl.dropboxusercontent.com/u/14272760/SavileRow/2016-08-25%2014-59%20c9d0b46c82b2/savilerow.jar
-
-    copy savilerow-1.6.4-windows\bin\minion.exe .
-
-    echo java -ea -XX:ParallelGCThreads=1 -jar "%~p0savilerow.jar" %* > savilerow.bat
-
-
     REM pick a stack.yaml file
 
     copy etc\hs-deps\stack-8.0.yaml stack.yaml
