@@ -14,7 +14,6 @@ module Conjure.Process.StrengthenVariables
     strengthenVariables
   ) where
 
-
 import Data.List ( find, union )
 import Data.Map.Strict ( Map )
 import qualified Data.Map.Strict as M ( (!?), empty, union )
@@ -56,23 +55,21 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
       -- Apply rules to each decision (find) variable
       (model', toAddToRem) <- foldM (\modelAndToKeep findAndCstrs ->
           -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tatr) (rule, name) -> do
+          foldM (\(m, tatr) rule -> do
                   (attrs, tatr') <- nested rule m findAndCstrs
-                  when (not (null attrs) || tatr' /= mempty)
-                       (logInfo name)
                   m' <- resolveNames $ foldr (uncurry3 addAttrsToModel) m attrs
                   return (m', toAddRem tatr' tatr))
-                modelAndToKeep [ (surjectiveIsTotalBijective, "#attr.01")
-                               , (totalInjectiveIsBijective,  "#attr.03")
-                               , (definedForAllIsTotal,       "#attr.02")
-                               , (diffArgResultIsInjective,   "#attr.10")
-                               , (varSize,                    "#attr.06")
-                               , (setSize,                    "#attr.04")
-                               , (mSetSizeOccur,              "#attr.07")
-                               , (mSetOccur,                  "#attr.08")
-                               , (funcRangeEqSet,             "#cstr.01")
-                               , (forAllIneqToIneqSum,        "#cstr.02")
-                               , (fasterIteration,            "#cstr.03")
+                modelAndToKeep [ surjectiveIsTotalBijective
+                               , totalInjectiveIsBijective
+                               , definedForAllIsTotal
+                               , diffArgResultIsInjective
+                               , varSize
+                               , setSize
+                               , mSetSizeOccur
+                               , mSetOccur
+                               , funcRangeEqSet
+                               , forAllIneqToIneqSum
+                               , fasterIteration
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
