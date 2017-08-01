@@ -59,11 +59,11 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                   (attrs, tatr') <- nested rule m findAndCstrs
                   let m' = foldr (uncurry3 addAttrsToModel) m attrs
                   return (m', toAddRem tatr' tatr))
-                modelAndToKeep [ varSize
-                               , surjectiveIsTotalBijective
+                modelAndToKeep [ surjectiveIsTotalBijective
                                , totalInjectiveIsBijective
                                , definedForAllIsTotal
                                , diffArgResultIsInjective
+                               , varSize
                                , setSize
                                , mSetSizeOccur
                                , mSetOccur
@@ -74,12 +74,17 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
           (model, ([], []))
           (zip (collectFindVariables model)
                (repeat $ map zipper $ collectConstraints model))
+      -- Apply constraint additions and removals
       let model'' = addConstraints (fst toAddToRem) $
                     remConstraints (snd toAddToRem) model'
-      -- Make another pass if the model was updated
-      if model == model''
+      -- Make another pass if the model was updated and does not contain machine names
+      if model == model'' && not (any containsMachineName $ collectConstraints model'')
          then return model''
          else core model''
+    -- Does an expression contain a reference with a machine name?
+    containsMachineName = any isMachineName . universe
+    isMachineName (Reference MachineName{} _) = True
+    isMachineName _                           = False
 
 -- | 'uncurry' for functions of three arguments and triples.
 uncurry3 :: (a -> b -> c -> d) -> ((a, b, c) -> d)
@@ -156,6 +161,7 @@ nameExpEq n [essence| image(&f, &x) |] = nameExpEq n f || nameExpEq n x
 nameExpEq n [essence| &f(&x) |]        = nameExpEq n f || nameExpEq n x
 nameExpEq n [essence| defined(&f) |]   = nameExpEq n f
 nameExpEq n [essence| range(&f) |]     = nameExpEq n f
+nameExpEq n [essence| |&x| |]          = nameExpEq n x
 nameExpEq _ _                          = False
 
 -- | Does a reference refer to an abstract pattern?
@@ -220,6 +226,54 @@ findInUncondForAllZ p = concatMap findInForAll
     isCondition Condition{} = True
     isCondition _           = False
 
+-- | Lens function over a binary expression.
+type BinExprLens m = Proxy m -> (Expression -> Expression -> Expression,
+                                 Expression -> m (Expression, Expression))
+
+-- | Get the lens for an expression and the values it matches.
+matching :: Expression
+         -> [(BinExprLens Maybe, a)]
+         -> Maybe (a, (Expression, Expression))
+matching e ops = case mapMaybe (\(f1, f2) -> (,) f2 <$> match f1 e) ops of
+                      [x] -> pure x
+                      _   -> fail $ "no matching operator for expression: " <+> pretty e
+
+-- | (In)equality operator lens pairs.
+ineqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+ineqOps = [ (opEq,  opEq)
+          , (opLt,  opLt)
+          , (opLeq, opLeq)
+          , (opGt,  opGt)
+          , (opGeq, opGeq)
+          ]
+
+-- | Opposites of (in)equality operator lens pairs.
+oppIneqOps :: [(BinExprLens Maybe, BinExprLens Identity)]
+oppIneqOps = [ (opEq, opEq)
+             , (opLt, opGt)
+             , (opLeq, opGeq)
+             , (opGt, opLt)
+             , (opGeq, opLeq)
+             ]
+
+-- | (In)equality operator to size attribute modifier pairs.
+ineqSizeAttrs :: [(BinExprLens Maybe, (AttrName, Expression -> Maybe Expression))]
+ineqSizeAttrs = [ (opEq,  ("size",    Just))
+                , (opLt,  ("maxSize", Just . \x -> x - 1))
+                , (opLeq, ("maxSize", Just))
+                , (opGt,  ("minSize", Just . (+ 1)))
+                , (opGeq, ("minSize", Just))
+                ]
+
+-- | (In)equality operator to size attribute modifier pairs.
+ineqOccurAttrs :: [(BinExprLens Maybe, [(AttrName, Expression -> Maybe Expression)])]
+ineqOccurAttrs = [ (opEq,  [ ("minOccur", Just), ("maxOccur", Just) ])
+                 , (opLt,  [ ("maxOccur", Just . \x -> x - 1) ])
+                 , (opLeq, [ ("maxOccur", Just) ])
+                 , (opGt,  [ ("minOccur", Just . (+ 1)) ])
+                 , (opGeq, [ ("minOccur", Just) ])
+                 ]
+
 -- | Unzip where the key is a 'Maybe' but the values should all be combined.
 unzipMaybeK :: Monoid m => [(Maybe a, m)] -> ([a], m)
 unzipMaybeK = foldr (\(mx, y) (xs, z) ->
@@ -268,22 +322,6 @@ nested rule m fc@(fv, cs) = do
   -- Do not add a modification if there are no attributes
   let attrs' = if null attrs then [] else [(fv, 0, attrs)]
   return $ mappend nestedResults (attrs', toAddToRem)
-
--- | Set a size attribute on a variable.
-varSize :: (MonadFail m, MonadLog m)
-        => Model
-        -> (FindVar, [ExpressionZ])
-        -> m ([AttrPair], ToAddToRem)
-varSize _ ((n, _), cs) = do
-  results <- forM cs $ \c ->
-    case hole c of
-         [essence| |&x| =  &e |] | nameExpEq n x -> pure (Just ("size",    Just e),       ([], [c]))
-         [essence| |&x| <  &e |] | nameExpEq n x -> pure (Just ("maxSize", Just $ e - 1), ([], [c]))
-         [essence| |&x| <= &e |] | nameExpEq n x -> pure (Just ("maxSize", Just e),       ([], [c]))
-         [essence| |&x| >  &e |] | nameExpEq n x -> pure (Just ("minSize", Just $ e + 1), ([], [c]))
-         [essence| |&x| >= &e |] | nameExpEq n x -> pure (Just ("minSize", Just e),       ([], [c]))
-         _                                       -> pure (Nothing, mempty)
-  return $ unzipMaybeK results
 
 -- | If a function is surjective or bijective, and its domain and codomain
 --   are of equal size, then it is total and bijective.
@@ -375,6 +413,18 @@ diffArgResultIsInjective _ ((n, DomainFunction _ (FunctionAttr _ _ ject) from _)
                       Right dom -> dom == from
                       Left _    -> False
 diffArgResultIsInjective _ _ = return mempty
+
+-- | Set a size attribute on a variable.
+varSize :: (MonadFail m, MonadLog m)
+        => Model
+        -> (FindVar, [ExpressionZ])
+        -> m ([AttrPair], ToAddToRem)
+varSize _ ((n, _), cs) = do
+  results <- forM cs $ \c ->
+    case matching (hole c) ineqSizeAttrs of
+         Just ((attr, f), (x, e)) | nameExpEq n x -> pure (Just (attr, f e), ([], [c]))
+         _                                        -> pure (Nothing, mempty)
+  return $ unzipMaybeK results
 
 -- | Set the minimum size of a set based on it being a superset of another.
 setSize :: (MonadFail m, MonadLog m, NameGen m)
