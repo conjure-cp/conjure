@@ -9,8 +9,7 @@ where
            or([or([q8_1 = q14_2 /\ q8_2 = path_ExplicitBounded_Values[1] /\ 1 <= path_ExplicitBounded_Length
                        | q8_1 : int(1..n), q8_2 : int(1..n), g_RelationAsMatrix[q8_1, q8_2]])
                /\
-               or([q6_1 = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\ q6_2 = q14_1 /\
-                   path_ExplicitBounded_Length <= path_ExplicitBounded_Length
+               or([q6_1 = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\ q6_2 = q14_1
                        | q6_1 : int(1..n), q6_2 : int(1..n), g_RelationAsMatrix[q6_1, q6_2]])
                /\
                and([or([and([q10_1 = path_ExplicitBounded_Values[x] /\ q10_2 = path_ExplicitBounded_Values[x + 1],
