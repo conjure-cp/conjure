@@ -75,22 +75,22 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxIndex-1) . &i+1 <= &flag -> &values[&i] .<= &values[&i+1]
+                            forAll &iPat : int(1..&maxIndex-1) , &i+1 <= &flag . &values[&i] .<= &values[&i+1]
                         |]
 
                 dontCareAfterFlag flag values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxIndex) . &i > &flag -> dontCare(&values[&i])
+                            forAll &iPat : int(1..&maxIndex) , &i > &flag . dontCare(&values[&i])
                         |]
 
                 minOccurrenceCons mset flag values = do
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) .
-                                &i <= &flag -> (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
+                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
+                                (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
@@ -99,15 +99,15 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) .
-                                &i <= &flag -> freq(&mset, &values[&i]) <= &maxOccur_
+                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
+                                freq(&mset, &values[&i]) <= &maxOccur_
                                   |]
                         | Just maxOccur_ <- [getMaxOccur attrs]
                         ]
 
                 innerStructuralCons flag values = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxIndex) |]
-                    let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) . &i <= &flag -> &b |]
+                    let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) , &i <= &flag . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
