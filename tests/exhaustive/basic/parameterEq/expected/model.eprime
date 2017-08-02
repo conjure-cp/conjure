@@ -1,9 +1,8 @@
 language ESSENCE' 1.0
 
-given a: int(1..3)
 find x: bool
 find y: int(0..4)
 such that
-    x = (a <= a),
-    and([y >= i + toInt(i >= i) | i : int(1..3)])
+    x,
+    and([y >= i + 1 | i : int(1..3)])
 
