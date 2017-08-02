@@ -70,7 +70,7 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , funcRangeEqSet
                                , forAllIneqToIneqSum
                                , fasterIteration
-                               -- attr.09
+                               , partRegular
                                -- attr.10
                                -- attr.11
                                -- attr.12
@@ -172,8 +172,8 @@ nameExpEq n [essence| |&x| |]          = nameExpEq n x
 nameExpEq _ _                          = False
 
 -- | Does a reference refer to an abstract pattern?
-refersTo :: AbstractPattern -> Expression -> Bool
-refersTo a (Reference n _) = n `elem` namesFromAbstractPattern a
+refersTo :: Expression -> AbstractPattern -> Bool
+refersTo (Reference n _) a = n `elem` namesFromAbstractPattern a
 refersTo _ _               = False
 
 -- | Get a single name from an abstract pattern.
@@ -210,10 +210,10 @@ findInUncondForAllZ p = concatMap findInForAll
     findInForAll z
       = case hole z of
              [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
-               | refersTo x x' && refersTo y y'
+               | x' `refersTo` x && y' `refersTo` y
                  -> maybe [] findInForAll (down z >>= down)
              [essence| forAll &x, &y in &_, &x' != &y' . &_ |]
-               | refersTo x x' && refersTo y y'
+               | x' `refersTo` x && y' `refersTo` y
                  -> maybe [] findInForAll (down z >>= down)
              Op (MkOpAnd (OpAnd (Comprehension _ gorcs)))
                | all (not . isCondition) gorcs
@@ -627,9 +627,9 @@ funcRangeEqSet _ ((n, DomainSet{}), cs)
                             _ -> Nothing
     -- Are the values of the function equal to the values of the set?
     funcValEqSetVal f [essence| forAll &x in &s . image(&f', &_) = &x' |]
-      = nameExpEq n s && f == f' && refersTo x x'
+      = nameExpEq n s && f == f' && x' `refersTo` x
     funcValEqSetVal f [essence| forAll &x in &s . &x' = image(&f', &_) |]
-      = nameExpEq n s && f == f' && refersTo x x'
+      = nameExpEq n s && f == f' && x' `refersTo` x
     funcValEqSetVal _ _ = False
 funcRangeEqSet _ _ = return mempty
 
@@ -698,9 +698,9 @@ fasterIteration m (_, cs) = do
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
       = case hole z of
-             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
+             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | x' `refersTo` x && y' `refersTo` y
                -> Just ((x, x'), (y, y'), v, down z >>= down)
-             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | refersTo x x' && refersTo y y'
+             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | x' `refersTo` x && y' `refersTo` y
                -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
     -- Find which variables are equivalent in an expression
@@ -755,6 +755,28 @@ fasterIteration m (_, cs) = do
 ferret :: Text -> IO Text
 ferret path = sh $ run "symmetry_detect" [ "--json", path ]
 
+-- | Mark a partition as regular if all parts are of equal size.
+partRegular :: (MonadFail m, MonadIO m, MonadLog m)
+            => Model
+            -> (FindVar, [ExpressionZ])
+            -> m ([AttrPair], ToAddToRem)
+partRegular _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . forAll &y in parts(&p') . &e |]
+           | nameExpEq n p && p == p'
+             -> case e of
+                     [essence| |&x'| = |&y'| |] | x' `refersTo` x && y' `refersTo` y
+                         -> pure (Just ("regular", Nothing), ([], [c]))
+                     [essence| &x'' != &y'' -> |&x'| = |&y'| |]
+                       | x' `refersTo` x && y' `refersTo` y &&
+                         ((x' == x'' && y' == y'') || (x' == y'' && y' == x''))
+                         -> pure (Just ("regular", Nothing), ([], [c]))
+                     _ -> pure (Nothing, mempty)
+         _   -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+partRegular _ _ = return mempty
+
 -- | Convert constraints acting on the number of parts in a partition to an attribute.
 numPartsToAttr :: (MonadFail m, MonadIO m, MonadLog m)
                => Model
@@ -799,5 +821,5 @@ partSizeToAttr _ ((n, DomainPartition{}), cs) = do
   where
     -- Make sure that the expression's components are valid
     valid :: Expression -> AbstractPattern -> Expression -> Expression -> Bool
-    valid p x v e = nameExpEq n p && refersTo x v && not (isFind e)
+    valid p x v e = nameExpEq n p && v `refersTo` x && not (isFind e)
 partSizeToAttr _ _ = return mempty
