@@ -71,9 +71,7 @@ such that
                         | q30 : int(1..3)])
                    | q34 : int(1..3)])))
             | q40 : int(1..3)]),
-    and([q1 + 1 <= 3 -> a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1]
-             | q1 : int(1..2)]),
-    and([q2 > 3 -> a_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..3)]),
+    and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
     and([b_ExplicitWithFlags_Flags[q6 + 1] > 0 -> b_ExplicitWithFlags_Values[q6] < b_ExplicitWithFlags_Values[q6 + 1]
              | q6 : int(1..2)]),
     and([b_ExplicitWithFlags_Flags[q7] = 0 -> b_ExplicitWithFlags_Values[q7] = 1 | q7 : int(1..3)]),

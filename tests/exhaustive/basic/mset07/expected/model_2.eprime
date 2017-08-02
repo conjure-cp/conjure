@@ -3,7 +3,5 @@ language ESSENCE' 1.0
 given a: int
 find x_ExplicitWithRepetition_Flag: int(2)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..2)] of int(1..a)
-such that
-    x_ExplicitWithRepetition_Values[1] <= x_ExplicitWithRepetition_Values[2],
-    and([q2 > 2 -> x_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..2)])
+such that x_ExplicitWithRepetition_Values[1] <= x_ExplicitWithRepetition_Values[2]
 

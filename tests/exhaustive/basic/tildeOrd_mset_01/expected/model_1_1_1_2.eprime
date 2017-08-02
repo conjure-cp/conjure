@@ -93,9 +93,8 @@ such that
     and([b_ExplicitWithFlags_Flags[q8] = 0 -> b_ExplicitWithFlags_Values[q8] = 1 | q8 : int(1..3)]),
     and([b_ExplicitWithFlags_Flags[q9 + 1] > 0 -> b_ExplicitWithFlags_Flags[q9] > 0 | q9 : int(1..2)]),
     3 = sum([b_ExplicitWithFlags_Flags[q11] | q11 : int(1..3)]),
-    and([q13 + 1 <= 3 -> b_ExplicitWithRepetition_Values[q13] <= b_ExplicitWithRepetition_Values[q13 + 1]
-             | q13 : int(1..2)]),
-    and([q14 > 3 -> b_ExplicitWithRepetition_Values[q14] = 1 | q14 : int(1..3)]),
+    and([b_ExplicitWithRepetition_Values[q13] <= b_ExplicitWithRepetition_Values[q13 + 1]
+             | q13 : int(1..2), q13 + 1 <= 3]),
     and([sum([toInt(b_ExplicitWithRepetition_Values[q22] = b_ExplicitWithRepetition_Values[q19])
                   | q22 : int(1..3), q22 <= 3])
          =
