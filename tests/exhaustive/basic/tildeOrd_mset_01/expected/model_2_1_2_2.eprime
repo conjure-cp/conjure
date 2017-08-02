@@ -1,119 +1,94 @@
 language ESSENCE' 1.0
 
-find a_ExplicitWithRepetition_Flag: int(0..9)
-find a_ExplicitWithRepetition_Values: matrix indexed by [int(1..9)] of int(1..2)
+find a_ExplicitWithRepetition_Flag: int(3)
+find a_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
 find b_ExplicitWithFlags_Flags: matrix indexed by [int(1..3)] of int(0..3)
 find b_ExplicitWithFlags_Values: matrix indexed by [int(1..3)] of int(1..2)
-find b_ExplicitWithRepetition_Flag: int(0..9)
-find b_ExplicitWithRepetition_Values: matrix indexed by [int(1..9)] of int(1..2)
+find b_ExplicitWithRepetition_Flag: int(3)
+find b_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
 such that
-    or([q38 <= a_ExplicitWithRepetition_Flag /\
-        (sum([toInt(q37 <= a_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(a_ExplicitWithRepetition_Values[q37] = a_ExplicitWithRepetition_Values[q38]), 0)
-                  | q37 : int(1..9)])
-         <
-         sum([toInt(b_ExplicitWithFlags_Values[q28] = a_ExplicitWithRepetition_Values[q38]) *
-              catchUndef(b_ExplicitWithFlags_Flags[q28], 0)
-                  | q28 : int(1..3)])
+    or([sum([toInt(a_ExplicitWithRepetition_Values[q37] = a_ExplicitWithRepetition_Values[q38])
+                 | q37 : int(1..3), q37 <= 3])
+        <
+        sum([toInt(b_ExplicitWithFlags_Values[q28] = a_ExplicitWithRepetition_Values[q38]) *
+             catchUndef(b_ExplicitWithFlags_Flags[q28], 0)
+                 | q28 : int(1..3)])
+        /\
+        (and([a_ExplicitWithRepetition_Values[q32] < a_ExplicitWithRepetition_Values[q38] ->
+              sum([toInt(a_ExplicitWithRepetition_Values[q31] = a_ExplicitWithRepetition_Values[q32])
+                       | q31 : int(1..3), q31 <= 3])
+              =
+              sum([toInt(b_ExplicitWithFlags_Values[q29] = a_ExplicitWithRepetition_Values[q32]) *
+                   catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
+                       | q29 : int(1..3)])
+                  | q32 : int(1..3), q32 <= 3])
          /\
-         (and([q32 <= a_ExplicitWithRepetition_Flag /\
-               a_ExplicitWithRepetition_Values[q32] < a_ExplicitWithRepetition_Values[q38]
-               ->
-               sum([toInt(q31 <= a_ExplicitWithRepetition_Flag) *
-                    catchUndef(toInt(a_ExplicitWithRepetition_Values[q31] = a_ExplicitWithRepetition_Values[q32]), 0)
-                        | q31 : int(1..9)])
-               =
-               sum([toInt(b_ExplicitWithFlags_Values[q29] = a_ExplicitWithRepetition_Values[q32]) *
-                    catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
-                        | q29 : int(1..3)])
-                   | q32 : int(1..9)])
-          /\
-          and([and([b_ExplicitWithFlags_Flags[q33] > 0,
-                    !or([q35 <= a_ExplicitWithRepetition_Flag /\
-                         a_ExplicitWithRepetition_Values[q35] = b_ExplicitWithFlags_Values[q33]
-                             | q35 : int(1..9)]),
-                    b_ExplicitWithFlags_Values[q33] < a_ExplicitWithRepetition_Values[q38];
-                        int(1..3)])
-               ->
-               sum([toInt(q31 <= a_ExplicitWithRepetition_Flag) *
-                    catchUndef(toInt(a_ExplicitWithRepetition_Values[q31] = b_ExplicitWithFlags_Values[q33]), 0)
-                        | q31 : int(1..9)])
-               =
-               sum([toInt(b_ExplicitWithFlags_Values[q29] = b_ExplicitWithFlags_Values[q33]) *
-                    catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
-                        | q29 : int(1..3)])
-                   | q33 : int(1..3)])))
-            | q38 : int(1..9)])
+         and([and([b_ExplicitWithFlags_Flags[q33] > 0,
+                   !or([a_ExplicitWithRepetition_Values[q35] = b_ExplicitWithFlags_Values[q33]
+                            | q35 : int(1..3), q35 <= 3]),
+                   b_ExplicitWithFlags_Values[q33] < a_ExplicitWithRepetition_Values[q38];
+                       int(1..3)])
+              ->
+              sum([toInt(a_ExplicitWithRepetition_Values[q31] = b_ExplicitWithFlags_Values[q33])
+                       | q31 : int(1..3), q31 <= 3])
+              =
+              sum([toInt(b_ExplicitWithFlags_Values[q29] = b_ExplicitWithFlags_Values[q33]) *
+                   catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
+                       | q29 : int(1..3)])
+                  | q33 : int(1..3)]))
+            | q38 : int(1..3), q38 <= 3])
     \/
     or([b_ExplicitWithFlags_Flags[q39] > 0 /\
-        !or([q41 <= a_ExplicitWithRepetition_Flag /\
-             a_ExplicitWithRepetition_Values[q41] = b_ExplicitWithFlags_Values[q39]
-                 | q41 : int(1..9)])
+        !or([a_ExplicitWithRepetition_Values[q41] = b_ExplicitWithFlags_Values[q39] | q41 : int(1..3), q41 <= 3])
         /\
-        (sum([toInt(q37 <= a_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(a_ExplicitWithRepetition_Values[q37] = b_ExplicitWithFlags_Values[q39]), 0)
-                  | q37 : int(1..9)])
+        (sum([toInt(a_ExplicitWithRepetition_Values[q37] = b_ExplicitWithFlags_Values[q39])
+                  | q37 : int(1..3), q37 <= 3])
          <
          sum([toInt(b_ExplicitWithFlags_Values[q28] = b_ExplicitWithFlags_Values[q39]) *
               catchUndef(b_ExplicitWithFlags_Flags[q28], 0)
                   | q28 : int(1..3)])
          /\
-         (and([q32 <= a_ExplicitWithRepetition_Flag /\
-               a_ExplicitWithRepetition_Values[q32] < b_ExplicitWithFlags_Values[q39]
-               ->
-               sum([toInt(q31 <= a_ExplicitWithRepetition_Flag) *
-                    catchUndef(toInt(a_ExplicitWithRepetition_Values[q31] = a_ExplicitWithRepetition_Values[q32]), 0)
-                        | q31 : int(1..9)])
+         (and([a_ExplicitWithRepetition_Values[q32] < b_ExplicitWithFlags_Values[q39] ->
+               sum([toInt(a_ExplicitWithRepetition_Values[q31] = a_ExplicitWithRepetition_Values[q32])
+                        | q31 : int(1..3), q31 <= 3])
                =
                sum([toInt(b_ExplicitWithFlags_Values[q29] = a_ExplicitWithRepetition_Values[q32]) *
                     catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
                         | q29 : int(1..3)])
-                   | q32 : int(1..9)])
+                   | q32 : int(1..3), q32 <= 3])
           /\
           and([and([b_ExplicitWithFlags_Flags[q33] > 0,
-                    !or([q35 <= a_ExplicitWithRepetition_Flag /\
-                         a_ExplicitWithRepetition_Values[q35] = b_ExplicitWithFlags_Values[q33]
-                             | q35 : int(1..9)]),
+                    !or([a_ExplicitWithRepetition_Values[q35] = b_ExplicitWithFlags_Values[q33]
+                             | q35 : int(1..3), q35 <= 3]),
                     b_ExplicitWithFlags_Values[q33] < b_ExplicitWithFlags_Values[q39];
                         int(1..3)])
                ->
-               sum([toInt(q31 <= a_ExplicitWithRepetition_Flag) *
-                    catchUndef(toInt(a_ExplicitWithRepetition_Values[q31] = b_ExplicitWithFlags_Values[q33]), 0)
-                        | q31 : int(1..9)])
+               sum([toInt(a_ExplicitWithRepetition_Values[q31] = b_ExplicitWithFlags_Values[q33])
+                        | q31 : int(1..3), q31 <= 3])
                =
                sum([toInt(b_ExplicitWithFlags_Values[q29] = b_ExplicitWithFlags_Values[q33]) *
                     catchUndef(b_ExplicitWithFlags_Flags[q29], 0)
                         | q29 : int(1..3)])
                    | q33 : int(1..3)])))
             | q39 : int(1..3)]),
-    and([q1 + 1 <= a_ExplicitWithRepetition_Flag ->
-         a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1]
-             | q1 : int(1..8)]),
-    and([q2 > a_ExplicitWithRepetition_Flag -> a_ExplicitWithRepetition_Values[q2] = 1 | q2 : int(1..9)]),
-    3 = a_ExplicitWithRepetition_Flag,
+    and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
     and([b_ExplicitWithFlags_Flags[q6 + 1] > 0 -> b_ExplicitWithFlags_Values[q6] < b_ExplicitWithFlags_Values[q6 + 1]
              | q6 : int(1..2)]),
     and([b_ExplicitWithFlags_Flags[q7] = 0 -> b_ExplicitWithFlags_Values[q7] = 1 | q7 : int(1..3)]),
     and([b_ExplicitWithFlags_Flags[q8 + 1] > 0 -> b_ExplicitWithFlags_Flags[q8] > 0 | q8 : int(1..2)]),
     3 = sum([b_ExplicitWithFlags_Flags[q10] | q10 : int(1..3)]),
-    and([q12 + 1 <= b_ExplicitWithRepetition_Flag ->
-         b_ExplicitWithRepetition_Values[q12] <= b_ExplicitWithRepetition_Values[q12 + 1]
-             | q12 : int(1..8)]),
-    and([q13 > b_ExplicitWithRepetition_Flag -> b_ExplicitWithRepetition_Values[q13] = 1 | q13 : int(1..9)]),
-    3 = b_ExplicitWithRepetition_Flag,
-    and([q18 <= b_ExplicitWithRepetition_Flag ->
-         sum([toInt(q21 <= b_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(b_ExplicitWithRepetition_Values[q21] = b_ExplicitWithRepetition_Values[q18]), 0)
-                  | q21 : int(1..9)])
+    and([b_ExplicitWithRepetition_Values[q12] <= b_ExplicitWithRepetition_Values[q12 + 1]
+             | q12 : int(1..2), q12 + 1 <= 3]),
+    and([sum([toInt(b_ExplicitWithRepetition_Values[q21] = b_ExplicitWithRepetition_Values[q18])
+                  | q21 : int(1..3), q21 <= 3])
          =
          sum([toInt(b_ExplicitWithFlags_Values[q19] = b_ExplicitWithRepetition_Values[q18]) *
               catchUndef(b_ExplicitWithFlags_Flags[q19], 0)
                   | q19 : int(1..3)])
-             | q18 : int(1..9)]),
+             | q18 : int(1..3), q18 <= 3]),
     and([b_ExplicitWithFlags_Flags[q22] > 0 ->
-         sum([toInt(q25 <= b_ExplicitWithRepetition_Flag) *
-              catchUndef(toInt(b_ExplicitWithRepetition_Values[q25] = b_ExplicitWithFlags_Values[q22]), 0)
-                  | q25 : int(1..9)])
+         sum([toInt(b_ExplicitWithRepetition_Values[q25] = b_ExplicitWithFlags_Values[q22])
+                  | q25 : int(1..3), q25 <= 3])
          =
          sum([toInt(b_ExplicitWithFlags_Values[q23] = b_ExplicitWithFlags_Values[q22]) *
               catchUndef(b_ExplicitWithFlags_Flags[q23], 0)

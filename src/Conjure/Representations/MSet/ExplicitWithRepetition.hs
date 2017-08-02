@@ -38,25 +38,24 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             MSetAttr _ (OccurAttr_MinMaxOccur x _) -> Just x
             _ -> Nothing
 
-        getMaxOccurAsGiven attrs = case attrs of
-            MSetAttr _ (OccurAttr_MaxOccur x) -> return x
-            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
-
         getMaxOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MaxOccur x) -> return x
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            MSetAttr (SizeAttr_Size x) _ -> return x
-            MSetAttr (SizeAttr_MaxSize x) _ -> return x
-            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
             _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
-            maxSize  <- getMaxSize attrs innerDomain
-            maxOccur <- getMaxOccur attrs
-            let indexDomain =           mkDomainIntB 1 [essence| &maxSize * &maxOccur |]
-            let flagDomain  = defRepr $ mkDomainIntB 0 [essence| &maxSize * &maxOccur |]
+            (indexDomain, flagDomain) <-
+                case attrs of
+                    MSetAttr (SizeAttr_Size size) _ -> do
+                        let indexDomain = mkDomainIntB 1 size
+                        let flagDomain  = defRepr $ DomainInt [RangeSingle size]
+                        return (indexDomain, flagDomain)
+                    _ -> do
+                        maxSize <- getMaxSize attrs innerDomain
+                        let indexDomain =           mkDomainIntB 1 maxSize
+                        let flagDomain  = defRepr $ mkDomainIntB 0 maxSize
+                        return (indexDomain, flagDomain)
             return $ Just
                 [ ( nameFlag domain name
                   , flagDomain
@@ -69,30 +68,29 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainMSet MSet_ExplicitWithRepetition attrs@(MSetAttr sizeAttrs _) innerDomain) = do
-            maxSize  <- getMaxSize attrs innerDomain
-            maxOccur <- getMaxOccur attrs
-            let maxIndex = [essence| &maxSize * &maxOccur |]
+            maxSize <- getMaxSize attrs innerDomain
+            let maxIndex = maxSize
             let
                 orderingUpToFlag flag values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxIndex-1) . &i+1 <= &flag -> &values[&i] .<= &values[&i+1]
+                            forAll &iPat : int(1..&maxIndex-1) , &i+1 <= &flag . &values[&i] .<= &values[&i+1]
                         |]
 
                 dontCareAfterFlag flag values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxIndex) . &i > &flag -> dontCare(&values[&i])
+                            forAll &iPat : int(1..&maxIndex) , &i > &flag . dontCare(&values[&i])
                         |]
 
                 minOccurrenceCons mset flag values = do
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) .
-                                &i <= &flag -> (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
+                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
+                                (freq(&mset, &values[&i]) = 0 \/ freq(&mset, &values[&i]) >= &minOccur)
                                   |]
                         | Just minOccur <- [getMinOccur attrs]
                         ]
@@ -101,15 +99,15 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                     (iPat, i) <- quantifiedVar
                     return
                         [ [essence|
-                            forAll &iPat : int(1..&maxIndex) .
-                                &i <= &flag -> freq(&mset, &values[&i]) <= &maxOccur_
+                            forAll &iPat : int(1..&maxIndex) , &i <= &flag .
+                                freq(&mset, &values[&i]) <= &maxOccur_
                                   |]
-                        | Just maxOccur_ <- [getMaxOccurAsGiven attrs]
+                        | Just maxOccur_ <- [getMaxOccur attrs]
                         ]
 
                 innerStructuralCons flag values = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&maxIndex) |]
-                    let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) . &i <= &flag -> &b |]
+                    let activeZone b = [essence| forAll &iPat : int(1..&maxIndex) , &i <= &flag . &b |]
 
                     -- preparing structural constraints for the inner guys
                     innerStructuralConsGen <- f innerDomain
@@ -138,46 +136,50 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
               , ConstantAbstract (AbsLitMSet constants)
-              ) = do
-            maxSize   <- getMaxSize attrs innerDomain
-            maxOccur  <- getMaxOccur attrs
+              ) = case attrs of
+                    MSetAttr (SizeAttr_Size size) _ -> do
+                        let indexDomain = mkDomainIntB 1 size
+                        let flagDomain  = DomainInt [RangeSingle size]
 
-            maxSizeInt <-
-                case maxSize of
-                    ConstantInt x -> return x
-                    _ -> fail $ vcat
-                            [ "Expecting an integer for the maxSize attribute."
-                            , "But got:" <+> pretty maxSize
-                            , "When working on:" <+> pretty name
-                            , "With domain:" <+> pretty domain
+                        return $ Just
+                            [ ( nameFlag domain name
+                              , defRepr flagDomain
+                              , ConstantInt (genericLength constants)
+                              )
+                            , ( nameValues domain name
+                              , DomainMatrix indexDomain innerDomain
+                              , ConstantAbstract $ AbsLitMatrix indexDomain constants
+                              )
                             ]
-            maxOccurInt <-
-                case maxOccur of
-                    ConstantInt x -> return x
-                    _ -> fail $ vcat
-                            [ "Expecting an integer for the maxOccur attribute."
-                            , "But got:" <+> pretty maxSize
-                            , "When working on:" <+> pretty name
-                            , "With domain:" <+> pretty domain
+
+                    _ -> do
+                        maxSize    <- getMaxSize attrs innerDomain
+                        maxSizeInt <-
+                            case maxSize of
+                                ConstantInt x -> return x
+                                _ -> fail $ vcat
+                                        [ "Expecting an integer for the maxSize attribute."
+                                        , "But got:" <+> pretty maxSize
+                                        , "When working on:" <+> pretty name
+                                        , "With domain:" <+> pretty domain
+                                        ]
+                        let indexDomain = mkDomainIntB 1 maxSize
+                        let flagDomain  = mkDomainIntB 0 maxSize
+
+                        z <- zeroVal innerDomain
+                        let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
+
+                        return $ Just
+                            [ ( nameFlag domain name
+                              , defRepr flagDomain
+                              , ConstantInt (genericLength constants)
+                              )
+                            , ( nameValues domain name
+                              , DomainMatrix indexDomain innerDomain
+                              , ConstantAbstract $ AbsLitMatrix indexDomain (constants ++ zeroes)
+                              )
                             ]
-            let maxIndexInt = maxSizeInt * maxOccurInt
 
-            let indexDomain0 = mkDomainIntB 0 (ConstantInt maxIndexInt)
-            let indexDomain1 = mkDomainIntB 1 (ConstantInt maxIndexInt)
-
-            z <- zeroVal innerDomain
-            let zeroes = replicate (fromInteger (maxIndexInt - genericLength constants)) z
-
-            return $ Just
-                [ ( nameFlag domain name
-                  , defRepr indexDomain0
-                  , ConstantInt (genericLength constants)
-                  )
-                , ( nameValues domain name
-                  , DomainMatrix indexDomain1 innerDomain
-                  , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
-                  )
-                ]
         downC _ = na "{downC} ExplicitVarSizeWithRepetition"
 
         up :: TypeOf_Up m

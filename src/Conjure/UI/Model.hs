@@ -2033,6 +2033,21 @@ rule_PartialEvaluate = "partial-evaluate" `namedRuleZ` theRule where
             _                      -> return ( "Partial evaluator"
                                              , return val
                                              )
+    theRule _ (Op op)
+        | Just (x, y) <- case op of
+                            MkOpLeq (OpLeq x y) -> Just (x,y)
+                            MkOpGeq (OpGeq x y) -> Just (x,y)
+                            MkOpEq  (OpEq  x y) -> Just (x,y)
+                            _                   -> Nothing
+        , Reference nmX _ <- x
+        , Reference nmY _ <- y
+        , nmX == nmY
+        , categoryOf x <= CatQuantified
+        , categoryOf y <= CatQuantified
+        = return
+            ( "Parameter = parameter (or quantified)"
+            , return (fromBool True)
+            )
     theRule _ (Op x) = do
         x' <- simplifyOp x
         when (Op x == x') $ bug $ vcat
