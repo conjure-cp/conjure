@@ -53,10 +53,17 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainMSet _ attrs innerDomain)) = do
-            maxSize  <- getMaxSize attrs innerDomain
-            maxOccur <- getMaxOccur attrs
-            let indexDomain =           mkDomainIntB 1 [essence| &maxSize * &maxOccur |]
-            let flagDomain  = defRepr $ mkDomainIntB 0 [essence| &maxSize * &maxOccur |]
+            (indexDomain, flagDomain) <-
+                case attrs of
+                    MSetAttr (SizeAttr_Size size) _ -> do
+                        let indexDomain =           DomainInt [RangeSingle size]
+                        let flagDomain  = defRepr $ DomainInt [RangeSingle size]
+                        return (indexDomain, flagDomain)
+                    _ -> do
+                        maxSize <- getMaxSize attrs innerDomain
+                        let indexDomain =           mkDomainIntB 1 maxSize
+                        let flagDomain  = defRepr $ mkDomainIntB 0 maxSize
+                        return (indexDomain, flagDomain)
             return $ Just
                 [ ( nameFlag domain name
                   , flagDomain
@@ -69,9 +76,8 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainMSet MSet_ExplicitWithRepetition attrs@(MSetAttr sizeAttrs _) innerDomain) = do
-            maxSize  <- getMaxSize attrs innerDomain
-            maxOccur <- getMaxOccur attrs
-            let maxIndex = [essence| &maxSize * &maxOccur |]
+            maxSize <- getMaxSize attrs innerDomain
+            let maxIndex = maxSize
             let
                 orderingUpToFlag flag values = do
                     (iPat, i) <- quantifiedVar
@@ -138,46 +144,48 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
         downC ( name
               , domain@(DomainMSet _ attrs innerDomain)
               , ConstantAbstract (AbsLitMSet constants)
-              ) = do
-            maxSize   <- getMaxSize attrs innerDomain
-            maxOccur  <- getMaxOccur attrs
-
-            maxSizeInt <-
-                case maxSize of
-                    ConstantInt x -> return x
-                    _ -> fail $ vcat
-                            [ "Expecting an integer for the maxSize attribute."
-                            , "But got:" <+> pretty maxSize
-                            , "When working on:" <+> pretty name
-                            , "With domain:" <+> pretty domain
+              ) = case attrs of
+                    MSetAttr (SizeAttr_Size size) _ -> do
+                        let indexDomain = DomainInt [RangeSingle size]
+                        return $ Just
+                            [ ( nameFlag domain name
+                              , defRepr indexDomain
+                              , ConstantInt (genericLength constants)
+                              )
+                            , ( nameValues domain name
+                              , DomainMatrix indexDomain innerDomain
+                              , ConstantAbstract $ AbsLitMatrix indexDomain constants
+                              )
                             ]
-            maxOccurInt <-
-                case maxOccur of
-                    ConstantInt x -> return x
-                    _ -> fail $ vcat
-                            [ "Expecting an integer for the maxOccur attribute."
-                            , "But got:" <+> pretty maxSize
-                            , "When working on:" <+> pretty name
-                            , "With domain:" <+> pretty domain
+
+                    _ -> do
+                        maxSize    <- getMaxSize attrs innerDomain
+                        maxSizeInt <-
+                            case maxSize of
+                                ConstantInt x -> return x
+                                _ -> fail $ vcat
+                                        [ "Expecting an integer for the maxSize attribute."
+                                        , "But got:" <+> pretty maxSize
+                                        , "When working on:" <+> pretty name
+                                        , "With domain:" <+> pretty domain
+                                        ]
+                        let indexDomain0 = mkDomainIntB 0 (ConstantInt maxSizeInt)
+                        let indexDomain1 = mkDomainIntB 1 (ConstantInt maxSizeInt)
+
+                        z <- zeroVal innerDomain
+                        let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
+
+                        return $ Just
+                            [ ( nameFlag domain name
+                              , defRepr indexDomain0
+                              , ConstantInt (genericLength constants)
+                              )
+                            , ( nameValues domain name
+                              , DomainMatrix indexDomain1 innerDomain
+                              , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
+                              )
                             ]
-            let maxIndexInt = maxSizeInt * maxOccurInt
 
-            let indexDomain0 = mkDomainIntB 0 (ConstantInt maxIndexInt)
-            let indexDomain1 = mkDomainIntB 1 (ConstantInt maxIndexInt)
-
-            z <- zeroVal innerDomain
-            let zeroes = replicate (fromInteger (maxIndexInt - genericLength constants)) z
-
-            return $ Just
-                [ ( nameFlag domain name
-                  , defRepr indexDomain0
-                  , ConstantInt (genericLength constants)
-                  )
-                , ( nameValues domain name
-                  , DomainMatrix indexDomain1 innerDomain
-                  , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
-                  )
-                ]
         downC _ = na "{downC} ExplicitVarSizeWithRepetition"
 
         up :: TypeOf_Up m
