@@ -48,7 +48,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             (indexDomain, flagDomain) <-
                 case attrs of
                     MSetAttr (SizeAttr_Size size) _ -> do
-                        let indexDomain =           DomainInt [RangeSingle size]
+                        let indexDomain = mkDomainIntB 1 size
                         let flagDomain  = defRepr $ DomainInt [RangeSingle size]
                         return (indexDomain, flagDomain)
                     _ -> do
@@ -138,10 +138,12 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
               , ConstantAbstract (AbsLitMSet constants)
               ) = case attrs of
                     MSetAttr (SizeAttr_Size size) _ -> do
-                        let indexDomain = DomainInt [RangeSingle size]
+                        let indexDomain = mkDomainIntB 1 size
+                        let flagDomain  = DomainInt [RangeSingle size]
+
                         return $ Just
                             [ ( nameFlag domain name
-                              , defRepr indexDomain
+                              , defRepr flagDomain
                               , ConstantInt (genericLength constants)
                               )
                             , ( nameValues domain name
@@ -161,20 +163,20 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                                         , "When working on:" <+> pretty name
                                         , "With domain:" <+> pretty domain
                                         ]
-                        let indexDomain0 = mkDomainIntB 0 (ConstantInt maxSizeInt)
-                        let indexDomain1 = mkDomainIntB 1 (ConstantInt maxSizeInt)
+                        let indexDomain = mkDomainIntB 1 maxSize
+                        let flagDomain  = mkDomainIntB 0 maxSize
 
                         z <- zeroVal innerDomain
                         let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
                         return $ Just
                             [ ( nameFlag domain name
-                              , defRepr indexDomain0
+                              , defRepr flagDomain
                               , ConstantInt (genericLength constants)
                               )
                             , ( nameValues domain name
-                              , DomainMatrix indexDomain1 innerDomain
-                              , ConstantAbstract $ AbsLitMatrix indexDomain1 (constants ++ zeroes)
+                              , DomainMatrix indexDomain innerDomain
+                              , ConstantAbstract $ AbsLitMatrix indexDomain (constants ++ zeroes)
                               )
                             ]
 
