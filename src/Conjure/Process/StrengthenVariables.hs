@@ -70,6 +70,13 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , funcRangeEqSet
                                , forAllIneqToIneqSum
                                , fasterIteration
+                               -- attr.09
+                               -- attr.10
+                               -- attr.11
+                               -- attr.12
+                               -- attr.13
+                               , numPartsToAttr
+                               , partSizeToAttr
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
@@ -282,6 +289,16 @@ unzipMaybeK = foldr (\(mx, y) (xs, z) ->
                           Nothing -> (  xs, y `mappend` z))
               ([], mempty)
 
+-- | Does an expression contain a find variable?
+isFind :: Expression -> Bool
+isFind (Reference _ (Just (DeclNoRepr  Find _ _ _))) = True
+isFind (Reference _ (Just (DeclHasRepr Find _ _)))   = True
+isFind Reference{}                                   = False
+isFind Constant{}                                    = False
+isFind [essence| &f(&_) |]                           = isFind f
+isFind [essence| image(&f, &_) |]                    = isFind f
+isFind e                                             = any isFind $ children e
+
 -- | Add expressions to the ToAdd list.
 toAdd :: [ExpressionZ] -> ToAddToRem -> ToAddToRem
 toAdd e = first (`union` e)
@@ -430,14 +447,6 @@ varSize _ ((n, _), cs) = do
            -> pure (Just (attr, f e), ([], [c]))
          _ -> pure (Nothing, mempty)
   return $ unzipMaybeK results
-  where
-    isFind (Reference _ (Just (DeclNoRepr  Find _ _ _))) = True
-    isFind (Reference _ (Just (DeclHasRepr Find _ _)))   = True
-    isFind Reference{}                                   = False
-    isFind Constant{}                                    = False
-    isFind [essence| &f(&_) |]                           = isFind f
-    isFind [essence| image(&f, &_) |]                    = isFind f
-    isFind e                                             = any isFind $ children e
 
 -- | Set the minimum size of a set based on it being a superset of another.
 setSize :: (MonadFail m, MonadLog m, NameGen m)
@@ -745,3 +754,50 @@ fasterIteration m (_, cs) = do
 -- | Call ferret's symmetry detection on a JSON file
 ferret :: Text -> IO Text
 ferret path = sh $ run "symmetry_detect" [ "--json", path ]
+
+-- | Convert constraints acting on the number of parts in a partition to an attribute.
+numPartsToAttr :: (MonadFail m, MonadIO m, MonadLog m)
+               => Model
+               -> (FindVar, [ExpressionZ])
+               -> m ([AttrPair], ToAddToRem)
+numPartsToAttr _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case matching (hole c) ineqSizeAttrs of
+         -- Do not allow find variables to be put in attributes
+         Just ((attr, f), ([essence| |parts(&x)| |], e)) | nameExpEq n x && not (isFind e)
+           -> pure (Just (changeAttr attr, f e), ([], [c]))
+         _ -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+  where
+    -- Change a size attribute name to a numParts attribute name
+    changeAttr "size"    = "numParts"
+    changeAttr "minSize" = "minNumParts"
+    changeAttr "maxSize" = "maxNumParts"
+    changeAttr a         = a
+numPartsToAttr _ _ = return mempty
+
+-- | Convert constraints acting on the sizes of parts in a partition to an attribute.
+partSizeToAttr :: (MonadFail m, MonadIO m, MonadLog m)
+               => Model
+               -> (FindVar, [ExpressionZ])
+               -> m ([AttrPair], ToAddToRem)
+partSizeToAttr _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . |&x'| =  &e |] | valid p x x' e
+           -> pure (Just ("partSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| <  &e |] | valid p x x' e
+           -> pure (Just ("maxPartSize", Just (e - 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| <= &e |] | valid p x x' e
+           -> pure (Just ("maxPartSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| >  &e |] | valid p x x' e
+           -> pure (Just ("minPartSize", Just (e + 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| >= &e |] | valid p x x' e
+           -> pure (Just ("minPartSize", Just e), ([], [c]))
+         _ -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+  where
+    -- Make sure that the expression's components are valid
+    valid :: Expression -> AbstractPattern -> Expression -> Expression -> Bool
+    valid p x v e = nameExpEq n p && refersTo x v && not (isFind e)
+partSizeToAttr _ _ = return mempty
