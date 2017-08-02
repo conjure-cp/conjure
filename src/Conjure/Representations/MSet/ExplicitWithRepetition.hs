@@ -38,17 +38,9 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             MSetAttr _ (OccurAttr_MinMaxOccur x _) -> Just x
             _ -> Nothing
 
-        getMaxOccurAsGiven attrs = case attrs of
-            MSetAttr _ (OccurAttr_MaxOccur x) -> return x
-            MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
-
         getMaxOccur attrs = case attrs of
             MSetAttr _ (OccurAttr_MaxOccur x) -> return x
             MSetAttr _ (OccurAttr_MinMaxOccur _ x) -> return x
-            MSetAttr (SizeAttr_Size x) _ -> return x
-            MSetAttr (SizeAttr_MaxSize x) _ -> return x
-            MSetAttr (SizeAttr_MinMaxSize _ x) _ -> return x
             _ -> fail ("getMaxOccur, mset not supported. attributes:" <+> pretty attrs)
 
         downD :: TypeOf_DownD m
@@ -110,7 +102,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                             forAll &iPat : int(1..&maxIndex) .
                                 &i <= &flag -> freq(&mset, &values[&i]) <= &maxOccur_
                                   |]
-                        | Just maxOccur_ <- [getMaxOccurAsGiven attrs]
+                        | Just maxOccur_ <- [getMaxOccur attrs]
                         ]
 
                 innerStructuralCons flag values = do
