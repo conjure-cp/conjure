@@ -753,7 +753,8 @@ fasterIteration m (_, cs) = do
 
 -- | Call ferret's symmetry detection on a JSON file
 ferret :: Text -> IO Text
-ferret path = sh $ run "symmetry_detect" [ "--json", path ]
+ferret path = sh (run "symmetry_detect" [ "--json", path ]) `catch`
+              (\(_ :: SomeException) -> return "{}")
 
 -- | Mark a partition as regular if all parts are of equal size.
 partRegular :: (MonadFail m, MonadLog m)
