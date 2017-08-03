@@ -598,6 +598,108 @@ mSetOccur _ ((n, DomainMSet _ _ d), cs)
     isConst _ = False
 mSetOccur _ _ = return mempty
 
+-- | Mark a partition as regular if all parts are of equal size.
+partRegular :: (MonadFail m, MonadLog m)
+            => Model
+            -> (FindVar, [ExpressionZ])
+            -> m ([AttrPair], ToAddToRem)
+partRegular _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . forAll &y in parts(&p') . &e |]
+           | nameExpEq n p && p == p'
+             -> case e of
+                     [essence| |&x'| = |&y'| |] | x' `refersTo` x && y' `refersTo` y
+                         -> pure (Just ("regular", Nothing), ([], [c]))
+                     [essence| &x'' != &y'' -> |&x'| = |&y'| |]
+                       | x' `refersTo` x && y' `refersTo` y &&
+                         ((x' == x'' && y' == y'') || (x' == y'' && y' == x''))
+                         -> pure (Just ("regular", Nothing), ([], [c]))
+                     _ -> pure (Nothing, mempty)
+         _   -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+partRegular _ _ = return mempty
+
+-- | Mark a partition as complete if all values are defined.
+partComplete :: (MonadFail m, MonadLog m)
+             => Model
+             -> (FindVar, [ExpressionZ])
+             -> m ([AttrPair], ToAddToRem)
+partComplete _ ((n, DomainPartition _ _ d), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . &x' in &d' |]
+           | nameExpEq n p && x' `refersTo` x && maybe False (Domain d ==) (isAlias d')
+             -> pure (Nothing, mempty) -- COMPLETE NOT IMPLEMENTED (Just ("complete", Nothing), ([], [c]))
+         _   -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+partComplete _ _ = return mempty
+
+-- | Mark a partition regular and complete if numParts * partSize = |domain|.
+partRegularAndComplete :: (MonadFail m, MonadLog m)
+                       => Model
+                       -> (FindVar, [ExpressionZ])
+                       -> m ([AttrPair], ToAddToRem)
+partRegularAndComplete _ ((_, d), _)
+  = case d of
+         DomainPartition _ PartitionAttr { partsNum = SizeAttr_Size pNum@Constant{}
+                                         , partsSize = SizeAttr_Size pSize@Constant{}
+                                         } dom
+           | Just n1 <- domainSizeOf dom >>= e2c
+           , Just pNum' <- e2c pNum
+           , Just pSize' <- e2c pSize
+           , Just n2 <- evaluateOp $ MkOpProduct $ OpProduct $ fromList [ pNum', pSize' ]
+           , n1 == n2
+             -> return ([("regular", Nothing){-, COMPLETE NOT IMPLEMENTED ("complete", Nothing)-}], mempty)
+         _   -> return mempty
+
+-- | Convert constraints acting on the number of parts in a partition to an attribute.
+numPartsToAttr :: (MonadFail m, MonadLog m)
+               => Model
+               -> (FindVar, [ExpressionZ])
+               -> m ([AttrPair], ToAddToRem)
+numPartsToAttr _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case matching (hole c) ineqSizeAttrs of
+         -- Do not allow find variables to be put in attributes
+         Just ((attr, f), ([essence| |parts(&x)| |], e)) | nameExpEq n x && not (isFind e)
+           -> pure (Just (changeAttr attr, f e), ([], [c]))
+         _ -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+  where
+    -- Change a size attribute name to a numParts attribute name
+    changeAttr "size"    = "numParts"
+    changeAttr "minSize" = "minNumParts"
+    changeAttr "maxSize" = "maxNumParts"
+    changeAttr a         = a
+numPartsToAttr _ _ = return mempty
+
+-- | Convert constraints acting on the sizes of parts in a partition to an attribute.
+partSizeToAttr :: (MonadFail m, MonadLog m)
+               => Model
+               -> (FindVar, [ExpressionZ])
+               -> m ([AttrPair], ToAddToRem)
+partSizeToAttr _ ((n, DomainPartition{}), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . |&x'| =  &e |] | valid p x x' e
+           -> pure (Just ("partSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| <  &e |] | valid p x x' e
+           -> pure (Just ("maxPartSize", Just (e - 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| <= &e |] | valid p x x' e
+           -> pure (Just ("maxPartSize", Just e), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| >  &e |] | valid p x x' e
+           -> pure (Just ("minPartSize", Just (e + 1)), ([], [c]))
+         [essence| forAll &x in parts(&p) . |&x'| >= &e |] | valid p x x' e
+           -> pure (Just ("minPartSize", Just e), ([], [c]))
+         _ -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+  where
+    -- Make sure that the expression's components are valid
+    valid :: Expression -> AbstractPattern -> Expression -> Expression -> Bool
+    valid p x v e = nameExpEq n p && v `refersTo` x && not (isFind e)
+partSizeToAttr _ _ = return mempty
+
 -- | Equate the range of a function to a set of the former is a subset of the latter
 --   and all values in the set are results of the function.
 funcRangeEqSet :: (MonadFail m, MonadLog m)
@@ -755,105 +857,3 @@ fasterIteration m (_, cs) = do
 ferret :: Text -> IO Text
 ferret path = sh (run "symmetry_detect" [ "--json", path ]) `catch`
               (\(_ :: SomeException) -> return "{}")
-
--- | Mark a partition as regular if all parts are of equal size.
-partRegular :: (MonadFail m, MonadLog m)
-            => Model
-            -> (FindVar, [ExpressionZ])
-            -> m ([AttrPair], ToAddToRem)
-partRegular _ ((n, DomainPartition{}), cs) = do
-  attrs <- forM cs $ \c ->
-    case hole c of
-         [essence| forAll &x in parts(&p) . forAll &y in parts(&p') . &e |]
-           | nameExpEq n p && p == p'
-             -> case e of
-                     [essence| |&x'| = |&y'| |] | x' `refersTo` x && y' `refersTo` y
-                         -> pure (Just ("regular", Nothing), ([], [c]))
-                     [essence| &x'' != &y'' -> |&x'| = |&y'| |]
-                       | x' `refersTo` x && y' `refersTo` y &&
-                         ((x' == x'' && y' == y'') || (x' == y'' && y' == x''))
-                         -> pure (Just ("regular", Nothing), ([], [c]))
-                     _ -> pure (Nothing, mempty)
-         _   -> pure (Nothing, mempty)
-  return $ unzipMaybeK attrs
-partRegular _ _ = return mempty
-
--- | Mark a partition as complete if all values are defined.
-partComplete :: (MonadFail m, MonadLog m)
-             => Model
-             -> (FindVar, [ExpressionZ])
-             -> m ([AttrPair], ToAddToRem)
-partComplete _ ((n, DomainPartition _ _ d), cs) = do
-  attrs <- forM cs $ \c ->
-    case hole c of
-         [essence| forAll &x in parts(&p) . &x' in &d' |]
-           | nameExpEq n p && x' `refersTo` x && maybe False (Domain d ==) (isAlias d')
-             -> pure (Nothing, mempty) -- COMPLETE NOT IMPLEMENTED (Just ("complete", Nothing), ([], [c]))
-         _   -> pure (Nothing, mempty)
-  return $ unzipMaybeK attrs
-partComplete _ _ = return mempty
-
--- | Mark a partition regular and complete if numParts * partSize = |domain|.
-partRegularAndComplete :: (MonadFail m, MonadLog m)
-                       => Model
-                       -> (FindVar, [ExpressionZ])
-                       -> m ([AttrPair], ToAddToRem)
-partRegularAndComplete _ ((_, d), _)
-  = case d of
-         DomainPartition _ PartitionAttr { partsNum = SizeAttr_Size pNum@Constant{}
-                                         , partsSize = SizeAttr_Size pSize@Constant{}
-                                         } dom
-           | Just n1 <- domainSizeOf dom >>= e2c
-           , Just pNum' <- e2c pNum
-           , Just pSize' <- e2c pSize
-           , Just n2 <- evaluateOp $ MkOpProduct $ OpProduct $ fromList [ pNum', pSize' ]
-           , n1 == n2
-             -> return ([("regular", Nothing){-, COMPLETE NOT IMPLEMENTED ("complete", Nothing)-}], mempty)
-         _   -> return mempty
-
--- | Convert constraints acting on the number of parts in a partition to an attribute.
-numPartsToAttr :: (MonadFail m, MonadLog m)
-               => Model
-               -> (FindVar, [ExpressionZ])
-               -> m ([AttrPair], ToAddToRem)
-numPartsToAttr _ ((n, DomainPartition{}), cs) = do
-  attrs <- forM cs $ \c ->
-    case matching (hole c) ineqSizeAttrs of
-         -- Do not allow find variables to be put in attributes
-         Just ((attr, f), ([essence| |parts(&x)| |], e)) | nameExpEq n x && not (isFind e)
-           -> pure (Just (changeAttr attr, f e), ([], [c]))
-         _ -> pure (Nothing, mempty)
-  return $ unzipMaybeK attrs
-  where
-    -- Change a size attribute name to a numParts attribute name
-    changeAttr "size"    = "numParts"
-    changeAttr "minSize" = "minNumParts"
-    changeAttr "maxSize" = "maxNumParts"
-    changeAttr a         = a
-numPartsToAttr _ _ = return mempty
-
--- | Convert constraints acting on the sizes of parts in a partition to an attribute.
-partSizeToAttr :: (MonadFail m, MonadLog m)
-               => Model
-               -> (FindVar, [ExpressionZ])
-               -> m ([AttrPair], ToAddToRem)
-partSizeToAttr _ ((n, DomainPartition{}), cs) = do
-  attrs <- forM cs $ \c ->
-    case hole c of
-         [essence| forAll &x in parts(&p) . |&x'| =  &e |] | valid p x x' e
-           -> pure (Just ("partSize", Just e), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| <  &e |] | valid p x x' e
-           -> pure (Just ("maxPartSize", Just (e - 1)), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| <= &e |] | valid p x x' e
-           -> pure (Just ("maxPartSize", Just e), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| >  &e |] | valid p x x' e
-           -> pure (Just ("minPartSize", Just (e + 1)), ([], [c]))
-         [essence| forAll &x in parts(&p) . |&x'| >= &e |] | valid p x x' e
-           -> pure (Just ("minPartSize", Just e), ([], [c]))
-         _ -> pure (Nothing, mempty)
-  return $ unzipMaybeK attrs
-  where
-    -- Make sure that the expression's components are valid
-    valid :: Expression -> AbstractPattern -> Expression -> Expression -> Bool
-    valid p x v e = nameExpEq n p && v `refersTo` x && not (isFind e)
-partSizeToAttr _ _ = return mempty
