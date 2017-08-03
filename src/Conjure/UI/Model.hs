@@ -874,9 +874,12 @@ addIncumbentVariables model
                 Just q  -> applyWash q
 
         applyWash p@(Reference _ (Just (Alias _))) = return p
-        applyWash (Reference nm _) = do
-            tell [nm]
-            return (Reference (appendIncumbent nm) Nothing)
+        applyWash p@(Reference nm _) = do
+            if categoryOf p == CatDecision
+                then do
+                    tell [nm]
+                    return (Reference (appendIncumbent nm) Nothing)
+                else return p
         applyWash (match opIndexing -> Just (m,i)) = do
             m' <- applyWash m
             return (make opIndexing m' i)
