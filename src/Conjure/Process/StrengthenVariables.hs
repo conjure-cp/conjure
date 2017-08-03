@@ -67,14 +67,16 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , setSize
                                , mSetSizeOccur
                                , mSetOccur
-                               , funcRangeEqSet
-                               , forAllIneqToIneqSum
-                               , fasterIteration
+                               -- #attr.09
+                               -- #attr.10
                                , partRegular
                                , partComplete
                                , partRegularAndComplete
                                , numPartsToAttr
                                , partSizeToAttr
+                               , funcRangeEqSet
+                               , forAllIneqToIneqSum
+                               , fasterIteration
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
