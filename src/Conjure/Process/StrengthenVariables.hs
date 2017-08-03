@@ -71,10 +71,8 @@ strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
                                , forAllIneqToIneqSum
                                , fasterIteration
                                , partRegular
-                               -- attr.10
-                               -- attr.11
-                               -- attr.12
-                               -- attr.13
+                               , partComplete
+                               , partRegularAndComplete
                                , numPartsToAttr
                                , partSizeToAttr
                                ])
@@ -756,7 +754,7 @@ ferret :: Text -> IO Text
 ferret path = sh $ run "symmetry_detect" [ "--json", path ]
 
 -- | Mark a partition as regular if all parts are of equal size.
-partRegular :: (MonadFail m, MonadIO m, MonadLog m)
+partRegular :: (MonadFail m, MonadLog m)
             => Model
             -> (FindVar, [ExpressionZ])
             -> m ([AttrPair], ToAddToRem)
@@ -777,8 +775,41 @@ partRegular _ ((n, DomainPartition{}), cs) = do
   return $ unzipMaybeK attrs
 partRegular _ _ = return mempty
 
+-- | Mark a partition as complete if all values are defined.
+partComplete :: (MonadFail m, MonadLog m)
+             => Model
+             -> (FindVar, [ExpressionZ])
+             -> m ([AttrPair], ToAddToRem)
+partComplete _ ((n, DomainPartition _ _ d), cs) = do
+  attrs <- forM cs $ \c ->
+    case hole c of
+         [essence| forAll &x in parts(&p) . &x' in &d' |]
+           | nameExpEq n p && x' `refersTo` x && maybe False (Domain d ==) (isAlias d')
+             -> pure (Nothing, mempty) -- COMPLETE NOT IMPLEMENTED (Just ("complete", Nothing), ([], [c]))
+         _   -> pure (Nothing, mempty)
+  return $ unzipMaybeK attrs
+partComplete _ _ = return mempty
+
+-- | Mark a partition regular and complete if numParts * partSize = |domain|.
+partRegularAndComplete :: (MonadFail m, MonadLog m)
+                       => Model
+                       -> (FindVar, [ExpressionZ])
+                       -> m ([AttrPair], ToAddToRem)
+partRegularAndComplete _ ((_, d), _)
+  = case d of
+         DomainPartition _ PartitionAttr { partsNum = SizeAttr_Size pNum@Constant{}
+                                         , partsSize = SizeAttr_Size pSize@Constant{}
+                                         } dom
+           | Just n1 <- domainSizeOf dom >>= e2c
+           , Just pNum' <- e2c pNum
+           , Just pSize' <- e2c pSize
+           , Just n2 <- evaluateOp $ MkOpProduct $ OpProduct $ fromList [ pNum', pSize' ]
+           , n1 == n2
+             -> return ([("regular", Nothing){-, COMPLETE NOT IMPLEMENTED ("complete", Nothing)-}], mempty)
+         _   -> return mempty
+
 -- | Convert constraints acting on the number of parts in a partition to an attribute.
-numPartsToAttr :: (MonadFail m, MonadIO m, MonadLog m)
+numPartsToAttr :: (MonadFail m, MonadLog m)
                => Model
                -> (FindVar, [ExpressionZ])
                -> m ([AttrPair], ToAddToRem)
@@ -799,7 +830,7 @@ numPartsToAttr _ ((n, DomainPartition{}), cs) = do
 numPartsToAttr _ _ = return mempty
 
 -- | Convert constraints acting on the sizes of parts in a partition to an attribute.
-partSizeToAttr :: (MonadFail m, MonadIO m, MonadLog m)
+partSizeToAttr :: (MonadFail m, MonadLog m)
                => Model
                -> (FindVar, [ExpressionZ])
                -> m ([AttrPair], ToAddToRem)
