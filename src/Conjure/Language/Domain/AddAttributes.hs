@@ -4,6 +4,7 @@
 module Conjure.Language.Domain.AddAttributes
     ( allSupportedAttributes
     , addAttributesToDomain
+    , mkMin, mkMax
     ) where
 
 -- conjure

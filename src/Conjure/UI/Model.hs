@@ -35,6 +35,7 @@ import Conjure.Process.LettingsForComplexInDoms ( lettingsForComplexInDoms
                                                 , removeDomainLettings
                                                 )
 import Conjure.Process.AttributeAsConstraints ( attributeAsConstraints, mkAttributeToConstraint )
+import Conjure.Process.InferAttributes ( inferAttributes )
 import Conjure.Process.DealWithCuts ( dealWithCuts )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Language.NameResolution ( resolveNames, resolveNamesX )
@@ -851,6 +852,7 @@ prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
+    >>= inferAttributes               >>= logDebugId "[inferAttributes]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
     >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
