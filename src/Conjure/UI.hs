@@ -166,10 +166,11 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | StrengthenVariables
+    | ModelStrengthening
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
+        , logRuleSuccesses           :: Bool
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
@@ -1062,7 +1063,7 @@ ui = modes
             &= help "Generate an Essence model describing the instances of the problem class \
                     \defined in the input Essence model.\n\
                     \An error will be printed if the model has infinitely many instances."
-    , StrengthenVariables
+    , ModelStrengthening
         { essence
             = def
             &= typ "ESSENCE_FILE"
@@ -1081,6 +1082,12 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Log level."
+        , logRuleSuccesses
+            = False
+            &= name "log-rule-successes"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Generate logs for rule applications."
         , limitTime
             = Nothing
             &= name "limit-time"
@@ -1106,11 +1113,11 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width to use during pretty printing.\nDefault: 120"
-        }   &= name "strengthen-variables"
+        }   &= name "model-strengthening"
             &= explicit
-            &= help "Strengthen variables at the class level of an Essence model as \
-                     \described in the \"Reformulating Essence Specifications for Robustness\" \
-                     \paper, which aims to make search faster."
+            &= help "Strengthen an Essence model as described in the\n\
+                   \ \"Reformulating Essence Specifications for Robustness\" \
+                   \ paper, which aims to make search faster."
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]

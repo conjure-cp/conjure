@@ -1,17 +1,17 @@
 {-
- - Module      : Conjure.Process.StrengthenVariables
- - Description : Strengthen variables using type- and domain-inference.
+ - Module      : Conjure.Process.ModelStrengthening
+ - Description : Strengthen a model using type- and domain-inference.
  - Copyright   : Billy Brown 2017
  - License     : BSD3
  
- Processing step that attempts to strengthen variables at the Essence class level, using methods described in the "Reformulating Essence Specifications for Robustness" paper.
+ Processing step that attempts to strengthen an Essence model, using methods described in the "Reformulating Essence Specifications for Robustness" paper.
 -}
 
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Process.StrengthenVariables
+module Conjure.Process.ModelStrengthening
   (
-    strengthenVariables
+    strengthenModel
   ) where
 
 import Data.List ( find, union )
@@ -41,42 +41,53 @@ import qualified Data.Text.Encoding as T ( encodeUtf8 )
 import Data.Generics.Uniplate.Zipper ( Zipper, zipper, down, fromZipper, hole, replaceHole, right, up )
 
 type ExpressionZ = Zipper Expression Expression
-type FindVar = (Name, Domain () Expression)
-type AttrPair = (AttrName, Maybe Expression)
-type ToAddToRem = ([ExpressionZ], [ExpressionZ])
+type FindVar     = (Name, Domain () Expression)
+type AttrPair    = (AttrName, Maybe Expression)
+type ToAddToRem  = ([ExpressionZ], [ExpressionZ])
 
--- | Strengthen the variables in a model using type- and domain-inference.
-strengthenVariables :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
-                    => Model -> m Model
-strengthenVariables = runNameGen . (resolveNames >=> core . fixRelationProj)
+-- | Strengthen a model using type- and domain-inference.
+strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
+                => LogLevel -- ^ Log level to use.
+                -> Bool     -- ^ Generate logs for rule applications.
+                -> Model    -- ^ Model to strengthen.
+                -> m Model  -- ^ Strengthened model.
+strengthenModel logLevel logRuleSuccesses = runNameGen . (resolveNames >=> core . fixRelationProj)
   where
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
     core model = do
       -- Apply rules to each decision (find) variable
       (model', toAddToRem) <- foldM (\modelAndToKeep findAndCstrs ->
           -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tatr) rule -> do
+          foldM (\(m, tatr) (rule, name) -> do
                   (attrs, tatr') <- nested rule m findAndCstrs
-                  m' <- resolveNames $ foldr (uncurry3 addAttrsToModel) m attrs
-                  return (m', toAddRem tatr' tatr))
-                modelAndToKeep [ surjectiveIsTotalBijective
-                               , totalInjectiveIsBijective
-                               , definedForAllIsTotal
-                               , diffArgResultIsInjective
-                               , varSize
-                               , setSize
-                               , mSetSizeOccur
-                               , mSetOccur
+                  let m' = foldr (uncurry3 addAttrsToModel) m attrs
+                  when (((not (null attrs) && m /= m') ||
+                         (tatr' /= mempty && toAddRem tatr' tatr /= tatr)) &&
+                        logRuleSuccesses)
+                       (log logLevel $ name <+> if null attrs
+                                                   then vcat $ map (pretty . hole) (fst tatr')
+                                                   else pretty (fst $ fst findAndCstrs) <+> ":" <+>
+                                                        pretty (snd $ fst findAndCstrs))
+                  m'' <- resolveNames m'
+                  return (m'', toAddRem tatr' tatr))
+                modelAndToKeep [ (surjectiveIsTotalBijective, "function marked total and bijective")
+                               , (totalInjectiveIsBijective,  "function marked bijective")
+                               , (definedForAllIsTotal,       "function marked total")
+                               , (diffArgResultIsInjective,   "function marked injective")
+                               , (varSize,                    "added or refined domain size attribute")
+                               , (setSize,                    "added or refined set domain size attribute")
+                               , (mSetSizeOccur,              "added or refined multiset occurrence attribute")
+                               , (mSetOccur,                  "added or refined multiset occurrence attribute")
                                -- #attr.09
                                -- #attr.10
-                               , partRegular
-                               , partComplete
-                               , partRegularAndComplete
-                               , numPartsToAttr
-                               , partSizeToAttr
-                               , funcRangeEqSet
-                               , forAllIneqToIneqSum
-                               , fasterIteration
+                               , (partRegular,                "marked partition regular")
+                               , (partComplete,               "marked partition complete")
+                               , (partRegularAndComplete,     "marked partition regular and complete")
+                               , (numPartsToAttr,             "added or refined partition domain numParts attribute")
+                               , (partSizeToAttr,             "added or refined partition domain partSize attribute")
+                               , (funcRangeEqSet,             "equated function range and set")
+                               , (forAllIneqToIneqSum,        "lifted arithmetic relation from two forAlls to a sum")
+                               , (fasterIteration,            "refined distinctness condition on forAll")
                                ])
           (model, ([], []))
           (zip (collectFindVariables model)
