@@ -9,6 +9,7 @@ such that
          sum([toInt(x_PartitionOccurrence_WhichPart[q14] = q11) | q14 : int(1..4)]) = 2
              | q11 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
+    x_PartitionOccurrence_NumParts <= 4,
     and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..4)])
              | q2 : int(3..4)]),
     x_PartitionOccurrence_NumParts = max([x_PartitionOccurrence_WhichPart[q4] | q4 : int(1..4)]),

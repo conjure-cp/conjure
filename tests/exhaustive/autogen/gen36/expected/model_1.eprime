@@ -1,10 +1,11 @@
 language ESSENCE' 1.0
 
+letting let1 be 2
 find var6_ExplicitVarSizeWithMarkerR17R5R2_Marker: int(0..2)
 find var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker:
-        matrix indexed by [int(1..2)] of int(0..4)
+        matrix indexed by [int(1..2)] of int(0..2)
 find var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence:
-        matrix indexed by [int(1..2), int(1..4), int(2, 5)] of bool
+        matrix indexed by [int(1..2), int(1..2), int(2, 5)] of bool
 such that
     2 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
     var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[1] <
@@ -24,7 +25,7 @@ such that
                        [q2, q11, q12]
                    = false
                        | q12 : int(2, 5)])
-                  | q11 : int(1..4)])
+                  | q11 : int(1..2)])
              | q2 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
          and([1 =
@@ -34,24 +35,21 @@ such that
                          /\
                          var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                              [q3, q13, q4])
-                       | q13 : int(1..4)])
+                       | q13 : int(1..2)])
                   | q4 : int(2, 5)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
          and([q14 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3]
               -> false
-                  | q14 : int(1..4)])
+                  | q14 : int(1..2)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
-         and([q7 + 1 <=
-              var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3]
-              ->
-              var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                  [q3, q7, ..]
-              <lex
-              var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                  [q3, q7 + 1, ..]
-                  | q7 : int(1..3)])
+         (2 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3] ->
+          var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+              [q3, 1, ..]
+          <lex
+          var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+              [q3, 2, ..])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
          and([q8 > var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3] ->
@@ -59,13 +57,13 @@ such that
                        [q3, q8, q15]
                    = false
                        | q15 : int(2, 5)])
-                  | q8 : int(1..4)])
+                  | q8 : int(1..2)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
          3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3]
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
-         var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3] <= 4
+         var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3] <= 2
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Marker ->
          and([q9 <= var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3]
@@ -74,6 +72,6 @@ such that
               sum([toInt(var6_ExplicitVarSizeWithMarkerR17R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
                              [q3, q9, q10])
                        | q10 : int(2, 5)])
-                  | q9 : int(1..4)])
+                  | q9 : int(1..2)])
              | q3 : int(1..2)])
 

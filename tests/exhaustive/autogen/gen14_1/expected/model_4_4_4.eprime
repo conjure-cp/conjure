@@ -73,6 +73,7 @@ such that
            and([var1_PartitionOccurrence_WhichPart[q127] = q124 -> 1 = q127 | q127 : int(1..2)])
                | q124 : int(1..2)])),
     and([q1 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
+    var1_PartitionOccurrence_NumParts <= 2,
     var1_PartitionOccurrence_NumParts = max([var1_PartitionOccurrence_WhichPart[q4] | q4 : int(1..2)]),
     and([var1_PartitionOccurrence_PartSizes[q5] =
          sum([toInt(var1_PartitionOccurrence_WhichPart[q6] = q5) | q6 : int(1..2)])
