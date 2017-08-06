@@ -35,6 +35,7 @@ such that
     or([q71 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q73] = q71 /\ q73 = 4
             | q71 : int(1..4), q73 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
+    x_PartitionOccurrence_NumParts <= 4,
     and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..4)])
              | q2 : int(3..4)]),
     and([q4 <= x_PartitionOccurrence_NumParts ->
