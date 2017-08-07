@@ -220,6 +220,8 @@ findInUncondForAllZ p = concatMap findInForAll
     findInForAll z | p (hole z) = [z]
     findInForAll z
       = case hole z of
+             [essence| forAll &_ in defined(&_) . &_ |]
+                 -> []
              [essence| forAll &x, &y : &_, &x' != &y' . &_ |]
                | x' `refersTo` x && y' `refersTo` y
                  -> maybe [] findInForAll (down z >>= down)
