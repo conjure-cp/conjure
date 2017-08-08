@@ -78,8 +78,6 @@ strengthenModel logLevel logRuleSuccesses = runNameGen . (resolveNames >=> core 
                                , (setSize,                    "added or refined set domain size attribute")
                                , (mSetSizeOccur,              "added or refined multiset occurrence attribute")
                                , (mSetOccur,                  "added or refined multiset occurrence attribute")
-                               -- #attr.09
-                               -- #attr.10
                                , (partRegular,                "marked partition regular")
                                , (numPartsToAttr,             "added or refined partition domain numParts attribute")
                                , (partSizeToAttr,             "added or refined partition domain partSize attribute")
