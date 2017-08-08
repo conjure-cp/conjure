@@ -7,6 +7,7 @@ find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..6)] of int(1..6
 such that
     and([q1 <= x_PartitionOccurrence_NumParts -> 3 = x_PartitionOccurrence_PartSizes[q1] | q1 : int(1..6)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..6)]),
+    x_PartitionOccurrence_NumParts <= 6,
     and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..6)])
              | q2 : int(3..6)]),
     and([q4 <= x_PartitionOccurrence_NumParts ->
