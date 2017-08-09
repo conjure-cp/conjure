@@ -54,47 +54,66 @@ strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
 strengthenModel logLevel logRuleSuccesses = runNameGen . (resolveNames >=> core . fixRelationProj)
   where
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
-    core model = do
-      -- Apply rules to each decision (find) variable
-      (model', toAddToRem) <- foldM (\modelAndToKeep findAndCstrs ->
-          -- Apply each rule to the variable and hold on to constraints to keep
-          foldM (\(m, tatr) (rule, name) -> do
-                  (attrs, tatr') <- nested rule m findAndCstrs
-                  let m' = foldr (uncurry3 addAttrsToModel) m attrs
-                  when (((not (null attrs) && m /= m') ||
-                         (tatr' /= mempty && toAddRem tatr' tatr /= tatr)) &&
+    core model1 = do
+      -- Apply attribute rules to each decision (find) variable
+      (model2, toAddToRem) <- foldM (\modelAndToKeep findAndCstrs@((n, d), _) ->
+          foldM (\(m1, tatr1) (rule, name) -> do
+                  (attrs, tatr2) <- nested rule m1 findAndCstrs
+                  let m2 = foldr (uncurry3 addAttrsToModel) m1 attrs
+                  when (((not (null attrs) && m1 /= m2) ||
+                         (tatr2 /= mempty && toAddRem tatr2 tatr1 /= tatr1)) &&
                         logRuleSuccesses)
                        (log logLevel $ name <+> if null attrs
-                                                   then vcat $ map (pretty . hole) (fst tatr')
-                                                   else pretty (fst $ fst findAndCstrs) <+> ":" <+>
-                                                        pretty (snd $ fst findAndCstrs))
-                  m'' <- resolveNames m'
-                  return (m'', toAddRem tatr' tatr))
-                modelAndToKeep [ (surjectiveIsTotalBijective, "function marked total and bijective")
-                               , (totalInjectiveIsBijective,  "function marked bijective")
-                               , (definedForAllIsTotal,       "function marked total")
-                               , (diffArgResultIsInjective,   "function marked injective")
-                               , (varSize,                    "added or refined domain size attribute")
-                               , (setSize,                    "added or refined set domain size attribute")
-                               , (mSetSizeOccur,              "added or refined multiset occurrence attribute")
-                               , (mSetOccur,                  "added or refined multiset occurrence attribute")
-                               , (partRegular,                "marked partition regular")
-                               , (numPartsToAttr,             "added or refined partition domain numParts attribute")
-                               , (partSizeToAttr,             "added or refined partition domain partSize attribute")
-                               , (funcRangeEqSet,             "equated function range and set")
-                               , (forAllIneqToIneqSum,        "lifted arithmetic relation from two forAlls to a sum")
-                               , (fasterIteration,            "refined distinctness condition on forAll")
-                               ])
-          (model, ([], []))
-          (zip (collectFindVariables model)
-               (repeat $ map zipper $ collectConstraints model))
+                                                   then vcat $ map (pretty . hole) (fst tatr2)
+                                                   else pretty n <+> ":" <+> pretty d)
+                  return (m2, toAddRem tatr2 tatr1))
+              modelAndToKeep [ (surjectiveIsTotalBijective, "function marked total and bijective")
+                             , (totalInjectiveIsBijective,  "function marked bijective")
+                             , (definedForAllIsTotal,       "function marked total")
+                             , (diffArgResultIsInjective,   "function marked injective")
+                             , (varSize,                    "added or refined domain size attribute")
+                             , (setSize,                    "added or refined set domain size attribute")
+                             , (mSetSizeOccur,              "added or refined multiset occurrence attribute")
+                             , (mSetOccur,                  "added or refined multiset occurrence attribute")
+                             , (partRegular,                "marked partition regular")
+                             , (numPartsToAttr,             "added or refined partition domain numParts attribute")
+                             , (partSizeToAttr,             "added or refined partition domain partSize attribute")
+                             , (funcRangeEqSet,             "equated function range and set")
+                             , (forAllIneqToIneqSum,        "lifted arithmetic relation from two forAlls to a sum")
+                             , (fasterIteration,            "refined distinctness condition on forAll")
+                             ])
+          (model1, ([], []))
+          (zip (collectFindVariables model1)
+               (repeat $ map zipper $ collectConstraints model1))
+
       -- Apply constraint additions and removals
-      let model'' = addConstraints (fst toAddToRem) $
-                    remConstraints (snd toAddToRem) model'
-      -- Make another pass if the model was updated or contains machine names
-      if model == model'' || any containsMachineName (collectConstraints model'')
-         then return model''
-         else core model''
+      model3 <- resolveNames $
+                addConstraints (fst toAddToRem) $
+                remConstraints (snd toAddToRem) model2
+
+      -- Apply type change rules to each decision (find) variable
+      (model4, toAddToRem') <- foldM (\modelAndToKeep findAndCstrs@((n, d), _) ->
+          foldM (\(m1, tatr1) (rule, name) -> do
+                  (dom, tatr2) <- rule m1 findAndCstrs
+                  when ((dom /= d || toAddRem tatr2 tatr1 /= tatr1) &&
+                        logRuleSuccesses)
+                       (log logLevel $ name <+> pretty n <+> ":" <+> pretty d)
+                  return (updateDecl (n, dom) m1, toAddRem tatr2 tatr1))
+              modelAndToKeep [ (mSetToSet, "multiset changed to set")
+                             ])
+          (model3, ([], []))
+          (zip (collectFindVariables model3)
+               (repeat $ map zipper $ collectConstraints model3))
+
+      -- Apply constraint additions and removals
+      model5 <- resolveNames $
+                addConstraints (fst toAddToRem') $
+                remConstraints (snd toAddToRem') model4
+
+      -- Make another pass if the model was updated, but stop if it contains machine names
+      if model1 == model5 || any containsMachineName (collectConstraints model5)
+         then return model5
+         else core model5
     -- Does an expression contain a reference with a machine name?
     containsMachineName = any isMachineName . universe
     isMachineName (Reference MachineName{} _) = True
@@ -600,11 +619,14 @@ mSetOccur _ ((n, DomainMSet _ _ d), cs)
     valid :: Expression -> Expression -> Expression -> Bool
     valid x v e = nameExpEq n x && isGen v && isConst e
     -- Make sure that the value is generated from the mset's domain
-    isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _))) = d == d'
-    isGen _ = False
+    isGen (Reference _ (Just (InComprehension (GenDomainNoRepr _ d')))) = d == d'
+    isGen (Reference _ (Just (DeclNoRepr Quantified _ d' _)))           = d == d'
+    isGen (Reference _ (Just (InComprehension (GenInExpr _ e ))))       = nameExpEq n e
+    isGen _                                                             = False
     -- Make sure that the mset is being equated to a constant
-    isConst (Constant ConstantInt{}) = True
-    isConst _ = False
+    isConst (Reference _ (Just (DeclNoRepr Given _ _ _))) = True
+    isConst (Constant ConstantInt{})                      = True
+    isConst _                                             = False
 mSetOccur _ _ = return mempty
 
 -- | Mark a partition regular if its numParts * partSize = |domain|, or if there
@@ -850,3 +872,23 @@ fasterIteration m (_, cs) = do
 ferret :: Text -> IO Text
 ferret path = sh (run "symmetry_detect" [ "--json", path ]) `catch`
               (\(_ :: SomeException) -> return "{}")
+
+-- | Change the type of a multiset with `maxOccur 1` to set.
+mSetToSet :: (MonadFail m, MonadLog m)
+          => Model
+          -> (FindVar, [ExpressionZ])
+          -> m (Domain () Expression, ToAddToRem)
+mSetToSet _ ((n, DomainMSet r (MSetAttr sa oa) d), cs) | maxOccur1 oa = do
+  let dom'  = DomainSet r (SetAttr sa) d
+  let torem = filter (any (nameExpEq n) . universe . hole) cs
+  let toadd = map (zipper . transform (\e -> if nameExpEq n e
+                                                then [essence| toMSet(&e) |]
+                                                else e)
+                          . hole)
+                  cs
+  return (dom', (toadd, torem))
+  where
+    maxOccur1 (OccurAttr_MaxOccur 1)      = True
+    maxOccur1 (OccurAttr_MinMaxOccur _ 1) = True
+    maxOccur1 _                           = False
+mSetToSet _ ((_, dom), _) = return (dom, mempty)
