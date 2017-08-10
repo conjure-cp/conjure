@@ -12,7 +12,7 @@ find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3:
 such that
     false,
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] =
-    var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1],
+    sum([toInt(q25 <= var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]) | q25 : int(1..let2)]),
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] >= 1,
     and([q8 + 1 <= var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] ->
          var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_1[1, q8, ..] <lex
