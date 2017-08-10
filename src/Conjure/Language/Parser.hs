@@ -992,7 +992,10 @@ parseLiteral = label "value" $ msum
             xs <- parens (commaSeparated0 inner)
             return (AbsLitPartitionSequence xs)
             where
-                inner = braces (commaSeparated0 parseExpr)
+                inner = do
+                    lexeme L_sequence
+                    xs <- parens (commaSeparated0 parseExpr)
+                    return xs
 
 
 
