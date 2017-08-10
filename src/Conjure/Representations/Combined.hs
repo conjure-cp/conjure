@@ -36,6 +36,8 @@ import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
+import Conjure.Representations.PartitionSequence.Occurrence
+import Conjure.Representations.PartitionSequence.PartitionSequenceAsSet
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
@@ -181,6 +183,12 @@ dispatch domain = do
                                                     (bug "reprOptions inside dispatch")
                                                     (bug "useLevels inside dispatch")
             _ -> nope
+        DomainPartitionSequence r _ _ -> case r of
+            PartitionSequence_Occurrence      -> partitionSequenceOccurrence
+            PartitionSequence_AsSet{}         -> partitionSequenceAsSet dispatch
+                                                    (bug "reprOptions inside dispatch")
+                                                    (bug "useLevels inside dispatch")
+            _ -> nope
         _ -> nope
 
 
@@ -201,6 +209,8 @@ reprsStandardOrderNoLevels = return $ concat
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
       , partitionOccurrence
+      , partitionSequenceAsSet dispatch (reprOptions reprsStandardOrderNoLevels) False
+      , partitionSequenceOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
       , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
@@ -224,6 +234,8 @@ reprsStandardOrder =
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrder) True
       , partitionOccurrence
+      , partitionSequenceAsSet dispatch (reprOptions reprsStandardOrderNoLevels) False
+      , partitionSequenceOccurrence
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
       , relationAsSet      dispatch (reprOptions reprsStandardOrder) True
@@ -252,8 +264,10 @@ reprsSparseOrder = map return
     , relationAsSet      dispatch (reprOptions reprsSparseOrder) False
     , relationAsMatrix
     , partitionAsSet     dispatch (reprOptions reprsSparseOrder) False
+    , partitionSequenceAsSet dispatch (reprOptions reprsSparseOrder) False
 
     , partitionOccurrence                                     -- redundant
+    , partitionSequenceOccurrence                             -- redundant
     ]
 
 

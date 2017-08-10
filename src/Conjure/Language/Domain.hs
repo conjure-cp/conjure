@@ -763,7 +763,10 @@ data HasRepresentation
     | Relation_AsSet HasRepresentation                          -- carries: representation for the inner set
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
-    | Partition_Occurrence              -- TODO
+    | Partition_Occurrence
+
+    | PartitionSequence_AsSet HasRepresentation HasRepresentation -- carries: representations for the inner sets
+    | PartitionSequence_Occurrence
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -911,6 +914,8 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
+representationToShortText PartitionSequence_AsSet{}      = "PartitionSequenceAsSet"
+representationToShortText PartitionSequence_Occurrence   = "PartitionSequenceOccurrence"
 representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
