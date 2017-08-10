@@ -1,6 +1,6 @@
 language Essence 1.3
 
 find x,y,z : bool
-such that x = (partition({-1}) = partition({-2}))
-such that y = (partition({1}) = partition({2}))
-such that z = (partition({1}) = partition({1}))
+such that x = (partitionSequence(sequence(-1)) = partitionSequence(sequence(-2)))
+such that y = (partitionSequence(sequence(1)) = partitionSequence(sequence(2)))
+such that z = (partitionSequence(sequence(1)) = partitionSequence(sequence(1)))
