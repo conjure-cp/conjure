@@ -815,10 +815,18 @@ fasterIteration m (_, cs) = do
     -- Match the elemenents of interest in the constraint
     doubleDistinctIter z
       = case hole z of
-             [essence| forAll &x, &y in &v, &x' != &y' . &_ |] | x' `refersTo` x && y' `refersTo` y
-               -> Just ((x, x'), (y, y'), v, down z >>= down)
-             [essence| forAll &x, &y : &d, &x' != &y' . &_ |] | x' `refersTo` x && y' `refersTo` y
-               -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
+             Op (MkOpAnd (OpAnd (Comprehension _ [ Generator (GenInExpr x v)
+                                                 , Generator (GenInExpr y v')
+                                                 , Condition [essence| &x' != &y' |]
+                                                 ])))
+               | v == v' && x' `refersTo` x && y' `refersTo` y
+                 -> Just ((x, x'), (y, y'), v, down z >>= down)
+             Op (MkOpAnd (OpAnd (Comprehension _ [ Generator (GenDomainNoRepr x d)
+                                                 , Generator (GenDomainNoRepr y d')
+                                                 , Condition [essence| &x' != &y' |]
+                                                 ])))
+               | d == d' && x' `refersTo` x && y' `refersTo` y
+                 -> Just ((x, x'), (y, y'), Domain d, down z >>= down)
              _ -> Nothing
     -- Find which variables are equivalent in an expression
     findEquivVars :: (MonadIO m) => Expression -> m (Map Text Text)
