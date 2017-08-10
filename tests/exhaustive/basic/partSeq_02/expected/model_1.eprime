@@ -1,0 +1,11 @@
+language ESSENCE' 1.0
+
+find x_PartitionAsSet_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..6)] of bool
+such that
+    and([1 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q9, q1]) | q9 : int(1..2)]) | q1 : int(1..6)]),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q10, q12]) | q12 : int(1..6)]) =
+         sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q11, q13]) | q13 : int(1..6)])
+             | q10 : int(1..2), q11 : int(1..2)]),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q14, q15]) | q15 : int(1..6)]) >= 1 | q14 : int(1..2)]),
+    x_PartitionAsSet_ExplicitR2_Occurrence[1, ..] <lex x_PartitionAsSet_ExplicitR2_Occurrence[2, ..]
+

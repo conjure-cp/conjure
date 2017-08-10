@@ -1,0 +1,57 @@
+language ESSENCE' 1.0
+
+find x_PartitionOccurrence_NumParts: int(1..4)
+find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
+find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
+find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
+such that
+    and([and([q15 <= x_PartitionOccurrence_NumParts,
+              or([x_PartitionOccurrence_WhichPart[q21] = q15 /\ q21 = 2 | q21 : int(1..4)]),
+              x_PartitionOccurrence_WhichPart[q17] = q15;
+                  int(1..3)])
+         -> 4 = q17 \/ 2 = q17
+             | q15 : int(1..4), q17 : int(1..4)]),
+    or([and([q27 <= x_PartitionOccurrence_NumParts,
+             or([x_PartitionOccurrence_WhichPart[q31] = q27 /\ q31 = 2 | q31 : int(1..4)]),
+             x_PartitionOccurrence_WhichPart[q29] = q27;
+                 int(1..3)])
+        /\ q29 = 4
+            | q27 : int(1..4), q29 : int(1..4)]),
+    or([and([q35 <= x_PartitionOccurrence_NumParts,
+             or([x_PartitionOccurrence_WhichPart[q39] = q35 /\ q39 = 2 | q39 : int(1..4)]),
+             x_PartitionOccurrence_WhichPart[q37] = q35;
+                 int(1..3)])
+        /\ q37 = 2
+            | q35 : int(1..4), q37 : int(1..4)]),
+    and([q43 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q45] = q43 ->
+         or([1 = q45, 2 = q45, 3 = q45, 4 = q45; int(1..4)])
+             | q43 : int(1..4), q45 : int(1..4)]),
+    or([q53 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q55] = q53 /\ q55 = 1
+            | q53 : int(1..4), q55 : int(1..4)]),
+    or([q59 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q61] = q59 /\ q61 = 2
+            | q59 : int(1..4), q61 : int(1..4)]),
+    or([q65 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q67] = q65 /\ q67 = 3
+            | q65 : int(1..4), q67 : int(1..4)]),
+    or([q71 <= x_PartitionOccurrence_NumParts /\ x_PartitionOccurrence_WhichPart[q73] = q71 /\ q73 = 4
+            | q71 : int(1..4), q73 : int(1..4)]),
+    and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
+    x_PartitionOccurrence_NumParts <= 4,
+    and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..4)])
+             | q2 : int(3..4)]),
+    and([q4 <= x_PartitionOccurrence_NumParts ->
+         x_PartitionOccurrence_PartSizes[q4 - 1] = x_PartitionOccurrence_PartSizes[q4]
+             | q4 : int(2..4)]),
+    x_PartitionOccurrence_NumParts = max([x_PartitionOccurrence_WhichPart[q5] | q5 : int(1..4)]),
+    and([x_PartitionOccurrence_PartSizes[q6] = sum([toInt(x_PartitionOccurrence_WhichPart[q7] = q6) | q7 : int(1..4)])
+             | q6 : int(1..4)]),
+    and([q8 <= x_PartitionOccurrence_NumParts ->
+         and([x_PartitionOccurrence_WhichPart[q9] = q8 -> x_PartitionOccurrence_FirstIndex[q8] <= q9 | q9 : int(1..4)])
+             | q8 : int(1..4)]),
+    and([q8 <= x_PartitionOccurrence_NumParts ->
+         or([x_PartitionOccurrence_WhichPart[q9] = q8 /\ x_PartitionOccurrence_FirstIndex[q8] = q9 | q9 : int(1..4)])
+             | q8 : int(1..4)]),
+    and([q8 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_FirstIndex[q8] = 1 | q8 : int(1..4)]),
+    and([q10 <= x_PartitionOccurrence_NumParts /\ q11 <= x_PartitionOccurrence_NumParts ->
+         (q10 < q11 <-> x_PartitionOccurrence_FirstIndex[q10] < x_PartitionOccurrence_FirstIndex[q11])
+             | q10 : int(1..4), q11 : int(1..4)])
+

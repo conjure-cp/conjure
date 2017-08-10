@@ -1,0 +1,66 @@
+language ESSENCE' 1.0
+
+find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..4)
+find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..4), int(1..4)] of int(1..5)
+such that
+    or([q28 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+        (or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q28, q32] != 5 /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q28, q32] = 1
+                 | q32 : int(1..4)])
+         /\
+         or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q28, q34] != 5 /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q28, q34] = 3
+                 | q34 : int(1..4)]))
+            | q28 : int(1..4)]),
+    !or([q37 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+         (or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q41] != 5 /\
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q41] = 1
+                  | q41 : int(1..4)])
+          /\
+          or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q43] != 5 /\
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q43] = 2
+                  | q43 : int(1..4)]))
+             | q37 : int(1..4)]),
+    and([1 =
+         sum([toInt(q13 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                    or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q13, q15] != 5 /\
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q13, q15] = q1
+                            | q15 : int(1..4)]))
+                  | q13 : int(1..4)])
+             | q1 : int(1..4)]),
+    and([q17 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+         q18 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker
+         ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q17, q20] != 5)
+                  | q20 : int(1..4)])
+         =
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q18, q22] != 5)
+                  | q22 : int(1..4)])
+             | q17 : int(1..4), q18 : int(1..4)]),
+    and([q23 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q23, q25] != 5)
+                  | q25 : int(1..4)])
+         >= 1
+             | q23 : int(1..4)]),
+    and([q6 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q6, ..] <lex
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q6 + 1, ..]
+             | q6 : int(1..3)]),
+    and([q7 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q7, q16] = 1
+                  | q16 : int(1..4)])
+             | q7 : int(1..4)]),
+    x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= 4,
+    and([q8 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9] <
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9 + 1]
+              \/ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q9] = 5
+                  | q9 : int(1..3)])
+             | q8 : int(1..4)]),
+    and([q8 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q10] = 5 ->
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q8, q10 + 1] = 5
+                  | q10 : int(1..3)])
+             | q8 : int(1..4)])
+
