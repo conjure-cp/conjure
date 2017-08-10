@@ -538,6 +538,124 @@ addAttributeToDomain domain@(DomainPartition r partitionAttr inner) = updater wh
                         , "For the domain:" <+> pretty domain
                         ]
 
+addAttributeToDomain domain@(DomainPartitionSequence r partitionAttr inner) = updater where
+    updater attr (Just val) = case attr of
+
+        AttrName_numParts ->
+            case partsNum partitionAttr of
+                SizeAttr_Size s | val == s -> return domain
+                SizeAttr_Size{}            -> fail $ "Cannot add a numParts attribute to this domain:" <++> pretty domain
+                _                          -> return $ DomainPartitionSequence r (partitionAttr { partsNum = SizeAttr_Size val }) inner
+        AttrName_minNumParts -> do
+            let fails = fail $ "Cannot add a minNumParts attribute to this domain:" <++> pretty domain
+            case partsNum partitionAttr of
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinSize (mkMax minS val) }
+                                                 inner
+                SizeAttr_MaxSize maxS      | val == maxS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MaxSize maxS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinMaxSize val maxS }
+                                                 inner
+                SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinMaxSize (mkMax minS val) maxS }
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinSize val }
+                                                 inner
+        AttrName_maxNumParts -> do
+            let fails = fail $ "Cannot add a maxNumParts attribute to this domain:" <++> pretty domain
+            case partsNum partitionAttr of
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS      | val == minS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinSize minS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinMaxSize minS val }
+                                                 inner
+                SizeAttr_MaxSize maxS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MaxSize (mkMin maxS val) }
+                                                 inner
+                SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsNum = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MinMaxSize minS (mkMin maxS val) }
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsNum = SizeAttr_MaxSize val }
+                                                 inner
+
+        AttrName_partSize ->
+            case partsSize partitionAttr of
+                SizeAttr_Size s | val == s -> return domain
+                SizeAttr_Size{} -> fail $ "Cannot add a partSize attribute to this domain:" <++> pretty domain
+                _               -> return $ DomainPartitionSequence r (partitionAttr { partsSize = SizeAttr_Size val }) inner
+        AttrName_minPartSize -> do
+            let fails = fail $ "Cannot add a minPartSize attribute to this domain:" <++> pretty domain
+            case partsSize partitionAttr of
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MinSize (mkMax minS val) }
+                                                 inner
+                SizeAttr_MaxSize maxS      | val == maxS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsSize = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MaxSize maxS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MinMaxSize val maxS }
+                                                 inner
+                SizeAttr_MinMaxSize _ maxS | val == maxS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsSize = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MinMaxSize (mkMax minS val) maxS }
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainPartitionSequence r
+                                                 (partitionAttr { partsSize = SizeAttr_MinSize val })
+                                                 inner
+        AttrName_maxPartSize -> do
+            let fails = fail $ "Cannot add a maxPartSize attribute to this domain:" <++> pretty domain
+            case partsSize partitionAttr of
+                SizeAttr_Size s | val == s    -> return domain
+                SizeAttr_Size{}               -> fails
+                SizeAttr_MinSize minS      | val == minS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsSize = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinSize minS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MinMaxSize minS val }
+                                                 inner
+                SizeAttr_MaxSize maxS         -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MaxSize (mkMin maxS val) }
+                                                 inner
+                SizeAttr_MinMaxSize minS _ | val == minS -> return $ DomainPartitionSequence r
+                                                            partitionAttr { partsSize = SizeAttr_Size val }
+                                                            inner
+                SizeAttr_MinMaxSize minS maxS -> return $ DomainPartitionSequence r
+                                                 partitionAttr { partsSize = SizeAttr_MinMaxSize minS (mkMin maxS val) }
+                                                 inner
+                SizeAttr_None{}               -> return $ DomainPartitionSequence r
+                                                 (partitionAttr { partsSize = SizeAttr_MaxSize val })
+                                                 inner
+
+        _ ->
+            fail $ vcat [ "Unsupported attribute" <+> pretty attr
+                        , "For the domain:" <+> pretty domain
+                        ]
+    updater AttrName_regular Nothing =
+            return $ DomainPartitionSequence r (partitionAttr { isRegular  = True }) inner
+    updater attr Nothing =
+            fail $ vcat [ "Missing attribute value for" <+> pretty attr
+                        , "For the domain:" <+> pretty domain
+                        ]
+
 
 -- | Make a maximum expression between two expressions.
 -- | Two max expressions are merged into one.

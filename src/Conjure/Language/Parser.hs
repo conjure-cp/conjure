@@ -251,6 +251,7 @@ parseDomainWithRepr = pDomainAtom
             , pSequence
             , pRelation
             , pPartition
+            , pPartitionSequence
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
@@ -389,6 +390,15 @@ parseDomainWithRepr = pDomainAtom
             lexeme L_from
             y <- parseDomainWithRepr
             return $ DomainPartition r x y
+
+        pPartitionSequence = do
+            lexeme L_partitionSequence
+            r <- parseRepr
+            x <- parsePartitionAttr
+            lexeme L_from
+            y <- parseDomainWithRepr
+            return $ DomainPartitionSequence r x y
+
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
@@ -883,6 +893,7 @@ parseLiteral = label "value" $ msum
     , mkAbstractLiteral <$> pSequence
     , mkAbstractLiteral <$> pRelation
     , mkAbstractLiteral <$> pPartition
+    , mkAbstractLiteral <$> pPartitionSequence
     ]
     where
 
@@ -973,6 +984,13 @@ parseLiteral = label "value" $ msum
             lexeme L_partition
             xs <- parens (commaSeparated0 inner)
             return (AbsLitPartition xs)
+            where
+                inner = braces (commaSeparated0 parseExpr)
+
+        pPartitionSequence = do
+            lexeme L_partitionSequence
+            xs <- parens (commaSeparated0 inner)
+            return (AbsLitPartitionSequence xs)
             where
                 inner = braces (commaSeparated0 parseExpr)
 
