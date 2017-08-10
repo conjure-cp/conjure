@@ -1115,9 +1115,9 @@ ui = modes
             &= help "Line width to use during pretty printing.\nDefault: 120"
         }   &= name "model-strengthening"
             &= explicit
-            &= help "Strengthen an Essence model as described in the\n\
-                   \ \"Reformulating Essence Specifications for Robustness\" \
-                   \ paper, which aims to make search faster."
+            &= help "Strengthen an Essence model as described in \"Reformulating \
+                    \Essence Specifications for Robustness\",\n\
+                    \which aims to make search faster."
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
