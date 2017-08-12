@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+find order_Function1DPartial_Flags: matrix indexed by [int(1..6)] of bool
+find order_Function1DPartial_Values: matrix indexed by [int(1..6)] of int(1..10)
+such that
+    1505 =
+    sum([toInt(order_Function1DPartial_Flags[q9]) *
+         catchUndef(sum([sum([215 | 1 = q9]), sum([275 | 2 = q9]), sum([335 | 3 = q9]), sum([355 | 4 = q9]),
+                         sum([420 | 5 = q9]), sum([580 | 6 = q9]);
+                             int(1..6)])
+                    * order_Function1DPartial_Values[q9],
+                    0)
+             | q9 : int(1..6)]),
+    and([order_Function1DPartial_Flags[q9] -> or([1 = q9, 2 = q9, 3 = q9, 4 = q9, 5 = q9, 6 = q9; int(1..6)])
+             | q9 : int(1..6)]),
+    and([order_Function1DPartial_Flags[q5] = false -> order_Function1DPartial_Values[q5] = 1 | q5 : int(1..6)])
+
