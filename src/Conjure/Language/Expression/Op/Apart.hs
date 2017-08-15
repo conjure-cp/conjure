@@ -34,6 +34,11 @@ instance EvaluateOp OpApart where
             [ and [ y `elem` xs | y <- ys ]
             | xs <- xss
             ]
+    evaluateOp (OpApart (viewConstantSet -> Just ys) (viewConstantPartitionSequence -> Just xss)) =
+        return $ ConstantBool $ not $ or
+            [ and [ y `elem` xs | y <- ys ]
+            | xs <- xss
+            ]
     evaluateOp op = na $ "evaluateOp{OpApart}:" <++> pretty (show op)
 
 instance SimplifyOp OpApart x where

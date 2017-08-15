@@ -34,6 +34,11 @@ instance EvaluateOp OpTogether where
             [ and [ y `elem` xs | y <- ys ]
             | xs <- xss
             ]
+    evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartitionSequence -> Just xss)) =
+        return $ ConstantBool $ or
+            [ and [ y `elem` xs | y <- ys ]
+            | xs <- xss
+            ]
     evaluateOp op = na $ "evaluateOp{OpTogether}:" <++> pretty (show op)
 
 instance SimplifyOp OpTogether x where
