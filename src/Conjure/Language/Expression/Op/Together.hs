@@ -24,6 +24,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
         pTy <- typeOf p
         case (xTy, pTy) of
             (TypeSet xTyInner, TypePartition pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
+            (TypeSet xTyInner, TypePartitionSequence pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpTogether where
