@@ -35,7 +35,7 @@ inferAttributesD (DomainPartition () (PartitionAttr partsNum1 partsSize1 isRegul
                                 SizeAttr_MaxSize x -> SizeAttr_MaxSize (mkMin x n)
                                 SizeAttr_MinMaxSize x y -> SizeAttr_MinMaxSize x (mkMin y n)
     return (DomainPartition () (PartitionAttr partsNum2 partsSize2 isRegular1) innerDomain)
-inferAttributesD (DomainPartitionSequence () (PartitionSequenceAttr partsNum1 partsSize1 isRegular1 jectivity1) innerDomain) = do
+inferAttributesD (DomainPartitionSequence () (PartitionAttr partsNum1 partsSize1 isRegular1) innerDomain) = do
     -- there cannot be more parts than there are members
     let partsNum2 =
             case domainSizeOf innerDomain of
@@ -56,6 +56,6 @@ inferAttributesD (DomainPartitionSequence () (PartitionSequenceAttr partsNum1 pa
                                 SizeAttr_MinSize x -> SizeAttr_MinMaxSize x n
                                 SizeAttr_MaxSize x -> SizeAttr_MaxSize (mkMin x n)
                                 SizeAttr_MinMaxSize x y -> SizeAttr_MinMaxSize x (mkMin y n)
-    return (DomainPartitionSequence () (PartitionSequenceAttr partsNum2 partsSize2 isRegular1 jectivity1) innerDomain)
+    return (DomainPartitionSequence () (PartitionAttr partsNum2 partsSize2 isRegular1) innerDomain)
 inferAttributesD d = return d
 

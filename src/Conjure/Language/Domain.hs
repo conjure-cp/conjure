@@ -13,7 +13,6 @@ module Conjure.Language.Domain
     , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
     , PartitionAttr(..)
-    , PartitionSequenceAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , textToRepresentation, representationToShortText, representationToFullText
@@ -69,7 +68,7 @@ data Domain r x
     | DomainSequence r (SequenceAttr x) (Domain r x)
     | DomainRelation r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
-    | DomainPartitionSequence r (PartitionSequenceAttr x) (Domain r x)
+    | DomainPartitionSequence r (PartitionAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
@@ -668,51 +667,6 @@ instance Pretty a => Pretty (PartitionAttr a) where
 
             prettyReg False = prEmpty
             prettyReg True  = "regular"
-
-        in  if null inside
-                then prEmpty
-                else prettyList prParens "," inside
-
-
-data PartitionSequenceAttr a = PartitionSequenceAttr
-    { psPartsNum          :: SizeAttr a
-    , psPartsSize         :: SizeAttr a
-    , psIsRegular         :: Bool
-    , psJectivity         :: JectivityAttr
-    }
-    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
-instance Serialize a => Serialize (PartitionSequenceAttr a)
-instance Hashable  a => Hashable  (PartitionSequenceAttr a)
-instance ToJSON    a => ToJSON    (PartitionSequenceAttr a) where toJSON = genericToJSON jsonOptions
-instance FromJSON  a => FromJSON  (PartitionSequenceAttr a) where parseJSON = genericParseJSON jsonOptions
-instance Default (PartitionSequenceAttr a) where def = PartitionSequenceAttr def def False def
-instance Pretty a => Pretty (PartitionSequenceAttr a) where
-    pretty (PartitionSequenceAttr a b c d) =
-        let inside = filter (/=prEmpty) [ prettyNum a
-                                        , prettySize b
-                                        , prettyReg c
-                                        , prettyJect d
-                                        ]
-
-            prettyNum SizeAttr_None = prEmpty
-            prettyNum (SizeAttr_Size       x  ) = "numParts"    <+> pretty x
-            prettyNum (SizeAttr_MinSize    x  ) = "minNumParts" <+> pretty x
-            prettyNum (SizeAttr_MaxSize    x  ) = "maxNumParts" <+> pretty x
-            prettyNum (SizeAttr_MinMaxSize x y) = "minNumParts" <+> pretty x <> ", maxNumParts" <+> pretty y
-
-            prettySize SizeAttr_None = prEmpty
-            prettySize (SizeAttr_Size       x  ) = "partSize"    <+> pretty x
-            prettySize (SizeAttr_MinSize    x  ) = "minPartSize" <+> pretty x
-            prettySize (SizeAttr_MaxSize    x  ) = "maxPartSize" <+> pretty x
-            prettySize (SizeAttr_MinMaxSize x y) = "minPartSize" <+> pretty x <> ", maxPartSize" <+> pretty y
-
-            prettyReg False = prEmpty
-            prettyReg True  = "regular"
-
-            prettyJect JectivityAttr_None = prEmpty
-            prettyJect JectivityAttr_Injective = "injective"
-            prettyJect JectivityAttr_Surjective = "surjective"
-            prettyJect JectivityAttr_Bijective = "bijective"
 
         in  if null inside
                 then prEmpty

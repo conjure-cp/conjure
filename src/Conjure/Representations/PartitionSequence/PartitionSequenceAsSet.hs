@@ -48,15 +48,15 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
         outName = mkOutName Nothing
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
-        outDomain_ (DomainPartitionSequence () PartitionSequenceAttr{..} innerDomain) =
-            return (DomainSet () (SetAttr psPartsNum) (DomainSequence () (SequenceAttr psPartsSize psJectivity) innerDomain))
+        outDomain_ (DomainPartitionSequence () PartitionAttr{..} innerDomain) =
+            return (DomainSet () (SetAttr partsNum) (DomainSequence () (SequenceAttr partsSize JectivityAttr_None) innerDomain))
         outDomain_ domain = na $ vcat [ "{outDomain_} PartitionSequenceAsSet"
                                       , "domain:" <+> pretty domain
                                       ]
 
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
-        outDomain (DomainPartitionSequence (PartitionSequence_AsSet repr1 repr2) PartitionSequenceAttr{..} innerDomain) =
-            return (DomainSet repr1 (SetAttr psPartsNum) (DomainSequence repr2 (SequenceAttr psPartsSize JectivityAttr_None) innerDomain))
+        outDomain (DomainPartitionSequence (PartitionSequence_AsSet repr1 repr2) PartitionAttr{..} innerDomain) =
+            return (DomainSet repr1 (SetAttr partsNum) (DomainSequence repr2 (SequenceAttr partsSize JectivityAttr_None) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionSequenceAsSet"
                                      , "domain:" <+> pretty domain
                                      ]
@@ -73,8 +73,8 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
 
                 fixedPartSize =
                     case attrs of
-                        PartitionSequenceAttr _ SizeAttr_Size{} _ _ -> True
-                        _                                           -> False
+                        PartitionAttr _ SizeAttr_Size{} _ -> True
+                        _                                 -> False
 
                 exactlyOnce rel = do
                     (iPat, i) <- quantifiedVar
@@ -90,7 +90,7 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                                           ])
                                 |]
 
-                regular rel | psIsRegular attrs && not fixedPartSize = do
+                regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return -- for list

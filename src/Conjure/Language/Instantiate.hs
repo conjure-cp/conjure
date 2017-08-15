@@ -251,7 +251,7 @@ instantiateD (DomainSequence  r attrs inner) = DomainSequence r <$> instantiateS
 instantiateD (DomainRelation  r attrs inners) = DomainRelation r <$> instantiateRelationAttr attrs <*> mapM instantiateD inners
 instantiateD (DomainPartition r attrs inner) = DomainPartition r <$> instantiatePartitionAttr attrs <*> instantiateD inner
 instantiateD (DomainPartitionSequence r attrs inner) =
-    DomainPartitionSequence r <$> instantiatePartitionSequenceAttr attrs
+    DomainPartitionSequence r <$> instantiatePartitionAttr attrs
                               <*> instantiateD inner
 instantiateD (DomainOp nm ds) = DomainOp nm <$> mapM instantiateD ds
 instantiateD (DomainReference _ (Just d)) = instantiateD d
@@ -362,21 +362,6 @@ instantiatePartitionAttr (PartitionAttr a b r) =
     PartitionAttr <$> instantiateSizeAttr a
                   <*> instantiateSizeAttr b
                   <*> pure r
-
-
-instantiatePartitionSequenceAttr
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => PartitionSequenceAttr Expression
-    -> m (PartitionSequenceAttr Constant)
-instantiatePartitionSequenceAttr (PartitionSequenceAttr a b r j) =
-    PartitionSequenceAttr <$> instantiateSizeAttr a
-                          <*> instantiateSizeAttr b
-                          <*> pure r
-                          <*> pure j
 
 
 instantiateR
