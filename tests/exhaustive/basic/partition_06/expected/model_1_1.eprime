@@ -21,5 +21,8 @@ such that
     and([q5 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q8] = false | q8 : int(1..4)])
              | q5 : int(1..4)]),
-    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 4
+    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 4,
+    and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q6, q7]) | q7 : int(1..4)]) <= 4
+             | q6 : int(1..4)])
 
