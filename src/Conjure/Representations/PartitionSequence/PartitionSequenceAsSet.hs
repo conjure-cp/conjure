@@ -36,7 +36,7 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
             dom2 <- outDomain_ dom1
             dom3 <- reprOptions dom2
             return [ DomainPartitionSequence (PartitionSequence_AsSet r1 r2) attrs innerDomain
-                   | DomainSet r1 _ (DomainSet r2 _ innerDomain) <- dom3
+                   | DomainSet r1 _ (DomainSequence r2 _ innerDomain) <- dom3
                    -- special hack: do not use Set_ExplicitVarSizeWithFlags when --representation-levels=yes
                    , if useLevels
                        then r1 /= Set_ExplicitVarSizeWithFlags && r2 /= Set_ExplicitVarSizeWithFlags
@@ -49,14 +49,14 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
 
         outDomain_ :: Pretty x => Domain () x -> m (Domain () x)
         outDomain_ (DomainPartitionSequence () PartitionAttr{..} innerDomain) =
-            return (DomainSet () (SetAttr partsNum) (DomainSet () (SetAttr partsSize) innerDomain))
+            return (DomainSet () (SetAttr partsNum) (DomainSequence () (SequenceAttr partsSize JectivityAttr_None) innerDomain))
         outDomain_ domain = na $ vcat [ "{outDomain_} PartitionSequenceAsSet"
                                       , "domain:" <+> pretty domain
                                       ]
 
         outDomain :: Pretty x => Domain HasRepresentation x -> m (Domain HasRepresentation x)
         outDomain (DomainPartitionSequence (PartitionSequence_AsSet repr1 repr2) PartitionAttr{..} innerDomain) =
-            return (DomainSet repr1 (SetAttr partsNum) (DomainSet repr2 (SetAttr partsSize) innerDomain))
+            return (DomainSet repr1 (SetAttr partsNum) (DomainSequence repr2 (SequenceAttr partsSize JectivityAttr_None) innerDomain))
         outDomain domain = na $ vcat [ "{outDomain} PartitionSequenceAsSet"
                                      , "domain:" <+> pretty domain
                                      ]
@@ -73,12 +73,14 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                 exactlyOnce rel = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
+                    (kPat, k) <- quantifiedVar
                     return $ return $ -- for list
                         [essence|
                             forAll &iPat : &innerDomain .
                                 1  = sum ([ 1
                                           | &jPat <- &rel
-                                          , &i in &j
+                                          , &kPat <- &j         $ (i in j)
+                                          , &i = &k[2]          $ (i in j)
                                           ])
                                 |]
 
@@ -144,9 +146,9 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
                 Just (viewConstantSet -> Just sets) -> do
-                    let setOut (viewConstantSet -> Just xs) = return xs
-                        setOut c = fail $ "Expecting a set, but got:" <++> pretty c
-                    vals <- mapM setOut sets
+                    let seqOut (viewConstantSequence -> Just xs) = return xs
+                        seqOut c = fail $ "Expecting a sequence, but got:" <++> pretty c
+                    vals <- mapM seqOut sets
                     return (name, ConstantAbstract (AbsLitPartitionSequence vals))
                 Just (ConstantUndefined msg ty) ->        -- undefined propagates
                     return (name, ConstantUndefined ("PartitionSequenceAsSet " `mappend` msg) ty)
