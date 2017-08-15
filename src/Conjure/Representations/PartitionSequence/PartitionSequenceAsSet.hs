@@ -133,11 +133,11 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                 (dispatch outDom)
                 ( outName inDom name
                 , outDom
-                , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) vals
+                , ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSequence) vals
                 )
         downC (name, domain, constant) = na $ vcat [ "{downC} PartitionSequenceAsSet"
-                                                   , "name:" <+> pretty name
-                                                   , "domain:" <+> pretty domain
+                                                   , "name    :" <+> pretty name
+                                                   , "domain  :" <+> pretty domain
                                                    , "constant:" <+> pretty constant
                                                    ]
 

@@ -228,7 +228,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                   , ConstantAbstract $ AbsLitMatrix (indexDomain 1) (constants ++ zeroes)
                   )
                 ]
-        downC _ = na "{downC} ExplicitBounded"
+        downC (name, domain, constant) = na $ vcat [ "{downC} ExplicitBounded"
+                                                   , "name    :" <+> pretty name
+                                                   , "domain  :" <+> pretty domain
+                                                   , "constant:" <+> pretty constant
+                                                   ]
 
         up :: TypeOf_Up m
         up ctxt (name, domain) =
