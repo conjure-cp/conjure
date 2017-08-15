@@ -160,7 +160,7 @@ normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction              $ sortN
 normaliseAbsLit norm (AbsLitSequence  xs ) = AbsLitSequence              $           map norm xs
 normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation              $ sortNub $ map (map norm) xss
 normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition             $ sortNub $ map (sortNub . map norm) xss
-normaliseAbsLit norm (AbsLitPartitionSequence xss) = AbsLitPartitionSequence $ sortNub $ map (sortNub . map norm) xss
+normaliseAbsLit norm (AbsLitPartitionSequence xss) = AbsLitPartitionSequence $ sortNub $ map (map norm) xss
 
 emptyCollectionAbsLit :: AbstractLiteral c -> Bool
 emptyCollectionAbsLit AbsLitTuple{} = False
