@@ -1332,6 +1332,30 @@ partitionLiteral _ =
         extract p = na ("Lenses.partitionLiteral:" <+> pretty p)
 
 
+partitionSequenceLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
+       )
+partitionSequenceLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPartitionSequence elems)) ty
+            else        AbstractLiteral (AbsLitPartitionSequence elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitPartitionSequence xs))) = return (map (map Constant) xs)
+        extract (AbstractLiteral (AbsLitPartitionSequence xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.partitionSequenceLiteral:" <+> pretty p)
+
+
 opTwoBars
     :: ( Op x :< x
        , Pretty x
