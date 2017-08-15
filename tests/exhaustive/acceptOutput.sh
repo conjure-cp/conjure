@@ -16,6 +16,7 @@ if [ -d "${TESTCASE}" ]; then
            "${TESTCASE}"/outputs/*.solution \
            "${TESTCASE}"/outputs/*.eprime-param \
            "${TESTCASE}"/expected/ 2> /dev/null || :
-        parallel "[ -f {} ] && (cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {})" ::: "${TESTCASE}"/expected/*.eprime
+        parallel --no-notice "[ -f {} ] && (cat {} | grep -v '\\$' > {}.temp ; mv {}.temp {})" \
+            ::: "${TESTCASE}"/expected/*.eprime
     fi
 fi
