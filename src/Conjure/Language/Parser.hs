@@ -394,7 +394,7 @@ parseDomainWithRepr = pDomainAtom
         pPartitionSequence = do
             lexeme L_partitionSequence
             r <- parseRepr
-            x <- parsePartitionAttr
+            x <- parsePartitionSequenceAttr
             lexeme L_from
             y <- parseDomainWithRepr
             return $ DomainPartitionSequence r x y
@@ -580,6 +580,57 @@ parsePartitionAttr = do
             fail ("incompatible attributes:" <+> stringToDoc (show as))
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
+
+parsePartitionSequenceAttr :: Parser (PartitionSequenceAttr Expression)
+parsePartitionSequenceAttr = do
+    pos <- getPosition
+    DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes pos "partition" attrs
+        [ "size", "minSize", "maxSize"
+        , "regular"
+        , "numParts", "minNumParts", "maxNumParts"
+        , "partSize", "minPartSize", "maxPartSize"
+        , "injective", "surjective", "bijective"
+        ]
+    unless (null $ filterAttrName ["complete"] attrs) $ do
+        setPosition pos
+        fail $ vcat [ "PartitionSequences do not support the 'complete' attribute."
+                    , "They are complete by default."
+                    ]
+    unless (null $ filterSizey attrs) $ do
+        setPosition pos
+        fail $ vcat [ "PartitionSequences do not support these attributes:" <+> prettyList id "," (filterSizey attrs)
+                    , "This is because partitions are complete by default."
+                    ]
+    psPartsNum       <- case filterAttrName ["numParts", "minNumParts", "maxNumParts"] attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "numParts"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minNumParts" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxNumParts" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxNumParts" b, DANameValue "minNumParts" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> do
+            setPosition pos
+            fail ("incompatible attributes:" <+> stringToDoc (show as))
+    psPartsSize      <- case filterAttrName ["partSize", "minPartSize", "maxPartSize"] attrs of
+        [] -> return SizeAttr_None
+        [DANameValue "partSize"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minPartSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxPartSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxPartSize" b, DANameValue "minPartSize" a] -> return (SizeAttr_MinMaxSize a b)
+        as -> do
+            setPosition pos
+            fail ("incompatible attributes:" <+> stringToDoc (show as))
+    let psIsRegular  = DAName "regular"  `elem` attrs
+    psJectivity      <- case filterJectivity attrs of
+        [] -> return JectivityAttr_None
+        [DAName "bijective" ] -> return JectivityAttr_Bijective
+        [DAName "injective" ] -> return JectivityAttr_Injective
+        [DAName "surjective"] -> return JectivityAttr_Surjective
+        [DAName "injective", DAName "surjective"] -> return JectivityAttr_Bijective
+        as -> do
+            setPosition pos
+            fail ("incompatible attributes:" <+> stringToDoc (show as))
+    return PartitionSequenceAttr {..}
 
 checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
 checkExtraAttributes pos ty attrs supported = do
