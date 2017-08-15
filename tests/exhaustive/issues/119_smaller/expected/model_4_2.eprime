@@ -29,6 +29,7 @@ such that
         (and([p_PartitionOccurrence_WhichPart[q113] = q110 -> 3 = q113 | q113 : int(1..3)]) /\
          or([p_PartitionOccurrence_WhichPart[q119] = q110 /\ q119 = 3 | q119 : int(1..3)]))
             | q110 : int(1..3)]),
+    and([q1 <= p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] <= 3 | q1 : int(1..3)]),
     and([q1 > p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..3)]),
     p_PartitionOccurrence_NumParts <= 3,
     3 <= p_PartitionOccurrence_NumParts -> or([p_PartitionOccurrence_WhichPart[q3] = 3 | q3 : int(1..3)]),
@@ -76,6 +77,11 @@ such that
          and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18] = 4 ->
               p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18 + 1] = 4
                   | q18 : int(1..2)])
+             | q16 : int(1..3)]),
+    and([q16 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q19] != 4)
+                  | q19 : int(1..3)])
+         <= 3
              | q16 : int(1..3)]),
     and([q23 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
          or([q25 <= p_PartitionOccurrence_NumParts /\
