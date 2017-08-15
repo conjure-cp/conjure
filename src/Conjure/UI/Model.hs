@@ -855,8 +855,6 @@ prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugId "[input]"
     >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
-    >>= return . initInfo_Lettings    >>= logDebugId "[initInfo_Lettings]"
-    >>= resolveNames                  >>= logDebugId "[resolveNames]"
     >>= inferAttributes               >>= logDebugId "[inferAttributes]"
     >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
     >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
