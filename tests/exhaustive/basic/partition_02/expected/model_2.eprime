@@ -23,5 +23,7 @@ such that
     and([and([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9] = 7 ->
               x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9 + 1] = 7
                   | q9 : int(1..5)])
+             | q7 : int(1..2)]),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q10] != 7) | q10 : int(1..6)]) <= 6
              | q7 : int(1..2)])
 
