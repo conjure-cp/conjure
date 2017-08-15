@@ -176,7 +176,12 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                 ])
                         |]
 
-                regular numPartsVar partSizesVar | isRegular attrs = do
+                fixedPartSize attrs =
+                    case attrs of
+                        PartitionAttr _ SizeAttr_Size{} _ -> True
+                        _                                 -> False
+
+                regular numPartsVar partSizesVar | isRegular attrs && not (fixedPartSize attrs) = do
                     (iPat, i) <- quantifiedVar
                     return $ return -- for list
                         [essence|

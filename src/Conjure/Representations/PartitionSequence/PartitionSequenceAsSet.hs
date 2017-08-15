@@ -30,7 +30,7 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
         chck :: TypeOf_ReprCheck m
         chck _ dom1@(DomainPartitionSequence _ attrs _) = do
             -- this is a "lookahead"
-            -- do the horizontal representation move: go from "partitionSequence of T" to "set of set of T"
+            -- do the horizontal representation move: go from "partitionSequence of T" to "set of sequence of T"
             -- do representation selection on the set
             -- lookup the chosen representations and store them inside PartitionSequence_AsSet
             dom2 <- outDomain_ dom1
@@ -70,6 +70,12 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
         structuralCons f downX1 inDom@(DomainPartitionSequence _ attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
+
+                fixedPartSize =
+                    case attrs of
+                        PartitionAttr _ SizeAttr_Size{} _ -> True
+                        _                                 -> False
+
                 exactlyOnce rel = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
@@ -84,7 +90,7 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                                           ])
                                 |]
 
-                regular rel | isRegular attrs = do
+                regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return -- for list
