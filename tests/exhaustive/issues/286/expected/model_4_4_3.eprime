@@ -15,7 +15,7 @@ such that
                and([q16 > q14_ExplicitVarSizeWithMarker_Marker -> q14_ExplicitVarSizeWithMarker_Values[q16] = 1
                         | q16 : int(1..b)])])
     / 8,
-    and([true | q1 : int(1..b)]),
+    and([q1 <= p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] <= b | q1 : int(1..b)]),
     and([q1 > p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..b)]),
     p_PartitionOccurrence_NumParts <= b,
     and([q2 <= p_PartitionOccurrence_NumParts -> or([p_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..b)])

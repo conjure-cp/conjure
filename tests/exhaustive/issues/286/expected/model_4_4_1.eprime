@@ -8,7 +8,7 @@ find p_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..b)] of int(1..b
 such that
     sum([toInt(q12 <= p_PartitionOccurrence_NumParts) | q12 : int(1..b)]) <=
     sum([1 | q14_Occurrence : matrix indexed by [int(1..b)] of bool]) / 8,
-    and([true | q1 : int(1..b)]),
+    and([q1 <= p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] <= b | q1 : int(1..b)]),
     and([q1 > p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..b)]),
     p_PartitionOccurrence_NumParts <= b,
     and([q2 <= p_PartitionOccurrence_NumParts -> or([p_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..b)])
