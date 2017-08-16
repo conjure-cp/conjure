@@ -27,6 +27,9 @@ such that
          and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9] = false | q9 : int(1..4)])
              | q5 : int(1..4)]),
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 4,
+    and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q6, q7]) | q7 : int(1..4)]) <= 4
+             | q6 : int(1..4)]),
     4 =
     sum([toInt(q10 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
          catchUndef(sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q11])
@@ -72,6 +75,9 @@ such that
          and([q19 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q17] ->
               x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q17, q19] = 1
                   | q19 : int(1..4)])
+             | q17 : int(1..4)]),
+    and([q17 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q17] <= 4
              | q17 : int(1..4)]),
     4 =
     sum([toInt(q22 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker) *

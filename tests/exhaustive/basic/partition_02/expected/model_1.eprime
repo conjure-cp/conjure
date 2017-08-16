@@ -10,5 +10,6 @@ such that
              | q13 : int(1..2), q14 : int(1..2)]),
     and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q17, q18]) | q18 : int(1..6)]) >= 1 | q17 : int(1..2)]),
     x_PartitionAsSet_ExplicitR2_Occurrence[1, ..] <lex x_PartitionAsSet_ExplicitR2_Occurrence[2, ..],
+    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q7, q8]) | q8 : int(1..6)]) <= 6 | q7 : int(1..2)]),
     6 = sum([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q10, q11]) | q11 : int(1..6)]) | q10 : int(1..2)])
 

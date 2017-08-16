@@ -28,5 +28,6 @@ such that
               x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q9] = 1
                   | q9 : int(1..6)])
              | q7 : int(1..2)]),
+    and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q7] <= 6 | q7 : int(1..2)]),
     6 = sum([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q12] | q12 : int(1..2)])
 
