@@ -19,6 +19,7 @@ module Conjure.Language.Constant
     , viewConstantSequence
     , viewConstantRelation
     , viewConstantPartition
+    , viewConstantPartitionSequence
     ) where
 
 -- conjure
@@ -126,11 +127,12 @@ instance DomainSizeOf Constant Integer where
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
             _ -> fail ("domainSizeOf{Constant}" <+> pretty d)
-    domainSizeOf DomainMSet      {} = bug "not implemented: domainSizeOf DomainMSet"
-    domainSizeOf DomainFunction  {} = bug "not implemented: domainSizeOf DomainFunction"
-    domainSizeOf DomainRelation  {} = bug "not implemented: domainSizeOf DomainRelation"
-    domainSizeOf DomainPartition {} = bug "not implemented: domainSizeOf DomainPartition"
-    domainSizeOf _                  = bug "not implemented: domainSizeOf"
+    domainSizeOf DomainMSet              {} = bug "not implemented: domainSizeOf DomainMSet"
+    domainSizeOf DomainFunction          {} = bug "not implemented: domainSizeOf DomainFunction"
+    domainSizeOf DomainRelation          {} = bug "not implemented: domainSizeOf DomainRelation"
+    domainSizeOf DomainPartition         {} = bug "not implemented: domainSizeOf DomainPartition"
+    domainSizeOf DomainPartitionSequence {} = bug "not implemented: domainSizeOf DomainPartitionSequence"
+    domainSizeOf _                          = bug "not implemented: domainSizeOf"
 
 emptyCollection :: Constant -> Bool
 emptyCollection ConstantBool{} = False
@@ -415,6 +417,11 @@ validateConstantForDomain name
     d@(DomainPartition _ _ dInner) = nested c d $
         mapM_ (\ val -> validateConstantForDomain name val dInner ) (concat valss)
 
+validateConstantForDomain name
+    c@(ConstantAbstract (AbsLitPartitionSequence valss))
+    d@(DomainPartitionSequence _ _ dInner) = nested c d $
+        mapM_ (\ val -> validateConstantForDomain name val dInner ) (concat valss)
+
 validateConstantForDomain name c@(TypedConstant c' _) d = nested c d $ validateConstantForDomain name c' d
 
 validateConstantForDomain name c d = constantNotInDomain name c d
@@ -510,3 +517,7 @@ viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
 viewConstantPartition constant = fail ("Expecting a partition, but got:" <++> pretty constant)
 
+viewConstantPartitionSequence :: MonadFail m => Constant -> m [[Constant]]
+viewConstantPartitionSequence (ConstantAbstract (AbsLitPartitionSequence xs)) = return xs
+viewConstantPartitionSequence (TypedConstant c _) = viewConstantPartitionSequence c
+viewConstantPartitionSequence constant = fail ("Expecting a partitionSequence, but got:" <++> pretty constant)

@@ -4,6 +4,7 @@ module Conjure.Language.NameResolution
     ( resolveNames
     , resolveNamesMulti
     , resolveNamesX
+    , resolveX, resolveD -- actually internal, use with care
     ) where
 
 import Conjure.Prelude

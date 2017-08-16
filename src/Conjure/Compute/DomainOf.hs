@@ -297,6 +297,14 @@ instance DomainOf (AbstractLiteral Expression) where
                                    (SizeAttr_MaxSize (fromInt $ maximum [genericLength xs | xs <- xss]))
                                    False
 
+    domainOf (AbsLitPartitionSequence [] ) = return $ DomainPartitionSequence def attr
+                                                      (DomainAny "domainOf-AbsLitPartitionSequence-[]" TypeAny)
+        where attr = PartitionAttr (SizeAttr_Size 0) (SizeAttr_Size 0) False
+    domainOf (AbsLitPartitionSequence xss) = DomainPartitionSequence def attr <$> (domainUnions =<< mapM domainOf (concat xss))
+        where attr = PartitionAttr (SizeAttr_MaxSize (fromInt $ genericLength xss))
+                                   (SizeAttr_MaxSize (fromInt $ maximum [genericLength xs | xs <- xss]))
+                                   False
+
     indexDomainsOf (AbsLitMatrix ind inn) = (ind :) <$> (mapM domainUnions =<< mapM indexDomainsOf inn)
     indexDomainsOf _ = return []
 

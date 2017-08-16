@@ -5,6 +5,7 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..6)] of int(1..2)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..6)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(1..6)
 such that
+    and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 6 | q1 : int(1..2)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
     2 = x_PartitionOccurrence_NumParts,
     2 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[1] = x_PartitionOccurrence_PartSizes[2],

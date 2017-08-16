@@ -1,0 +1,23 @@
+
+$ see https://xkcd.com/287
+
+letting appetizer be new type enum
+            { mixedFruit, frenchFries
+            , sideSalad, hotWings
+            , mozzarellaSticks, samplerPlate
+            }
+
+letting price be function
+            ( mixedFruit       --> 215
+            , frenchFries      --> 275
+            , sideSalad        --> 335
+            , hotWings         --> 355
+            , mozzarellaSticks --> 420
+            , samplerPlate     --> 580
+            )
+
+letting worth be 1505
+
+find order : function appetizer --> int(1..10)
+
+such that worth = sum (a,n) in order . price(a) * n

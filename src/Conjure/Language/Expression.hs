@@ -197,6 +197,7 @@ instance Pretty Declaration where
             isPrim2D (extract -> Just rows) = mapM isPrim1D rows
             isPrim2D (viewConstantRelation  -> Just table) = mapM (mapM isPrim) table
             isPrim2D (viewConstantPartition -> Just table) = mapM (mapM isPrim) table
+            isPrim2D (viewConstantPartitionSequence -> Just table) = mapM (mapM isPrim) table
             isPrim2D _ = Nothing
 
             isPrim3D (extract -> Just table) = mapM isPrim2D table

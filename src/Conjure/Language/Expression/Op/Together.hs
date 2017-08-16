@@ -24,11 +24,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTogether x) where
         pTy <- typeOf p
         case (xTy, pTy) of
             (TypeSet xTyInner, TypePartition pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
+            (TypeSet xTyInner, TypePartitionSequence pTyInner) | typesUnify [xTyInner, pTyInner] -> return TypeBool
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpTogether where
     evaluateOp (OpTogether _ ConstantUndefined{}) = return (fromBool False)
     evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
+        return $ ConstantBool $ or
+            [ and [ y `elem` xs | y <- ys ]
+            | xs <- xss
+            ]
+    evaluateOp (OpTogether (viewConstantSet -> Just ys) (viewConstantPartitionSequence -> Just xss)) =
         return $ ConstantBool $ or
             [ and [ y `elem` xs | y <- ys ]
             | xs <- xss

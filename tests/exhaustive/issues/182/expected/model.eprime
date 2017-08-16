@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 letting let1 be 4
+letting let2 be 4
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker: int(0..4)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker:
         matrix indexed by [int(1..4)] of int(0..4)
@@ -49,5 +50,8 @@ such that
               and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q6, q8, q13] = 1
                        | q13 : int(1..2)])
                   | q8 : int(1..4)])
+             | q6 : int(1..4)]),
+    and([q6 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q6] <= 4
              | q6 : int(1..4)])
 

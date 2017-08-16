@@ -30,6 +30,7 @@ data AbstractLiteral x
     | AbsLitSequence [x]
     | AbsLitRelation [[x]]
     | AbsLitPartition [[x]]
+    | AbsLitPartitionSequence [[x]]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (AbstractLiteral x)
@@ -50,6 +51,7 @@ instance Pretty a => Pretty (AbstractLiteral a) where
     pretty (AbsLitSequence  xs ) = "sequence"  <> prettyList prParens "," xs
     pretty (AbsLitRelation  xss) = "relation"  <> prettyListDoc prParens "," [ pretty (AbsLitTuple xs)         | xs <- xss   ]
     pretty (AbsLitPartition xss) = "partition" <> prettyListDoc prParens "," [ prettyList prBraces "," xs      | xs <- xss   ]
+    pretty (AbsLitPartitionSequence xss) = "partitionSequence" <> prettyListDoc prParens "," [ "sequence" <> prettyList prParens "," xs | xs <- xss ]
 
 instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescription (AbstractLiteral x) where
     varSymBreakingDescription (AbsLitTuple xs) = JSON.Object $ M.fromList
@@ -98,6 +100,11 @@ instance (VarSymBreakingDescription x, ExpressionLike x) => VarSymBreakingDescri
         , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitSet) xs)
         , ("symmetricChildren", JSON.Bool True)
         ]
+    varSymBreakingDescription (AbsLitPartitionSequence xs) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "AbsLitPartitionSequence")
+        , ("children", JSON.Array $ V.fromList $ map (varSymBreakingDescription . AbsLitSet) xs)
+        , ("symmetricChildren", JSON.Bool True)
+        ]
 
 instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
@@ -138,6 +145,9 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny)
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
 
+    typeOf   (AbsLitPartitionSequence [] ) = return (TypePartitionSequence TypeAny)
+    typeOf p@(AbsLitPartitionSequence xss) = TypePartitionSequence <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
+
 
 normaliseAbsLit :: (Ord c, ExpressionLike c) => (c -> c) -> AbstractLiteral c -> AbstractLiteral c
 normaliseAbsLit norm (AbsLitTuple     xs ) = AbsLitTuple                           $ map norm xs
@@ -150,6 +160,7 @@ normaliseAbsLit norm (AbsLitFunction  xs ) = AbsLitFunction              $ sortN
 normaliseAbsLit norm (AbsLitSequence  xs ) = AbsLitSequence              $           map norm xs
 normaliseAbsLit norm (AbsLitRelation  xss) = AbsLitRelation              $ sortNub $ map (map norm) xss
 normaliseAbsLit norm (AbsLitPartition xss) = AbsLitPartition             $ sortNub $ map (sortNub . map norm) xss
+normaliseAbsLit norm (AbsLitPartitionSequence xss) = AbsLitPartitionSequence $ sortNub $ map (map norm) xss
 
 emptyCollectionAbsLit :: AbstractLiteral c -> Bool
 emptyCollectionAbsLit AbsLitTuple{} = False
@@ -162,3 +173,4 @@ emptyCollectionAbsLit (AbsLitFunction xs) = null xs
 emptyCollectionAbsLit (AbsLitSequence xs) = null xs
 emptyCollectionAbsLit (AbsLitRelation xs) = null xs
 emptyCollectionAbsLit (AbsLitPartition xs) = null xs
+emptyCollectionAbsLit (AbsLitPartitionSequence xs) = null xs

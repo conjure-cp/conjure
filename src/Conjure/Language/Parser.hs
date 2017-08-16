@@ -264,6 +264,7 @@ parseDomainWithRepr = pDomainAtom
             , pSequence
             , pRelation
             , pPartition
+            , pPartitionSequence
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
@@ -402,6 +403,15 @@ parseDomainWithRepr = pDomainAtom
             lexeme L_from
             y <- parseDomainWithRepr
             return $ DomainPartition r x y
+
+        pPartitionSequence = do
+            lexeme L_partitionSequence
+            r <- parseRepr
+            x <- parsePartitionAttr
+            lexeme L_from
+            y <- parseDomainWithRepr
+            return $ DomainPartitionSequence r x y
+
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
@@ -583,6 +593,7 @@ parsePartitionAttr = do
             fail ("incompatible attributes:" <+> stringToDoc (show as))
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
+
 
 checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
 checkExtraAttributes pos ty attrs supported = do
@@ -896,6 +907,7 @@ parseLiteral = label "value" $ msum
     , mkAbstractLiteral <$> pSequence
     , mkAbstractLiteral <$> pRelation
     , mkAbstractLiteral <$> pPartition
+    , mkAbstractLiteral <$> pPartitionSequence
     ]
     where
 
@@ -988,6 +1000,16 @@ parseLiteral = label "value" $ msum
             return (AbsLitPartition xs)
             where
                 inner = braces (commaSeparated0 parseExpr)
+
+        pPartitionSequence = do
+            lexeme L_partitionSequence
+            xs <- parens (commaSeparated0 inner)
+            return (AbsLitPartitionSequence xs)
+            where
+                inner = do
+                    lexeme L_sequence
+                    xs <- parens (commaSeparated0 parseExpr)
+                    return xs
 
 
 

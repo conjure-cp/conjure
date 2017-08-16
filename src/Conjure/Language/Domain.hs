@@ -62,12 +62,13 @@ data Domain r x
     | DomainRecord [(Name, Domain r x)]
     | DomainVariant [(Name, Domain r x)]
     | DomainMatrix (Domain () x) (Domain r x)
-    | DomainSet       r (SetAttr x) (Domain r x)
-    | DomainMSet      r (MSetAttr x) (Domain r x)
-    | DomainFunction  r (FunctionAttr x) (Domain r x) (Domain r x)
-    | DomainSequence  r (SequenceAttr x) (Domain r x)
-    | DomainRelation  r (RelationAttr x) [Domain r x]
+    | DomainSet r (SetAttr x) (Domain r x)
+    | DomainMSet r (MSetAttr x) (Domain r x)
+    | DomainFunction r (FunctionAttr x) (Domain r x) (Domain r x)
+    | DomainSequence r (SequenceAttr x) (Domain r x)
+    | DomainRelation r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
+    | DomainPartitionSequence r (PartitionAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
@@ -150,6 +151,7 @@ typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf 
 typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
 typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
 typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
+typeOfDomain (DomainPartitionSequence _ _ x) = TypePartitionSequence <$> typeOf x
 typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
@@ -190,6 +192,8 @@ changeRepr rep = go
             DomainRelation rep attr (map go ds)
         go (DomainPartition _   attr d) =
             DomainPartition rep attr (go d)
+        go (DomainPartitionSequence _   attr d) =
+            DomainPartitionSequence rep attr (go d)
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
@@ -240,6 +244,7 @@ reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
 reprTree (DomainSequence  r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
 reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainPartitionSequence r _ a) = Tree (Just r) [reprTree a]
 reprTree DomainOp{}        = Tree Nothing []
 reprTree DomainReference{} = Tree Nothing []
 reprTree DomainMetaVar{}   = Tree Nothing []
@@ -265,6 +270,7 @@ applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = Doma
 applyReprTree (DomainSequence  _ attr a  ) (Tree (Just r) [aRepr]) = DomainSequence r attr <$> applyReprTree a aRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
+applyReprTree (DomainPartitionSequence _ attr a) (Tree (Just r) [aRepr]) = DomainPartitionSequence r attr <$> applyReprTree a aRepr
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
@@ -757,7 +763,10 @@ data HasRepresentation
     | Relation_AsSet HasRepresentation                          -- carries: representation for the inner set
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
-    | Partition_Occurrence              -- TODO
+    | Partition_Occurrence
+
+    | PartitionSequence_AsSet HasRepresentation HasRepresentation -- carries: representations for the inner sets
+    | PartitionSequence_Occurrence
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -828,6 +837,9 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainPartition r attrs inner)
         = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
+
+    pretty (DomainPartitionSequence r attrs inner)
+        = hang ("partitionSequence" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
 
     pretty d@DomainOp{} = pretty (show d)
 
@@ -902,6 +914,8 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
+representationToShortText PartitionSequence_AsSet{}      = "PartitionSequenceAsSet"
+representationToShortText PartitionSequence_Occurrence   = "PartitionSequenceOccurrence"
 representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
@@ -947,6 +961,8 @@ normaliseDomain  norm (DomainRelation  r attr doms     ) = DomainRelation  r (fm
                                                                              (map (normaliseDomain norm) doms)
 normaliseDomain  norm (DomainPartition r attr dom      ) = DomainPartition r (fmap norm attr)
                                                                              (normaliseDomain norm dom)
+normaliseDomain  norm (DomainPartitionSequence r attr dom) = DomainPartitionSequence r (fmap norm attr)
+                                                                                       (normaliseDomain norm dom)
 normaliseDomain _norm d = d
 
 normaliseRange :: (c -> c) -> Range c -> Range c
@@ -962,7 +978,8 @@ innerDomainOf (DomainSet _ _ t) = return t
 innerDomainOf (DomainMSet _ _ t) = return t
 innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
 innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
-innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
+innerDomainOf (DomainPartition _ _ t) = return (DomainSet () def t)
+innerDomainOf (DomainPartitionSequence _ _ t) = return (DomainSet () def t)
 innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
 
 singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x

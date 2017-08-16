@@ -1,0 +1,69 @@
+language ESSENCE' 1.0
+
+find x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker: int(0..4)
+find x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length:
+        matrix indexed by [int(1..4)] of int(0..4)
+find x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values:
+        matrix indexed by [int(1..4), int(1..4)] of int(1..4)
+such that
+    or([q22 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker /\
+        (or([q23 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q22] /\
+             1 = x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q22, q23]
+                 | q23 : int(1..4)])
+         /\
+         or([q23 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q22] /\
+             3 = x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q22, q23]
+                 | q23 : int(1..4)]))
+            | q22 : int(1..4)]),
+    !or([q29 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker /\
+         (or([q30 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q29] /\
+              1 = x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q29, q30]
+                  | q30 : int(1..4)])
+          /\
+          or([q30 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q29] /\
+              2 = x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q29, q30]
+                  | q30 : int(1..4)]))
+             | q29 : int(1..4)]),
+    and([1 =
+         sum([toInt(and([q13 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker,
+                         q14 <=
+                         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q13],
+                         q1 =
+                         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q13, q14];
+                             int(1..3)]))
+                  | q13 : int(1..4), q14 : int(1..4)])
+             | q1 : int(1..4)]),
+    and([q15 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker /\
+         q16 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker
+         ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q15] =
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q16]
+             | q15 : int(1..4), q16 : int(1..4)]),
+    and([q17 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q17] >= 1
+             | q17 : int(1..4)]),
+    and([q7 + 1 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q7] <
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q7 + 1]
+         \/
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q7] =
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q7 + 1]
+         /\
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q7, ..] <lex
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q7 + 1, ..]
+             | q7 : int(1..3)]),
+    and([q8 > x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q8] = 0 /\
+         and([x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q8, q12] = 1
+                  | q12 : int(1..4)])
+             | q8 : int(1..4)]),
+    x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker <= 4,
+    and([q9 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker ->
+         and([q10 > x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q9] ->
+              x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Values[q9, q10] = 1
+                  | q10 : int(1..4)])
+             | q9 : int(1..4)]),
+    and([q9 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Marker ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithMarkerR14_Values_ExplicitBounded_Length[q9] <= 4
+             | q9 : int(1..4)])
+
