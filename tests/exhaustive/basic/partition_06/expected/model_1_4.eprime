@@ -26,12 +26,16 @@ such that
          and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9] = false | q9 : int(1..4)])
              | q5 : int(1..4)]),
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 4,
+    and([q6 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q6, q7]) | q7 : int(1..4)]) <= 4
+             | q6 : int(1..4)]),
     4 =
     sum([toInt(q10 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
          catchUndef(sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q11])
                              | q11 : int(1..4)]),
                     0)
              | q10 : int(1..4)]),
+    and([q12 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q12] <= 4 | q12 : int(1..4)]),
     and([q12 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q12] = 0 | q12 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,
     and([q13 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q14] = q13 | q14 : int(1..4)])
