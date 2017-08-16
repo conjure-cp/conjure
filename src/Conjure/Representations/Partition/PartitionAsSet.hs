@@ -74,11 +74,10 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- for list
                         [essence|
-                            forAll &iPat : &innerDomain .
-                                1  = sum ([ 1
-                                          | &jPat <- &rel
-                                          , &i in &j
-                                          ])
+                            allDiff([ &j
+                                    | &iPat <- &rel
+                                    , &jPat <- &i
+                                    ])
                                 |]
 
                 regular rel | isRegular attrs = do
