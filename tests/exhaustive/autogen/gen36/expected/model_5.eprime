@@ -23,7 +23,6 @@ such that
          var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q2] = 0
              | q2 : int(1..2)]),
     var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[2] -> var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[1],
-    and([var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[q5] -> false | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[q5] ->
          and([q19 <= var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5]
               -> false
@@ -42,5 +41,6 @@ such that
              | q5 : int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[q5] ->
          var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q5] <= 2
-             | q5 : int(1..2)])
+             | q5 : int(1..2)]),
+    and([var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[q5] -> false | q5 : int(1..2)])
 
