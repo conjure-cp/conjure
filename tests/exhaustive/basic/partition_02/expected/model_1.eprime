@@ -2,15 +2,6 @@ language ESSENCE' 1.0
 
 find x_PartitionAsSet_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..6)] of bool
 such that
-<<<<<<< HEAD
-    and([1 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q9, q1]) | q9 : int(1..2)]) | q1 : int(1..6)]),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q10, q12]) | q12 : int(1..6)]) =
-         sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q11, q13]) | q13 : int(1..6)])
-             | q10 : int(1..2), q11 : int(1..2)]),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q14, q15]) | q15 : int(1..6)]) >= 1 | q14 : int(1..2)]),
-    x_PartitionAsSet_ExplicitR2_Occurrence[1, ..] <lex x_PartitionAsSet_ExplicitR2_Occurrence[2, ..],
-    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q7, q8]) | q8 : int(1..6)]) <= 6 | q7 : int(1..2)])
-=======
     alldifferent_except([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q12, q2]) * catchUndef(q2, 0)
                              | q12 : int(1..2), q2 : int(1..6)],
                         0),
@@ -19,6 +10,6 @@ such that
              | q13 : int(1..2), q14 : int(1..2)]),
     and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q17, q18]) | q18 : int(1..6)]) >= 1 | q17 : int(1..2)]),
     x_PartitionAsSet_ExplicitR2_Occurrence[1, ..] <lex x_PartitionAsSet_ExplicitR2_Occurrence[2, ..],
+    and([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q7, q8]) | q8 : int(1..6)]) <= 6 | q7 : int(1..2)]),
     6 = sum([sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q10, q11]) | q11 : int(1..6)]) | q10 : int(1..2)])
->>>>>>> master
 

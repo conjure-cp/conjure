@@ -22,12 +22,9 @@ such that
               x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9 + 1] = 7
                   | q9 : int(1..5)])
              | q7 : int(1..2)]),
-<<<<<<< HEAD
     and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q10] != 7) | q10 : int(1..6)]) <= 6
-             | q7 : int(1..2)])
-=======
+             | q7 : int(1..2)]),
     6 =
     sum([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q13, q15] != 7) | q15 : int(1..6)])
              | q13 : int(1..2)])
->>>>>>> master
 
