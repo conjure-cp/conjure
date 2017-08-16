@@ -6,7 +6,7 @@ module Conjure.Process.InferAttributes ( inferAttributes ) where
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Domain.AddAttributes ( mkMin )
-import Conjure.Language.Expression.DomainSizeOf
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 
 
 inferAttributes :: MonadFail m => Model -> m Model
