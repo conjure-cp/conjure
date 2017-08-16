@@ -6,34 +6,39 @@ find x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded
 find x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values:
         matrix indexed by [int(1..6), int(1..3)] of int(1..6)
 such that
-    and([1 =
-         sum([toInt(and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q11],
-                         q12 <= x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q11],
-                         q1 =
-                         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q11, q12];
-                             int(1..3)]))
-                  | q11 : int(1..6), q12 : int(1..3)])
-             | q1 : int(1..6)]),
-    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q14] ->
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q14] >= 1
-             | q14 : int(1..6)]),
-    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q5 + 1] ->
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q5] <
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q5 + 1]
+    alldifferent_except([toInt(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q13] /\
+                               q14 <=
+                               x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q13])
+                         *
+                         catchUndef(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values
+                                        [q13, q14],
+                                    0)
+                             | q13 : int(1..6), q14 : int(1..3)],
+                        0),
+    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q15] ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q15] >= 1
+             | q15 : int(1..6)]),
+    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q4 + 1] ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q4] <
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q4 + 1]
          \/
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q5] =
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q5 + 1]
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q4] =
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q4 + 1]
          /\
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q5, ..] <lex
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q5 + 1, ..]
-             | q5 : int(1..5)]),
-    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q6] = false ->
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q6] = 3 /\
-         and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q6, q13] = 1
-                  | q13 : int(1..3)])
-             | q6 : int(1..6)]),
-    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q7 + 1] ->
-         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q7]
-             | q7 : int(1..5)]),
-    sum([toInt(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q8]) | q8 : int(1..6)]) <= 6
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q4, ..] <lex
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q4 + 1, ..]
+             | q4 : int(1..5)]),
+    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q5] = false ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q5] = 3 /\
+         and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Values[q5, q12] = 1
+                  | q12 : int(1..3)])
+             | q5 : int(1..6)]),
+    and([x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q6 + 1] ->
+         x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q6]
+             | q6 : int(1..5)]),
+    sum([toInt(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q7]) | q7 : int(1..6)]) <= 6,
+    6 =
+    sum([toInt(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Flags[q11]) *
+         catchUndef(x_PartitionSequenceAsSet_ExplicitVarSizeWithFlagsR14_Values_ExplicitBounded_Length[q11], 0)
+             | q11 : int(1..6)])
 

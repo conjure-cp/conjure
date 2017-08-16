@@ -10,10 +10,9 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
--- import Conjure.Language.Type
--- import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
 
@@ -79,15 +78,12 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                 exactlyOnce rel = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
-                    (kPat, k) <- quantifiedVar
                     return $ return $ -- for list
                         [essence|
-                            forAll &iPat : &innerDomain .
-                                1  = sum ([ 1
-                                          | &jPat <- &rel
-                                          , &kPat <- &j         $ (i in j)
-                                          , &i = &k[2]          $ (i in j)
-                                          ])
+                            allDiff([ &j[2]
+                                    | &iPat <- &rel
+                                    , &jPat <- &i
+                                    ])
                                 |]
 
                 regular rel | isRegular attrs && not fixedPartSize = do
@@ -106,6 +102,13 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
+                sumOfParts rel = do
+                    case domainSizeOf innerDomain of
+                        Left _err -> return []
+                        Right n   -> do
+                            (iPat, i) <- quantifiedVar
+                            return $ return [essence| &n = sum([ |&i| | &iPat <- &rel ]) |]
+
             case refs of
                 [rel] -> do
                     outDom                 <- outDomain inDom
@@ -115,6 +118,7 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                         , regular rel
                         , partsAren'tEmpty rel
                         , innerStructuralConsGen rel
+                        , sumOfParts rel
                         ]
                 _ -> na $ vcat [ "{structuralCons} PartitionSequenceAsSet"
                                , pretty inDom
