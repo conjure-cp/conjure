@@ -3,16 +3,14 @@ language ESSENCE' 1.0
 find x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)] of int(0..6)
 find x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2), int(1..6)] of int(1..6)
 such that
-    and([1 =
-         sum([toInt(or([q13 <= x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q11] /\
-                        x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q11, q13] = q1
-                            | q13 : int(1..6)]))
-                  | q11 : int(1..2)])
-             | q1 : int(1..6)]),
-    and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q14] =
-         x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q15]
-             | q14 : int(1..2), q15 : int(1..2)]),
-    and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q16] >= 1 | q16 : int(1..2)]),
+    alldifferent_except([toInt(q14 <= x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q13]) *
+                         catchUndef(x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q13, q14], 0)
+                             | q13 : int(1..2), q14 : int(1..6)],
+                        0),
+    and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q15] =
+         x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q16]
+             | q15 : int(1..2), q16 : int(1..2)]),
+    and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q17] >= 1 | q17 : int(1..2)]),
     x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] <
     x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]
     \/
@@ -30,5 +28,9 @@ such that
               x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values[q7, q9] = 1
                   | q9 : int(1..6)])
              | q7 : int(1..2)]),
+<<<<<<< HEAD
     and([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q7] <= 6 | q7 : int(1..2)])
+=======
+    6 = sum([x_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q12] | q12 : int(1..2)])
+>>>>>>> master
 

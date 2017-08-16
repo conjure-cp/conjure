@@ -2,17 +2,15 @@ language ESSENCE' 1.0
 
 find x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2), int(1..6)] of int(1..7)
 such that
-    and([1 =
-         sum([toInt(or([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q12, q14] != 7 /\
-                        x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q12, q14] = q1
-                            | q14 : int(1..6)]))
-                  | q12 : int(1..2)])
-             | q1 : int(1..6)]),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q15, q18] != 7) | q18 : int(1..6)]) =
-         sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q16, q20] != 7) | q20 : int(1..6)])
-             | q15 : int(1..2), q16 : int(1..2)]),
-    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q21, q23] != 7) | q23 : int(1..6)]) >= 1
-             | q21 : int(1..2)]),
+    alldifferent_except([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q16, q17] != 7) *
+                         catchUndef(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q16, q17], 0)
+                             | q16 : int(1..2), q17 : int(1..6)],
+                        0),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q18, q21] != 7) | q21 : int(1..6)]) =
+         sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q19, q23] != 7) | q23 : int(1..6)])
+             | q18 : int(1..2), q19 : int(1..2)]),
+    and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q24, q26] != 7) | q26 : int(1..6)]) >= 1
+             | q24 : int(1..2)]),
     x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[1, ..] <lex
     x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[2, ..],
     and([and([x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q8] <
@@ -24,6 +22,12 @@ such that
               x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q9 + 1] = 7
                   | q9 : int(1..5)])
              | q7 : int(1..2)]),
+<<<<<<< HEAD
     and([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q7, q10] != 7) | q10 : int(1..6)]) <= 6
              | q7 : int(1..2)])
+=======
+    6 =
+    sum([sum([toInt(x_PartitionAsSet_ExplicitR6_ExplicitVarSizeWithDummy[q13, q15] != 7) | q15 : int(1..6)])
+             | q13 : int(1..2)])
+>>>>>>> master
 

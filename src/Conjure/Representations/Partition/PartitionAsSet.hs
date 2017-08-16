@@ -10,10 +10,9 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
--- import Conjure.Language.Type
--- import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
 
@@ -81,11 +80,10 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- for list
                         [essence|
-                            forAll &iPat : &innerDomain .
-                                1  = sum ([ 1
-                                          | &jPat <- &rel
-                                          , &i in &j
-                                          ])
+                            allDiff([ &j
+                                    | &iPat <- &rel
+                                    , &jPat <- &i
+                                    ])
                                 |]
 
                 regular rel | isRegular attrs && not fixedPartSize = do
@@ -104,6 +102,13 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
+                sumOfParts rel = do
+                    case domainSizeOf innerDomain of
+                        Left _err -> return []
+                        Right n   -> do
+                            (iPat, i) <- quantifiedVar
+                            return $ return [essence| &n = sum([ |&i| | &iPat <- &rel ]) |]
+
             case refs of
                 [rel] -> do
                     outDom                 <- outDomain inDom
@@ -113,6 +118,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         , regular rel
                         , partsAren'tEmpty rel
                         , innerStructuralConsGen rel
+                        , sumOfParts rel
                         ]
                 _ -> na $ vcat [ "{structuralCons} PartitionAsSet"
                                , pretty inDom
