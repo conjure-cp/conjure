@@ -53,13 +53,9 @@ such that
              | q6 : int(1..4)]),
     and([q6 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q6] <= 4
-<<<<<<< HEAD
-             | q6 : int(1..4)])
-=======
              | q6 : int(1..4)]),
     4 =
     sum([toInt(q15 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker) *
          catchUndef(p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q15], 0)
              | q15 : int(1..4)])
->>>>>>> master
 
