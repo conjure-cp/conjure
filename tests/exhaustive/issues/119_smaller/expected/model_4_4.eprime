@@ -26,6 +26,7 @@ such that
         (and([p_PartitionOccurrence_WhichPart[q68] = q65 -> 3 = q68 | q68 : int(1..3)]) /\
          or([p_PartitionOccurrence_WhichPart[q74] = q65 /\ q74 = 3 | q74 : int(1..3)]))
             | q65 : int(1..3)]),
+    and([q1 <= p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] <= 3 | q1 : int(1..3)]),
     and([q1 > p_PartitionOccurrence_NumParts -> p_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..3)]),
     p_PartitionOccurrence_NumParts <= 3,
     3 <= p_PartitionOccurrence_NumParts -> or([p_PartitionOccurrence_WhichPart[q3] = 3 | q3 : int(1..3)]),
