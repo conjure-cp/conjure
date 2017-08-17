@@ -12,6 +12,8 @@ import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
+import Conjure.Language.Type ( Type(..), typeUnify )
+import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
@@ -76,15 +78,31 @@ partitionSequenceAsSet dispatch reprOptions useLevels = Representation chck down
                         _                                 -> False
 
                 exactlyOnce rel = do
-                    (iPat, i) <- quantifiedVar
-                    (jPat, j) <- quantifiedVar
-                    return $ return $ -- for list
-                        [essence|
-                            allDiff([ &j[2]
-                                    | &iPat <- &rel
-                                    , &jPat <- &i
-                                    ])
-                                |]
+                    innerType <- typeOf innerDomain
+                    if innerType `typeUnify` TypeInt
+                        then do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- for list
+                                [essence|
+                                    allDiff([ &j[2]
+                                            | &iPat <- &rel
+                                            , &jPat <- &i
+                                            ])
+                                        |]
+                        else do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            (kPat, k) <- quantifiedVar
+                            return $ return $ -- for list
+                                [essence|
+                                    forAll &iPat : &innerDomain .
+                                        1  = sum ([ 1
+                                                  | &jPat <- &rel
+                                                  , &kPat <- &j         $ (i in j)
+                                                  , &i = &k[2]          $ (i in j)
+                                                  ])
+                                        |]
 
                 regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
