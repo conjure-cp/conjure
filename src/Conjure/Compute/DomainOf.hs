@@ -8,9 +8,9 @@ import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
-
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainUnion
+
 
 type Dom = Domain () Expression
 
@@ -52,6 +52,7 @@ instance DomainOf ReferenceTo where
     domainOf (DeclHasRepr _ _ dom  ) = return (forgetRepr dom)
     domainOf RecordField{}  = fail "domainOf-ReferenceTo-RecordField"
     domainOf VariantField{} = fail "domainOf-ReferenceTo-VariantField"
+    domainOf FrameUpdateVar = fail "domainOf-FrameUpdateVar"
 
 
 instance DomainOf Expression where
@@ -94,6 +95,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpEq x) = domainOf x
     domainOf (MkOpFactorial x) = domainOf x
     domainOf (MkOpFlatten x) = domainOf x
+    domainOf (MkOpFrameUpdate x) = domainOf x
     domainOf (MkOpFreq x) = domainOf x
     domainOf (MkOpGeq x) = domainOf x
     domainOf (MkOpGt x) = domainOf x
@@ -166,6 +168,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpEq x) = indexDomainsOf x
     indexDomainsOf (MkOpFactorial x) = indexDomainsOf x
     indexDomainsOf (MkOpFlatten x) = indexDomainsOf x
+    indexDomainsOf (MkOpFrameUpdate x) = indexDomainsOf x
     indexDomainsOf (MkOpFreq x) = indexDomainsOf x
     indexDomainsOf (MkOpGeq x) = indexDomainsOf x
     indexDomainsOf (MkOpGt x) = indexDomainsOf x
@@ -555,6 +558,9 @@ instance (DomainOf x, Dom :< x) => DomainOf (OpRestrict x) where
 instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpIncumbent x) where
     domainOf (OpIncumbent x) = domainOf x
     indexDomainsOf (OpIncumbent x) = indexDomainsOf x
+
+instance DomainOf (OpFrameUpdate x) where
+    domainOf OpFrameUpdate{} = return DomainBool
 
 instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x

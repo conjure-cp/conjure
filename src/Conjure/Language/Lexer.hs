@@ -265,6 +265,7 @@ data Lexeme
 
     | L_neighbourhood
     | L_incumbent
+    | L_frameUpdate
 
     deriving (Eq, Ord, Show, Generic)
 
@@ -479,6 +480,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_neighbourhood, "neighbourhood" )
     , ( L_neighbourhood, "neighborhood" )
     , ( L_incumbent, "incumbent" )
+    , ( L_frameUpdate, "frameUpdate" )
 
     ]
 

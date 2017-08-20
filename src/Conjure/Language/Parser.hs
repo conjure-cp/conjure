@@ -798,7 +798,7 @@ parseAAC = do
 parseOthers :: [Parser Expression]
 parseOthers = [ parseFunctional l
               | l <- functionals
-              ] ++ [parseTyped, parseTwoBars]
+              ] ++ [parseTyped, parseTwoBars, parseFrameUpdate]
     where
 
         parseTwoBars :: Parser Expression
@@ -813,6 +813,19 @@ parseOthers = [ parseFunctional l
             d  <- betweenTicks parseDomain
             ty <- typeOfDomain d
             return (Typed x ty)
+
+        parseFrameUpdate :: Parser Expression
+        parseFrameUpdate = do
+            lexeme L_frameUpdate
+            parens $ do
+                old   <- parseExpr
+                comma
+                new   <- parseExpr
+                comma
+                names <- brackets (commaSeparated (parens (countSep 2 parseName comma)))
+                comma
+                cons  <- parseExpr
+                return $ Op $ MkOpFrameUpdate $ OpFrameUpdate old new [(a,b) | [a,b] <- names] cons
 
         parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do

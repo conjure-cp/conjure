@@ -10,10 +10,10 @@ module Conjure.Language.NameResolution
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.Language.Definition
-import Conjure.Language.Domain
+import Conjure.Language
+-- import Conjure.Language.Domain
 import Conjure.Language.TypeOf
-import Conjure.Language.Pretty
+-- import Conjure.Language.Pretty
 
 
 resolveNamesMulti :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => [Model] -> m [Model]
@@ -229,6 +229,15 @@ resolveX (WithLocals body (DefinednessConstraints locals)) = scope $ do
     locals' <- mapM resolveX locals
     body'   <- resolveX body
     return (WithLocals body' (DefinednessConstraints locals'))
+
+resolveX (Op (MkOpFrameUpdate (OpFrameUpdate old new names cons))) = scope $ do
+    old' <- resolveX old
+    new' <- resolveX new
+    forM_ names $ \ (a,b) -> do
+        modify ((a, FrameUpdateVar) :)
+        modify ((b, FrameUpdateVar) :)
+    cons' <- resolveX cons
+    return (Op (MkOpFrameUpdate (OpFrameUpdate old' new' names cons')))
 
 resolveX x = descendM resolveX x
 

@@ -39,6 +39,7 @@ instance CategoryOf ReferenceTo where
     categoryOf (DeclHasRepr forg _ _  ) = categoryOf forg
     categoryOf RecordField{}            = CatBottom
     categoryOf VariantField{}           = CatBottom
+    categoryOf FrameUpdateVar           = CatBottom
 
 instance CategoryOf Generator where
      categoryOf (GenDomainNoRepr  _ x) = categoryOf x
