@@ -351,7 +351,6 @@ Test-Suite conjure-testing
                      , Conjure.TypeCheckAll
                      , Conjure.ParsePrint
                      , Conjure.Custom
-                     , Golden
     main-is          : TestsMain.hs
     build-depends    : conjure-cp
                      , base
@@ -362,7 +361,6 @@ Test-Suite conjure-testing
                      , system-filepath
                      , tasty
                      , tasty-ant-xml
-                     , tasty-golden >= 2.3
                      , tasty-hunit
                      , text
     default-extensions:
