@@ -117,3 +117,127 @@ rule_Max = "set-max{Explicit}" `namedRule` theRule where
             ( "Vertical rule for set max, Explicit representation."
             , return [essence| &m[&maxInIndex] |]
             )
+
+
+-- | This is the specification of frameUpdate(old, new, [(x1,y1), (x2, y2)], cons)
+-- { true
+-- @
+--     find x1, x2 : indexOld
+--     find y1, y2 : indexNew
+--     such that
+--         allDiff([x1, x2]),
+--         allDiff([y1, y2]),
+--         cons(x1,x2,y1,y2),
+--         and([ new[k] = &m + sum([ toInt(or([m in {x1,x2}])),
+--                                 , toInt(or([m in {x1,x2}]) /\ or([m+1 in {x1,x2}]))
+--                                 ])
+--             | k : indexNew
+--             , !(k in {y1,y2})
+--             , letting l be k - sum(&k >= &y1, &k >= &y2)            $ number of empty places to the left
+--             , letting m be l + sum(&l >= &x1, &l >= &x2)
+--             ])
+-- }
+rule_frameUpdate :: Rule
+rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
+    theRule p = do
+        (old, new, names, cons) <- match opFrameUpdate p
+
+        TypeSet{}    <- typeOf old
+        Set_Explicit <- representationOf old
+        [oldM]       <- downX1 old
+        (oldIndex:_) <- indexDomainsOf oldM
+
+        TypeSet{}    <- typeOf new
+        Set_Explicit <- representationOf new
+        [newM]       <- downX1 new
+        (newIndex:_) <- indexDomainsOf newM
+
+        traceM $ show $ "old  :" <+> pretty old
+        traceM $ show $ "new  :" <+> pretty new
+        traceM $ show $ "names:" <+> pretty (show names)
+        traceM $ show $ "cons :" <+> pretty cons
+
+        return
+            ( "Vertical rule for frameUpdate, Explicit representation"
+            , do
+
+                focusNames_a <- forM names $ \ (a,_) -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (a, auxName, aux, oldIndex)
+                focusNames_b <- forM names $ \ (_,b) -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (b, auxName, aux, newIndex)
+
+                let consOut = flip transform cons $ \ h -> case h of
+                        Reference nm (Just FrameUpdateVar) ->
+                            case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
+                                 , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
+                                ([auxVar], _) -> [essence| &oldM[&auxVar] |]
+                                (_, [auxVar]) -> [essence| &newM[&auxVar] |]
+                                _             -> h
+                        _ -> h
+
+                (kPat, k) <- quantifiedVar
+                (targetLPat, targetL) <- auxiliaryVar
+                (targetMPat, targetM) <- auxiliaryVar
+
+                -- keep everything out of focus unchanged
+                let freezeFrame =
+                        let
+                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+                            k_gt_b = make opSum $ fromList [ [essence| toInt(&k >= &i) |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+                            l_gt_a = make opSum $ fromList [ [essence| toInt(&targetL >= &i) |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            targetAdjust = make opSum $ fromList
+                                [ [essence| toInt(&condition) |]
+                                | i <- [0 .. genericLength names - 1]
+                                , let condition = make opAnd $ fromList
+                                                    [ is_a [essence| &targetM + &jE |]
+                                                    | j <- [0 .. i]
+                                                    , let jE = Constant (ConstantInt j)
+                                                    ]
+                                ]
+                            
+
+                        in
+                            trace (show $ "rule_frameUpdate targetAdjust" <++> pretty targetAdjust) $ [essence|
+                                and([ &newM[&k] = &oldM[&targetM + &targetAdjust]
+                                    | &kPat : &newIndex
+                                    , ! &k_is_b
+                                    , letting &targetLPat be &k       - &k_gt_b
+                                    , letting &targetMPat be &targetL + &l_gt_a
+                                    ])
+                            |]
+
+                let out = WithLocals
+                        [essence| true |]
+                        (AuxiliaryVars $
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_a
+                            ] ++
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_b
+                            ] ++
+                            [ SuchThat
+                                [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
+                                , make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_b])
+                                , consOut
+                                , freezeFrame
+                                ]
+                            ])
+                traceM $ show $ "rule_frameUpdate consOut     " <++> pretty consOut
+                traceM $ show $ "rule_frameUpdate freezeFrame " <++> pretty freezeFrame
+                traceM $ show $ "rule_frameUpdate out         " <++> pretty out
+                return out
+            )
+

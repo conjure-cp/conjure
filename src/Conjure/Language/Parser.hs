@@ -737,7 +737,7 @@ parseComprehension = brackets $ do
         letting :: Parser [GeneratorOrCondition]
         letting = do
             lexeme L_letting
-            nm <- parseName
+            nm <- parseNameOrMeta
             lexeme L_be
             x  <- parseExpr
             return [ComprehensionLetting nm x]

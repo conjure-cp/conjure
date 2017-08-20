@@ -1433,6 +1433,25 @@ opIncumbent _ =
     )
 
 
+opFrameUpdate
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> [(Name, Name)] -> x -> x
+       , x -> m (x, x, [(Name, Name)], x)
+       )
+opFrameUpdate _ =
+    ( \ old new names cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate old new names cons
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpFrameUpdate (OpFrameUpdate old new names cons) -> return (old, new, names, cons)
+                _ -> na ("Lenses.opFrameUpdate:" <++> pretty p)
+    )
+
+
 opFactorial
     :: ( Op x :< x
        , Pretty x
