@@ -3,7 +3,7 @@ rm -rf output-*
 
 for i in {1..4}; do
 
-    conjure solve frameUpdate_02.essence \
+    conjure solve *.essence \
         -aai \
         --channelling=no \
         --copy-solutions=no \

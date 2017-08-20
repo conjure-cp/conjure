@@ -4,7 +4,7 @@ rm -rf Occurrence Explicit
 
 
 # Occurrence
-conjure solve frameUpdate_01.essence \
+conjure solve *.essence \
     -aai \
     --channelling=no \
     --copy-solutions=no \
@@ -16,7 +16,7 @@ cat Occurrence/*.solution
 
 
 # Explicit
-conjure solve frameUpdate_01.essence \
+conjure solve *.essence \
     -aai \
     --channelling=no \
     --copy-solutions=no \
