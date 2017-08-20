@@ -14,331 +14,332 @@ find b_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(1..2
 find b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..2)
 find b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..2), int(1..2)] of bool
 such that
-    or([q101 <= a_PartitionOccurrence_NumParts /\
-        (toInt(or([q224 <= a_PartitionOccurrence_NumParts /\
-                   (and([a_PartitionOccurrence_WhichPart[q227] = q224 ->
-                         or([a_PartitionOccurrence_WhichPart[q229] = q101 /\ q229 = q227 | q229 : int(1..2)])
-                             | q227 : int(1..2)])
+    or([q107 <= a_PartitionOccurrence_NumParts /\
+        (toInt(or([q230 <= a_PartitionOccurrence_NumParts /\
+                   (and([a_PartitionOccurrence_WhichPart[q233] = q230 ->
+                         or([a_PartitionOccurrence_WhichPart[q235] = q107 /\ q235 = q233 | q235 : int(1..2)])
+                             | q233 : int(1..2)])
                     /\
-                    and([a_PartitionOccurrence_WhichPart[q231] = q101 ->
-                         or([a_PartitionOccurrence_WhichPart[q233] = q224 /\ q233 = q231 | q233 : int(1..2)])
-                             | q231 : int(1..2)]))
-                       | q224 : int(1..2)]))
+                    and([a_PartitionOccurrence_WhichPart[q237] = q107 ->
+                         or([a_PartitionOccurrence_WhichPart[q239] = q230 /\ q239 = q237 | q239 : int(1..2)])
+                             | q237 : int(1..2)]))
+                       | q230 : int(1..2)]))
          <
-         toInt(or([q104 <= b_PartitionOccurrence_NumParts /\
-                   (and([b_PartitionOccurrence_WhichPart[q107] = q104 ->
-                         or([a_PartitionOccurrence_WhichPart[q109] = q101 /\ q109 = q107 | q109 : int(1..2)])
-                             | q107 : int(1..2)])
+         toInt(or([q110 <= b_PartitionOccurrence_NumParts /\
+                   (and([b_PartitionOccurrence_WhichPart[q113] = q110 ->
+                         or([a_PartitionOccurrence_WhichPart[q115] = q107 /\ q115 = q113 | q115 : int(1..2)])
+                             | q113 : int(1..2)])
                     /\
-                    and([a_PartitionOccurrence_WhichPart[q111] = q101 ->
-                         or([b_PartitionOccurrence_WhichPart[q113] = q104 /\ q113 = q111 | q113 : int(1..2)])
-                             | q111 : int(1..2)]))
-                       | q104 : int(1..2)]))
+                    and([a_PartitionOccurrence_WhichPart[q117] = q107 ->
+                         or([b_PartitionOccurrence_WhichPart[q119] = q110 /\ q119 = q117 | q119 : int(1..2)])
+                             | q117 : int(1..2)]))
+                       | q110 : int(1..2)]))
          /\
-         (and([q140 <= a_PartitionOccurrence_NumParts /\
-               (or([a_PartitionOccurrence_WhichPart[q158] = q140 /\
-                    (toInt(or([a_PartitionOccurrence_WhichPart[q153] = q140 /\ q153 = q158 | q153 : int(1..2)])) <
-                     toInt(or([a_PartitionOccurrence_WhichPart[q131] = q101 /\ q131 = q158 | q131 : int(1..2)]))
+         (and([q146 <= a_PartitionOccurrence_NumParts /\
+               (or([a_PartitionOccurrence_WhichPart[q164] = q146 /\
+                    (toInt(or([a_PartitionOccurrence_WhichPart[q159] = q146 /\ q159 = q164 | q159 : int(1..2)])) <
+                     toInt(or([a_PartitionOccurrence_WhichPart[q137] = q107 /\ q137 = q164 | q137 : int(1..2)]))
                      /\
-                     (and([a_PartitionOccurrence_WhichPart[q155] = q140 ->
-                           toInt(or([a_PartitionOccurrence_WhichPart[q154] = q140 /\ q154 = q155 | q154 : int(1..2)])) =
-                           toInt(or([a_PartitionOccurrence_WhichPart[q139] = q101 /\ q139 = q155 | q139 : int(1..2)]))
-                               | q155 : int(1..2), q155 < q158])
+                     (and([a_PartitionOccurrence_WhichPart[q161] = q146 ->
+                           toInt(or([a_PartitionOccurrence_WhichPart[q160] = q146 /\ q160 = q161 | q160 : int(1..2)])) =
+                           toInt(or([a_PartitionOccurrence_WhichPart[q145] = q107 /\ q145 = q161 | q145 : int(1..2)]))
+                               | q161 : int(1..2), q161 < q164])
                       /\
-                      and([!or([a_PartitionOccurrence_WhichPart[q157] = q140 /\ q157 = q132 | q157 : int(1..2)]) ->
-                           (a_PartitionOccurrence_WhichPart[q132] = q101 ->
-                            toInt(or([a_PartitionOccurrence_WhichPart[q156] = q140 /\ q156 = q132 | q156 : int(1..2)]))
+                      and([!or([a_PartitionOccurrence_WhichPart[q163] = q146 /\ q163 = q138 | q163 : int(1..2)]) ->
+                           (a_PartitionOccurrence_WhichPart[q138] = q107 ->
+                            toInt(or([a_PartitionOccurrence_WhichPart[q162] = q146 /\ q162 = q138 | q162 : int(1..2)]))
                             =
-                            toInt(or([a_PartitionOccurrence_WhichPart[q135] = q101 /\ q135 = q132 | q135 : int(1..2)])))
-                               | q132 : int(1..2), q132 < q158])))
-                        | q158 : int(1..2)])
+                            toInt(or([a_PartitionOccurrence_WhichPart[q141] = q107 /\ q141 = q138 | q141 : int(1..2)])))
+                               | q138 : int(1..2), q138 < q164])))
+                        | q164 : int(1..2)])
                 \/
-                or([!or([a_PartitionOccurrence_WhichPart[q164] = q140 /\ q164 = q116 | q164 : int(1..2)]) /\
-                    (a_PartitionOccurrence_WhichPart[q116] = q101 /\
-                     (toInt(or([a_PartitionOccurrence_WhichPart[q159] = q140 /\ q159 = q116 | q159 : int(1..2)])) <
-                      toInt(or([a_PartitionOccurrence_WhichPart[q119] = q101 /\ q119 = q116 | q119 : int(1..2)]))
+                or([!or([a_PartitionOccurrence_WhichPart[q170] = q146 /\ q170 = q122 | q170 : int(1..2)]) /\
+                    (a_PartitionOccurrence_WhichPart[q122] = q107 /\
+                     (toInt(or([a_PartitionOccurrence_WhichPart[q165] = q146 /\ q165 = q122 | q165 : int(1..2)])) <
+                      toInt(or([a_PartitionOccurrence_WhichPart[q125] = q107 /\ q125 = q122 | q125 : int(1..2)]))
                       /\
-                      (and([a_PartitionOccurrence_WhichPart[q161] = q140 ->
-                            toInt(or([a_PartitionOccurrence_WhichPart[q160] = q140 /\ q160 = q161 | q160 : int(1..2)]))
+                      (and([a_PartitionOccurrence_WhichPart[q167] = q146 ->
+                            toInt(or([a_PartitionOccurrence_WhichPart[q166] = q146 /\ q166 = q167 | q166 : int(1..2)]))
                             =
-                            toInt(or([a_PartitionOccurrence_WhichPart[q127] = q101 /\ q127 = q161 | q127 : int(1..2)]))
-                                | q161 : int(1..2), q161 < q116])
+                            toInt(or([a_PartitionOccurrence_WhichPart[q133] = q107 /\ q133 = q167 | q133 : int(1..2)]))
+                                | q167 : int(1..2), q167 < q122])
                        /\
-                       and([!or([a_PartitionOccurrence_WhichPart[q163] = q140 /\ q163 = q120 | q163 : int(1..2)]) ->
-                            (a_PartitionOccurrence_WhichPart[q120] = q101 ->
-                             toInt(or([a_PartitionOccurrence_WhichPart[q162] = q140 /\ q162 = q120 | q162 : int(1..2)]))
+                       and([!or([a_PartitionOccurrence_WhichPart[q169] = q146 /\ q169 = q126 | q169 : int(1..2)]) ->
+                            (a_PartitionOccurrence_WhichPart[q126] = q107 ->
+                             toInt(or([a_PartitionOccurrence_WhichPart[q168] = q146 /\ q168 = q126 | q168 : int(1..2)]))
                              =
-                             toInt(or([a_PartitionOccurrence_WhichPart[q123] = q101 /\ q123 = q120
-                                           | q123 : int(1..2)])))
-                                | q120 : int(1..2), q120 < q116]))))
-                        | q116 : int(1..2)]))
+                             toInt(or([a_PartitionOccurrence_WhichPart[q129] = q107 /\ q129 = q126
+                                           | q129 : int(1..2)])))
+                                | q126 : int(1..2), q126 < q122]))))
+                        | q122 : int(1..2)]))
                ->
-               toInt(or([q213 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q216] = q213 ->
-                               or([a_PartitionOccurrence_WhichPart[q218] = q140 /\ q218 = q216 | q218 : int(1..2)])
-                                   | q216 : int(1..2)])
+               toInt(or([q219 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q222] = q219 ->
+                               or([a_PartitionOccurrence_WhichPart[q224] = q146 /\ q224 = q222 | q224 : int(1..2)])
+                                   | q222 : int(1..2)])
                           /\
-                          and([a_PartitionOccurrence_WhichPart[q220] = q140 ->
-                               or([a_PartitionOccurrence_WhichPart[q222] = q213 /\ q222 = q220 | q222 : int(1..2)])
-                                   | q220 : int(1..2)]))
-                             | q213 : int(1..2)]))
+                          and([a_PartitionOccurrence_WhichPart[q226] = q146 ->
+                               or([a_PartitionOccurrence_WhichPart[q228] = q219 /\ q228 = q226 | q228 : int(1..2)])
+                                   | q226 : int(1..2)]))
+                             | q219 : int(1..2)]))
                =
-               toInt(or([q143 <= b_PartitionOccurrence_NumParts /\
-                         (and([b_PartitionOccurrence_WhichPart[q146] = q143 ->
-                               or([a_PartitionOccurrence_WhichPart[q148] = q140 /\ q148 = q146 | q148 : int(1..2)])
-                                   | q146 : int(1..2)])
+               toInt(or([q149 <= b_PartitionOccurrence_NumParts /\
+                         (and([b_PartitionOccurrence_WhichPart[q152] = q149 ->
+                               or([a_PartitionOccurrence_WhichPart[q154] = q146 /\ q154 = q152 | q154 : int(1..2)])
+                                   | q152 : int(1..2)])
                           /\
-                          and([a_PartitionOccurrence_WhichPart[q150] = q140 ->
-                               or([b_PartitionOccurrence_WhichPart[q152] = q143 /\ q152 = q150 | q152 : int(1..2)])
-                                   | q150 : int(1..2)]))
-                             | q143 : int(1..2)]))
-                   | q140 : int(1..2)])
+                          and([a_PartitionOccurrence_WhichPart[q156] = q146 ->
+                               or([b_PartitionOccurrence_WhichPart[q158] = q149 /\ q158 = q156 | q158 : int(1..2)])
+                                   | q156 : int(1..2)]))
+                             | q149 : int(1..2)]))
+                   | q146 : int(1..2)])
           /\
-          and([and([q165 <= b_PartitionOccurrence_NumParts,
-                    !or([q179 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q182] = q179 ->
-                               or([b_PartitionOccurrence_WhichPart[q184] = q165 /\ q184 = q182 | q184 : int(1..2)])
-                                   | q182 : int(1..2)])
+          and([and([q171 <= b_PartitionOccurrence_NumParts,
+                    !or([q185 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q188] = q185 ->
+                               or([b_PartitionOccurrence_WhichPart[q190] = q171 /\ q190 = q188 | q190 : int(1..2)])
+                                   | q188 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q186] = q165 ->
-                               or([a_PartitionOccurrence_WhichPart[q188] = q179 /\ q188 = q186 | q188 : int(1..2)])
-                                   | q186 : int(1..2)]))
-                             | q179 : int(1..2)]),
-                    or([b_PartitionOccurrence_WhichPart[q194] = q165 /\
-                        (toInt(or([b_PartitionOccurrence_WhichPart[q189] = q165 /\ q189 = q194 | q189 : int(1..2)])) <
-                         toInt(or([a_PartitionOccurrence_WhichPart[q131] = q101 /\ q131 = q194 | q131 : int(1..2)]))
+                          and([b_PartitionOccurrence_WhichPart[q192] = q171 ->
+                               or([a_PartitionOccurrence_WhichPart[q194] = q185 /\ q194 = q192 | q194 : int(1..2)])
+                                   | q192 : int(1..2)]))
+                             | q185 : int(1..2)]),
+                    or([b_PartitionOccurrence_WhichPart[q200] = q171 /\
+                        (toInt(or([b_PartitionOccurrence_WhichPart[q195] = q171 /\ q195 = q200 | q195 : int(1..2)])) <
+                         toInt(or([a_PartitionOccurrence_WhichPart[q137] = q107 /\ q137 = q200 | q137 : int(1..2)]))
                          /\
-                         (and([b_PartitionOccurrence_WhichPart[q191] = q165 ->
-                               toInt(or([b_PartitionOccurrence_WhichPart[q190] = q165 /\ q190 = q191
-                                             | q190 : int(1..2)]))
+                         (and([b_PartitionOccurrence_WhichPart[q197] = q171 ->
+                               toInt(or([b_PartitionOccurrence_WhichPart[q196] = q171 /\ q196 = q197
+                                             | q196 : int(1..2)]))
                                =
-                               toInt(or([a_PartitionOccurrence_WhichPart[q139] = q101 /\ q139 = q191
-                                             | q139 : int(1..2)]))
-                                   | q191 : int(1..2), q191 < q194])
+                               toInt(or([a_PartitionOccurrence_WhichPart[q145] = q107 /\ q145 = q197
+                                             | q145 : int(1..2)]))
+                                   | q197 : int(1..2), q197 < q200])
                           /\
-                          and([!or([b_PartitionOccurrence_WhichPart[q193] = q165 /\ q193 = q132 | q193 : int(1..2)]) ->
-                               (a_PartitionOccurrence_WhichPart[q132] = q101 ->
-                                toInt(or([b_PartitionOccurrence_WhichPart[q192] = q165 /\ q192 = q132
-                                              | q192 : int(1..2)]))
+                          and([!or([b_PartitionOccurrence_WhichPart[q199] = q171 /\ q199 = q138 | q199 : int(1..2)]) ->
+                               (a_PartitionOccurrence_WhichPart[q138] = q107 ->
+                                toInt(or([b_PartitionOccurrence_WhichPart[q198] = q171 /\ q198 = q138
+                                              | q198 : int(1..2)]))
                                 =
-                                toInt(or([a_PartitionOccurrence_WhichPart[q135] = q101 /\ q135 = q132
-                                              | q135 : int(1..2)])))
-                                   | q132 : int(1..2), q132 < q194])))
-                            | q194 : int(1..2)])
+                                toInt(or([a_PartitionOccurrence_WhichPart[q141] = q107 /\ q141 = q138
+                                              | q141 : int(1..2)])))
+                                   | q138 : int(1..2), q138 < q200])))
+                            | q200 : int(1..2)])
                     \/
-                    or([!or([b_PartitionOccurrence_WhichPart[q200] = q165 /\ q200 = q116 | q200 : int(1..2)]) /\
-                        (a_PartitionOccurrence_WhichPart[q116] = q101 /\
-                         (toInt(or([b_PartitionOccurrence_WhichPart[q195] = q165 /\ q195 = q116 | q195 : int(1..2)])) <
-                          toInt(or([a_PartitionOccurrence_WhichPart[q119] = q101 /\ q119 = q116 | q119 : int(1..2)]))
+                    or([!or([b_PartitionOccurrence_WhichPart[q206] = q171 /\ q206 = q122 | q206 : int(1..2)]) /\
+                        (a_PartitionOccurrence_WhichPart[q122] = q107 /\
+                         (toInt(or([b_PartitionOccurrence_WhichPart[q201] = q171 /\ q201 = q122 | q201 : int(1..2)])) <
+                          toInt(or([a_PartitionOccurrence_WhichPart[q125] = q107 /\ q125 = q122 | q125 : int(1..2)]))
                           /\
-                          (and([b_PartitionOccurrence_WhichPart[q197] = q165 ->
-                                toInt(or([b_PartitionOccurrence_WhichPart[q196] = q165 /\ q196 = q197
-                                              | q196 : int(1..2)]))
+                          (and([b_PartitionOccurrence_WhichPart[q203] = q171 ->
+                                toInt(or([b_PartitionOccurrence_WhichPart[q202] = q171 /\ q202 = q203
+                                              | q202 : int(1..2)]))
                                 =
-                                toInt(or([a_PartitionOccurrence_WhichPart[q127] = q101 /\ q127 = q197
-                                              | q127 : int(1..2)]))
-                                    | q197 : int(1..2), q197 < q116])
+                                toInt(or([a_PartitionOccurrence_WhichPart[q133] = q107 /\ q133 = q203
+                                              | q133 : int(1..2)]))
+                                    | q203 : int(1..2), q203 < q122])
                            /\
-                           and([!or([b_PartitionOccurrence_WhichPart[q199] = q165 /\ q199 = q120 | q199 : int(1..2)]) ->
-                                (a_PartitionOccurrence_WhichPart[q120] = q101 ->
-                                 toInt(or([b_PartitionOccurrence_WhichPart[q198] = q165 /\ q198 = q120
-                                               | q198 : int(1..2)]))
+                           and([!or([b_PartitionOccurrence_WhichPart[q205] = q171 /\ q205 = q126 | q205 : int(1..2)]) ->
+                                (a_PartitionOccurrence_WhichPart[q126] = q107 ->
+                                 toInt(or([b_PartitionOccurrence_WhichPart[q204] = q171 /\ q204 = q126
+                                               | q204 : int(1..2)]))
                                  =
-                                 toInt(or([a_PartitionOccurrence_WhichPart[q123] = q101 /\ q123 = q120
-                                               | q123 : int(1..2)])))
-                                    | q120 : int(1..2), q120 < q116]))))
-                            | q116 : int(1..2)]);
+                                 toInt(or([a_PartitionOccurrence_WhichPart[q129] = q107 /\ q129 = q126
+                                               | q129 : int(1..2)])))
+                                    | q126 : int(1..2), q126 < q122]))))
+                            | q122 : int(1..2)]);
                         int(1..3)])
                ->
-               toInt(or([q202 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q205] = q202 ->
-                               or([b_PartitionOccurrence_WhichPart[q207] = q165 /\ q207 = q205 | q207 : int(1..2)])
-                                   | q205 : int(1..2)])
+               toInt(or([q208 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q211] = q208 ->
+                               or([b_PartitionOccurrence_WhichPart[q213] = q171 /\ q213 = q211 | q213 : int(1..2)])
+                                   | q211 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q209] = q165 ->
-                               or([a_PartitionOccurrence_WhichPart[q211] = q202 /\ q211 = q209 | q211 : int(1..2)])
-                                   | q209 : int(1..2)]))
-                             | q202 : int(1..2)]))
+                          and([b_PartitionOccurrence_WhichPart[q215] = q171 ->
+                               or([a_PartitionOccurrence_WhichPart[q217] = q208 /\ q217 = q215 | q217 : int(1..2)])
+                                   | q215 : int(1..2)]))
+                             | q208 : int(1..2)]))
                =
-               toInt(or([q168 <= b_PartitionOccurrence_NumParts /\
-                         (and([b_PartitionOccurrence_WhichPart[q171] = q168 ->
-                               or([b_PartitionOccurrence_WhichPart[q173] = q165 /\ q173 = q171 | q173 : int(1..2)])
-                                   | q171 : int(1..2)])
+               toInt(or([q174 <= b_PartitionOccurrence_NumParts /\
+                         (and([b_PartitionOccurrence_WhichPart[q177] = q174 ->
+                               or([b_PartitionOccurrence_WhichPart[q179] = q171 /\ q179 = q177 | q179 : int(1..2)])
+                                   | q177 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q175] = q165 ->
-                               or([b_PartitionOccurrence_WhichPart[q177] = q168 /\ q177 = q175 | q177 : int(1..2)])
-                                   | q175 : int(1..2)]))
-                             | q168 : int(1..2)]))
-                   | q165 : int(1..2)])))
-            | q101 : int(1..2)])
+                          and([b_PartitionOccurrence_WhichPart[q181] = q171 ->
+                               or([b_PartitionOccurrence_WhichPart[q183] = q174 /\ q183 = q181 | q183 : int(1..2)])
+                                   | q181 : int(1..2)]))
+                             | q174 : int(1..2)]))
+                   | q171 : int(1..2)])))
+            | q107 : int(1..2)])
     \/
-    or([q234 <= b_PartitionOccurrence_NumParts /\
-        !or([q368 <= a_PartitionOccurrence_NumParts /\
-             (and([a_PartitionOccurrence_WhichPart[q371] = q368 ->
-                   or([b_PartitionOccurrence_WhichPart[q373] = q234 /\ q373 = q371 | q373 : int(1..2)])
-                       | q371 : int(1..2)])
+    or([q240 <= b_PartitionOccurrence_NumParts /\
+        !or([q374 <= a_PartitionOccurrence_NumParts /\
+             (and([a_PartitionOccurrence_WhichPart[q377] = q374 ->
+                   or([b_PartitionOccurrence_WhichPart[q379] = q240 /\ q379 = q377 | q379 : int(1..2)])
+                       | q377 : int(1..2)])
               /\
-              and([b_PartitionOccurrence_WhichPart[q375] = q234 ->
-                   or([a_PartitionOccurrence_WhichPart[q377] = q368 /\ q377 = q375 | q377 : int(1..2)])
-                       | q375 : int(1..2)]))
-                 | q368 : int(1..2)])
+              and([b_PartitionOccurrence_WhichPart[q381] = q240 ->
+                   or([a_PartitionOccurrence_WhichPart[q383] = q374 /\ q383 = q381 | q383 : int(1..2)])
+                       | q381 : int(1..2)]))
+                 | q374 : int(1..2)])
         /\
-        (toInt(or([q357 <= a_PartitionOccurrence_NumParts /\
-                   (and([a_PartitionOccurrence_WhichPart[q360] = q357 ->
-                         or([b_PartitionOccurrence_WhichPart[q362] = q234 /\ q362 = q360 | q362 : int(1..2)])
-                             | q360 : int(1..2)])
+        (toInt(or([q363 <= a_PartitionOccurrence_NumParts /\
+                   (and([a_PartitionOccurrence_WhichPart[q366] = q363 ->
+                         or([b_PartitionOccurrence_WhichPart[q368] = q240 /\ q368 = q366 | q368 : int(1..2)])
+                             | q366 : int(1..2)])
                     /\
-                    and([b_PartitionOccurrence_WhichPart[q364] = q234 ->
-                         or([a_PartitionOccurrence_WhichPart[q366] = q357 /\ q366 = q364 | q366 : int(1..2)])
-                             | q364 : int(1..2)]))
-                       | q357 : int(1..2)]))
+                    and([b_PartitionOccurrence_WhichPart[q370] = q240 ->
+                         or([a_PartitionOccurrence_WhichPart[q372] = q363 /\ q372 = q370 | q372 : int(1..2)])
+                             | q370 : int(1..2)]))
+                       | q363 : int(1..2)]))
          <
-         toInt(or([q237 <= b_PartitionOccurrence_NumParts /\
-                   (and([b_PartitionOccurrence_WhichPart[q240] = q237 ->
-                         or([b_PartitionOccurrence_WhichPart[q242] = q234 /\ q242 = q240 | q242 : int(1..2)])
-                             | q240 : int(1..2)])
+         toInt(or([q243 <= b_PartitionOccurrence_NumParts /\
+                   (and([b_PartitionOccurrence_WhichPart[q246] = q243 ->
+                         or([b_PartitionOccurrence_WhichPart[q248] = q240 /\ q248 = q246 | q248 : int(1..2)])
+                             | q246 : int(1..2)])
                     /\
-                    and([b_PartitionOccurrence_WhichPart[q244] = q234 ->
-                         or([b_PartitionOccurrence_WhichPart[q246] = q237 /\ q246 = q244 | q246 : int(1..2)])
-                             | q244 : int(1..2)]))
-                       | q237 : int(1..2)]))
+                    and([b_PartitionOccurrence_WhichPart[q250] = q240 ->
+                         or([b_PartitionOccurrence_WhichPart[q252] = q243 /\ q252 = q250 | q252 : int(1..2)])
+                             | q250 : int(1..2)]))
+                       | q243 : int(1..2)]))
          /\
-         (and([q273 <= a_PartitionOccurrence_NumParts /\
-               (or([a_PartitionOccurrence_WhichPart[q291] = q273 /\
-                    (toInt(or([a_PartitionOccurrence_WhichPart[q286] = q273 /\ q286 = q291 | q286 : int(1..2)])) <
-                     toInt(or([b_PartitionOccurrence_WhichPart[q264] = q234 /\ q264 = q291 | q264 : int(1..2)]))
+         (and([q279 <= a_PartitionOccurrence_NumParts /\
+               (or([a_PartitionOccurrence_WhichPart[q297] = q279 /\
+                    (toInt(or([a_PartitionOccurrence_WhichPart[q292] = q279 /\ q292 = q297 | q292 : int(1..2)])) <
+                     toInt(or([b_PartitionOccurrence_WhichPart[q270] = q240 /\ q270 = q297 | q270 : int(1..2)]))
                      /\
-                     (and([a_PartitionOccurrence_WhichPart[q288] = q273 ->
-                           toInt(or([a_PartitionOccurrence_WhichPart[q287] = q273 /\ q287 = q288 | q287 : int(1..2)])) =
-                           toInt(or([b_PartitionOccurrence_WhichPart[q272] = q234 /\ q272 = q288 | q272 : int(1..2)]))
-                               | q288 : int(1..2), q288 < q291])
+                     (and([a_PartitionOccurrence_WhichPart[q294] = q279 ->
+                           toInt(or([a_PartitionOccurrence_WhichPart[q293] = q279 /\ q293 = q294 | q293 : int(1..2)])) =
+                           toInt(or([b_PartitionOccurrence_WhichPart[q278] = q240 /\ q278 = q294 | q278 : int(1..2)]))
+                               | q294 : int(1..2), q294 < q297])
                       /\
-                      and([!or([a_PartitionOccurrence_WhichPart[q290] = q273 /\ q290 = q265 | q290 : int(1..2)]) ->
-                           (b_PartitionOccurrence_WhichPart[q265] = q234 ->
-                            toInt(or([a_PartitionOccurrence_WhichPart[q289] = q273 /\ q289 = q265 | q289 : int(1..2)]))
+                      and([!or([a_PartitionOccurrence_WhichPart[q296] = q279 /\ q296 = q271 | q296 : int(1..2)]) ->
+                           (b_PartitionOccurrence_WhichPart[q271] = q240 ->
+                            toInt(or([a_PartitionOccurrence_WhichPart[q295] = q279 /\ q295 = q271 | q295 : int(1..2)]))
                             =
-                            toInt(or([b_PartitionOccurrence_WhichPart[q268] = q234 /\ q268 = q265 | q268 : int(1..2)])))
-                               | q265 : int(1..2), q265 < q291])))
-                        | q291 : int(1..2)])
+                            toInt(or([b_PartitionOccurrence_WhichPart[q274] = q240 /\ q274 = q271 | q274 : int(1..2)])))
+                               | q271 : int(1..2), q271 < q297])))
+                        | q297 : int(1..2)])
                 \/
-                or([!or([a_PartitionOccurrence_WhichPart[q297] = q273 /\ q297 = q249 | q297 : int(1..2)]) /\
-                    (b_PartitionOccurrence_WhichPart[q249] = q234 /\
-                     (toInt(or([a_PartitionOccurrence_WhichPart[q292] = q273 /\ q292 = q249 | q292 : int(1..2)])) <
-                      toInt(or([b_PartitionOccurrence_WhichPart[q252] = q234 /\ q252 = q249 | q252 : int(1..2)]))
+                or([!or([a_PartitionOccurrence_WhichPart[q303] = q279 /\ q303 = q255 | q303 : int(1..2)]) /\
+                    (b_PartitionOccurrence_WhichPart[q255] = q240 /\
+                     (toInt(or([a_PartitionOccurrence_WhichPart[q298] = q279 /\ q298 = q255 | q298 : int(1..2)])) <
+                      toInt(or([b_PartitionOccurrence_WhichPart[q258] = q240 /\ q258 = q255 | q258 : int(1..2)]))
                       /\
-                      (and([a_PartitionOccurrence_WhichPart[q294] = q273 ->
-                            toInt(or([a_PartitionOccurrence_WhichPart[q293] = q273 /\ q293 = q294 | q293 : int(1..2)]))
+                      (and([a_PartitionOccurrence_WhichPart[q300] = q279 ->
+                            toInt(or([a_PartitionOccurrence_WhichPart[q299] = q279 /\ q299 = q300 | q299 : int(1..2)]))
                             =
-                            toInt(or([b_PartitionOccurrence_WhichPart[q260] = q234 /\ q260 = q294 | q260 : int(1..2)]))
-                                | q294 : int(1..2), q294 < q249])
+                            toInt(or([b_PartitionOccurrence_WhichPart[q266] = q240 /\ q266 = q300 | q266 : int(1..2)]))
+                                | q300 : int(1..2), q300 < q255])
                        /\
-                       and([!or([a_PartitionOccurrence_WhichPart[q296] = q273 /\ q296 = q253 | q296 : int(1..2)]) ->
-                            (b_PartitionOccurrence_WhichPart[q253] = q234 ->
-                             toInt(or([a_PartitionOccurrence_WhichPart[q295] = q273 /\ q295 = q253 | q295 : int(1..2)]))
+                       and([!or([a_PartitionOccurrence_WhichPart[q302] = q279 /\ q302 = q259 | q302 : int(1..2)]) ->
+                            (b_PartitionOccurrence_WhichPart[q259] = q240 ->
+                             toInt(or([a_PartitionOccurrence_WhichPart[q301] = q279 /\ q301 = q259 | q301 : int(1..2)]))
                              =
-                             toInt(or([b_PartitionOccurrence_WhichPart[q256] = q234 /\ q256 = q253
-                                           | q256 : int(1..2)])))
-                                | q253 : int(1..2), q253 < q249]))))
-                        | q249 : int(1..2)]))
+                             toInt(or([b_PartitionOccurrence_WhichPart[q262] = q240 /\ q262 = q259
+                                           | q262 : int(1..2)])))
+                                | q259 : int(1..2), q259 < q255]))))
+                        | q255 : int(1..2)]))
                ->
-               toInt(or([q346 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q349] = q346 ->
-                               or([a_PartitionOccurrence_WhichPart[q351] = q273 /\ q351 = q349 | q351 : int(1..2)])
-                                   | q349 : int(1..2)])
+               toInt(or([q352 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q355] = q352 ->
+                               or([a_PartitionOccurrence_WhichPart[q357] = q279 /\ q357 = q355 | q357 : int(1..2)])
+                                   | q355 : int(1..2)])
                           /\
-                          and([a_PartitionOccurrence_WhichPart[q353] = q273 ->
-                               or([a_PartitionOccurrence_WhichPart[q355] = q346 /\ q355 = q353 | q355 : int(1..2)])
-                                   | q353 : int(1..2)]))
-                             | q346 : int(1..2)]))
+                          and([a_PartitionOccurrence_WhichPart[q359] = q279 ->
+                               or([a_PartitionOccurrence_WhichPart[q361] = q352 /\ q361 = q359 | q361 : int(1..2)])
+                                   | q359 : int(1..2)]))
+                             | q352 : int(1..2)]))
                =
-               toInt(or([q276 <= b_PartitionOccurrence_NumParts /\
-                         (and([b_PartitionOccurrence_WhichPart[q279] = q276 ->
-                               or([a_PartitionOccurrence_WhichPart[q281] = q273 /\ q281 = q279 | q281 : int(1..2)])
-                                   | q279 : int(1..2)])
+               toInt(or([q282 <= b_PartitionOccurrence_NumParts /\
+                         (and([b_PartitionOccurrence_WhichPart[q285] = q282 ->
+                               or([a_PartitionOccurrence_WhichPart[q287] = q279 /\ q287 = q285 | q287 : int(1..2)])
+                                   | q285 : int(1..2)])
                           /\
-                          and([a_PartitionOccurrence_WhichPart[q283] = q273 ->
-                               or([b_PartitionOccurrence_WhichPart[q285] = q276 /\ q285 = q283 | q285 : int(1..2)])
-                                   | q283 : int(1..2)]))
-                             | q276 : int(1..2)]))
-                   | q273 : int(1..2)])
+                          and([a_PartitionOccurrence_WhichPart[q289] = q279 ->
+                               or([b_PartitionOccurrence_WhichPart[q291] = q282 /\ q291 = q289 | q291 : int(1..2)])
+                                   | q289 : int(1..2)]))
+                             | q282 : int(1..2)]))
+                   | q279 : int(1..2)])
           /\
-          and([and([q298 <= b_PartitionOccurrence_NumParts,
-                    !or([q312 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q315] = q312 ->
-                               or([b_PartitionOccurrence_WhichPart[q317] = q298 /\ q317 = q315 | q317 : int(1..2)])
-                                   | q315 : int(1..2)])
+          and([and([q304 <= b_PartitionOccurrence_NumParts,
+                    !or([q318 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q321] = q318 ->
+                               or([b_PartitionOccurrence_WhichPart[q323] = q304 /\ q323 = q321 | q323 : int(1..2)])
+                                   | q321 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q319] = q298 ->
-                               or([a_PartitionOccurrence_WhichPart[q321] = q312 /\ q321 = q319 | q321 : int(1..2)])
-                                   | q319 : int(1..2)]))
-                             | q312 : int(1..2)]),
-                    or([b_PartitionOccurrence_WhichPart[q327] = q298 /\
-                        (toInt(or([b_PartitionOccurrence_WhichPart[q322] = q298 /\ q322 = q327 | q322 : int(1..2)])) <
-                         toInt(or([b_PartitionOccurrence_WhichPart[q264] = q234 /\ q264 = q327 | q264 : int(1..2)]))
+                          and([b_PartitionOccurrence_WhichPart[q325] = q304 ->
+                               or([a_PartitionOccurrence_WhichPart[q327] = q318 /\ q327 = q325 | q327 : int(1..2)])
+                                   | q325 : int(1..2)]))
+                             | q318 : int(1..2)]),
+                    or([b_PartitionOccurrence_WhichPart[q333] = q304 /\
+                        (toInt(or([b_PartitionOccurrence_WhichPart[q328] = q304 /\ q328 = q333 | q328 : int(1..2)])) <
+                         toInt(or([b_PartitionOccurrence_WhichPart[q270] = q240 /\ q270 = q333 | q270 : int(1..2)]))
                          /\
-                         (and([b_PartitionOccurrence_WhichPart[q324] = q298 ->
-                               toInt(or([b_PartitionOccurrence_WhichPart[q323] = q298 /\ q323 = q324
-                                             | q323 : int(1..2)]))
+                         (and([b_PartitionOccurrence_WhichPart[q330] = q304 ->
+                               toInt(or([b_PartitionOccurrence_WhichPart[q329] = q304 /\ q329 = q330
+                                             | q329 : int(1..2)]))
                                =
-                               toInt(or([b_PartitionOccurrence_WhichPart[q272] = q234 /\ q272 = q324
-                                             | q272 : int(1..2)]))
-                                   | q324 : int(1..2), q324 < q327])
+                               toInt(or([b_PartitionOccurrence_WhichPart[q278] = q240 /\ q278 = q330
+                                             | q278 : int(1..2)]))
+                                   | q330 : int(1..2), q330 < q333])
                           /\
-                          and([!or([b_PartitionOccurrence_WhichPart[q326] = q298 /\ q326 = q265 | q326 : int(1..2)]) ->
-                               (b_PartitionOccurrence_WhichPart[q265] = q234 ->
-                                toInt(or([b_PartitionOccurrence_WhichPart[q325] = q298 /\ q325 = q265
-                                              | q325 : int(1..2)]))
+                          and([!or([b_PartitionOccurrence_WhichPart[q332] = q304 /\ q332 = q271 | q332 : int(1..2)]) ->
+                               (b_PartitionOccurrence_WhichPart[q271] = q240 ->
+                                toInt(or([b_PartitionOccurrence_WhichPart[q331] = q304 /\ q331 = q271
+                                              | q331 : int(1..2)]))
                                 =
-                                toInt(or([b_PartitionOccurrence_WhichPart[q268] = q234 /\ q268 = q265
-                                              | q268 : int(1..2)])))
-                                   | q265 : int(1..2), q265 < q327])))
-                            | q327 : int(1..2)])
+                                toInt(or([b_PartitionOccurrence_WhichPart[q274] = q240 /\ q274 = q271
+                                              | q274 : int(1..2)])))
+                                   | q271 : int(1..2), q271 < q333])))
+                            | q333 : int(1..2)])
                     \/
-                    or([!or([b_PartitionOccurrence_WhichPart[q333] = q298 /\ q333 = q249 | q333 : int(1..2)]) /\
-                        (b_PartitionOccurrence_WhichPart[q249] = q234 /\
-                         (toInt(or([b_PartitionOccurrence_WhichPart[q328] = q298 /\ q328 = q249 | q328 : int(1..2)])) <
-                          toInt(or([b_PartitionOccurrence_WhichPart[q252] = q234 /\ q252 = q249 | q252 : int(1..2)]))
+                    or([!or([b_PartitionOccurrence_WhichPart[q339] = q304 /\ q339 = q255 | q339 : int(1..2)]) /\
+                        (b_PartitionOccurrence_WhichPart[q255] = q240 /\
+                         (toInt(or([b_PartitionOccurrence_WhichPart[q334] = q304 /\ q334 = q255 | q334 : int(1..2)])) <
+                          toInt(or([b_PartitionOccurrence_WhichPart[q258] = q240 /\ q258 = q255 | q258 : int(1..2)]))
                           /\
-                          (and([b_PartitionOccurrence_WhichPart[q330] = q298 ->
-                                toInt(or([b_PartitionOccurrence_WhichPart[q329] = q298 /\ q329 = q330
-                                              | q329 : int(1..2)]))
+                          (and([b_PartitionOccurrence_WhichPart[q336] = q304 ->
+                                toInt(or([b_PartitionOccurrence_WhichPart[q335] = q304 /\ q335 = q336
+                                              | q335 : int(1..2)]))
                                 =
-                                toInt(or([b_PartitionOccurrence_WhichPart[q260] = q234 /\ q260 = q330
-                                              | q260 : int(1..2)]))
-                                    | q330 : int(1..2), q330 < q249])
+                                toInt(or([b_PartitionOccurrence_WhichPart[q266] = q240 /\ q266 = q336
+                                              | q266 : int(1..2)]))
+                                    | q336 : int(1..2), q336 < q255])
                            /\
-                           and([!or([b_PartitionOccurrence_WhichPart[q332] = q298 /\ q332 = q253 | q332 : int(1..2)]) ->
-                                (b_PartitionOccurrence_WhichPart[q253] = q234 ->
-                                 toInt(or([b_PartitionOccurrence_WhichPart[q331] = q298 /\ q331 = q253
-                                               | q331 : int(1..2)]))
+                           and([!or([b_PartitionOccurrence_WhichPart[q338] = q304 /\ q338 = q259 | q338 : int(1..2)]) ->
+                                (b_PartitionOccurrence_WhichPart[q259] = q240 ->
+                                 toInt(or([b_PartitionOccurrence_WhichPart[q337] = q304 /\ q337 = q259
+                                               | q337 : int(1..2)]))
                                  =
-                                 toInt(or([b_PartitionOccurrence_WhichPart[q256] = q234 /\ q256 = q253
-                                               | q256 : int(1..2)])))
-                                    | q253 : int(1..2), q253 < q249]))))
-                            | q249 : int(1..2)]);
+                                 toInt(or([b_PartitionOccurrence_WhichPart[q262] = q240 /\ q262 = q259
+                                               | q262 : int(1..2)])))
+                                    | q259 : int(1..2), q259 < q255]))))
+                            | q255 : int(1..2)]);
                         int(1..3)])
                ->
-               toInt(or([q335 <= a_PartitionOccurrence_NumParts /\
-                         (and([a_PartitionOccurrence_WhichPart[q338] = q335 ->
-                               or([b_PartitionOccurrence_WhichPart[q340] = q298 /\ q340 = q338 | q340 : int(1..2)])
-                                   | q338 : int(1..2)])
+               toInt(or([q341 <= a_PartitionOccurrence_NumParts /\
+                         (and([a_PartitionOccurrence_WhichPart[q344] = q341 ->
+                               or([b_PartitionOccurrence_WhichPart[q346] = q304 /\ q346 = q344 | q346 : int(1..2)])
+                                   | q344 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q342] = q298 ->
-                               or([a_PartitionOccurrence_WhichPart[q344] = q335 /\ q344 = q342 | q344 : int(1..2)])
-                                   | q342 : int(1..2)]))
-                             | q335 : int(1..2)]))
+                          and([b_PartitionOccurrence_WhichPart[q348] = q304 ->
+                               or([a_PartitionOccurrence_WhichPart[q350] = q341 /\ q350 = q348 | q350 : int(1..2)])
+                                   | q348 : int(1..2)]))
+                             | q341 : int(1..2)]))
                =
-               toInt(or([q301 <= b_PartitionOccurrence_NumParts /\
-                         (and([b_PartitionOccurrence_WhichPart[q304] = q301 ->
-                               or([b_PartitionOccurrence_WhichPart[q306] = q298 /\ q306 = q304 | q306 : int(1..2)])
-                                   | q304 : int(1..2)])
+               toInt(or([q307 <= b_PartitionOccurrence_NumParts /\
+                         (and([b_PartitionOccurrence_WhichPart[q310] = q307 ->
+                               or([b_PartitionOccurrence_WhichPart[q312] = q304 /\ q312 = q310 | q312 : int(1..2)])
+                                   | q310 : int(1..2)])
                           /\
-                          and([b_PartitionOccurrence_WhichPart[q308] = q298 ->
-                               or([b_PartitionOccurrence_WhichPart[q310] = q301 /\ q310 = q308 | q310 : int(1..2)])
-                                   | q308 : int(1..2)]))
-                             | q301 : int(1..2)]))
-                   | q298 : int(1..2)])))
-            | q234 : int(1..2)]),
+                          and([b_PartitionOccurrence_WhichPart[q314] = q304 ->
+                               or([b_PartitionOccurrence_WhichPart[q316] = q307 /\ q316 = q314 | q316 : int(1..2)])
+                                   | q314 : int(1..2)]))
+                             | q307 : int(1..2)]))
+                   | q304 : int(1..2)])))
+            | q240 : int(1..2)]),
+    and([q1 <= a_PartitionOccurrence_NumParts -> a_PartitionOccurrence_PartSizes[q1] <= 2 | q1 : int(1..2)]),
     and([q1 > a_PartitionOccurrence_NumParts -> a_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
     a_PartitionOccurrence_NumParts <= 2,
     a_PartitionOccurrence_NumParts = max([a_PartitionOccurrence_WhichPart[q4] | q4 : int(1..2)]),
@@ -354,6 +355,7 @@ such that
     and([q9 <= a_PartitionOccurrence_NumParts /\ q10 <= a_PartitionOccurrence_NumParts ->
          (q9 < q10 <-> a_PartitionOccurrence_FirstIndex[q9] < a_PartitionOccurrence_FirstIndex[q10])
              | q9 : int(1..2), q10 : int(1..2)]),
+    and([q11 <= b_PartitionOccurrence_NumParts -> b_PartitionOccurrence_PartSizes[q11] <= 2 | q11 : int(1..2)]),
     and([q11 > b_PartitionOccurrence_NumParts -> b_PartitionOccurrence_PartSizes[q11] = 0 | q11 : int(1..2)]),
     b_PartitionOccurrence_NumParts <= 2,
     b_PartitionOccurrence_NumParts = max([b_PartitionOccurrence_WhichPart[q14] | q14 : int(1..2)]),
@@ -372,24 +374,26 @@ such that
     and([q19 <= b_PartitionOccurrence_NumParts /\ q20 <= b_PartitionOccurrence_NumParts ->
          (q19 < q20 <-> b_PartitionOccurrence_FirstIndex[q19] < b_PartitionOccurrence_FirstIndex[q20])
              | q19 : int(1..2), q20 : int(1..2)]),
-    and([1 =
-         sum([toInt(q89 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-                    or([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q89, q91] != 3 /\
-                        a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q89, q91] = q21
-                            | q91 : int(1..2)]))
-                  | q89 : int(1..2)])
-             | q21 : int(1..2)]),
-    and([q96 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         sum([toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q96, q98] != 3)
-                  | q98 : int(1..2)])
+    alldifferent_except([toInt(q100 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                               a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q100, q101]
+                               != 3)
+                         *
+                         catchUndef(a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
+                                        [q100, q101],
+                                    0)
+                             | q100 : int(1..2), q101 : int(1..2)],
+                        0),
+    and([q102 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q102, q104] != 3)
+                  | q104 : int(1..2)])
          >= 1
-             | q96 : int(1..2)]),
+             | q102 : int(1..2)]),
     2 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
     a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[1, ..] <lex
     a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[2, ..],
     and([q25 > a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q25, q92] = 1
-                  | q92 : int(1..2)])
+         and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q25, q96] = 1
+                  | q96 : int(1..2)])
              | q25 : int(1..2)]),
     a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= 2,
     and([q26 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
@@ -401,71 +405,92 @@ such that
          (a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q26, 1] = 3 ->
           a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q26, 2] = 3)
              | q26 : int(1..2)]),
-    and([q33 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         or([q35 <= a_PartitionOccurrence_NumParts /\
-             (and([a_PartitionOccurrence_WhichPart[q38] = q35 ->
-                   or([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q40] != 3 /\
-                       a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q40] = q38
-                           | q40 : int(1..2)])
-                       | q38 : int(1..2)])
-              /\
-              and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q42] != 3 ->
-                   or([a_PartitionOccurrence_WhichPart[q44] = q35 /\
-                       q44 = a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q42]
+    and([q26 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q26, q29] != 3)
+                  | q29 : int(1..2)])
+         <= 2
+             | q26 : int(1..2)]),
+    2 =
+    sum([toInt(q32 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
+         catchUndef(sum([toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q32, q34] !=
+                               3)
+                             | q34 : int(1..2)]),
+                    0)
+             | q32 : int(1..2)]),
+    and([q37 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([q39 <= a_PartitionOccurrence_NumParts /\
+             (and([a_PartitionOccurrence_WhichPart[q42] = q39 ->
+                   or([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q44] != 3 /\
+                       a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q44] = q42
                            | q44 : int(1..2)])
-                       | q42 : int(1..2)]))
-                 | q35 : int(1..2)])
-             | q33 : int(1..2)]),
-    and([q46 <= a_PartitionOccurrence_NumParts ->
-         or([q50 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-             (and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q50, q52] != 3 ->
-                   or([a_PartitionOccurrence_WhichPart[q54] = q46 /\
-                       q54 = a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q50, q52]
-                           | q54 : int(1..2)])
-                       | q52 : int(1..2)])
+                       | q42 : int(1..2)])
               /\
-              and([a_PartitionOccurrence_WhichPart[q56] = q46 ->
-                   or([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q50, q58] != 3 /\
-                       a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q50, q58] = q56
+              and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q46] != 3 ->
+                   or([a_PartitionOccurrence_WhichPart[q48] = q39 /\
+                       q48 = a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q37, q46]
+                           | q48 : int(1..2)])
+                       | q46 : int(1..2)]))
+                 | q39 : int(1..2)])
+             | q37 : int(1..2)]),
+    and([q50 <= a_PartitionOccurrence_NumParts ->
+         or([q54 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+             (and([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q54, q56] != 3 ->
+                   or([a_PartitionOccurrence_WhichPart[q58] = q50 /\
+                       q58 = a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q54, q56]
                            | q58 : int(1..2)])
-                       | q56 : int(1..2)]))
-                 | q50 : int(1..2)])
-             | q46 : int(1..2)]),
-    and([1 =
-         sum([toInt(q93 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                    b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q93, q59])
-                  | q93 : int(1..2)])
-             | q59 : int(1..2)]),
-    and([q94 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q94, q95]) | q95 : int(1..2)]) >= 1
-             | q94 : int(1..2)]),
+                       | q56 : int(1..2)])
+              /\
+              and([a_PartitionOccurrence_WhichPart[q60] = q50 ->
+                   or([a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q54, q62] != 3 /\
+                       a_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q54, q62] = q60
+                           | q62 : int(1..2)])
+                       | q60 : int(1..2)]))
+                 | q54 : int(1..2)])
+             | q50 : int(1..2)]),
+    alldifferent_except([toInt(q97 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                               b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q97, q64])
+                         * catchUndef(q64, 0)
+                             | q97 : int(1..2), q64 : int(1..2)],
+                        0),
+    and([q98 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q98, q99]) | q99 : int(1..2)]) >= 1
+             | q98 : int(1..2)]),
     2 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
     b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[1, ..] <lex
     b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[2, ..],
-    and([q63 > b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q63, q66] = false | q66 : int(1..2)])
-             | q63 : int(1..2)]),
+    and([q67 > b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q67, q71] = false | q71 : int(1..2)])
+             | q67 : int(1..2)]),
     b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 2,
-    and([q69 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         or([q71 <= b_PartitionOccurrence_NumParts /\
-             (and([b_PartitionOccurrence_WhichPart[q74] = q71 ->
-                   b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q69, q74]
-                       | q74 : int(1..2)])
+    and([q68 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q68, q69]) | q69 : int(1..2)]) <= 2
+             | q68 : int(1..2)]),
+    2 =
+    sum([toInt(q72 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
+         catchUndef(sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q72, q73])
+                             | q73 : int(1..2)]),
+                    0)
+             | q72 : int(1..2)]),
+    and([q76 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         or([q78 <= b_PartitionOccurrence_NumParts /\
+             (and([b_PartitionOccurrence_WhichPart[q81] = q78 ->
+                   b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q81]
+                       | q81 : int(1..2)])
               /\
-              and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q69, q75] ->
-                   or([b_PartitionOccurrence_WhichPart[q77] = q71 /\ q77 = q75 | q77 : int(1..2)])
-                       | q75 : int(1..2)]))
-                 | q71 : int(1..2)])
-             | q69 : int(1..2)]),
-    and([q79 <= b_PartitionOccurrence_NumParts ->
-         or([q83 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-             (and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q83, q84] ->
-                   or([b_PartitionOccurrence_WhichPart[q86] = q79 /\ q86 = q84 | q86 : int(1..2)])
-                       | q84 : int(1..2)])
+              and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q82] ->
+                   or([b_PartitionOccurrence_WhichPart[q84] = q78 /\ q84 = q82 | q84 : int(1..2)])
+                       | q82 : int(1..2)]))
+                 | q78 : int(1..2)])
+             | q76 : int(1..2)]),
+    and([q86 <= b_PartitionOccurrence_NumParts ->
+         or([q90 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+             (and([b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q90, q91] ->
+                   or([b_PartitionOccurrence_WhichPart[q93] = q86 /\ q93 = q91 | q93 : int(1..2)])
+                       | q91 : int(1..2)])
               /\
-              and([b_PartitionOccurrence_WhichPart[q88] = q79 ->
-                   b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q83, q88]
-                       | q88 : int(1..2)]))
-                 | q83 : int(1..2)])
-             | q79 : int(1..2)])
+              and([b_PartitionOccurrence_WhichPart[q95] = q86 ->
+                   b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q90, q95]
+                       | q95 : int(1..2)]))
+                 | q90 : int(1..2)])
+             | q86 : int(1..2)])
 

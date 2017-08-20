@@ -12,71 +12,71 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 such that
-    and([and([q123 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
-              or([q128 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q123] /\
-                  x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q123, q128] = 2
-                      | q128 : int(1..4)]),
-              q124 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q123];
+    and([and([q127 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+              or([q132 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127] /\
+                  x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q132] = 2
+                      | q132 : int(1..4)]),
+              q128 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127];
                   int(1..3)])
          ->
-         4 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q123, q124] \/
-         2 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q123, q124]
-             | q123 : int(1..4), q124 : int(1..4)]),
-    or([and([q135 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
-             or([q138 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q135] /\
-                 x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q135, q138] = 2
-                     | q138 : int(1..4)]),
-             q136 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q135];
+         4 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q128] \/
+         2 = x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q128]
+             | q127 : int(1..4), q128 : int(1..4)]),
+    or([and([q139 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+             or([q142 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q139] /\
+                 x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q139, q142] = 2
+                     | q142 : int(1..4)]),
+             q140 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q139];
                  int(1..3)])
-        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q135, q136] = 4
-            | q135 : int(1..4), q136 : int(1..4)]),
-    or([and([q143 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
-             or([q146 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q143] /\
-                 x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q143, q146] = 2
-                     | q146 : int(1..4)]),
-             q144 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q143];
+        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q139, q140] = 4
+            | q139 : int(1..4), q140 : int(1..4)]),
+    or([and([q147 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+             or([q150 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q147] /\
+                 x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q147, q150] = 2
+                     | q150 : int(1..4)]),
+             q148 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q147];
                  int(1..3)])
-        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q143, q144] = 2
-            | q143 : int(1..4), q144 : int(1..4)]),
-    and([q151 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q151, q149]
-         -> or([1 = q149, 2 = q149, 3 = q149, 4 = q149; int(1..4)])
-             | q151 : int(1..4), q149 : int(1..4)]),
-    or([q160 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q158]
-        /\ q158 = 1
-            | q160 : int(1..4), q158 : int(1..4)]),
-    or([q165 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q165, q163]
-        /\ q163 = 2
-            | q165 : int(1..4), q163 : int(1..4)]),
-    or([q170 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q170, q168]
-        /\ q168 = 3
-            | q170 : int(1..4), q168 : int(1..4)]),
-    or([q175 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q175, q173]
-        /\ q173 = 4
-            | q175 : int(1..4), q173 : int(1..4)]),
-    and([1 =
-         sum([toInt(q105 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-                    or([q107 <=
-                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q105]
-                        /\
-                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q105, q107]
-                        = q1
-                            | q107 : int(1..4)]))
-                  | q105 : int(1..4)])
-             | q1 : int(1..4)]),
-    and([q116 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-         q117 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker
+        /\ x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q147, q148] = 2
+            | q147 : int(1..4), q148 : int(1..4)]),
+    and([q155 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q155, q153]
+         -> or([1 = q153, 2 = q153, 3 = q153, 4 = q153; int(1..4)])
+             | q155 : int(1..4), q153 : int(1..4)]),
+    or([q164 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q164, q162]
+        /\ q162 = 1
+            | q164 : int(1..4), q162 : int(1..4)]),
+    or([q169 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q169, q167]
+        /\ q167 = 2
+            | q169 : int(1..4), q167 : int(1..4)]),
+    or([q174 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q172]
+        /\ q172 = 3
+            | q174 : int(1..4), q172 : int(1..4)]),
+    or([q179 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+        x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q179, q177]
+        /\ q177 = 4
+            | q179 : int(1..4), q177 : int(1..4)]),
+    alldifferent_except([toInt(q111 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+                               q112 <=
+                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
+                                   [q111])
+                         *
+                         catchUndef(x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values
+                                        [q111, q112],
+                                    0)
+                             | q111 : int(1..4), q112 : int(1..4)],
+                        0),
+    and([q113 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+         q114 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker
          ->
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q116] =
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q117]
-             | q116 : int(1..4), q117 : int(1..4)]),
-    and([q118 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q118] >= 1
-             | q118 : int(1..4)]),
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q113] =
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q114]
+             | q113 : int(1..4), q114 : int(1..4)]),
+    and([q115 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q115] >= 1
+             | q115 : int(1..4)]),
     and([q6 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q6] <
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q6 + 1]
@@ -89,8 +89,8 @@ such that
              | q6 : int(1..3)]),
     and([q7 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q7] = 0 /\
-         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q7, q108] = 1
-                  | q108 : int(1..4)])
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q7, q60] = 1
+                  | q60 : int(1..4)])
              | q7 : int(1..4)]),
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker <= 4,
     and([q8 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
@@ -104,137 +104,154 @@ such that
               x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q8, q10] = 1
                   | q10 : int(1..4)])
              | q8 : int(1..4)]),
-    and([1 =
-         sum([toInt(q109 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q109, q12])
-                  | q109 : int(1..4)])
-             | q12 : int(1..4)]),
-    and([q110 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-         q111 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker
+    and([q8 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q8] <= 4
+             | q8 : int(1..4)]),
+    4 =
+    sum([toInt(q13 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker) *
+         catchUndef(x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q13], 0)
+             | q13 : int(1..4)]),
+    alldifferent_except([toInt(q116 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q116, q15])
+                         * catchUndef(q15, 0)
+                             | q116 : int(1..4), q15 : int(1..4)],
+                        0),
+    and([q117 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+         q118 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker
          ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q110, q112]) | q112 : int(1..4)]) =
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q111, q113]) | q113 : int(1..4)])
-             | q110 : int(1..4), q111 : int(1..4)]),
-    and([q114 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q114, q115]) | q115 : int(1..4)]) >=
-         1   | q114 : int(1..4)]),
-    and([q17 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q17, ..] <lex
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q17 + 1, ..]
-             | q17 : int(1..3)]),
-    and([q18 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q18, q21] = false | q21 : int(1..4)])
-             | q18 : int(1..4)]),
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q117, q119]) | q119 : int(1..4)]) =
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q118, q120]) | q120 : int(1..4)])
+             | q117 : int(1..4), q118 : int(1..4)]),
+    and([q121 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q121, q122]) | q122 : int(1..4)]) >=
+         1   | q121 : int(1..4)]),
+    and([q19 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q19, ..] <lex
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q19 + 1, ..]
+             | q19 : int(1..3)]),
+    and([q20 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20, q24] = false | q24 : int(1..4)])
+             | q20 : int(1..4)]),
     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 4,
-    and([q24 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         or([q27 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-             (and([q29 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q27] ->
+    and([q21 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q22]) | q22 : int(1..4)]) <= 4
+             | q21 : int(1..4)]),
+    4 =
+    sum([toInt(q25 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
+         catchUndef(sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q25, q26])
+                             | q26 : int(1..4)]),
+                    0)
+             | q25 : int(1..4)]),
+    and([q29 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         or([q32 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+             (and([q34 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q32] ->
                    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                       [q24,
-                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q27, q29]]
-                       | q29 : int(1..4)])
+                       [q29,
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q32, q34]]
+                       | q34 : int(1..4)])
               /\
-              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q24, q30] ->
-                   or([q32 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q27]
+              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q29, q35] ->
+                   or([q37 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q32]
                        /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q27, q32] =
-                       q30 | q32 : int(1..4)])
-                       | q30 : int(1..4)]))
-                 | q27 : int(1..4)])
-             | q24 : int(1..4)]),
-    and([q35 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
-         or([q38 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q38, q39] ->
-                   or([q41 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q35]
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q32, q37] =
+                       q35 | q37 : int(1..4)])
+                       | q35 : int(1..4)]))
+                 | q32 : int(1..4)])
+             | q29 : int(1..4)]),
+    and([q40 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         or([q43 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q43, q44] ->
+                   or([q46 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q40]
                        /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q35, q41] =
-                       q39 | q41 : int(1..4)])
-                       | q39 : int(1..4)])
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q40, q46] =
+                       q44 | q46 : int(1..4)])
+                       | q44 : int(1..4)])
               /\
-              and([q43 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q35] ->
+              and([q48 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q40] ->
                    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                       [q38,
-                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q35, q43]]
-                       | q43 : int(1..4)]))
-                 | q38 : int(1..4)])
-             | q35 : int(1..4)]),
-    and([q44 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q44] = 0 | q44 : int(1..4)]),
+                       [q43,
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q40, q48]]
+                       | q48 : int(1..4)]))
+                 | q43 : int(1..4)])
+             | q40 : int(1..4)]),
+    and([q49 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q49] <= 4 | q49 : int(1..4)]),
+    and([q49 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q49] = 0 | q49 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,
-    and([q45 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q46] = q45 | q46 : int(1..4)])
-             | q45 : int(3..4)]),
-    and([q47 <= x_PartitionOccurrence_NumParts ->
-         x_PartitionOccurrence_PartSizes[q47 - 1] = x_PartitionOccurrence_PartSizes[q47]
-             | q47 : int(2..4)]),
-    x_PartitionOccurrence_NumParts = max([x_PartitionOccurrence_WhichPart[q48] | q48 : int(1..4)]),
-    and([x_PartitionOccurrence_PartSizes[q49] =
-         sum([toInt(x_PartitionOccurrence_WhichPart[q50] = q49) | q50 : int(1..4)])
-             | q49 : int(1..4)]),
-    and([q51 <= x_PartitionOccurrence_NumParts ->
-         and([x_PartitionOccurrence_WhichPart[q52] = q51 -> x_PartitionOccurrence_FirstIndex[q51] <= q52
-                  | q52 : int(1..4)])
-             | q51 : int(1..4)]),
-    and([q51 <= x_PartitionOccurrence_NumParts ->
-         or([x_PartitionOccurrence_WhichPart[q52] = q51 /\ x_PartitionOccurrence_FirstIndex[q51] = q52
-                 | q52 : int(1..4)])
-             | q51 : int(1..4)]),
-    and([q51 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_FirstIndex[q51] = 1 | q51 : int(1..4)]),
-    and([q53 <= x_PartitionOccurrence_NumParts /\ q54 <= x_PartitionOccurrence_NumParts ->
-         (q53 < q54 <-> x_PartitionOccurrence_FirstIndex[q53] < x_PartitionOccurrence_FirstIndex[q54])
-             | q53 : int(1..4), q54 : int(1..4)]),
+    and([q50 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q51] = q50 | q51 : int(1..4)])
+             | q50 : int(3..4)]),
+    and([q52 <= x_PartitionOccurrence_NumParts ->
+         x_PartitionOccurrence_PartSizes[q52 - 1] = x_PartitionOccurrence_PartSizes[q52]
+             | q52 : int(2..4)]),
+    x_PartitionOccurrence_NumParts = max([x_PartitionOccurrence_WhichPart[q53] | q53 : int(1..4)]),
+    and([x_PartitionOccurrence_PartSizes[q54] =
+         sum([toInt(x_PartitionOccurrence_WhichPart[q55] = q54) | q55 : int(1..4)])
+             | q54 : int(1..4)]),
     and([q56 <= x_PartitionOccurrence_NumParts ->
-         or([q60 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-             (and([q62 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q60] ->
-                   or([x_PartitionOccurrence_WhichPart[q64] = q56 /\
-                       q64 =
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q60, q62]
-                           | q64 : int(1..4)])
-                       | q62 : int(1..4)])
-              /\
-              and([x_PartitionOccurrence_WhichPart[q66] = q56 ->
-                   or([q68 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q60]
-                       /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q60, q68] =
-                       q66 | q68 : int(1..4)])
-                       | q66 : int(1..4)]))
-                 | q60 : int(1..4)])
+         and([x_PartitionOccurrence_WhichPart[q57] = q56 -> x_PartitionOccurrence_FirstIndex[q56] <= q57
+                  | q57 : int(1..4)])
              | q56 : int(1..4)]),
-    and([q71 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
-         or([q73 <= x_PartitionOccurrence_NumParts /\
-             (and([x_PartitionOccurrence_WhichPart[q76] = q73 ->
-                   or([q78 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q71]
+    and([q56 <= x_PartitionOccurrence_NumParts ->
+         or([x_PartitionOccurrence_WhichPart[q57] = q56 /\ x_PartitionOccurrence_FirstIndex[q56] = q57
+                 | q57 : int(1..4)])
+             | q56 : int(1..4)]),
+    and([q56 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_FirstIndex[q56] = 1 | q56 : int(1..4)]),
+    and([q58 <= x_PartitionOccurrence_NumParts /\ q59 <= x_PartitionOccurrence_NumParts ->
+         (q58 < q59 <-> x_PartitionOccurrence_FirstIndex[q58] < x_PartitionOccurrence_FirstIndex[q59])
+             | q58 : int(1..4), q59 : int(1..4)]),
+    and([q62 <= x_PartitionOccurrence_NumParts ->
+         or([q66 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+             (and([q68 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q66] ->
+                   or([x_PartitionOccurrence_WhichPart[q70] = q62 /\
+                       q70 =
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q66, q68]
+                           | q70 : int(1..4)])
+                       | q68 : int(1..4)])
+              /\
+              and([x_PartitionOccurrence_WhichPart[q72] = q62 ->
+                   or([q74 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q66]
                        /\
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q71, q78] =
-                       q76 | q78 : int(1..4)])
-                       | q76 : int(1..4)])
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q66, q74] =
+                       q72 | q74 : int(1..4)])
+                       | q72 : int(1..4)]))
+                 | q66 : int(1..4)])
+             | q62 : int(1..4)]),
+    and([q77 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         or([q79 <= x_PartitionOccurrence_NumParts /\
+             (and([x_PartitionOccurrence_WhichPart[q82] = q79 ->
+                   or([q84 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q77]
+                       /\
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q77, q84] =
+                       q82 | q84 : int(1..4)])
+                       | q82 : int(1..4)])
               /\
-              and([q80 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q71] ->
-                   or([x_PartitionOccurrence_WhichPart[q82] = q73 /\
-                       q82 =
-                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q71, q80]
-                           | q82 : int(1..4)])
-                       | q80 : int(1..4)]))
-                 | q73 : int(1..4)])
-             | q71 : int(1..4)]),
-    and([q84 <= x_PartitionOccurrence_NumParts ->
-         or([q88 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q88, q89] ->
-                   or([x_PartitionOccurrence_WhichPart[q91] = q84 /\ q91 = q89 | q91 : int(1..4)])
-                       | q89 : int(1..4)])
+              and([q86 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q77] ->
+                   or([x_PartitionOccurrence_WhichPart[q88] = q79 /\
+                       q88 =
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q77, q86]
+                           | q88 : int(1..4)])
+                       | q86 : int(1..4)]))
+                 | q79 : int(1..4)])
+             | q77 : int(1..4)]),
+    and([q90 <= x_PartitionOccurrence_NumParts ->
+         or([q94 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q94, q95] ->
+                   or([x_PartitionOccurrence_WhichPart[q97] = q90 /\ q97 = q95 | q97 : int(1..4)])
+                       | q95 : int(1..4)])
               /\
-              and([x_PartitionOccurrence_WhichPart[q93] = q84 ->
-                   x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q88, q93]
-                       | q93 : int(1..4)]))
-                 | q88 : int(1..4)])
-             | q84 : int(1..4)]),
-    and([q96 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         or([q98 <= x_PartitionOccurrence_NumParts /\
-             (and([x_PartitionOccurrence_WhichPart[q101] = q98 ->
-                   x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q96, q101]
-                       | q101 : int(1..4)])
+              and([x_PartitionOccurrence_WhichPart[q99] = q90 ->
+                   x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q94, q99]
+                       | q99 : int(1..4)]))
+                 | q94 : int(1..4)])
+             | q90 : int(1..4)]),
+    and([q102 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         or([q104 <= x_PartitionOccurrence_NumParts /\
+             (and([x_PartitionOccurrence_WhichPart[q107] = q104 ->
+                   x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q102, q107]
+                       | q107 : int(1..4)])
               /\
-              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q96, q102] ->
-                   or([x_PartitionOccurrence_WhichPart[q104] = q98 /\ q104 = q102 | q104 : int(1..4)])
-                       | q102 : int(1..4)]))
-                 | q98 : int(1..4)])
-             | q96 : int(1..4)])
+              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q102, q108] ->
+                   or([x_PartitionOccurrence_WhichPart[q110] = q104 /\ q110 = q108 | q110 : int(1..4)])
+                       | q108 : int(1..4)]))
+                 | q104 : int(1..4)])
+             | q102 : int(1..4)])
 
