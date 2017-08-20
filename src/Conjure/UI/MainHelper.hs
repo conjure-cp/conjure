@@ -83,14 +83,17 @@ mainWithArgs Modelling{..} = do
             _       -> return ()
 
         responsesList <- do
-            let parts = splitOn "," responses
-            let intParts = mapMaybe readMay parts
-            if length parts == length intParts
-                then return (Just intParts)
-                else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                     , "Expected a comma separated list of integers."
-                                     , "But got:" <+> pretty responses
-                                     ]
+            if null responses
+                then return Nothing
+                else do
+                    let parts = splitOn "," responses
+                    let intParts = mapMaybe readMay parts
+                    if length parts == length intParts
+                        then return (Just intParts)
+                        else userErr1 $ vcat [ "Cannot parse the value for --responses."
+                                             , "Expected a comma separated list of integers."
+                                             , "But got:" <+> pretty responses
+                                             ]
 
         return Config.Config
             { Config.outputDirectory            = outputDirectory
