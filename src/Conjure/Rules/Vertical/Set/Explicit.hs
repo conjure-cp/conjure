@@ -138,7 +138,7 @@ rule_Max = "set-max{Explicit}" `namedRule` theRule where
 --             ])
 -- }
 rule_frameUpdate :: Rule
-rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
+rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
     theRule p = do
         (old, new, names, cons) <- match opFrameUpdate p
 

@@ -84,7 +84,7 @@ rule_In = "set-in{Occurrence}" `namedRule` theRule where
 
 
 rule_frameUpdate :: Rule
-rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
+rule_frameUpdate = "set-frameUpdate{Occurrence}" `namedRule` theRule where
     theRule p = do
         (old, new, names, cons) <- match opFrameUpdate p
 
