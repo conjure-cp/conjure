@@ -1124,6 +1124,7 @@ verticalRules =
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_PowerSet_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension

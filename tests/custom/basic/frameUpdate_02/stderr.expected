@@ -28,33 +28,3 @@ CallStack (from HasCallStack):
   error, called at src/Conjure/Bug.hs:21:15 in conjure-cp-2.0.0-2w1QEWQgrYy5vUWJEHcFF7:Conjure.Bug
   bug, called at src/Conjure/UI/Model.hs:764:26 in conjure-cp-2.0.0-2w1QEWQgrYy5vUWJEHcFF7:Conjure.UI.Model
 grep: output-3/*.solution: No such file or directory
-conjure: This should never happen, sorry!
-
-Please report a bug.
-Conjure is actively maintained, we will get back to you as soon as possible.
-You can help us by providing a minimal failing example.
-
-Also include the repository version for this build: 410c9228e (2017-08-12 23:29:44 +0100)
-
-Issue tracker: http://github.com/conjure-cp/conjure/issues
-
-
-
-Not refined: a
-Domain     : set {ExplicitVarSizeWithFlags} (maxSize 4) of int(1..6)
-    Context #1: frameUpdate(a, b, [(x1, y1), (x2, y2)],
-                            and([x1 = conjure_aux1, y1 = conjure_aux2, y1 = x1 - 1, x2 = conjure_aux3,
-                                 y2 = conjure_aux4, y2 = x2 + 1;
-                                     int(1..6)]))
-
-Not refined: b
-Domain     : set {ExplicitVarSizeWithFlags} (maxSize 4) of int(1..6)
-    Context #1: frameUpdate(a, b, [(x1, y1), (x2, y2)],
-                            and([x1 = conjure_aux1, y1 = conjure_aux2, y1 = x1 - 1, x2 = conjure_aux3,
-                                 y2 = conjure_aux4, y2 = x2 + 1;
-                                     int(1..6)]))
-
-CallStack (from HasCallStack):
-  error, called at src/Conjure/Bug.hs:21:15 in conjure-cp-2.0.0-2w1QEWQgrYy5vUWJEHcFF7:Conjure.Bug
-  bug, called at src/Conjure/UI/Model.hs:764:26 in conjure-cp-2.0.0-2w1QEWQgrYy5vUWJEHcFF7:Conjure.UI.Model
-grep: output-4/*.solution: No such file or directory
