@@ -158,6 +158,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , limitTime                     = Nothing
             , outputFormat                  = UI.Plain
             , lineWidth                     = 120
+            , responses                     = []
             }
     -- catching the (SR timeout) error, and raising a user error
     catch solve $ \ (e :: SomeException) -> userErr1 $ vcat

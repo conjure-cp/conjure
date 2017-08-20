@@ -96,6 +96,9 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 -- base
 import System.IO ( hFlush, stdout )
+import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
+import System.IO.Unsafe ( unsafePerformIO )
+
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
@@ -112,6 +115,8 @@ outputModels
     -> Model
     -> m ()
 outputModels config model = do
+
+    liftIO $ writeIORef recordedResponses (responses config)
 
     -- Savile Row does not support ' characters in identifiers
     -- We could implement a workaround where we insert a marker (like __PRIME__) for each ' character
@@ -394,6 +399,11 @@ strategyToDriver config questions = do
             ]
 
 
+recordedResponses :: IORef (Maybe [Int])
+{-# NOINLINE recordedResponses #-}
+recordedResponses = unsafePerformIO (newIORef Nothing)
+
+
 executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
@@ -412,19 +422,36 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
         Interactive -> liftIO $ do
             print (vcat (map fst options))
             let
+                nextRecordedResponse :: IO (Maybe Int)
+                nextRecordedResponse = do
+                    mres <- readIORef recordedResponses
+                    case mres of
+                        Just (next:rest) -> do
+                            writeIORef recordedResponses (Just rest)
+                            return (Just next)
+                        _ -> return Nothing
+
+                pickIndex :: IO Int
                 pickIndex = do
-                    putStr "Pick option: "
-                    hFlush stdout
-                    line <- getLine
-                    case (line, readMay line) of
-                        ("", _) -> return 1
-                        (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
-                        (_, Nothing) -> do
-                            putStrLn "Enter an integer value."
-                            pickIndex
-                        (_, Just _) -> do
-                            print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
-                            pickIndex
+                    mrecorded <- nextRecordedResponse
+                    case mrecorded of
+                        Just recorded -> do
+                            putStrLn ("Response: " ++ show recorded)
+                            return recorded
+                        Nothing -> do
+                            putStr "Pick option: "
+                            hFlush stdout
+                            line <- getLine
+                            case (line, readMay line) of
+                                ("", _) -> return 1
+                                (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
+                                (_, Nothing) -> do
+                                    putStrLn "Enter an integer value."
+                                    pickIndex
+                                (_, Just _) -> do
+                                    print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
+                                    pickIndex
+
             pickedIndex <- pickIndex
             let (pickedDescr, picked) = at options (pickedIndex - 1)
             return [(pickedIndex, pickedDescr, picked)]

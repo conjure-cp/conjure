@@ -500,4 +500,5 @@ modelAll dir = ignoreLogs . runNameGen . outputModels Config
     , numberingStart             = 1
     , smartFilenames             = True
     , lineWidth                  = 120
+    , responses                  = Nothing
     }

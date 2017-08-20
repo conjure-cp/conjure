@@ -13,6 +13,7 @@ such that
          (or([x_PartitionOccurrence_WhichPart[q27] = q22 /\ q27 = 1 | q27 : int(1..4)]) /\
           or([x_PartitionOccurrence_WhichPart[q29] = q22 /\ q29 = 2 | q29 : int(1..4)]))
              | q22 : int(1..4)]),
+    and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,
     and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..4)])
