@@ -8,7 +8,6 @@ import qualified Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) )
 import qualified Conjure.TypeCheckAll ( tests )
 import qualified Conjure.ParsePrint ( tests )
 import qualified Conjure.Custom ( tests )
-import qualified Golden ( tests )
 
 -- tasty
 import Test.Tasty ( defaultMainWithIngredients, defaultIngredients, includingOptions, askOption, testGroup )
@@ -35,5 +34,4 @@ main = do
             , typeCheckAllTests
             , parsePrintTests
             , customTests testTimeLimit
-            , Golden.tests
             ]
