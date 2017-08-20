@@ -98,10 +98,10 @@ rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
         [newM]         <- downX1 new
         (newIndex:_)   <- indexDomainsOf newM
 
-        traceM $ show $ "old  :" <+> pretty old
-        traceM $ show $ "new  :" <+> pretty new
-        traceM $ show $ "names:" <+> pretty (show names)
-        traceM $ show $ "cons :" <+> pretty cons
+        -- traceM $ show $ "old  :" <+> pretty old
+        -- traceM $ show $ "new  :" <+> pretty new
+        -- traceM $ show $ "names:" <+> pretty (show names)
+        -- traceM $ show $ "cons :" <+> pretty cons
 
         return
             ( "Vertical rule for frameUpdate, Occurrence representation"
@@ -156,7 +156,8 @@ rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
                             
 
                         in
-                            trace (show $ "rule_frameUpdate targetAdjust" <++> pretty targetAdjust) $ [essence|
+                            -- trace (show $ "rule_frameUpdate targetAdjust" <++> pretty targetAdjust) $
+                            [essence|
                                 and([ &newM[&k] = &oldM[&targetM + &targetAdjust]
                                     | &kPat : &newIndex
                                     , ! &k_is_b
@@ -181,9 +182,9 @@ rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
                                 , freezeFrame
                                 ]
                             ])
-                traceM $ show $ "rule_frameUpdate consOut     " <++> pretty consOut
-                traceM $ show $ "rule_frameUpdate freezeFrame " <++> pretty freezeFrame
-                traceM $ show $ "rule_frameUpdate out         " <++> pretty out
+                -- traceM $ show $ "rule_frameUpdate consOut     " <++> pretty consOut
+                -- traceM $ show $ "rule_frameUpdate freezeFrame " <++> pretty freezeFrame
+                -- traceM $ show $ "rule_frameUpdate out         " <++> pretty out
                 return out
             )
 
