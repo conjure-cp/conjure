@@ -81,3 +81,109 @@ rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
             ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
             , return marker
             )
+
+
+rule_frameUpdate :: Rule
+rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theRule where
+    theRule p = do
+        (old, new, names, cons) <- match opFrameUpdate p
+
+        TypeSet{}                     <- typeOf old
+        Set_ExplicitVarSizeWithMarker <- representationOf old
+        [oldMarker, oldValues]        <- downX1 old
+        (oldIndex:_)                  <- indexDomainsOf oldValues
+
+        TypeSet{}                     <- typeOf new
+        Set_ExplicitVarSizeWithMarker <- representationOf new
+        [newMarker, newValues]        <- downX1 new
+        (newIndex:_)                  <- indexDomainsOf newValues
+
+        return
+            ( "Vertical rule for frameUpdate, ExplicitVarSizeWithMarker representation"
+            , do
+
+                focusNames_a <- forM names $ \ (a,_) -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (a, auxName, aux, oldIndex)
+                focusNames_b <- forM names $ \ (_,b) -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (b, auxName, aux, newIndex)
+
+                let consOut = flip transform cons $ \ h -> case h of
+                        Reference nm (Just FrameUpdateVar) ->
+                            case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
+                                 , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
+                                ([auxVar], _) -> [essence| &oldValues[&auxVar] |]
+                                (_, [auxVar]) -> [essence| &newValues[&auxVar] |]
+                                _             -> h
+                        _ -> h
+
+                (kPat, k) <- quantifiedVar
+                (targetLPat, targetL) <- auxiliaryVar
+                (targetMPat, targetM) <- auxiliaryVar
+
+                -- keep everything out of focus unchanged
+                let freezeFrame =
+                        let
+                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+                            k_gt_b = make opSum $ fromList [ [essence| toInt(&k >= &i) |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+                            l_gt_a = make opSum $ fromList [ [essence| toInt(&targetL >= &i) |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            targetAdjust = make opSum $ fromList
+                                [ [essence| toInt(&condition) |]
+                                | i <- [0 .. genericLength names - 1]
+                                , let condition = make opAnd $ fromList
+                                                    [ is_a [essence| &targetM + &jE |]
+                                                    | j <- [0 .. i]
+                                                    , let jE = Constant (ConstantInt j)
+                                                    ]
+                                ]
+                            
+
+                        in
+                            [essence|
+                                and([ &newValues[&k] = &oldValues[&targetM + &targetAdjust]
+                                      /\ &k <= &newMarker
+                                      /\ &targetM + &targetAdjust <= &oldMarker
+                                    | &kPat : &newIndex
+                                    , ! &k_is_b
+                                    , letting &targetLPat be &k       - &k_gt_b
+                                    , letting &targetMPat be &targetL + &l_gt_a
+                                    ])
+                            |]
+
+                let out = WithLocals
+                        [essence| true |]
+                        (AuxiliaryVars $
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_a
+                            ] ++
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_b
+                            ] ++
+                            [ SuchThat
+                                [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
+                                , make opAnd     (fromList [ [essence| &auxVar <= &oldMarker |]
+                                                           | (_,_,auxVar,_) <- focusNames_a ])
+
+                                , make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_b])
+                                , make opAnd     (fromList [ [essence| &auxVar <= &newMarker |]
+                                                           | (_,_,auxVar,_) <- focusNames_b ])
+
+                                , consOut
+                                , freezeFrame
+                                ]
+                            ])
+
+                return out
+            )

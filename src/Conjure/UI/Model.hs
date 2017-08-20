@@ -1128,6 +1128,7 @@ verticalRules =
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate
     , Vertical.Set.Occurrence.rule_Comprehension
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
