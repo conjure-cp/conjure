@@ -38,6 +38,9 @@ Logging & Output:
      --line-width=INT                        Line width for pretty printing.
                                              Default: 120
 Model generation:
+     --responses=ITEM                        A comma separated list of integers.
+                                             If provided, these will be used as the answers during interactive model
+                                             generation instead of prompting the user.
   -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                              first), i (for interactive), r (for random), x (for all). Prepend a (for
                                              auto) to automatically skip when there is only one option at any point.
@@ -167,6 +170,9 @@ Logging & Output:
      --line-width=INT                        Line width for pretty printing.
                                              Default: 120
 Model generation:
+     --responses=ITEM                        A comma separated list of integers.
+                                             If provided, these will be used as the answers during interactive model
+                                             generation instead of prompting the user.
   -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
                                              first), i (for interactive), r (for random), x (for all). Prepend a (for
                                              auto) to automatically skip when there is only one option at any point.

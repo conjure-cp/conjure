@@ -82,6 +82,16 @@ mainWithArgs Modelling{..} = do
             Compact -> userErr1 "The Compact heuristic isn't supported for questions."
             _       -> return ()
 
+        responsesList <- do
+            let parts = splitOn "," responses
+            let intParts = mapMaybe readMay parts
+            if length parts == length intParts
+                then return (Just intParts)
+                else userErr1 $ vcat [ "Cannot parse the value for --responses."
+                                     , "Expected a comma separated list of integers."
+                                     , "But got:" <+> pretty responses
+                                     ]
+
         return Config.Config
             { Config.outputDirectory            = outputDirectory
             , Config.logLevel                   = logLevel
@@ -105,6 +115,7 @@ mainWithArgs Modelling{..} = do
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
+            , Config.responses                  = responsesList
             }
     runNameGen $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
@@ -200,6 +211,7 @@ mainWithArgs config@Solve{..} = do
                       , smartFilenames
                       , strategyQ
                       , strategyA
+                      , responses
                       )
                     , ( representations
                       , representationsFinds
