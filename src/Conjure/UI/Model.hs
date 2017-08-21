@@ -676,6 +676,33 @@ updateDeclarations model = do
                             return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
+                SNS_Group groupName vars -> do
+                    let
+                        go vars1 = do
+                            vars2 <- fmap concat $ forM vars1 $ \ v -> do
+                                mvs <- runMaybeT (downX1 v)
+                                case mvs of
+                                    Just vs | length vs > 0 -> return vs
+                                    _ -> return [v]
+                            if vars1 == vars2
+                                then return vars1
+                                else go vars2
+                    vars' <- go vars
+                    return [SNS_Group groupName vars']
+                SNS_Out_Neighbourhood name sizeVarName activationVarName groupName vars -> do
+                    let
+                        go vars1 = do
+                            vars2 <- fmap concat $ forM vars1 $ \ v -> do
+                                mvs <- runMaybeT (downX1 v)
+                                case mvs of
+                                    Just vs | length vs > 0 -> return vs
+                                    _ -> return [v]
+                            if vars1 == vars2
+                                then return vars1
+                                else go vars2
+                    vars' <- go vars
+                    return [SNS_Out_Neighbourhood name sizeVarName activationVarName groupName vars']
+
                 -- -- SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body -> do
                 -- SNS_Neighbourhood name activationVarName sizeVarName vars -> do
                 --     let
