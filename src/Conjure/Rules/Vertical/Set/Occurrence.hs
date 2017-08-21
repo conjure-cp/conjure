@@ -115,7 +115,7 @@ rule_frameUpdate = "set-frameUpdate{Occurrence}" `namedRule` theRule where
                     return (b, auxName, aux, newIndex)
 
                 let consOut = flip transform cons $ \ h -> case h of
-                        Reference nm (Just FrameUpdateVar) ->
+                        Reference nm (Just FrameUpdateVar{}) ->
                             case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
                                  , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
                                 ([auxVar], _) -> [essence| &auxVar |]

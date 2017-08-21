@@ -234,8 +234,8 @@ resolveX (Op (MkOpFrameUpdate (OpFrameUpdate old new names cons))) = scope $ do
     old' <- resolveX old
     new' <- resolveX new
     forM_ names $ \ (a,b) -> do
-        modify ((a, FrameUpdateVar) :)
-        modify ((b, FrameUpdateVar) :)
+        modify ((a, FrameUpdateVar old') :)
+        modify ((b, FrameUpdateVar new') :)
     cons' <- resolveX cons
     return (Op (MkOpFrameUpdate (OpFrameUpdate old' new' names cons')))
 

@@ -428,7 +428,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom   -> typeOf dom
             RecordField _ ty      -> return ty
             VariantField _ ty     -> return ty
-            FrameUpdateVar        -> return TypeAny
+            FrameUpdateVar x      -> typeOf x
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
@@ -682,7 +682,7 @@ data ReferenceTo
     | DeclHasRepr     FindOrGiven Name (Domain HasRepresentation Expression)
     | RecordField     Name Type         -- the type of the field with this name
     | VariantField    Name Type         -- the type of the variant with this name
-    | FrameUpdateVar
+    | FrameUpdateVar  Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize ReferenceTo
@@ -697,7 +697,7 @@ instance Pretty ReferenceTo where
     pretty (DeclHasRepr forg nm dom  ) = "DeclHasRepr" <+> prParens (pretty forg <+> pretty nm <> ":" <+> pretty dom)
     pretty (RecordField  nm ty) = "RecordField"  <+> prParens (pretty nm <+> ":" <+> pretty ty)
     pretty (VariantField nm ty) = "VariantField" <+> prParens (pretty nm <+> ":" <+> pretty ty)
-    pretty FrameUpdateVar = "FrameUpdateVar"
+    pretty FrameUpdateVar{} = "FrameUpdateVar"
 
 data Region
     = NoRegion
