@@ -91,12 +91,12 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
         TypeSet{}                     <- typeOf old
         Set_ExplicitVarSizeWithMarker <- representationOf old
         [oldMarker, oldValues]        <- downX1 old
-        (oldIndex:_)                  <- indexDomainsOf oldMarker
+        (oldIndex:_)                  <- indexDomainsOf oldValues
 
         TypeSet{}                     <- typeOf new
         Set_ExplicitVarSizeWithMarker <- representationOf new
         [newMarker, newValues]        <- downX1 new
-        (newIndex:_)                  <- indexDomainsOf newMarker
+        (newIndex:_)                  <- indexDomainsOf newValues
 
         return
             ( "Vertical rule for frameUpdate, ExplicitVarSizeWithMarker representation"
