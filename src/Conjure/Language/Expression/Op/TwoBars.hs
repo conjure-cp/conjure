@@ -32,7 +32,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
             TypeSequence{}  -> return ()
             TypeRelation{}  -> return ()
             TypePartition{} -> return ()
-            _               -> raiseTypeError p
+            _               -> raiseTypeError $ vcat [ pretty p
+                                                     , "Expected an integer or a collection."
+                                                     , "But got:" <+> pretty ty
+                                                     ]
         return TypeInt
 
 instance EvaluateOp OpTwoBars where
