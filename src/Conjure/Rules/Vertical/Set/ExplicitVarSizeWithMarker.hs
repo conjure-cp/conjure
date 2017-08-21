@@ -106,15 +106,9 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
 
-                let focusNames_a_set = AbstractLiteral $ AbsLitSet
-                        [ [essence| &oldValues[&i] |] | (_, _, i, _) <- focusNames_a ]
-
                 focusNames_b <- forM names $ \ (_,b) -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
-
-                let focusNames_b_set = AbstractLiteral $ AbsLitSet
-                        [ [essence| &newValues[&i] |] | (_, _, i, _) <- focusNames_b ]
 
                 let consOut = flip transform cons $ \ h -> case h of
                         Reference nm (Just FrameUpdateVar{}) ->
@@ -125,15 +119,67 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                                 _             -> h
                         _ -> h
 
-                -- (kPat, k) <- quantifiedVar
-                -- (targetLPat, targetL) <- auxiliaryVar
-                -- (targetMPat, targetM) <- auxiliaryVar
+                (kPat, k) <- quantifiedVar
+                (contiguousCountsPat, contiguousCounts) <- auxiliaryVar
+                (offsetsPat, offsets) <- auxiliaryVar
+
+                -- build contiguousCounts
+                let
+                    contiguousCountsCons =
+                        let
+                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+                            maxOldIndex_is_a = is_a maxOldIndex
+
+                            maxOldIndexMinusK_is_a = is_a [essence| &maxOldIndex - &k |]
+
+                        in
+                            [essence|
+                                (&contiguousCounts[&maxOldIndex] = toInt(&maxOldIndex_is_a)) /\
+                                forAll &kPat : int(1..&maxOldIndex-1) .
+                                    (&contiguousCounts[&maxOldIndex-&k] = 0 <-> ! &maxOldIndexMinusK_is_a) /\
+                                    (&maxOldIndexMinusK_is_a -> &contiguousCounts[&maxOldIndex-&k] = &contiguousCounts[&maxOldIndex-(&k-1)] +1)
+                            |]
+
+                -- build offsets matrix
+                let
+                    buildOffSetsCons = 
+                        let
+                            is_b t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+
+                            k_is_b = is_b k
+
+                            one_is_b = is_b [essence| 1 |]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+
+                        in
+                            [essence|
+                                (&offsets[1] = (0 - toInt(&one_is_b) + catchUndef(&contiguousCounts[1 - toInt(&one_is_b)], 0))) /\
+                                forAll &kPat : int(2..&maxOldIndex) .
+                                    &offsets[&k] = (&offsets[&k-1] - toInt(&k_is_b))
+                                                + catchUndef(&contiguousCounts[(&offsets[&k-1] - toInt(&k_is_b)) + &k], 0)
+                            |]
 
                 -- keep everything out of focus unchanged
-                let freezeFrame =
-                        [essence|
-                            &new = &old - &focusNames_a_set union &focusNames_b_set
-                        |]
+                let freezeFrameCons =
+                        let
+                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+
+                        in
+                            [essence|
+                                forAll &kPat : int(1..&maxOldIndex) .
+                                    (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
+                            |]
 
                 let out = WithLocals
                         [essence| true |]
@@ -144,6 +190,17 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                             [ Declaration (FindOrGiven LocalFind auxName domain)
                             | (_userName, auxName, _auxVar, domain) <- focusNames_b
                             ] ++
+                            [ Declaration (FindOrGiven LocalFind contiguousCountsPat
+                                    (DomainMatrix oldIndex
+                                        (DomainInt [RangeBounded
+                                                        (Constant $ ConstantInt 0)
+                                                        (Constant $ ConstantInt $ genericLength focusNames_a)])))
+                            , Declaration (FindOrGiven LocalFind offsetsPat
+                                    (DomainMatrix oldIndex
+                                        (DomainInt [RangeBounded
+                                                        (Constant $ ConstantInt $ negate $ genericLength focusNames_a)
+                                                        (Constant $ ConstantInt $          genericLength focusNames_a)])))
+                            ] ++
                             [ SuchThat
                                 [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
                                 , make opAnd     (fromList [ [essence| &auxVar <= &oldMarker |]
@@ -153,8 +210,11 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                                 , make opAnd     (fromList [ [essence| &auxVar <= &newMarker |]
                                                            | (_,_,auxVar,_) <- focusNames_b ])
 
+                                , contiguousCountsCons
+                                , buildOffSetsCons
+                                , freezeFrameCons
+
                                 , consOut
-                                , freezeFrame
                                 ]
                             ])
 
