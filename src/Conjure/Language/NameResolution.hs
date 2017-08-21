@@ -117,10 +117,15 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
-        SNS_Neighbourhood name activationVarName sizeVarName vars -> do
+        SNS_Group groupName vars -> do
             vars' <- mapM resolveX vars
-            return (SNS_Neighbourhood name activationVarName sizeVarName vars')
-        IncumbentMapping{} -> return st
+            return (SNS_Group groupName vars')
+        SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body -> do
+            sizeVarDomain' <- resolveD sizeVarDomain
+            body' <- mapM resolveStatement body
+            return (SNS_Neighbourhood name groupName sizeVarName sizeVarDomain' body')
+        SNS_Out_Neighbourhood{}    -> return st
+        SNS_Out_IncumbentMapping{} -> return st
 
 
 resolveSearchOrder

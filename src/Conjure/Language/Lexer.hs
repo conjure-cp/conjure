@@ -263,7 +263,8 @@ data Lexeme
     | L_pred
     | L_succ
 
-    | L_neighbourhood
+    | L_SNSGroup
+    | L_SNSNeighbourhood
     | L_incumbent
     | L_frameUpdate
 
@@ -477,8 +478,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_pred, "pred" )
     , ( L_succ, "succ" )
 
-    , ( L_neighbourhood, "neighbourhood" )
-    , ( L_neighbourhood, "neighborhood" )
+    , ( L_SNSGroup, "SNSGroup" )
+    , ( L_SNSNeighbourhood, "SNSNeighbourhood" )
     , ( L_incumbent, "incumbent" )
     , ( L_frameUpdate, "frameUpdate" )
 

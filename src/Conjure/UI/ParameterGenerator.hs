@@ -32,8 +32,10 @@ parameterGenerator = runNameGen . resolveNames >=> core
                 Where             xs                   -> return [SuchThat xs]
                 Objective         {}                   -> return []
                 SuchThat          {}                   -> return []
-                SNS_Neighbourhood {}                   -> return []
-                IncumbentMapping  {}                   -> return []
+                SNS_Group{}                            -> return []
+                SNS_Neighbourhood{}                    -> return []
+                SNS_Out_Neighbourhood{}                -> return []
+                SNS_Out_IncumbentMapping{}             -> return []
             if null errs
                 then return m { mStatements = concat outStatements }
                 else userErr1 $ vcat $ "Some parameters have infinite domains."

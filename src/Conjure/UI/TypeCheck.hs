@@ -156,11 +156,10 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
-            SNS_Neighbourhood name activationVarName sizeVarName vars -> do
-                -- TODO: make sure the names are unique
-                -- TODO: "type-check" vars
-                return (SNS_Neighbourhood name activationVarName sizeVarName vars)
-            IncumbentMapping{} -> return st
+            SNS_Group{}                -> return st         -- TODO
+            SNS_Neighbourhood{}        -> return st         -- TODO
+            SNS_Out_Neighbourhood{}    -> return st         -- TODO
+            SNS_Out_IncumbentMapping{} -> return st         -- TODO
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

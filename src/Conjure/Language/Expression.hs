@@ -55,11 +55,25 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
-    | SNS_Neighbourhood Name                    -- the name of the neighbourhood
-                        Name                    -- the name of the neighbourhood-activation variable
-                        Name                    -- the name of the neighbourhood-size variable
-                        [Expression]            -- the variables that are involved
-    | IncumbentMapping [Name] [Name]
+
+    | SNS_Group                 Name                        -- group name
+                                [Expression]                -- involved variables
+
+    | SNS_Neighbourhood         Name                        -- neighbourhood name
+                                Name                        -- group name
+                                Name                        -- size variable name
+                                (Domain () Expression)      -- size variable domain
+                                [Statement]                 -- body
+
+    | SNS_Out_Neighbourhood     Name                        -- neighbourhood name
+                                Name                        -- size var
+                                Name                        -- activation var
+                                Name                        -- group name
+                                [Expression]                -- (extra) involved variables
+
+    | SNS_Out_IncumbentMapping  [Name]                      -- original variables
+                                [Name]                      -- incumbent variables
+
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -74,14 +88,23 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
-    pretty (SNS_Neighbourhood name activationVarName sizeVarName vars) =
-        "neighbourhood" <+> pretty name <+> ":" <++>
-        prettyList prParens "," [ pretty activationVarName
-                                , pretty sizeVarName
+    pretty (SNS_Group name vars) =
+        "SNSGroup" <+> pretty name <+> ":" <++> prettyList prBrackets "," vars
+    pretty (SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body) =
+        "SNSNeighbourhood" <+> pretty name <+> ":" <++>
+        prettyList prParens "," [ pretty groupName
+                                , pretty sizeVarName <+> ":" <+> pretty sizeVarDomain
+                                , vcat (map pretty body)
+                                ]
+    pretty (SNS_Out_Neighbourhood name size activation groupName vars) =
+        "SNSNeighbourhood" <+> pretty name <+> ":" <++>
+        prettyList prParens "," [ pretty size
+                                , pretty activation
+                                , pretty groupName
                                 , prettyList prBrackets "," vars
                                 ]
-    pretty (IncumbentMapping originals incumbents) =
-        "incumbentMapping" <> prettyList prParens "," [ prettyList prBrackets "," originals
+    pretty (SNS_Out_IncumbentMapping originals incumbents) =
+        "SNSIncumbentMapping" <> prettyList prParens "," [ prettyList prBrackets "," originals
                                                       , prettyList prBrackets "," incumbents
                                                       ]
 
@@ -106,20 +129,10 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (SNS_Neighbourhood name activationVarName sizeVarName vars) = JSON.Object $ M.fromList
-        [ ("type", JSON.String "SNS_Neighbourhood")
-        , ("children", JSON.Array $ V.fromList $ [ toJSON name
-                                                 , toJSON activationVarName
-                                                 , toJSON sizeVarName
-                                                 ]
-                                                 ++ map varSymBreakingDescription vars)
-        ]
-    varSymBreakingDescription (IncumbentMapping originals incumbents) = JSON.Object $ M.fromList
-        [ ("type", JSON.String "IncumbentMapping")
-        , ("children", JSON.Array $ V.fromList $ [ toJSON originals
-                                                 , toJSON incumbents
-                                                 ])
-        ]
+    varSymBreakingDescription p@SNS_Group{} = toJSON p
+    varSymBreakingDescription p@SNS_Neighbourhood{} = toJSON p
+    varSymBreakingDescription p@SNS_Out_Neighbourhood{} = toJSON p
+    varSymBreakingDescription p@SNS_Out_IncumbentMapping{} = toJSON p
 
 
 ------------------------------------------------------------------------------------------------------------------------

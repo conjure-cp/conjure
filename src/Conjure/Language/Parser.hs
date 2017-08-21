@@ -194,17 +194,25 @@ parseTopLevels = do
                     return [ SearchHeuristic nm ]
                     <?> "branching on"
                 , do
-                    lexeme L_neighbourhood
+                    lexeme L_SNSGroup
+                    groupName <- parseNameOrMeta
+                    colon
+                    involvedVars <- brackets $ commaSeparated parseExpr
+                    return [SNS_Group groupName involvedVars]
+                    <?> "neighbourhood group declaration"
+                , do
+                    lexeme L_SNSNeighbourhood
                     neighbourhoodName <- parseNameOrMeta
                     colon
                     parens $ do
-                        activationVarName <- parseNameOrMeta
+                        groupName <- parseNameOrMeta
                         comma
                         sizeVarName <- parseNameOrMeta
+                        colon
+                        sizeVarDomain <- parseDomain
                         comma
-                        involvedVars <- brackets $ commaSeparated parseExpr
-                        return [SNS_Neighbourhood neighbourhoodName
-                                    activationVarName sizeVarName involvedVars]
+                        body <- parseTopLevels
+                        return [SNS_Neighbourhood neighbourhoodName groupName sizeVarName sizeVarDomain body]
                     <?> "neighbourhood declaration"
                 ] <?> "statement"
     concat <$> some one

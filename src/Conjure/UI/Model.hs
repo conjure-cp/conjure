@@ -676,19 +676,20 @@ updateDeclarations model = do
                             return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
-                SNS_Neighbourhood name activationVarName sizeVarName vars -> do
-                    let
-                        go vars1 = do
-                            vars2 <- fmap concat $ forM vars1 $ \ v -> do
-                                mvs <- runMaybeT (downX1 v)
-                                case mvs of
-                                    Just vs | length vs > 0 -> return vs
-                                    _ -> return [v]
-                            if vars1 == vars2
-                                then return vars1
-                                else go vars2
-                    vars' <- go vars
-                    return [SNS_Neighbourhood name activationVarName sizeVarName vars']
+                -- -- SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body -> do
+                -- SNS_Neighbourhood name activationVarName sizeVarName vars -> do
+                --     let
+                --         go vars1 = do
+                --             vars2 <- fmap concat $ forM vars1 $ \ v -> do
+                --                 mvs <- runMaybeT (downX1 v)
+                --                 case mvs of
+                --                     Just vs | length vs > 0 -> return vs
+                --                     _ -> return [v]
+                --             if vars1 == vars2
+                --                 then return vars1
+                --                 else go vars2
+                --     vars' <- go vars
+                --     return [SNS_Neighbourhood name activationVarName sizeVarName vars']
                 _ -> return [inStatement]
 
         onEachDomain forg nm domain =
@@ -927,7 +928,7 @@ addIncumbentVariables model
             _ -> return [st]
 
     return model { mStatements = concat stIncumbentsDeclared
-                              ++ [IncumbentMapping originals (map appendIncumbent originals) ] }
+                              ++ [SNS_Out_IncumbentMapping originals (map appendIncumbent originals) ] }
 
 addIncumbentVariables model = return model
 
