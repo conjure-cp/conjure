@@ -919,6 +919,54 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
+convertSNSNeighbourhood :: MonadUserError m => Model -> m Model
+convertSNSNeighbourhood model
+    | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
+    , hasSNS = do
+
+    statements <- concatForM (mStatements model) $ \case
+
+        SNS_Neighbourhood neigName groupName sizeVarName sizeVarDomain body -> do
+
+            let liftName n = mconcat [neigName, "_", n]
+
+            let activationVarName = liftName "activation"
+            let activationVar = Reference activationVarName Nothing
+
+            -- implication
+            (bodyVars, bodyConstraints) <- fmap mconcat $ forM body $ \case
+                SuchThat xs -> return ([], xs)
+                Declaration (FindOrGiven Find name domain) -> return ([(name, domain)], [])
+                st -> userErr1 $ "Unsupported statement type inside a neighbourhood:" <++> pretty st
+
+            let liftAllNames =
+                    transform
+                        (\ p -> case p of
+                            Reference nm _ | nm `elem` (sizeVarName : [name | (name, _) <- bodyVars]) ->
+                                Reference (liftName nm) Nothing
+                            _ -> p
+                        )
+
+            let bodyConstraintsConjunction = make opAnd $ fromList bodyConstraints
+            let outBody      = liftAllNames [essence| &activationVar -> &bodyConstraintsConjunction |]
+
+            let outSNS = SNS_Out_Neighbourhood neigName sizeVarName activationVarName groupName
+                            [ Reference (liftName name) Nothing | (name, _) <- bodyVars ]
+
+            return $ [ Declaration (FindOrGiven Find (liftName name) domain) | (name, domain) <- bodyVars ]
+                  ++ [ Declaration (FindOrGiven Find activationVarName DomainBool)
+                     , Declaration (FindOrGiven Find (liftName sizeVarName) sizeVarDomain)
+                     , SuchThat [outBody]
+                     , outSNS
+                     ]
+
+        st -> return [st]
+
+    return model { mStatements = statements }
+
+convertSNSNeighbourhood model = return model
+
+
 addIncumbentVariables :: Monad m => Model -> m Model
 addIncumbentVariables model
     | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
@@ -985,10 +1033,11 @@ prologue config model = do
     >>= addNeighbourhoods config      >>= logDebugId "[addNeighbourhoods]"
 
 
-epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
+    >>= convertSNSNeighbourhood       >>= logDebugId "[convertSNSNeighbourhood]"
     >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
