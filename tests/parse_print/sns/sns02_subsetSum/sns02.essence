@@ -8,21 +8,17 @@ find x : set (minSize 1, maxSize |nums|) of int([ i | i <- nums])
 such that x subsetEq nums, s = sum i in x . i
 
 
-find nSize : int(1)
+SNSGroup hasX : [x]
 
-find act1 : bool
-neighbourhood removeElem :
-    ( act1
-    , nSize
-    , [x]
+SNSNeighbourhood removeElem :
+    ( hasX
+    , nSize : int(1)
+    , such that exists i in x . incumbent(x) = x - {i}
     )
-such that act1 -> exists i in x . incumbent(x) = x - {i}
 
-find act2 : bool
-neighbourhood addElem :
-    ( act2
-    , nSize
-    , [x]
+SNSNeighbourhood addElem :
+    ( hasX
+    , nSize : int(1)
+    , such that exists i in x . incumbent(x) = x union {i}
     )
-such that act2 -> exists i in x . incumbent(x) = x union {i}
 

@@ -35,30 +35,23 @@ such that
                (field[row,col] = values[row,col]),
 
 
-$ SNS stuff
-  $ act1 -> true     $  any permutation of the first row is part of the 'hood.
 
 
 
 
 
+SNSGroup field1 : [field[1,..]]
 
 
 
-
-find act1 : bool
-find n : int(1)
-neighbourhood row1 : (act1, n, [field[1,..]])
-
-$ find activator_row1 : bool
-$ find shadowOf_field : ...
-$ such that activator_row1 -> true
-$ neighbourhood row1 : (activator_row1, [field[1,..]])
+SNSNeighbourhood row1 : (field1, n : int(1), such that true)
 
 
-find act2 : bool
-neighbourhood row1FirstHalf : (act2, n, [field[1,..]])
-such that forAll i : int(1..5) . incumbent(field[1,i]) = field[1,i]
+SNSNeighbourhood row1FirstHalf :
+    ( field1
+    , n : int(1)
+    , such that forAll i : int(1..5) . incumbent(field[1,i]) = field[1,i]
+    )
 
 $ find activator_row1FirstHalf : bool
 $ find shadowOf_field : ...
