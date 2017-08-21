@@ -1,0 +1,17 @@
+language Essence 1.4
+
+given s: int
+given nums: set of int
+find x: set (minSize 1, maxSize |nums|) of int([i | i <- nums])
+such that
+    x subsetEq nums,
+    s = sum([i | i <- x])
+SNSGroup hasX : [x]
+SNSNeighbourhood removeElem : (hasX, nSize : int(1), such that or([incumbent(x) = x - {i} | i <- x]))
+SNSNeighbourhood addElem : (hasX, nSize : int(1), such that or([incumbent(x) = x union {i} | i <- x]))
+SNSNeighbourhood findDoubleAdd :
+    (hasX, nSize : int(1),
+     find k: int([i | i <- nums])
+     such that k in x
+     such that 2 * k in incumbent(x))
+

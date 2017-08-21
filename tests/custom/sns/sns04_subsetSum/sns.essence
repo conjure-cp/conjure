@@ -1,0 +1,33 @@
+language Essence 1.4
+
+$ https://en.wikipedia.org/wiki/Subset_sum_problem
+
+given s : int
+given nums : set of int
+find x : set (minSize 1, maxSize |nums|) of int([ i | i <- nums])
+such that x subsetEq nums, s = sum i in x . i
+
+
+SNSGroup hasX : [x]
+
+SNSNeighbourhood removeElem :
+    ( hasX
+    , nSize : int(1)
+    , such that exists i in x . incumbent(x) = x - {i}
+    )
+
+SNSNeighbourhood addElem :
+    ( hasX
+    , nSize : int(1)
+    , such that exists i in x . incumbent(x) = x union {i}
+    )
+
+SNSNeighbourhood findDoubleAdd :
+    ( hasX
+    , nSize : int(1)
+    , find k : int([ i | i <- nums])
+      such that k in x
+      such that 2*k in incumbent(x)
+    )
+
+
