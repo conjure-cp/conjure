@@ -22,10 +22,13 @@ instance ToJSON    x => ToJSON    (OpFrameUpdate x) where toJSON = genericToJSON
 instance FromJSON  x => FromJSON  (OpFrameUpdate x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
-    typeOf p@(OpFrameUpdate old new _names cons) = do
+    typeOf p@(OpFrameUpdate old new _names _cons) = do
         tyOld <- typeOf old
         tyNew <- typeOf new
-        tyCons <- typeOf cons
+        -- delay the type-checking of the constraint component
+        -- cannot possibly type-check it without knowing the types of the focus variables
+        -- tyCons <- typeOf cons
+        let tyCons = TypeBool
         case (typeUnify tyOld tyNew, typeUnify tyCons TypeBool) of
             (True, True) -> return TypeBool
             (False, _  ) -> raiseTypeError $ vcat [ pretty p

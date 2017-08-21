@@ -242,7 +242,7 @@ remaining config modelZipper minfo = do
     forM questions $ \ (focus, answers0) -> do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
             importNameGenState namegenst0
-            ruleResultExpr <- ruleResult
+            ruleResultExpr <- fmap fixRelationProj ruleResult
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
