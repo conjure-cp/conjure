@@ -16,9 +16,9 @@ SNSNeighbourhood removeElem :
     , such that exists i in x . incumbent(x) = x - {i}
     )
 
-SNSNeighbourhood addElem :
-    ( hasX
-    , nSize : int(1)
-    , such that exists i in x . incumbent(x) = x union {i}
-    )
-
+$ SNSNeighbourhood addElem :
+$     ( hasX
+$     , nSize : int(1)
+$     , such that exists i in x . incumbent(x) = x union {i}
+$     )
+$
