@@ -50,6 +50,7 @@ import Conjure.Language.Constant
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Domain
 import Conjure.Language.Expression
+import Conjure.Language.Expression.Op
 
 
 -- aeson
@@ -116,6 +117,7 @@ allContextsExceptReferences z0 = concatMap subtreeOf (allSiblings z0)
         subtreeOf :: Zipper a Expression -> [Zipper a Expression]
         subtreeOf z = z : case hole z of
             Reference{} -> []                                       -- don't go through a Reference
+            (Op (MkOpFrameUpdate (OpFrameUpdate{}))) -> []
             _           -> maybe [] allContextsExceptReferences (down z)
 
 ------------------------------------------------------------------------------------------------------------------------
