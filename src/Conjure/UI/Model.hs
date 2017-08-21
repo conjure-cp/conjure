@@ -1118,7 +1118,7 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
-    -- , Vertical.Set.Explicit.rule_frameUpdate
+    , Vertical.Set.Explicit.rule_frameUpdate
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
     -- , Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate
@@ -1128,7 +1128,7 @@ verticalRules =
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension
-    -- , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate
     , Vertical.Set.Occurrence.rule_Comprehension
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In

@@ -152,11 +152,6 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
         [newM]       <- downX1 new
         (newIndex:_) <- indexDomainsOf newM
 
-        -- traceM $ show $ "old  :" <+> pretty old
-        -- traceM $ show $ "new  :" <+> pretty new
-        -- traceM $ show $ "names:" <+> pretty (show names)
-        -- traceM $ show $ "cons :" <+> pretty cons
-
         return
             ( "Vertical rule for frameUpdate, Explicit representation"
             , do
@@ -164,9 +159,16 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                 focusNames_a <- forM names $ \ (a,_) -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
+
+                let focusNames_a_set = AbstractLiteral $ AbsLitSet
+                        [ i | (_, _, i, _) <- focusNames_a ]
+
                 focusNames_b <- forM names $ \ (_,b) -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
+
+                let focusNames_b_set = AbstractLiteral $ AbsLitSet
+                        [ i | (_, _, i, _) <- focusNames_b ]
 
                 let consOut = flip transform cons $ \ h -> case h of
                         Reference nm (Just FrameUpdateVar) ->
@@ -177,48 +179,15 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                                 _             -> h
                         _ -> h
 
-                (kPat, k) <- quantifiedVar
-                (targetLPat, targetL) <- auxiliaryVar
-                (targetMPat, targetM) <- auxiliaryVar
+                -- (kPat, k) <- quantifiedVar
+                -- (targetLPat, targetL) <- auxiliaryVar
+                -- (targetMPat, targetM) <- auxiliaryVar
 
                 -- keep everything out of focus unchanged
                 let freezeFrame =
-                        let
-                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
-                                                           | (_, _, i, _) <- focusNames_a
-                                                           ]
-
-                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-                            k_gt_b = make opSum $ fromList [ [essence| toInt(&k >= &i) |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-                            l_gt_a = make opSum $ fromList [ [essence| toInt(&targetL >= &i) |]
-                                                           | (_, _, i, _) <- focusNames_a
-                                                           ]
-
-                            targetAdjust = make opSum $ fromList
-                                [ [essence| toInt(&condition) |]
-                                | i <- [0 .. genericLength names - 1]
-                                , let condition = make opAnd $ fromList
-                                                    [ is_a [essence| &targetM + &jE |]
-                                                    | j <- [0 .. i]
-                                                    , let jE = Constant (ConstantInt j)
-                                                    ]
-                                ]
-                            
-
-                        in
-                            -- trace (show $ "rule_frameUpdate targetAdjust" <++> pretty targetAdjust) $
-                            [essence|
-                                and([ &newM[&k] = &oldM[&targetM + &targetAdjust]
-                                    | &kPat : &newIndex
-                                    , ! &k_is_b
-                                    , letting &targetLPat be &k       - &k_gt_b
-                                    , letting &targetMPat be &targetL + &l_gt_a
-                                    ])
-                            |]
+                        [essence|
+                            &new = &old - &focusNames_a_set union &focusNames_b_set
+                        |]
 
                 let out = WithLocals
                         [essence| true |]
@@ -231,14 +200,14 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                             ] ++
                             [ SuchThat
                                 [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
+
                                 , make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_b])
+
                                 , consOut
                                 , freezeFrame
                                 ]
                             ])
-                -- traceM $ show $ "rule_frameUpdate consOut     " <++> pretty consOut
-                -- traceM $ show $ "rule_frameUpdate freezeFrame " <++> pretty freezeFrame
-                -- traceM $ show $ "rule_frameUpdate out         " <++> pretty out
+
                 return out
             )
 

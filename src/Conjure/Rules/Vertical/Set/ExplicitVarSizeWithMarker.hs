@@ -91,12 +91,12 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
         TypeSet{}                     <- typeOf old
         Set_ExplicitVarSizeWithMarker <- representationOf old
         [oldMarker, oldValues]        <- downX1 old
-        (oldIndex:_)                  <- indexDomainsOf oldValues
+        (oldIndex:_)                  <- indexDomainsOf oldMarker
 
         TypeSet{}                     <- typeOf new
         Set_ExplicitVarSizeWithMarker <- representationOf new
         [newMarker, newValues]        <- downX1 new
-        (newIndex:_)                  <- indexDomainsOf newValues
+        (newIndex:_)                  <- indexDomainsOf newMarker
 
         return
             ( "Vertical rule for frameUpdate, ExplicitVarSizeWithMarker representation"
@@ -105,9 +105,16 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                 focusNames_a <- forM names $ \ (a,_) -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
+
+                let focusNames_a_set = AbstractLiteral $ AbsLitSet
+                        [ [essence| &oldValues[&i] |] | (_, _, i, _) <- focusNames_a ]
+
                 focusNames_b <- forM names $ \ (_,b) -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
+
+                let focusNames_b_set = AbstractLiteral $ AbsLitSet
+                        [ [essence| &newValues[&i] |] | (_, _, i, _) <- focusNames_b ]
 
                 let consOut = flip transform cons $ \ h -> case h of
                         Reference nm (Just FrameUpdateVar) ->
@@ -118,49 +125,15 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                                 _             -> h
                         _ -> h
 
-                (kPat, k) <- quantifiedVar
-                (targetLPat, targetL) <- auxiliaryVar
-                (targetMPat, targetM) <- auxiliaryVar
+                -- (kPat, k) <- quantifiedVar
+                -- (targetLPat, targetL) <- auxiliaryVar
+                -- (targetMPat, targetM) <- auxiliaryVar
 
                 -- keep everything out of focus unchanged
                 let freezeFrame =
-                        let
-                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
-                                                           | (_, _, i, _) <- focusNames_a
-                                                           ]
-
-                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-                            k_gt_b = make opSum $ fromList [ [essence| toInt(&k >= &i) |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-                            l_gt_a = make opSum $ fromList [ [essence| toInt(&targetL >= &i) |]
-                                                           | (_, _, i, _) <- focusNames_a
-                                                           ]
-
-                            targetAdjust = make opSum $ fromList
-                                [ [essence| toInt(&condition) |]
-                                | i <- [0 .. genericLength names - 1]
-                                , let condition = make opAnd $ fromList
-                                                    [ is_a [essence| &targetM + &jE |]
-                                                    | j <- [0 .. i]
-                                                    , let jE = Constant (ConstantInt j)
-                                                    ]
-                                ]
-                            
-
-                        in
-                            [essence|
-                                and([ &newValues[&k] = &oldValues[&targetM + &targetAdjust]
-                                      /\ &k <= &newMarker
-                                      /\ &targetM + &targetAdjust <= &oldMarker
-                                    | &kPat : &newIndex
-                                    , ! &k_is_b
-                                    , letting &targetLPat be &k       - &k_gt_b
-                                    , letting &targetMPat be &targetL + &l_gt_a
-                                    ])
-                            |]
+                        [essence|
+                            &new = &old - &focusNames_a_set union &focusNames_b_set
+                        |]
 
                 let out = WithLocals
                         [essence| true |]
@@ -187,3 +160,4 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
 
                 return out
             )
+
