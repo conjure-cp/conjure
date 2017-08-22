@@ -4,35 +4,34 @@ given a: int
 given b: int
 find x_ExplicitVarSizeWithMarkerR2_Marker: int(0..2 ** (1 + (b - a)))
 find x_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..2 ** (1 + (b - a))), int(a..b)] of bool
-given SNS_MAX_NEIGHBOURHOOD_SIZE: int
 SNSGroup x_neighbourhoodGroup : [x_ExplicitVarSizeWithMarkerR2_Marker, x_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 find x_setLiftExists_setRemove_activation: bool
-find x_setLiftExists_setRemove_x_setLiftExists_setRemove_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setLiftExists_setRemove_x_setLiftExists_setRemove_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setLiftExists_setRemove :
     (x_setLiftExists_setRemove_size, x_setLiftExists_setRemove_activation, x_neighbourhoodGroup, [])
 find x_setLiftExists_setAdd_activation: bool
-find x_setLiftExists_setAdd_x_setLiftExists_setAdd_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setLiftExists_setAdd_x_setLiftExists_setAdd_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setLiftExists_setAdd :
     (x_setLiftExists_setAdd_size, x_setLiftExists_setAdd_activation, x_neighbourhoodGroup, [])
 find x_setLiftExists_setSwap_activation: bool
-find x_setLiftExists_setSwap_x_setLiftExists_setSwap_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setLiftExists_setSwap_x_setLiftExists_setSwap_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setLiftExists_setSwap :
     (x_setLiftExists_setSwap_size, x_setLiftExists_setSwap_activation, x_neighbourhoodGroup, [])
 find x_setLiftExists_setSwapAdd_activation: bool
-find x_setLiftExists_setSwapAdd_x_setLiftExists_setSwapAdd_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setLiftExists_setSwapAdd_x_setLiftExists_setSwapAdd_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setLiftExists_setSwapAdd :
     (x_setLiftExists_setSwapAdd_size, x_setLiftExists_setSwapAdd_activation, x_neighbourhoodGroup, [])
 find x_setRemove_activation: bool
-find x_setRemove_x_setRemove_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setRemove_x_setRemove_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setRemove : (x_setRemove_size, x_setRemove_activation, x_neighbourhoodGroup, [])
 find x_setAdd_activation: bool
-find x_setAdd_x_setAdd_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setAdd_x_setAdd_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setAdd : (x_setAdd_size, x_setAdd_activation, x_neighbourhoodGroup, [])
 find x_setSwap_activation: bool
-find x_setSwap_x_setSwap_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setSwap_x_setSwap_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setSwap : (x_setSwap_size, x_setSwap_activation, x_neighbourhoodGroup, [])
 find x_setSwapAdd_activation: bool
-find x_setSwapAdd_x_setSwapAdd_size: int(1..SNS_MAX_NEIGHBOURHOOD_SIZE)
+find x_setSwapAdd_x_setSwapAdd_size: int(1..2 ** (1 + (b - a)))
 SNSNeighbourhood x_setSwapAdd : (x_setSwapAdd_size, x_setSwapAdd_activation, x_neighbourhoodGroup, [])
 such that
     x_setLiftExists_setRemove_activation ->
