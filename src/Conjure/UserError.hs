@@ -21,7 +21,7 @@ import qualified Pipes
 userErr1 :: MonadUserError m => Doc -> m a
 userErr1 = userErr . return
 
-class Monad m => MonadUserError m where
+class (Functor m, Monad m) => MonadUserError m where
     userErr :: [Doc] -> m a
 
 instance MonadUserError (Either Doc) where
