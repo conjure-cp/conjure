@@ -78,6 +78,7 @@ such that
     or([q44 <= incumbent(x_ExplicitVarSizeWithMarker_Marker) /\
         incumbent(x_ExplicitVarSizeWithMarker_Values)[q44] = 2 * findDoubleAdd_k
             | q44 : int(1..let1)]),
+    !findDoubleAdd_activation -> and([findDoubleAdd_k = min([nums_Explicit[q40] | q40 : int(1..fin1)]); int(1)]),
     and([q5 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q5] < x_ExplicitVarSizeWithMarker_Values[q5 + 1]
              | q5 : int(1..let1 - 1)]),

@@ -919,7 +919,7 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-convertSNSNeighbourhood :: MonadUserError m => Model -> m Model
+convertSNSNeighbourhood :: (MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
 convertSNSNeighbourhood model
     | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
     , hasSNS = do
@@ -959,14 +959,22 @@ convertSNSNeighbourhood model
 
             let outBody = map (liftAllNames . liftImply) bodyConstraints
 
-            let outSNS = SNS_Out_Neighbourhood neigName sizeVarName activationVarName groupName
-                            [ Reference (liftName name) Nothing | (name, _) <- bodyVars ]
+            let localVars = [ Reference (liftName name)
+                                        (Just (DeclNoRepr LocalFind (liftName name) domain NoRegion))
+                            | (name, domain) <- bodyVars ]
+            let localVarsTuple = AbstractLiteral $ AbsLitTuple localVars
+            dontCareLocalVars <- DontCare.handleDontCares [essence| dontCare(&localVarsTuple) |]
+
+            let outSNS = SNS_Out_Neighbourhood neigName sizeVarName activationVarName groupName localVars
 
             return $ [ Declaration (FindOrGiven Find (liftName name) domain) | (name, domain) <- bodyVars ]
                   ++ [ Declaration (FindOrGiven Find activationVarName DomainBool)
                      , Declaration (FindOrGiven Find (liftName sizeVarName) sizeVarDomain)
                      , SuchThat outBody
                      , outSNS
+                     ]
+                  ++ [ SuchThat [ [essence| (! &activationVar) -> &dontCareLocalVars |] ]
+                     | length localVars > 0
                      ]
 
         st -> return [st]
