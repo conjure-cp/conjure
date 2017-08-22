@@ -8,7 +8,7 @@ module Conjure.Language.Domain
     , HasRepresentation(..)
     , Range(..), rangesInts
     , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr
-    , MSetAttr(..), OccurAttr(..)
+    , MSetAttr(..), OccurAttr(..), getMaxFrom_OccurAttr
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
@@ -472,6 +472,12 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty (OccurAttr_MinOccur    x  ) = "minOccur" <+> pretty x
     pretty (OccurAttr_MaxOccur    x  ) = "maxOccur" <+> pretty x
     pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
+
+
+getMaxFrom_OccurAttr :: MonadFail m => OccurAttr a -> m a
+getMaxFrom_OccurAttr (OccurAttr_MaxOccur n) = return n
+getMaxFrom_OccurAttr (OccurAttr_MinMaxOccur _ n) = return n
+getMaxFrom_OccurAttr _ = fail "getMaxFrom_OccurAttr"
 
 
 data FunctionAttr x
