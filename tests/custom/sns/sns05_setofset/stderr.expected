@@ -1,0 +1,56 @@
+Added the following SNS Neighbourhoods
+language Essence 1.4
+
+given SNS_MAX_NEIGHBOURHOOD_SIZE: int
+SNSGroup x_neighbourhoodGroup : [x]
+SNSNeighbourhood x_setLiftExists_setRemove :
+    (x_neighbourhoodGroup,
+     x_setLiftExists_setRemove_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         or([q1 subsetEq incumbent(q1) | q1 <- x]),
+         or([|incumbent(q1)| - |q1| = x_setLiftExists_setRemove_size
+                 | q1 <- x]))
+SNSNeighbourhood x_setLiftExists_setAdd :
+    (x_neighbourhoodGroup,
+     x_setLiftExists_setAdd_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         or([incumbent(q1) subsetEq q1 | q1 <- x]),
+         or([|q1| - |incumbent(q1)| = x_setLiftExists_setAdd_size
+                 | q1 <- x]))
+SNSNeighbourhood x_setLiftExists_setSwap :
+    (x_neighbourhoodGroup,
+     x_setLiftExists_setSwap_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         or([|q1 - incumbent(q1)| = x_setLiftExists_setSwap_size
+                 | q1 <- x]),
+         or([|incumbent(q1)| = |q1| | q1 <- x]))
+SNSNeighbourhood x_setLiftExists_setSwapAdd :
+    (x_neighbourhoodGroup,
+     x_setLiftExists_setSwapAdd_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         or([|q1 - incumbent(q1)| = x_setLiftExists_setSwapAdd_size
+                 | q1 <- x]))
+SNSNeighbourhood x_setRemove :
+    (x_neighbourhoodGroup,
+     x_setRemove_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         x subsetEq incumbent(x),
+         |incumbent(x)| - |x| = x_setRemove_size)
+SNSNeighbourhood x_setAdd :
+    (x_neighbourhoodGroup,
+     x_setAdd_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         incumbent(x) subsetEq x,
+         |x| - |incumbent(x)| = x_setAdd_size)
+SNSNeighbourhood x_setSwap :
+    (x_neighbourhoodGroup,
+     x_setSwap_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that
+         |x - incumbent(x)| = x_setSwap_size,
+         |incumbent(x)| = |x|)
+SNSNeighbourhood x_setSwapAdd :
+    (x_neighbourhoodGroup,
+     x_setSwapAdd_size : int(1..SNS_MAX_NEIGHBOURHOOD_SIZE),
+     such that |x - incumbent(x)| = x_setSwapAdd_size)
+
+
