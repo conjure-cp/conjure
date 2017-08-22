@@ -947,8 +947,17 @@ convertSNSNeighbourhood model
                             _ -> p
                         )
 
-            let bodyConstraintsConjunction = make opAnd $ fromList bodyConstraints
-            let outBody      = liftAllNames [essence| &activationVar -> &bodyConstraintsConjunction |]
+            let
+                liftImply (WithLocals b (AuxiliaryVars st)) =
+                    WithLocals (liftImply b) (AuxiliaryVars (map liftImplySt st))
+                liftImply x = [essence| &activationVar -> &x |]
+
+                liftImplySt (SuchThat xs) =
+                    let xsConjunction = make opAnd $ fromList xs
+                    in  SuchThat [ [essence| &activationVar -> &xsConjunction |] ]
+                liftImplySt s = s
+
+            let outBody = map (liftAllNames . liftImply) bodyConstraints
 
             let outSNS = SNS_Out_Neighbourhood neigName sizeVarName activationVarName groupName
                             [ Reference (liftName name) Nothing | (name, _) <- bodyVars ]
@@ -956,7 +965,7 @@ convertSNSNeighbourhood model
             return $ [ Declaration (FindOrGiven Find (liftName name) domain) | (name, domain) <- bodyVars ]
                   ++ [ Declaration (FindOrGiven Find activationVarName DomainBool)
                      , Declaration (FindOrGiven Find (liftName sizeVarName) sizeVarDomain)
-                     , SuchThat [outBody]
+                     , SuchThat outBody
                      , outSNS
                      ]
 
