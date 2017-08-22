@@ -122,6 +122,7 @@ resolveStatement st =
             return (SNS_Group groupName vars')
         SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body -> do
             sizeVarDomain' <- resolveD sizeVarDomain
+            modify ( (sizeVarName, DeclNoRepr Find sizeVarName sizeVarDomain' NoRegion) :)
             body' <- mapM resolveStatement body
             return (SNS_Neighbourhood name groupName sizeVarName sizeVarDomain' body')
         SNS_Out_Neighbourhood{}    -> return st

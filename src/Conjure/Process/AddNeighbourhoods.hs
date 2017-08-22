@@ -61,6 +61,9 @@ skeleton
     -> [Statement]
 skeleton varName var gen =
     let
+
+        neighbourhoodGroupdName = mconcat [varName, "_neighbourhoodGroup"]
+
         (generatorName, consGen) = gen
 
         neighbourhoodName     = mconcat [varName, "_", generatorName]
@@ -68,20 +71,19 @@ skeleton varName var gen =
         activatorName         = mconcat [neighbourhoodName, "_", "activator"]
         neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
 
-        activatorVar          = Reference activatorName Nothing
         neighbourhoodSize     = Reference neighbourhoodSizeName Nothing
 
         (statements, consPositive, consNegative) = consGen neighbourhoodSize
+
+        consPositiveConjunction = make opAnd $ fromList [ c | Just c <- [consPositive] ]
+
     in
         [essenceStmts|
-            find &activatorName : bool
-            find &neighbourhoodSizeName : int(1..&maxNeighbourhoodSizeVar)
-            neighbourhood &neighbourhoodName : (&neighbourhoodSizeName, &activatorName, [&var])
+            SNSNeighbourhood &neighbourhoodName : ( &neighbourhoodGroupdName
+                                                  , &neighbourhoodSizeName : int(1..&maxNeighbourhoodSizeVar)
+                                                  , such that &consPositiveConjunction
+                                                  )
         |]
-        ++ fromMaybe [] statements
-        ++ concat [ [essenceStmts| such that  &activatorVar -> &c |] | Just c <- [consPositive] ]
-        ++ concat [ [essenceStmts| such that !&activatorVar -> &c |] | Just c <- [consNegative] ]
-        ++ concat [ [essenceStmts| such that !&activatorVar -> dontCare(&neighbourhoodSize) |] ]
 
 
 type NeighbourhoodGenResult = (Name, Expression -> (Maybe [Statement], Maybe Expression, Maybe Expression))
