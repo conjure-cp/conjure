@@ -52,7 +52,7 @@ maxNeighbourhoodSizeVar = Reference maxNeighbourhoodSizeVarName Nothing
 generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
 generateNeighbourhoods theVarName theVar domain = do
     neighbourhoods <- allNeighbourhoods theVar domain
-    return $ concatMap (skeleton theVarName theVar) neighbourhoods
+    return $ nub $ concatMap (skeleton theVarName theVar) neighbourhoods
 
 
 skeleton
@@ -62,28 +62,27 @@ skeleton
 skeleton varName var gen =
     let
 
-        neighbourhoodGroupdName = mconcat [varName, "_neighbourhoodGroup"]
+        neighbourhoodGroupName = mconcat [varName, "_neighbourhoodGroup"]
 
         (generatorName, consGen) = gen
 
         neighbourhoodName     = mconcat [varName, "_", generatorName]
 
-        activatorName         = mconcat [neighbourhoodName, "_", "activator"]
         neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
 
         neighbourhoodSize     = Reference neighbourhoodSizeName Nothing
 
         (statements, consPositive, consNegative) = consGen neighbourhoodSize
 
-        consPositiveConjunction = make opAnd $ fromList [ c | Just c <- [consPositive] ]
-
     in
-        [essenceStmts|
-            SNSNeighbourhood &neighbourhoodName : ( &neighbourhoodGroupdName
-                                                  , &neighbourhoodSizeName : int(1..&maxNeighbourhoodSizeVar)
-                                                  , such that &consPositiveConjunction
-                                                  )
-        |]
+        [ SNS_Group neighbourhoodGroupName [var]
+        , SNS_Neighbourhood neighbourhoodName
+                            neighbourhoodGroupName
+                            neighbourhoodSizeName
+                            [essenceDomain| int(1..&maxNeighbourhoodSizeVar) |]
+                            (fromMaybe [] statements ++ [SuchThat [c | Just c <- [consPositive]]])
+        ]
+
 
 
 type NeighbourhoodGenResult = (Name, Expression -> (Maybe [Statement], Maybe Expression, Maybe Expression))
