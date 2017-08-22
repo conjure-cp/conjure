@@ -92,7 +92,7 @@ getMaxNumberOfElementsInContainer domain@(DomainMSet _ (MSetAttr sizeAttr occurA
         (Just n, _     , _     ) -> n
         (_     , Just o, Just n) -> [essence| &o * &n |]
         _                        -> bug $ "getMaxNumberOfElementsInContainer, DomainMSet:" <+> pretty domain
-getMaxNumberOfElementsInContainer domain@(DomainSequence _ (SequenceAttr sizeAttr _) inner) =
+getMaxNumberOfElementsInContainer domain@(DomainSequence _ (SequenceAttr sizeAttr _) _) =
     case getMaxFrom_SizeAttr sizeAttr of
         Just n -> n
         _      -> bug $ "getMaxNumberOfElementsInContainer, DomainSequence:" <+> pretty domain
