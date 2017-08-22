@@ -441,7 +441,7 @@ instance TypeOf Expression where
             DeclHasRepr _ _ dom   -> typeOf dom
             RecordField _ ty      -> return ty
             VariantField _ ty     -> return ty
-            FrameUpdateVar x      -> typeOf x
+            FrameUpdateVar x      -> typeOf x >>= innerTypeOf
     typeOf p@(WithLocals h (DefinednessConstraints cs)) = do
         forM_ cs $ \ c -> do
             ty <- typeOf c
