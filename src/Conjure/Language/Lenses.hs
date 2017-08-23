@@ -1439,15 +1439,15 @@ opFrameUpdate
        , MonadFail m
        )
     => Proxy (m :: * -> *)
-    -> ( x -> x -> [(Name, Name)] -> x -> x
-       , x -> m (x, x, [(Name, Name)], x)
+    -> ( x -> x -> [Name] -> [Name] -> x -> x
+       , x -> m (x, x, [Name], [Name], x)
        )
 opFrameUpdate _ =
-    ( \ old new names cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate old new names cons
+    ( \ old new oldFocus newFocus cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate old new oldFocus newFocus cons
     , \ p -> do
             op <- project p
             case op of
-                MkOpFrameUpdate (OpFrameUpdate old new names cons) -> return (old, new, names, cons)
+                MkOpFrameUpdate (OpFrameUpdate old new oldFocus newFocus cons) -> return (old, new, oldFocus, newFocus, cons)
                 _ -> na ("Lenses.opFrameUpdate:" <++> pretty p)
     )
 

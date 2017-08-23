@@ -414,7 +414,7 @@ rule_Param_Card = "param-card-of-set" `namedRule` theRule where
 rule_frameUpdate :: Rule
 rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
     theRule p = do
-        (old, new, names, cons) <- match opFrameUpdate p
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
 
         TypeSet{}                     <- typeOf old
         DomainSet _ _ oldInnerDomain  <- domainOf old
@@ -426,14 +426,14 @@ rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
             ( "Horizontal rule for frameUpdate"
             , do
 
-                focusNames_a <- forM names $ \ (a,_) -> do
+                focusNames_a <- forM oldFocus $ \ a -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldInnerDomain)
 
                 let focusNames_a_set = AbstractLiteral $ AbsLitSet
                         [ i | (_, _, i, _) <- focusNames_a ]
 
-                focusNames_b <- forM names $ \ (_,b) -> do
+                focusNames_b <- forM newFocus $ \ b -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newInnerDomain)
 

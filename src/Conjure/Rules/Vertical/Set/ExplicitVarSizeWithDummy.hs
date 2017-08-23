@@ -74,7 +74,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithDum
 rule_frameUpdate :: Rule
 rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithDummy}" `namedRule` theRule where
     theRule p = do
-        (old, new, names, cons) <- match opFrameUpdate p
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
 
         TypeSet{}                    <- typeOf old
         Set_ExplicitVarSizeWithDummy <- representationOf old
@@ -100,10 +100,11 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithDummy}" `namedRule` theRu
             ( "Vertical rule for frameUpdate, ExplicitVarSizeWithDummy representation"
             , do
 
-                focusNames_a <- forM names $ \ (a,_) -> do
+                focusNames_a <- forM oldFocus $ \ a -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
-                focusNames_b <- forM names $ \ (_,b) -> do
+
+                focusNames_b <- forM newFocus $ \ b -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
 
@@ -139,7 +140,7 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithDummy}" `namedRule` theRu
 
                             targetAdjust = make opSum $ fromList
                                 [ [essence| toInt(&condition) |]
-                                | i <- [0 .. genericLength names - 1]
+                                | i <- [0 .. maximum [genericLength oldFocus, genericLength newFocus] - 1]
                                 , let condition = make opAnd $ fromList
                                                     [ is_a [essence| &targetM + &jE |]
                                                     | j <- [0 .. i]

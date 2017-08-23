@@ -86,7 +86,7 @@ rule_Card = "set-card{ExplicitVarSizeWithMarker}" `namedRule` theRule where
 rule_frameUpdate :: Rule
 rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theRule where
     theRule p = do
-        (old, new, names, cons) <- match opFrameUpdate p
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
 
         TypeSet{}                     <- typeOf old
         Set_ExplicitVarSizeWithMarker <- representationOf old
@@ -102,11 +102,11 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
             ( "Vertical rule for frameUpdate, ExplicitVarSizeWithMarker representation"
             , do
 
-                focusNames_a <- forM names $ \ (a,_) -> do
+                focusNames_a <- forM oldFocus $ \ a -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
 
-                focusNames_b <- forM names $ \ (_,b) -> do
+                focusNames_b <- forM newFocus $ \ b -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
 

@@ -140,7 +140,7 @@ rule_Max = "set-max{Explicit}" `namedRule` theRule where
 rule_frameUpdate :: Rule
 rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
     theRule p = do
-        (old, new, names, cons) <- match opFrameUpdate p
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
 
         TypeSet{}    <- typeOf old
         Set_Explicit <- representationOf old
@@ -156,11 +156,11 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
             ( "Vertical rule for frameUpdate, Explicit representation"
             , do
 
-                focusNames_a <- forM names $ \ (a,_) -> do
+                focusNames_a <- forM oldFocus $ \ a -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
 
-                focusNames_b <- forM names $ \ (_,b) -> do
+                focusNames_b <- forM newFocus $ \ b -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
 

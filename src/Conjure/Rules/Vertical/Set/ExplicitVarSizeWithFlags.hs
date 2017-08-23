@@ -73,7 +73,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithFla
 rule_frameUpdate :: Rule
 rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithFlags}" `namedRule` theRule where
     theRule p = do
-        (old, new, names, cons) <- match opFrameUpdate p
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
 
         TypeSet{}                    <- typeOf old
         Set_ExplicitVarSizeWithFlags <- representationOf old
@@ -89,11 +89,11 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithFlags}" `namedRule` theRu
             ( "Vertical rule for frameUpdate, ExplicitVarSizeWithFlags representation"
             , do
 
-                focusNames_a <- forM names $ \ (a,_) -> do
+                focusNames_a <- forM oldFocus $ \ a -> do
                     (auxName, aux) <- auxiliaryVar
                     return (a, auxName, aux, oldIndex)
 
-                focusNames_b <- forM names $ \ (_,b) -> do
+                focusNames_b <- forM newFocus $ \ b -> do
                     (auxName, aux) <- auxiliaryVar
                     return (b, auxName, aux, newIndex)
 

@@ -12,7 +12,8 @@ import qualified Data.Vector as V               -- vector
 
 data OpFrameUpdate x = OpFrameUpdate x                  -- old
                                      x                  -- new
-                                     [(Name, Name)]     -- names of the focus variables
+                                     [Name]             -- old focus variables
+                                     [Name]             -- new focus variables
                                      x                  -- constraint
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
@@ -22,7 +23,7 @@ instance ToJSON    x => ToJSON    (OpFrameUpdate x) where toJSON = genericToJSON
 instance FromJSON  x => FromJSON  (OpFrameUpdate x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
-    typeOf p@(OpFrameUpdate old new _names cons) = do
+    typeOf p@(OpFrameUpdate old new _ _ cons) = do
         tyOld <- typeOf old
         tyNew <- typeOf new
         tyCons <- typeOf cons
@@ -46,21 +47,23 @@ instance SimplifyOp OpFrameUpdate x where
     simplifyOp _ = na "simplifyOp{OpFrameUpdate}"
 
 instance Pretty x => Pretty (OpFrameUpdate x) where
-    prettyPrec _ (OpFrameUpdate old new names cons) =
+    prettyPrec _ (OpFrameUpdate old new oldFocus newFocus cons) =
         "frameUpdate" <> prettyList prParens ","
             [ pretty old
             , pretty new
-            , prettyList prBrackets "," (map (\ (a,b) -> prettyList prParens "," [a,b]) names)
+            , prettyList prBrackets "," oldFocus
+            , prettyList prBrackets "," newFocus
             , pretty cons
             ]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate x) where
-    varSymBreakingDescription (OpFrameUpdate old new names cons) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpFrameUpdate old new oldFocus newFocus cons) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpFrameUpdate")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription old
             , varSymBreakingDescription new
-            , toJSON names
+            , toJSON oldFocus
+            , toJSON newFocus
             , varSymBreakingDescription cons
             ])
         ]

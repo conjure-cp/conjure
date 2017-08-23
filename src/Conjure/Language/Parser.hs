@@ -826,14 +826,16 @@ parseOthers = [ parseFunctional l
         parseFrameUpdate = do
             lexeme L_frameUpdate
             parens $ do
-                old   <- parseExpr
+                old <- parseExpr
                 comma
-                new   <- parseExpr
+                new <- parseExpr
                 comma
-                names <- brackets (commaSeparated (parens (countSep 2 parseName comma)))
+                oldFocus <- brackets (commaSeparated parseNameOrMeta)
+                comma
+                newFocus <- brackets (commaSeparated parseNameOrMeta)
                 comma
                 cons  <- parseExpr
-                return $ Op $ MkOpFrameUpdate $ OpFrameUpdate old new [(a,b) | [a,b] <- names] cons
+                return $ Op $ MkOpFrameUpdate $ OpFrameUpdate old new oldFocus newFocus cons
 
         parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do
