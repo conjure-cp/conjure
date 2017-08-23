@@ -89,7 +89,8 @@ setLiftFrameUpdate theIncumbentVar theVar (DomainSet _ _ inner) = do
     (incumbent_iPat, incumbent_i) <- auxiliaryVar
     (iPat, i) <- auxiliaryVar
     let
-        liftCons (SuchThat cs) = SuchThat [ [essence| frameUpdate(&theIncumbentVar, &theVar, [&incumbent_iPat], [&iPat], and([ &c ])) |] | c <- cs ]
+        liftCons (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
+            [essence| frameUpdate(&theIncumbentVar, &theVar, [&incumbent_iPat], [&iPat], &conjCs ) |]]
         liftCons st            = st
 
     ns <- allNeighbourhoods incumbent_i i inner
