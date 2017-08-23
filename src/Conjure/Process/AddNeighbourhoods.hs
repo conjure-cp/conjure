@@ -75,7 +75,7 @@ type NeighbourhoodGenResult = (Name, Expression, Expression -> Expression -> [St
 
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
-    [setLiftFrameUpdate 
+    [setLiftSingle 
      , setRemove
     ]
 
@@ -83,9 +83,9 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
 
 
 
-setLiftFrameUpdate :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setLiftFrameUpdate theIncumbentVar theVar (DomainSet _ _ inner) = do
-    let generatorName = "setLiftFrameUpdate"
+setLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftSingle"
     (incumbent_iPat, incumbent_i) <- auxiliaryVar
     (iPat, i) <- auxiliaryVar
     let
@@ -103,14 +103,14 @@ setLiftFrameUpdate theIncumbentVar theVar (DomainSet _ _ inner) = do
           )
         | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
         ]
-setLiftFrameUpdate _ _ _ = return []
+setLiftSingle _ _ _ = return []
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setRemove theIncumbentVar theVar domain@(DomainSet{}) = do
     let generatorName = "setRemove"
-    let neighbourhoodMaxSize = getMaxNumberOfElementsInContainer domain
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer domain
     return
-        [( generatorName, neighbourhoodMaxSize
+        [( generatorName, calculatedMaxNhSize
          , \ neighbourhoodSize _maxNeighbourhoodSize ->
                  [essenceStmts|
                     such that
@@ -119,3 +119,58 @@ setRemove theIncumbentVar theVar domain@(DomainSet{}) = do
                  |]
         )]
 setRemove _ _ _ = return []
+
+
+
+
+
+
+setAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
+    let generatorName = "setAdd"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    return
+        [( generatorName
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        &theIncumbentVar subsetEq &theVar,
+                        |&theVar| - |&theIncumbentVar| = &neighbourhoodSize
+                |]
+        )]
+setAdd _ _ _ = return []
+
+
+setSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = do
+    let generatorName = "setSwap"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    return
+        [( generatorName
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        |&theVar - &theIncumbentVar| = &neighbourhoodSize,
+                        |&theIncumbentVar| = |&theVar|
+                |]
+        )]
+setSwap _ _ _ = return []
+
+
+setSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
+    let generatorName = "setSwapAdd"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        |&theVar - &theIncumbentVar| = &neighbourhoodSize
+                |]
+        )]
+setSwapAdd _ _ _ = return []
+
