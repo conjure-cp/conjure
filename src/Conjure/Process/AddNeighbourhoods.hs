@@ -77,6 +77,11 @@ allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expressi
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [setLiftSingle 
      , setRemove
+     , setAdd
+     , setSwap
+     , setSwapAdd
+     , sequenceReverseSub
+     
     ]
 
 
@@ -106,9 +111,9 @@ setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
 setLiftSingle _ _ _ = return []
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setRemove theIncumbentVar theVar domain@(DomainSet{}) = do
+setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setRemove"
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer domain
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName, calculatedMaxNhSize
          , \ neighbourhoodSize _maxNeighbourhoodSize ->
@@ -173,4 +178,41 @@ setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
                 |]
         )]
 setSwapAdd _ _ _ = return []
+
+
+
+sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+sequenceReverseSub theIncumbentVar theVar theDomain@(DomainSequence _ (SequenceAttr sizeAttr _) _)
+    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
+
+    let generatorName = "sequenceReverseSub"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+
+    (iPat, i) <- auxiliaryVar
+    (jPat, j) <- auxiliaryVar
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize maxNeighbourhoodSize ->
+                [essenceStmts|
+                    find &iPat, &jPat :  int(1..&maxSize)
+                    such that
+                        and([ &j - &i = &neighbourhoodSize
+                        , &i <= |&theVar|
+                        , &j <= |&theVar|
+                        , and([ &theVar(&k) = &theIncumbentVar(&k)
+                              | &kPat : int(1..&maxNeighbourhoodSize)
+                              , &k < &i \/ &k > &j
+                              , &k <= |&theVar|
+                              ])
+                        , and([ &theVar(&i + &k) = &theIncumbentVar(&j - &k)
+                              | &kPat : int(0..&maxNeighbourhoodSize)
+                              , &k <= &neighbourhoodSize
+                              ])
+                        ])
+                |]
+        )]
+sequenceReverseSub _ _ _ = return []
 
