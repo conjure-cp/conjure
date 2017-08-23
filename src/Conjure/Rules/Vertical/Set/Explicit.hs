@@ -220,6 +220,9 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                                                 + catchUndef(&contiguousCounts[(&offsets[&k-1] - toInt(&k_is_b)) + &k], 0)
                             |]
 
+                let nbOlds = Constant $ ConstantInt $ genericLength oldFocus
+                let nbNews = Constant $ ConstantInt $ genericLength newFocus
+
                 -- keep everything out of focus unchanged
                 let freezeFrameCons =
                         let
@@ -230,10 +233,20 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                             maxOldIndex = [essence| max(`&oldIndex`) |]
 
                         in
-                            [essence|
-                                forAll &kPat : int(1..&maxOldIndex) .
-                                    (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
-                            |]
+                            if length newFocus >= length oldFocus
+                                then
+                                    [essence|
+                                        forAll &kPat : int(1..&maxOldIndex) .
+                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
+                                    |]
+                                else
+                                    [essence|
+                                        forAll &kPat : int(1..&maxOldIndex - (&nbNews - &nbOlds)) .
+                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
+                                    |]
+
+                let impliedSize =
+                        [essence| |&new| = |&old| + (&nbNews - &nbOlds) |]
 
                 let out = WithLocals
                         [essence| true |]
@@ -265,6 +278,7 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                                 , freezeFrameCons
 
                                 , consOut
+                                , impliedSize
                                 ]
                             ])
 
