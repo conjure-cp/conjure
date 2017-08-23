@@ -37,7 +37,8 @@ addNeighbourhoods _ inpModel = do
 
 generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
 generateNeighbourhoods theVarName theVar domain = do
-    neighbourhoods <- allNeighbourhoods theVar domain
+    let theIncumbentVar = [essence|incumbent(&theVar)|]
+    neighbourhoods <- allNeighbourhoods theIncumbentVar theVar domain
     return $ nub $ concatMap (skeleton theVarName theVar domain) neighbourhoods
 
 
@@ -72,8 +73,8 @@ skeleton varName var domain gen =
 type NeighbourhoodGenResult = (Name, Expression, Expression -> Expression -> [Statement])
 
 
-allNeighbourhoods :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
+allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [setLiftFrameUpdate 
      , setRemove
     ]
@@ -82,16 +83,16 @@ allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
 
 
 
-setLiftFrameUpdate :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setLiftFrameUpdate theVar (DomainSet _ _ inner) = do
+setLiftFrameUpdate :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftFrameUpdate theIncumbentVar theVar (DomainSet _ _ inner) = do
     let generatorName = "setLiftFrameUpdate"
-    (iPat, i) <- quantifiedVar
---    (jPat, j) <- auxiliaryVar
+    (incumbent_iPat, incumbent_i) <- auxiliaryVar
+    (iPat, i) <- auxiliaryVar
     let
-        liftCons (SuchThat cs) = SuchThat [ [essence| exists &iPat in &theVar . &c|] | c <- cs ]
+        liftCons (SuchThat cs) = SuchThat [ [essence| frameUpdate(&theIncumbentVar, &theVar, [&incumbent_iPat], [&iPat], and([ &c ])) |] | c <- cs ]
         liftCons st            = st
 
-    ns <- allNeighbourhoods i inner
+    ns <- allNeighbourhoods incumbent_i i inner
     return
         [ ( mconcat [generatorName, "_", innerGeneratorName]
         , innerNeighbourhoodSize
@@ -101,10 +102,10 @@ setLiftFrameUpdate theVar (DomainSet _ _ inner) = do
           )
         | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
         ]
-setLiftFrameUpdate _ _ = return []
+setLiftFrameUpdate _ _ _ = return []
 
-setRemove :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setRemove theVar domain@(DomainSet{}) = do
+setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setRemove theIncumbentVar theVar domain@(DomainSet{}) = do
     let generatorName = "setRemove"
     let neighbourhoodMaxSize = getMaxNumberOfElementsInContainer domain
     return
@@ -112,8 +113,8 @@ setRemove theVar domain@(DomainSet{}) = do
          , \ neighbourhoodSize _maxNeighbourhoodSize ->
                  [essenceStmts|
                     such that
-                        &theVar subsetEq incumbent(&theVar),
-                        |incumbent(&theVar)| - |&theVar| = &neighbourhoodSize
+                        &theVar subsetEq &theIncumbentVar,
+                        |&theIncumbentVar| - |&theVar| = &neighbourhoodSize
                  |]
         )]
-setRemove _ _ = return []
+setRemove _ _ _ = return []
