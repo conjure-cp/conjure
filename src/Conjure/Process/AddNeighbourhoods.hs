@@ -74,12 +74,34 @@ type NeighbourhoodGenResult = (Name, Expression, Expression -> Expression -> [St
 
 allNeighbourhoods :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
-    [ 
-     setRemove
+    [setLiftFrameUpdate 
+     , setRemove
     ]
 
 
 
+
+
+setLiftFrameUpdate :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftFrameUpdate theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftFrameUpdate"
+    (iPat, i) <- quantifiedVar
+--    (jPat, j) <- auxiliaryVar
+    let
+        liftCons (SuchThat cs) = SuchThat [ [essence| exists &iPat in &theVar . &c|] | c <- cs ]
+        liftCons st            = st
+
+    ns <- allNeighbourhoods i inner
+    return
+        [ ( mconcat [generatorName, "_", innerGeneratorName]
+        , innerNeighbourhoodSize
+          , \ neighbourhoodSize maxNeighbourhoodSize ->
+              let statements = rule neighbourhoodSize maxNeighbourhoodSize
+              in  map liftCons statements
+          )
+        | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+        ]
+setLiftFrameUpdate _ _ = return []
 
 setRemove :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setRemove theVar domain@(DomainSet{}) = do
