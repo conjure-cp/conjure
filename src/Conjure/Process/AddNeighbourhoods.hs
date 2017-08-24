@@ -71,11 +71,13 @@ skeleton varName var domain gen =
 
 
 type NeighbourhoodGenResult = (Name, Expression, Expression -> [Statement])
+type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Expression -> [Expression] -> [Expression] -> [Statement])
 
 
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
-    [setLiftSingle 
+    [setLiftSingle
+    , setLiftMultiple 
      , setRemove
      , setAdd
      , setSwap
@@ -84,18 +86,30 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      
     ]
 
+multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
+    [setMove]
 
-
-
+makeFrameUpdate :: NameGen m => Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
+makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
+    incumbents <- replicateM numberIncumbents auxiliaryVar
+    primaries <- replicateM numberPrimaries auxiliaryVar
+    return (map snd incumbents, map snd primaries, buildFrameUpdate (map fst incumbents) (map fst primaries)) where
+        --todo written by saad
+        --below local function should build a frame update with any number of arguments lifted.
+         --not sure how to do this in haskel so special cased 1 and 2 lifts
+        buildFrameUpdate :: [Name] -> [Name] -> (Expression -> Expression)
+        buildFrameUpdate [iPat1,iPat2] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1,&jPat2], &c) |]
+        buildFrameUpdate [iPat1] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1], &c) |]
+        buildFrameUpdate [iPat1,iPat2] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1], &c) |]
+        buildFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
 
 setLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
     let generatorName = "setLiftSingle"
-    (incumbent_iPat, incumbent_i) <- auxiliaryVar
-    (iPat, i) <- auxiliaryVar
+    ([incumbent_i], [i], frameUpdate) <- makeFrameUpdate 1 1 theIncumbentVar theVar
     let
-        liftCons (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
-            [essence| frameUpdate(&theIncumbentVar, &theVar, [&incumbent_iPat], [&iPat], &conjCs ) |]]
+        liftCons (SuchThat cs) = SuchThat [frameUpdate $ make opAnd $ fromList cs]
         liftCons st            = st
 
     ns <- allNeighbourhoods incumbent_i i inner
@@ -109,6 +123,25 @@ setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
         | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
         ]
 setLiftSingle _ _ _ = return []
+
+
+setLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftMultiple theIncumbentVar theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftMultiple"
+    let
+        liftCons frame (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
+            frame conjCs]
+        liftCons frame st = st
+
+    ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods inner
+    mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
+        (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
+        return  ( mconcat [generatorName, "_", innerGeneratorName]
+            , innerNeighbourhoodSize
+            , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
+                map (liftCons frame) statements)) ns
+
+setLiftMultiple _ _ _ = return []
 
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
@@ -180,6 +213,32 @@ setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
         )]
 setSwapAdd _ _ _ = return []
 
+
+
+
+
+setMove :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setMove theDomain@(DomainSet{}) = do
+    let generatorName = "setMove"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1, theIncumbentVar2] [theVar1,theVar2] ->
+                 [essenceStmts|
+                    such that
+                    &theVar1 subsetEq &theIncumbentVar1,
+                    |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
+                    &theIncumbentVar2 subsetEq &theVar2,
+                    |&theVar2| - |&theIncumbentVar2| = &neighbourhoodSize,
+                    and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                     |]
+        )]
+setMove _ = return []
 
 
 sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
