@@ -49,4 +49,4 @@ instance Monoid Name where
     mempty = ""
     mappend (Name a) (Name b) = Name (mappend a b)
     mappend (MachineName base n rest) (Name new) = MachineName base n (rest++[new])
-    mappend _ _ = bug "mappend{Name}"
+    mappend a b = bug $ "mappend{Name}" <+> vcat [pretty (show a), pretty (show b)]
