@@ -57,7 +57,7 @@ skeleton varName var domain gen =
         neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
         neighbourhoodSizeVar = Reference neighbourhoodSizeName Nothing
 
-        statements =  consGen neighbourhoodSizeVar neighbourhoodSize
+        statements =  consGen neighbourhoodSizeVar
 
     in
         [ SNS_Group neighbourhoodGroupName [var]
@@ -70,7 +70,7 @@ skeleton varName var domain gen =
 
 
 
-type NeighbourhoodGenResult = (Name, Expression, Expression -> Expression -> [Statement])
+type NeighbourhoodGenResult = (Name, Expression, Expression -> [Statement])
 
 
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
@@ -102,13 +102,14 @@ setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
     return
         [ ( mconcat [generatorName, "_", innerGeneratorName]
         , innerNeighbourhoodSize
-          , \ neighbourhoodSize maxNeighbourhoodSize ->
-              let statements = rule neighbourhoodSize maxNeighbourhoodSize
+          , \ neighbourhoodSize ->
+              let statements = rule neighbourhoodSize 
               in  map liftCons statements
           )
         | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
         ]
 setLiftSingle _ _ _ = return []
+
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
@@ -116,7 +117,7 @@ setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName, calculatedMaxNhSize
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+         , \ neighbourhoodSize ->
                  [essenceStmts|
                     such that
                         &theVar subsetEq &theIncumbentVar,
@@ -137,7 +138,7 @@ setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
     return
         [( generatorName
         , calculatedMaxNhSize 
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
                         &theIncumbentVar subsetEq &theVar,
@@ -154,7 +155,7 @@ setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = do
     return
         [( generatorName
         , calculatedMaxNhSize 
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
                         |&theVar - &theIncumbentVar| = &neighbourhoodSize,
@@ -171,7 +172,7 @@ setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
     return
         [( generatorName
         , calculatedMaxNhSize
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
                         |&theVar - &theIncumbentVar| = &neighbourhoodSize
@@ -182,8 +183,7 @@ setSwapAdd _ _ _ = return []
 
 
 sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceReverseSub theIncumbentVar theVar theDomain@(DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
+sequenceReverseSub theIncumbentVar theVar theDomain@(DomainSequence _ (SequenceAttr sizeAttr _) _) = do
 
     let generatorName = "sequenceReverseSub"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
@@ -195,20 +195,20 @@ sequenceReverseSub theIncumbentVar theVar theDomain@(DomainSequence _ (SequenceA
     return
         [( generatorName
         , calculatedMaxNhSize 
-         , \ neighbourhoodSize maxNeighbourhoodSize ->
+         , \ neighbourhoodSize ->
                 [essenceStmts|
-                    find &iPat, &jPat :  int(1..&maxSize)
+                    find &iPat, &jPat :  int(1..&calculatedMaxNhSize)
                     such that
                         and([ &j - &i = &neighbourhoodSize
                         , &i <= |&theVar|
                         , &j <= |&theVar|
                         , and([ &theVar(&k) = &theIncumbentVar(&k)
-                              | &kPat : int(1..&maxNeighbourhoodSize)
+                              | &kPat : int(1..&calculatedMaxNhSize)
                               , &k < &i \/ &k > &j
                               , &k <= |&theVar|
                               ])
                         , and([ &theVar(&i + &k) = &theIncumbentVar(&j - &k)
-                              | &kPat : int(0..&maxNeighbourhoodSize)
+                              | &kPat : int(0..&calculatedMaxNhSize)
                               , &k <= &neighbourhoodSize
                               ])
                         ])
