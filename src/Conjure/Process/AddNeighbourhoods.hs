@@ -88,7 +88,8 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
 
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
-    [setMove]
+    [setMove
+    , setCrossOver]
 
 makeFrameUpdate :: NameGen m => Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
 makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
@@ -239,6 +240,28 @@ setMove theDomain@(DomainSet{}) = do
                      |]
         )]
 setMove _ = return []
+
+
+
+setCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setCrossOver theDomain@(DomainSet{}) = do
+    let generatorName = "setCrossOver"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1, theIncumbentVar2] [theVar1,theVar2] ->
+             [essenceStmts|
+             such that
+            &theIncumbentVar1 union &theIncumbentVar2 = &theVar1 union &theVar2,
+            |&theVar1 - &theIncumbentVar1| = &neighbourhoodSize,
+            |&theVar2 - &theIncumbentVar2| = &neighbourhoodSize
+                     |]
+        )]
+setCrossOver _ = return []
+
 
 
 sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
