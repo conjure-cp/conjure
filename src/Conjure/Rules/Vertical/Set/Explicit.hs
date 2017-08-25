@@ -241,7 +241,7 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
                                     |]
                                 else
                                     [essence|
-                                        forAll &kPat : int(1..&maxOldIndex - (&nbNews - &nbOlds)) .
+                                        forAll &kPat : int(1..&maxOldIndex - (&nbOlds - &nbNews)) .
                                             (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
                                     |]
 
