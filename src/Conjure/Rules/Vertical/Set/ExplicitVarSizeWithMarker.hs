@@ -211,8 +211,8 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithMarker}" `namedRule` theR
                             , Declaration (FindOrGiven LocalFind offsetsPat
                                     (DomainMatrix oldIndex
                                         (DomainInt [RangeBounded
-                                                        (Constant $ ConstantInt $ negate $ genericLength focusNames_a)
-                                                        (Constant $ ConstantInt $          genericLength focusNames_a)])))
+                                                        (Constant $ ConstantInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
+                                                        (Constant $ ConstantInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
                             ] ++
                             [ SuchThat
                                 [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
