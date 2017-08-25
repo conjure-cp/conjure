@@ -57,6 +57,27 @@ SNSNeighbourhood x_setLiftMultiple_setCrossOver :
                           |conjure_aux12 - conjure_aux10| =
                           x_setLiftMultiple_setCrossOver_size;
                               int(1..3)])))
+SNSNeighbourhood x_setLiftMultiple_setSplit :
+    (x_neighbourhoodGroup,
+     x_setLiftMultiple_setSplit_size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux13],
+                     [conjure_aux14, conjure_aux15],
+                     and([conjure_aux14 subsetEq conjure_aux13,
+                          |conjure_aux13| - |conjure_aux14| =
+                          x_setLiftMultiple_setSplit_size,
+                          |conjure_aux15| = x_setLiftMultiple_setSplit_size,
+                          and([q2 in conjure_aux15
+                                   | q2 <- conjure_aux13, !(q2 in conjure_aux14)]);
+                              int(1..4)])))
+SNSNeighbourhood x_setLiftMultiple_setMerge :
+    (x_neighbourhoodGroup,
+     x_setLiftMultiple_setMerge_size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux16, conjure_aux17],
+                     [conjure_aux18],
+                     |conjure_aux16| <= x_setLiftMultiple_setMerge_size /\
+                     conjure_aux16 union conjure_aux17 = conjure_aux18))
 SNSNeighbourhood x_setRemove :
     (x_neighbourhoodGroup,
      x_setRemove_size : int(1..2 ** (1 + (b - a))),
