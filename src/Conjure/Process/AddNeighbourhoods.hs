@@ -89,7 +89,9 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     [setMove
-    , setCrossOver]
+    , setCrossOver
+    , setSplit
+    , setMerge]
 
 makeFrameUpdate :: NameGen m => Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
 makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
@@ -261,6 +263,50 @@ setCrossOver theDomain@(DomainSet{}) = do
                      |]
         )]
 setCrossOver _ = return []
+
+
+setSplit :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setSplit theDomain@(DomainSet{}) = do
+    let generatorName = "setSplit"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 1
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1] [theVar1,theVar2] ->
+                 [essenceStmts|
+                such that
+                &theVar1 subsetEq &theIncumbentVar1,
+                |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
+                |&theVar2| = &neighbourhoodSize,
+                and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                     |]
+        )]
+setSplit _ = return []
+
+
+setMerge :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setMerge theDomain@(DomainSet{}) = do
+    let generatorName = "setMerge"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 1
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1, theIncumbentVar2] [theVar1] ->
+                 [essenceStmts|
+                such that
+                |&theIncumbentVar1| <= &neighbourhoodSize,
+                &theIncumbentVar1 union &theIncumbentVar2  = &theVar1
+                 |]
+        )]
+setMerge _ = return []
 
 
 
