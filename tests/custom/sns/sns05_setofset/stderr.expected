@@ -2,33 +2,61 @@ Added the following SNS Neighbourhoods
 language Essence 1.4
 
 SNSGroup x_neighbourhoodGroup : [x]
-SNSNeighbourhood x_setLiftExists_setRemove :
+SNSNeighbourhood x_setLiftSingle_setRemove :
     (x_neighbourhoodGroup,
-     x_setLiftExists_setRemove_size : int(1..2 ** (1 + (b - a))),
+     x_setLiftSingle_setRemove_size : int(1..1 + (b - a)),
      such that
-         or([q1 subsetEq incumbent(q1) | q1 <- x]),
-         or([|incumbent(q1)| - |q1| = x_setLiftExists_setRemove_size
-                 | q1 <- x]))
-SNSNeighbourhood x_setLiftExists_setAdd :
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     conjure_aux2 subsetEq conjure_aux1 /\
+                     |conjure_aux1| - |conjure_aux2| = x_setLiftSingle_setRemove_size))
+SNSNeighbourhood x_setLiftSingle_setAdd :
     (x_neighbourhoodGroup,
-     x_setLiftExists_setAdd_size : int(1..2 ** (1 + (b - a))),
+     x_setLiftSingle_setAdd_size : int(1..1 + (b - a)),
      such that
-         or([incumbent(q1) subsetEq q1 | q1 <- x]),
-         or([|q1| - |incumbent(q1)| = x_setLiftExists_setAdd_size
-                 | q1 <- x]))
-SNSNeighbourhood x_setLiftExists_setSwap :
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     conjure_aux1 subsetEq conjure_aux2 /\
+                     |conjure_aux2| - |conjure_aux1| = x_setLiftSingle_setAdd_size))
+SNSNeighbourhood x_setLiftSingle_setSwap :
     (x_neighbourhoodGroup,
-     x_setLiftExists_setSwap_size : int(1..2 ** (1 + (b - a))),
+     x_setLiftSingle_setSwap_size : int(1..1 + (b - a)),
      such that
-         or([|q1 - incumbent(q1)| = x_setLiftExists_setSwap_size
-                 | q1 <- x]),
-         or([|incumbent(q1)| = |q1| | q1 <- x]))
-SNSNeighbourhood x_setLiftExists_setSwapAdd :
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     |conjure_aux2 - conjure_aux1| = x_setLiftSingle_setSwap_size /\
+                     |conjure_aux1| = |conjure_aux2|))
+SNSNeighbourhood x_setLiftSingle_setSwapAdd :
     (x_neighbourhoodGroup,
-     x_setLiftExists_setSwapAdd_size : int(1..2 ** (1 + (b - a))),
+     x_setLiftSingle_setSwapAdd_size : int(1..1 + (b - a)),
      such that
-         or([|q1 - incumbent(q1)| = x_setLiftExists_setSwapAdd_size
-                 | q1 <- x]))
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     and([|conjure_aux2 - conjure_aux1| =
+                          x_setLiftSingle_setSwapAdd_size;
+                              int(1)])))
+SNSNeighbourhood x_setLiftMultiple_setMove :
+    (x_neighbourhoodGroup,
+     x_setLiftMultiple_setMove_size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux5, conjure_aux6],
+                     [conjure_aux7, conjure_aux8],
+                     and([conjure_aux7 subsetEq conjure_aux5,
+                          |conjure_aux5| - |conjure_aux7| = x_setLiftMultiple_setMove_size,
+                          conjure_aux6 subsetEq conjure_aux8,
+                          |conjure_aux8| - |conjure_aux6| = x_setLiftMultiple_setMove_size,
+                          and([q1 in conjure_aux8
+                                   | q1 <- conjure_aux5, !(q1 in conjure_aux7)]);
+                              int(1..5)])))
+SNSNeighbourhood x_setLiftMultiple_setCrossOver :
+    (x_neighbourhoodGroup,
+     x_setLiftMultiple_setCrossOver_size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux9, conjure_aux10],
+                     [conjure_aux11, conjure_aux12],
+                     and([conjure_aux9 union conjure_aux10 =
+                          conjure_aux11 union conjure_aux12,
+                          |conjure_aux11 - conjure_aux9| =
+                          x_setLiftMultiple_setCrossOver_size,
+                          |conjure_aux12 - conjure_aux10| =
+                          x_setLiftMultiple_setCrossOver_size;
+                              int(1..3)])))
 SNSNeighbourhood x_setRemove :
     (x_neighbourhoodGroup,
      x_setRemove_size : int(1..2 ** (1 + (b - a))),
