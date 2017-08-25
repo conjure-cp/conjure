@@ -37,7 +37,8 @@ addNeighbourhoods _ inpModel = do
 
 generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
 generateNeighbourhoods theVarName theVar domain = do
-    neighbourhoods <- allNeighbourhoods theVar domain
+    let theIncumbentVar = [essence|incumbent(&theVar)|]
+    neighbourhoods <- allNeighbourhoods theIncumbentVar theVar domain
     return $ nub $ concatMap (skeleton theVarName theVar domain) neighbourhoods
 
 
@@ -48,19 +49,15 @@ skeleton
 skeleton varName var domain gen =
     let
 
-        (generatorName, consGen) = gen
+        (generatorName, neighbourhoodSize,  consGen) = gen
 
         neighbourhoodGroupName = mconcat [varName, "_neighbourhoodGroup"]
 
         neighbourhoodName     = mconcat [varName, "_", generatorName]
-
         neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
-
-        neighbourhoodSize = getMaxNumberOfElementsInContainer domain
-
         neighbourhoodSizeVar = Reference neighbourhoodSizeName Nothing
 
-        statements = consGen neighbourhoodSizeVar neighbourhoodSize
+        statements =  consGen neighbourhoodSizeVar
 
     in
         [ SNS_Group neighbourhoodGroupName [var]
@@ -73,111 +70,205 @@ skeleton varName var domain gen =
 
 
 
-type NeighbourhoodGenResult = (Name, Expression -> Expression -> [Statement])
+type NeighbourhoodGenResult = (Name, Expression, Expression -> [Statement])
+type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Expression -> [Expression] -> [Expression] -> [Statement])
 
 
-allNeighbourhoods :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-allNeighbourhoods theVar domain = concatMapM (\ gen -> gen theVar domain )
-    [ setLiftExists
-    , setRemove
-    , setAdd
-    , setSwap
-    , setSwapAdd
-
-    , sequenceReverseSubSeq
-    , sequenceAnySwap
-    , sequenceRelaxSub
-    , sequenceAddRight
-    , sequenceAddLeft
-    , sequenceRemoveRight
-    , sequenceRemoveLeft
+allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
+    [setLiftSingle
+    , setLiftMultiple 
+     , setRemove
+     , setAdd
+     , setSwap
+     , setSwapAdd
+     , sequenceReverseSub
+     
     ]
 
+multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
+    [setMove
+    , setCrossOver]
 
-setLiftExists :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setLiftExists theVar (DomainSet _ _ inner) = do
-    let generatorName = "setLiftExists"
-    (iPat, i) <- quantifiedVar
+makeFrameUpdate :: NameGen m => Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
+makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
+    incumbents <- replicateM numberIncumbents auxiliaryVar
+    primaries <- replicateM numberPrimaries auxiliaryVar
+    return (map snd incumbents, map snd primaries, buildFrameUpdate (map fst incumbents) (map fst primaries)) where
+        --todo written by saad
+        --below local function should build a frame update with any number of arguments lifted.
+         --not sure how to do this in haskel so special cased 1 and 2 lifts
+        buildFrameUpdate :: [Name] -> [Name] -> (Expression -> Expression)
+        buildFrameUpdate [iPat1,iPat2] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1,&jPat2], &c) |]
+        buildFrameUpdate [iPat1] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1], &c) |]
+        buildFrameUpdate [iPat1,iPat2] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1], &c) |]
+        buildFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
+
+setLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftSingle"
+    ([incumbent_i], [i], frameUpdate) <- makeFrameUpdate 1 1 theIncumbentVar theVar
     let
-        liftCons (SuchThat cs) = SuchThat [ [essence| exists &iPat in &theVar . &c |] | c <- cs ]
+        liftCons (SuchThat cs) = SuchThat [frameUpdate $ make opAnd $ fromList cs]
         liftCons st            = st
 
-    ns <- allNeighbourhoods i inner
+    ns <- allNeighbourhoods incumbent_i i inner
     return
         [ ( mconcat [generatorName, "_", innerGeneratorName]
-          , \ neighbourhoodSize maxNeighbourhoodSize ->
-              let statements = rule neighbourhoodSize maxNeighbourhoodSize
+        , innerNeighbourhoodSize
+          , \ neighbourhoodSize ->
+              let statements = rule neighbourhoodSize 
               in  map liftCons statements
           )
-        | (innerGeneratorName, rule) <- ns
+        | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
         ]
-setLiftExists _ _ = return []
+setLiftSingle _ _ _ = return []
 
 
-setRemove :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setRemove theVar DomainSet{} = do
+setLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setLiftMultiple theIncumbentVar theVar (DomainSet _ _ inner) = do
+    let generatorName = "setLiftMultiple"
+    let
+        liftCons frame (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
+            frame conjCs]
+        liftCons frame st = st
+
+    ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods inner
+    mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
+        (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
+        return  ( mconcat [generatorName, "_", innerGeneratorName]
+            , innerNeighbourhoodSize
+            , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
+                map (liftCons frame) statements)) ns
+
+setLiftMultiple _ _ _ = return []
+
+
+setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setRemove"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
-        [( generatorName
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+        [( generatorName, calculatedMaxNhSize
+         , \ neighbourhoodSize ->
                  [essenceStmts|
                     such that
-                        &theVar subsetEq incumbent(&theVar),
-                        |incumbent(&theVar)| - |&theVar| = &neighbourhoodSize
+                        &theVar subsetEq &theIncumbentVar,
+                        |&theIncumbentVar| - |&theVar| = &neighbourhoodSize
                  |]
         )]
-setRemove _ _ = return []
+setRemove _ _ _ = return []
 
 
-setAdd :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setAdd theVar DomainSet{} = do
+
+
+
+
+setAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setAdd"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
-                        incumbent(&theVar) subsetEq &theVar,
-                        |&theVar| - |incumbent(&theVar)| = &neighbourhoodSize
+                        &theIncumbentVar subsetEq &theVar,
+                        |&theVar| - |&theIncumbentVar| = &neighbourhoodSize
                 |]
         )]
-setAdd _ _ = return []
+setAdd _ _ _ = return []
 
 
-setSwap :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwap theVar DomainSet{} = do
+setSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setSwap"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
-                        |&theVar - incumbent(&theVar)| = &neighbourhoodSize,
-                        |incumbent(&theVar)| = |&theVar|
+                        |&theVar - &theIncumbentVar| = &neighbourhoodSize,
+                        |&theIncumbentVar| = |&theVar|
                 |]
         )]
-setSwap _ _ = return []
+setSwap _ _ _ = return []
 
 
-setSwapAdd :: Monad m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwapAdd theVar DomainSet{} = do
+setSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setSwapAdd"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
                 [essenceStmts|
                     such that
-                        |&theVar - incumbent(&theVar)| = &neighbourhoodSize
+                        |&theVar - &theIncumbentVar| = &neighbourhoodSize
                 |]
         )]
-setSwapAdd _ _ = return []
+setSwapAdd _ _ _ = return []
 
 
-sequenceReverseSubSeq :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
 
-    let generatorName = "sequenceReverseSubSeq"
+
+
+setMove :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setMove theDomain@(DomainSet{}) = do
+    let generatorName = "setMove"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1, theIncumbentVar2] [theVar1,theVar2] ->
+                 [essenceStmts|
+                    such that
+                    &theVar1 subsetEq &theIncumbentVar1,
+                    |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
+                    &theIncumbentVar2 subsetEq &theVar2,
+                    |&theVar2| - |&theIncumbentVar2| = &neighbourhoodSize,
+                    and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                     |]
+        )]
+setMove _ = return []
+
+
+
+setCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+setCrossOver theDomain@(DomainSet{}) = do
+    let generatorName = "setCrossOver"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize [theIncumbentVar1, theIncumbentVar2] [theVar1,theVar2] ->
+             [essenceStmts|
+             such that
+            &theIncumbentVar1 union &theIncumbentVar2 = &theVar1 union &theVar2,
+            |&theVar1 - &theIncumbentVar1| = &neighbourhoodSize,
+            |&theVar2 - &theIncumbentVar2| = &neighbourhoodSize
+                     |]
+        )]
+setCrossOver _ = return []
+
+
+
+sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+sequenceReverseSub theIncumbentVar theVar theDomain@(DomainSequence _ (SequenceAttr sizeAttr _) _) = do
+
+    let generatorName = "sequenceReverseSub"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
 
     (iPat, i) <- auxiliaryVar
     (jPat, j) <- auxiliaryVar
@@ -185,197 +276,25 @@ sequenceReverseSubSeq theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
 
     return
         [( generatorName
-         , \ neighbourhoodSize maxNeighbourhoodSize ->
+        , calculatedMaxNhSize 
+         , \ neighbourhoodSize ->
                 [essenceStmts|
-                    find &iPat, &jPat :  int(1..&maxSize)
+                    find &iPat, &jPat :  int(1..&calculatedMaxNhSize)
                     such that
                         and([ &j - &i = &neighbourhoodSize
                         , &i <= |&theVar|
                         , &j <= |&theVar|
-                        , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                              | &kPat : int(1..&maxNeighbourhoodSize)
-                              , &k <= &neighbourhoodSize
-                              , &k < &i
-                              , &k > &j
+                        , and([ &theVar(&k) = &theIncumbentVar(&k)
+                              | &kPat : int(1..&calculatedMaxNhSize)
+                              , &k < &i \/ &k > &j
+                              , &k <= |&theVar|
                               ])
-                        , and([ &theVar(&k) = incumbent(&theVar)(&j - (&k - &i))
-                              | &kPat : int(1..&maxNeighbourhoodSize)
+                        , and([ &theVar(&i + &k) = &theIncumbentVar(&j - &k)
+                              | &kPat : int(0..&calculatedMaxNhSize)
                               , &k <= &neighbourhoodSize
-                              , &k >= &i
-                              , &k <= &j
                               ])
                         ])
                 |]
         )]
-sequenceReverseSubSeq _ _ = return []
-
-
-sequenceAnySwap :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceAnySwap theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceAnySwap"
-
-    (iPat, i) <- quantifiedVar
-
-    return
-        [( generatorName
-         , \ neighbourhoodSize _maxNeighbourhoodSize ->
-                [essenceStmts|
-                    such that
-                        &neighbourhoodSize * 2
-                            = sum([ toInt(&theVar(&i) != incumbent(&theVar)(&i))
-                                  | &iPat : int(1..&maxSize)
-                                  , &i <= |&theVar|
-                                  ])
-                |]
-        )]
-sequenceAnySwap _ _ = return []
-
-
-sequenceRelaxSub :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceRelaxSub theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceRelaxSub"
-
-    (iPat, i) <- auxiliaryVar
-    (jPat, j) <- auxiliaryVar
-    (kPat, k) <- quantifiedVar
-    (lPat, l) <- auxiliaryVar
-
-    return
-        [( generatorName
-         , \ neighbourhoodSize maxNeighbourhoodSize ->
-                [essenceStmts|
-                    find &iPat, &jPat, &lPat :  int(1..&maxSize)
-                    such that
-                        and([ &j - &i = &neighbourhoodSize
-                            , &i <= |&theVar|
-                            , &j <= |&theVar|
-                            , and([ &theVar(&k) = incumbent(&theVar)(&k)
-                                  | &kPat : int(1..&maxNeighbourhoodSize)
-                                  , &k <= &neighbourhoodSize
-                                  , &k < &i
-                                  , &k > &j
-                                  ])
-                            , &l >= &i
-                            , &l <= &j
-                            , &theVar(&l) != incumbent(&theVar)(&l)
-                            ])
-                |]
-        )]
-sequenceRelaxSub _ _ = return []
-
-
-sequenceAddRight :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceAddRight _ (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
-sequenceAddRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceAddRight"
-
-    (iPat, i) <- auxiliaryVar
-    (kPat, k) <- quantifiedVar
-
-    return
-        [( generatorName
-          , \ neighbourhoodSize maxNeighbourhoodSize ->
-                [essenceStmts|
-                    find &iPat :  int(1..&maxNeighbourhoodSize)
-                    such that
-                        and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
-                                  | &kPat : int(1..&maxSize)
-                                  , &k <= |&theVar|
-                                  ])
-                            , |incumbent(&theVar)| = |&theVar| + &i
-                            , &i <= &neighbourhoodSize
-                            ])
-                |]
-        )]
-sequenceAddRight _ _ = return []
-
-
-sequenceAddLeft :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceAddLeft _ (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
-sequenceAddLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceAddLeft"
-
-    (iPat, i) <- auxiliaryVar
-    (kPat, k) <- quantifiedVar
-
-    return
-        [( generatorName
-          , \ neighbourhoodSize maxNeighbourhoodSize ->
-                [essenceStmts|
-                    find &iPat :  int(1..&maxNeighbourhoodSize)
-                    such that
-                        and([ and([ &theVar(&k) = incumbent(&theVar)(&k + &i)
-                                  | &kPat : int(1..&maxSize)
-                                  , &k <= |&theVar|
-                                  ])
-                            , |incumbent(&theVar)| = |&theVar| + &i
-                            , &i <= &neighbourhoodSize
-                            ])
-                |]
-        )]
-sequenceAddLeft _ _ = return []
-
-
-sequenceRemoveRight :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceRemoveRight _ (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
-sequenceRemoveRight theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceRemoveRight"
-
-    (iPat, i) <- auxiliaryVar
-    (kPat, k) <- quantifiedVar
-
-    return
-        [( generatorName
-         , \ neighbourhoodSize maxNeighbourhoodSize ->
-                [essenceStmts|
-                    find &iPat :  int(1..&maxNeighbourhoodSize)
-                    such that
-                        and([ and([ &theVar(&k) = incumbent(&theVar)(&k)
-                                  | &kPat : int(1..&maxSize)
-                                  , &k <= |&theVar| - &i
-                                  ])
-                            , |incumbent(&theVar)| = |&theVar| - &i
-                            , &i <= &neighbourhoodSize
-                            ])
-                |]
-        )]
-sequenceRemoveRight _ _ = return []
-
-
-sequenceRemoveLeft :: NameGen m => Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-sequenceRemoveLeft _ (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
-sequenceRemoveLeft theVar (DomainSequence _ (SequenceAttr sizeAttr _) _)
-    | Just maxSize <- getMaxFrom_SizeAttr sizeAttr = do
-
-    let generatorName = "sequenceRemoveLeft"
-
-    (iPat, i) <- auxiliaryVar
-    (kPat, k) <- quantifiedVar
-
-    return
-        [( generatorName
-         , \ neighbourhoodSize maxNeighbourhoodSize ->
-                [essenceStmts|
-                    find &iPat :  int(1..&maxNeighbourhoodSize)
-                    such that
-                        and([ and([ &theVar(&k) = incumbent(&theVar)(&k - &i)
-                                  | &kPat : int(1..&maxSize)
-                                  , &k <= |&theVar| - &i
-                                  ])
-                            , |incumbent(&theVar)| = |&theVar| - &i
-                            , &i <= &neighbourhoodSize
-                            ])
-                |]
-        )]
-sequenceRemoveLeft _ _ = return []
+sequenceReverseSub _ _ _ = return []
 
