@@ -54,8 +54,8 @@ instance EvaluateOp OpTwoBars where
             (viewConstantPartition -> Just xs)      -> return $ ConstantInt $ genericLength $ nub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt rs)    -> ConstantInt . genericLength <$> rangesInts rs
-            DomainInConstant dom               -> runNameGen $ domainSizeOf dom
+            DomainInConstant (DomainInt rs) -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 instance SimplifyOp OpTwoBars x where
