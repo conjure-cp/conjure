@@ -969,7 +969,7 @@ convertSNSNeighbourhood model
 
             return $ [ Declaration (FindOrGiven Find (liftName name) domain) | (name, domain) <- bodyVars ]
                   ++ [ Declaration (FindOrGiven Find activationVarName DomainBool)
-                     , Declaration (FindOrGiven Find (liftName sizeVarName) sizeVarDomain)
+                     , Declaration (FindOrGiven Find sizeVarName sizeVarDomain)
                      , SuchThat outBody
                      , outSNS
                      ]
