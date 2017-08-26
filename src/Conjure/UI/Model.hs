@@ -986,7 +986,14 @@ convertSNSNeighbourhood model = return model
 
 addIncumbentVariables :: Monad m => Model -> m Model
 addIncumbentVariables model
-    | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
+    | let hasSNS = not $ null $ [ () | st <- mStatements model
+                                     , case st of
+                                         SNS_Group{} -> True
+                                         SNS_Neighbourhood{} -> True
+                                         SNS_Out_Neighbourhood{} -> True
+                                         SNS_Out_IncumbentMapping{} -> True
+                                         _ -> False
+                                ]
     , hasSNS = do
     let
         appendIncumbent :: Name -> Name
