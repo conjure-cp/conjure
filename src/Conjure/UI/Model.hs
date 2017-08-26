@@ -926,7 +926,9 @@ convertSNSNeighbourhood model
 
     statements <- concatForM (mStatements model) $ \case
 
-        SNS_Neighbourhood neigName groupName sizeVarName sizeVarDomain body -> do
+        SNS_Neighbourhood neigName groupName sizeVarName sizeVarDomain body0 -> do
+
+            Model _ body _ <- topLevelBubbles (Model def body0 def)
 
             let liftName n = mconcat [neigName, "_", n]
 
@@ -936,7 +938,7 @@ convertSNSNeighbourhood model
             -- implication
             (bodyVars, bodyConstraints) <- fmap mconcat $ forM body $ \case
                 SuchThat xs -> return ([], xs)
-                Declaration (FindOrGiven Find name domain) -> return ([(name, domain)], [])
+                Declaration (FindOrGiven f name domain) | f `elem` [Find, LocalFind] -> return ([(name, domain)], [])
                 st -> userErr1 $ "Unsupported statement type inside a neighbourhood:" <++> pretty st
 
             let liftAllNames =
