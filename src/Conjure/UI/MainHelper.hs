@@ -128,7 +128,7 @@ mainWithArgs TranslateParameter{..} = do
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
     essenceParamF <- readModelFromFile essenceParam
-    output <- runNameGen (eprimeF, essenceParamF) $ translateParameter eprimeF essenceParamF
+    output <- runNameGen () $ translateParameter eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
@@ -136,8 +136,7 @@ mainWithArgs TranslateSolution{..} = do
     eprimeF <- readModelInfoFromFile eprime
     essenceParamF <- maybe (return def) readModelFromFile essenceParamO
     eprimeSolutionF <- readModelFromFile eprimeSolution
-    output <- runNameGen (eprimeF, essenceParamF, eprimeSolutionF) $
-                    translateSolution eprimeF essenceParamF eprimeSolutionF
+    output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
@@ -146,9 +145,8 @@ mainWithArgs ValidateSolution{..} = do
     essence2  <- readModelFromFile essence
     param2    <- maybe (return def) readModelFromFile essenceParamO
     solution2 <- readModelFromFile essenceSolution
-    [essence3, param3, solution3] <- runNameGen (essence2, param2, solution2) $
-                                        resolveNamesMulti [essence2, param2, solution2]
-    runNameGen (essence3, param3, solution3) $ validateSolution essence3 param3 solution3
+    [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
+    runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
     model0 <- readModelFromFile essence
     let model1 = model0
@@ -161,7 +159,7 @@ mainWithArgs Diff{..} =
         <*> readModelFromFile file2
 mainWithArgs TypeCheck{..} = do
     essenceF <- readModelFromFile essence
-    void $ runNameGen essenceF $ typeCheckModel_StandAlone essenceF
+    void $ runNameGen () $ typeCheckModel_StandAlone essenceF
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model
@@ -398,7 +396,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
         runTranslateParameter :: IO (Either [Doc] Model)
-        runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen (eprimeModel, essenceParam) $
+        runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen () $
                                     translateParameter eprimeModel essenceParam
     eprimeParam' <- liftIO runTranslateParameter
     case eprimeParam' of
@@ -474,7 +472,7 @@ srStdoutHandler
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
                     writeFile filenameEprimeSol (render lineWidth eprimeSol)
-                    essenceSol <- ignoreLogs $ runNameGen (eprimeModel, essenceParam, eprimeSol) $
+                    essenceSol <- ignoreLogs $ runNameGen () $
                                                     translateSolution eprimeModel essenceParam eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
@@ -513,8 +511,8 @@ validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
-    [essenceM2, solution2] <- ignoreLogs $ runNameGen (essenceM, solution) $ resolveNamesMulti [essenceM, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen (essenceM2, solution2) $ validateSolution essenceM2 def solution2
+    [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
     case result of
         Left err -> bug err
         Right () -> return ()
@@ -527,8 +525,8 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath
-    [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen (essenceM, param, solution) $ resolveNamesMulti [essenceM, param, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen (essenceM2, param2, solution2)
+    [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen ()
                                 $ validateSolution essenceM2 param2 solution2
     case result of
         Left err -> bug err

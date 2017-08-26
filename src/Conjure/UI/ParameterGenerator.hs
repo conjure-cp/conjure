@@ -16,7 +16,7 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 --      such that n = |s|
 --   (Just dropping wrong category stuff from attribute list isn't acceptable, because mset.)
 parameterGenerator :: (MonadLog m, MonadFail m, MonadUserError m) => Model -> m Model
-parameterGenerator model = runNameGen model (resolveNames model) >>= core
+parameterGenerator model = runNameGen () (resolveNames model) >>= core
     where
         core m = do
             (outStatements, errs) <- runWriterT $ forM (mStatements m) $ \ st -> case st of

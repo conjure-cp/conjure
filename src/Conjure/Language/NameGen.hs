@@ -107,5 +107,6 @@ instance NameGen Identity where
     importNameGenState _ = fail "importNameGenState{Identity}"
 
 runNameGen :: (Monad m, Data x) => x -> NameGenM m a -> m a
-runNameGen avoid (NameGenM comp) = evalStateT comp initState
-    where initState = (M.empty, S.fromList (universeBi avoid))
+runNameGen avoid (NameGenM comp) =
+    let initState = (M.empty, S.fromList (universeBi avoid))
+    in  evalStateT comp initState

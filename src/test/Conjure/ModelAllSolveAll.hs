@@ -203,7 +203,7 @@ savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
             forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                 let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ padLeft 6 '0' (show i)
                 eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                res <- runUserErrorT $ ignoreLogs $ runNameGen (eprimeModel, eprimeSolution) $
+                res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel def eprimeSolution
                 case res of
                     Left errs -> assertFailure $ renderNormal $ vcat errs
@@ -225,7 +225,7 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
     fileShouldExist (tBaseDir   </> paramPath)
     eprimeModel <- readModelInfoFromFile (outputsDir </> modelPath)
     param       <- readModelFromFile (tBaseDir   </> paramPath)
-    eprimeParam <- ignoreLogs $ runNameGen (eprimeModel, param) $ translateParameter eprimeModel param
+    eprimeParam <- ignoreLogs $ runNameGen () $ translateParameter eprimeModel param
     let outBase = dropExtension modelPath ++ "-" ++ dropExtension paramPath
     writeFile (outputsDir </> outBase ++ ".eprime-param") (renderNormal eprimeParam)
     (stdoutSR, stderrSR, exitCodeSR) <-
@@ -249,7 +249,7 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
             forM_ (take nbEprimeSolutions allNats) $ \ i -> do
                 let eprimeSolutionPath = outBase ++ ".eprime-solution." ++ padLeft 6 '0' (show i)
                 eprimeSolution <- readModelFromFile (outputsDir </> eprimeSolutionPath)
-                res <- runUserErrorT $ ignoreLogs $ runNameGen (eprimeModel, param, eprimeSolution) $
+                res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel param eprimeSolution
                 case res of
                     Left errs -> assertFailure $ renderNormal $ vcat errs
@@ -271,7 +271,7 @@ validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
         step (unwords ["Validating solution:", solutionPath])
         fileShouldExist (outputsDir </> solutionPath)
         solution <- readModelFromFile (outputsDir </> solutionPath)
-        result   <- runUserErrorT $ ignoreLogs $ runNameGen (essence, solution) $ do
+        result   <- runUserErrorT $ ignoreLogs $ runNameGen () $ do
             [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
             validateSolution essence2 param2 solution2
         case result of
@@ -290,7 +290,7 @@ validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
             step (unwords ["Validating solution:", paramPath, solutionPath])
             fileShouldExist (outputsDir </> solutionPath)
             solution <- readModelFromFile (outputsDir </> solutionPath)
-            result   <- runUserErrorT $ ignoreLogs $ runNameGen (essence, param, solution) $ do
+            result   <- runUserErrorT $ ignoreLogs $ runNameGen () $ do
                 [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
                 validateSolution essence2 param2 solution2
             case result of
@@ -478,7 +478,7 @@ fileShouldExist f = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir model = ignoreLogs $ runNameGen model $ flip outputModels model Config
+modelAll dir model = ignoreLogs $ runNameGen () $ flip outputModels model Config
     { logLevel                   = LogNone
     , verboseTrail               = False
     , rewritesTrail              = False
