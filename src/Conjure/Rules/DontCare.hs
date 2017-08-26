@@ -152,7 +152,9 @@ handleDontCares p =
                     domX <- domainOf x
                     case domX of
                         DomainMatrix index _ -> do
-                            (iPat, i) <- quantifiedVar
+                            (iPat@(Single nm), _) <- quantifiedVar
+                            -- direct name resolution
+                            let i = Reference nm (Just (DeclNoRepr Find nm index NoRegion))
                             inner <- handleDontCares [essence| dontCare(&x[&i]) |]
                             return [essence| forAll &iPat : &index . &inner |]
                         _ -> bug ("dontCare on domain, expecting matrix, but got:" <+> pretty domX)
