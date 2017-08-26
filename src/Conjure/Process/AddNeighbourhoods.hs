@@ -54,7 +54,7 @@ skeleton varName var _ gen =
         neighbourhoodGroupName = mconcat [varName, "_neighbourhoodGroup"]
 
         neighbourhoodName     = mconcat [varName, "_", generatorName]
-        neighbourhoodSizeName = mconcat [neighbourhoodName, "_", "size"]
+        neighbourhoodSizeName = "size"
         neighbourhoodSizeVar = Reference neighbourhoodSizeName Nothing
 
         statements =  consGen neighbourhoodSizeVar
