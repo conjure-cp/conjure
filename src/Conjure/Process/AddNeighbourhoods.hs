@@ -101,7 +101,8 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , setSplit
     , setMerge
     , sequenceRemoveLeftAddLeftOrRight
-    , sequenceRemoveRightAddLeftOrRight]
+    , sequenceRemoveRightAddLeftOrRight
+    , sequenceMergeLeftOrRight]
 
 
 --some helper functions
@@ -657,6 +658,52 @@ sequenceRemoveLeftAddLeftOrRight  theDomain@(DomainSequence{}) = do
             other -> multiContainerNeighbourhoodError  generatorName 2 2 other 
         )]
 sequenceRemoveLeftAddLeftOrRight  _ = return []
+
+
+
+
+
+sequenceMergeLeftOrRight  :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceMergeLeftOrRight (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
+sequenceMergeLeftOrRight  theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceMergeLeftOrRight"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 1
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
+            ([theIncumbentVar1, theIncumbentVar2], [theVar1]) ->
+                 [essenceStmts|
+                    such that
+                    |&theVar1| = |&theIncumbentVar1| + |&theIncumbentVar2|
+                    , |&theIncumbentVar1| = &neighbourhoodSize
+                    , or([
+                    and([&theVar1(&k) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= &neighbourhoodSize]) /\
+                    and([&theVar1(&k + &neighbourhoodSize) = &theIncumbentVar2(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= |&theIncumbentVar2|
+                    ])
+                    
+                    , and([&theVar1(&k) = &theIncumbentVar2(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= |&theIncumbentVar2|
+                    ]) /\
+                    and([&theVar1(&k + |&theIncumbentVar2|) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= &neighbourhoodSize])
+                    ])
+
+                     |]
+            other -> multiContainerNeighbourhoodError  generatorName 2 1 other 
+        )]
+sequenceMergeLeftOrRight  _ = return []
+
 
 
 
