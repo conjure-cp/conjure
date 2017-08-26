@@ -570,7 +570,7 @@ sequenceRemoveLeft _ _ _ = return []
 sequenceRemoveRightAddLeftOrRight  :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 sequenceRemoveRightAddLeftOrRight (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
 sequenceRemoveRightAddLeftOrRight  theDomain@(DomainSequence{}) = do
-    let generatorName = "sequenceRemoveRightAddRight"
+    let generatorName = "sequenceRemoveRightAddLeftOrRight"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     let numberIncumbents = 2
     let numberPrimaries = 2
@@ -618,7 +618,7 @@ sequenceRemoveRightAddLeftOrRight _ = return []
 sequenceRemoveLeftAddLeftOrRight  :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 sequenceRemoveLeftAddLeftOrRight (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
 sequenceRemoveLeftAddLeftOrRight  theDomain@(DomainSequence{}) = do
-    let generatorName = "sequenceRemoveLeftAddRight"
+    let generatorName = "sequenceRemoveLeftAddLeftOrRight"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     let numberIncumbents = 2
     let numberPrimaries = 2
@@ -642,14 +642,14 @@ sequenceRemoveLeftAddLeftOrRight  theDomain@(DomainSequence{}) = do
                     | &kPat : int(1..&calculatedMaxNhSize)
                     , &k <= |&theIncumbentVar2|
                     ]) /\
-                    and([&theVar2[|&theIncumbentVar2| + &k] = &theIncumbentVar1[&k]
+                    and([&theVar2(|&theIncumbentVar2| + &k) = &theIncumbentVar1(&k)
                     | &kPat : int(1..&calculatedMaxNhSize)
                     , &k <= &neighbourhoodSize])
                     , and([ &theVar2(&k + &neighbourhoodSize) = &theIncumbentVar2(&k)
                     | &kPat : int(1..&calculatedMaxNhSize)
                     , &k <= |&theIncumbentVar2|
                     ]) /\
-                    and([&theVar2[&k] = &theIncumbentVar1[&k]
+                    and([&theVar2(&k) = &theIncumbentVar1(&k)
                     | &kPat : int(1..&calculatedMaxNhSize)
                     , &k <= &neighbourhoodSize])
                     ])
