@@ -102,7 +102,8 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , setMerge
     , sequenceRemoveLeftAddLeftOrRight
     , sequenceRemoveRightAddLeftOrRight
-    , sequenceMergeLeftOrRight]
+    , sequenceMergeLeftOrRight
+    , sequenceSplitLeftOrRight]
 
 
 --some helper functions
@@ -267,7 +268,7 @@ setMove theDomain@(DomainSet{}) = do
                     |&theVar2| - |&theIncumbentVar2| = &neighbourhoodSize,
                     and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
                      |]
-            other -> multiContainerNeighbourhoodError  generatorName 2 2 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 setMove _ = return []
 
@@ -290,7 +291,7 @@ setCrossOver theDomain@(DomainSet{}) = do
             |&theVar1 - &theIncumbentVar1| = &neighbourhoodSize,
             |&theVar2 - &theIncumbentVar2| = &neighbourhoodSize
                      |]
-            other -> multiContainerNeighbourhoodError  generatorName 2 2 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
                     )]
 setCrossOver _ = return []
 
@@ -315,7 +316,7 @@ setSplit theDomain@(DomainSet{}) = do
                 |&theVar2| = &neighbourhoodSize,
                 and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
                      |]
-            other -> multiContainerNeighbourhoodError generatorName 1 2 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 setSplit _ = return []
 
@@ -337,7 +338,7 @@ setMerge theDomain@(DomainSet{}) = do
                 |&theIncumbentVar1| <= &neighbourhoodSize,
                 &theIncumbentVar1 union &theIncumbentVar2  = &theVar1
                  |]
-            other -> multiContainerNeighbourhoodError generatorName 2 1 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 setMerge _ = return []
 
@@ -610,7 +611,7 @@ sequenceRemoveRightAddLeftOrRight  theDomain@(DomainSequence{}) = do
 
                     ])
                      |]
-            other -> multiContainerNeighbourhoodError  generatorName 2 2 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 sequenceRemoveRightAddLeftOrRight _ = return []
 
@@ -655,7 +656,7 @@ sequenceRemoveLeftAddLeftOrRight  theDomain@(DomainSequence{}) = do
                     , &k <= &neighbourhoodSize])
                     ])
                      |]
-            other -> multiContainerNeighbourhoodError  generatorName 2 2 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 sequenceRemoveLeftAddLeftOrRight  _ = return []
 
@@ -700,9 +701,56 @@ sequenceMergeLeftOrRight  theDomain@(DomainSequence{}) = do
                     ])
 
                      |]
-            other -> multiContainerNeighbourhoodError  generatorName 2 1 other 
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
         )]
 sequenceMergeLeftOrRight  _ = return []
+
+
+
+
+
+
+sequenceSplitLeftOrRight  :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceSplitLeftOrRight (DomainSequence _ (SequenceAttr (SizeAttr_Size _) _) _) = return []
+sequenceSplitLeftOrRight  theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceSplitLeftOrRight"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 1
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
+            ([theIncumbentVar1], [theVar1, theVar2]) ->
+                 [essenceStmts|
+                    such that
+                    |&theVar1| = |&theIncumbentVar1| - &neighbourhoodSize
+                    , |&theVar2| = &neighbourhoodSize
+                    , or([
+                    and([&theVar1(&k) = &theIncumbentVar1(&k + &neighbourhoodSize)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= |&theVar1|
+                    ]) /\
+                    and([&theVar2(&k) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= &neighbourhoodSize])
+                    
+                    , and([&theVar1(&k) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= |&theVar1|
+                    ]) /\
+                    and([&theVar2(&k) = &theIncumbentVar1(&k + |&theVar1|)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= &neighbourhoodSize
+                    ])
+                    ])
+
+                     |]
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+        )]
+sequenceSplitLeftOrRight  _ = return []
 
 
 
