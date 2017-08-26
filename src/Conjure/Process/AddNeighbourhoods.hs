@@ -175,6 +175,7 @@ setLiftMultiple _ _ _ = return []
 
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setRemove _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
 setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setRemove"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
@@ -195,6 +196,7 @@ setRemove _ _ _ = return []
 
 
 setAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setAdd _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
 setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
     let generatorName = "setAdd"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
