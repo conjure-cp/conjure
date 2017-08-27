@@ -105,7 +105,8 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , sequenceRemoveLeftAddLeftOrRight
     , sequenceRemoveRightAddLeftOrRight
     , sequenceMergeLeftOrRight
-    , sequenceSplitLeftOrRight]
+    , sequenceSplitLeftOrRight
+    , sequenceCrossOver]
 
 
 --some helper functions
@@ -761,6 +762,37 @@ sequenceSplitLeftOrRight  _ = return []
 
 
 
+
+
+sequenceCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceCrossOver theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceCrossOver"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (iPat,i) <- auxiliaryVar
+    (jPat,j) <- auxiliaryVar
+    (kPat, k) <- quantifiedVar
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
+            ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
+                    [essenceStmts|
+                    find &iPat : int(1..&calculatedMaxNhSize)
+                    find &jPat : int(1..&calculatedMaxNhSize)
+                    such that
+                    &j - &i = &neighbourhoodSize
+                    , and([&theVar1(&k) = &theIncumbentVar2(&k) /\
+                    &theVar2(&k) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k >= &i
+                    , &k <= &j
+                    ])
+                    |]
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+                    )]
+sequenceCrossOver _ = return []
 
 
 functionLessInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
