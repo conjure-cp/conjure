@@ -180,9 +180,11 @@ toCompletion
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue config m
+    namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
+                                 , miNameGenState = namegenst
                                  } }
     logDebug $ modelInfo m3
     loopy (StartOver m3)
