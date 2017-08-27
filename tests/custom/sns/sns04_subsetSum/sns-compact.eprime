@@ -14,14 +14,14 @@ find incumbent_x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..let
 SNSGroup hasX : [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 find removeElem_activation: bool
 find removeElem_nSize: int(1)
-SNSNeighbourhood removeElem : (nSize, removeElem_activation, hasX, [])
+SNSNeighbourhood removeElem : (removeElem_nSize, removeElem_activation, hasX, [])
 find addElem_activation: bool
 find addElem_nSize: int(1)
-SNSNeighbourhood addElem : (nSize, addElem_activation, hasX, [])
+SNSNeighbourhood addElem : (addElem_nSize, addElem_activation, hasX, [])
 find findDoubleAdd_k: int([nums_Explicit[q40] | q40 : int(1..fin1)])
 find findDoubleAdd_activation: bool
 find findDoubleAdd_nSize: int(1)
-SNSNeighbourhood findDoubleAdd : (nSize, findDoubleAdd_activation, hasX, [findDoubleAdd_k])
+SNSNeighbourhood findDoubleAdd : (findDoubleAdd_nSize, findDoubleAdd_activation, hasX, [findDoubleAdd_k])
 SNSIncumbentMapping([x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values],
                     [incumbent_x_ExplicitVarSizeWithMarker_Marker, incumbent_x_ExplicitVarSizeWithMarker_Values])
 such that
