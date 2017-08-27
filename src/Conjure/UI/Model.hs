@@ -969,7 +969,7 @@ convertSNSNeighbourhood model
             let localVarsTuple = AbstractLiteral $ AbsLitTuple localVars
             dontCareLocalVars <- DontCare.handleDontCares [essence| dontCare(&localVarsTuple) |]
 
-            let outSNS = SNS_Out_Neighbourhood neigName sizeVarName activationVarName groupName localVars
+            let outSNS = SNS_Out_Neighbourhood neigName (liftName sizeVarName) activationVarName groupName localVars
 
             return $ [ Declaration (FindOrGiven Find (liftName name) domain) | (name, domain) <- bodyVars ]
                   ++ [ Declaration (FindOrGiven Find activationVarName DomainBool)
