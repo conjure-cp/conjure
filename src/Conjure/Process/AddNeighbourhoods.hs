@@ -811,9 +811,9 @@ sequenceCrossOverAny theDomain@(DomainSequence{}) = do
             ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
                     [essenceStmts|
                     such that
-                    &neighbourhoodSize = sum([&theVar1(&k) = &theIncumbentVar2(&k) /\
+                    &neighbourhoodSize = sum([toInt(&theVar1(&k) = &theIncumbentVar2(&k) /\
                     &theVar2(&k) = &theIncumbentVar1(&k) /\
-                    &theIncumbentVar1(&k) != &theIncumbentVar2(&k)
+                    &theIncumbentVar1(&k) != &theIncumbentVar2(&k))
                     | &kPat : int(1..&calculatedMaxNhSize)
                     , &k <= |&theIncumbentVar1|
                     , &k <= |&theIncumbentVar2|
@@ -945,9 +945,9 @@ functionCrossOver (DomainFunction _ _ functionFromDomain _) = do
                     [essenceStmts|
                     such that
                     &neighbourhoodSize  = sum &kPat in defined(&theIncumbentVar1)  intersect defined(&theIncumbentVar2) .
-                        &theVar1(&k) = &theIncumbentVar2(&k) /\
-                        &theVar2(&k) = &theIncumbentVar1(&k) /\
-                        &theIncumbentVar1(&k) != &theIncumbentVar2(&k)
+                        toInt( &theVar1(&k) = &theIncumbentVar2(&k) /\
+                               &theVar2(&k) = &theIncumbentVar1(&k) /\
+                               &theIncumbentVar1(&k) != &theIncumbentVar2(&k) )
                     |]
             other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
                     )]
