@@ -921,7 +921,7 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-convertSNSNeighbourhood :: (MonadFail m, MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
+convertSNSNeighbourhood :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
 convertSNSNeighbourhood model
     | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
     , hasSNS = do
@@ -983,7 +983,7 @@ convertSNSNeighbourhood model
 
         st -> return [st]
 
-    return model { mStatements = statements }
+    resolveNames model { mStatements = statements }
 
 convertSNSNeighbourhood model = return model
 
