@@ -8,7 +8,7 @@ import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.Language.NameResolution ( resolveNames )
 import Conjure.Language.Expression.DomainSizeOf ( getMaxNumberOfElementsInContainer )
 import qualified Conjure.Rules.Definition as Config ( Config(..) )
-
+import Conjure.Language.DomainSizeOf ( domainSizeOf )
 
 addNeighbourhoods
     :: ( NameGen m
@@ -91,6 +91,8 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      , sequenceAddLeft
      , sequenceRemoveRight
      , sequenceRemoveLeft
+     , functionLessInjective
+     , functionMoreInjective 
      
     ]
 
@@ -103,7 +105,8 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , sequenceRemoveLeftAddLeftOrRight
     , sequenceRemoveRightAddLeftOrRight
     , sequenceMergeLeftOrRight
-    , sequenceSplitLeftOrRight]
+    , sequenceSplitLeftOrRight
+    , sequenceCrossOver]
 
 
 --some helper functions
@@ -756,4 +759,117 @@ sequenceSplitLeftOrRight  _ = return []
 
 
 
+
+
+
+
+
+sequenceCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceCrossOver theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceCrossOver"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (iPat,i) <- auxiliaryVar
+    (jPat,j) <- auxiliaryVar
+    (kPat, k) <- quantifiedVar
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
+            ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
+                    [essenceStmts|
+                    find &iPat : int(1..&calculatedMaxNhSize)
+                    find &jPat : int(1..&calculatedMaxNhSize)
+                    such that
+                    &j - &i = &neighbourhoodSize
+                    , and([&theVar1(&k) = &theIncumbentVar2(&k) /\
+                    &theVar2(&k) = &theIncumbentVar1(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k >= &i
+                    , &k <= &j
+                    ])
+                    |]
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+                    )]
+sequenceCrossOver _ = return []
+
+
+functionLessInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLessInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+    let generatorName = "functionLessInjective"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    let isOdd = [essence|&calculatedMaxNhSize % 2 != 0 |]
+    (iPat, i) <- quantifiedVar
+    (isPat,is) <- auxiliaryVar
+    (jsPat,js) <- auxiliaryVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
+                [essenceStmts|
+                    find &isPat : matrix indexed by [int(1..&calculatedMaxNhSize/2)] of &functionFromDomain
+                    find &jsPat : matrix indexed by [int(1..&calculatedMaxNhSize/2 + toInt(&isOdd))] of &functionFromDomain
+
+                    such that
+                    allDiff(flatten([&is,&js]))
+                    , forAll &iPat : int(1..&calculatedMaxNhSize/2) .
+                    (&i <= &neighbourhoodSize ->
+                    (&theIncumbentVar(&is[&i]) !=
+                    &theIncumbentVar(&js[&i]) /\
+                    &theVar(&is[&i]) =
+                    &theVar(&js[&i]))) /\
+                    (&i > &neighbourhoodSize ->
+                    (&theIncumbentVar(&is[&i]) =
+                    &theVar(&is[&i]) /\
+                    &theIncumbentVar(&js[&i]) =
+                    &theVar(&js[&i])))
+                    , &isOdd ->
+                    &theVar(&js[&calculatedMaxNhSize /2 +1]) =
+                        &theIncumbentVar(&js[&calculatedMaxNhSize/2+1])
+                |]
+        )]
+functionLessInjective _ _ _ = return []
+
+
+
+functionMoreInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionMoreInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+    let generatorName = "functionMoreInjective"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    let isOdd = [essence|&calculatedMaxNhSize % 2 != 0 |]
+    (iPat, i) <- quantifiedVar
+    (isPat,is) <- auxiliaryVar
+    (jsPat,js) <- auxiliaryVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
+                [essenceStmts|
+                    find &isPat : matrix indexed by [int(1..&calculatedMaxNhSize/2)] of &functionFromDomain
+                    find &jsPat : matrix indexed by [int(1..&calculatedMaxNhSize/2 + toInt(&isOdd))] of &functionFromDomain
+
+                    such that
+                    allDiff(flatten([&is,&js]))
+                    , forAll &iPat : int(1..&calculatedMaxNhSize/2) .
+                    (&i <= &neighbourhoodSize ->
+                    (&theIncumbentVar(&is[&i]) =
+                    &theIncumbentVar(&js[&i]) /\
+                    &theVar(&is[&i]) !=
+                    &theVar(&js[&i]))) /\
+                    (&i > &neighbourhoodSize ->
+                    (&theIncumbentVar(&is[&i]) =
+                    &theVar(&is[&i]) /\
+                    &theIncumbentVar(&js[&i]) =
+                    &theVar(&js[&i])))
+                    , &isOdd ->
+                    &theVar(&js[&calculatedMaxNhSize /2 +1]) =
+                        &theIncumbentVar(&js[&calculatedMaxNhSize/2+1])
+                |]
+        )]
+functionMoreInjective _ _ _ = return []
 
