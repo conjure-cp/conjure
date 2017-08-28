@@ -963,10 +963,12 @@ convertSNSNeighbourhood model
 
             let outBody = map (liftAllNames . liftImply) bodyConstraints
 
+            let sizeVar = Reference (liftName sizeVarName)
+                                    (Just (DeclNoRepr LocalFind (liftName sizeVarName) sizeVarDomain NoRegion))
             let localVars = [ Reference (liftName name)
                                         (Just (DeclNoRepr LocalFind (liftName name) domain NoRegion))
                             | (name, domain) <- bodyVars ]
-            let localVarsTuple = AbstractLiteral $ AbsLitTuple localVars
+            let localVarsTuple = AbstractLiteral $ AbsLitTuple (sizeVar : localVars)
             dontCareLocalVars <- DontCare.handleDontCares [essence| dontCare(&localVarsTuple) |]
 
             let outSNS = SNS_Out_Neighbourhood neigName (liftName sizeVarName) activationVarName groupName localVars
@@ -977,9 +979,7 @@ convertSNSNeighbourhood model
                      , SuchThat outBody
                      , outSNS
                      ]
-                  ++ [ SuchThat [ [essence| (! &activationVar) -> &dontCareLocalVars |] ]
-                     | length localVars > 0
-                     ]
+                  ++ [ SuchThat [ [essence| (! &activationVar) -> &dontCareLocalVars |] ] ]
 
         st -> return [st]
 
