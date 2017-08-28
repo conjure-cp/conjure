@@ -92,9 +92,8 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      , sequenceRemoveRight
      , sequenceRemoveLeft
      , functionLessInjective
-     , functionMoreInjective 
-     
-    ]
+     , functionMoreInjective
+     , functionAnySwap]
 
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
@@ -106,7 +105,9 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , sequenceRemoveRightAddLeftOrRight
     , sequenceMergeLeftOrRight
     , sequenceSplitLeftOrRight
-    , sequenceCrossOver]
+    , sequenceCrossOverSub
+    , sequenceCrossOverAny
+    , functionCrossOver]
 
 
 --some helper functions
@@ -764,9 +765,9 @@ sequenceSplitLeftOrRight  _ = return []
 
 
 
-sequenceCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
-sequenceCrossOver theDomain@(DomainSequence{}) = do
-    let generatorName = "sequenceCrossOver"
+sequenceCrossOverSub :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceCrossOverSub theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceCrossOverSub"
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     let numberIncumbents = 2
     let numberPrimaries = 2
@@ -792,7 +793,37 @@ sequenceCrossOver theDomain@(DomainSequence{}) = do
                     |]
             other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
                     )]
-sequenceCrossOver _ = return []
+sequenceCrossOverSub _ = return []
+
+
+
+sequenceCrossOverAny :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+sequenceCrossOverAny theDomain@(DomainSequence{}) = do
+    let generatorName = "sequenceCrossOverAny"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
+            ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
+                    [essenceStmts|
+                    such that
+                    &neighbourhoodSize = sum([&theVar1(&k) = &theIncumbentVar2(&k) /\
+                    &theVar2(&k) = &theIncumbentVar1(&k) /\
+                    &theIncumbentVar1(&k) != &theIncumbentVar2(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k <= |&theIncumbentVar1|
+                    , &k <= |&theIncumbentVar2|
+                    ])
+                    |]
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+                    )]
+sequenceCrossOverAny _ = return []
+
+
 
 
 functionLessInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
@@ -872,4 +903,53 @@ functionMoreInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ P
                 |]
         )]
 functionMoreInjective _ _ _ = return []
+
+
+
+functionAnySwap :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionAnySwap theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
+    let generatorName = "functionAnySwap"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    (iPat, i) <- quantifiedVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        &neighbourhoodSize * 2
+                            = sum([ toInt(&theVar(&i) != &theIncumbentVar(&i))
+                                  | &iPat  <- defined(&theIncumbentVar)])
+                |]
+        )]
+functionAnySwap _ _ _ = return []
+
+
+
+functionCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+functionCrossOver (DomainFunction _ _ functionFromDomain _) = do
+    let generatorName = "functionCrossOver"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    let numberIncumbents = 2
+    let numberPrimaries = 2
+    (kPat, k) <- quantifiedVar
+    return
+        [( generatorName, calculatedMaxNhSize
+        , numberIncumbents, numberPrimaries 
+         , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
+            ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
+                    [essenceStmts|
+                    such that
+                    &neighbourhoodSize  = sum &kPat in defined(&theIncumbentVar1)  intersect defined(&theIncumbentVar2) .
+                        &theVar1(&k) = &theIncumbentVar2(&k) /\
+                        &theVar2(&k) = &theIncumbentVar1(&k) /\
+                        &theIncumbentVar1(&k) != &theIncumbentVar2(&k)
+                    |]
+            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+                    )]
+functionCrossOver _ = return []
 
