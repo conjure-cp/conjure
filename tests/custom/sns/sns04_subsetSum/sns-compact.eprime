@@ -48,6 +48,7 @@ such that
                       | q20 : int(1..let1)])
                   | q18 : int(1..let1)]))
             | q10 : int(1..let1)]),
+    !removeElem_activation -> and([removeElem_nSize = 1; int(1)]),
     addElem_activation ->
     or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\
         (and([q25 <= incumbent_x_ExplicitVarSizeWithMarker_Marker ->
@@ -75,6 +76,7 @@ such that
                incumbent_x_ExplicitVarSizeWithMarker_Values[q37] = x_ExplicitVarSizeWithMarker_Values[q23]
                    | q37 : int(1..let1)]))))
             | q23 : int(1..let1)]),
+    !addElem_activation -> and([addElem_nSize = 1; int(1)]),
     findDoubleAdd_activation ->
     or([q42 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q42] = findDoubleAdd_k
             | q42 : int(1..let1)]),
@@ -82,7 +84,8 @@ such that
     or([q44 <= incumbent_x_ExplicitVarSizeWithMarker_Marker /\
         incumbent_x_ExplicitVarSizeWithMarker_Values[q44] = 2 * findDoubleAdd_k
             | q44 : int(1..let1)]),
-    !findDoubleAdd_activation -> and([findDoubleAdd_k = min([nums_Explicit[q40] | q40 : int(1..fin1)]); int(1)]),
+    !findDoubleAdd_activation ->
+    findDoubleAdd_nSize = 1 /\ findDoubleAdd_k = min([nums_Explicit[q40] | q40 : int(1..fin1)]),
     and([q5 + 1 <= x_ExplicitVarSizeWithMarker_Marker ->
          x_ExplicitVarSizeWithMarker_Values[q5] < x_ExplicitVarSizeWithMarker_Values[q5 + 1]
              | q5 : int(1..let1 - 1)]),
