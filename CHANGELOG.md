@@ -1,4 +1,9 @@
 
+# After v2.1.0
+
+- Bug fix: Avoid generating names that are used in the input file.
+- Improvements to the refinement of partitions. Do not generate redundant structural constraints.
+
 # v2.1.0 (2017-08-24)
 
 This release contains bug fixes, general improvements, and much more comprehensive documentation!
