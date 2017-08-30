@@ -176,9 +176,11 @@ toCompletion
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue m
+    namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
+                                 , miNameGenState = namegenst
                                  } }
     logDebug $ modelInfo m3
     loopy (StartOver m3)
@@ -239,6 +241,7 @@ remaining config modelZipper minfo = do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
             importNameGenState namegenst0
             ruleResultExpr <- ruleResult
+            -- ruleResultExpr <- fmap fixRelationProj ruleResult   -- TODO: do we need the fixRelationProj?
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
@@ -1106,7 +1109,6 @@ verticalRules =
     , Vertical.Relation.RelationAsSet.rule_Comprehension
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
-
     , Vertical.Partition.Occurrence.rule_Comprehension
 
     ]

@@ -71,6 +71,12 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
+
+                fixedPartSize =
+                    case attrs of
+                        PartitionAttr _ SizeAttr_Size{} _ -> True
+                        _                                 -> False
+
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
                     if innerType `typeUnify` TypeInt
@@ -96,7 +102,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                                   ])
                                         |]
 
-                regular rel | isRegular attrs = do
+                regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return -- for list

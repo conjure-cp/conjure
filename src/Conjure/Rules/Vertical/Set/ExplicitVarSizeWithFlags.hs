@@ -44,7 +44,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{ExplicitVarSizeWithFla
         DomainMatrix index _         <- domainOf values
         let upd val old = lambdaToFunction setPat old val
         return
-            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlagst representation"
+            ( "Vertical rule for set-comprehension, ExplicitVarSizeWithFlags representation"
             , do
                 outPats <- replicateM setPatNum quantifiedVar
                 let val = AbstractLiteral $ AbsLitSet

@@ -58,7 +58,7 @@ testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
     model_ <- runUserErrorT (readModelFromFile essenceFile)
     let
         tyCheck :: Model -> Either Doc ()
-        tyCheck m = runNameGen $ ignoreLogs $ void $ typeCheckModel_StandAlone m
+        tyCheck m = runNameGen () $ ignoreLogs $ void $ typeCheckModel_StandAlone m
     result <-
         case model_ of
             Left err    -> return (userErr err)

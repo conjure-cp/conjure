@@ -8,7 +8,7 @@ module Conjure.Language.Domain
     , HasRepresentation(..)
     , Range(..), rangesInts
     , SetAttr(..), SizeAttr(..), getMaxFrom_SizeAttr
-    , MSetAttr(..), OccurAttr(..)
+    , MSetAttr(..), OccurAttr(..), getMaxFrom_OccurAttr
     , FunctionAttr(..), PartialityAttr(..), JectivityAttr(..)
     , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
@@ -468,6 +468,12 @@ instance Pretty a => Pretty (OccurAttr a) where
     pretty (OccurAttr_MinMaxOccur x y) = "minOccur" <+> pretty x <> ", maxOccur" <+> pretty y
 
 
+getMaxFrom_OccurAttr :: MonadFail m => OccurAttr a -> m a
+getMaxFrom_OccurAttr (OccurAttr_MaxOccur n) = return n
+getMaxFrom_OccurAttr (OccurAttr_MinMaxOccur _ n) = return n
+getMaxFrom_OccurAttr _ = fail "getMaxFrom_OccurAttr"
+
+
 data FunctionAttr x
     = FunctionAttr (SizeAttr x) PartialityAttr JectivityAttr
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -757,7 +763,7 @@ data HasRepresentation
     | Relation_AsSet HasRepresentation                          -- carries: representation for the inner set
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
-    | Partition_Occurrence              -- TODO
+    | Partition_Occurrence
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -962,7 +968,7 @@ innerDomainOf (DomainSet _ _ t) = return t
 innerDomainOf (DomainMSet _ _ t) = return t
 innerDomainOf (DomainFunction _ _ a b) = return (DomainTuple [a,b])
 innerDomainOf (DomainRelation _ _ ts) = return (DomainTuple ts)
-innerDomainOf (DomainPartition  _ _ t) = return (DomainSet () def t)
+innerDomainOf (DomainPartition _ _ t) = return (DomainSet () def t)
 innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
 
 singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x

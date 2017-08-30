@@ -29,7 +29,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIn x) where
             Just tyBInner ->
                 if tyA `typeUnify` tyBInner
                     then return TypeBool
-                    else raiseTypeError p
+                    else raiseTypeError $ vcat [ pretty p
+                                               , pretty a <+> "has type" <+> pretty tyA
+                                               , pretty b <+> "has type" <+> pretty tyB
+                                               ]
 
 instance EvaluateOp OpIn where
     evaluateOp (OpIn c (viewConstantSet      -> Just cs)) = return $ ConstantBool $ elem c cs

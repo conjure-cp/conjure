@@ -1,6 +1,10 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Language.Expression.DomainSizeOf ( DomainSizeOf(..) ) where
+module Conjure.Language.Expression.DomainSizeOf
+    ( DomainSizeOf(..)
+    , getMaxNumberOfElementsInContainer
+    ) where
 
 -- conjure
 import Conjure.Prelude
@@ -10,6 +14,7 @@ import Conjure.Language.AdHoc
 import Conjure.Language.Domain
 import Conjure.Language.Expression.Op
 import Conjure.Language.Lenses
+import Conjure.Language.TH
 
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Pretty
@@ -66,7 +71,7 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainPartition _ a inner) =
         domainSizeOf $ DomainSet def (SetAttr (partsNum  a))
                       $ DomainSet def (SetAttr (partsSize a)) inner
-    domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> pretty d)
+    domainSizeOf d = bug ("not implemented: domainSizeOf:" <+> vcat [pretty d, pretty (show d)])
 
 
 domainSizeOfRange :: (Op a :< a, ExpressionLike a, Pretty a, MonadFail m, Num a, Eq a) => Range a -> m a
@@ -74,3 +79,22 @@ domainSizeOfRange RangeSingle{} = return 1
 domainSizeOfRange (RangeBounded 1 u) = return u
 domainSizeOfRange (RangeBounded l u) = return $ make opSum $ fromList [1, make opMinus u l]
 domainSizeOfRange r = fail ("domainSizeOf infinite range:" <+> pretty r)
+
+
+getMaxNumberOfElementsInContainer :: Domain () Expression -> Expression
+getMaxNumberOfElementsInContainer domain@(DomainSet _ (SetAttr sizeAttr) inner) =
+    case (getMaxFrom_SizeAttr sizeAttr, domainSizeOf inner) of
+        (Just n, _) -> n
+        (_, Just n) -> n
+        _           -> bug $ "getMaxNumberOfElementsInContainer, DomainSet:" <+> pretty domain
+getMaxNumberOfElementsInContainer domain@(DomainMSet _ (MSetAttr sizeAttr occurAttr) inner) =
+    case (getMaxFrom_SizeAttr sizeAttr, getMaxFrom_OccurAttr occurAttr, domainSizeOf inner) of
+        (Just n, _     , _     ) -> n
+        (_     , Just o, Just n) -> [essence| &o * &n |]
+        _                        -> bug $ "getMaxNumberOfElementsInContainer, DomainMSet:" <+> pretty domain
+getMaxNumberOfElementsInContainer domain@(DomainSequence _ (SequenceAttr sizeAttr _) _) =
+    case getMaxFrom_SizeAttr sizeAttr of
+        Just n -> n
+        _      -> bug $ "getMaxNumberOfElementsInContainer, DomainSequence:" <+> pretty domain
+getMaxNumberOfElementsInContainer domain = bug $ "getMaxNumberOfElementsInContainer:" <+> pretty domain
+
