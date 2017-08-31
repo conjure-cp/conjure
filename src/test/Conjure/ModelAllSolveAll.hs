@@ -478,7 +478,7 @@ fileShouldExist f = do
 
 
 modelAll :: FilePath -> Model -> IO ()
-modelAll dir model = ignoreLogs $ runNameGen () $ flip outputModels model Config
+modelAll dir model = ignoreLogs $ runNameGen model $ flip outputModels model Config
     { logLevel                   = LogNone
     , verboseTrail               = False
     , rewritesTrail              = False

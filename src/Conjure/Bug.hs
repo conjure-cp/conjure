@@ -21,7 +21,8 @@ bug :: Doc -> a
 bug message = error $ unlines
     [ "This should never happen, sorry!"
     , ""
-    , "Please report a bug."
+    , "However, it did happen, so it must be a bug. Please report it to us!"
+    , ""
     , "Conjure is actively maintained, we will get back to you as soon as possible."
     , "You can help us by providing a minimal failing example."
     , ""
