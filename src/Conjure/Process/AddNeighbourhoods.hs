@@ -802,6 +802,14 @@ sequenceCrossOverSub theDomain@(DomainSequence{}) = do
                     find &jPat : int(1..&calculatedMaxNhSize)
                     such that
                     &j - &i = &neighbourhoodSize
+                    , and([&theVar1(&k) = &theIncumbentVar1(&k) /\
+                    &theVar2(&k) = &theIncumbentVar2(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k < &i
+                    , &k > &j
+                    , &k < |&theIncumbentVar1|
+                    , &k <= |&theIncumbentVar2|
+                    ])
                     , and([&theVar1(&k) = &theIncumbentVar2(&k) /\
                     &theVar2(&k) = &theIncumbentVar1(&k)
                     | &kPat : int(1..&calculatedMaxNhSize)
