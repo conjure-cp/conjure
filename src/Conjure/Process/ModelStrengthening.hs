@@ -51,7 +51,7 @@ strengthenModel :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m)
                 -> Bool     -- ^ Generate logs for rule applications.
                 -> Model    -- ^ Model to strengthen.
                 -> m Model  -- ^ Strengthened model.
-strengthenModel logLevel logRuleSuccesses = runNameGen . (resolveNames >=> core . fixRelationProj)
+strengthenModel logLevel logRuleSuccesses model = runNameGen model $ (resolveNames >=> core . fixRelationProj) model
   where
     core :: (MonadFail m, MonadIO m, MonadLog m, MonadUserError m, NameGen m) => Model -> m Model
     core model1 = do
