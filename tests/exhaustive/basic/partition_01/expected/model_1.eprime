@@ -2,7 +2,9 @@ language ESSENCE' 1.0
 
 find x_PartitionAsSet_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(3..8)] of bool
 such that
-    and([1 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q9, q1]) | q9 : int(1..2)]) | q1 : int(3..8)]),
+    alldifferent_except([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q9, q2]) * catchUndef(q2 + -2, 0)
+                             | q9 : int(1..2), q2 : int(3..8)],
+                        0),
     x_PartitionAsSet_ExplicitR2_Occurrence[1, ..] <lex x_PartitionAsSet_ExplicitR2_Occurrence[2, ..],
-    and([3 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q7, q8]) | q8 : int(3..8)]) | q7 : int(1..2)])
+    and([3 = sum([toInt(x_PartitionAsSet_ExplicitR2_Occurrence[q5, q6]) | q6 : int(3..8)]) | q5 : int(1..2)])
 

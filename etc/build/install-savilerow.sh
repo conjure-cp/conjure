@@ -5,7 +5,7 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 
-rm -f savilerow-repo savilerow*.tgz
+rm -rf savilerow-repo savilerow*.tgz
 
 ######## this is the release
 # wget -c http://savilerow.cs.st-andrews.ac.uk/savilerow-1.6.5-linux.tgz
@@ -13,9 +13,9 @@ rm -f savilerow-repo savilerow*.tgz
 # mv savilerow-1.6.5-linux savilerow-repo
 
 ######## we are using an unreleased version...
-wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/2017-07-18--1bfd9d6728ce/savilerow.tgz
-tar zxvf savilerow.tgz
-mv savilerow savilerow-repo
+wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/savilerow-2017-07-18--1bfd9d6728ce-linux.tgz
+tar zxvf savilerow-2017-07-18--1bfd9d6728ce-linux.tgz
+mv savilerow-2017-07-18--1bfd9d6728ce-linux savilerow-repo
 
 (cd savilerow-repo ; ./compile.sh)
 cp savilerow-repo/savilerow.jar ${BIN_DIR}/savilerow.jar

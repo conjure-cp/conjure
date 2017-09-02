@@ -571,6 +571,7 @@ parsePartitionAttr = do
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
 
+
 checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
 checkExtraAttributes pos ty attrs supported = do
     let extras = mapMaybe f attrs
@@ -713,7 +714,7 @@ parseComprehension = brackets $ do
         letting :: Parser [GeneratorOrCondition]
         letting = do
             lexeme L_letting
-            nm <- parseName
+            nm <- parseNameOrMeta
             lexeme L_be
             x  <- parseExpr
             return [ComprehensionLetting nm x]

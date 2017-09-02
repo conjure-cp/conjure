@@ -18,12 +18,15 @@ import Conjure.Language.Name
 
 -- containers
 import Data.Map.Strict as M
+import Data.Set as S
 
 -- pipes
 import qualified Pipes
 
 
-type NameGenState = M.Map NameKind Int        -- next int to use
+type NameGenState = ( M.Map NameKind Int        -- next int to use
+                    , S.Set Name                -- set of names to avoid
+                    )
 
 type NameKind = Text
 
@@ -36,7 +39,7 @@ newtype NameGenM m a = NameGenM (StateT NameGenState m a)
              , MonadIO
              )
 
-class Monad m => NameGen m where
+class (Functor m, Applicative m, Monad m) => NameGen m where
     nextName :: NameKind -> m Name
     exportNameGenState :: m [(NameKind, Int)]
     importNameGenState :: [(NameKind, Int)] -> m ()
@@ -76,18 +79,22 @@ instance NameGen m => NameGen (Pipes.Proxy a b c d m) where
     exportNameGenState = lift exportNameGenState
     importNameGenState = lift . importNameGenState
 
-instance Monad m => NameGen (NameGenM m) where
+instance (Functor m, Monad m) => NameGen (NameGenM m) where
     nextName k = do
-        mi <- gets (M.lookup k)
-        case mi of
-            Nothing -> do
-                modify $ M.insert k 2
-                return $ MachineName k 1 []
-            Just !i -> do
-                modify $ M.insert k (i+1)
-                return $ MachineName k i []
-    exportNameGenState = gets M.toList
-    importNameGenState = modify . const . M.fromList
+        mi <- gets (M.lookup k . fst)
+        out <- case mi of
+                Nothing -> do
+                    modify $ \ (st, avoid) -> (M.insert k 2 st, avoid)
+                    return $ MachineName k 1 []
+                Just !i -> do
+                    modify $ \ (st, avoid) -> (M.insert k (i+1) st, avoid)
+                    return $ MachineName k i []
+        avoid <- gets snd
+        if out `S.member` avoid
+            then nextName k
+            else return out
+    exportNameGenState = gets (M.toList . fst)
+    importNameGenState st = modify $ \ (_, avoid) -> (M.fromList st, avoid)
 
 instance NameGen (Either Doc) where
     nextName _ = fail "nextName{Either Doc}"
@@ -99,6 +106,7 @@ instance NameGen Identity where
     exportNameGenState = fail "exportNameGenState{Identity}"
     importNameGenState _ = fail "importNameGenState{Identity}"
 
-runNameGen :: Monad m => NameGenM m a -> m a
-runNameGen (NameGenM comp) = evalStateT comp initState
-    where initState = M.empty
+runNameGen :: (Monad m, Data x) => x -> NameGenM m a -> m a
+runNameGen avoid (NameGenM comp) =
+    let initState = (M.empty, S.fromList (universeBi avoid))
+    in  evalStateT comp initState

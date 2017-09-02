@@ -92,6 +92,9 @@ import qualified Conjure.Rules.TildeOrdering as TildeOrdering
 
 -- base
 import System.IO ( hFlush, stdout )
+import Data.IORef ( IORef, newIORef, readIORef, writeIORef )
+import System.IO.Unsafe ( unsafePerformIO )
+
 
 -- uniplate
 import Data.Generics.Uniplate.Zipper ( hole, replaceHole )
@@ -108,6 +111,8 @@ outputModels
     -> Model
     -> m ()
 outputModels config model = do
+
+    liftIO $ writeIORef recordedResponses (responses config)
 
     -- Savile Row does not support ' characters in identifiers
     -- We could implement a workaround where we insert a marker (like __PRIME__) for each ' character
@@ -171,9 +176,11 @@ toCompletion
     -> Producer LogOrModel m ()
 toCompletion config m = do
     m2 <- prologue m
+    namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
                                  , miStrategyA = strategyA config
+                                 , miNameGenState = namegenst
                                  } }
     logDebug $ modelInfo m3
     loopy (StartOver m3)
@@ -234,6 +241,7 @@ remaining config modelZipper minfo = do
         answers1 <- forM answers0 $ \ (ruleName, RuleResult{..}) -> do
             importNameGenState namegenst0
             ruleResultExpr <- ruleResult
+            -- ruleResultExpr <- fmap fixRelationProj ruleResult   -- TODO: do we need the fixRelationProj?
             let fullModelBeforeHook = replaceHole ruleResultExpr focus
             let mtyBefore = typeOf (hole focus)
             let mtyAfter  = typeOf ruleResultExpr
@@ -390,6 +398,11 @@ strategyToDriver config questions = do
             ]
 
 
+recordedResponses :: IORef (Maybe [Int])
+{-# NOINLINE recordedResponses #-}
+recordedResponses = unsafePerformIO (newIORef Nothing)
+
+
 executeStrategy :: (MonadIO m, MonadLog m) => [(Doc, a)] -> Strategy -> m [(Int, Doc, a)]
 executeStrategy [] _ = bug "executeStrategy: nothing to choose from"
 executeStrategy [(doc, option)] (viewAuto -> (_, True)) = do
@@ -408,19 +421,36 @@ executeStrategy options@((doc, option):_) (viewAuto -> (strategy, _)) =
         Interactive -> liftIO $ do
             print (vcat (map fst options))
             let
+                nextRecordedResponse :: IO (Maybe Int)
+                nextRecordedResponse = do
+                    mres <- readIORef recordedResponses
+                    case mres of
+                        Just (next:rest) -> do
+                            writeIORef recordedResponses (Just rest)
+                            return (Just next)
+                        _ -> return Nothing
+
+                pickIndex :: IO Int
                 pickIndex = do
-                    putStr "Pick option: "
-                    hFlush stdout
-                    line <- getLine
-                    case (line, readMay line) of
-                        ("", _) -> return 1
-                        (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
-                        (_, Nothing) -> do
-                            putStrLn "Enter an integer value."
-                            pickIndex
-                        (_, Just _) -> do
-                            print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
-                            pickIndex
+                    mrecorded <- nextRecordedResponse
+                    case mrecorded of
+                        Just recorded -> do
+                            putStrLn ("Response: " ++ show recorded)
+                            return recorded
+                        Nothing -> do
+                            putStr "Pick option: "
+                            hFlush stdout
+                            line <- getLine
+                            case (line, readMay line) of
+                                ("", _) -> return 1
+                                (_, Just lineInt) | lineInt >= 1 && lineInt <= length options -> return lineInt
+                                (_, Nothing) -> do
+                                    putStrLn "Enter an integer value."
+                                    pickIndex
+                                (_, Just _) -> do
+                                    print $ pretty $ "Enter a value between 1 and" <+> pretty (length options)
+                                    pickIndex
+
             pickedIndex <- pickIndex
             let (pickedDescr, picked) = at options (pickedIndex - 1)
             return [(pickedIndex, pickedDescr, picked)]
@@ -1079,7 +1109,6 @@ verticalRules =
     , Vertical.Relation.RelationAsSet.rule_Comprehension
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
-
     , Vertical.Partition.Occurrence.rule_Comprehension
 
     ]

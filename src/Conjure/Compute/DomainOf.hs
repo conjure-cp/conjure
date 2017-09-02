@@ -8,9 +8,9 @@ import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
-
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainUnion
+
 
 type Dom = Domain () Expression
 

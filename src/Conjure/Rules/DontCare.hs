@@ -3,6 +3,7 @@
 module Conjure.Rules.DontCare where
 
 import Conjure.Rules.Import
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
 rule_Bool :: Rule
@@ -107,3 +108,61 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
             ( "dontCare handling for an abstract domain"
             , return $ make opAnd $ fromList $ map (make opDontCare) xs
             )
+
+
+handleDontCares ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    Expression -> m Expression
+handleDontCares p =
+    case match opDontCare p of
+        Nothing -> return p
+        Just x -> do
+            typX <- typeOf x
+            case typX of
+                TypeBool -> return (make opEq x (fromBool False))
+                TypeInt -> do
+                    domX <- domainOf x
+                    let raiseBug = bug ("dontCare on domain:" <+> pretty domX)
+                    let val = case domX of
+                            DomainInt [] -> raiseBug
+                            DomainInt (r:_) -> case r of
+                                RangeOpen -> raiseBug
+                                RangeSingle v -> v
+                                RangeLowerBounded v -> v
+                                RangeUpperBounded v -> v
+                                RangeBounded v _ -> v
+                            DomainIntE v -> [essence| min(&v) |]
+                            _ -> raiseBug
+                    return $ make opEq x val
+                TypeTuple{} -> do
+                    xs  <- downX1 x
+                    xs' <- mapM (handleDontCares . make opDontCare) xs
+                    return $ make opAnd $ fromList xs'
+                TypeRecord{} -> do
+                    xs  <- downX1 x
+                    xs' <- mapM (handleDontCares . make opDontCare) xs
+                    return $ make opAnd $ fromList xs'
+                TypeVariant{} -> do
+                    xs  <- downX1 x
+                    xs' <- mapM (handleDontCares . make opDontCare) xs
+                    return $ make opAnd $ fromList xs'
+                TypeMatrix{} -> do
+                    domX <- domainOf x
+                    case domX of
+                        DomainMatrix index _ -> do
+                            (iPat@(Single nm), _) <- quantifiedVar
+                            -- direct name resolution
+                            let i = Reference nm (Just (DeclNoRepr Find nm index NoRegion))
+                            inner <- handleDontCares [essence| dontCare(&x[&i]) |]
+                            return [essence| forAll &iPat : &index . &inner |]
+                        _ -> bug ("dontCare on domain, expecting matrix, but got:" <+> pretty domX)
+                _ -> do
+                    case representationOf x of
+                        Nothing -> fail "doesn't seem to have a representation, during handleDontCares"
+                        Just _  -> do
+                            xs  <- downX1 x
+                            xs' <- mapM (handleDontCares . make opDontCare) xs
+                            return $ make opAnd $ fromList xs'
+

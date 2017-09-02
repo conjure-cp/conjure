@@ -10,10 +10,11 @@ import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Constant
 import Conjure.Language.Domain
--- import Conjure.Language.Type
--- import Conjure.Language.TypeOf
 import Conjure.Language.TH
 import Conjure.Language.Pretty
+import Conjure.Language.Type ( Type(..), typeUnify )
+import Conjure.Language.TypeOf ( typeOf )
+import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
 
@@ -70,19 +71,38 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
         structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
-                exactlyOnce rel = do
-                    (iPat, i) <- quantifiedVar
-                    (jPat, j) <- quantifiedVar
-                    return $ return $ -- for list
-                        [essence|
-                            forAll &iPat : &innerDomain .
-                                1  = sum ([ 1
-                                          | &jPat <- &rel
-                                          , &i in &j
-                                          ])
-                                |]
 
-                regular rel | isRegular attrs = do
+                fixedPartSize =
+                    case attrs of
+                        PartitionAttr _ SizeAttr_Size{} _ -> True
+                        _                                 -> False
+
+                exactlyOnce rel = do
+                    innerType <- typeOf innerDomain
+                    if innerType `typeUnify` TypeInt
+                        then do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- for list
+                                [essence|
+                                    allDiff([ &j
+                                            | &iPat <- &rel
+                                            , &jPat <- &i
+                                            ])
+                                        |]
+                        else do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- for list
+                                [essence|
+                                    forAll &iPat : &innerDomain .
+                                        1  = sum ([ 1
+                                                  | &jPat <- &rel
+                                                  , &i in &j
+                                                  ])
+                                        |]
+
+                regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return -- for list
@@ -98,6 +118,13 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
+                sumOfParts rel = do
+                    case domainSizeOf innerDomain of
+                        Left _err -> return []
+                        Right n   -> do
+                            (iPat, i) <- quantifiedVar
+                            return $ return [essence| &n = sum([ |&i| | &iPat <- &rel ]) |]
+
             case refs of
                 [rel] -> do
                     outDom                 <- outDomain inDom
@@ -107,6 +134,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         , regular rel
                         , partsAren'tEmpty rel
                         , innerStructuralConsGen rel
+                        , sumOfParts rel
                         ]
                 _ -> na $ vcat [ "{structuralCons} PartitionAsSet"
                                , pretty inDom

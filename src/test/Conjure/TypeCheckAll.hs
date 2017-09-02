@@ -23,7 +23,7 @@ tests = do
 testSingle :: FilePath -> TestTree
 testSingle fp = testCase fp $ do
     model <- readModelFromFile fp
-    result <- runUserErrorT $ ignoreLogs $ runNameGen $ typeCheckModel_StandAlone model
+    result <- runUserErrorT $ ignoreLogs $ runNameGen () $ typeCheckModel_StandAlone model
     case result of
         Left errs -> assertFailure $ renderNormal $ vcat errs
         Right _ -> return ()

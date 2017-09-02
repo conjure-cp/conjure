@@ -32,7 +32,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
             TypeSequence{}  -> return ()
             TypeRelation{}  -> return ()
             TypePartition{} -> return ()
-            _               -> raiseTypeError p
+            _               -> raiseTypeError $ vcat [ pretty p
+                                                     , "Expected an integer or a collection."
+                                                     , "But got:" <+> pretty ty
+                                                     ]
         return TypeInt
 
 instance EvaluateOp OpTwoBars where
@@ -51,8 +54,8 @@ instance EvaluateOp OpTwoBars where
             (viewConstantPartition -> Just xs)      -> return $ ConstantInt $ genericLength $ nub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt rs)    -> ConstantInt . genericLength <$> rangesInts rs
-            DomainInConstant dom               -> runNameGen $ domainSizeOf dom
+            DomainInConstant (DomainInt rs) -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 
 instance SimplifyOp OpTwoBars x where

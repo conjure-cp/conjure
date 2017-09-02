@@ -83,6 +83,19 @@ mainWithArgs Modelling{..} = do
             Compact -> userErr1 "The Compact heuristic isn't supported for questions."
             _       -> return ()
 
+        responsesList <- do
+            if null responses
+                then return Nothing
+                else do
+                    let parts = splitOn "," responses
+                    let intParts = mapMaybe readMay parts
+                    if length parts == length intParts
+                        then return (Just intParts)
+                        else userErr1 $ vcat [ "Cannot parse the value for --responses."
+                                             , "Expected a comma separated list of integers."
+                                             , "But got:" <+> pretty responses
+                                             ]
+
         return Config.Config
             { Config.outputDirectory            = outputDirectory
             , Config.logLevel                   = logLevel
@@ -106,23 +119,24 @@ mainWithArgs Modelling{..} = do
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
+            , Config.responses                  = responsesList
             }
-    runNameGen $ outputModels config model
+    runNameGen model $ outputModels config model
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
-    output <- runNameGen $ join $ translateParameter
-                    <$> readModelInfoFromFile eprime
-                    <*> readModelFromFile essenceParam
+    eprimeF <- readModelInfoFromFile eprime
+    essenceParamF <- readModelFromFile essenceParam
+    output <- runNameGen () $ translateParameter eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
-    output <- runNameGen $ join $ translateSolution
-                    <$> readModelInfoFromFile eprime
-                    <*> maybe (return def) readModelFromFile essenceParamO
-                    <*> readModelFromFile eprimeSolution
+    eprimeF <- readModelInfoFromFile eprime
+    essenceParamF <- maybe (return def) readModelFromFile essenceParamO
+    eprimeSolutionF <- readModelFromFile eprimeSolution
+    output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs ValidateSolution{..} = do
@@ -131,8 +145,8 @@ mainWithArgs ValidateSolution{..} = do
     essence2  <- readModelFromFile essence
     param2    <- maybe (return def) readModelFromFile essenceParamO
     solution2 <- readModelFromFile essenceSolution
-    [essence3, param3, solution3] <- runNameGen $ resolveNamesMulti [essence2, param2, solution2]
-    runNameGen $ validateSolution essence3 param3 solution3
+    [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
+    runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
     model0 <- readModelFromFile essence
     let model1 = model0
@@ -143,8 +157,9 @@ mainWithArgs Diff{..} =
     join $ modelDiffIO
         <$> readModelFromFile file1
         <*> readModelFromFile file2
-mainWithArgs TypeCheck{..} =
-    void $ runNameGen $ join $ typeCheckModel_StandAlone <$> readModelFromFile essence
+mainWithArgs TypeCheck{..} = do
+    essenceF <- readModelFromFile essence
+    void $ runNameGen () $ typeCheckModel_StandAlone essenceF
 mainWithArgs Split{..} = do
     model <- readModelFromFile essence
     outputSplittedModels outputDirectory model
@@ -205,6 +220,7 @@ mainWithArgs config@Solve{..} = do
                       , smartFilenames
                       , strategyQ
                       , strategyA
+                      , responses
                       )
                     , ( representations
                       , representationsFinds
@@ -384,7 +400,8 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
         -- this is a bit tricky.
         -- we want to preserve user-erors, and not raise them as errors using IO.fail
         runTranslateParameter :: IO (Either [Doc] Model)
-        runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen $ translateParameter eprimeModel essenceParam
+        runTranslateParameter = runUserErrorT $ ignoreLogs $ runNameGen () $
+                                    translateParameter eprimeModel essenceParam
     eprimeParam' <- liftIO runTranslateParameter
     case eprimeParam' of
         Left err -> return (Left err)
@@ -459,7 +476,8 @@ srStdoutHandler
                     let filenameEssenceSol = mkFilename ".solution"
                     eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
                     writeFile filenameEprimeSol (render lineWidth eprimeSol)
-                    essenceSol <- ignoreLogs $ runNameGen $ translateSolution eprimeModel essenceParam eprimeSol
+                    essenceSol <- ignoreLogs $ runNameGen () $
+                                                    translateSolution eprimeModel essenceParam eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
                          (srStdoutHandler args (solutionNumber+1) h)
@@ -497,8 +515,8 @@ validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
     solution <- readModelFromFile solutionPath
-    [essenceM2, solution2] <- ignoreLogs $ runNameGen $ resolveNamesMulti [essenceM, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essenceM2 def solution2
+    [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
     case result of
         Left err -> bug err
         Right () -> return ()
@@ -511,8 +529,9 @@ validateSolutionWithParams Solve{..} solutionPath paramPath = do
     essenceM <- readModelFromFile essence
     param    <- readModelFromFile paramPath
     solution <- readModelFromFile solutionPath
-    [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen $ resolveNamesMulti [essenceM, param, solution]
-    result   <- runExceptT $ ignoreLogs $ runNameGen $ validateSolution essenceM2 param2 solution2
+    [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
+    result   <- runExceptT $ ignoreLogs $ runNameGen ()
+                                $ validateSolution essenceM2 param2 solution2
     case result of
         Left err -> bug err
         Right () -> return ()

@@ -22,6 +22,7 @@ data UI
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
+        , responses                  :: String
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -87,6 +88,7 @@ data UI
         , outputDirectory            :: FilePath
         , numberingStart             :: Int
         , smartFilenames             :: Bool
+        , responses                  :: String
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -221,6 +223,14 @@ ui = modes
                     \Directs Conjure to use the answers when producing \
                     \a filename and to ignore the order of questions. \
                     \Only useful if 'f' is used for questions."
+        , responses
+            = ""
+            &= name "responses"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, these will be used as the answers during \
+                    \interactive model generation instead of prompting the user."
         , logLevel
             = def
             &= name "log-level"
@@ -604,6 +614,14 @@ ui = modes
                     \Directs Conjure to use the answers when producing \
                     \a filename and to ignore the order of questions. \
                     \Only useful if 'f' is used for questions."
+        , responses
+            = ""
+            &= name "responses"
+            &= groupname "Model generation"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, these will be used as the answers during \
+                    \interactive model generation instead of prompting the user."
         , logLevel
             = def
             &= name "log-level"

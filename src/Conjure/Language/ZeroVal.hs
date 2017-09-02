@@ -26,6 +26,10 @@ zeroVal d@(DomainSet _ (SetAttr sizeAttr) inner) = do
     z       <- zeroVal inner
     minSize <- getMin d sizeAttr
     return $ ConstantAbstract $ AbsLitSet $ replicate (fromInteger minSize) z
+zeroVal d@(DomainSequence _ (SequenceAttr sizeAttr _) inner) = do
+    z       <- zeroVal inner
+    minSize <- getMin d sizeAttr
+    return $ ConstantAbstract $ AbsLitSequence $ replicate (fromInteger minSize) z
 zeroVal d@(DomainFunction _ (FunctionAttr sizeAttr partialityAttr _) innerFr innerTo) =
     case partialityAttr of
         PartialityAttr_Partial -> do
