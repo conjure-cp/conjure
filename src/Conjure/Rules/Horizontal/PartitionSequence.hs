@@ -133,6 +133,7 @@ rule_Party = "partitionSequence-party" `namedRule` theRule where
             _ -> na "rule_Comprehension_Literal"
         (mkModifier, expr2) <- match opModifier expr
         (wanted, p)         <- match opParty expr2
+        TypePartitionSequence{} <- typeOf p
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on a particular part of a partitionSequence"
@@ -158,6 +159,7 @@ rule_Participants = "partitionSequence-participants" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         p <- match opParticipants expr
+        TypePartitionSequence{} <- typeOf p
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on participants of a partitionSequence"
