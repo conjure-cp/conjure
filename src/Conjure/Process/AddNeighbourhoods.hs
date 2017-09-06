@@ -76,18 +76,13 @@ type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Express
 
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
-    [setLiftSingle
-    , setLiftMultiple 
-     , setRemove
-     , setAdd
-     , setSwap
-     , setSwapAdd
-     , setSwapRemove
-     , mSetRemove
-     , mSetAdd
-     , mSetSwap
-     , mSetSwapAdd
-     , mSetSwapRemove
+    [mSetOrSetLiftSingle
+    , mSetOrSetLiftMultiple 
+     , mSetOrSetRemove
+     , mSetOrSetAdd
+     , mSetOrSetSwap
+     , mSetOrSetSwapAdd
+     , mSetOrSetSwapRemove
      , sequenceReverseSub
      , sequenceAnySwap
      , sequenceRelaxSub
@@ -144,171 +139,157 @@ makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
         buildFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
         buildFrameUpdate _ _ = bug "todo, extend the buildFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
 
-setLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setLiftSingle theIncumbentVar theVar (DomainSet _ _ inner) = do
-    let generatorName = "setLiftSingle"
-    ([incumbent_i], [i], frameUpdate) <- makeFrameUpdate 1 1 theIncumbentVar theVar
-    let
-        liftCons (SuchThat cs) = SuchThat [frameUpdate $ make opAnd $ fromList cs]
-        liftCons st            = st
 
-    ns <- allNeighbourhoods incumbent_i i inner
-    return
-        [ ( mconcat [generatorName, "_", innerGeneratorName]
-        , innerNeighbourhoodSize
-          , \ neighbourhoodSize ->
+mSetOrSetName :: Domain () Expression -> Maybe Name
+mSetOrSetName (DomainSet{}) = Just "set"
+mSetOrSetName (DomainMSet{}) = Just "mSet"
+mSetOrSetName _ = Nothing
+
+isFixedSizeMSetOrSet :: Domain () Expression -> Bool
+isFixedSizeMSetOrSet (DomainSet _ (SetAttr (SizeAttr_Size _)) _)  = True
+isFixedSizeMSetOrSet (DomainMSet _ (MSetAttr (SizeAttr_Size _) _) _) = True
+isFixedSizeMSetOrSet _ = False
+
+--not sure how to use innerDomainOf, so special casing
+innerDomainOfMSetOrSet :: Domain () Expression -> Domain () Expression
+innerDomainOfMSetOrSet (DomainSet _ _ inner) = inner
+innerDomainOfMSetOrSet (DomainMSet _ _ inner) = inner
+innerDomainOfMSetOrSet _ = bug "I special case this function, called with type not set or MSet"
+
+mSetOrSetLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetLiftSingle theIncumbentVar theVar theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName,"LiftSingle"]
+        let inner = innerDomainOfMSetOrSet theDomain
+        ([incumbent_i], [i], frameUpdate) <- makeFrameUpdate 1 1 theIncumbentVar theVar
+        let
+            liftCons (SuchThat cs) = SuchThat [frameUpdate $ make opAnd $ fromList cs]
+            liftCons st            = st
+
+        ns <- allNeighbourhoods incumbent_i i inner
+        return [ ( mconcat [generatorName, "_", innerGeneratorName]
+            , innerNeighbourhoodSize
+            , \ neighbourhoodSize ->
               let statements = rule neighbourhoodSize 
               in  map liftCons statements
-          )
-        | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
-        ]
-setLiftSingle _ _ _ = return []
+             )
+             | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+             ]
+mSetOrSetLiftSingle _ _ _ = return []
 
 
-setLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setLiftMultiple theIncumbentVar theVar (DomainSet _ _ inner) = do
-    let generatorName = "setLiftMultiple"
-    let
-        liftCons frame (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
-            frame conjCs]
-        liftCons _ st = st
+mSetOrSetLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetLiftMultiple theIncumbentVar theVar theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "LiftMultiple"]
+        let inner = innerDomainOfMSetOrSet theDomain
+        let
+            liftCons frame (SuchThat cs) = SuchThat [ let conjCs  =  make opAnd $ fromList cs in
+                frame conjCs]
+            liftCons _ st = st
+    
+        ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods inner
+        mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
+            (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
+            return  ( mconcat [generatorName, "_", innerGeneratorName]
+                , innerNeighbourhoodSize
+                , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
+                    map (liftCons frame) statements)) ns
 
-    ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods inner
-    mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
-        (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
-        return  ( mconcat [generatorName, "_", innerGeneratorName]
-            , innerNeighbourhoodSize
-            , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
-                map (liftCons frame) statements)) ns
-
-setLiftMultiple _ _ _ = return []
-
-
-setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setRemove _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
-setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = setRemoveHelper theIncumbentVar theVar theDomain "setRemove"
-setRemove _ _ _ = return []
-
-mSetRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-mSetRemove _ _ (DomainMSet _ (MSetAttr (SizeAttr_Size _) _) _) = return []
-mSetRemove theIncumbentVar theVar theDomain@(DomainMSet{}) = setRemoveHelper theIncumbentVar theVar theDomain "mSetRemove"
-mSetRemove _ _ _ = return []
-
-setRemoveHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
-setRemoveHelper theIncumbentVar theVar theDomain generatorName = do
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    return
-        [( generatorName, calculatedMaxNhSize
-         , \ neighbourhoodSize ->
-                 [essenceStmts|
-                    such that
-                        &theVar subsetEq &theIncumbentVar,
-                        |&theIncumbentVar| - |&theVar| = &neighbourhoodSize
-                 |]
-        )]
+mSetOrSetLiftMultiple _ _ _ = return []
 
 
-
-setAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setAdd _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
-setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = setAddHelper theIncumbentVar theVar theDomain "setAdd"
-setAdd _ _ _ = return []
-
-mSetAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-mSetAdd _ _ (DomainMSet _ (MSetAttr (SizeAttr_Size _) _) _) = return []
-mSetAdd theIncumbentVar theVar theDomain@(DomainMSet{}) = setAddHelper theIncumbentVar theVar theDomain "mSetAdd"
-mSetAdd _ _ _ = return []
-
-setAddHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
-setAddHelper theIncumbentVar theVar theDomain generatorName = do
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    return
-        [( generatorName
-        , calculatedMaxNhSize 
-         , \ neighbourhoodSize  ->
-                [essenceStmts|
-                    such that
-                        &theIncumbentVar subsetEq &theVar,
-                        |&theVar| - |&theIncumbentVar| = &neighbourhoodSize
-                |]
-        )]
-
-
-
-
-setSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapHelper theIncumbentVar theVar theDomain "setSwap"
-setSwap _ _ _ = return []
-
-mSetSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-mSetSwap theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapHelper theIncumbentVar theVar theDomain "mSetSwap"
-mSetSwap _ _ _ = return []
-
-
-setSwapHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
-setSwapHelper theIncumbentVar theVar theDomain generatorName = do
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    return
-        [( generatorName
-        , calculatedMaxNhSize 
-         , \ neighbourhoodSize  ->
-                [essenceStmts|
-                    such that
-                        |&theVar - &theIncumbentVar| = &neighbourhoodSize,
-                        |&theIncumbentVar| = |&theVar|
-                |]
-        )]
-
-
-
-setSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapAddHelper theIncumbentVar theVar theDomain "setSwapAdd"
-setSwapAdd _ _ _ = return []
-
-mSetSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-mSetSwapAdd theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapAddHelper theIncumbentVar theVar theDomain "mSetSwapAdd"
-mSetSwapAdd _ _ _ = return []
-
-
-setSwapAddHelper :: Monad m => Expression -> Expression -> Domain () Expression  -> Name -> m [NeighbourhoodGenResult]
-setSwapAddHelper theIncumbentVar theVar theDomain generatorName  = do
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    return
-        [( generatorName
-        , calculatedMaxNhSize
-         , \ neighbourhoodSize  ->
-                [essenceStmts|
-                    such that
-                        |&theVar - &theIncumbentVar| = &neighbourhoodSize
-                |]
-        )]
+mSetOrSetRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetRemove theIncumbentVar theVar theDomain
+    | (Just typeName, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain) = do
+        let generatorName = mconcat [typeName, "Remove"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName, calculatedMaxNhSize
+             , \ neighbourhoodSize ->
+                     [essenceStmts|
+                        such that
+                            &theVar subsetEq &theIncumbentVar,
+                            |&theIncumbentVar| - |&theVar| = &neighbourhoodSize
+                     |]
+            )]
+mSetOrSetRemove _ _ _ = return []
 
 
 
 
 
-setSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwapRemove theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapRemoveHelper theIncumbentVar theVar theDomain "setSwapRemove"
-setSwapRemove _ _ _ = return []
 
-mSetSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-mSetSwapRemove theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapRemoveHelper theIncumbentVar theVar theDomain "mSetSwapRemove"
-mSetSwapRemove _ _ _ = return []
-
-setSwapRemoveHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name ->  m [NeighbourhoodGenResult]
-setSwapRemoveHelper theIncumbentVar theVar theDomain generatorName = do
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    return
-        [( generatorName
-        , calculatedMaxNhSize
-         , \ neighbourhoodSize  ->
-                [essenceStmts|
-                    such that
-                        |&theIncumbentVar - &theVar| = &neighbourhoodSize
-                |]
-        )]
+mSetOrSetAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetAdd theIncumbentVar theVar theDomain
+    | (Just typeName, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain) = do
+        let generatorName = mconcat [typeName, "Add"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName
+            , calculatedMaxNhSize 
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                            &theIncumbentVar subsetEq &theVar,
+                            |&theVar| - |&theIncumbentVar| = &neighbourhoodSize
+                    |]
+            )]
+mSetOrSetAdd _ _ _ = return []
 
 
+mSetOrSetSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetSwap theIncumbentVar theVar theDomain
+     | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "Swap"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName
+            , calculatedMaxNhSize 
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                            |&theVar - &theIncumbentVar| = &neighbourhoodSize,
+                            |&theIncumbentVar| = |&theVar|
+                    |]
+            )]
+mSetOrSetSwap _ _ _ = return []
+
+
+mSetOrSetSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetSwapAdd theIncumbentVar theVar theDomain
+     | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "SwapAdd"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName
+            , calculatedMaxNhSize
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                            |&theVar - &theIncumbentVar| = &neighbourhoodSize
+                    |]
+            )]
+mSetOrSetSwapAdd _ _ _ = return []
+
+
+
+
+mSetOrSetSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetSwapRemove theIncumbentVar theVar theDomain
+     | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "SwapRemove"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName
+            , calculatedMaxNhSize
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                            |&theIncumbentVar - &theVar| = &neighbourhoodSize
+                    |]
+            )]
+mSetOrSetSwapRemove _ _ _ = return []
 
 
 
