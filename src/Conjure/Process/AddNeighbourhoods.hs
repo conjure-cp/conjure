@@ -83,6 +83,11 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      , setSwap
      , setSwapAdd
      , setSwapRemove
+     , mSetRemove
+     , mSetAdd
+     , mSetSwap
+     , mSetSwapAdd
+     , mSetSwapRemove
      , sequenceReverseSub
      , sequenceAnySwap
      , sequenceRelaxSub
@@ -181,8 +186,16 @@ setLiftMultiple _ _ _ = return []
 
 setRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setRemove _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
-setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
-    let generatorName = "setRemove"
+setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = setRemoveHelper theIncumbentVar theVar theDomain "setRemove"
+setRemove _ _ _ = return []
+
+mSetRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetRemove _ _ (DomainMSet _ (MSetAttr (SizeAttr_Size _) _) _) = return []
+mSetRemove theIncumbentVar theVar theDomain@(DomainMSet{}) = setRemoveHelper theIncumbentVar theVar theDomain "mSetRemove"
+mSetRemove _ _ _ = return []
+
+setRemoveHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
+setRemoveHelper theIncumbentVar theVar theDomain generatorName = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName, calculatedMaxNhSize
@@ -193,17 +206,21 @@ setRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
                         |&theIncumbentVar| - |&theVar| = &neighbourhoodSize
                  |]
         )]
-setRemove _ _ _ = return []
-
-
-
 
 
 
 setAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 setAdd _ _ (DomainSet _ (SetAttr (SizeAttr_Size _)) _) = return []
-setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
-    let generatorName = "setAdd"
+setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = setAddHelper theIncumbentVar theVar theDomain "setAdd"
+setAdd _ _ _ = return []
+
+mSetAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetAdd _ _ (DomainMSet _ (MSetAttr (SizeAttr_Size _) _) _) = return []
+mSetAdd theIncumbentVar theVar theDomain@(DomainMSet{}) = setAddHelper theIncumbentVar theVar theDomain "mSetAdd"
+mSetAdd _ _ _ = return []
+
+setAddHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
+setAddHelper theIncumbentVar theVar theDomain generatorName = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
@@ -215,12 +232,21 @@ setAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
                         |&theVar| - |&theIncumbentVar| = &neighbourhoodSize
                 |]
         )]
-setAdd _ _ _ = return []
+
+
 
 
 setSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = do
-    let generatorName = "setSwap"
+setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapHelper theIncumbentVar theVar theDomain "setSwap"
+setSwap _ _ _ = return []
+
+mSetSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetSwap theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapHelper theIncumbentVar theVar theDomain "mSetSwap"
+mSetSwap _ _ _ = return []
+
+
+setSwapHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name -> m [NeighbourhoodGenResult]
+setSwapHelper theIncumbentVar theVar theDomain generatorName = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
@@ -232,12 +258,20 @@ setSwap theIncumbentVar theVar theDomain@(DomainSet{}) = do
                         |&theIncumbentVar| = |&theVar|
                 |]
         )]
-setSwap _ _ _ = return []
+
 
 
 setSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
-    let generatorName = "setSwapAdd"
+setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapAddHelper theIncumbentVar theVar theDomain "setSwapAdd"
+setSwapAdd _ _ _ = return []
+
+mSetSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetSwapAdd theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapAddHelper theIncumbentVar theVar theDomain "mSetSwapAdd"
+mSetSwapAdd _ _ _ = return []
+
+
+setSwapAddHelper :: Monad m => Expression -> Expression -> Domain () Expression  -> Name -> m [NeighbourhoodGenResult]
+setSwapAddHelper theIncumbentVar theVar theDomain generatorName  = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
@@ -248,14 +282,21 @@ setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
                         |&theVar - &theIncumbentVar| = &neighbourhoodSize
                 |]
         )]
-setSwapAdd _ _ _ = return []
+
 
 
 
 
 setSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-setSwapRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
-    let generatorName = "setSwapRemove"
+setSwapRemove theIncumbentVar theVar theDomain@(DomainSet{}) = setSwapRemoveHelper theIncumbentVar theVar theDomain "setSwapRemove"
+setSwapRemove _ _ _ = return []
+
+mSetSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetSwapRemove theIncumbentVar theVar theDomain@(DomainMSet{}) = setSwapRemoveHelper theIncumbentVar theVar theDomain "mSetSwapRemove"
+mSetSwapRemove _ _ _ = return []
+
+setSwapRemoveHelper :: Monad m => Expression -> Expression -> Domain () Expression -> Name ->  m [NeighbourhoodGenResult]
+setSwapRemoveHelper theIncumbentVar theVar theDomain generatorName = do
     let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
     return
         [( generatorName
@@ -266,7 +307,8 @@ setSwapRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
                         |&theIncumbentVar - &theVar| = &neighbourhoodSize
                 |]
         )]
-setSwapRemove _ _ _ = return []
+
+
 
 
 
