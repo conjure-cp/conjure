@@ -21,7 +21,7 @@ conjure solve *.essence \
     --channelling=no \
     --copy-solutions=no \
     --number-of-solutions=all \
-    --responses 1,1 \
+    --responses 2,2 \
     -o Explicit
 
 grep letting Explicit/*.solution
