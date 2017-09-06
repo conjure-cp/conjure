@@ -1,0 +1,9 @@
+language Essence 1.4
+
+find a,b : mset (maxSize 3) of int(1..6)
+such that a = {2,3}
+such that frameUpdate( a, b
+                     , [x1]
+                     , [y1]
+                     , y1 = x1 + 1
+                     )

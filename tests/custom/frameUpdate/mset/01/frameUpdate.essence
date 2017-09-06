@@ -1,0 +1,16 @@
+language Essence 1.4
+
+find a,b : mset (size 4) of int(1..7)
+such that frameUpdate( a, b
+                     , [x1, x2]
+                     , [y1, y2]
+                     , and([ x1 = max(a)
+                           , y1 = max(b)
+                           , y1 = x1-1
+
+                           , x2 = min(a)
+                           , y2 = min(b)
+                           , y2=x2+1
+
+                           ])
+                     )
