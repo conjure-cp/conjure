@@ -51,3 +51,157 @@ rule_Freq = "mset-freq{ExplicitWithFlags}" `namedRule` theRule where
                             ])
                     |]
             )
+
+
+rule_frameUpdate :: Rule
+rule_frameUpdate = "mset-frameUpdate{ExplicitWithFlags}" `namedRule` theRule where
+    theRule p = do
+        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
+
+        TypeMSet{}                   <- typeOf old
+        MSet_ExplicitWithFlags       <- representationOf old
+        [oldFlags, oldValues]        <- downX1 old
+        (oldIndex:_)                 <- indexDomainsOf oldValues
+
+        TypeMSet{}                   <- typeOf new
+        MSet_ExplicitWithFlags       <- representationOf new
+        [newFlags, newValues]        <- downX1 new
+        (newIndex:_)                 <- indexDomainsOf newValues
+
+        return
+            ( "Vertical rule for mset-frameUpdate, ExplicitWithFlags representation"
+            , do
+
+                focusNames_a <- forM oldFocus $ \ a -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (a, auxName, aux, oldIndex)
+
+                focusNames_b <- forM newFocus $ \ b -> do
+                    (auxName, aux) <- auxiliaryVar
+                    return (b, auxName, aux, newIndex)
+
+                let consOut = flip transform cons $ \ h -> case h of
+                        Reference nm (Just FrameUpdateVar{}) ->
+                            case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
+                                 , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
+                                ([auxVar], _) -> [essence| &oldValues[&auxVar] |]
+                                (_, [auxVar]) -> [essence| &newValues[&auxVar] |]
+                                _             -> h
+                        _ -> h
+
+                (kPat, k) <- quantifiedVar
+                (contiguousCountsPat, contiguousCounts) <- auxiliaryVar
+                (offsetsPat, offsets) <- auxiliaryVar
+
+                -- build contiguousCounts
+                let
+                    contiguousCountsCons =
+                        let
+                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_a
+                                                           ]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+                            maxOldIndex_is_a = is_a maxOldIndex
+
+                            maxOldIndexMinusK_is_a = is_a [essence| &maxOldIndex - &k |]
+
+                        in
+                            [essence|
+                                (&contiguousCounts[&maxOldIndex] = toInt(&maxOldIndex_is_a)) /\
+                                forAll &kPat : int(1..&maxOldIndex-1) .
+                                    (&contiguousCounts[&maxOldIndex-&k] = 0 <-> ! &maxOldIndexMinusK_is_a) /\
+                                    (&maxOldIndexMinusK_is_a -> &contiguousCounts[&maxOldIndex-&k] = &contiguousCounts[&maxOldIndex-(&k-1)] +1)
+                            |]
+
+                -- build offsets matrix
+                let
+                    buildOffSetsCons = 
+                        let
+                            is_b t = make opOr  $ fromList [ [essence| &t = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+
+                            k_is_b = is_b k
+
+                            one_is_b = is_b [essence| 1 |]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+
+                        in
+                            [essence|
+                                (&offsets[1] = (0 - toInt(&one_is_b) + catchUndef(&contiguousCounts[1 - toInt(&one_is_b)], 0))) /\
+                                forAll &kPat : int(2..&maxOldIndex) .
+                                    &offsets[&k] = (&offsets[&k-1] - toInt(&k_is_b))
+                                                + catchUndef(&contiguousCounts[(&offsets[&k-1] - toInt(&k_is_b)) + &k], 0)
+                            |]
+
+                let nbOlds = Constant $ ConstantInt $ genericLength oldFocus
+                let nbNews = Constant $ ConstantInt $ genericLength newFocus
+
+                -- keep everything out of focus unchanged
+                let freezeFrameCons =
+                        let
+                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
+                                                           | (_, _, i, _) <- focusNames_b
+                                                           ]
+
+                            maxOldIndex = [essence| max(`&oldIndex`) |]
+
+                        in
+                            if length newFocus >= length oldFocus
+                                then
+                                    [essence|
+                                        forAll &kPat : int(1..&maxOldIndex) .
+                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
+                                    |]
+                                else
+                                    [essence|
+                                        forAll &kPat : int(1..&maxOldIndex - (&nbOlds - &nbNews)) .
+                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
+                                    |]
+
+                let impliedSize =
+                        [essence| |&new| = |&old| + (&nbNews - &nbOlds) |]
+
+                let out = WithLocals
+                        [essence| true |]
+                        (AuxiliaryVars $
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_a
+                            ] ++
+                            [ Declaration (FindOrGiven LocalFind auxName domain)
+                            | (_userName, auxName, _auxVar, domain) <- focusNames_b
+                            ] ++
+                            [ Declaration (FindOrGiven LocalFind contiguousCountsPat
+                                    (DomainMatrix oldIndex
+                                        (DomainInt [RangeBounded
+                                                        (Constant $ ConstantInt 0)
+                                                        (Constant $ ConstantInt $ genericLength focusNames_a)])))
+                            , Declaration (FindOrGiven LocalFind offsetsPat
+                                    (DomainMatrix oldIndex
+                                        (DomainInt [RangeBounded
+                                                        (Constant $ ConstantInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
+                                                        (Constant $ ConstantInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
+                            ] ++
+                            [ SuchThat
+                                [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
+                                , make opAnd     (fromList [ [essence| &oldFlags[&auxVar] > 0 |]
+                                                           | (_,_,auxVar,_) <- focusNames_a ])
+
+                                , make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_b])
+                                , make opAnd     (fromList [ [essence| &newFlags[&auxVar] > 0 |]
+                                                           | (_,_,auxVar,_) <- focusNames_b ])
+
+                                , contiguousCountsCons
+                                , buildOffSetsCons
+                                , freezeFrameCons
+
+                                , consOut
+                                , impliedSize
+                                ]
+                            ])
+
+                return out
+            )
+
