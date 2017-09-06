@@ -82,6 +82,7 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      , setAdd
      , setSwap
      , setSwapAdd
+     , setSwapRemove
      , sequenceReverseSub
      , sequenceAnySwap
      , sequenceRelaxSub
@@ -249,6 +250,23 @@ setSwapAdd theIncumbentVar theVar theDomain@(DomainSet{}) = do
         )]
 setSwapAdd _ _ _ = return []
 
+
+
+
+setSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+setSwapRemove theIncumbentVar theVar theDomain@(DomainSet{}) = do
+    let generatorName = "setSwapRemove"
+    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
+                [essenceStmts|
+                    such that
+                        |&theIncumbentVar - &theVar| = &neighbourhoodSize
+                |]
+        )]
+setSwapRemove _ _ _ = return []
 
 
 
@@ -784,6 +802,14 @@ sequenceCrossOverSub theDomain@(DomainSequence{}) = do
                     find &jPat : int(1..&calculatedMaxNhSize)
                     such that
                     &j - &i = &neighbourhoodSize
+                    , and([&theVar1(&k) = &theIncumbentVar1(&k) /\
+                    &theVar2(&k) = &theIncumbentVar2(&k)
+                    | &kPat : int(1..&calculatedMaxNhSize)
+                    , &k < &i
+                    , &k > &j
+                    , &k < |&theIncumbentVar1|
+                    , &k <= |&theIncumbentVar2|
+                    ])
                     , and([&theVar1(&k) = &theIncumbentVar2(&k) /\
                     &theVar2(&k) = &theIncumbentVar1(&k)
                     | &kPat : int(1..&calculatedMaxNhSize)
