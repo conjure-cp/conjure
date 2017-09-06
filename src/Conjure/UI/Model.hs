@@ -1245,6 +1245,7 @@ verticalRules =
     , Vertical.MSet.ExplicitWithFlags.rule_frameUpdate
 
     , Vertical.MSet.ExplicitWithRepetition.rule_Comprehension
+    , Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate
 
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Comprehension_Defined
