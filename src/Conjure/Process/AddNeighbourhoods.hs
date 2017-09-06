@@ -98,10 +98,10 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
 
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
-    [setMove
-    , setCrossOver
-    , setSplit
-    , setMerge
+    [mSetOrSetMove
+    , mSetOrSetCrossOver
+    , mSetOrSetSplit
+    , mSetOrSetMerge
     , sequenceRemoveLeftAddLeftOrRight
     , sequenceRemoveRightAddLeftOrRight
     , sequenceMergeLeftOrRight
@@ -294,100 +294,104 @@ mSetOrSetSwapRemove _ _ _ = return []
 
 
 
-setMove :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
-setMove theDomain@(DomainSet{}) = do
-    let generatorName = "setMove"
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    let numberIncumbents = 2
-    let numberPrimaries = 2
-    (kPat, k) <- quantifiedVar
+mSetOrSetMove :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+mSetOrSetMove theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "Move"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        let numberIncumbents = 2
+        let numberPrimaries = 2
+        (kPat, k) <- quantifiedVar
+    
+        return
+            [( generatorName, calculatedMaxNhSize
+            , numberIncumbents, numberPrimaries 
+             , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
+                ([theIncumbentVar1, theIncumbentVar2], [theVar1,theVar2]) ->
+                     [essenceStmts|
+                        such that
+                        &theVar1 subsetEq &theIncumbentVar1,
+                        |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
+                        &theIncumbentVar2 subsetEq &theVar2,
+                        |&theVar2| - |&theIncumbentVar2| = &neighbourhoodSize,
+                        and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                         |]
+                other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+            )]
+mSetOrSetMove _ = return []
 
-    return
-        [( generatorName, calculatedMaxNhSize
-        , numberIncumbents, numberPrimaries 
-         , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
-            ([theIncumbentVar1, theIncumbentVar2], [theVar1,theVar2]) ->
+
+
+mSetOrSetCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+mSetOrSetCrossOver theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "CrossOver"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        let numberIncumbents = 2
+        let numberPrimaries = 2
+        return
+            [( generatorName, calculatedMaxNhSize
+            , numberIncumbents, numberPrimaries 
+             , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
+                ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
                  [essenceStmts|
+                 such that
+                &theIncumbentVar1 union &theIncumbentVar2 = &theVar1 union &theVar2,
+                |&theVar1 - &theIncumbentVar1| = &neighbourhoodSize,
+                |&theVar2 - &theIncumbentVar2| = &neighbourhoodSize
+                         |]
+                other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+                        )]
+mSetOrSetCrossOver _ = return []
+
+
+mSetOrSetSplit :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+mSetOrSetSplit theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "Split"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        let numberIncumbents = 1
+        let numberPrimaries = 2
+        (kPat, k) <- quantifiedVar
+    
+        return
+            [( generatorName, calculatedMaxNhSize
+            , numberIncumbents, numberPrimaries 
+             , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of 
+                ([theIncumbentVar1], [theVar1,theVar2]) ->
+                     [essenceStmts|
                     such that
                     &theVar1 subsetEq &theIncumbentVar1,
                     |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
-                    &theIncumbentVar2 subsetEq &theVar2,
-                    |&theVar2| - |&theIncumbentVar2| = &neighbourhoodSize,
+                    |&theVar2| = &neighbourhoodSize,
                     and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                         |]
+                other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+            )]
+mSetOrSetSplit _ = return []
+
+
+mSetOrSetMerge :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+mSetOrSetMerge theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "Merge"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        let numberIncumbents = 2
+        let numberPrimaries = 1
+    
+        return
+            [( generatorName, calculatedMaxNhSize
+            , numberIncumbents, numberPrimaries 
+             , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
+                ([theIncumbentVar1, theIncumbentVar2], [theVar1]) ->
+                     [essenceStmts|
+                    such that
+                    |&theIncumbentVar1| <= &neighbourhoodSize,
+                    &theIncumbentVar1 union &theIncumbentVar2  = &theVar1
                      |]
-            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
-        )]
-setMove _ = return []
-
-
-
-setCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
-setCrossOver theDomain@(DomainSet{}) = do
-    let generatorName = "setCrossOver"
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    let numberIncumbents = 2
-    let numberPrimaries = 2
-    return
-        [( generatorName, calculatedMaxNhSize
-        , numberIncumbents, numberPrimaries 
-         , \ neighbourhoodSize incumbents primaries -> case (incumbents,primaries) of
-            ([theIncumbentVar1, theIncumbentVar2],[theVar1,theVar2]) ->
-             [essenceStmts|
-             such that
-            &theIncumbentVar1 union &theIncumbentVar2 = &theVar1 union &theVar2,
-            |&theVar1 - &theIncumbentVar1| = &neighbourhoodSize,
-            |&theVar2 - &theIncumbentVar2| = &neighbourhoodSize
-                     |]
-            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
-                    )]
-setCrossOver _ = return []
-
-
-setSplit :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
-setSplit theDomain@(DomainSet{}) = do
-    let generatorName = "setSplit"
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    let numberIncumbents = 1
-    let numberPrimaries = 2
-    (kPat, k) <- quantifiedVar
-
-    return
-        [( generatorName, calculatedMaxNhSize
-        , numberIncumbents, numberPrimaries 
-         , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of 
-            ([theIncumbentVar1], [theVar1,theVar2]) ->
-                 [essenceStmts|
-                such that
-                &theVar1 subsetEq &theIncumbentVar1,
-                |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
-                |&theVar2| = &neighbourhoodSize,
-                and([&k in &theVar2 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
-                     |]
-            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
-        )]
-setSplit _ = return []
-
-
-setMerge :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
-setMerge theDomain@(DomainSet{}) = do
-    let generatorName = "setMerge"
-    let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
-    let numberIncumbents = 2
-    let numberPrimaries = 1
-
-    return
-        [( generatorName, calculatedMaxNhSize
-        , numberIncumbents, numberPrimaries 
-         , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
-            ([theIncumbentVar1, theIncumbentVar2], [theVar1]) ->
-                 [essenceStmts|
-                such that
-                |&theIncumbentVar1| <= &neighbourhoodSize,
-                &theIncumbentVar1 union &theIncumbentVar2  = &theVar1
-                 |]
-            other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
-        )]
-setMerge _ = return []
+                other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+            )]
+mSetOrSetMerge _ = return []
 
 
 sequenceReverseSub :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
