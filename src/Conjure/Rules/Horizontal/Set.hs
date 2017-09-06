@@ -423,7 +423,7 @@ rule_frameUpdate = "set-frameUpdate" `namedRule` theRule where
         DomainSet _ _ newInnerDomain  <- domainOf new
 
         return
-            ( "Horizontal rule for frameUpdate"
+            ( "Horizontal rule for set-frameUpdate"
             , do
 
                 focusNames_a <- forM oldFocus $ \ a -> do

@@ -86,7 +86,7 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithFlags}" `namedRule` theRu
         (newIndex:_)                 <- indexDomainsOf newValues
 
         return
-            ( "Vertical rule for frameUpdate, ExplicitVarSizeWithFlags representation"
+            ( "Vertical rule for set-frameUpdate, ExplicitVarSizeWithFlags representation"
             , do
 
                 focusNames_a <- forM oldFocus $ \ a -> do

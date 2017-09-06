@@ -153,7 +153,7 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
         (newIndex:_) <- indexDomainsOf newValues
 
         return
-            ( "Vertical rule for frameUpdate, Explicit representation"
+            ( "Vertical rule for set-frameUpdate, Explicit representation"
             , do
 
                 focusNames_a <- forM oldFocus $ \ a -> do

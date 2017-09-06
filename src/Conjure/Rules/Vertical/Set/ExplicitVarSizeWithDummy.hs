@@ -89,7 +89,7 @@ rule_frameUpdate = "set-frameUpdate{ExplicitVarSizeWithDummy}" `namedRule` theRu
         let newDummy = [essence| max(`&newInner`) |]
 
         return
-            ( "Vertical rule for frameUpdate, ExplicitVarSizeWithDummy representation"
+            ( "Vertical rule for set-frameUpdate, ExplicitVarSizeWithDummy representation"
             , do
 
                 focusNames_a <- forM oldFocus $ \ a -> do

@@ -99,7 +99,7 @@ rule_frameUpdate = "set-frameUpdate{Occurrence}" `namedRule` theRule where
         (newIndex:_)   <- indexDomainsOf newValues
 
         return
-            ( "Vertical rule for frameUpdate, Occurrence representation"
+            ( "Vertical rule for set-frameUpdate, Occurrence representation"
             , do
 
                 focusNames_a <- forM oldFocus $ \ a -> do
