@@ -25,6 +25,11 @@ SNSNeighbourhood x_setLiftSingle_setSwapAdd :
      such that
          frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
                      and([|conjure_aux2 - conjure_aux1| = size; int(1)])))
+SNSNeighbourhood x_setLiftSingle_setSwapRemove :
+    (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     and([|conjure_aux1 - conjure_aux2| = size; int(1)])))
 SNSNeighbourhood x_setLiftMultiple_setMove :
     (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
      such that
@@ -82,5 +87,8 @@ SNSNeighbourhood x_setSwap :
 SNSNeighbourhood x_setSwapAdd :
     (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
      such that |x - incumbent(x)| = size)
+SNSNeighbourhood x_setSwapRemove :
+    (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
+     such that |incumbent(x) - x| = size)
 
 
