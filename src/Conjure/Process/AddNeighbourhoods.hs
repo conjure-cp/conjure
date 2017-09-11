@@ -78,6 +78,7 @@ allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expressi
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [mSetOrSetLiftSingle
     , functionLiftSingle
+    , functionLiftMultiple
     , mSetOrSetLiftMultiple 
      , mSetOrSetRemove
      , mSetOrSetAdd
@@ -95,7 +96,9 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
      , sequenceRemoveLeft
      , functionLessInjective
      , functionMoreInjective
-     , functionAnySwap]
+     , functionAnySwap
+     , functionMoreDefined
+     , functionLessDefined]
 
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
@@ -268,7 +271,7 @@ functionLiftMultiple theIncumbentVar theVar (DomainFunction _ _ fromDomain toDom
     
         ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods toDomain
         mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
-            (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
+            (incumbents, primaries, frame) <- makeFunctionFrameUpdate numberIncumbents numberPrimaries fromDomain theIncumbentVar theVar 
             return  ( mconcat [generatorName, "_", innerGeneratorName]
                 , innerNeighbourhoodSize
                 , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
@@ -1057,6 +1060,51 @@ functionMoreInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ P
         )]
 functionMoreInjective _ _ _ = return []
 
+
+
+functionMoreDefined :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionMoreDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+    let generatorName = "functionMoreDefined"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    (iPat, i) <- quantifiedVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
+                [essenceStmts|
+                such that
+                defined(&theIncumbentVar) subsetEq defined(&theVar),
+                |defined(&theVar)| - |defined(&theIncumbentVar)| = &neighbourhoodSize
+                , and([&theVar(&i) = &theIncumbentVar(&i)
+                | &iPat <- defined(&theIncumbentVar)])
+                |]
+        )]
+functionMoreDefined _ _ _ = return []
+
+
+
+functionLessDefined :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLessDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+    let generatorName = "functionLessDefined"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    (iPat, i) <- quantifiedVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize  ->
+                [essenceStmts|
+                such that
+                defined(&theVar) subsetEq defined(&theIncumbentVar),
+                |defined(&theIncumbentVar)| - |defined(&theVar)| = &neighbourhoodSize
+                , and([&theVar(&i) = &theIncumbentVar(&i)
+                | &iPat <- defined(&theVar)])
+                |]
+        )]
+functionLessDefined _ _ _ = return []
 
 
 functionAnySwap :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
