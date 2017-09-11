@@ -77,6 +77,7 @@ type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Express
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [mSetOrSetLiftSingle
+    , functionLiftSingle
     , mSetOrSetLiftMultiple 
      , mSetOrSetRemove
      , mSetOrSetAdd
@@ -140,6 +141,52 @@ makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
         buildFrameUpdate _ _ = bug "todo, extend the buildFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
 
 
+makeFunctionFrameUpdate :: NameGen m => Int -> Int -> Domain () Expression -> Expression -> Expression -> m ([Expression], [Expression], Expression -> [Statement])
+makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theIncumbentVar theVar = do
+    incumbents <- replicateM numberIncumbents auxiliaryVar
+    primaries <- replicateM numberPrimaries auxiliaryVar
+    (kPat,k) <- quantifiedVar
+    let myWrap var val = [essence| &var(&val) |]
+    return     (map (\ (_,v) -> myWrap theIncumbentVar v) incumbents, map (\ (_,v) -> myWrap theVar v) primaries, buildFunctionFrameUpdate incumbents primaries kPat k) where
+        --todo written by saad
+        --below local function should build a function frame update with any number of arguments lifted.
+         --not sure how to do this in haskel so special cased 1 and 2 lifts
+        buildFunctionFrameUpdate :: [(Name,Expression)] -> [(Name,Expression)] -> AbstractPattern -> Expression -> (Expression -> [Statement])
+        buildFunctionFrameUpdate [(iPat1, i1),(iPat2,i2)] [(jPat1,j1),(jPat2,j2)] kPat k = \c -> [essenceStmts| 
+            find &iPat1, &iPat2, &jPat1, &jPat2 : &functionFromDomain
+            such that
+            &i1 != &i2, &j1 != &j2,
+            &j1 = &i1 \/ &j1 = &i2,
+            &j2 = &i1 \/ &j2 = &i2,
+            {&i1,&i2,&j1,&j2} subsetEq defined(&theIncumbentVar),
+            and([&theIncumbentVar(&k) = &theVar(&k) 
+            | &kPat <- &theIncumbentVar,
+            !(&k in {&i1,&i2})]),
+            &c|]
+        buildFunctionFrameUpdate [(iPat1,i1)] [(jPat1,j1)] kPat k = \c -> [essenceStmts|
+            find &iPat1,&jPat1 : &functionFromDomain
+            such that
+            &j1 = &i1,
+            &i1 in defined(&theIncumbentVar),
+            and([&theIncumbentVar(&k) = &theVar(&k) 
+            | &kPat <- &theIncumbentVar,
+            &k != &i1]),
+            &c|]
+        buildFunctionFrameUpdate [(iPat1,i1),(iPat2,i2)] [(jPat1,j1)] kPat k = \c -> [essenceStmts| 
+            find &iPat1, &iPat2, &jPat1 : &functionFromDomain
+            such that
+            &i1 != &i2,
+            &j1 = &i1 \/ &j1 = &i2,
+            {&i1,&i2,&j1} subsetEq defined(&theIncumbentVar),
+            and([&theIncumbentVar(&k) = &theVar(&k) 
+            | &kPat <- &theIncumbentVar,
+            !(&k in {&i1,&i2})]),
+            &c|]
+
+        -- buildFunctionFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
+        buildFunctionFrameUpdate _ _ _ _ = bug "todo, extend the buildFunctionFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
+
+
 mSetOrSetName :: Domain () Expression -> Maybe Name
 mSetOrSetName (DomainSet{}) = Just "set"
 mSetOrSetName (DomainMSet{}) = Just "mSet"
@@ -176,6 +223,27 @@ mSetOrSetLiftSingle theIncumbentVar theVar theDomain
              | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
              ]
 mSetOrSetLiftSingle _ _ _ = return []
+
+
+functionLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ fromDomain toDomain) = do
+        let generatorName = "functionLiftSingle"
+        ([incumbent_i], [i], frameUpdate) <- makeFunctionFrameUpdate 1 1 fromDomain theIncumbentVar theVar
+        let getCs (SuchThat cs) = cs 
+        let
+            liftCons (SuchThat cs) = SuchThat [make opAnd $ fromList $ concat $ map getCs $  frameUpdate $ make opAnd $ fromList cs]
+            liftCons st            = st
+
+        ns <- allNeighbourhoods incumbent_i i toDomain
+        return [ ( mconcat [generatorName, "_", innerGeneratorName]
+            , innerNeighbourhoodSize
+            , \ neighbourhoodSize ->
+              let statements = rule neighbourhoodSize 
+              in  map liftCons statements
+             )
+             | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+             ]
+functionLiftSingle _ _ _ = return []
 
 
 mSetOrSetLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
