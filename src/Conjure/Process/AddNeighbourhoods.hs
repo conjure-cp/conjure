@@ -158,9 +158,10 @@ makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theI
             &i1 != &i2, &j1 != &j2,
             &j1 = &i1 \/ &j1 = &i2,
             &j2 = &i1 \/ &j2 = &i2,
-            {&i1,&i2,&j1,&j2} subsetEq defined(&theIncumbentVar),
+            {&i1,&i2} subsetEq defined(&theIncumbentVar),
+            defined(&theIncumbentVar) = defined(&theVar),
             and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- &theIncumbentVar,
+            | &kPat <- defined(&theIncumbentVar),
             !(&k in {&i1,&i2})]),
             &c|]
         buildFunctionFrameUpdate [(iPat1,i1)] [(jPat1,j1)] kPat k = \c -> [essenceStmts|
@@ -168,8 +169,9 @@ makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theI
             such that
             &j1 = &i1,
             &i1 in defined(&theIncumbentVar),
+            defined(&theIncumbentVar) = defined(&theVar),
             and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- &theIncumbentVar,
+            | &kPat <- defined(&theIncumbentVar),
             &k != &i1]),
             &c|]
         buildFunctionFrameUpdate [(iPat1,i1),(iPat2,i2)] [(jPat1,j1)] kPat k = \c -> [essenceStmts| 
@@ -177,13 +179,24 @@ makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theI
             such that
             &i1 != &i2,
             &j1 = &i1 \/ &j1 = &i2,
-            {&i1,&i2,&j1} subsetEq defined(&theIncumbentVar),
+            {&i1,&i2} subsetEq defined(&theIncumbentVar),
+            |defined(&theIncumbentVar)| = |defined(&theVar)| + 1,
             and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- &theIncumbentVar,
+            | &kPat <- defined(&theIncumbentVar),
             !(&k in {&i1,&i2})]),
             &c|]
-
-        -- buildFunctionFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
+        buildFunctionFrameUpdate [(iPat1,i1)] [(jPat1,j1),(jPat2,j2)] kPat k = \c -> [essenceStmts|
+            find &iPat1,&jPat1,&jPat2 : &functionFromDomain
+            such that
+            &j1 != &j2,
+            &i1 = &j1 \/ &i1 = &j2,
+            &i1 in defined(&theIncumbentVar),
+            {&j1,&j2} subsetEq defined(&theVar),
+            |defined(&theIncumbentVar)| = |defined(&theVar)| - 1,
+            and([&theIncumbentVar(&k) = &theVar(&k) 
+            | &kPat <- defined(&theIncumbentVar),
+            &k != &i1]),
+            &c|]
         buildFunctionFrameUpdate _ _ _ _ = bug "todo, extend the buildFunctionFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
 
 
@@ -229,21 +242,40 @@ functionLiftSingle :: NameGen m => Expression -> Expression -> Domain () Express
 functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ fromDomain toDomain) = do
         let generatorName = "functionLiftSingle"
         ([incumbent_i], [i], frameUpdate) <- makeFunctionFrameUpdate 1 1 fromDomain theIncumbentVar theVar
-        let getCs (SuchThat cs) = cs 
         let
-            liftCons (SuchThat cs) = SuchThat [make opAnd $ fromList $ concat $ map getCs $  frameUpdate $ make opAnd $ fromList cs]
-            liftCons st            = st
+            liftCons (SuchThat cs) = frameUpdate $ make opAnd $ fromList cs
+            liftCons st            = [st]
 
         ns <- allNeighbourhoods incumbent_i i toDomain
         return [ ( mconcat [generatorName, "_", innerGeneratorName]
             , innerNeighbourhoodSize
             , \ neighbourhoodSize ->
               let statements = rule neighbourhoodSize 
-              in  map liftCons statements
+              in concat $ map liftCons statements
              )
              | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
              ]
 functionLiftSingle _ _ _ = return []
+
+
+functionLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLiftMultiple theIncumbentVar theVar (DomainFunction _ _ fromDomain toDomain) = do
+        let generatorName = "functionLiftMultiple"
+        let
+            liftCons frame (SuchThat cs) =  let conjCs  =  make opAnd $ fromList cs in
+                frame conjCs
+            liftCons _ st = [st]
+    
+        ns :: [MultiContainerNeighbourhoodGenResult] <- multiContainerNeighbourhoods toDomain
+        mapM (\ (innerGeneratorName, innerNeighbourhoodSize, numberIncumbents, numberPrimaries, rule)  -> do
+            (incumbents, primaries, frame) <- makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar
+            return  ( mconcat [generatorName, "_", innerGeneratorName]
+                , innerNeighbourhoodSize
+                , \ neighbourhoodSize -> let statements = rule neighbourhoodSize incumbents primaries in
+                    concat $ map (liftCons frame) statements)) ns
+
+functionLiftMultiple _ _ _ = return []
+
 
 
 mSetOrSetLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
