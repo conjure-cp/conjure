@@ -1,0 +1,49 @@
+Generating models for partition_together_apart.essence
+Generated models: model_1_1.eprime
+Saved under: conjure-output
+Savile Row: model_1_1.eprime
+Validating solution: conjure-output/model_1_1-solution000001.solution
+Copying solution to: partition_together_apart.solution
+File: conjure-output/model_1_1.eprime
+language ESSENCE' 1.0
+
+find a: bool
+find b_Occurrence: matrix indexed by [int(1..6)] of bool
+find c_Occurrence: matrix indexed by [int(1..6)] of bool
+find d: bool
+find e: bool
+find e1: bool
+find e2: bool
+such that
+    a,
+    and([b_Occurrence[q3] -> or([1 = q3, 2 = q3, 3 = q3, 4 = q3, 5 = q3, 6 = q3; int(1..6)]) | q3 : int(1..6)]),
+    b_Occurrence[1],
+    b_Occurrence[2],
+    b_Occurrence[3],
+    b_Occurrence[4],
+    b_Occurrence[5],
+    b_Occurrence[6],
+    and([c_Occurrence[q8] -> or([4 = q8, 5 = q8, 6 = q8; int(1..3)]) | q8 : int(1..6)]),
+    c_Occurrence[4],
+    c_Occurrence[5],
+    c_Occurrence[6],
+    d,
+    e = false,
+    e1 = false,
+    e2 = false
+
+
+--------------------
+
+File: conjure-output/model_1_1-solution000001.solution
+language Essence 1.3
+
+letting a be true
+letting b be {1, 2, 3, 4, 5, 6}
+letting c be {4, 5, 6}
+letting d be true
+letting e be false
+letting e1 be false
+letting e2 be false
+--------------------
+
