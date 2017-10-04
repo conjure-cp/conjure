@@ -226,10 +226,11 @@ mSetOrSetLiftSingle _ _ _ = return []
 
 
 functionLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ fromDomain toDomain) = do
+functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ frDomain toDomain) = do
         let generatorName = "functionLiftSingle"
-        ([incumbent_i], [i], frameUpdate) <- makeFunctionFrameUpdate 1 1 fromDomain theIncumbentVar theVar
+        ([incumbent_i], [i], frameUpdate) <- makeFunctionFrameUpdate 1 1 frDomain theIncumbentVar theVar
         let getCs (SuchThat cs) = cs 
+            getCs _ = []
         let
             liftCons (SuchThat cs) = SuchThat [make opAnd $ fromList $ concat $ map getCs $  frameUpdate $ make opAnd $ fromList cs]
             liftCons st            = st
