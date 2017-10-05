@@ -23,9 +23,6 @@ addNeighbourhoods config inpModel = do
         concatForM (mStatements inpModel) $ \case
             Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm (Reference nm Nothing) dom
             _ -> return []
-    let outModel = inpModel { mStatements = mStatements inpModel
-                                         ++ neighbourhoods
-                            }
     -- TODO: this is here only temporarily, remove!
     traceM $ unlines [ "Generated the following SNS Neighbourhoods (" ++ show (length neighbourhoods) ++ " of them in total)"
                      , case Config.filterNeighbourhoods config of
@@ -35,6 +32,11 @@ addNeighbourhoods config inpModel = do
                                                , mInfo = def
                                                })
                      ]
+    let outModel = inpModel { mStatements = mStatements inpModel
+                                         ++ [ n | (i, n) <- zip [1..] neighbourhoods
+                                                , i `elem` Config.filterNeighbourhoods config
+                                                ]
+                            }
     (resolveNames >=> typeCheckModel) outModel
 
 
