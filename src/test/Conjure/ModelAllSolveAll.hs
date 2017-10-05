@@ -498,6 +498,7 @@ modelAll dir model = ignoreLogs $ runNameGen model $ flip outputModels model Con
     , channelling                = True
     , representationLevels       = True
     , generateNeighbourhoods     = False
+    , filterNeighbourhoods       = []
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True

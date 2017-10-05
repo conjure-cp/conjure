@@ -18,7 +18,7 @@ addNeighbourhoods
        )
     => Config.Config -> Model -> m Model
 addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) = return inpModel
-addNeighbourhoods _ inpModel = do
+addNeighbourhoods config inpModel = do
     neighbourhoods <-
         concatForM (mStatements inpModel) $ \case
             Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm (Reference nm Nothing) dom
@@ -27,7 +27,10 @@ addNeighbourhoods _ inpModel = do
                                          ++ neighbourhoods
                             }
     -- TODO: this is here only temporarily, remove!
-    traceM $ unlines [ "Added the following SNS Neighbourhoods (" ++ show (length neighbourhoods) ++ " of them in total)"
+    traceM $ unlines [ "Generated the following SNS Neighbourhoods (" ++ show (length neighbourhoods) ++ " of them in total)"
+                     , case Config.filterNeighbourhoods config of
+                         [] -> "Adding all of them to the model, use --filter-neighbourhoods to select a subset."
+                         xs -> "Adding only these due to --filter-neighbourhoods " ++ show xs
                      , show $ pretty (inpModel { mStatements = neighbourhoods
                                                , mInfo = def
                                                })

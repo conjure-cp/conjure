@@ -97,6 +97,7 @@ data Config = Config
     , channelling                :: Bool
     , representationLevels       :: Bool
     , generateNeighbourhoods     :: Bool
+    , filterNeighbourhoods       :: [Int]
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -126,6 +127,7 @@ instance Default Config where
         , channelling                = True
         , representationLevels       = True
         , generateNeighbourhoods     = False
+        , filterNeighbourhoods       = []
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False

@@ -43,6 +43,7 @@ data UI
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , generateNeighbourhoods     :: Bool                -- (def: False)
+        , filterNeighbourhoods       :: [Int]               -- (def: [], meaning all)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -110,6 +111,7 @@ data UI
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
         , generateNeighbourhoods     :: Bool                -- (def: False)
+        , filterNeighbourhoods       :: [Int]               -- (def: [], meaning all)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -359,10 +361,18 @@ ui = modes
         , generateNeighbourhoods
             = False
             &= name "generate-neighbourhoods"
-            &= groupname "Model generation"
+            &= groupname "SNS"
             &= explicit
             &= help "Whether to produce SNS-style neighbourhood definitions or not.\n\
                     \Can be true or false. (false by default)."
+        , filterNeighbourhoods
+            = []
+            &= name "filter-neighbourhoods"
+            &= groupname "SNS"
+            &= explicit
+            &= help "Which SNS-style neighbourhoods definitions to produce.\n\
+                    \Neighbourhoods will be numbered from 1..n, and this argument is a list of integers.\
+                    \Conjure will generate all neighbourhoods by default."
         , seed
             = Nothing
             &= name "seed"
@@ -757,10 +767,18 @@ ui = modes
         , generateNeighbourhoods
             = False
             &= name "generate-neighbourhoods"
-            &= groupname "Model generation"
+            &= groupname "SNS"
             &= explicit
             &= help "Whether to produce SNS-style neighbourhood definitions or not.\n\
                     \Can be true or false. (false by default)."
+        , filterNeighbourhoods
+            = []
+            &= name "filter-neighbourhoods"
+            &= groupname "SNS"
+            &= explicit
+            &= help "Which SNS-style neighbourhoods definitions to produce.\n\
+                    \Neighbourhoods will be numbered from 1..n, and this argument is a list of integers.\
+                    \Conjure will generate all neighbourhoods by default."
         , seed
             = Nothing
             &= name "seed"

@@ -115,6 +115,7 @@ mainWithArgs Modelling{..} = do
             , Config.channelling                = channelling
             , Config.representationLevels       = representationLevels
             , Config.generateNeighbourhoods     = generateNeighbourhoods
+            , Config.filterNeighbourhoods       = filterNeighbourhoods
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames
