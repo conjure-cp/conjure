@@ -42,7 +42,7 @@ data UI
         , representationsCuts        :: Maybe String        -- (def: representations)
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
-        , generateNeighbourhoods          :: Bool
+        , generateNeighbourhoods     :: Bool                -- (def: False)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -109,7 +109,7 @@ data UI
         , representationsCuts        :: Maybe String
         , channelling                :: Bool
         , representationLevels       :: Bool                -- (def: True)
-        , generateNeighbourhoods          :: Bool
+        , generateNeighbourhoods     :: Bool                -- (def: False)
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
