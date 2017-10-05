@@ -108,16 +108,24 @@
                                               the number of generated models.
                                               Can be true or false. (true by
                                               default)
-      --generate-neighbourhoods               Whether to produce SNS-style
-                                              neighbourhood definitions or not.
-                                              Can be true or false. (false by
-                                              default).
       --seed=INT                              Random number generator seed.
       --limit-models=INT                      Maximum number of models to
                                               generate.
       --choices=FILE                          Choices to use for -al, either
                                               an eprime file (created by
                                               --log-choices), or a json file.
+ SNS:
+      --generate-neighbourhoods               Whether to produce SNS-style
+                                              neighbourhood definitions or not.
+                                              Can be true or false. (false by
+                                              default).
+      --filter-neighbourhoods=INT             Which SNS-style neighbourhoods
+                                              definitions to produce.
+                                              Neighbourhoods will be numbered
+                                              from 1..n, and this argument is a
+                                              list of integers.Conjure will
+                                              generate all neighbourhoods by
+                                              default.
  General:
       --limit-time=INT                        Limit in seconds of real time.
  
@@ -300,10 +308,6 @@
                                               the number of generated models.
                                               Can be true or false. (true by
                                               default)
-      --generate-neighbourhoods               Whether to produce SNS-style
-                                              neighbourhood definitions or not.
-                                              Can be true or false. (false by
-                                              default).
       --seed=INT                              Random number generator seed.
       --limit-models=INT                      Maximum number of models to
                                               generate.
@@ -312,6 +316,18 @@
                                               Conjure skips the modelling phase
                                               and uses existing models for
                                               solving.
+ SNS:
+      --generate-neighbourhoods               Whether to produce SNS-style
+                                              neighbourhood definitions or not.
+                                              Can be true or false. (false by
+                                              default).
+      --filter-neighbourhoods=INT             Which SNS-style neighbourhoods
+                                              definitions to produce.
+                                              Neighbourhoods will be numbered
+                                              from 1..n, and this argument is a
+                                              list of integers.Conjure will
+                                              generate all neighbourhoods by
+                                              default.
  Options for other tools:
       --savilerow-options=ITEM                Options passed to Savile Row.
       --solver-options=ITEM                   Options passed to the backend
