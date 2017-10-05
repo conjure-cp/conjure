@@ -33,9 +33,14 @@ addNeighbourhoods config inpModel = do
                                                })
                      ]
     let outModel = inpModel { mStatements = mStatements inpModel
+                                         -- filter and add those neighbourhoods that we are filtering
                                          ++ [ n | (i, n) <- zip [1..] neighbourhoods
                                                 , i `elem` Config.filterNeighbourhoods config
                                                 ]
+                                         -- add all neighbourhoods if we are not filtering
+                                         ++ if null (Config.filterNeighbourhoods config)
+                                             then neighbourhoods
+                                             else []
                             }
     (resolveNames >=> typeCheckModel) outModel
 
