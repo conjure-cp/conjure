@@ -27,7 +27,7 @@ addNeighbourhoods _ inpModel = do
                                          ++ neighbourhoods
                             }
     -- TODO: this is here only temporarily, remove!
-    traceM $ unlines [ "Added the following SNS Neighbourhoods"
+    traceM $ unlines [ "Added the following SNS Neighbourhoods (" ++ show (length neighbourhoods) ++ " of them in total)"
                      , show $ pretty (inpModel { mStatements = neighbourhoods
                                                , mInfo = def
                                                })
