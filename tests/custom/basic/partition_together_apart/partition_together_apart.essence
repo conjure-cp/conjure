@@ -3,6 +3,6 @@ find a : bool such that a = apart({3,5},P) /\ !together({1,2,5},P) $ true
 find b : set of int(1..6) such that b = participants(P) $ {1,2,3,4,5,6}
 find c : set of int(1..6) such that c = party(4,P) $ {4,5,6}
 find d : bool such that d = ({{1,2},{3},{4,5,6}} = parts(P)) $ true
-find e : bool such that e = (together({1,7},P) \/ apart({1,7},P)) $ true
-find e1 : bool such that e1 = together({1,7},P) $ true
-find e2 : bool such that e2 = apart({1,7},P) $ true
+find e : bool such that e = (together({1,7},P) \/ apart({1,7},P)) $ false
+find e1 : bool such that e1 = together({1,7},P) $ false
+find e2 : bool such that e2 = apart({1,7},P) $ false
