@@ -10,14 +10,14 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..4), int(1..4)] of int(1..5)
 such that
-    or([q133 <= x_PartitionOccurrence_NumParts /\
-        (or([x_PartitionOccurrence_WhichPart[q138] = q133 /\ q138 = 1 | q138 : int(1..4)]) /\
-         or([x_PartitionOccurrence_WhichPart[q140] = q133 /\ q140 = 3 | q140 : int(1..4)]))
-            | q133 : int(1..4)]),
-    !or([q143 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-         (x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q143, 1] /\
-          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q143, 2])
-             | q143 : int(1..4)]),
+    or([q135 <= x_PartitionOccurrence_NumParts /\
+        (or([x_PartitionOccurrence_WhichPart[q140] = q135 /\ q140 = 1 | q140 : int(1..4)]) /\
+         or([x_PartitionOccurrence_WhichPart[q142] = q135 /\ q142 = 3 | q142 : int(1..4)]))
+            | q135 : int(1..4)]),
+    and([q147 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         !(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q147, 1] /\
+           x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q147, 2])
+             | q147 : int(1..4)]),
     and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,

@@ -7,14 +7,14 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 such that
-    or([q56 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-        (x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q56, 1] /\
-         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q56, 3])
-            | q56 : int(1..4)]),
-    !or([q61 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-         (x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q61, 1] /\
-          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q61, 2])
-             | q61 : int(1..4)]),
+    or([q58 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+        (x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q58, 1] /\
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q58, 3])
+            | q58 : int(1..4)]),
+    and([q65 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         !(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q65, 1] /\
+           x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q65, 2])
+             | q65 : int(1..4)]),
     alldifferent_except([toInt(q47 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
                                x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q47, q2])
                          * catchUndef(q2, 0)

@@ -12,19 +12,19 @@ find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..4), int(1..4)] of bool
 such that
-    or([q125 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-        (or([q129 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q125] /\
-             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q125, q129] = 1
-                 | q129 : int(1..4)])
+    or([q127 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+        (or([q131 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127] /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q131] = 1
+                 | q131 : int(1..4)])
          /\
-         or([q131 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q125] /\
-             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q125, q131] = 3
-                 | q131 : int(1..4)]))
-            | q125 : int(1..4)]),
-    !or([q133 <= x_PartitionOccurrence_NumParts /\
-         (or([x_PartitionOccurrence_WhichPart[q138] = q133 /\ q138 = 1 | q138 : int(1..4)]) /\
-          or([x_PartitionOccurrence_WhichPart[q140] = q133 /\ q140 = 2 | q140 : int(1..4)]))
-             | q133 : int(1..4)]),
+         or([q133 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127] /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q133] = 3
+                 | q133 : int(1..4)]))
+            | q127 : int(1..4)]),
+    and([q137 <= x_PartitionOccurrence_NumParts ->
+         !(or([x_PartitionOccurrence_WhichPart[q142] = q137 /\ q142 = 1 | q142 : int(1..4)]) /\
+           or([x_PartitionOccurrence_WhichPart[q144] = q137 /\ q144 = 2 | q144 : int(1..4)]))
+             | q137 : int(1..4)]),
     alldifferent_except([toInt(q90 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                                q91 <=
                                x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker
