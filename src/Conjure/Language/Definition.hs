@@ -196,6 +196,7 @@ instance Pretty ModelInfo where
             commentLines :: Doc -> Doc
             commentLines
                 = vcat                          -- Doc
+                . (++ [""])                     -- add an empty line to the end
                 . map ("$ " `mappend`)          -- comment each line
                 . ("Conjure's" :)               -- add the heading
                 . map pretty                    -- [Doc]

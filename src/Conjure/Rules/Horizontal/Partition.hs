@@ -95,11 +95,19 @@ rule_Together :: Rule
 rule_Together = "partition-together" `namedRule` theRule where
     theRule [essence| together(&x,&p) |] = do
         TypePartition{} <- typeOf p
+        DomainPartition _ _ inner <- domainOf p
         return
             ( "Horizontal rule for partition-together"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| exists &iPat in parts(&p) . &x subsetEq &i |]
+                 (jPat, j) <- quantifiedVar
+                 (kPat, k) <- quantifiedVar
+                 return [essence|
+                             (exists &iPat in parts(&p) . &x subsetEq &i)
+                             /\
+                             $ the items in x appear somewhere in the partition
+                             (forAll &jPat in &x . exists &kPat : &inner . &j = &k)
+                        |]
             )
     theRule _ = na "rule_Together"
 
@@ -113,9 +121,19 @@ rule_Apart = "partition-apart" `namedRule` theRule where
             WithLocals{} -> na "rule_Apart"
             _ -> return ()
         TypePartition{} <- typeOf p
+        DomainPartition _ _ inner <- domainOf p
         return
             ( "Horizontal rule for partition-apart"
-            , return [essence| !together(&x,&p) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                return [essence|
+                             (forAll &iPat in parts(&p) . !(&x subsetEq &i))
+                                    /\
+                             $ the items in x appear somewhere in the partition
+                             (forAll &jPat in &x . exists &kPat : &inner . &j = &k)
+                       |]
             )
     theRule _ = na "rule_Apart"
 
@@ -128,6 +146,7 @@ rule_Party = "partition-party" `namedRule` theRule where
             _ -> na "rule_Comprehension_Literal"
         (mkModifier, expr2) <- match opModifier expr
         (wanted, p)         <- match opParty expr2
+        TypePartition{} <- typeOf p
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on a particular part of a partition"
@@ -153,6 +172,7 @@ rule_Participants = "partition-participants" `namedRule` theRule where
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Literal"
         p <- match opParticipants expr
+        TypePartition{} <- typeOf p
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on participants of a partition"
