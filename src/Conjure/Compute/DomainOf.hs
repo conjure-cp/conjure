@@ -41,12 +41,9 @@ defIndexDomainsOf x = do
 
 instance DomainOf ReferenceTo where
     domainOf (Alias x) = domainOf x
-    -- domainOf (InComprehension (GenDomainNoRepr Single{} dom)) = return dom
-    -- domainOf (InComprehension (GenDomainHasRepr _ dom)) = return (forgetRepr dom)
-    -- domainOf (InComprehension (GenInExpr Single{} x)) = do
-    --     domX <- domainOf x
-    --     innX <- innerDomainOf domX
-    --     return innX
+    domainOf (InComprehension (GenDomainNoRepr Single{} dom)) = return dom
+    domainOf (InComprehension (GenDomainHasRepr _ dom)) = return (forgetRepr dom)
+    domainOf (InComprehension (GenInExpr Single{} x)) = domainOf x >>= innerDomainOf
     domainOf x@InComprehension{} = fail $ vcat [ "domainOf-ReferenceTo-InComprehension", pretty x, pretty (show x) ]
     domainOf (DeclNoRepr  _ _ dom _) = return dom
     domainOf (DeclHasRepr _ _ dom  ) = return (forgetRepr dom)

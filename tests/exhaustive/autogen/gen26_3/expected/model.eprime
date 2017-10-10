@@ -22,7 +22,7 @@ such that
              | q2_1 : matrix indexed by [int(2..4, 0)] of bool, q2_2 : matrix indexed by [int(2..4, 0)] of bool,
                q2_3 : matrix indexed by [int(2..4, 0)] of bool]),
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] =
-    var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1],
+    sum([toInt(q29 <= var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]) | q29 : int(1..let2)]),
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] >= 1,
     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] <= let2,
     4096 = var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]
