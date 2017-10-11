@@ -978,12 +978,12 @@ Examples:
    find b : set of int(1..6) such that b = participants(P) $ {1,2,3,4,5,6}
    find c : set of int(1..6) such that c = party(4,P) $ {4,5,6}
    find d : bool such that d = ({{1,2},{3},{4,5,6}} = parts(P)) $ true
-   find e : bool such that e = (together({1,7},P) \/ apart({1,7},P)) $ true
+   find e : bool such that e = (together({1,7},P) \/ apart({1,7},P)) $ false
 
-Note that the original Essence definition requires that ``apart({1,7},P)`` and ``together({1,7},P)`` should both be false.
-In contrast, currently the relationship
+These semantics follow the original Essence definition.
+In contrast, in older versions of Conjure the relationship
   ``apart(L,P) = !together(L,P)``
-holds in Conjure for all lists ``L`` and partitions ``P``.
+held for all lists ``L`` and partitions ``P``.
 
 
 List combining operators
