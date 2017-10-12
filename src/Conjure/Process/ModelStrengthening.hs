@@ -17,7 +17,6 @@ module Conjure.Process.ModelStrengthening
 import Data.List ( find, union )
 import Data.Map.Strict ( Map )
 import qualified Data.Map.Strict as M ( (!?), empty, union )
-import Data.Maybe ( mapMaybe )
 
 import Conjure.Prelude
 import Conjure.Language
