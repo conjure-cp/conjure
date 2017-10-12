@@ -1,0 +1,27 @@
+language ESSENCE' 1.0
+
+find A: matrix indexed by [int(1..2), int(1..2)] of int(0..2)
+find B: matrix indexed by [int(1..2), int(1..2)] of int(0..2)
+find a: bool
+find b: bool
+find c: bool
+find d: bool
+find e: bool
+find f: bool
+such that
+    and([A[1, q5] = [0, 1; int(1..2)][q5] | q5 : int(1..2)]),
+    and([A[2, q7] = [1, 2; int(1..2)][q7] | q7 : int(1..2)]),
+    and([and([B[q9, q11] = [[0, 1; int(1..2)], [1, 2; int(1..2)]; int(1..2)][q9, q11] | q11 : int(1..2)])
+             | q9 : int(1..2)]),
+    a = and([and([A[q13, q15] = B[q13, q15] | q15 : int(1..2)]) | q13 : int(1..2)]),
+    b = (and([A[1, q17] = B[1, q17] | q17 : int(1..2)]) /\ and([A[2, q19] = B[2, q19] | q19 : int(1..2)])),
+    c =
+    and([and([[A[1, ..], A[2, ..]; int(1..2)][q21, q23] = [B[1, ..], B[2, ..]; int(1..2)][q21, q23] | q23 : int(1..2)])
+             | q21 : int(1..2)]),
+    d,
+    e = and([A[1, q27] = B[1, q27] | q27 : int(1..2)]),
+    f =
+    and([and([[A[1, ..], [1, 2; int(1..2)]; int(1..2)][q29, q31] = [B[1, ..], [1, 2; int(1..2)]; int(1..2)][q29, q31]
+                  | q31 : int(1..2)])
+             | q29 : int(1..2)])
+
