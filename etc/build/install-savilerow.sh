@@ -13,9 +13,9 @@ rm -rf savilerow-repo savilerow*.tgz
 # mv savilerow-1.6.5-linux savilerow-repo
 
 ######## we are using an unreleased version...
-wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/savilerow-2017-07-18--1bfd9d6728ce-linux.tgz
-tar zxvf savilerow-2017-07-18--1bfd9d6728ce-linux.tgz
-mv savilerow-2017-07-18--1bfd9d6728ce-linux savilerow-repo
+wget --no-check-certificate -c https://ozgur.host.cs.st-andrews.ac.uk/SavileRows/savilerow-2017-09-22--55d8d4b29032-linux.tgz
+tar zxvf savilerow-2017-09-22--55d8d4b29032-linux.tgz
+mv savilerow-2017-09-22--55d8d4b29032-linux savilerow-repo
 
 (cd savilerow-repo ; ./compile.sh)
 cp savilerow-repo/savilerow.jar ${BIN_DIR}/savilerow.jar
