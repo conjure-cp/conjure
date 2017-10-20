@@ -1928,16 +1928,25 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
             ( "Creating auxiliary variable for a" <+> nameQ
             , do
                 (auxName, aux) <- auxiliaryVar
-                return $ WithLocals aux
+                let auxDefinedLHS = make opSum (Comprehension 1 gensOrConds)
+                let auxDefined = [essence| &auxDefinedLHS > 0 |]
+                let aux' = WithLocals aux (DefinednessConstraints [auxDefined])
+                return $ WithLocals aux'
                     (AuxiliaryVars
                         [ Declaration (FindOrGiven LocalFind auxName auxDomain)
                         , SuchThat
                             [ make opAnd $ Comprehension
                                 (binOp body aux)
                                 gensOrConds
-                            , make opOr  $ Comprehension
-                                [essence| &body = &aux |]
-                                gensOrConds
+
+                        -- either one of the members of this comprehension, or dontCare
+                        -- if it is indeed dontCare, care should be taken to make sure it isn't used as a normal value
+                            , make opOr $ fromList
+                                [ make opOr  $ Comprehension
+                                    [essence| &body = &aux |]
+                                    gensOrConds
+                                , make opDontCare aux
+                                ]
                             ]
                         ])
             )
