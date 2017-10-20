@@ -1,0 +1,13 @@
+language ESSENCE' 1.0
+
+find a_Function1D: matrix indexed by [int(1..2)] of int(1..2)
+find b: int(1..2)
+find t: bool
+find conjure_aux1: int(1..2)
+such that
+    a_Function1D[1] = 1,
+    a_Function1D[2] = 1,
+    and([a_Function1D[q3] = 2 -> a_Function1D[q3] <= conjure_aux1 | q3 : int(1..2)]),
+    or([a_Function1D[q3] = 2 /\ a_Function1D[q3] = conjure_aux1 | q3 : int(1..2)]) \/ conjure_aux1 = 1,
+    t <-> b = conjure_aux1 /\ sum([toInt(a_Function1D[q3] = 2) | q3 : int(1..2)]) > 0
+
