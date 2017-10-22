@@ -1930,6 +1930,7 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
                 (auxName, aux) <- auxiliaryVar
                 let auxDefinedLHS = make opSum (Comprehension 1 gensOrConds)
                 let auxDefined = [essence| &auxDefinedLHS > 0 |]
+                let auxUndefined = [essence| &auxDefinedLHS = 0 |]
                 let aux' = WithLocals aux (DefinednessConstraints [auxDefined])
                 return $ WithLocals aux'
                     (AuxiliaryVars
@@ -1941,11 +1942,12 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
 
                         -- either one of the members of this comprehension, or dontCare
                         -- if it is indeed dontCare, care should be taken to make sure it isn't used as a normal value
-                            , make opOr $ fromList
-                                [ make opOr  $ Comprehension
-                                    [essence| &body = &aux |]
-                                    gensOrConds
-                                , make opDontCare aux
+                            , make opAnd $ fromList
+                                [ make opImply auxDefined
+                                    (make opOr  $ Comprehension
+                                        [essence| &body = &aux |]
+                                        gensOrConds)
+                                , make opImply auxUndefined (make opDontCare aux)
                                 ]
                             ]
                         ])
