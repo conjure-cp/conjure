@@ -5,6 +5,7 @@ module Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) ) where
 
 -- conjure
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.UI.IO
@@ -50,16 +51,24 @@ srOptionsMk srExtraOptions =
 
 
 -- | Which tests are we running?
-data TestTimeLimit = TestTimeLimit Int          -- in seconds, default 10
+data TestTimeLimit = TestTimeLimit Int          -- lower bound, in seconds, default 0
+                                   Int          -- upper bound, in seconds, default 10
     deriving (Eq, Ord, Typeable)
 
 instance IsOption TestTimeLimit where
-    defaultValue = TestTimeLimit 10
+    defaultValue = TestTimeLimit 0 10
 
-    parseValue i =
-        case readMay i of
-            Nothing -> Nothing
-            Just n  -> Just (TestTimeLimit n)
+    parseValue inp =
+        case splitOn "-" inp of
+            [i] ->
+                case readMay i of
+                    Nothing -> Nothing
+                    Just u  -> Just (TestTimeLimit 0 u)
+            [i,j] ->
+                case (readMay i, readMay j) of
+                    (Just l, Just u) -> Just (TestTimeLimit l u)
+                    _ -> Nothing
+            _ -> bug "parseValue{TestTimeLimit}"
 
     optionName = return "limit-time"
     optionHelp = return $ unlines [ "Select which tests to run by their expected times."
@@ -84,7 +93,7 @@ tests = do
 
 data TestDirFiles = TestDirFiles
     { name           :: String          -- a name for the test case
-    , expectedTime   :: Int             -- how long do we expect this test to run (in seconds)
+    , expectedTime   :: Int             -- how long do we expect this test to run (in seconds) (default: 0)
     , tBaseDir       :: FilePath        -- dir
     , outputsDir     :: FilePath        -- dir
     , expectedsDir   :: FilePath        -- dir
@@ -137,7 +146,7 @@ type Step = String -> Assertion
 --                + D/*.param files if required
 --                + D/expected for the expected output files
 testSingleDir :: TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
-testSingleDir (TestTimeLimit timeLimit) srOptions t@TestDirFiles{..} =
+testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles{..} =
     if shouldRun
         then return $ testCaseSteps name $ \ step -> do
                 conjuring step
@@ -149,8 +158,8 @@ testSingleDir (TestTimeLimit timeLimit) srOptions t@TestDirFiles{..} =
         else []
     where
 
-        shouldRun = or [ timeLimit == 0
-                       , expectedTime <= timeLimit
+        shouldRun = or [ timeLimitMax == 0
+                       , timeLimitMin <= expectedTime && expectedTime <= timeLimitMax
                        ]
 
         conjuring step = do
