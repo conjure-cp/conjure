@@ -7,8 +7,11 @@ find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 find conjure_aux2: int(1..4)
 such that
     and([s_Occurrence[q10] -> q10 >= conjure_aux2 | q10 : int(1..4)]),
+    sum([toInt(s_Occurrence[q10]) | q10 : int(1..4)]) > 0 ->
     or([s_Occurrence[q10] /\ q10 = conjure_aux2 | q10 : int(1..4)]),
+    sum([toInt(s_Occurrence[q10]) | q10 : int(1..4)]) = 0 -> conjure_aux2 = 1,
     conjure_aux2 = 3,
+    sum([toInt(s_Occurrence[q10]) | q10 : int(1..4)]) > 0,
     and([q2 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
          s_ExplicitVarSizeWithMarker_Values[q2] < s_ExplicitVarSizeWithMarker_Values[q2 + 1]
              | q2 : int(1..3)]),

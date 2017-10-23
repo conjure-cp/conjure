@@ -7,8 +7,11 @@ find conjure_aux2: int(1..4)
 such that
     and([s_ExplicitVarSizeWithFlags_Flags[q7] -> s_ExplicitVarSizeWithFlags_Values[q7] >= conjure_aux2
              | q7 : int(1..4)]),
+    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..4)]) > 0 ->
     or([s_ExplicitVarSizeWithFlags_Flags[q7] /\ s_ExplicitVarSizeWithFlags_Values[q7] = conjure_aux2 | q7 : int(1..4)]),
+    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..4)]) = 0 -> conjure_aux2 = 1,
     conjure_aux2 = 3,
+    sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q7]) | q7 : int(1..4)]) > 0,
     and([s_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          s_ExplicitVarSizeWithFlags_Values[q1] < s_ExplicitVarSizeWithFlags_Values[q1 + 1]
              | q1 : int(1..3)]),

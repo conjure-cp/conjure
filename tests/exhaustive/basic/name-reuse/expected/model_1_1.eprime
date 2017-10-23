@@ -5,6 +5,8 @@ find s_Occurrence: matrix indexed by [int(1..4)] of bool
 find conjure_aux2: int(1..4)
 such that
     and([s_Occurrence[q2] -> q2 >= conjure_aux2 | q2 : int(1..4)]),
-    or([s_Occurrence[q2] /\ q2 = conjure_aux2 | q2 : int(1..4)]),
-    conjure_aux2 = 3
+    sum([toInt(s_Occurrence[q2]) | q2 : int(1..4)]) > 0 -> or([s_Occurrence[q2] /\ q2 = conjure_aux2 | q2 : int(1..4)]),
+    sum([toInt(s_Occurrence[q2]) | q2 : int(1..4)]) = 0 -> conjure_aux2 = 1,
+    conjure_aux2 = 3,
+    sum([toInt(s_Occurrence[q2]) | q2 : int(1..4)]) > 0
 

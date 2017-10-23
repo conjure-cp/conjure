@@ -9,8 +9,10 @@ find conjure_aux1: int(1..2)
 such that
     f_Function1DPartial_Flags[s_Explicit[1]],
     and([s_Occurrence[q12] -> q12 >= conjure_aux1 | q12 : int(1..2)]),
+    sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) > 0 ->
     or([s_Occurrence[q12] /\ q12 = conjure_aux1 | q12 : int(1..2)]),
-    and([s_Occurrence[i] /\ i != conjure_aux1 ->
+    sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) = 0 -> conjure_aux1 = 1,
+    and([s_Occurrence[i] /\ (i != conjure_aux1 /\ sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)]) > 0) ->
          and([f_Function1DPartial_Values[i] > f_Function1DPartial_Values[s_Explicit[1]], f_Function1DPartial_Flags[i],
               f_Function1DPartial_Flags[s_Explicit[1]];
                   int(1..3)])

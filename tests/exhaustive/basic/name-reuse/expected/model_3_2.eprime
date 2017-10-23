@@ -8,9 +8,12 @@ find conjure_aux2: int(1..4)
 such that
     and([q17 <= s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q17] >= conjure_aux2
              | q17 : int(1..4)]),
+    sum([toInt(q17 <= s_ExplicitVarSizeWithMarker_Marker) | q17 : int(1..4)]) > 0 ->
     or([q17 <= s_ExplicitVarSizeWithMarker_Marker /\ s_ExplicitVarSizeWithMarker_Values[q17] = conjure_aux2
             | q17 : int(1..4)]),
+    sum([toInt(q17 <= s_ExplicitVarSizeWithMarker_Marker) | q17 : int(1..4)]) = 0 -> conjure_aux2 = 1,
     conjure_aux2 = 3,
+    sum([toInt(q17 <= s_ExplicitVarSizeWithMarker_Marker) | q17 : int(1..4)]) > 0,
     and([q1 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
          s_ExplicitVarSizeWithMarker_Values[q1] < s_ExplicitVarSizeWithMarker_Values[q1 + 1]
              | q1 : int(1..3)]),

@@ -8,6 +8,8 @@ such that
     a_Function1D[1] = 1,
     a_Function1D[2] = 1,
     and([a_Function1D[q3] = 2 -> a_Function1D[q3] <= conjure_aux1 | q3 : int(1..2)]),
-    or([a_Function1D[q3] = 2 /\ a_Function1D[q3] = conjure_aux1 | q3 : int(1..2)]) \/ conjure_aux1 = 1,
+    sum([toInt(a_Function1D[q3] = 2) | q3 : int(1..2)]) > 0 ->
+    or([a_Function1D[q3] = 2 /\ a_Function1D[q3] = conjure_aux1 | q3 : int(1..2)]),
+    sum([toInt(a_Function1D[q3] = 2) | q3 : int(1..2)]) = 0 -> conjure_aux1 = 1,
     t <-> b = conjure_aux1 /\ sum([toInt(a_Function1D[q3] = 2) | q3 : int(1..2)]) > 0
 
