@@ -31,14 +31,21 @@ instance ( TypeOf x, Pretty x
             _ -> raiseTypeError p
     typeOf p@(OpMax x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeInt -> return TypeInt
-            TypeMatrix _ TypeInt -> return TypeInt
-            TypeSet TypeInt -> return TypeInt
-            TypeMSet TypeInt -> return TypeInt
+        tyInner <- case ty of
+            TypeList tyInner -> return tyInner
+            TypeMatrix _ tyInner -> return tyInner
+            TypeSet tyInner -> return tyInner
+            TypeMSet tyInner -> return tyInner
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside max:" <+> pretty ty
                                        ]
+        case tyInner of
+            TypeBool -> return ()
+            TypeInt  -> return ()
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside max:" <+> pretty ty
+                                       ]
+        return tyInner
 
 instance EvaluateOp OpMax where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
@@ -48,21 +55,51 @@ instance EvaluateOp OpMax where
         return $ if null is
             then mkUndef TypeInt "Empty collection in max"
             else ConstantInt (maximum is)
-    evaluateOp (OpMax (viewConstantMatrix -> Just (_, xs))) = do
-        is <- concatMapM (intsOut "OpMax 1") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in max"
-            else ConstantInt (maximum is)
-    evaluateOp (OpMax (viewConstantSet -> Just xs)) = do
-        is <- concatMapM (intsOut "OpMax 2") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in max"
-            else ConstantInt (maximum is)
-    evaluateOp (OpMax (viewConstantMSet -> Just xs)) = do
-        is <- concatMapM (intsOut "OpMax 3") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in max"
-            else ConstantInt (maximum is)
+    evaluateOp (OpMax coll@(viewConstantMatrix -> Just (_, xs))) =
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in max"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMax 1") xs
+                        return $ ConstantInt (maximum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (maximum is)
+                    _ -> na "evaluateOp{OpMax}"
+    evaluateOp (OpMax coll@(viewConstantSet -> Just xs)) = do
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in max"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMax 1") xs
+                        return $ ConstantInt (maximum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (maximum is)
+                    _ -> na "evaluateOp{OpMax}"
+    evaluateOp (OpMax coll@(viewConstantMSet -> Just xs)) = do
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in max"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMax 1") xs
+                        return $ ConstantInt (maximum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (maximum is)
+                    _ -> na "evaluateOp{OpMax}"
     evaluateOp _ = na "evaluateOp{OpMax}"
 
 instance SimplifyOp OpMax x where

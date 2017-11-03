@@ -30,10 +30,12 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
                                 ]
 
 instance EvaluateOp OpIntersect where
-    evaluateOp (OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
+    evaluateOp p@(OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
+        ty <- typeOf p
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ ConstantAbstract $ AbsLitSet outs
-    evaluateOp (OpIntersect (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
+        return $ TypedConstant (ConstantAbstract $ AbsLitSet outs) ty
+    evaluateOp p@(OpIntersect (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) = do
+        ty <- typeOf p
         let asHist = histogram as
             bsHist = histogram bs
             allElems = sortNub (as++bs)
@@ -43,14 +45,16 @@ instance EvaluateOp OpIntersect where
                 , let countA = fromMaybe 0 (e `lookup` asHist)
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
-        return $ ConstantAbstract $ AbsLitMSet $ concat outs
+        return $ TypedConstant (ConstantAbstract $ AbsLitMSet $ concat outs) ty
     -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
-    evaluateOp (OpIntersect (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
+    evaluateOp p@(OpIntersect (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
+        ty <- typeOf p
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ ConstantAbstract $ AbsLitFunction outs
-    evaluateOp (OpIntersect (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
+        return $ TypedConstant (ConstantAbstract $ AbsLitFunction outs) ty
+    evaluateOp p@(OpIntersect (viewConstantRelation -> Just as) (viewConstantRelation -> Just bs)) = do
+        ty <- typeOf p
         let outs = sortNub [ i | i <- as, i `elem` bs]
-        return $ ConstantAbstract $ AbsLitRelation outs
+        return $ TypedConstant (ConstantAbstract $ AbsLitRelation outs) ty
     evaluateOp op = na $ "evaluateOp{OpIntersect}:" <++> pretty (show op)
 
 instance SimplifyOp OpIntersect x where

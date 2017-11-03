@@ -31,12 +31,21 @@ instance ( TypeOf x, Pretty x
             _ -> raiseTypeError p
     typeOf p@(OpMin x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeInt -> return TypeInt
-            TypeMatrix _ TypeInt -> return TypeInt
-            TypeSet TypeInt -> return TypeInt
-            TypeMSet TypeInt -> return TypeInt
-            _ -> raiseTypeError p
+        tyInner <- case ty of
+            TypeList tyInner -> return tyInner
+            TypeMatrix _ tyInner -> return tyInner
+            TypeSet tyInner -> return tyInner
+            TypeMSet tyInner -> return tyInner
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside min:" <+> pretty ty
+                                       ]
+        case tyInner of
+            TypeBool -> return ()
+            TypeInt  -> return ()
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside min:" <+> pretty ty
+                                       ]
+        return tyInner
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
@@ -46,21 +55,51 @@ instance EvaluateOp OpMin where
         return $ if null is
             then mkUndef TypeInt "Empty collection in min"
             else ConstantInt (minimum is)
-    evaluateOp (OpMin (viewConstantMatrix -> Just (_, xs))) = do
-        is <- concatMapM (intsOut "OpMin 1") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in min"
-            else ConstantInt (minimum is)
-    evaluateOp (OpMin (viewConstantSet -> Just xs)) = do
-        is <- concatMapM (intsOut "OpMin 2") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in min"
-            else ConstantInt (minimum is)
-    evaluateOp (OpMin (viewConstantMSet -> Just xs)) = do
-        is <- concatMapM (intsOut "OpMin 3") xs
-        return $ if null is
-            then mkUndef TypeInt "Empty collection in min"
-            else ConstantInt (minimum is)
+    evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in min"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMin 1") xs
+                        return $ ConstantInt (minimum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (minimum is)
+                    _ -> na "evaluateOp{OpMin}"
+    evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in min"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMin 1") xs
+                        return $ ConstantInt (minimum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (minimum is)
+                    _ -> na "evaluateOp{OpMin}"
+    evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
+        case xs of
+            [] -> do
+                tyInner <- typeOf coll >>= innerTypeOf
+                return $ mkUndef tyInner "Empty collection in min"
+            (x:_) -> do
+                tyInner <- typeOf x
+                case tyInner of
+                    TypeInt -> do
+                        is <- concatMapM (intsOut "OpMin 1") xs
+                        return $ ConstantInt (minimum is)
+                    TypeBool -> do
+                        is <- concatMapM boolsOut xs
+                        return $ ConstantBool (minimum is)
+                    _ -> na "evaluateOp{OpMin}"
     evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 
 instance SimplifyOp OpMin x where
