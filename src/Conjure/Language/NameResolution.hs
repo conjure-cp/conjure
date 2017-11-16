@@ -236,15 +236,17 @@ resolveX (WithLocals body (DefinednessConstraints locals)) = scope $ do
     body'   <- resolveX body
     return (WithLocals body' (DefinednessConstraints locals'))
 
-resolveX (Op (MkOpFrameUpdate (OpFrameUpdate old new oldFocus newFocus cons))) = scope $ do
+resolveX (Op (MkOpFrameUpdate (OpFrameUpdate old new oldFocus' newFocus' cons))) = scope $ do
     old' <- resolveX old
     new' <- resolveX new
+    oldFocus <- listOut oldFocus' >>= mapM nameOut
+    newFocus <- listOut newFocus' >>= mapM nameOut
     forM_ oldFocus $ \ n -> do
         modify ((n, FrameUpdateVar old') :)
     forM_ newFocus $ \ n -> do
         modify ((n, FrameUpdateVar new') :)
     cons' <- resolveX cons
-    return (Op (MkOpFrameUpdate (OpFrameUpdate old' new' oldFocus newFocus cons')))
+    return (Op (MkOpFrameUpdate (OpFrameUpdate old' new' oldFocus' newFocus' cons')))
 
 resolveX x = descendM resolveX x
 

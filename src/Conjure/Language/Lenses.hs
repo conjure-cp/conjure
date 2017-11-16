@@ -1434,20 +1434,24 @@ opIncumbent _ =
 
 
 opFrameUpdate
-    :: ( Op x :< x
-       , Pretty x
-       , MonadFail m
-       )
+    :: MonadFail m
     => Proxy (m :: * -> *)
-    -> ( x -> x -> [Name] -> [Name] -> x -> x
-       , x -> m (x, x, [Name], [Name], x)
+    -> ( Expression -> Expression -> [Name] -> [Name] -> Expression -> Expression
+       , Expression -> m (Expression, Expression, [Name], [Name], Expression)
        )
 opFrameUpdate _ =
-    ( \ old new oldFocus newFocus cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate old new oldFocus newFocus cons
+    ( \ old new oldFocus newFocus cons ->
+            inject $ MkOpFrameUpdate $ OpFrameUpdate old new
+                        (fromList [ Reference n Nothing | n <- oldFocus ])
+                        (fromList [ Reference n Nothing | n <- newFocus ])
+                        cons
     , \ p -> do
             op <- project p
             case op of
-                MkOpFrameUpdate (OpFrameUpdate old new oldFocus newFocus cons) -> return (old, new, oldFocus, newFocus, cons)
+                MkOpFrameUpdate (OpFrameUpdate old new oldFocus newFocus cons) -> do
+                    os <- listOut oldFocus >>= mapM nameOut
+                    ns <- listOut newFocus >>= mapM nameOut
+                    return (old, new, os, ns, cons)
                 _ -> na ("Lenses.opFrameUpdate:" <++> pretty p)
     )
 

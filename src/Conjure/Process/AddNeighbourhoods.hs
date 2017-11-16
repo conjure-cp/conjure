@@ -147,11 +147,10 @@ makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
         --below local function should build a frame update with any number of arguments lifted.
          --not sure how to do this in haskel so special cased 1 and 2 lifts
         buildFrameUpdate :: [Name] -> [Name] -> (Expression -> Expression)
-        buildFrameUpdate [iPat1,iPat2] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1,&jPat2], &c) |]
-        buildFrameUpdate [iPat1] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1], &c) |]
-        buildFrameUpdate [iPat1,iPat2] [jPat1] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1,&iPat2], [&jPat1], &c) |]
-        buildFrameUpdate [iPat1] [jPat1,jPat2] = \c -> [essence| frameUpdate(&theIncumbentVar, &theVar, [&iPat1], [&jPat1,&jPat2], &c) |]
-        buildFrameUpdate _ _ = bug "todo, extend the buildFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
+        buildFrameUpdate is js =
+            let iList = fromList [ Reference n Nothing | n <- is ]
+                jList = fromList [ Reference n Nothing | n <- js ]
+            in  \ c -> [essence| frameUpdate(&theIncumbentVar, &theVar, &iList, &jList, &c) |]
 
 
 makeFunctionFrameUpdate :: NameGen m => Int -> Int -> Domain () Expression -> Expression -> Expression -> m ([Expression], [Expression], Expression -> [Statement])

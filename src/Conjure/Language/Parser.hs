@@ -830,9 +830,9 @@ parseOthers = [ parseFunctional l
                 comma
                 new <- parseExpr
                 comma
-                oldFocus <- brackets (commaSeparated parseNameOrMeta)
+                oldFocus <- parseExpr
                 comma
-                newFocus <- brackets (commaSeparated parseNameOrMeta)
+                newFocus <- parseExpr
                 comma
                 cons  <- parseExpr
                 return $ Op $ MkOpFrameUpdate $ OpFrameUpdate old new oldFocus newFocus cons
