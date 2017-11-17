@@ -589,7 +589,6 @@ Matrices of dimension k are implemented by a list of matrices of dimension k-1.
    letting f be B = C                          $ true
    letting F be domain matrix indexed by [int(1..6)] of bool
    find g : F such that g = [a,b,c,d,e,f] $ [true,true,true,true,true,true]
-   $ actually f[5] is currently false, see issue # 373
 
 
 Tuple indexing
