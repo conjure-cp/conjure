@@ -113,6 +113,7 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     [mSetOrSetMove
+    , mSetOrSetCollect
     , mSetOrSetCrossOver
     , mSetOrSetSplit
     , mSetOrSetMerge
@@ -432,6 +433,36 @@ mSetOrSetMove theDomain
             )]
 mSetOrSetMove _ = return []
 
+
+
+mSetOrSetCollect :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+mSetOrSetCollect theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName, "Collect"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        let numberIncumbents = 3
+        let numberPrimaries = 3
+        (kPat, k) <- quantifiedVar
+    
+        return
+            [( generatorName, calculatedMaxNhSize
+            , numberIncumbents, numberPrimaries 
+             , \ neighbourhoodSize incumbents primaries -> case (incumbents, primaries) of
+                ([theIncumbentVar1, theIncumbentVar2, theIncumbentVar3], [theVar1,theVar2, theVar3]) ->
+                     [essenceStmts|
+                        such that
+                        &theVar1 subsetEq &theIncumbentVar1,
+                        |&theIncumbentVar1| - |&theVar1| = &neighbourhoodSize,
+                        &theVar2 subsetEq &theIncumbentVar2,
+                        |&theIncumbentVar2| - |&theVar2| = &neighbourhoodSize,
+                        (&theIncumbentVar1 - &theVar1) = (&theIncumbentVar2 - &theVar2),
+                        &theIncumbentVar3 subsetEq &theVar3,
+                        |&theVar3| - |&theIncumbentVar3| = &neighbourhoodSize,
+                        and([&k in &theVar3 | &kPat <- &theIncumbentVar1, !(&k in &theVar1)])
+                         |]
+                other -> multiContainerNeighbourhoodError generatorName numberIncumbents numberPrimaries other 
+            )]
+mSetOrSetCollect _ = return []
 
 
 mSetOrSetCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
