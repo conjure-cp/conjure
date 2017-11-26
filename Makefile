@@ -36,6 +36,10 @@ refreeze:
 clean:
 	@bash etc/build/clean.sh
 
+.PHONY: docs
+docs:
+	(cd docs; make conjure-help; make latexpdf; make singlehtml)
+
 .PHONY: ghci
 ghci:
 	@cabal exec ghci -- -isrc -isrc/test           \
