@@ -3,7 +3,7 @@
 # Default values for environment variables (to be used by the install script and make)
 
 export CORES=${CORES:-0}
-export GHC_VERSION=${GHC_VERSION:-"8.2.1"}
+export GHC_VERSION=${GHC_VERSION:-"8.2.2"}
 export GMP_VERSION=${GMP_VERSION:-"NEWGMP"}
 export INSTALL_GMP=${INSTALL_GMP:-no}
 export INSTALL_GHC=${INSTALL_GHC:-no}
