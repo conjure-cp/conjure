@@ -12,19 +12,19 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 such that
-    or([q125 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-        (or([q129 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q125] /\
-             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q125, q129] = 1
-                 | q129 : int(1..4)])
+    or([q127 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
+        (or([q131 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127] /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q131] = 1
+                 | q131 : int(1..4)])
          /\
-         or([q131 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q125] /\
-             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q125, q131] = 3
-                 | q131 : int(1..4)]))
-            | q125 : int(1..4)]),
-    !or([q134 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-         (x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q134, 1] /\
-          x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q134, 2])
-             | q134 : int(1..4)]),
+         or([q133 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q127] /\
+             x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q127, q133] = 3
+                 | q133 : int(1..4)]))
+            | q127 : int(1..4)]),
+    and([q138 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         !(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q138, 1] /\
+           x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q138, 2])
+             | q138 : int(1..4)]),
     alldifferent_except([toInt(q111 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
                                q112 <=
                                x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker

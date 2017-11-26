@@ -1,0 +1,6 @@
+find a : function (total) int(1..2) --> int(1..2)
+such that a(1) = 1, a(2) = 1
+
+find b : int(1..2)
+find t : bool
+such that t <-> (b = max([v | (_,v) <- a, v = 2]))

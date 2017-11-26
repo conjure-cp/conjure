@@ -57,10 +57,10 @@ isTestDir baseDir dir = do
 
 
 testSingleDir :: TestTimeLimit -> TestDirFiles -> [TestTree]
-testSingleDir (TestTimeLimit timeLimit) TestDirFiles{..} =
+testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
     let
-        shouldRun = or [ timeLimit == 0
-                       , expectedTime <= timeLimit
+        shouldRun = or [ timeLimitMax == 0
+                       , timeLimitMin <= expectedTime && expectedTime <= timeLimitMax
                        ]
     in
         if shouldRun

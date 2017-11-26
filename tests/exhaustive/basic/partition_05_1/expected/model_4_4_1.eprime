@@ -7,14 +7,14 @@ find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..4), int(1..4)] of bool
 such that
-    or([q55 <= x_PartitionOccurrence_NumParts /\
-        (or([x_PartitionOccurrence_WhichPart[q60] = q55 /\ q60 = 1 | q60 : int(1..4)]) /\
-         or([x_PartitionOccurrence_WhichPart[q62] = q55 /\ q62 = 3 | q62 : int(1..4)]))
-            | q55 : int(1..4)]),
-    !or([q64 <= x_PartitionOccurrence_NumParts /\
-         (or([x_PartitionOccurrence_WhichPart[q69] = q64 /\ q69 = 1 | q69 : int(1..4)]) /\
-          or([x_PartitionOccurrence_WhichPart[q71] = q64 /\ q71 = 2 | q71 : int(1..4)]))
-             | q64 : int(1..4)]),
+    or([q57 <= x_PartitionOccurrence_NumParts /\
+        (or([x_PartitionOccurrence_WhichPart[q62] = q57 /\ q62 = 1 | q62 : int(1..4)]) /\
+         or([x_PartitionOccurrence_WhichPart[q64] = q57 /\ q64 = 3 | q64 : int(1..4)]))
+            | q57 : int(1..4)]),
+    and([q68 <= x_PartitionOccurrence_NumParts ->
+         !(or([x_PartitionOccurrence_WhichPart[q73] = q68 /\ q73 = 1 | q73 : int(1..4)]) /\
+           or([x_PartitionOccurrence_WhichPart[q75] = q68 /\ q75 = 2 | q75 : int(1..4)]))
+             | q68 : int(1..4)]),
     and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,

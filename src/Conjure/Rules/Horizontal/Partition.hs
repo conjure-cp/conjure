@@ -95,11 +95,19 @@ rule_Together :: Rule
 rule_Together = "partition-together" `namedRule` theRule where
     theRule [essence| together(&x,&p) |] = do
         TypePartition{} <- typeOf p
+        DomainPartition _ _ inner <- domainOf p
         return
             ( "Horizontal rule for partition-together"
             , do
                  (iPat, i) <- quantifiedVar
-                 return [essence| exists &iPat in parts(&p) . &x subsetEq &i |]
+                 (jPat, j) <- quantifiedVar
+                 (kPat, k) <- quantifiedVar
+                 return [essence|
+                             (exists &iPat in parts(&p) . &x subsetEq &i)
+                             /\
+                             $ the items in x appear somewhere in the partition
+                             (forAll &jPat in &x . exists &kPat : &inner . &j = &k)
+                        |]
             )
     theRule _ = na "rule_Together"
 
@@ -113,9 +121,19 @@ rule_Apart = "partition-apart" `namedRule` theRule where
             WithLocals{} -> na "rule_Apart"
             _ -> return ()
         TypePartition{} <- typeOf p
+        DomainPartition _ _ inner <- domainOf p
         return
             ( "Horizontal rule for partition-apart"
-            , return [essence| !together(&x,&p) |]
+            , do
+                (iPat, i) <- quantifiedVar
+                (jPat, j) <- quantifiedVar
+                (kPat, k) <- quantifiedVar
+                return [essence|
+                             (forAll &iPat in parts(&p) . !(&x subsetEq &i))
+                                    /\
+                             $ the items in x appear somewhere in the partition
+                             (forAll &jPat in &x . exists &kPat : &inner . &j = &k)
+                       |]
             )
     theRule _ = na "rule_Apart"
 

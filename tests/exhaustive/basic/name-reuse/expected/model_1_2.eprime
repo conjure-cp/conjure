@@ -6,8 +6,11 @@ find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find conjure_aux2: int(1..4)
 such that
     and([s_Occurrence[q11] -> q11 >= conjure_aux2 | q11 : int(1..4)]),
+    sum([toInt(s_Occurrence[q11]) | q11 : int(1..4)]) > 0 ->
     or([s_Occurrence[q11] /\ q11 = conjure_aux2 | q11 : int(1..4)]),
+    sum([toInt(s_Occurrence[q11]) | q11 : int(1..4)]) = 0 -> conjure_aux2 = 1,
     conjure_aux2 = 3,
+    sum([toInt(s_Occurrence[q11]) | q11 : int(1..4)]) > 0,
     and([s_ExplicitVarSizeWithDummy[q2] < s_ExplicitVarSizeWithDummy[q2 + 1] \/ s_ExplicitVarSizeWithDummy[q2] = 5
              | q2 : int(1..3)]),
     and([s_ExplicitVarSizeWithDummy[q3] = 5 -> s_ExplicitVarSizeWithDummy[q3 + 1] = 5 | q3 : int(1..3)]),

@@ -1,4 +1,6 @@
 pushd ../../../docs > /dev/null
 make conjure-help
-git diff conjure-help.txt conjure-help.html
+rm conjure-help.html
 popd > /dev/null
+mv ../../../docs/conjure-help.txt .
+git diff conjure-help.txt

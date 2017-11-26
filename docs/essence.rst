@@ -589,7 +589,6 @@ Matrices of dimension k are implemented by a list of matrices of dimension k-1.
    letting f be B = C                          $ true
    letting F be domain matrix indexed by [int(1..6)] of bool
    find g : F such that g = [a,b,c,d,e,f] $ [true,true,true,true,true,true]
-   $ actually f[5] is currently false, see issue # 373
 
 
 Tuple indexing
@@ -956,8 +955,8 @@ Partition operators
 ~~~~~~~~~~~~~~~~~~~
 
 +-------------------------+----------------------------------------------------+
-| ``apart``               | test if two elements are in different parts of     |
-|                         | the partition                                      |
+| ``apart``               | test if a list of elements are not all contained   |
+|                         | in one part of the partition                       |
 +-------------------------+----------------------------------------------------+
 | ``participants``        | union of all parts of a partition                  |
 +-------------------------+----------------------------------------------------+
@@ -965,9 +964,25 @@ Partition operators
 +-------------------------+----------------------------------------------------+
 | ``parts``               | partition to its set of parts                      |
 +-------------------------+----------------------------------------------------+
-| ``together``            | test if two elements are in the same part of the   |
-|                         | partition                                          |
+| ``together``            | test if a list of elements are all in the same     |
+|                         | part of the partition                              |
 +-------------------------+----------------------------------------------------+
+
+Examples:
+
+.. code-block:: essence
+
+   letting P be partition({1,2},{3},{4,5,6})
+   find a : bool such that a = apart({3,5},P) /\ !together({1,2,5},P) $ true
+   find b : set of int(1..6) such that b = participants(P) $ {1,2,3,4,5,6}
+   find c : set of int(1..6) such that c = party(4,P) $ {4,5,6}
+   find d : bool such that d = ({{1,2},{3},{4,5,6}} = parts(P)) $ true
+   find e : bool such that e = (together({1,7},P) \/ apart({1,7},P)) $ false
+
+These semantics follow the original Essence definition.
+In contrast, in older versions of Conjure the relationship
+  ``apart(L,P) = !together(L,P)``
+held for all lists ``L`` and partitions ``P``.
 
 
 List combining operators

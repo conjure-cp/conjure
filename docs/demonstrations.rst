@@ -373,6 +373,7 @@ There are three constraints.
 The first is that C must contain some vertex.
 The second is that C must be a connected component; each vertex in C is connected to some other vertex in C (unless C only contains a single vertex).
 The third is that the value of ``connected`` is determined by whether it is possible to find some vertex that is not in C.
+The following is an attempt to capture these constraints in an Essence specification.
 
 .. code-block:: essence
 
@@ -393,8 +394,8 @@ This is the solution for ``disconnected-4.param``:
    letting C be {1, 2}
    letting connected be false
 
-Model ``gc4.essence`` yields a solution quickly, but unfortunately it can also give incorrect results.
-Letting C be the set of all vertices and letting ``connected`` be true is always a solution, whether the graph is connected or not.
+Model ``gc4.essence`` yields a solution quickly.
+Unfortunately it can also give incorrect results: letting C be the set of all vertices and letting ``connected`` be true is always a solution, whether the graph is connected or not.
 This can be confirmed by asking Conjure to generate all solutions:
 
 .. code-block:: essence
@@ -411,6 +412,10 @@ This gives two solutions, the one above and the following one:
 It is actually possible to ensure that this "solution" is never the first one generated, and then to ask Conjure to only look for the first solution; if the graph is not connected then the first solution will correctly indicate its status.
 However, this relies on precise knowledge of the ordering heuristics being employed at each stage of the toolchain.
 
+The problem with this fourth specification is that it only captures the property that C is a union of connected components.
+We would need to add additional constraints to enforce the property that C should contain only one connected component.
+This can be done, but is not especially efficent.
+
 
 Model 5: minimal connected component
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -426,6 +431,7 @@ In place of the missing "if-has-solution" directive, we could instead quantify o
 Such an approach quickly becomes infeasible as n grows (and is much worse than the models considered so far), because it attempts to check 2**n subsets.
 
 As another option, we can make use of the optimisation features of Essence to find a solution with a C of minimal cardinality.
+This ensures that C can only contain one connected component.
 Choosing a minimal C ensures that when there is more than one solution, then the one that is generated always indicates the failure of connectivity.
 Since we don't care about the minimal C, as long as it is smaller than the set of all vertices if possible, we also replace the general requirement for non-emptiness by a constraint that always forces the set C to contain the vertex labelled 1.
 

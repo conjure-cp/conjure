@@ -7,6 +7,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
+import Conjure.Language.Type ( mostDefined )
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -28,9 +29,14 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
+                    valC_typed            <- case valC of
+                                                TypedConstant c tyc -> do
+                                                    ty <- typeOf dom
+                                                    return $ TypedConstant c (mostDefined [ty, tyc])
+                                                _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
                     either userErr1 return (validateConstantForDomain nm valC domC)
-                    modify ((nm, Constant valC) :)
+                    modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the parameter file."
                                          , "Its domain:" <++> pretty dom
                                          ]
@@ -42,9 +48,14 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
             case [ val | Declaration (Letting nm2 val) <- mStatements essenceSolution, nm == nm2 ] of
                 [val] -> do
                     valC                  <- gets id >>= flip instantiateExpression val
+                    valC_typed            <- case valC of
+                                                TypedConstant c tyc -> do
+                                                    ty <- typeOf dom
+                                                    return $ TypedConstant c (mostDefined [ty, tyc])
+                                                _ -> return valC
                     DomainInConstant domC <- gets id >>= flip instantiateExpression (Domain dom)
                     either userErr1 return (validateConstantForDomain nm valC domC)
-                    modify ((nm, Constant valC) :)
+                    modify ((nm, Constant valC_typed) :)
                 []    -> userErr1 $ vcat [ "No value for" <+> pretty nm <+> "in the solution file."
                                          , "Its domain:" <++> pretty dom
                                          ]

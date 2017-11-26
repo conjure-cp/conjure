@@ -63,7 +63,13 @@ rule_ToMultiply_HeadOfIntComprehension = "bubble-to-multiply-HeadOfIntComprehens
 
 rule_NotBoolYet :: Rule
 rule_NotBoolYet = "bubble-up-NotBoolYet" `namedRule` theRule where
-    theRule WithLocals{}    = na "rule_NotBoolYet WithLocals"
+    theRule WithLocals{}
+        = na "rule_NotBoolYet WithLocals"
+
+    theRule [essence| catchUndef(&x, &_) |]
+        | WithLocals _ (DefinednessConstraints _) <- x
+        = na "rule_NotBoolYet WithLocals"
+
 
     -- if anything in a comprehension is undefined, the whole comprehension is undefined
     -- this is for the non-bool case.
@@ -151,6 +157,18 @@ rule_ConditionInsideGeneratorDomain = "bubble-up-ConditionInsideGeneratorDomain"
 
 rule_LiftVars :: Rule
 rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
+
+    theRule [essence| catchUndef(&x, &ifUndefVal) |]
+        | WithLocals body (DefinednessConstraints cons) <- x = do
+            let ifDef = make opAnd (fromList cons)
+            return
+                ( ""
+                , return [essence| [ catchUndef(&body, &ifUndefVal)
+                                   , &ifUndefVal
+                                   ; int(0..1)
+                                   ] [ toInt(!&ifDef) ]
+                         |]
+                )
 
     theRule (Comprehension (WithLocals body locals) gensOrConds)
         | and [ case goc of

@@ -10,19 +10,19 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..4)] of int(1..4)
 such that
-    or([q60 <= x_PartitionOccurrence_NumParts /\
-        (or([x_PartitionOccurrence_WhichPart[q65] = q60 /\ q65 = 1 | q65 : int(1..4)]) /\
-         or([x_PartitionOccurrence_WhichPart[q67] = q60 /\ q67 = 3 | q67 : int(1..4)]))
-            | q60 : int(1..4)]),
-    !or([q70 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\
-         (or([q74 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q70] /\
-              x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q70, q74] = 1
-                  | q74 : int(1..4)])
-          /\
-          or([q76 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q70] /\
-              x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q70, q76] = 2
-                  | q76 : int(1..4)]))
-             | q70 : int(1..4)]),
+    or([q62 <= x_PartitionOccurrence_NumParts /\
+        (or([x_PartitionOccurrence_WhichPart[q67] = q62 /\ q67 = 1 | q67 : int(1..4)]) /\
+         or([x_PartitionOccurrence_WhichPart[q69] = q62 /\ q69 = 3 | q69 : int(1..4)]))
+            | q62 : int(1..4)]),
+    and([q74 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
+         !(or([q78 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q74] /\
+               x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q74, q78] = 1
+                   | q78 : int(1..4)])
+           /\
+           or([q80 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q74] /\
+               x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values[q74, q80] = 2
+                   | q80 : int(1..4)]))
+             | q74 : int(1..4)]),
     and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,

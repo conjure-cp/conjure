@@ -5,14 +5,14 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 such that
-    or([q13 <= x_PartitionOccurrence_NumParts /\
-        (or([x_PartitionOccurrence_WhichPart[q18] = q13 /\ q18 = 1 | q18 : int(1..4)]) /\
-         or([x_PartitionOccurrence_WhichPart[q20] = q13 /\ q20 = 3 | q20 : int(1..4)]))
-            | q13 : int(1..4)]),
-    !or([q22 <= x_PartitionOccurrence_NumParts /\
-         (or([x_PartitionOccurrence_WhichPart[q27] = q22 /\ q27 = 1 | q27 : int(1..4)]) /\
-          or([x_PartitionOccurrence_WhichPart[q29] = q22 /\ q29 = 2 | q29 : int(1..4)]))
-             | q22 : int(1..4)]),
+    or([q15 <= x_PartitionOccurrence_NumParts /\
+        (or([x_PartitionOccurrence_WhichPart[q20] = q15 /\ q20 = 1 | q20 : int(1..4)]) /\
+         or([x_PartitionOccurrence_WhichPart[q22] = q15 /\ q22 = 3 | q22 : int(1..4)]))
+            | q15 : int(1..4)]),
+    and([q26 <= x_PartitionOccurrence_NumParts ->
+         !(or([x_PartitionOccurrence_WhichPart[q31] = q26 /\ q31 = 1 | q31 : int(1..4)]) /\
+           or([x_PartitionOccurrence_WhichPart[q33] = q26 /\ q33 = 2 | q33 : int(1..4)]))
+             | q26 : int(1..4)]),
     and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
     and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
     x_PartitionOccurrence_NumParts <= 4,

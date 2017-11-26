@@ -30,15 +30,23 @@ instance (TypeOf x, Pretty x) => TypeOf (OpApart x) where
 instance EvaluateOp OpApart where
     evaluateOp (OpApart _ ConstantUndefined{}) = return (fromBool False)
     evaluateOp (OpApart (viewConstantSet -> Just ys) (viewConstantPartition -> Just xss)) =
-        return $ ConstantBool $ not $ or
-            [ and [ y `elem` xs | y <- ys ]
-            | xs <- xss
-            ]
+        return $ ConstantBool $ and
+                    [ -- the items in `ys` do not appear together in the partition
+                      not $ or [ and [ y `elem` xs | y <- ys ]
+                               | xs <- xss
+                               ]
+                      -- the items in `ys` appear somewhere in the partition
+                    , and [ y `elem` concat xss | y <- ys ]
+                    ]
     evaluateOp (OpApart (viewConstantSet -> Just ys) (viewConstantPartitionSequence -> Just xss)) =
-        return $ ConstantBool $ not $ or
-            [ and [ y `elem` xs | y <- ys ]
-            | xs <- xss
-            ]
+        return $ ConstantBool $ and
+                    [ -- the items in `ys` do not appear together in the partition
+                      not $ or [ and [ y `elem` xs | y <- ys ]
+                               | xs <- xss
+                               ]
+                      -- the items in `ys` appear somewhere in the partition
+                    , and [ y `elem` concat xss | y <- ys ]
+                    ]
     evaluateOp op = na $ "evaluateOp{OpApart}:" <++> pretty (show op)
 
 instance SimplifyOp OpApart x where
