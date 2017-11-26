@@ -25,7 +25,6 @@ instance ( TypeOf x, Pretty x
     typeOf p@(OpMax x) | Just (dom :: Domain () x) <- project x = do
         ty <- typeOf dom
         case ty of
-            TypeBool{} -> return ty
             TypeInt{}  -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
@@ -40,7 +39,6 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside max:" <+> pretty ty
                                        ]
         case tyInner of
-            TypeBool -> return ()
             TypeInt  -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside max:" <+> pretty ty
@@ -66,9 +64,6 @@ instance EvaluateOp OpMax where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -81,9 +76,6 @@ instance EvaluateOp OpMax where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -96,9 +88,6 @@ instance EvaluateOp OpMax where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp _ = na "evaluateOp{OpMax}"
 

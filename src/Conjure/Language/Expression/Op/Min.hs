@@ -25,7 +25,6 @@ instance ( TypeOf x, Pretty x
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
         ty <- typeOf dom
         case ty of
-            TypeBool{} -> return ty
             TypeInt{}  -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
@@ -40,7 +39,6 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside min:" <+> pretty ty
                                        ]
         case tyInner of
-            TypeBool -> return ()
             TypeInt  -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside min:" <+> pretty ty
@@ -66,9 +64,6 @@ instance EvaluateOp OpMin where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -81,9 +76,6 @@ instance EvaluateOp OpMin where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -96,9 +88,6 @@ instance EvaluateOp OpMin where
                     TypeInt -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
-                    TypeBool -> do
-                        is <- concatMapM boolsOut xs
-                        return $ ConstantBool (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 
