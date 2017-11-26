@@ -732,20 +732,24 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                             fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
                                 ComprehensionLetting{} -> return (Just stmt)
                                 _ -> return Nothing
-                        msg <- case (decisionConditions, comprehensionLettings) of
-                            ([], []) -> return Nothing
-                            (_ , []) -> return $ Just ["Comprehension contains decision expressions as conditions."]
-                            ([], _ ) -> return $ Just ["Comprehension contains local lettings."]
-                            (_ , _ ) -> return $ Just [ "Comprehension contains decision expressions as conditions,"
-                                                      , "                   and local lettings."
-                                                      ]
-                        case msg of
-                            Nothing   -> return []
-                            Just msg' -> return $ msg'
-                                                ++ [ nest 4 (pretty (hole x)) ]
-                                                ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                                                   | (i, c) <- zip allNats (tail (ascendants x))
-                                                   ]
+                        unsupportedGenerator <-
+                            fmap catMaybes $ forM stmts $ \ stmt -> case stmt of
+                                Generator GenInExpr{} -> return (Just stmt)
+                                _ -> return Nothing
+                        let msgs =  [ "decision expressions as conditions"
+                                    | not (null decisionConditions) ]
+                                 ++ [ "local lettings"
+                                    | not (null comprehensionLettings) ]
+                                 ++ [ "unsupported generators"
+                                    | not (null unsupportedGenerator) ]
+                        let msg = "Comprehension contains" <+> prettyListDoc id "," msgs <> "."
+                        case msgs of
+                            [] -> return []
+                            _  -> return $ [ msg ]
+                                        ++ [ nest 4 (pretty (hole x)) ]
+                                        ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
+                                           | (i, c) <- zip allNats (tail (ascendants x))
+                                           ]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1045,7 +1049,6 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet
-    -- , Vertical.Matrix.rule_Comprehension_ToSet2
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
