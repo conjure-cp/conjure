@@ -3,6 +3,7 @@
 module Conjure.Language.Expression.Op.FrameUpdate where
 
 import Conjure.Prelude
+import Conjure.Bug
 import Conjure.Language.Expression.Op.Internal.Common
 
 import qualified Data.Aeson as JSON             -- aeson
@@ -10,11 +11,20 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
 
-data OpFrameUpdate x = OpFrameUpdate x      -- old
-                                     x      -- new
-                                     x      -- old focus variables, list of "Reference"s, we use the "Name"s
-                                     x      -- new focus variables, list of "Reference"s, we use the "Name"s
-                                     x      -- constraint
+data OpFrameUpdate x
+        = OpFrameUpdate
+            x      -- old
+            x      -- new
+            [Name] -- old focus variables, list of "Reference"s, we use the "Name"s
+            [Name] -- new focus variables, list of "Reference"s, we use the "Name"s
+            x      -- constraint
+        -- ignore this constructor, it is only here to support the TH
+        | OpFrameUpdateInternal
+            x      -- old
+            x      -- new
+            (Either [Name] x)
+            (Either [Name] x)
+            x      -- constraint
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (OpFrameUpdate x)
@@ -38,6 +48,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
                                                   , "Fourth argument must be of type bool."
                                                   , "Instead, it has the following type:" <+> pretty tyCons
                                                   ]
+    typeOf p@OpFrameUpdateInternal{} = bug $ "typeOf{OpFrameUpdateInternal}" <+> pretty p
 
 instance EvaluateOp OpFrameUpdate where
     -- TODO: How do we evaluate this???
@@ -51,10 +62,11 @@ instance Pretty x => Pretty (OpFrameUpdate x) where
         "frameUpdate" <> prettyList prParens ","
             [ pretty old
             , pretty new
-            , pretty oldFocus
-            , pretty newFocus
+            , prettyList prBrackets "," oldFocus
+            , prettyList prBrackets "," newFocus
             , pretty cons
             ]
+    prettyPrec _ p@OpFrameUpdateInternal{} = bug $ "prettyPrec{OpFrameUpdateInternal}" <+> pretty (show p)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate x) where
     varSymBreakingDescription (OpFrameUpdate old new oldFocus newFocus cons) = JSON.Object $ M.fromList
@@ -62,8 +74,9 @@ instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription old
             , varSymBreakingDescription new
-            , varSymBreakingDescription oldFocus
-            , varSymBreakingDescription newFocus
+            , toJSON oldFocus
+            , toJSON newFocus
             , varSymBreakingDescription cons
             ])
         ]
+    varSymBreakingDescription OpFrameUpdateInternal{} = bug "varSymBreakingDescription{OpFrameUpdateInternal}"

@@ -47,9 +47,9 @@ addNeighbourhoods config inpModel = do
 
 generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
 generateNeighbourhoods theVarName theVar domain = do
-    let theIncumbentVar = [essence|incumbent(&theVar)|]
+    let theIncumbentVar = [essence| incumbent(&theVar) |]
     neighbourhoods <- allNeighbourhoods theIncumbentVar theVar domain
-    return $ nub $ concatMap (skeleton theVarName theVar domain) neighbourhoods
+    return $ sortNub $ concatMap (skeleton theVarName theVar domain) neighbourhoods
 
 
 skeleton
@@ -58,16 +58,15 @@ skeleton
     -> [Statement]
 skeleton varName var _ gen =
     let
-
-        (generatorName, neighbourhoodSize,  consGen) = gen
+        (generatorName, neighbourhoodSize, consGen) = gen
 
         neighbourhoodGroupName = mconcat [varName, "_neighbourhoodGroup"]
 
         neighbourhoodName     = mconcat [varName, "_", generatorName]
         neighbourhoodSizeName = "size"
-        neighbourhoodSizeVar = Reference neighbourhoodSizeName Nothing
+        neighbourhoodSizeVar  = Reference neighbourhoodSizeName Nothing
 
-        statements =  consGen neighbourhoodSizeVar
+        statements = consGen neighbourhoodSizeVar
 
     in
         [ SNS_Group neighbourhoodGroupName [var]
@@ -86,33 +85,34 @@ type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Express
 
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
-    [mSetOrSetLiftSingle
+    [ mSetOrSetLiftSingle
     , functionLiftSingle
     , functionLiftMultiple
-    , mSetOrSetLiftMultiple 
-     , mSetOrSetRemove
-     , mSetOrSetAdd
-     , mSetOrSetSwap
-     , mSetOrSetSwapAdd
-     , mSetOrSetSwapRemove
-     , sequenceReverseSub
-     , sequenceAnySwap
-     , sequenceRelaxSub
-     , sequenceRotateRight
-     , sequenceRotateLeft 
-     , sequenceAddRight
-     , sequenceAddLeft
-     , sequenceRemoveRight
-     , sequenceRemoveLeft
-     , functionLessInjective
-     , functionMoreInjective
-     , functionAnySwap
-     , functionMoreDefined
-     , functionLessDefined]
+    , mSetOrSetLiftMultiple
+    , mSetOrSetRemove
+    , mSetOrSetAdd
+    , mSetOrSetSwap
+    , mSetOrSetSwapAdd
+    , mSetOrSetSwapRemove
+    , sequenceReverseSub
+    , sequenceAnySwap
+    , sequenceRelaxSub
+    , sequenceRotateRight
+    , sequenceRotateLeft
+    , sequenceAddRight
+    , sequenceAddLeft
+    , sequenceRemoveRight
+    , sequenceRemoveLeft
+    , functionLessInjective
+    , functionMoreInjective
+    , functionAnySwap
+    , functionMoreDefined
+    , functionLessDefined
+    ]
 
 multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
-    [mSetOrSetMove
+    [ mSetOrSetMove
     , mSetOrSetCollect
     , mSetOrSetCrossOver
     , mSetOrSetSplit
@@ -123,7 +123,8 @@ multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     , sequenceSplitLeftOrRight
     , sequenceCrossOverSub
     , sequenceCrossOverAny
-    , functionCrossOver]
+    , functionCrossOver
+    ]
 
 
 --some helper functions

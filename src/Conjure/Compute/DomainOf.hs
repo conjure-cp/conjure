@@ -560,7 +560,7 @@ instance (Pretty x, DomainOf x, Dom :< x) => DomainOf (OpIncumbent x) where
     indexDomainsOf (OpIncumbent x) = indexDomainsOf x
 
 instance DomainOf (OpFrameUpdate x) where
-    domainOf OpFrameUpdate{} = return DomainBool
+    domainOf _ = return DomainBool
 
 instance (Pretty x, DomainOf x) => DomainOf (OpSlicing x) where
     domainOf (OpSlicing x _ _) = domainOf x

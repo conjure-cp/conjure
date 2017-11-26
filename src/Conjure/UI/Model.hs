@@ -22,7 +22,7 @@ import Conjure.Language.CategoryOf
 import Conjure.Language.TypeOf
 import Conjure.Compute.DomainOf
 import Conjure.Language.Lenses
-import Conjure.Language.TH ( essence )
+import Conjure.Language.TH
 import Conjure.Language.Expression.Op
 import Conjure.Language.ModelStats ( modelInfo )
 import Conjure.Language.Instantiate ( instantiateExpression, trySimplify )

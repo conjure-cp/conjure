@@ -1,14 +1,19 @@
 {-# LANGUAGE TemplateHaskell #-}
 
-module Conjure.Language.TH ( essence, essenceDomain, essenceStmts, module X ) where
+module Conjure.Language.TH
+    ( essence, essenceDomain, essenceStmts
+    , fixAfterParsing
+    ) where
 
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Expression.Op.FrameUpdate
 import Conjure.Language.Domain
 import Conjure.Language.Parser
-import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
+import Conjure.Language.Pretty
+import Conjure.Language.Lenses ( fixRelationProj )
 
 
 -- megaparsec
@@ -29,7 +34,7 @@ essenceStmts = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixAfterParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
@@ -44,7 +49,7 @@ essence = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixAfterParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
@@ -59,7 +64,7 @@ essenceDomain = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixAfterParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str
@@ -113,3 +118,30 @@ patName _ = Nothing
 toPat :: String -> Maybe PatQ
 toPat "_" = Just wildP
 toPat x = Just (varP (mkName x))
+
+
+
+fixAfterParsing :: (Data a, Show a) => a -> a
+fixAfterParsing = fixFrameUpdate . fixRelationProj
+
+fixFrameUpdate :: (Data a, Show a) => a -> a
+fixFrameUpdate = transformBi f
+    where
+        f :: OpFrameUpdate Expression -> OpFrameUpdate Expression
+        f p@OpFrameUpdate{} = p
+        f p@(OpFrameUpdateInternal old new oldFocus newFocus constraint) =
+            let
+                convert focus =
+                    case focus of
+                        Left xs -> xs
+                        Right x ->
+                            case listOut x of
+                                Just xs -> [nm | Reference nm _ <- xs]
+                                Nothing -> 
+                                    bug $ vcat [ "focus:" <+> pretty (show focus)
+                                               , "whole expr:" <+> pretty (show p)
+                                               ]
+                oldFocusOut = convert oldFocus
+                newFocusOut = convert newFocus
+            in
+                OpFrameUpdate old new oldFocusOut newFocusOut constraint
