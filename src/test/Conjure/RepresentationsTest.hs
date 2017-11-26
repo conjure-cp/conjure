@@ -13,8 +13,7 @@ import Conjure.Representations ( downC, up, downC1, up1 )
 
 -- tasty
 import Test.Tasty
-import Test.Tasty.HUnit
-import Test.Tasty.HUnit ( Assertion, testCase, assertFailure )
+import Test.Tasty.HUnit ( Assertion, testCase, assertFailure, (@?=) )
 -- import Test.Tasty.QuickCheck as QC
 -- import Test.Tasty.SmallCheck as SC
 
