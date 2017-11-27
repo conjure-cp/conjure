@@ -27,11 +27,6 @@ matrix:
   include:
 
     - os: linux
-      env: GHC=7.8.4 SR="-O2" SOL=minion
-      compiler: ": # GHC 7.8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.8.4]}}
-
-    - os: linux
       env: GHC=7.10.3 SR="-O2" SOL=minion
       compiler: ": # GHC 7.10.3"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-7.10.3]}}
