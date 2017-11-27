@@ -55,6 +55,7 @@ import Conjure.Language.Expression
 -- aeson
 import Data.Aeson ( (.=), (.:) )
 import qualified Data.Aeson as JSON
+import qualified Data.Aeson.Types as JSON
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
