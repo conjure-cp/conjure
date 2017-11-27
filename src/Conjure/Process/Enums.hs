@@ -241,11 +241,6 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                     [ [ helper inner c | c <- line ]
                     | line <- vals ]
 
-            (DomainPartitionSequence _ _ inner, ConstantAbstract (AbsLitPartitionSequence vals)) ->
-                ConstantAbstract $ AbsLitPartitionSequence
-                    [ [ helper inner c | c <- line ]
-                    | line <- vals ]
-
             _ -> bug ("addEnumsAndUnnamedsBack 3:" <++> vcat [ "domain  :" <+> pretty domain
                                                              , "constant:" <+> pretty constant
                                                              ])

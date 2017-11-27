@@ -23,7 +23,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
         ty <- typeOf x
         case ty of
             TypePartition a -> return (TypeSet (TypeSet a))
-            TypePartitionSequence a -> return (TypeSet (TypeSequence a))
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -31,8 +30,6 @@ instance (TypeOf x, Pretty x) => TypeOf (OpParts x) where
 instance EvaluateOp OpParts where
     evaluateOp (OpParts (viewConstantPartition -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSet) xs
-    evaluateOp (OpParts (viewConstantPartitionSequence -> Just xs)) =
-        return $ ConstantAbstract $ AbsLitSet $ map (ConstantAbstract . AbsLitSequence) xs
     evaluateOp op = na $ "evaluateOp{OpParts}:" <++> pretty (show op)
 
 instance SimplifyOp OpParts x where

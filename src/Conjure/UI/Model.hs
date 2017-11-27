@@ -87,9 +87,6 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
-import qualified Conjure.Rules.Horizontal.PartitionSequence as Horizontal.PartitionSequence
-import qualified Conjure.Rules.Vertical.PartitionSequence.PartitionSequenceAsSet as Vertical.PartitionSequence.PartitionSequenceAsSet
-
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
 import qualified Conjure.Rules.TildeOrdering as TildeOrdering
@@ -1284,8 +1281,6 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
-    , Vertical.PartitionSequence.PartitionSequenceAsSet.rule_Comprehension
-
     ]
 
 horizontalRules :: [Rule]
@@ -1410,18 +1405,6 @@ horizontalRules =
     , Horizontal.Partition.rule_Participants
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
-
-    , Horizontal.PartitionSequence.rule_Comprehension_Literal
-    , Horizontal.PartitionSequence.rule_Eq
-    , Horizontal.PartitionSequence.rule_Neq
-    , Horizontal.PartitionSequence.rule_DotLeq
-    , Horizontal.PartitionSequence.rule_DotLt
-    , Horizontal.PartitionSequence.rule_Together
-    , Horizontal.PartitionSequence.rule_Apart
-    , Horizontal.PartitionSequence.rule_Party
-    , Horizontal.PartitionSequence.rule_Participants
-    , Horizontal.PartitionSequence.rule_Card
-    , Horizontal.PartitionSequence.rule_In
 
     ]
 
