@@ -149,46 +149,47 @@ rule_frameUpdate = "set-frameUpdate{Explicit}" `namedRule` theRule where
             ( "Vertical rule for set-frameUpdate, Explicit representation"
             , do
 
-                focusNames_a <- forM sourceFocus $ \ a -> do
+                sourceFocusNames <- forM sourceFocus $ \ x -> do
                     (auxName, aux) <- auxiliaryVar
-                    return (a, auxName, aux, sourceIndex)
+                    return (x, auxName, aux, sourceIndex)
 
-                focusNames_b <- forM targetFocus $ \ b -> do
+                targetFocusNames <- forM targetFocus $ \ x -> do
                     (auxName, aux) <- auxiliaryVar
-                    return (b, auxName, aux, targetIndex)
+                    return (x, auxName, aux, targetIndex)
 
                 let
-                    focusVars_a :: Expression
-                    focusVars_a = fromList $ [auxVar | (_,_,auxVar,_) <- focusNames_a]
+                    sourceFocusVars :: Expression
+                    sourceFocusVars = fromList $ [auxVar | (_,_,auxVar,_) <- sourceFocusNames]
 
-                    focusVars_b :: Expression
-                    focusVars_b = fromList $ [auxVar | (_,_,auxVar,_) <- focusNames_a]
+                    targetFocusVars :: Expression
+                    targetFocusVars = fromList $ [auxVar | (_,_,auxVar,_) <- targetFocusNames]
 
                     consOut :: Expression
                     consOut = flip transform cons $ \ h -> case h of
                         Reference nm (Just FrameUpdateVar{}) ->
-                            case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
-                                 , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
+                            case ( [auxVar | (userName, _, auxVar, _) <- sourceFocusNames, userName == nm]
+                                 , [auxVar | (userName, _, auxVar, _) <- targetFocusNames, userName == nm] ) of
                                 ([auxVar], _) -> [essence| &sourceValues[&auxVar] |]
                                 (_, [auxVar]) -> [essence| &targetValues[&auxVar] |]
                                 _             -> h
                         _ -> h
 
                     frameUpdateOut :: Expression
-                    frameUpdateOut = [essence| frameUpdate(&sourceValues, &targetValues, &focusVars_a, &focusVars_b) |]
+                    frameUpdateOut =
+                        [essence| frameUpdate(&sourceValues, &targetValues, &sourceFocusVars, &targetFocusVars) |]
 
-                let out = WithLocals
+                    out = WithLocals
                         [essence| true |]
                         (AuxiliaryVars $
                             [ Declaration (FindOrGiven LocalFind auxName domain)
-                            | (_userName, auxName, _auxVar, domain) <- focusNames_a
+                            | (_userName, auxName, _auxVar, domain) <- sourceFocusNames
                             ] ++
                             [ Declaration (FindOrGiven LocalFind auxName domain)
-                            | (_userName, auxName, _auxVar, domain) <- focusNames_b
+                            | (_userName, auxName, _auxVar, domain) <- targetFocusNames
                             ] ++
                             [ SuchThat
-                                [ make opAllDiff focusVars_a
-                                , make opAllDiff focusVars_b
+                                [ make opAllDiff sourceFocusVars
+                                , make opAllDiff targetFocusVars
                                 , consOut
                                 , frameUpdateOut
                                 ]
