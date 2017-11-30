@@ -56,148 +56,75 @@ rule_Freq = "mset-freq{ExplicitWithFlags}" `namedRule` theRule where
 rule_frameUpdate :: Rule
 rule_frameUpdate = "mset-frameUpdate{ExplicitWithFlags}" `namedRule` theRule where
     theRule p = do
-        (old, new, oldFocus, newFocus, cons) <- match opFrameUpdate p
+        (source, target, sourceFocus, targetFocus, cons) <- match opFrameUpdate p
 
-        TypeMSet{}                   <- typeOf old
-        MSet_ExplicitWithFlags       <- representationOf old
-        [oldFlags, oldValues]        <- downX1 old
-        (oldIndex:_)                 <- indexDomainsOf oldValues
+        TypeMSet{}                  <- typeOf source
+        MSet_ExplicitWithFlags      <- representationOf source
+        [sourceFlags, sourceValues] <- downX1 source
+        (sourceIndex:_)             <- indexDomainsOf sourceValues
 
-        TypeMSet{}                   <- typeOf new
-        MSet_ExplicitWithFlags       <- representationOf new
-        [newFlags, newValues]        <- downX1 new
-        (newIndex:_)                 <- indexDomainsOf newValues
+        TypeMSet{}                  <- typeOf target
+        MSet_ExplicitWithFlags      <- representationOf target
+        [targetFlags, targetValues] <- downX1 target
+        (targetIndex:_)             <- indexDomainsOf targetValues
 
         return
             ( "Vertical rule for mset-frameUpdate, ExplicitWithFlags representation"
             , do
 
-                focusNames_a <- forM oldFocus $ \ a -> do
+                sourceFocusNames <- forM sourceFocus $ \ x -> do
                     (auxName, aux) <- auxiliaryVar
-                    return (a, auxName, aux, oldIndex)
+                    return (x, auxName, aux, sourceIndex)
 
-                focusNames_b <- forM newFocus $ \ b -> do
+                targetFocusNames <- forM targetFocus $ \ x -> do
                     (auxName, aux) <- auxiliaryVar
-                    return (b, auxName, aux, newIndex)
+                    return (x, auxName, aux, targetIndex)
 
-                let consOut = flip transform cons $ \ h -> case h of
+                let
+                    sourceFocusVars :: Expression
+                    sourceFocusVars = fromList $ [auxVar | (_,_,auxVar,_) <- sourceFocusNames]
+
+                    targetFocusVars :: Expression
+                    targetFocusVars = fromList $ [auxVar | (_,_,auxVar,_) <- targetFocusNames]
+
+                    consOut :: Expression
+                    consOut = flip transform cons $ \ h -> case h of
                         Reference nm (Just FrameUpdateVar{}) ->
-                            case ( [auxVar | (userName, _, auxVar, _) <- focusNames_a, userName == nm]
-                                 , [auxVar | (userName, _, auxVar, _) <- focusNames_b, userName == nm] ) of
-                                ([auxVar], _) -> [essence| &oldValues[&auxVar] |]
-                                (_, [auxVar]) -> [essence| &newValues[&auxVar] |]
+                            case ( [auxVar | (userName, _, auxVar, _) <- sourceFocusNames, userName == nm]
+                                 , [auxVar | (userName, _, auxVar, _) <- targetFocusNames, userName == nm] ) of
+                                ([auxVar], _) -> [essence| &sourceValues[&auxVar] |]
+                                (_, [auxVar]) -> [essence| &targetValues[&auxVar] |]
                                 _             -> h
                         _ -> h
 
-                (kPat, k) <- quantifiedVar
-                (contiguousCountsPat, contiguousCounts) <- auxiliaryVar
-                (offsetsPat, offsets) <- auxiliaryVar
+                    frameUpdateOut :: Expression
+                    frameUpdateOut = [essence| frameUpdate(&sourceValues, &targetValues, &sourceFocusVars, &targetFocusVars) |]
 
-                -- build contiguousCounts
-                let
-                    contiguousCountsCons =
-                        let
-                            is_a t = make opOr  $ fromList [ [essence| &t = &i |]
-                                                           | (_, _, i, _) <- focusNames_a
-                                                           ]
+                    nbSources = Constant $ ConstantInt $ genericLength sourceFocus
+                    nbTargets = Constant $ ConstantInt $ genericLength targetFocus
+                    impliedSize =
+                        [essence| |&target| = |&source| + (&nbTargets - &nbSources) |]
 
-                            maxOldIndex = [essence| max(`&oldIndex`) |]
-                            maxOldIndex_is_a = is_a maxOldIndex
-
-                            maxOldIndexMinusK_is_a = is_a [essence| &maxOldIndex - &k |]
-
-                        in
-                            [essence|
-                                (&contiguousCounts[&maxOldIndex] = toInt(&maxOldIndex_is_a)) /\
-                                forAll &kPat : int(1..&maxOldIndex-1) .
-                                    (&contiguousCounts[&maxOldIndex-&k] = 0 <-> ! &maxOldIndexMinusK_is_a) /\
-                                    (&maxOldIndexMinusK_is_a -> &contiguousCounts[&maxOldIndex-&k] = &contiguousCounts[&maxOldIndex-(&k-1)] +1)
-                            |]
-
-                -- build offsets matrix
-                let
-                    buildOffSetsCons = 
-                        let
-                            is_b t = make opOr  $ fromList [ [essence| &t = &i |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-
-                            k_is_b = is_b k
-
-                            one_is_b = is_b [essence| 1 |]
-
-                            maxOldIndex = [essence| max(`&oldIndex`) |]
-
-                        in
-                            [essence|
-                                (&offsets[1] = (0 - toInt(&one_is_b) + catchUndef(&contiguousCounts[1 - toInt(&one_is_b)], 0))) /\
-                                forAll &kPat : int(2..&maxOldIndex) .
-                                    &offsets[&k] = (&offsets[&k-1] - toInt(&k_is_b))
-                                                + catchUndef(&contiguousCounts[(&offsets[&k-1] - toInt(&k_is_b)) + &k], 0)
-                            |]
-
-                let nbOlds = Constant $ ConstantInt $ genericLength oldFocus
-                let nbNews = Constant $ ConstantInt $ genericLength newFocus
-
-                -- keep everything out of focus unchanged
-                let freezeFrameCons =
-                        let
-                            k_is_b = make opOr  $ fromList [ [essence| &k = &i |]
-                                                           | (_, _, i, _) <- focusNames_b
-                                                           ]
-
-                            maxOldIndex = [essence| max(`&oldIndex`) |]
-
-                        in
-                            if length newFocus >= length oldFocus
-                                then
-                                    [essence|
-                                        forAll &kPat : int(1..&maxOldIndex) .
-                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
-                                    |]
-                                else
-                                    [essence|
-                                        forAll &kPat : int(1..&maxOldIndex - (&nbOlds - &nbNews)) .
-                                            (! &k_is_b) -> &newValues[&k] = &oldValues[&k + &offsets[&k]]
-                                    |]
-
-                let impliedSize =
-                        [essence| |&new| = |&old| + (&nbNews - &nbOlds) |]
-
-                let out = WithLocals
+                    out = WithLocals
                         [essence| true |]
                         (AuxiliaryVars $
                             [ Declaration (FindOrGiven LocalFind auxName domain)
-                            | (_userName, auxName, _auxVar, domain) <- focusNames_a
+                            | (_userName, auxName, _auxVar, domain) <- sourceFocusNames
                             ] ++
                             [ Declaration (FindOrGiven LocalFind auxName domain)
-                            | (_userName, auxName, _auxVar, domain) <- focusNames_b
-                            ] ++
-                            [ Declaration (FindOrGiven LocalFind contiguousCountsPat
-                                    (DomainMatrix oldIndex
-                                        (DomainInt [RangeBounded
-                                                        (Constant $ ConstantInt 0)
-                                                        (Constant $ ConstantInt $ genericLength focusNames_a)])))
-                            , Declaration (FindOrGiven LocalFind offsetsPat
-                                    (DomainMatrix oldIndex
-                                        (DomainInt [RangeBounded
-                                                        (Constant $ ConstantInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
-                                                        (Constant $ ConstantInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
+                            | (_userName, auxName, _auxVar, domain) <- targetFocusNames
                             ] ++
                             [ SuchThat
-                                [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
-                                , make opAnd     (fromList [ [essence| &oldFlags[&auxVar] > 0 |]
-                                                           | (_,_,auxVar,_) <- focusNames_a ])
+                                [ make opAllDiff sourceFocusVars
+                                , make opAnd     (fromList [ [essence| &sourceFlags[&auxVar] > 0 |]
+                                                           | (_,_,auxVar,_) <- sourceFocusNames ])
 
-                                , make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_b])
-                                , make opAnd     (fromList [ [essence| &newFlags[&auxVar] > 0 |]
-                                                           | (_,_,auxVar,_) <- focusNames_b ])
-
-                                , contiguousCountsCons
-                                , buildOffSetsCons
-                                , freezeFrameCons
+                                , make opAllDiff targetFocusVars
+                                , make opAnd     (fromList [ [essence| &targetFlags[&auxVar] > 0 |]
+                                                           | (_,_,auxVar,_) <- targetFocusNames ])
 
                                 , consOut
+                                , frameUpdateOut
                                 , impliedSize
                                 ]
                             ])
