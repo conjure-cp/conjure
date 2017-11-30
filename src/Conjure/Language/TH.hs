@@ -127,21 +127,30 @@ fixAfterParsing = fixFrameUpdate . fixRelationProj
 fixFrameUpdate :: (Data a, Show a) => a -> a
 fixFrameUpdate = transformBi f
     where
+
+        convert :: OpFrameUpdate Expression -> Either [Name] Expression -> [Name]
+        convert p focus =
+            case focus of
+                Left xs -> xs
+                Right x ->
+                    case listOut x of
+                        Just xs -> [nm | Reference nm _ <- xs]
+                        Nothing -> 
+                            bug $ vcat [ "focus:" <+> pretty (show focus)
+                                       , "whole expr:" <+> pretty (show p)
+                                       ]
         f :: OpFrameUpdate Expression -> OpFrameUpdate Expression
         f p@OpFrameUpdate{} = p
-        f p@(OpFrameUpdateInternal old new oldFocus newFocus constraint) =
+        f p@OpFrameUpdateEprime{} = p
+        f p@(OpFrameUpdateInternal source target sourceFocus targetFocus constraint) =
             let
-                convert focus =
-                    case focus of
-                        Left xs -> xs
-                        Right x ->
-                            case listOut x of
-                                Just xs -> [nm | Reference nm _ <- xs]
-                                Nothing -> 
-                                    bug $ vcat [ "focus:" <+> pretty (show focus)
-                                               , "whole expr:" <+> pretty (show p)
-                                               ]
-                oldFocusOut = convert oldFocus
-                newFocusOut = convert newFocus
+                sourceFocusOut = convert p sourceFocus
+                targetFocusOut = convert p targetFocus
             in
-                OpFrameUpdate old new oldFocusOut newFocusOut constraint
+                OpFrameUpdate source target sourceFocusOut targetFocusOut constraint
+        f p@(OpFrameUpdateEprimeInternal source target sourceFocus targetFocus) =
+            let
+                sourceFocusOut = convert p sourceFocus
+                targetFocusOut = convert p targetFocus
+            in
+                OpFrameUpdateEprime source target sourceFocusOut targetFocusOut

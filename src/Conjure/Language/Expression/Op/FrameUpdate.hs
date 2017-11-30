@@ -12,24 +12,32 @@ import qualified Data.Vector as V               -- vector
 
 
 data OpFrameUpdate x
+
         = OpFrameUpdate
             x      -- source
             x      -- target
             [Name] -- source variables
             [Name] -- target variables
             x      -- constraint
-        -- ignore this constructor, it is only here to support the TH
+        | OpFrameUpdateEprime
+            x      -- source
+            x      -- target
+            [Name] -- source indices
+            [Name] -- target indices
+
+        -- ignore the *Internal constructors, they are only here to support the TH
         | OpFrameUpdateInternal
             x      -- source
             x      -- target
             (Either [Name] x)
             (Either [Name] x)
             x      -- constraint
-        | OpFrameUpdateEprime
+        | OpFrameUpdateEprimeInternal
             x      -- source
             x      -- target
-            [Name] -- source indices
-            [Name] -- target indices
+            (Either [Name] x)
+            (Either [Name] x)
+
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (OpFrameUpdate x)
@@ -53,8 +61,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
                                                   , "Fourth argument must be of type bool."
                                                   , "Instead, it has the following type:" <+> pretty tyCons
                                                   ]
-    typeOf p@OpFrameUpdateInternal{} = bug $ "typeOf{OpFrameUpdateInternal}" <+> pretty p
     typeOf OpFrameUpdateEprime{} = return TypeBool
+    typeOf p@OpFrameUpdateInternal{} = bug $ "typeOf{OpFrameUpdateInternal}" <+> pretty p
+    typeOf p@OpFrameUpdateEprimeInternal{} = bug $ "typeOf{OpFrameUpdateEprimeInternal}" <+> pretty p
 
 instance EvaluateOp OpFrameUpdate where
     -- TODO: How do we evaluate this???
@@ -72,7 +81,6 @@ instance Pretty x => Pretty (OpFrameUpdate x) where
             , prettyList prBrackets "," targetFocus
             , pretty cons
             ]
-    prettyPrec _ p@OpFrameUpdateInternal{} = bug $ "prettyPrec{OpFrameUpdateInternal}" <+> pretty (show p)
     prettyPrec _ (OpFrameUpdateEprime source target sourceFocus targetFocus) =
         "frameUpdate" <> prettyList prParens ","
             [ pretty source
@@ -80,6 +88,8 @@ instance Pretty x => Pretty (OpFrameUpdate x) where
             , prettyList prBrackets "," sourceFocus
             , prettyList prBrackets "," targetFocus
             ]
+    prettyPrec _ p@OpFrameUpdateInternal{} = bug $ "prettyPrec{OpFrameUpdateInternal}" <+> pretty (show p)
+    prettyPrec _ p@OpFrameUpdateEprimeInternal{} = bug $ "prettyPrec{OpFrameUpdateEprimeInternal}" <+> pretty (show p)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate x) where
     varSymBreakingDescription (OpFrameUpdate source target sourceFocus targetFocus cons) = JSON.Object $ M.fromList
@@ -92,7 +102,6 @@ instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate
             , varSymBreakingDescription cons
             ])
         ]
-    varSymBreakingDescription OpFrameUpdateInternal{} = bug "varSymBreakingDescription{OpFrameUpdateInternal}"
     varSymBreakingDescription (OpFrameUpdateEprime source target sourceFocus targetFocus) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpFrameUpdateEprime")
         , ("children", JSON.Array $ V.fromList
@@ -102,3 +111,5 @@ instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate
             , toJSON targetFocus
             ])
         ]
+    varSymBreakingDescription OpFrameUpdateInternal{} = bug "varSymBreakingDescription{OpFrameUpdateInternal}"
+    varSymBreakingDescription OpFrameUpdateEprimeInternal{} = bug "varSymBreakingDescription{OpFrameUpdateEprimeInternal}"

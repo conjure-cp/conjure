@@ -817,20 +817,21 @@ parseOthers = [ parseFunctional l
         parseFrameUpdate = do
             lexeme L_frameUpdate
             parens $ do
-                old <- parseExpr
+                source <- parseExpr
                 comma
-                new <- parseExpr
+                target <- parseExpr
                 comma
-                oldFocus <- Left <$> brackets (commaSeparated parseNameOrMeta) <|>
-                            Right <$> parseExpr
+                sourceFocus <- Left <$> brackets (commaSeparated parseNameOrMeta) <|>
+                               Right <$> parseExpr
                 comma
-                newFocus <- Left <$> brackets (commaSeparated parseNameOrMeta) <|>
-                            Right <$> parseExpr
-                comma
-                cons  <- parseExpr
-                return $ Op $ MkOpFrameUpdate $ case (oldFocus, newFocus) of
-                    (Left os, Left ns) -> OpFrameUpdate old new os ns cons
-                    _                  -> OpFrameUpdateInternal old new oldFocus newFocus cons
+                targetFocus <- Left <$> brackets (commaSeparated parseNameOrMeta) <|>
+                               Right <$> parseExpr
+                mcons       <- optional (comma >> parseExpr)
+                return $ Op $ MkOpFrameUpdate $ case (mcons, sourceFocus, targetFocus) of
+                    (Nothing  , Left os, Left ns) -> OpFrameUpdateEprime source target os ns
+                    (Nothing  , _      , _      ) -> OpFrameUpdateEprimeInternal source target sourceFocus targetFocus
+                    (Just cons, Left os, Left ns) -> OpFrameUpdate source target os ns cons
+                    (Just cons, _      , _      ) -> OpFrameUpdateInternal source target sourceFocus targetFocus cons
 
         parseFunctional :: Lexeme -> Parser Expression
         parseFunctional l = do
