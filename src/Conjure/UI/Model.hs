@@ -641,7 +641,7 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarations :: forall m . (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -702,23 +702,9 @@ updateDeclarations model = do
                                 else go vars2
                     vars' <- go vars
                     return [SNS_Out_Neighbourhood name sizeVarName activationVarName groupName vars']
-
-                -- -- SNS_Neighbourhood name groupName sizeVarName sizeVarDomain body -> do
-                -- SNS_Neighbourhood name activationVarName sizeVarName vars -> do
-                --     let
-                --         go vars1 = do
-                --             vars2 <- fmap concat $ forM vars1 $ \ v -> do
-                --                 mvs <- runMaybeT (downX1 v)
-                --                 case mvs of
-                --                     Just vs | length vs > 0 -> return vs
-                --                     _ -> return [v]
-                --             if vars1 == vars2
-                --                 then return vars1
-                --                 else go vars2
-                --     vars' <- go vars
-                --     return [SNS_Neighbourhood name activationVarName sizeVarName vars']
                 _ -> return [inStatement]
 
+        onEachDomain :: FindOrGiven -> Name -> Domain HasRepresentation Expression -> m [Statement]
         onEachDomain forg nm domain =
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
@@ -726,6 +712,7 @@ updateDeclarations model = do
                     d' <- transformBiM trySimplify $ forgetRepr d
                     return $ Declaration (FindOrGiven forg n d')
 
+        onEachDomainSearch :: Name -> Domain HasRepresentation Expression -> m [Name]
         onEachDomainSearch nm domain =
             runExceptT (downD (nm, domain)) >>= \case
                 Left err -> bug err
@@ -734,6 +721,31 @@ updateDeclarations model = do
                                      ]
 
     statements <- concatMapM onEachStatement (withAfter (mStatements model))
+    return model { mStatements = statements }
+
+
+updateDeclarationsInsideFrameUpdate
+    :: forall m . (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarationsInsideFrameUpdate model = do
+    
+    let
+        onFrameUpdateEprime :: Expression -> m Expression
+        onFrameUpdateEprime p
+            | Just (source, target, sourceFocus, targetFocus) <- match opFrameUpdateEprime p = do
+            let 
+                onE (Reference nm (Just (DeclHasRepr Find _ domain))) =
+                    runExceptT (downD (nm, domain)) >>= \case
+                        Left err -> bug err
+                        Right outs -> return [ Reference n (Just (DeclHasRepr Find n d))
+                                             | (n, d) <- outs
+                                             ]
+                onE x = return [x]
+            source' <- onE source
+            target' <- onE target
+            return $ make opFrameUpdateEprime (fromList source') (fromList target') sourceFocus targetFocus
+        onFrameUpdateEprime p = return p
+
+    statements <- transformBiM onFrameUpdateEprime (mStatements model)
     return model { mStatements = statements }
 
 
@@ -1011,12 +1023,9 @@ addIncumbentVariables model
                 Just q  -> applyWash q
 
         applyWash p@(Reference _ (Just (Alias _))) = return p
-        applyWash p@(Reference nm _) = do
-            if categoryOf p == CatDecision
-                then do
-                    tell [nm]
-                    return (Reference (appendIncumbent nm) Nothing)
-                else return p
+        applyWash (Reference nm (Just (DeclHasRepr Find _ domain))) = do
+            tell [nm]
+            return (Reference (appendIncumbent nm) (Just (DeclHasRepr Find (appendIncumbent nm) domain)))
         applyWash (match opIndexing -> Just (m,i)) = do
             m' <- applyWash m
             return (make opIndexing m' i)
@@ -1069,6 +1078,7 @@ epilogue model = return model
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
     >>= convertSNSNeighbourhood       >>= logDebugId "[convertSNSNeighbourhood]"
     >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
+    >>= updateDeclarationsInsideFrameUpdate >>= logDebugId "[updateDeclarationsInsideFrameUpdate]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"

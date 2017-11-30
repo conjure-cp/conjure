@@ -1419,11 +1419,30 @@ opFrameUpdate
        , x -> m (x, x, [Name], [Name], x)
        )
 opFrameUpdate _ =
-    ( \ old new oldFocus newFocus cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate old new oldFocus newFocus cons
+    ( \ source target sourceFocus targetFocus cons -> inject $ MkOpFrameUpdate $ OpFrameUpdate source target sourceFocus targetFocus cons
     , \ p -> do
             op <- project p
             case op of
-                MkOpFrameUpdate (OpFrameUpdate old new oldFocus newFocus cons) -> return (old, new, oldFocus, newFocus, cons)
+                MkOpFrameUpdate (OpFrameUpdate source target sourceFocus targetFocus cons) -> return (source, target, sourceFocus, targetFocus, cons)
+                _ -> na ("Lenses.opFrameUpdate:" <++> pretty p)
+    )
+
+
+opFrameUpdateEprime
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x -> [Name] -> [Name] -> x
+       , x -> m (x, x, [Name], [Name])
+       )
+opFrameUpdateEprime _ =
+    ( \ source target sourceFocus targetFocus -> inject $ MkOpFrameUpdate $ OpFrameUpdateEprime source target sourceFocus targetFocus
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpFrameUpdate (OpFrameUpdateEprime source target sourceFocus targetFocus) -> return (source, target, sourceFocus, targetFocus)
                 _ -> na ("Lenses.opFrameUpdate:" <++> pretty p)
     )
 
