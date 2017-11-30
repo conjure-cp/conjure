@@ -13,18 +13,23 @@ import qualified Data.Vector as V               -- vector
 
 data OpFrameUpdate x
         = OpFrameUpdate
-            x      -- old
-            x      -- new
-            [Name] -- old focus variables, list of "Reference"s, we use the "Name"s
-            [Name] -- new focus variables, list of "Reference"s, we use the "Name"s
+            x      -- source
+            x      -- target
+            [Name] -- source variables
+            [Name] -- target variables
             x      -- constraint
         -- ignore this constructor, it is only here to support the TH
         | OpFrameUpdateInternal
-            x      -- old
-            x      -- new
+            x      -- source
+            x      -- target
             (Either [Name] x)
             (Either [Name] x)
             x      -- constraint
+        | OpFrameUpdateEprime
+            x      -- source
+            x      -- target
+            [Name] -- source indices
+            [Name] -- target indices
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (OpFrameUpdate x)
@@ -33,9 +38,9 @@ instance ToJSON    x => ToJSON    (OpFrameUpdate x) where toJSON = genericToJSON
 instance FromJSON  x => FromJSON  (OpFrameUpdate x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
-    typeOf p@(OpFrameUpdate old new _ _ cons) = do
-        tyOld <- typeOf old
-        tyNew <- typeOf new
+    typeOf p@(OpFrameUpdate source target _ _ cons) = do
+        tyOld <- typeOf source
+        tyNew <- typeOf target
         tyCons <- typeOf cons
         case (typeUnify tyOld tyNew, typeUnify tyCons TypeBool) of
             (True, True) -> return TypeBool
@@ -49,6 +54,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFrameUpdate x) where
                                                   , "Instead, it has the following type:" <+> pretty tyCons
                                                   ]
     typeOf p@OpFrameUpdateInternal{} = bug $ "typeOf{OpFrameUpdateInternal}" <+> pretty p
+    typeOf OpFrameUpdateEprime{} = return TypeBool
 
 instance EvaluateOp OpFrameUpdate where
     -- TODO: How do we evaluate this???
@@ -58,25 +64,41 @@ instance SimplifyOp OpFrameUpdate x where
     simplifyOp _ = na "simplifyOp{OpFrameUpdate}"
 
 instance Pretty x => Pretty (OpFrameUpdate x) where
-    prettyPrec _ (OpFrameUpdate old new oldFocus newFocus cons) =
+    prettyPrec _ (OpFrameUpdate source target sourceFocus targetFocus cons) =
         "frameUpdate" <> prettyList prParens ","
-            [ pretty old
-            , pretty new
-            , prettyList prBrackets "," oldFocus
-            , prettyList prBrackets "," newFocus
+            [ pretty source
+            , pretty target
+            , prettyList prBrackets "," sourceFocus
+            , prettyList prBrackets "," targetFocus
             , pretty cons
             ]
     prettyPrec _ p@OpFrameUpdateInternal{} = bug $ "prettyPrec{OpFrameUpdateInternal}" <+> pretty (show p)
+    prettyPrec _ (OpFrameUpdateEprime source target sourceFocus targetFocus) =
+        "frameUpdate" <> prettyList prParens ","
+            [ pretty source
+            , pretty target
+            , prettyList prBrackets "," sourceFocus
+            , prettyList prBrackets "," targetFocus
+            ]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpFrameUpdate x) where
-    varSymBreakingDescription (OpFrameUpdate old new oldFocus newFocus cons) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpFrameUpdate source target sourceFocus targetFocus cons) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpFrameUpdate")
         , ("children", JSON.Array $ V.fromList
-            [ varSymBreakingDescription old
-            , varSymBreakingDescription new
-            , toJSON oldFocus
-            , toJSON newFocus
+            [ varSymBreakingDescription source
+            , varSymBreakingDescription target
+            , toJSON sourceFocus
+            , toJSON targetFocus
             , varSymBreakingDescription cons
             ])
         ]
     varSymBreakingDescription OpFrameUpdateInternal{} = bug "varSymBreakingDescription{OpFrameUpdateInternal}"
+    varSymBreakingDescription (OpFrameUpdateEprime source target sourceFocus targetFocus) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpFrameUpdateEprime")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription source
+            , varSymBreakingDescription target
+            , toJSON sourceFocus
+            , toJSON targetFocus
+            ])
+        ]
