@@ -742,7 +742,13 @@ updateDeclarationsInsideFrameUpdate model = do
                 onE x = return [x]
             source' <- onE source
             target' <- onE target
-            return $ make opFrameUpdateEprime (fromList source') (fromList target') sourceFocus targetFocus
+            let
+                conjunct [x] = x
+                conjunct xs = make opAnd (fromList xs)
+            return $ conjunct
+                [ make opFrameUpdateEprime s t sourceFocus targetFocus
+                | (s, t) <- zip source' target'
+                ]
         onFrameUpdateEprime p = return p
 
     statements <- transformBiM onFrameUpdateEprime (mStatements model)
