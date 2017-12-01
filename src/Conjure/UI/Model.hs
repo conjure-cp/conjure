@@ -964,11 +964,11 @@ convertSNSNeighbourhood model
                 st -> userErr1 $ "Unsupported statement type inside a neighbourhood:" <++> pretty st
 
             let liftAllNames =
-                    transform
-                        (\ p -> case p of
-                            Reference nm _ | nm `elem` (sizeVarName : [name | (name, _) <- bodyVars]) ->
-                                Reference (liftName nm) Nothing
-                            _ -> p
+                    transformBi
+                        (\ nm ->
+                            if nm `elem` (sizeVarName : [name | (name, _) <- bodyVars])
+                                then liftName nm
+                                else nm
                         )
 
             let
