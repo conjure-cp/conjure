@@ -1026,10 +1026,11 @@ addIncumbentVariables model
         applyWash (Reference nm (Just (DeclHasRepr Find _ domain))) = do
             tell [nm]
             return (Reference (appendIncumbent nm) (Just (DeclHasRepr Find (appendIncumbent nm) domain)))
+        applyWash p@Reference{} = return p
         applyWash (match opIndexing -> Just (m,i)) = do
             m' <- applyWash m
             return (make opIndexing m' i)
-        applyWash what = bug (pretty (show what))
+        applyWash what = bug (pretty ("applyWash " ++ show what))
 
     (stWashed, originalsWithDups)  <- runWriterT $ descendBiM washIncumbent (mStatements model)
     let originals = nub originalsWithDups
