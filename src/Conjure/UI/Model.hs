@@ -732,13 +732,16 @@ updateDeclarationsInsideFrameUpdate model = do
         onFrameUpdateEprime :: Expression -> m Expression
         onFrameUpdateEprime p
             | Just (source, target, sourceFocus, targetFocus) <- match opFrameUpdateEprime p = do
-            let 
+            let
                 onE (Reference nm (Just (DeclHasRepr Find _ domain))) =
                     runExceptT (downD (nm, domain)) >>= \case
                         Left err -> bug err
                         Right outs -> return [ Reference n (Just (DeclHasRepr Find n d))
                                              | (n, d) <- outs
                                              ]
+                onE x | Just y <- match opIncumbent x = do
+                    ys <- onE y
+                    return (map (make opIncumbent) ys)
                 onE x = return [x]
             source' <- onE source
             target' <- onE target
@@ -1084,8 +1087,8 @@ epilogue model = return model
                                       >>= logDebugId "[epilogue]"
     >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
     >>= convertSNSNeighbourhood       >>= logDebugId "[convertSNSNeighbourhood]"
-    >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
     >>= updateDeclarationsInsideFrameUpdate >>= logDebugId "[updateDeclarationsInsideFrameUpdate]"
+    >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
     >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
     >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
