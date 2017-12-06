@@ -222,6 +222,7 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
                                   (AuxiliaryVars (declsLifted ++ [SuchThat consLifted]))
             )
     theRule WithLocals{} = na "rule_LiftVars"
+    theRule Reference{} = na "rule_LiftVars"
     theRule p = do
         let
             f (WithLocals y (AuxiliaryVars locals@(_:_))) = do
