@@ -30,6 +30,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpIntersect x) where
                                 ]
 
 instance EvaluateOp OpIntersect where
+    evaluateOp p | any isUndef (childrenBi p) = do
+        ty <- typeOf p
+        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpIntersect (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         ty <- typeOf p
         let outs = sortNub [ i | i <- as, i `elem` bs]
@@ -46,7 +49,6 @@ instance EvaluateOp OpIntersect where
                 , let countB = fromMaybe 0 (e `lookup` bsHist)
                 ]
         return $ TypedConstant (ConstantAbstract $ AbsLitMSet $ concat outs) ty
-    -- TODO: what if the same thing is mapped to two different values? undefined behaviour?
     evaluateOp p@(OpIntersect (viewConstantFunction -> Just as) (viewConstantFunction -> Just bs)) = do
         ty <- typeOf p
         let outs = sortNub [ i | i <- as, i `elem` bs]
