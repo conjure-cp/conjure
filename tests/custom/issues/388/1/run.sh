@@ -7,7 +7,7 @@ echo "----"
 cat conjure-output/*.solution
 
 echo "----"
-cat conjure-output/*.solution | sort -u
+cat conjure-output/*.solution | LC_ALL=C sort -u
 
 rm -rf conjure-output *.solution
 
