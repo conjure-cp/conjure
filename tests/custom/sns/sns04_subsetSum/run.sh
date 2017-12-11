@@ -5,7 +5,7 @@ conjure pretty sns.essence > sns-pretty.essence.new
 diff sns-pretty.essence sns-pretty.essence.new
 mv sns-pretty.essence.new sns-pretty.essence
 
-conjure -ac sns.essence
+conjure modelling sns.essence -ac --frameUpdate=decomposition
 
 # remove comments and move file
 cat conjure-output/model000001.eprime | grep -v '\$' > sns-compact.eprime.new

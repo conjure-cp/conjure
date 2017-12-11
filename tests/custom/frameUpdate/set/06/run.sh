@@ -4,6 +4,7 @@ rm -rf output-*
 for i in {1..4}; do
 
     conjure solve *.essence \
+        --frameUpdate=decomposition \
         -aai \
         --channelling=no \
         --copy-solutions=no \

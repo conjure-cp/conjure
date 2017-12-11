@@ -5,6 +5,7 @@ rm -rf WithFlags WithRepetition
 
 # WithFlags
 conjure solve *.essence \
+    --frameUpdate=decomposition \
     -aai \
     --channelling=no \
     --copy-solutions=no \
@@ -17,6 +18,7 @@ grep letting WithFlags/*.solution
 
 # WithRepetition
 conjure solve *.essence \
+    --frameUpdate=decomposition \
     -aai \
     --channelling=no \
     --copy-solutions=no \

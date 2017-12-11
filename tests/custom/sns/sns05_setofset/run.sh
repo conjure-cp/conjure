@@ -1,5 +1,5 @@
 
-conjure -ac --generate-neighbourhoods sns.essence
+conjure modelling sns.essence -ac --generate-neighbourhoods --frameUpdate=decomposition
 
 # remove comments and move file
 cat conjure-output/model000001.eprime | grep -v '\$' > sns-compact.eprime.new

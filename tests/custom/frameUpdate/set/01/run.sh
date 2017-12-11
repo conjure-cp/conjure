@@ -5,6 +5,7 @@ rm -rf Occurrence Explicit
 
 # Occurrence
 conjure solve *.essence \
+    --frameUpdate=decomposition \
     -aai \
     --channelling=no \
     --copy-solutions=no \
@@ -17,6 +18,7 @@ grep letting Occurrence/*.solution
 
 # Explicit
 conjure solve *.essence \
+    --frameUpdate=decomposition \
     -aai \
     --channelling=no \
     --copy-solutions=no \
