@@ -6,16 +6,17 @@ given g_RelationAsMatrix: matrix indexed by [int(1..n), int(1..n)] of bool
 where
     and([!(or([q12_1 = q14_2 /\ q12_2 = q14_1 | q12_1 : int(1..n), q12_2 : int(1..n), g_RelationAsMatrix[q12_1, q12_2]])
            \/
-           or([or([q8_1 = q14_2 /\ q8_2 = path_ExplicitBounded_Values[1] /\ 1 <= path_ExplicitBounded_Length
+           or([or([q8_1 = q14_2 /\ q8_2 = path_ExplicitBounded_Values[1]
                        | q8_1 : int(1..n), q8_2 : int(1..n), g_RelationAsMatrix[q8_1, q8_2]])
+               /\ 1 <= path_ExplicitBounded_Length
                /\
                or([q6_1 = path_ExplicitBounded_Values[path_ExplicitBounded_Length] /\ q6_2 = q14_1
                        | q6_1 : int(1..n), q6_2 : int(1..n), g_RelationAsMatrix[q6_1, q6_2]])
                /\
-               and([or([and([q10_1 = path_ExplicitBounded_Values[x] /\ q10_2 = path_ExplicitBounded_Values[x + 1],
-                             x <= path_ExplicitBounded_Length, x + 1 <= path_ExplicitBounded_Length;
-                                 int(1..3)])
-                            | q10_1 : int(1..n), q10_2 : int(1..n), g_RelationAsMatrix[q10_1, q10_2]])
+               and([and([or([q10_1 = path_ExplicitBounded_Values[x] /\ q10_2 = path_ExplicitBounded_Values[x + 1]
+                                 | q10_1 : int(1..n), q10_2 : int(1..n), g_RelationAsMatrix[q10_1, q10_2]]),
+                         x <= path_ExplicitBounded_Length, x + 1 <= path_ExplicitBounded_Length;
+                             int(1..3)])
                         | x : int(1..path_ExplicitBounded_Length - 1)])
                    | path_ExplicitBounded_Length : int(0..n - 2),
                      path_ExplicitBounded_Values : matrix indexed by [int(1..n - 2)] of int(1..n),

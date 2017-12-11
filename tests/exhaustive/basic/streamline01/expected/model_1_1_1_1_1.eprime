@@ -3,11 +3,14 @@ language ESSENCE' 1.0
 find f_Function1DPartial_Flags: matrix indexed by [int(1..2)] of bool
 find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+find conjure_aux3: int(1..2)
 find conjure_aux1: matrix indexed by [int(1..2)] of int(1..2)
 find conjure_aux2: matrix indexed by [int(1..2)] of int(1..2)
-find conjure_aux3: int(1..2)
 such that
     and([s_Occurrence[q9] -> f_Function1DPartial_Flags[q9] | q9 : int(1..2)]),
+    and([s_Occurrence[q7] -> q7 >= conjure_aux3 | q7 : int(1..2)]),
+    sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) > 0 -> or([s_Occurrence[q7] /\ q7 = conjure_aux3 | q7 : int(1..2)]),
+    sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) = 0 -> conjure_aux3 = 1,
     and([and([s_Occurrence[q5] -> q5 >= conjure_aux1[i] | q5 : int(1..2)]) | i : int(1..2)]),
     and([(sum([toInt(s_Occurrence[q5]) | q5 : int(1..2)]) > 0 ->
           or([s_Occurrence[q5] /\ q5 = conjure_aux1[i] | q5 : int(1..2)]))
@@ -18,9 +21,6 @@ such that
           or([s_Occurrence[q6] /\ q6 = conjure_aux2[i] | q6 : int(1..2)]))
          /\ (sum([toInt(s_Occurrence[q6]) | q6 : int(1..2)]) = 0 -> conjure_aux2[i] = 1)
              | i : int(1..2)]),
-    and([s_Occurrence[q7] -> q7 >= conjure_aux3 | q7 : int(1..2)]),
-    sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) > 0 -> or([s_Occurrence[q7] /\ q7 = conjure_aux3 | q7 : int(1..2)]),
-    sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) = 0 -> conjure_aux3 = 1,
     and([s_Occurrence[i] /\ (i != conjure_aux3 /\ sum([toInt(s_Occurrence[q7]) | q7 : int(1..2)]) > 0) ->
          and([f_Function1DPartial_Values[i] > f_Function1DPartial_Values[conjure_aux1[i]] /\
               sum([toInt(s_Occurrence[q5]) | q5 : int(1..2)]) > 0,

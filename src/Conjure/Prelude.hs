@@ -42,6 +42,7 @@ module Conjure.Prelude
     , nchoosek
     , JSONValue
     , isTopMostZ
+    , getDirectoryContents
     ) where
 
 import GHC.Err as X ( error )
@@ -190,10 +191,11 @@ import qualified Data.Set as S
 import System.IO.Strict ( readFile )
 
 import System.Directory as X
-    ( getDirectoryContents, doesDirectoryExist, doesFileExist
+    ( doesDirectoryExist, doesFileExist
     , createDirectoryIfMissing
     )
-import System.Directory ( removeDirectoryRecursive , removeFile )
+import System.Directory ( removeDirectoryRecursive, removeFile )
+import qualified System.Directory ( getDirectoryContents )
 import System.Environment as X ( getArgs )
 import System.FilePath as X ( (</>) )
 import System.CPUTime ( getCPUTime )
@@ -510,18 +512,21 @@ scope ma = do
     modify (const st)
     return a
 
+getDirectoryContents :: FilePath -> IO [FilePath]
+getDirectoryContents x = System.Directory.getDirectoryContents x `catch` (\ (_ :: SomeException) -> return [] )
+
 getAllDirs :: FilePath -> IO [FilePath]
 getAllDirs x = do
     let dots i = not ( i == "." || i == ".." )
     isDir <- doesDirectoryExist x
-    ys' <- getDirectoryContents x `catch` (\ (_ :: SomeException) -> return [] )
+    ys' <- getDirectoryContents x
     let ys = filter dots ys'
     ([x | isDir] ++) <$> concatMapM getAllDirs (map (x </>) ys)
 
 getAllFiles :: FilePath -> IO [FilePath]
 getAllFiles x = do
     let dots i = not ( i == "." || i == ".." )
-    ys' <- getDirectoryContents x `catch` (\ (_ :: SomeException) -> return [] )
+    ys' <- getDirectoryContents x
     let ys = filter dots ys'
     (x :) <$> concatMapM getAllFiles (map (x </>) ys)
 

@@ -69,6 +69,11 @@ mainWithArgs Modelling{..} = do
                                  return
                                  (parseStrategy s)
 
+    unless (frameUpdateVersion `elem` ["propagator", "decomposition"]) $
+        userErr1 $ vcat [ "Not a valid value for --frameUpdate:" <+> pretty frameUpdateVersion
+                        , "Valid values are: propagator/decomposition"
+                        ]
+
     config <- do
         strategyQ'                  <- parseStrategy_ strategyQ
         strategyA'                  <- parseStrategy_ strategyA
@@ -117,6 +122,7 @@ mainWithArgs Modelling{..} = do
             , Config.representationLevels       = representationLevels
             , Config.generateNeighbourhoods     = generateNeighbourhoods
             , Config.filterNeighbourhoods       = filterNeighbourhoods
+            , Config.frameUpdateVersion         = frameUpdateVersion
             , Config.limitModels                = if limitModels == Just 0 then Nothing else limitModels
             , Config.numberingStart             = numberingStart
             , Config.smartFilenames             = smartFilenames

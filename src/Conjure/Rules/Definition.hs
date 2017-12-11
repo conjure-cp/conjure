@@ -98,6 +98,7 @@ data Config = Config
     , representationLevels       :: Bool
     , generateNeighbourhoods     :: Bool
     , filterNeighbourhoods       :: [Int]
+    , frameUpdateVersion         :: String
     , limitModels                :: Maybe Int
     , numberingStart             :: Int
     , smartFilenames             :: Bool
@@ -128,6 +129,7 @@ instance Default Config where
         , representationLevels       = True
         , generateNeighbourhoods     = False
         , filterNeighbourhoods       = []
+        , frameUpdateVersion         = "progapator"
         , limitModels                = Nothing
         , numberingStart             = 1
         , smartFilenames             = False

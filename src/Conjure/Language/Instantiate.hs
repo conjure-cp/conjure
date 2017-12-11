@@ -143,7 +143,7 @@ instantiateE (Reference name _) = do
         Just x -> instantiateE x
 
 instantiateE (Constant c) = return c
-instantiateE (AbstractLiteral lit) = ConstantAbstract <$> instantiateAbsLit lit
+instantiateE (AbstractLiteral lit) = instantiateAbsLit lit
 instantiateE (Typed x ty) = TypedConstant <$> instantiateE x <*> pure ty
 instantiateE (Op op) = instantiateOp op
 
@@ -196,8 +196,19 @@ instantiateAbsLit
        , EnumerateDomain m
        )
     => AbstractLiteral Expression
-    -> m (AbstractLiteral Constant)
-instantiateAbsLit = mapM instantiateE
+    -> m Constant
+instantiateAbsLit x = do
+    c <- mapM instantiateE x
+    case c of
+        -- for functions, if the same thing is mapped to multiple values, the result is undefined
+        AbsLitFunction vals -> do
+            let nubVals = sortNub vals
+            if length (sortNub (map fst nubVals)) == length nubVals
+                then return $ ConstantAbstract $ AbsLitFunction nubVals
+                else do
+                    ty <- typeOf c
+                    return $ ConstantUndefined "Multiple mappings for the same value." ty
+        _ -> return $ ConstantAbstract c
 
 
 instantiateD

@@ -30,6 +30,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
                                 ]
 
 instance EvaluateOp OpUnion where
+    evaluateOp p | any isUndef (childrenBi p) = do
+        ty <- typeOf p
+        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
     evaluateOp (OpUnion (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub (as ++ bs)
     evaluateOp (OpUnion (viewConstantMSet -> Just as) (viewConstantMSet -> Just bs)) =
