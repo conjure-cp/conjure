@@ -1173,7 +1173,7 @@ allRules config =
       , rule_ChooseReprForLocals        config
       ]
     , bubbleUpRules
-    , verticalRules
+    , verticalRules config
     , horizontalRules
     ] ++ otherRules
       ++ delayedRules
@@ -1192,8 +1192,8 @@ paramRules =
     , Horizontal.Relation.rule_Param_Card
     ]
 
-verticalRules :: [Rule]
-verticalRules =
+verticalRules :: Config -> [Rule]
+verticalRules config =
     [ Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
@@ -1244,28 +1244,42 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
-    , Vertical.Set.Explicit.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.Set.Explicit.rule_frameUpdate_propagator
+        Vertical.Set.Explicit.rule_frameUpdate_decomposition
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate_propagator
+        Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate_decomposition
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate_propagator
+        Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate_decomposition
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate_propagator
+        Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate_decomposition
     , Vertical.Set.Occurrence.rule_Comprehension
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
-    , Vertical.Set.Occurrence.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.Set.Occurrence.rule_frameUpdate_propagator
+        Vertical.Set.Occurrence.rule_frameUpdate_decomposition
 
     , Vertical.MSet.ExplicitWithFlags.rule_Comprehension
     , Vertical.MSet.ExplicitWithFlags.rule_Freq
-    , Vertical.MSet.ExplicitWithFlags.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.MSet.ExplicitWithFlags.rule_frameUpdate_propagator
+        Vertical.MSet.ExplicitWithFlags.rule_frameUpdate_decomposition
 
     , Vertical.MSet.ExplicitWithRepetition.rule_Comprehension
-    , Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate_propagator
+    , frameUpdateDispatch config
+        Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate_propagator
+        Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate_decomposition
 
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Comprehension_Defined
@@ -1302,6 +1316,14 @@ verticalRules =
     , Vertical.Partition.Occurrence.rule_Comprehension
 
     ]
+
+frameUpdateDispatch :: Config -> Rule -> Rule -> Rule
+frameUpdateDispatch config propagator decomposition =
+    case frameUpdateVersion config of
+        "propagator" -> propagator
+        "decomposition" -> decomposition
+        v -> bug ("frameUpdateDispatch:" <+> pretty v)
+
 
 horizontalRules :: [Rule]
 horizontalRules =
