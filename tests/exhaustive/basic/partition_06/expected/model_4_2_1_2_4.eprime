@@ -1,0 +1,167 @@
+language ESSENCE' 1.0
+
+find x_PartitionOccurrence_NumParts: int(1..4)
+find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
+find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
+find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
+find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..4)
+find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..4), int(1..4)] of int(1..5)
+find conjure_aux3_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4), int(1..4)] of bool
+find conjure_aux3_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4), int(1..4)] of int(1..4)
+find conjure_aux1_Occurrence: matrix indexed by [int(1..4), int(1..4), int(1..4)] of bool
+find conjure_aux2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4), int(1..4)] of int(1..5)
+such that
+    and([and([conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q71 + 1] ->
+              conjure_aux3_ExplicitVarSizeWithFlags_Values[q68, q71] <
+              conjure_aux3_ExplicitVarSizeWithFlags_Values[q68, q71 + 1]
+                  | q71 : int(1..3)])
+             | q68 : int(1..4)]),
+    and([and([conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q72] = false ->
+              conjure_aux3_ExplicitVarSizeWithFlags_Values[q68, q72] = 1
+                  | q72 : int(1..4)])
+             | q68 : int(1..4)]),
+    and([and([conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q73 + 1] ->
+              conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q73]
+                  | q73 : int(1..3)])
+             | q68 : int(1..4)]),
+    and([and([x_PartitionOccurrence_WhichPart[q69] = q68 ->
+              or([conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q78] /\
+                  conjure_aux3_ExplicitVarSizeWithFlags_Values[q68, q78] = q69
+                      | q78 : int(1..4)])
+                  | q69 : int(1..4)])
+             | q68 : int(1..4)]),
+    and([and([conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q76] ->
+              or([x_PartitionOccurrence_WhichPart[q69] = q68 /\
+                  conjure_aux3_ExplicitVarSizeWithFlags_Values[q68, q76] = q69
+                      | q69 : int(1..4)])
+                  | q76 : int(1..4)])
+             | q68 : int(1..4)]),
+    and([q68 <= x_PartitionOccurrence_NumParts ->
+         sum([toInt(conjure_aux3_ExplicitVarSizeWithFlags_Flags[q68, q80]) | q80 : int(1..4)]) = 2
+             | q68 : int(1..4)]),
+    and([q1 <= x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] <= 4 | q1 : int(1..4)]),
+    and([q1 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..4)]),
+    x_PartitionOccurrence_NumParts <= 4,
+    and([q2 <= x_PartitionOccurrence_NumParts -> or([x_PartitionOccurrence_WhichPart[q3] = q2 | q3 : int(1..4)])
+             | q2 : int(3..4)]),
+    x_PartitionOccurrence_NumParts = max([x_PartitionOccurrence_WhichPart[q4] | q4 : int(1..4)]),
+    and([x_PartitionOccurrence_PartSizes[q5] = sum([toInt(x_PartitionOccurrence_WhichPart[q6] = q5) | q6 : int(1..4)])
+             | q5 : int(1..4)]),
+    and([q7 <= x_PartitionOccurrence_NumParts ->
+         and([x_PartitionOccurrence_WhichPart[q8] = q7 -> x_PartitionOccurrence_FirstIndex[q7] <= q8 | q8 : int(1..4)])
+             | q7 : int(1..4)]),
+    and([q7 <= x_PartitionOccurrence_NumParts ->
+         or([x_PartitionOccurrence_WhichPart[q8] = q7 /\ x_PartitionOccurrence_FirstIndex[q7] = q8 | q8 : int(1..4)])
+             | q7 : int(1..4)]),
+    and([q7 > x_PartitionOccurrence_NumParts -> x_PartitionOccurrence_FirstIndex[q7] = 1 | q7 : int(1..4)]),
+    and([q9 <= x_PartitionOccurrence_NumParts /\ q10 <= x_PartitionOccurrence_NumParts ->
+         (q9 < q10 <-> x_PartitionOccurrence_FirstIndex[q9] < x_PartitionOccurrence_FirstIndex[q10])
+             | q9 : int(1..4), q10 : int(1..4)]),
+    alldifferent_except([toInt(q83 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q83, q84] !=
+                               5)
+                         *
+                         catchUndef(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy
+                                        [q83, q84],
+                                    0)
+                             | q83 : int(1..4), q84 : int(1..4)],
+                        0),
+    and([q85 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q85, q87] != 5)
+                  | q87 : int(1..4)])
+         >= 1
+             | q85 : int(1..4)]),
+    and([q14 + 1 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q14, ..] <lex
+         x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q14 + 1, ..]
+             | q14 : int(1..3)]),
+    and([q15 > x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q15, q67] = 1
+                  | q67 : int(1..4)])
+             | q15 : int(1..4)]),
+    x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= 4,
+    and([q16 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17] <
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17 + 1]
+              \/ x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q17] = 5
+                  | q17 : int(1..3)])
+             | q16 : int(1..4)]),
+    and([q16 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18] = 5 ->
+              x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q18 + 1] = 5
+                  | q18 : int(1..3)])
+             | q16 : int(1..4)]),
+    and([q16 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q16, q19] != 5)
+                  | q19 : int(1..4)])
+         <= 4
+             | q16 : int(1..4)]),
+    4 =
+    sum([toInt(q22 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
+         catchUndef(sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q22, q24] !=
+                               5)
+                             | q24 : int(1..4)]),
+                    0)
+             | q22 : int(1..4)]),
+    and([and([and([x_PartitionOccurrence_WhichPart[q30] = q29 -> conjure_aux1_Occurrence[q27, q29, q30]
+                       | q30 : int(1..4)])
+                  | q29 : int(1..4)])
+             | q27 : int(1..4)]),
+    and([and([and([conjure_aux1_Occurrence[q27, q29, q31] ->
+                   or([x_PartitionOccurrence_WhichPart[q30] = q29 /\ q31 = q30 | q30 : int(1..4)])
+                       | q31 : int(1..4)])
+                  | q29 : int(1..4)])
+             | q27 : int(1..4)]),
+    and([and([conjure_aux2_ExplicitVarSizeWithDummy[q44, q47] < conjure_aux2_ExplicitVarSizeWithDummy[q44, q47 + 1] \/
+              conjure_aux2_ExplicitVarSizeWithDummy[q44, q47] = 5
+                  | q47 : int(1..3)])
+             | q44 : int(1..4)]),
+    and([and([conjure_aux2_ExplicitVarSizeWithDummy[q44, q48] = 5 ->
+              conjure_aux2_ExplicitVarSizeWithDummy[q44, q48 + 1] = 5
+                  | q48 : int(1..3)])
+             | q44 : int(1..4)]),
+    and([and([x_PartitionOccurrence_WhichPart[q45] = q44 ->
+              or([conjure_aux2_ExplicitVarSizeWithDummy[q44, q53] != 5 /\
+                  conjure_aux2_ExplicitVarSizeWithDummy[q44, q53] = q45
+                      | q53 : int(1..4)])
+                  | q45 : int(1..4)])
+             | q44 : int(1..4)]),
+    and([and([conjure_aux2_ExplicitVarSizeWithDummy[q44, q51] != 5 ->
+              or([x_PartitionOccurrence_WhichPart[q45] = q44 /\ conjure_aux2_ExplicitVarSizeWithDummy[q44, q51] = q45
+                      | q45 : int(1..4)])
+                  | q51 : int(1..4)])
+             | q44 : int(1..4)]),
+    and([q27 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([q29 <= x_PartitionOccurrence_NumParts /\
+             (and([conjure_aux1_Occurrence[q27, q29, q33] ->
+                   or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q27, q35] != 5 /\
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q27, q35] = q33
+                           | q35 : int(1..4)])
+                       | q33 : int(1..4)])
+              /\
+              and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q27, q37] != 5 ->
+                   conjure_aux1_Occurrence
+                       [q27, q29,
+                        x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q27, q37]]
+                       | q37 : int(1..4)]))
+                 | q29 : int(1..4)])
+             | q27 : int(1..4)]),
+    and([q44 <= x_PartitionOccurrence_NumParts ->
+         or([q56 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+             (and([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q56, q58] != 5 ->
+                   or([conjure_aux2_ExplicitVarSizeWithDummy[q44, q60] != 5 /\
+                       conjure_aux2_ExplicitVarSizeWithDummy[q44, q60] =
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q56, q58]
+                           | q60 : int(1..4)])
+                       | q58 : int(1..4)])
+              /\
+              and([conjure_aux2_ExplicitVarSizeWithDummy[q44, q62] != 5 ->
+                   or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q56, q64] != 5 /\
+                       x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q56, q64] =
+                       conjure_aux2_ExplicitVarSizeWithDummy[q44, q62]
+                           | q64 : int(1..4)])
+                       | q62 : int(1..4)]))
+                 | q56 : int(1..4)])
+             | q44 : int(1..4)])
+

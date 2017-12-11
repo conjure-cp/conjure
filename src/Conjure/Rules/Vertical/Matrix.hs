@@ -141,8 +141,8 @@ rule_Comprehension_LiteralIndexed = "matrix-comprehension-literal-indexed" `name
     theRule _ = na "rule_Comprehension_LiteralIndexed"
 
 
-rule_Comprehension_ToSet :: Rule
-rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
+rule_Comprehension_ToSet_Matrix :: Rule
+rule_Comprehension_ToSet_Matrix = "matrix-toSet-matrixInside" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
@@ -151,7 +151,7 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
         TypeMatrix{} <- typeOf matrix
         let upd val old = lambdaToFunction pat old val
         return
-            ( "Vertical rule for comprehension over matrix-toSet"
+            ( "Vertical rule for comprehension over matrix-toSet, matrix inside"
             , do
                  (iPat, i) <- quantifiedVar
                  let val  = make opIndexing i 1
@@ -164,13 +164,41 @@ rule_Comprehension_ToSet = "matrix-toSet" `namedRule` theRule where
     theRule _ = na "rule_Comprehension_ToSet"
 
 
+rule_Comprehension_ToSet_List :: Rule
+rule_Comprehension_ToSet_List = "matrix-toSet-listInside" `namedRule` theRule where
+    theRule p = do
+        Comprehension body gensOrConds <- match opToSet p
+        bodyDomain <- domainOf body
+        let auxDomain = DomainSet () (SetAttr SizeAttr_None) bodyDomain
+        return
+            ( "Vertical rule for comprehension over matrix-toSet, list inside"
+            , do
+                (auxName, aux) <- auxiliaryVar
+                (iPat, i) <- quantifiedVar
+                return $ WithLocals aux $
+                    AuxiliaryVars
+                        [ Declaration (FindOrGiven LocalFind auxName auxDomain)
+                        , SuchThat
+                            -- forAll i in list . i in aux
+                            [ make opAnd $ Comprehension
+                                [essence| &body in &aux |]
+                                gensOrConds
+                            -- forAll i in aux . exists j in list . i = j
+                            , make opAnd $ Comprehension
+                                (make opOr (Comprehension [essence| &i = &body |] gensOrConds))
+                                [Generator (GenInExpr iPat aux)]
+                            ]
+                        ]
+            )
+
+
 -- [ i | ... , i <- [ j | ... j ... ], ... i ... ]
 -- [ j | ... , ... j ..., ... j ... ]
 rule_Comprehension_Nested :: Rule
 rule_Comprehension_Nested = "matrix-comprehension-nested" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, Comprehension innerBody innerGocs), gocAfter) <- matchFirst gensOrConds $ \case
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToMSet] expr)
             _ -> na "rule_Comprehension_Nested"
         let upd val old = lambdaToFunction pat old val
         let

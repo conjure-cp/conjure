@@ -232,7 +232,8 @@ Library
                      , Conjure.UI.LogFollow
 
     build-depends    : base
-                     , aeson >= 1.0
+                     -- the export list have changed
+                     , aeson >= 1.2.2.0
                      , bytestring
                      , cereal >= 0.5.1.0
                      -- changes in newline handling

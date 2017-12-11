@@ -1172,8 +1172,7 @@ allRules config =
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
-    , [ rule_Xor_To_Sum
-      ]
+    , bubbleUpRules
     , verticalRules
     , horizontalRules
     ] ++ otherRules
@@ -1228,7 +1227,8 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_LiteralIndexed
     , Vertical.Matrix.rule_Comprehension_Nested
     , Vertical.Matrix.rule_Comprehension_Hist
-    , Vertical.Matrix.rule_Comprehension_ToSet
+    , Vertical.Matrix.rule_Comprehension_ToSet_Matrix
+    , Vertical.Matrix.rule_Comprehension_ToSet_List
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
@@ -1428,9 +1428,23 @@ horizontalRules =
 
     ]
 
+
+bubbleUpRules :: [Rule]
+bubbleUpRules =
+    [ BubbleUp.rule_MergeNested
+    , BubbleUp.rule_ToAnd
+    , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
+    , BubbleUp.rule_NotBoolYet
+    , BubbleUp.rule_ConditionInsideGeneratorDomain
+    , BubbleUp.rule_LiftVars
+    ]
+
+
 otherRules :: [[Rule]]
 otherRules =
     [
+        [ rule_Xor_To_Sum ]
+    ,
         [ TildeOrdering.rule_BoolInt
         , TildeOrdering.rule_MSet
         , TildeOrdering.rule_ViaMSet
@@ -1444,14 +1458,6 @@ otherRules =
         , DontCare.rule_Variant
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
-        ]
-    ,
-        [ BubbleUp.rule_MergeNested
-        , BubbleUp.rule_ToAnd
-        , BubbleUp.rule_ToMultiply_HeadOfIntComprehension
-        , BubbleUp.rule_NotBoolYet
-        , BubbleUp.rule_ConditionInsideGeneratorDomain
-        , BubbleUp.rule_LiftVars
         ]
     ,
         [ rule_TrueIsNoOp

@@ -27,6 +27,9 @@ instance (Pretty x, TypeOf x) => TypeOf (OpRange x) where
             _                -> raiseTypeError p
 
 instance EvaluateOp OpRange where
+    evaluateOp p | any isUndef (childrenBi p) = do
+        ty <- typeOf p
+        return $ mkUndef ty $ "Has undefined children:" <+> pretty p
     evaluateOp (OpRange (viewConstantFunction -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map snd xs
     evaluateOp op = na $ "evaluateOp{OpRange}:" <++> pretty (show op)
