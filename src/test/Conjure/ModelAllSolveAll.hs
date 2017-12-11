@@ -508,6 +508,7 @@ modelAll dir model = ignoreLogs $ runNameGen model $ flip outputModels model Con
     , representationLevels       = True
     , generateNeighbourhoods     = False
     , filterNeighbourhoods       = []
+    , frameUpdateVersion         = "decomposition"
     , limitModels                = Nothing
     , numberingStart             = 1
     , smartFilenames             = True

@@ -44,6 +44,7 @@ data UI
         , representationLevels       :: Bool                -- (def: True)
         , generateNeighbourhoods     :: Bool                -- (def: False)
         , filterNeighbourhoods       :: [Int]               -- (def: [], meaning all)
+        , frameUpdateVersion         :: String              -- propagator/decomposition
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -112,6 +113,7 @@ data UI
         , representationLevels       :: Bool                -- (def: True)
         , generateNeighbourhoods     :: Bool                -- (def: False)
         , filterNeighbourhoods       :: [Int]               -- (def: [], meaning all)
+        , frameUpdateVersion         :: String              -- propagator/decomposition
         , seed                       :: Maybe Int
         , limitModels                :: Maybe Int
         , limitTime                  :: Maybe Int
@@ -382,6 +384,14 @@ ui = modes
             &= help "Which SNS-style neighbourhoods definitions to produce.\n\
                     \Neighbourhoods will be numbered from 1..n, and this argument is a list of integers.\
                     \Conjure will generate all neighbourhoods by default."
+        , frameUpdateVersion
+            = "propagator"
+            &= name "frameUpdate"
+            &= groupname "SNS"
+            &= explicit
+            &= help "Which version of frameUpdate to use.\n\
+                    \Values are propagator/decomposition.\n\
+                    \Default: propagator."
         , seed
             = Nothing
             &= name "seed"
@@ -788,6 +798,14 @@ ui = modes
             &= help "Which SNS-style neighbourhoods definitions to produce.\n\
                     \Neighbourhoods will be numbered from 1..n, and this argument is a list of integers.\
                     \Conjure will generate all neighbourhoods by default."
+        , frameUpdateVersion
+            = "propagator"
+            &= name "frameUpdate"
+            &= groupname "SNS"
+            &= explicit
+            &= help "Which version of frameUpdate to use.\n\
+                    \Values are propagator/decomposition.\n\
+                    \Default: propagator."
         , seed
             = Nothing
             &= name "seed"
