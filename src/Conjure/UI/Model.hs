@@ -1244,28 +1244,28 @@ verticalRules =
     , Vertical.Set.Explicit.rule_Card
     , Vertical.Set.Explicit.rule_Comprehension
     , Vertical.Set.Explicit.rule_PowerSet_Comprehension
-    , Vertical.Set.Explicit.rule_frameUpdate
+    , Vertical.Set.Explicit.rule_frameUpdate_propagator
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithDummy.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate
+    , Vertical.Set.ExplicitVarSizeWithDummy.rule_frameUpdate_propagator
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithFlags.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate
+    , Vertical.Set.ExplicitVarSizeWithFlags.rule_frameUpdate_propagator
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Card
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_Comprehension
     , Vertical.Set.ExplicitVarSizeWithMarker.rule_PowerSet_Comprehension
-    , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate
+    , Vertical.Set.ExplicitVarSizeWithMarker.rule_frameUpdate_propagator
     , Vertical.Set.Occurrence.rule_Comprehension
     , Vertical.Set.Occurrence.rule_PowerSet_Comprehension
     , Vertical.Set.Occurrence.rule_In
-    , Vertical.Set.Occurrence.rule_frameUpdate
+    , Vertical.Set.Occurrence.rule_frameUpdate_propagator
 
     , Vertical.MSet.ExplicitWithFlags.rule_Comprehension
     , Vertical.MSet.ExplicitWithFlags.rule_Freq
-    , Vertical.MSet.ExplicitWithFlags.rule_frameUpdate
+    , Vertical.MSet.ExplicitWithFlags.rule_frameUpdate_propagator
 
     , Vertical.MSet.ExplicitWithRepetition.rule_Comprehension
-    , Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate
+    , Vertical.MSet.ExplicitWithRepetition.rule_frameUpdate_propagator
 
     , Vertical.Function.Function1D.rule_Comprehension
     , Vertical.Function.Function1D.rule_Comprehension_Defined
