@@ -90,7 +90,9 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
     , functionLiftMultiple
     , mSetOrSetLiftMultiple
     , mSetOrSetRemove
+    , mSetOrSetRemoveSingle
     , mSetOrSetAdd
+    , mSetOrSetAddSingle
     , mSetOrSetSwap
     , mSetOrSetSwapAdd
     , mSetOrSetSwapRemove
@@ -313,9 +315,10 @@ mSetOrSetLiftMultiple theIncumbentVar theVar theDomain
 mSetOrSetLiftMultiple _ _ _ = return []
 
 
+
 mSetOrSetRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetRemove theIncumbentVar theVar theDomain
-    | (Just typeName, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain) = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Remove"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         return
@@ -334,9 +337,14 @@ mSetOrSetRemove _ _ _ = return []
 
 
 
+isPrimitive :: Domain () Expression -> Bool
+isPrimitive (DomainInt _) = True
+isPrimitive DomainBool = True
+isPrimitive _ = False
+
 mSetOrSetAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetAdd theIncumbentVar theVar theDomain
-    | (Just typeName, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain) = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Add"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         return
@@ -352,9 +360,56 @@ mSetOrSetAdd theIncumbentVar theVar theDomain
 mSetOrSetAdd _ _ _ = return []
 
 
+mSetOrSetAddSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetAddSingle theIncumbentVar theVar theDomain
+    | (Just typeName, False, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
+        let generatorName = mconcat [typeName, "AddSingle"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        (a1Pat, a1) <- auxiliaryVar
+        (b1Pat, b1) <- auxiliaryVar
+        (b2Pat, b2) <- auxiliaryVar
+        return
+            [( generatorName
+            , calculatedMaxNhSize 
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                        frameUpdate(&theIncumbentVar,&theVar,[&a1Pat],[&b1Pat,&b2Pat], and([
+                        &b1 = &a1,
+                        |&b2| = &neighbourhoodSize
+                        ]))
+                    |]
+            )]
+mSetOrSetAddSingle _ _ _ = return []
+
+mSetOrSetRemoveSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetRemoveSingle theIncumbentVar theVar theDomain
+    | (Just typeName, False, False) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
+        let generatorName = mconcat [typeName, "RemoveSingle"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        (a1Pat, a1) <- auxiliaryVar
+        (a2Pat, a2) <- auxiliaryVar
+        (b1Pat, b1) <- auxiliaryVar
+        return
+            [( generatorName
+            , calculatedMaxNhSize 
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                        frameUpdate(&theIncumbentVar,&theVar,[&a1Pat,&a2Pat],[&b1Pat], and([
+                        &b1 = &a1,
+                        |&a2| = &neighbourhoodSize
+                        ]))
+                    |]
+            )]
+mSetOrSetRemoveSingle _ _ _ = return []
+
+
+
+
 mSetOrSetSwap :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetSwap theIncumbentVar theVar theDomain
-     | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, True) <- (mSetOrSetName theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Swap"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         return
@@ -372,7 +427,7 @@ mSetOrSetSwap _ _ _ = return []
 
 mSetOrSetSwapAdd :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetSwapAdd theIncumbentVar theVar theDomain
-     | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "SwapAdd"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         return
@@ -391,7 +446,7 @@ mSetOrSetSwapAdd _ _ _ = return []
 
 mSetOrSetSwapRemove :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetSwapRemove theIncumbentVar theVar theDomain
-     | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "SwapRemove"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         return
@@ -410,7 +465,7 @@ mSetOrSetSwapRemove _ _ _ = return []
 
 mSetOrSetMove :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 mSetOrSetMove theDomain
-    | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Move"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         let numberIncumbents = 2
@@ -438,7 +493,7 @@ mSetOrSetMove _ = return []
 
 mSetOrSetCollect :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 mSetOrSetCollect theDomain
-    | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Collect"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         let numberIncumbents = 3
@@ -468,7 +523,7 @@ mSetOrSetCollect _ = return []
 
 mSetOrSetCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 mSetOrSetCrossOver theDomain
-    | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName,  True) <- (mSetOrSetName theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "CrossOver"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         let numberIncumbents = 2
@@ -491,7 +546,7 @@ mSetOrSetCrossOver _ = return []
 
 mSetOrSetSplit :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 mSetOrSetSplit theDomain
-    | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Split"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         let numberIncumbents = 1
@@ -517,7 +572,7 @@ mSetOrSetSplit _ = return []
 
 mSetOrSetMerge :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 mSetOrSetMerge theDomain
-    | Just typeName <- mSetOrSetName theDomain = do
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
         let generatorName = mconcat [typeName, "Merge"]
         let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
         let numberIncumbents = 2
