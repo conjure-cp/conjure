@@ -1,13 +1,14 @@
-Generated the following SNS Neighbourhoods (16 of them in total)
+Generated the following SNS Neighbourhoods (13 of them in total)
 Adding all of them to the model, use --filter-neighbourhoods to select a subset.
 language Essence 1.4
 
 SNSGroup x_neighbourhoodGroup : [x]
-SNSNeighbourhood x_setAdd :
+SNSNeighbourhood x_setAddSingle :
     (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
      such that
-         incumbent(x) subsetEq x,
-         |x| - |incumbent(x)| = size)
+         frameUpdate(incumbent(x), x, [conjure_aux28],
+                     [conjure_aux29, conjure_aux30],
+                     conjure_aux29 = conjure_aux28 /\ |conjure_aux30| = size))
 SNSNeighbourhood x_setLiftMultiple_setCollect :
     (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
      such that
@@ -91,21 +92,11 @@ SNSNeighbourhood x_setLiftSingle_setSwapRemove :
      such that
          frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
                      and([|conjure_aux1 - conjure_aux2| = size; int(1)])))
-SNSNeighbourhood x_setRemove :
+SNSNeighbourhood x_setRemoveSingle :
     (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
      such that
-         x subsetEq incumbent(x),
-         |incumbent(x)| - |x| = size)
-SNSNeighbourhood x_setSwap :
-    (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
-     such that
-         |x - incumbent(x)| = size,
-         |incumbent(x)| = |x|)
-SNSNeighbourhood x_setSwapAdd :
-    (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
-     such that |x - incumbent(x)| = size)
-SNSNeighbourhood x_setSwapRemove :
-    (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
-     such that |incumbent(x) - x| = size)
+         frameUpdate(incumbent(x), x, [conjure_aux25, conjure_aux26],
+                     [conjure_aux27],
+                     conjure_aux27 = conjure_aux25 /\ |conjure_aux26| = size))
 
 
