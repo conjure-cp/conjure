@@ -2,7 +2,7 @@
 
 set -o errexit
 set -o nounset
-set -s nullglob # for the loop
+shopt -s nullglob # for the loop
 
 TESTCASE="$1"
 
