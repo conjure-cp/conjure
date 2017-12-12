@@ -14,12 +14,17 @@ cat all-tests-list | grep 'conjure/custom'     >> test_commands
 cat all-tests-list | grep 'conjure/exhaustive' >> test_commands
 rm all-tests-list
 
+function t {
+    dist/build/conjure-testing/conjure-testing --limit-time 0 -p "$1"
+}
+export -f t
+
 parallel \
     --results test_results \
     --joblog test_joblog \
     --no-notice \
     --eta \
-    "dist/build/conjure-testing/conjure-testing --limit-time 0 -p {}" \
+    "t {}" \
     :::: test_commands
 
 grep FAIL -R test_results

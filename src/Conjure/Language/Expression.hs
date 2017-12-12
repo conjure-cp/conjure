@@ -573,7 +573,8 @@ instance Enum Expression where
 
 data InBubble
     = AuxiliaryVars [Statement]                     -- can only be a LocalFind or a SuchThat
-    | DefinednessConstraints [Expression]
+                                                    -- the variable declarations are lifted to top level, eventually
+    | DefinednessConstraints [Expression]           -- lifted to the closest relational context
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize InBubble
