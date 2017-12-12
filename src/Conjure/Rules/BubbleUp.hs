@@ -223,6 +223,30 @@ rule_LiftVars = "bubble-up-LiftVars" `namedRule` theRule where
             )
     theRule WithLocals{} = na "rule_LiftVars"
     theRule Reference{} = na "rule_LiftVars"
+
+    -- special handling of AuxiliaryVars-bubbles on the rhs of an implication
+    theRule p
+        | Just (a, WithLocals b (AuxiliaryVars locals@(_:_))) <- match opImply p
+        = do
+        let
+            decls = [ l | l@(Declaration (FindOrGiven LocalFind _ _)) <- locals ]
+
+            cons  = make opAnd $ fromList $ concat [ xs | SuchThat xs <- locals ]
+
+            dontCares = make opAnd $ fromList [ make opDontCare (Reference nm Nothing)
+                                              | Declaration (FindOrGiven LocalFind nm _) <- locals
+                                              ]
+
+            p' = [essence| and([ &a -> (&b /\ &cons)
+                               , !&a -> &dontCares
+                               ])
+                         |]
+
+        return
+            ( "Bubbling up auxiliary variables, rhs of imply."
+            , return $ WithLocals p' (AuxiliaryVars decls)
+            )
+
     theRule p = do
         let
             f (WithLocals y (AuxiliaryVars locals@(_:_))) = do
