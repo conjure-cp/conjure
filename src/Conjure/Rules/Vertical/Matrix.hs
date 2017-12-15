@@ -199,7 +199,7 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_ToSet"
-        -- we *can* assume that the list is duplciate-free!
+        -- we *can* assume that the list is duplicate-free!
         (True, list) <- match opToSetWithFlag expr
         TypeList{} <- typeOf list
         return
