@@ -64,7 +64,11 @@ rule_ViaMSet = "tildeLt-via-mset" `namedRule` theRule where
         tyX <- typeOf x
         tyY <- typeOf y
         f   <- case mostDefined [tyX, tyY] of
-            TypeSet{}       -> return $ \ i -> [essence| toMSet(&i) |]
+            TypeSet{}       -> return $ \ i ->
+                case match opToSetWithFlag i of
+                    -- if i is a toSet, that doesn't contain any duplicates anyway, stip the toSet
+                    Just (True, j) -> [essence| toMSet(&j) |]
+                    _              -> [essence| toMSet(&i) |]
             TypeFunction{}  -> return $ \ i -> [essence| toMSet(&i) |]
             TypeRelation{}  -> return $ \ i -> [essence| toMSet(&i) |]
             TypePartition{} -> return $ \ i -> [essence| toMSet(parts(&i)) |]
