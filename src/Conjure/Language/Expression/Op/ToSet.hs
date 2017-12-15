@@ -29,7 +29,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
             TypeFunction i j -> return (TypeSet (TypeTuple [i,j]))
             TypeMatrix _ i   -> return (TypeSet i)
             TypeList i       -> return (TypeSet i)
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty tx
+                                       ]
 
 instance EvaluateOp OpToSet where
     evaluateOp (OpToSet _ (viewConstantMatrix -> Just (_, xs))) =
