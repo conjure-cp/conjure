@@ -25,6 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
             TypeRelation is  -> return (TypeMSet (TypeTuple is))
             TypeSet i        -> return (TypeMSet i)
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
+            TypeList i       -> return (TypeMSet i)
             _ -> raiseTypeError p
 
 instance EvaluateOp OpToMSet where
