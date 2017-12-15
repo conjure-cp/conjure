@@ -24,7 +24,8 @@ rule_Comprehension = "partition-comprehension{Occurrence}" `namedRule` theRule w
                 (pPat, p) <- quantifiedVar
                 (kPat, k) <- quantifiedVar
                 -- the value, a set representing part number p
-                let val = make opToSet $ Comprehension k
+                -- indicate that there won't be duplicates in this comprehension!
+                let val = make opToSetWithFlag True $ Comprehension k
                         [ Generator (GenDomainNoRepr kPat innerDomain)
                         , Condition [essence| &whichPart[&k] = &p |]
                         ]

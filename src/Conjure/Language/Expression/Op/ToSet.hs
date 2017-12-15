@@ -10,7 +10,9 @@ import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
 
-data OpToSet x = OpToSet x
+data OpToSet x = OpToSet
+                    Bool       -- True means we can assume there won't be any duplicates
+                    x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
 instance Serialize x => Serialize (OpToSet x)
@@ -19,7 +21,7 @@ instance ToJSON    x => ToJSON    (OpToSet x) where toJSON = genericToJSON jsonO
 instance FromJSON  x => FromJSON  (OpToSet x) where parseJSON = genericParseJSON jsonOptions
 
 instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
-    typeOf p@(OpToSet x) = do
+    typeOf p@(OpToSet _ x) = do
         tx <- typeOf x
         case tx of
             TypeRelation is  -> return (TypeSet (TypeTuple is))
@@ -30,15 +32,15 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToSet x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpToSet where
-    evaluateOp (OpToSet (viewConstantMatrix -> Just (_, xs))) =
+    evaluateOp (OpToSet _ (viewConstantMatrix -> Just (_, xs))) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
-    evaluateOp (OpToSet (viewConstantSet -> Just xs)) =
+    evaluateOp (OpToSet _ (viewConstantSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
-    evaluateOp (OpToSet (viewConstantMSet -> Just xs)) =
+    evaluateOp (OpToSet _ (viewConstantMSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub xs
-    evaluateOp (OpToSet (viewConstantFunction -> Just xs)) =
+    evaluateOp (OpToSet _ (viewConstantFunction -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
-    evaluateOp (OpToSet (viewConstantRelation -> Just xs)) =
+    evaluateOp (OpToSet _ (viewConstantRelation -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
     evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
 
@@ -46,12 +48,13 @@ instance SimplifyOp OpToSet x where
     simplifyOp _ = na "simplifyOp{OpToSet}"
 
 instance Pretty x => Pretty (OpToSet x) where
-    prettyPrec _ (OpToSet a) = "toSet" <> prParens (pretty a)
+    prettyPrec _ (OpToSet _ a) = "toSet" <> prParens (pretty a)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpToSet x) where
-    varSymBreakingDescription (OpToSet a) = JSON.Object $ M.fromList
+    varSymBreakingDescription (OpToSet b x) = JSON.Object $ M.fromList
         [ ("type", JSON.String "OpToSet")
         , ("children", JSON.Array $ V.fromList
-            [ varSymBreakingDescription a
+            [ toJSON b
+            , varSymBreakingDescription x
             ])
         ]
