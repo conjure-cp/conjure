@@ -4,7 +4,7 @@ SHELL := /bin/bash
 .PHONY: install-with-stack
 install-with-stack:
 	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-8.0.yaml stack.yaml
+	@cp etc/hs-deps/stack-8.2.yaml stack.yaml
 	@stack setup
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
