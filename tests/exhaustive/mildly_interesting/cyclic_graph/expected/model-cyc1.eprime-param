@@ -1,16 +1,6 @@
 language ESSENCE' 1.0
 
 letting n be 5
-letting g_RelationAsMatrix be
-        [[false, true, false, false, false; int(1..5)], [true, false, false, false, false; int(1..5)],
-         [false, false, false, false, false; int(1..5)], [false, false, false, false, false; int(1..5)],
-         [false, false, false, false, false; int(1..5)];
-             int(1..5)]
-$ Visualisation for g_RelationAsMatrix
-$ _ T _ _ _
-$ T _ _ _ _
-$ _ _ _ _ _
-$ _ _ _ _ _
-$ _ _ _ _ _
-
+letting g_RelationAsSet_Explicit_1 be [1, 2; int(1..2)]
+letting g_RelationAsSet_Explicit_2 be [2, 1; int(1..2)]
 letting fin1 be 2
