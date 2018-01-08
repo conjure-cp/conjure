@@ -18,6 +18,7 @@ rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `Rule` theRule wher
         [flags, values]        <- downX1 s
         DomainMatrix index _   <- domainOf values
         let upd val old = lambdaToFunction pat old val
+        theyDo <- doDuplicatesMatter z
         return
             [ RuleResult
                 { ruleResultDescr = "Vertical rule for mset-comprehension, ExplicitWithFlags representation"
@@ -27,7 +28,6 @@ rule_Comprehension = "mset-comprehension{ExplicitWithFlags}" `Rule` theRule wher
                     (jPat, j) <- quantifiedVar
                     let val = [essence| &values[&j] |]
                     let outBody = upd val body
-                    theyDo <- doDuplicatesMatter z
                     return $ Comprehension (if theyDo then [essence| &outBody * &flags[&j] |]
                                                       else outBody)
                             $  gocBefore
