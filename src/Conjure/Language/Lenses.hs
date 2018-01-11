@@ -271,11 +271,30 @@ opToSet
        , x -> m x
        )
 opToSet _ =
-    ( inject . MkOpToSet . OpToSet
+    ( inject . MkOpToSet . OpToSet False
     , \ p -> do
             op <- project p
             case op of
-                MkOpToSet (OpToSet x) -> return x
+                MkOpToSet (OpToSet _ x) -> return x
+                _ -> na ("Lenses.opToSet:" <++> pretty p)
+    )
+
+
+opToSetWithFlag
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( Bool -> x -> x
+       , x -> m (Bool, x)
+       )
+opToSetWithFlag _ =
+    ( \ b x -> inject $ MkOpToSet $ OpToSet b x
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpToSet (OpToSet b x) -> return (b, x)
                 _ -> na ("Lenses.opToSet:" <++> pretty p)
     )
 
@@ -1056,11 +1075,11 @@ opModifier
 opModifier _ =
     ( \ (mk, x) -> mk x
     , \ p -> case project p of
-        Just (MkOpToSet      (OpToSet      x)) -> return (inject . MkOpToSet      . OpToSet      , x)
-        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet     , x)
-        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation , x)
-        Just (MkOpParts      (OpParts      x)) -> return (inject . MkOpParts      . OpParts      , x)
-        _                                      -> return (id                                     , p)
+        Just (MkOpToSet      (OpToSet    _ x)) -> return (inject . MkOpToSet      . OpToSet False , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet      , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation  , x)
+        Just (MkOpParts      (OpParts      x)) -> return (inject . MkOpParts      . OpParts       , x)
+        _                                      -> return (id                                      , p)
     )
 
 
@@ -1075,10 +1094,10 @@ opModifierNoP
 opModifierNoP _ =
     ( \ (mk, x) -> mk x
     , \ p -> case project p of
-        Just (MkOpToSet      (OpToSet      x)) -> return (inject . MkOpToSet      . OpToSet      , x)
-        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet     , x)
-        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation , x)
-        _                                      -> return (id                                     , p)
+        Just (MkOpToSet      (OpToSet    _ x)) -> return (inject . MkOpToSet      . OpToSet False , x)
+        Just (MkOpToMSet     (OpToMSet     x)) -> return (inject . MkOpToMSet     . OpToMSet      , x)
+        Just (MkOpToRelation (OpToRelation x)) -> return (inject . MkOpToRelation . OpToRelation  , x)
+        _                                      -> return (id                                      , p)
     )
 
 

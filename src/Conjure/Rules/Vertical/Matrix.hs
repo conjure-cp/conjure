@@ -167,7 +167,8 @@ rule_Comprehension_ToSet_Matrix = "matrix-toSet-matrixInside" `namedRule` theRul
 rule_Comprehension_ToSet_List :: Rule
 rule_Comprehension_ToSet_List = "matrix-toSet-listInside" `namedRule` theRule where
     theRule p = do
-        Comprehension body gensOrConds <- match opToSet p
+        -- we cannot assume that the list is duplciate-free
+        (False, Comprehension body gensOrConds) <- match opToSetWithFlag p
         bodyDomain <- domainOf body
         let auxDomain = DomainSet () (SetAttr SizeAttr_None) bodyDomain
         return
@@ -190,6 +191,25 @@ rule_Comprehension_ToSet_List = "matrix-toSet-listInside" `namedRule` theRule wh
                             ]
                         ]
             )
+
+
+rule_Comprehension_ToSet_List_DuplicateFree :: Rule
+rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_ToSet"
+        -- we *can* assume that the list is duplicate-free!
+        (True, list) <- match opToSetWithFlag expr
+        TypeList{} <- typeOf list
+        return
+            ( "Vertical rule for comprehension over matrix-toSet, list inside, assumed no duplicates"
+            , return $ Comprehension body
+                     $  gocBefore
+                     ++ [Generator (GenInExpr pat list)]
+                     ++ gocAfter
+            )
+    theRule _ = na "rule_Comprehension_ToSet_List_DuplicateFree"
 
 
 -- [ i | ... , i <- [ j | ... j ... ], ... i ... ]

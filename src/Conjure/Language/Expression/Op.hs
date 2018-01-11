@@ -93,7 +93,7 @@ mkOp op xs =
             L_catchUndef   -> inject $ MkOpCatchUndef   $ OpCatchUndef   (arg xs 0 "catchUndef")
                                                                          (arg xs 1 "catchUndef")
             L_dontCare     -> inject $ MkOpDontCare     $ OpDontCare     (arg xs 0 "dontCare")
-            L_toSet        -> inject $ MkOpToSet        $ OpToSet        (arg xs 0 "toSet")
+            L_toSet        -> inject $ MkOpToSet        $ OpToSet        False (arg xs 0 "toSet")
             L_toMSet       -> inject $ MkOpToMSet       $ OpToMSet       (arg xs 0 "toMSet")
             L_toRelation   -> inject $ MkOpToRelation   $ OpToRelation   (arg xs 0 "toRelation")
             L_max          -> inject $ MkOpMax          $ OpMax          (arg xs 0 "max")
