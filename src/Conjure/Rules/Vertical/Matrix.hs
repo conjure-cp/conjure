@@ -203,7 +203,7 @@ rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `
         (True, list) <- match opToSetWithFlag expr
         TypeList{} <- typeOf list
         return
-            ( "Vertical rule for comprehension over matrix-toSet, matrix inside"
+            ( "Vertical rule for comprehension over matrix-toSet, list inside, assumed no duplicates"
             , return $ Comprehension body
                      $  gocBefore
                      ++ [Generator (GenInExpr pat list)]
