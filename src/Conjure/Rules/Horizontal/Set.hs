@@ -323,6 +323,11 @@ rule_In = "set-in" `namedRule` theRule where
     theRule p = do
         (x,s)     <- match opIn p
         TypeSet{} <- typeOf s
+        -- do not apply this rule to quantified variables
+        -- or else we might miss the opportunity to apply a more specific vertical rule
+        case s of
+            Reference _ (Just InComprehension{}) -> na "rule_In"
+            _ -> return ()
         return
             ( "Horizontal rule for set-in."
             , do
