@@ -1,4 +1,8 @@
-module Conjure.Rules.Import ( module X, doDuplicatesMatter ) where
+module Conjure.Rules.Import
+    ( module X
+    , doDuplicatesMatter
+    , referenceToComprehensionVar
+    ) where
 
 import Conjure.Prelude as X
 import Conjure.Bug as X
@@ -41,4 +45,9 @@ doDuplicatesMatter z0 =
                                         -- case Zipper.up z of
                                         --     Nothing -> na "doDuplicatesMatter"
                                         --     Just u  -> doDuplicatesMatter u
+
+referenceToComprehensionVar :: Expression -> Bool
+referenceToComprehensionVar (Reference _ (Just InComprehension{})) = True
+referenceToComprehensionVar (Op (MkOpIndexing (OpIndexing m _))) = referenceToComprehensionVar m
+referenceToComprehensionVar _ = False
 
