@@ -72,12 +72,12 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension{Occurrence}" `namedRul
 
 rule_In :: Rule
 rule_In = "set-in{Occurrence}" `namedRule` theRule where
-    theRule p = do
-        (x, s)         <- match opIn p
+    theRule [essence| &x in &s |] = do
         TypeSet{}      <- typeOf s
         Set_Occurrence <- representationOf s
         [m]            <- downX1 s
         return
             ( "Vertical rule for set-in, Occurrence representation"
-            , return $ make opIndexing m x
+            , return [essence| &m[&x] |]
             )
+    theRule _ = na "rule_In"

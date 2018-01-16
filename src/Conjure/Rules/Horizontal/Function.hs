@@ -430,6 +430,15 @@ rule_Comprehension_Defined_Size = "function-defined-size" `namedRule` theRule wh
             )
     theRule _ = na "rule_Comprehension_Defined_Size"
 
+rule_Function_Range_SubsetEq :: Rule
+rule_Function_Range_SubsetEq = "function-range-subseteq" `namedRule` theRule where
+  theRule [essence| range(&func) subsetEq &s |] = do
+    return ( "Horizontal rule for function range subsetEq"
+           , do
+             (aPat, a) <- quantifiedVar
+             let aPatAsExpr = patternToExpr aPat
+             return [essence|forAll &aPat in &a . &func(&aPatAsExpr) in &s |])
+  theRule _ = na "rule_Function_Range_SubsetEq"
 
 rule_Comprehension_Range_Size :: Rule
 rule_Comprehension_Range_Size = "function-range-size" `namedRule` theRule where
