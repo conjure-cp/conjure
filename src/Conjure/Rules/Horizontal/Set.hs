@@ -325,9 +325,9 @@ rule_In = "set-in" `namedRule` theRule where
         TypeSet{} <- typeOf s
         -- do not apply this rule to quantified variables
         -- or else we might miss the opportunity to apply a more specific vertical rule
-        case s of
-            Reference _ (Just InComprehension{}) -> na "rule_In"
-            _ -> return ()
+        if referenceToComprehensionVar s
+            then na "rule_In"
+            else return ()
         return
             ( "Horizontal rule for set-in."
             , do
