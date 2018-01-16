@@ -96,6 +96,7 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
     , mSetOrSetSwap
     , mSetOrSetSwapAdd
     , mSetOrSetSwapRemove
+    , mSetOrSetDiff
     , sequenceReverseSub
     , sequenceAnySwap
     , sequenceRelaxSub
@@ -436,7 +437,8 @@ mSetOrSetSwapAdd theIncumbentVar theVar theDomain
              , \ neighbourhoodSize  ->
                     [essenceStmts|
                         such that
-                            |&theVar - &theIncumbentVar| = &neighbourhoodSize
+                            |&theVar - &theIncumbentVar| = &neighbourhoodSize,
+                            |&theVar| >= |&theIncumbentVar|
                     |]
             )]
 mSetOrSetSwapAdd _ _ _ = return []
@@ -455,11 +457,30 @@ mSetOrSetSwapRemove theIncumbentVar theVar theDomain
              , \ neighbourhoodSize  ->
                     [essenceStmts|
                         such that
-                            |&theIncumbentVar - &theVar| = &neighbourhoodSize
+                            |&theIncumbentVar - &theVar| = &neighbourhoodSize,
+                            |&theVar| <= |&theIncumbentVar|
                     |]
             )]
 mSetOrSetSwapRemove _ _ _ = return []
 
+
+
+
+mSetOrSetDiff :: Monad m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetDiff theIncumbentVar theVar theDomain
+    | (Just typeName, False, True) <- (mSetOrSetName theDomain, isFixedSizeMSetOrSet theDomain, isPrimitive $ innerDomainOfMSetOrSet theDomain) = do
+        let generatorName = mconcat [typeName, "Diff"]
+        let calculatedMaxNhSize = getMaxNumberOfElementsInContainer theDomain
+        return
+            [( generatorName
+            , calculatedMaxNhSize 
+             , \ neighbourhoodSize  ->
+                    [essenceStmts|
+                        such that
+                        &neighbourhoodSize = |&theIncumbentVar - &theVar| + |&theVar - &theIncumbentVar|
+                    |]
+            )]
+mSetOrSetDiff _ _ _ = return []
 
 
 
