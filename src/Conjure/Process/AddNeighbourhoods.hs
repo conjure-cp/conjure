@@ -169,52 +169,52 @@ makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theI
         --below local function should build a function frame update with any number of arguments lifted.
          --not sure how to do this in haskel so special cased 1 and 2 lifts
         buildFunctionFrameUpdate :: [(Name,Expression)] -> [(Name,Expression)] -> AbstractPattern -> Expression -> (Expression -> [Statement])
-        buildFunctionFrameUpdate [(iPat1, i1),(iPat2,i2)] [(jPat1,j1),(jPat2,j2)] kPat k = \c -> [essenceStmts| 
-            find &iPat1, &iPat2, &jPat1, &jPat2 : &functionFromDomain
-            such that
-            &i1 != &i2, &j1 != &j2,
-            &j1 = &i1 \/ &j1 = &i2,
-            &j2 = &i1 \/ &j2 = &i2,
-            {&i1,&i2} subsetEq defined(&theIncumbentVar),
-            defined(&theIncumbentVar) = defined(&theVar),
-            and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- defined(&theIncumbentVar),
-            !(&k in {&i1,&i2})]),
-            &c|]
-        buildFunctionFrameUpdate [(iPat1,i1)] [(jPat1,j1)] kPat k = \c -> [essenceStmts|
-            find &iPat1,&jPat1 : &functionFromDomain
-            such that
-            &j1 = &i1,
-            &i1 in defined(&theIncumbentVar),
-            defined(&theIncumbentVar) = defined(&theVar),
-            and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- defined(&theIncumbentVar),
-            &k != &i1]),
-            &c|]
-        buildFunctionFrameUpdate [(iPat1,i1),(iPat2,i2)] [(jPat1,j1)] kPat k = \c -> [essenceStmts| 
-            find &iPat1, &iPat2, &jPat1 : &functionFromDomain
-            such that
-            &i1 != &i2,
-            &j1 = &i1 \/ &j1 = &i2,
-            {&i1,&i2} subsetEq defined(&theIncumbentVar),
-            |defined(&theIncumbentVar)| = |defined(&theVar)| + 1,
-            and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- defined(&theIncumbentVar),
-            !(&k in {&i1,&i2})]),
-            &c|]
-        buildFunctionFrameUpdate [(iPat1,i1)] [(jPat1,j1),(jPat2,j2)] kPat k = \c -> [essenceStmts|
-            find &iPat1,&jPat1,&jPat2 : &functionFromDomain
-            such that
-            &j1 != &j2,
-            &i1 = &j1 \/ &i1 = &j2,
-            &i1 in defined(&theIncumbentVar),
-            {&j1,&j2} subsetEq defined(&theVar),
-            |defined(&theIncumbentVar)| = |defined(&theVar)| - 1,
-            and([&theIncumbentVar(&k) = &theVar(&k) 
-            | &kPat <- defined(&theIncumbentVar),
-            &k != &i1]),
-            &c|]
-        buildFunctionFrameUpdate _ _ _ _ = bug "todo, extend the buildFunctionFrameUpdate pattern in AddNeighbourhood.hs to support frameUpdate with more than two focus variables."
+        buildFunctionFrameUpdate is js kPat k = \ c ->
+            let
+                isSet = AbstractLiteral $ AbsLitSet $ map snd is
+                jsSet = AbstractLiteral $ AbsLitSet $ map snd js
+            in  concat
+                [ [ Declaration (FindOrGiven Find nm functionFromDomain) | (nm, _) <- is ]
+                , [ Declaration (FindOrGiven Find nm functionFromDomain) | (nm, _) <- js ]
+                , [ SuchThat $ concat
+                        [
+
+                            -- alldiff is, alldiff js
+                            [ make opAllDiff (fromList (map snd is))
+                            , make opAllDiff (fromList (map snd js))
+                            ]
+                        ,
+
+                        -- the smaller set is a subset of the larger set. unless the sizes are equal.
+                        -- in which case they are equal.
+                            [ case compare (length is) (length js) of
+                                LT -> [essence| &isSet subsetEq &jsSet |]
+                                GT -> [essence| &isSet supsetEq &jsSet |]
+                                EQ -> [essence| &isSet = &jsSet |]
+                            ]
+                        ,
+
+                        -- is are in the defined(theIncumbentVar)
+                            [ [essence| &isSet subsetEq defined(&theIncumbentVar) |]
+                            ]
+                        ,
+
+                            [ [essence| defined(&theIncumbentVar) = defined(&theVar) |]
+                            ]
+                        ,
+
+                            [ [essence|
+                                and([ &theIncumbentVar(&k) = &theVar(&k)
+                                    | &kPat <- defined(&theIncumbentVar)
+                                    , !(&k in &isSet)
+                                    , &c
+                                    ])
+                                    |]
+                            ]
+
+                        ]
+                    ]
+                ]
 
 
 mSetOrSetName :: Domain () Expression -> Maybe Name
