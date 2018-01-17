@@ -31,7 +31,7 @@ domainUnions
        ) => [Domain r x] -> m (Domain r x)
 domainUnions [] = return $ DomainAny "domainUnions []" TypeAny
 domainUnions [a] = return a
-domainUnions (a:as) = do b <- domainUnions as ; domainUnion a b
+domainUnions (a:as) = domainUnions as >>= domainUnion a
 
 instance
     ( Eq x
