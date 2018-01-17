@@ -282,10 +282,14 @@ tupleLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression
 tupleLiftSingle theIncumbentVar theVar (DomainTuple innerDomains) = do
         let generatorName = "tupleLiftSingle"
         let innerVarsAndDomains = map (\ i -> getInner theIncumbentVar theVar innerDomains i) [1..toInteger $ length innerDomains]
-        return $ concat $ mapM (\ (incumbent_i, i, innerDomain)  -> do
+        flip concatMapM innerVarsAndDomains $ \ (incumbent_i, i, innerDomain)  -> do
             ns <- allNeighbourhoods incumbent_i i innerDomain
-            return $ concat [( mconcat [generatorName, "_", innerGeneratorName], innerNeighbourhoodSize, \ neighbourhoodSize -> rule neighbourhoodSize)
-                | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns])  innerVarsAndDomains
+            return [ ( mconcat [generatorName, "_", innerGeneratorName]
+                     , innerNeighbourhoodSize
+                     , \ neighbourhoodSize -> rule neighbourhoodSize
+                     )
+                   | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+                   ]
 tupleLiftSingle _ _ _ = return []
 
 
