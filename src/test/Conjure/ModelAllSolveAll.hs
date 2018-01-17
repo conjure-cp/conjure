@@ -1,5 +1,6 @@
 {-# LANGUAGE DeriveDataTypeable #-}
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 
 module Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) ) where
 
@@ -9,16 +10,17 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
 import Conjure.UI.IO
-import Conjure.UI.Model
 import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution
 import Conjure.UI.ValidateSolution
-import Conjure.UI.MainHelper ( savilerowScriptName )
+import Conjure.UI.MainHelper ( savilerowScriptName, mainWithArgs )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 import Conjure.UserError ( runUserErrorT )
+import Conjure.UI ( ui )
 
 -- base
 import System.Environment ( getEnvironment )
+import System.Environment ( withArgs )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
@@ -27,6 +29,9 @@ import Test.Tasty.Options ( IsOption(..) )
 
 -- shelly
 import Shelly ( run, errExit, lastStderr, lastExitCode )
+
+-- cmdargs
+import System.Console.CmdArgs ( cmdArgs )
 
 -- text
 import qualified Data.Text as T ( isInfixOf, lines, unlines )
@@ -165,9 +170,8 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles
         conjuring step = do
             void (step "Conjuring")
             removeDirectoryIfExists outputsDir
-            -- read in the essence, generate the eprimes
-            essence <- ignoreLogs $ readModelFromFile essenceFile
-            modelAll outputsDir essence
+            -- generate the eprimes
+            modelAll tBaseDir outputsDir essenceFile
 
         savileRows step =
             if null paramFiles
@@ -486,32 +490,21 @@ fileShouldExist f = do
         assertFailure $ "file does not exist: " ++ f
 
 
-modelAll :: FilePath -> Model -> IO ()
-modelAll dir model = ignoreLogs $ runNameGen model $ flip outputModels model Config
-    { logLevel                   = LogNone
-    , verboseTrail               = False
-    , rewritesTrail              = False
-    , logRuleFails               = False
-    , logRuleSuccesses           = False
-    , logRuleAttempts            = False
-    , logChoices                 = False
-    , strategyQ                  = PickFirst
-    , strategyA                  = PickAll
-    , representations            = PickAll
-    , representationsFinds       = PickAll
-    , representationsGivens      = PickAll
-    , representationsAuxiliaries = PickAll
-    , representationsQuantifieds = PickAll
-    , representationsCuts        = PickAll
-    , outputDirectory            = dir
-    , channelling                = True
-    , representationLevels       = True
-    , generateNeighbourhoods     = False
-    , filterNeighbourhoods       = []
-    , frameUpdateVersion         = "decomposition"
-    , limitModels                = Nothing
-    , numberingStart             = 1
-    , smartFilenames             = True
-    , lineWidth                  = 120
-    , responses                  = Nothing
-    }
+modelAll :: FilePath -> FilePath -> FilePath -> IO ()
+modelAll tBaseDir dir essenceFile = do
+    additionalArgs <- catch (words . textToString <$> T.readFile (tBaseDir ++ "/additional-arguments.txt"))
+                            (\ (_ :: SomeException) -> return [] )
+    args <- withArgs (defaultArgs ++ additionalArgs) (cmdArgs ui)
+    ignoreLogs $ mainWithArgs args
+    where
+        defaultArgs = [ "modelling"
+                      , essenceFile
+                      , "--output-directory=" ++ dir
+                      , "-qf"
+                      , "-ax"
+                      , "--smart-filenames"
+                      , "--line-width=120"
+                      , "--channelling=yes"
+                      , "--representation-levels=yes"
+                      ]
+

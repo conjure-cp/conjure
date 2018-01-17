@@ -1,8 +1,0 @@
-language ESSENCE' 1.0
-
-letting let1 be -4
-letting let2 be -2
-find var3_Function1DPartial_Flags: matrix indexed by [int(2, 2)] of bool
-find var3_Function1DPartial_Values: matrix indexed by [int(2, 2)] of int(-4..-2)
-such that and([var3_Function1DPartial_Flags[q1] = false -> var3_Function1DPartial_Values[q1] = -4 | q1 : int(2, 2)])
-

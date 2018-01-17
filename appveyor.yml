@@ -8,7 +8,7 @@ build_script:
 
     REM pick a stack.yaml file
 
-    copy etc\hs-deps\stack-8.0.yaml stack.yaml
+    copy etc\hs-deps\stack-8.2.yaml stack.yaml
 
 
     REM download stack
@@ -41,4 +41,11 @@ test_script:
 - cmd: >-
 
     stack test --ghc-options "-with-rtsopts=-M2G" --test-arguments "--hide-successes -p parse_print +RTS -s"
+
+
+# shorter paths to avoid problems
+clone_folder: "c:\\conjure"
+environment:
+  global:
+    STACK_ROOT: "c:\\sr"
 

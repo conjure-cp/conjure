@@ -25,7 +25,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToMSet x) where
             TypeRelation is  -> return (TypeMSet (TypeTuple is))
             TypeSet i        -> return (TypeMSet i)
             TypeFunction i j -> return (TypeMSet (TypeTuple [i,j]))
-            _ -> raiseTypeError p
+            TypeList i       -> return (TypeMSet i)
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty tx
+                                       ]
 
 instance EvaluateOp OpToMSet where
     evaluateOp (OpToMSet (viewConstantSet -> Just xs)) =

@@ -34,13 +34,13 @@ such that
                     and([and([y_1_2_Function1DR2_Occurrence[q26, 3, q53] -> false | q53 : int(1, 2)]) | 1 = q26]);
                         int(1..3)])
                /\
-               and([and([and([y_1_2_Function1DR2_Occurrence[q26, 1, q56] -> 1 = q56 \/ 2 = q56 | q56 : int(1, 2)]) /\
+               and([and([and([y_1_2_Function1DR2_Occurrence[q26, 1, q55] -> 1 = q55 \/ 2 = q55 | q55 : int(1, 2)]) /\
                          (y_1_2_Function1DR2_Occurrence[q26, 1, 1] /\ y_1_2_Function1DR2_Occurrence[q26, 1, 2])
                              | 2 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 2, q56] -> 1 = q56 | q56 : int(1, 2)]) /\
+                    and([and([y_1_2_Function1DR2_Occurrence[q26, 2, q55] -> 1 = q55 | q55 : int(1, 2)]) /\
                          y_1_2_Function1DR2_Occurrence[q26, 2, 1]
                              | 2 = q26]),
-                    and([and([y_1_2_Function1DR2_Occurrence[q26, 3, q56] -> false | q56 : int(1, 2)]) | 2 = q26]);
+                    and([and([y_1_2_Function1DR2_Occurrence[q26, 3, q55] -> false | q55 : int(1, 2)]) | 2 = q26]);
                         int(1..3)])),
               y_1_3[q26] = [33, 55; int(1..2)][q26];
                   int(1..3)])

@@ -191,7 +191,7 @@ toCompletion config m = do
 
         loopy :: ModelWIP -> Producer LogOrModel m ()
         loopy modelWIP = do
-            logDebug $ "[loopy]" <+> pretty (modelWIPOut modelWIP)     -- TODO: pretty ModelWIP directly
+            logDebug $ "[loopy]" <+> pretty ((modelWIPOut modelWIP) {mInfo = def})
             qs <- remainingWIP config modelWIP
             if null qs
                 then do
@@ -1057,47 +1057,51 @@ addIncumbentVariables model
 addIncumbentVariables model = return model
 
 
+logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
+logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
+
 prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Config -> Model -> m Model
 prologue config model = do
     void $ typeCheckModel_StandAlone model
-    return model                      >>= logDebugId "[input]"
-    >>= attributeAsConstraints        >>= logDebugId "[attributeAsConstraints]"
-    >>= inferAttributes               >>= logDebugId "[inferAttributes]"
-    >>= inlineLettingDomainsForDecls  >>= logDebugId "[inlineLettingDomainsForDecls]"
-    >>= lettingsForComplexInDoms      >>= logDebugId "[lettingsForComplexInDoms]"
-    >>= distinctQuantifiedVars        >>= logDebugId "[distinctQuantifiedVars]"
-    >>= return . initInfo             >>= logDebugId "[initInfo]"
-    >>= removeUnnamedsFromModel       >>= logDebugId "[removeUnnamedsFromModel]"
-    >>= removeEnumsFromModel          >>= logDebugId "[removeEnumsFromModel]"
-    >>= finiteGivens                  >>= logDebugId "[finiteGivens]"
-    >>= resolveNames                  >>= logDebugId "[resolveNames]"
-    >>= return . initInfo_Lettings    >>= logDebugId "[initInfo_Lettings]"
-    >>= removeDomainLettings          >>= logDebugId "[removeDomainLettings]"
-    >>= typeCheckModel                >>= logDebugId "[typeCheckModel]"
-    >>= categoryChecking              >>= logDebugId "[categoryChecking]"
-    >>= sanityChecks                  >>= logDebugId "[sanityChecks]"
-    >>= dealWithCuts                  >>= logDebugId "[dealWithCuts]"
-    >>= removeExtraSlices             >>= logDebugId "[removeExtraSlices]"
-    >>= return . addTrueConstraints   >>= logDebugId "[addTrueConstraints]"
+    return model                      >>= logDebugIdModel "[input]"
+    >>= attributeAsConstraints        >>= logDebugIdModel "[attributeAsConstraints]"
+    >>= inferAttributes               >>= logDebugIdModel "[inferAttributes]"
+    >>= inlineLettingDomainsForDecls  >>= logDebugIdModel "[inlineLettingDomainsForDecls]"
+    >>= lettingsForComplexInDoms      >>= logDebugIdModel "[lettingsForComplexInDoms]"
+    >>= distinctQuantifiedVars        >>= logDebugIdModel "[distinctQuantifiedVars]"
+    >>= return . initInfo             >>= logDebugIdModel "[initInfo]"
+    >>= removeUnnamedsFromModel       >>= logDebugIdModel "[removeUnnamedsFromModel]"
+    >>= removeEnumsFromModel          >>= logDebugIdModel "[removeEnumsFromModel]"
+    >>= finiteGivens                  >>= logDebugIdModel "[finiteGivens]"
+    >>= resolveNames                  >>= logDebugIdModel "[resolveNames]"
+    >>= return . initInfo_Lettings    >>= logDebugIdModel "[initInfo_Lettings]"
+    >>= removeDomainLettings          >>= logDebugIdModel "[removeDomainLettings]"
+    >>= typeCheckModel                >>= logDebugIdModel "[typeCheckModel]"
+    >>= categoryChecking              >>= logDebugIdModel "[categoryChecking]"
+    >>= sanityChecks                  >>= logDebugIdModel "[sanityChecks]"
+    >>= dealWithCuts                  >>= logDebugIdModel "[dealWithCuts]"
+    >>= removeExtraSlices             >>= logDebugIdModel "[removeExtraSlices]"
+    >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
     >>= addNeighbourhoods config      >>= logDebugId "[addNeighbourhoods]"
 
 
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m) => Model -> m Model
 epilogue model = return model
-                                      >>= logDebugId "[epilogue]"
-    >>= updateDeclarations            >>= logDebugId "[updateDeclarations]"
-    >>= convertSNSNeighbourhood       >>= logDebugId "[convertSNSNeighbourhood]"
-    >>= updateDeclarationsInsideFrameUpdate >>= logDebugId "[updateDeclarationsInsideFrameUpdate]"
-    >>= addIncumbentVariables         >>= logDebugId "[addIncumbentVariables]"
-    >>= return . inlineDecVarLettings >>= logDebugId "[inlineDecVarLettings]"
-    >>= topLevelBubbles               >>= logDebugId "[topLevelBubbles]"
-    >>= checkIfAllRefined             >>= logDebugId "[checkIfAllRefined]"
-    >>= checkIfHasUndefined           >>= logDebugId "[checkIfHasUndefined]"
-    >>= sliceThemMatrices             >>= logDebugId "[sliceThemMatrices]"
-    >>= return . emptyMatrixLiterals  >>= logDebugId "[emptyMatrixLiterals]"
-    >>= return . reverseTrails        >>= logDebugId "[reverseTrails]"
-    >>= return . oneSuchThat          >>= logDebugId "[oneSuchThat]"
-    >>= return . languageEprime       >>= logDebugId "[languageEprime]"
+                                      >>= logDebugIdModel "[epilogue]"
+    >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
+    >>= convertSNSNeighbourhood       >>= logDebugIdModel "[convertSNSNeighbourhood]"
+    >>= updateDeclarationsInsideFrameUpdate
+                                      >>= logDebugIdModel "[updateDeclarationsInsideFrameUpdate]"
+    >>= addIncumbentVariables         >>= logDebugIdModel "[addIncumbentVariables]"
+    >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
+    >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
+    >>= checkIfAllRefined             >>= logDebugIdModel "[checkIfAllRefined]"
+    >>= checkIfHasUndefined           >>= logDebugIdModel "[checkIfHasUndefined]"
+    >>= sliceThemMatrices             >>= logDebugIdModel "[sliceThemMatrices]"
+    >>= return . emptyMatrixLiterals  >>= logDebugIdModel "[emptyMatrixLiterals]"
+    >>= return . reverseTrails        >>= logDebugIdModel "[reverseTrails]"
+    >>= return . oneSuchThat          >>= logDebugIdModel "[oneSuchThat]"
+    >>= return . languageEprime       >>= logDebugIdModel "[languageEprime]"
 
 
 applicableRules
@@ -1229,6 +1233,7 @@ verticalRules config =
     , Vertical.Matrix.rule_Comprehension_Hist
     , Vertical.Matrix.rule_Comprehension_ToSet_Matrix
     , Vertical.Matrix.rule_Comprehension_ToSet_List
+    , Vertical.Matrix.rule_Comprehension_ToSet_List_DuplicateFree
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
     , Vertical.Matrix.rule_Matrix_Leq_Primitive

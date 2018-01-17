@@ -3,6 +3,10 @@
 module Conjure.Rules.Horizontal.Function where
 
 import Conjure.Rules.Import
+import Conjure.Rules.Definition
+
+-- uniplate
+import Data.Generics.Uniplate.Zipper as Zipper ( up, hole )
 
 
 rule_Comprehension_Literal :: Rule
@@ -253,8 +257,37 @@ rule_Comprehension_Defined = "function-defined" `namedRule` theRule where
 
 
 rule_Comprehension_Range :: Rule
-rule_Comprehension_Range = "function-range" `namedRule` theRule where
-    theRule (Comprehension body gensOrConds) = do
+rule_Comprehension_Range = "function-range" `Rule` theRule where
+
+    theRule z p = do
+        should <- shouldRemoveDuplicates z
+        if should
+            then theRule_shouldRemoveDuplicates p
+            else theRule_noRemoveDuplicates p
+
+    -- keep going up, until finding a quantifier
+    -- when found, return whether this quantifier requires us to remove duplicates or not
+    -- if none exists, do not apply the rule.
+    -- (or maybe we should call bug right ahead, it can't be anything else.)
+    shouldRemoveDuplicates z0 =
+        case Zipper.up z0 of
+            Nothing -> na "rule_Comprehension_Range shouldRemoveDuplicates 1"
+            Just z -> do
+                let h = Zipper.hole z
+                case ( match opAnd h, match opOr h, match opSum h
+                     , match opMin h, match opMax h ) of
+                    (Just{}, _, _, _, _) -> return False
+                    (_, Just{}, _, _, _) -> return False
+                    (_, _, Just{}, _, _) -> return True
+                    (_, _, _, Just{}, _) -> return False
+                    (_, _, _, _, Just{}) -> return False
+                    _                    -> na "rule_Comprehension_Range shouldRemoveDuplicates 2"
+                                            -- case Zipper.up z of
+                                            --     Nothing -> na "queryQ"
+                                            --     Just u  -> queryQ u
+
+    theRule_shouldRemoveDuplicates (Comprehension body gensOrConds) = do
+
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
             _ -> na "rule_Comprehension_Range"
@@ -314,12 +347,36 @@ rule_Comprehension_Range = "function-range" `namedRule` theRule where
                 na "Cannot compute the domain of range(f)"
 
         return
-            ( "Mapping over range(f)"
-            , if isInjective
-                then caseInjective
-                else caseNonInjective
-            )
-    theRule _ = na "rule_Comprehension_Range"
+            [ RuleResult
+                { ruleResultDescr = "Mapping over range(f)"
+                , ruleResultType  = ExpressionRefinement
+                , ruleResult      = if isInjective
+                                        then caseInjective
+                                        else caseNonInjective
+                , ruleResultHook  = Nothing
+                } ]
+    theRule_shouldRemoveDuplicates _ = na "rule_Comprehension_Range"
+
+    theRule_noRemoveDuplicates (Comprehension body gensOrConds) = do
+        (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            _ -> na "rule_Comprehension_Range"
+        func <- match opRange expr
+        let upd val old = lambdaToFunction pat old val
+        return
+            [ RuleResult
+                { ruleResultDescr = "Mapping over range(f)"
+                , ruleResultType  = ExpressionRefinement
+                , ruleResult      = do
+                    (iPat, i) <- quantifiedVar
+                    let i2 = [essence| &i[2] |]
+                    return $ Comprehension (upd i2 body)
+                                $  gocBefore
+                                ++ [Generator (GenInExpr iPat func)]
+                                ++ transformBi (upd i2) gocAfter
+                , ruleResultHook  = Nothing
+                } ]
+    theRule_noRemoveDuplicates _ = na "rule_Comprehension_Range"
 
 
 -- TODO: What about duplicates for sum, product, etc?
