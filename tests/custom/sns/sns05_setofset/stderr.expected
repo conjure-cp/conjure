@@ -1,4 +1,4 @@
-Generated the following SNS Neighbourhoods (13 of them in total)
+Generated the following SNS Neighbourhoods (14 of them in total)
 Adding all of them to the model, use --filter-neighbourhoods to select a subset.
 language Essence 1.4
 
@@ -70,6 +70,13 @@ SNSNeighbourhood x_setLiftSingle_setAdd :
          frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
                      conjure_aux1 subsetEq conjure_aux2 /\
                      |conjure_aux2| - |conjure_aux1| = size))
+SNSNeighbourhood x_setLiftSingle_setDiff :
+    (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
+     such that
+         frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
+                     and([size =
+                          |conjure_aux1 - conjure_aux2| + |conjure_aux2 - conjure_aux1|;
+                              int(1)])))
 SNSNeighbourhood x_setLiftSingle_setRemove :
     (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
      such that
@@ -86,12 +93,14 @@ SNSNeighbourhood x_setLiftSingle_setSwapAdd :
     (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
      such that
          frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
-                     and([|conjure_aux2 - conjure_aux1| = size; int(1)])))
+                     |conjure_aux2 - conjure_aux1| = size /\
+                     |conjure_aux2| >= |conjure_aux1|))
 SNSNeighbourhood x_setLiftSingle_setSwapRemove :
     (x_neighbourhoodGroup, size : int(1..1 + (b - a)),
      such that
          frameUpdate(incumbent(x), x, [conjure_aux1], [conjure_aux2],
-                     and([|conjure_aux1 - conjure_aux2| = size; int(1)])))
+                     |conjure_aux1 - conjure_aux2| = size /\
+                     |conjure_aux2| <= |conjure_aux1|))
 SNSNeighbourhood x_setRemoveSingle :
     (x_neighbourhoodGroup, size : int(1..2 ** (1 + (b - a))),
      such that
