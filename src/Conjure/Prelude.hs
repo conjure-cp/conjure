@@ -262,6 +262,8 @@ concatMapM f xs = concat <$> mapM f xs
 concatForM :: (Functor m, Monad m) => [a] -> (a -> m [b]) -> m [b]
 concatForM f xs = concatMapM xs f
 
+-- fully evaluate a otherwise the time may be erroneous?
+--   requires a to be instance of NFData
 timedIO :: IO a -> IO (a, Double)
 timedIO io = do
     start <- getCPUTime

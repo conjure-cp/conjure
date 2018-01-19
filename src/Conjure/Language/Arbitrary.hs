@@ -58,13 +58,6 @@ instance Arbitrary AnyConstantTuple where
                 ]
             _ -> []
 
-
--- | Some of these arbitrary generators are a bit crap.
---   They recursively call themselves if some property doesn't hold in the generated value.
---   This is the number of maximum retries.
-maxRetries :: Int
-maxRetries = 1000000
-
 data AnyDomainAndConstant = AnyDomainAndConstant (Domain HasRepresentation Constant) Constant
 
 instance Show AnyDomainAndConstant where
@@ -183,34 +176,6 @@ arbitraryDomainAndConstant = sized dispatch
         set :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         set depth = oneof [setFixed depth, setBounded depth]
 
-        setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
-        setFixed depth = do
-            (dom, constantGen) <- dispatch (smaller depth)
-            let sizeUpTo = case domainSizeOf dom of
-                                Left err -> bug err
-                                Right s  -> min 10 s
-            size <- choose (0 :: Integer, sizeUpTo)
-            repr <- pickFromList [Set_Explicit]
-            let domainOut =
-                    DomainSet
-                        repr
-                        (SetAttr (SizeAttr_Size (ConstantInt size)))
-                        dom
-            return ( domainOut
-                   , let try n =
-                            if n >= maxRetries
-                                then fail (vcat [ "setFixed: maxRetries"
-                                                , pretty domainOut
-                                                ])
-                                else do
-                                    elems <- vectorOf (fromInteger size) constantGen
-                                    let sorted = sort $ nub elems
-                                    if length sorted == length elems
-                                        then return $ ConstantAbstract $ AbsLitSet sorted
-                                        else try (n+1)
-                     in try (1 :: Int)
-                   )
-
         setBounded :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBounded depth = oneof [setBoundedMax depth, setBoundedMinMax depth]
 
@@ -231,6 +196,22 @@ arbitraryDomainAndConstant = sized dispatch
                         return $ ConstantAbstract $ AbsLitSet sorted
                    )
 
+        setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
+        setFixed depth = do
+            (dom, constantGen) <- dispatch (smaller depth)
+            let sizeUpTo = case domainSizeOf dom of
+                                Left err -> bug err
+                                Right s  -> min 10 s
+            size <- choose (0 :: Integer, sizeUpTo)
+            repr <- pickFromList [Set_Explicit]
+            let domainOut =
+                    DomainSet
+                        repr
+                        (SetAttr (SizeAttr_Size (ConstantInt size)))
+                        dom
+            return ( domainOut
+                   , genSetOfSize (fromInteger size) constantGen )
+
         setBoundedMinMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMinMax depth = do
             (dom, constantGen) <- dispatch (smaller depth)
@@ -248,20 +229,21 @@ arbitraryDomainAndConstant = sized dispatch
                                     (ConstantInt maxSize)))
                         dom
             return ( domainOut
-                   , let try n =
-                            if n >= maxRetries
-                                then fail (vcat [ "setFixed: maxRetries"
-                                                , pretty domainOut
-                                                ])
-                                else do
-                                    numElems <- choose (minSize, maxSize)
-                                    elems <- vectorOf (fromInteger numElems) constantGen
-                                    let sorted = sort $ nub elems
-                                    if genericLength sorted >= minSize
-                                        then return $ ConstantAbstract $ AbsLitSet sorted
-                                        else try (n+1)
-                     in try (1 :: Int)
-                   )
+                   , do
+                       numElems <- choose (minSize, maxSize)
+                       genSetOfSize (fromInteger numElems) constantGen )
+
+genSetOfSize :: Int -> Gen Constant -> Gen Constant
+genSetOfSize size constantGen = genSetOfSize' [] size
+  where
+    genSetOfSize' :: [Constant] -> Int -> Gen Constant
+    genSetOfSize' setBuild extendBy = do
+      elems <- vectorOf extendBy constantGen
+      let targetSize = length setBuild + extendBy
+          sorted = sort $ nub $ elems ++ setBuild
+      if length sorted == targetSize 
+        then return $ ConstantAbstract $ AbsLitSet sorted
+        else genSetOfSize' sorted (targetSize - length sorted)
 
 pickFromList :: [a] -> Gen a
 pickFromList [] = fail "pickFromList []"
