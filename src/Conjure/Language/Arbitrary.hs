@@ -176,6 +176,22 @@ arbitraryDomainAndConstant = sized dispatch
         set :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         set depth = oneof [setFixed depth, setBounded depth]
 
+        setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
+        setFixed depth = do
+            (dom, constantGen) <- dispatch (smaller depth)
+            let sizeUpTo = case domainSizeOf dom of
+                                Left err -> bug err
+                                Right s  -> min 10 s
+            size <- choose (0 :: Integer, sizeUpTo)
+            repr <- pickFromList [Set_Explicit]
+            let domainOut =
+                    DomainSet
+                        repr
+                        (SetAttr (SizeAttr_Size (ConstantInt size)))
+                        dom
+            return ( domainOut
+                   , genSetOfSize (fromInteger size) constantGen )
+
         setBounded :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBounded depth = oneof [setBoundedMax depth, setBoundedMinMax depth]
 
@@ -195,22 +211,6 @@ arbitraryDomainAndConstant = sized dispatch
                         let sorted = sort $ nub elems
                         return $ ConstantAbstract $ AbsLitSet sorted
                    )
-
-        setFixed :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
-        setFixed depth = do
-            (dom, constantGen) <- dispatch (smaller depth)
-            let sizeUpTo = case domainSizeOf dom of
-                                Left err -> bug err
-                                Right s  -> min 10 s
-            size <- choose (0 :: Integer, sizeUpTo)
-            repr <- pickFromList [Set_Explicit]
-            let domainOut =
-                    DomainSet
-                        repr
-                        (SetAttr (SizeAttr_Size (ConstantInt size)))
-                        dom
-            return ( domainOut
-                   , genSetOfSize (fromInteger size) constantGen )
 
         setBoundedMinMax :: Int -> Gen (Domain HasRepresentation Constant, Gen Constant)
         setBoundedMinMax depth = do
