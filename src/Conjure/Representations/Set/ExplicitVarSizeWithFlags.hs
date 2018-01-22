@@ -52,9 +52,12 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
             let
                 orderingWhenFlagged flags values = do
                     (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &values[&i] .< &values[&i+1]
+                            forAll &iPat : int(1..&maxSize) .
+                                forAll &jPat : int(&i+1..&maxSize) .
+                                     &flags[&i] /\ &flags[&j] -> &values[&i] != &values[&j]
                         |]
 
                 dontCareWhenNotFlagged flags values = do
@@ -62,13 +65,6 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                     return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &flags[&i] = false -> dontCare(&values[&i])
-                        |]
-
-                flagsToTheLeft flags = do
-                    (iPat, i) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] -> &flags[&i]
                         |]
 
                 cardinality flags = do
@@ -93,7 +89,6 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
                         concat <$> sequence
                             [ orderingWhenFlagged    flags values
                             , dontCareWhenNotFlagged flags values
-                            , flagsToTheLeft         flags
                             , mkSizeCons attrs <$> cardinality flags
                             , innerStructuralCons flags values
                             ]

@@ -74,20 +74,10 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             let
                 dummyElem = calcDummyElem innerDomain
 
-                ordering m = do
-                    (iPat, i) <- quantifiedVar
+                ordering m =
                     return $ return -- for list
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) .
-                                (&m[&i] .< &m[&i+1]) \/ (&m[&i] = &dummyElem)
-                        |]
-
-                dummyToTheRight m = do
-                    (iPat, i) <- quantifiedVar
-                    return $ return -- for list
-                        [essence|
-                            forAll &iPat : int(1..&maxSize-1) .
-                                (&m[&i] = &dummyElem) -> (&m[&i+1] = &dummyElem)
+                            alldifferent_except(&m, &dummyElem)
                         |]
 
                 cardinality m = do
@@ -111,7 +101,6 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
                     [m] ->
                         concat <$> sequence
                             [ ordering m
-                            , dummyToTheRight m
                             , mkSizeCons attrs <$> cardinality m
                             , innerStructuralCons m
                             ]

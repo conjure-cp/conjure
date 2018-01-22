@@ -33,13 +33,9 @@ setExplicit = Representation chck downD structuralCons downC up
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet Set_Explicit (SetAttr (SizeAttr_Size size)) innerDomain) = do
             let
-                ordering m = do
-                    (iPat, i) <- quantifiedVar
+                ordering m =
                     return $ return -- for list
-                        [essence|
-                            forAll &iPat : int(1..&size-1) .
-                                &m[&i] .< &m[&i+1]
-                        |]
+                        [essence| allDiff(&m) |]
 
                 innerStructuralCons m = do
                     (iPat, i) <- quantifiedVarOverDomain [essenceDomain| int(1..&size) |]

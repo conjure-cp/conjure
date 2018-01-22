@@ -50,10 +50,12 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let
                 orderingUpToMarker marker values = do
                     (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &i + 1 <= &marker ->
-                                &values[&i] .< &values[&i+1]
+                            forAll &iPat : int(1..&maxSize) .
+                                forAll &jPat : int(&i+1..&maxSize) .
+                                     &i <= &marker /\ &j <= &marker -> &values[&i] != &values[&j]
                         |]
 
                 dontCareAfterMarker marker values = do
