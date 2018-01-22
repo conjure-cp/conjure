@@ -66,25 +66,11 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
         structuralCons f downX1 (DomainMSet MSet_ExplicitWithFlags attrs@(MSetAttr sizeAttrs _) innerDomain) = do
             maxSize  <- getMaxSize attrs innerDomain
             let
-                orderingWhenFlagged flags values = do
-                    (iPat, i) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] > 0 -> &values[&i] .< &values[&i+1]
-                        |]
-
                 dontCareWhenNotFlagged flags values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
                         [essence|
                             forAll &iPat : int(1..&maxSize) . &flags[&i] = 0 -> dontCare(&values[&i])
-                        |]
-
-                flagsToTheLeft flags = do
-                    (iPat, i) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            forAll &iPat : int(1..&maxSize-1) . &flags[&i+1] > 0 -> &flags[&i] > 0
                         |]
 
                 cardinality flags = do
@@ -115,9 +101,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                 case refs of
                     [flags, values] ->
                         concat <$> sequence
-                            [ orderingWhenFlagged    flags values
-                            , dontCareWhenNotFlagged flags values
-                            , flagsToTheLeft         flags
+                            [ dontCareWhenNotFlagged flags values
                             , minOccurrenceCons      flags
                             , mkSizeCons sizeAttrs <$> cardinality flags
                             , innerStructuralCons flags values

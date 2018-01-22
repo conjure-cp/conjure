@@ -71,13 +71,6 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
             maxSize <- getMaxSize attrs innerDomain
             let maxIndex = maxSize
             let
-                orderingUpToFlag flag values = do
-                    (iPat, i) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            forAll &iPat : int(1..&maxIndex-1) , &i+1 <= &flag . &values[&i] .<= &values[&i+1]
-                        |]
-
                 dontCareAfterFlag flag values = do
                     (iPat, i) <- quantifiedVar
                     return $ return $ -- list
@@ -121,8 +114,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                 case refs of
                     [flag, values] ->
                         concat <$> sequence
-                            [ orderingUpToFlag  flag values
-                            , dontCareAfterFlag flag values
+                            [ dontCareAfterFlag flag values
                             , minOccurrenceCons mset flag values
                             , maxOccurrenceCons mset flag values
                             , return (mkSizeCons sizeAttrs flag)
