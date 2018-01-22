@@ -3,6 +3,7 @@
 module Conjure.Process.AddNeighbourhoods where
 import Conjure.Bug
 import Conjure.Prelude
+import Data.List
 import Conjure.Language
 import Conjure.UI.TypeCheck ( typeCheckModel )
 import Conjure.Language.NameResolution ( resolveNames )
@@ -273,6 +274,23 @@ functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ frDomain toDomain)
              | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
              ]
 functionLiftSingle _ _ _ = return []
+
+getInner :: Expression -> Expression -> [Domain () Expression] -> Integer -> (Expression, Expression, Domain () Expression)
+getInner theIncumbentVar theVar innerDomains i = let iE = fromInt i in([essence|&theIncumbentVar[&iE]  |], [essence|&theVar[&iE] |], (innerDomains !! ( fromIntegral (i-1))))
+
+tupleLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+tupleLiftSingle theIncumbentVar theVar (DomainTuple innerDomains) = do
+        let generatorName = "tupleLiftSingle"
+        let innerVarsAndDomains = map (\ i -> getInner theIncumbentVar theVar innerDomains i) [1..toInteger $ length innerDomains]
+        flip concatMapM innerVarsAndDomains $ \ (incumbent_i, i, innerDomain)  -> do
+            ns <- allNeighbourhoods incumbent_i i innerDomain
+            return [ ( mconcat [generatorName, "_", innerGeneratorName]
+                     , innerNeighbourhoodSize
+                     , \ neighbourhoodSize -> rule neighbourhoodSize
+                     )
+                   | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+                   ]
+tupleLiftSingle _ _ _ = return []
 
 
 functionLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
