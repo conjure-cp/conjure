@@ -87,6 +87,7 @@ type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Express
 allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [ mSetOrSetLiftSingle
+    , mSetOrSetLiftAll
     , functionLiftSingle
     , functionLiftMultiple
     , mSetOrSetLiftMultiple
@@ -233,6 +234,35 @@ innerDomainOfMSetOrSet :: Domain () Expression -> Domain () Expression
 innerDomainOfMSetOrSet (DomainSet _ _ inner) = inner
 innerDomainOfMSetOrSet (DomainMSet _ _ inner) = inner
 innerDomainOfMSetOrSet _ = bug "I special case this function, called with type not set or MSet"
+
+
+makeForAll :: NameGen m => Expression -> m (Expression, Expression, Expression -> Expression)
+makeForAll theVar = do
+        (iPat,i) <-  quantifiedVar
+        return ([essence| incumbent(&i) |], i,\ c -> [essence|and( [&c | &iPat <- &theVar]) |])
+
+mSetOrSetLiftAll :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetLiftAll _ theVar theDomain
+    | Just typeName <- mSetOrSetName theDomain = do
+        let generatorName = mconcat [typeName,"LiftAll"]
+        let inner = innerDomainOfMSetOrSet theDomain
+        (incumbent_i, i, forAll) <- makeForAll theVar
+        let
+            liftCons (SuchThat cs) = SuchThat [forAll $ make opAnd $ fromList cs]
+            liftCons st            = st
+
+        ns <- allNeighbourhoods incumbent_i i inner
+        return [ ( mconcat [generatorName, "_", innerGeneratorName]
+            , innerNeighbourhoodSize
+            , \ neighbourhoodSize ->
+              let statements = rule neighbourhoodSize 
+              in  map liftCons statements
+             )
+             | (innerGeneratorName, innerNeighbourhoodSize, rule) <- ns
+             ]
+mSetOrSetLiftAll _ _ _ = return []
+
+
 
 mSetOrSetLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetLiftSingle theIncumbentVar theVar theDomain
