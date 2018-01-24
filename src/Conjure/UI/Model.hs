@@ -1092,6 +1092,7 @@ verticalRules =
     , Vertical.Function.Function1DPartial.rule_Image_NotABool
     , Vertical.Function.Function1DPartial.rule_Image_Bool
     , Vertical.Function.Function1DPartial.rule_InDefined
+    , Vertical.Function.Function1DPartial.rule_DefinedEqDefined
 
     , Vertical.Function.FunctionND.rule_Comprehension
     , Vertical.Function.FunctionND.rule_Comprehension_Defined
