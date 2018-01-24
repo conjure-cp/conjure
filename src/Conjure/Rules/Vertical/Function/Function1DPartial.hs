@@ -93,3 +93,25 @@ rule_InDefined = "function-in-defined{Function1DPartial}" `namedRule` theRule wh
             , return [essence| &flags[&x] |]
             )
     theRule _ = na "rule_InDefined"
+
+
+rule_DefinedEqDefined :: Rule
+rule_DefinedEqDefined = "set-subsetEq" `namedRule` theRule where
+    theRule [essence| defined(&x) = defined(&y) |] = do
+        TypeFunction{}     <- typeOf x
+        Function_1DPartial <- representationOf x
+        [xFlags,_]         <- downX1 x
+        TypeFunction{}     <- typeOf y
+        Function_1DPartial <- representationOf y
+        [yFlags,_]         <- downX1 y
+        DomainFunction _ _ xIndex _ <- domainOf x
+        DomainFunction _ _ yIndex _ <- domainOf y
+        unless (xIndex == yIndex) (na "rule_DefinedEqDefined")
+        return
+            ( "Horizontal rule for set subsetEq"
+            , do
+                 (iPat, i) <- quantifiedVar
+                 return [essence| forAll &iPat : &xIndex . &xFlags[&i] = &yFlags[&i] |]
+            )
+    theRule _ = na "rule_DefinedEqDefined"
+
