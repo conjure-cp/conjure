@@ -496,7 +496,7 @@ rule_Restrict_Comprehension = "function-restrict-comprehension" `namedRule` theR
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (iPat, iPatName, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr iPat@(Single iPatName) expr) -> return (iPat, iPatName, expr)
-            _ -> na "rule_Comprehension_PreImage"
+            _ -> na "rule_Restrict_Comprehension"
         (func, dom) <- match opRestrict expr
         TypeFunction{} <- typeOf func
         return
