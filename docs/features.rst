@@ -37,12 +37,12 @@ High level of abstraction
 -------------------------
 
 Conjure's input language is Essence.
-Essence provides abstract domain types like matrices, sets, multi-sets, functions, sequences, relations, partitions, records, and variants.
-These abstract domain types also support domain attributes like cardinality for set-like domains, injectivity/surjectivity for functions, and etc to enable concise specification of a problem.
-Essence also provides more primitive domain types, like booleans, integers and enumerated types, that are supported by most CP solvers and modelling assistants.
+Essence provides abstract domain types like sets, multi-sets, functions, sequences, relations, partitions, records, and variants.
+These abstract domain types also support domain attributes like cardinality for set-like domains and injectivity/surjectivity for functions, to enable concise specification of a problem.
+Essence also provides more primitive domain types like Booleans, integers, enumerated types, and matrices, that are supported by most CP solvers and modelling assistants.
 
 In addition to abstract domain types, Essence also provides operators that operate on parameters or decision variables with abstract domains.
-For example, set membership, subset, function inverse, and relation projection are provided to enable specification of problem constraints abstractly
+For example, set membership, subset, function inverse, and relation projection are provided to enable specification of problem constraints abstractly.
 
 The high level of abstraction offered by Essence allows its users to specify problems without having to make a lot of low level *modelling decisions*.
 
