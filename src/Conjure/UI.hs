@@ -177,6 +177,14 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
+    | Streamline
+        { essence                    :: FilePath
+        , essenceOut                 :: FilePath
+        , logLevel                   :: LogLevel
+        , limitTime                  :: Maybe Int
+        , outputFormat               :: OutputFormat        -- Essence by default
+        , lineWidth                  :: Int                 -- 120 by default
+        }
     deriving (Eq, Ord, Show, Data, Typeable)
 
 
@@ -1136,6 +1144,53 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
+    , Streamline
+        { essence
+            = def
+            &= typ "ESSENCE_FILE"
+            &= argPos 0
+        , essenceOut
+            = def
+            &= typ "ESSENCE_FILE"
+            &= typFile
+            &= name "essence-out"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Output file path."
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
+        , limitTime
+            = Nothing
+            &= name "limit-time"
+            &= groupname "General"
+            &= explicit
+            &= help "Time limit in seconds (real time)."
+        , outputFormat
+            = def
+            &= name "output-format"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= typ "FORMAT"
+            &= help "Conjure's output can be in multiple formats.\n\
+                    \    plain : The default\n\
+                    \    binary: A binary encoding of the Essence output.\n\
+                    \            It can be read back in by Conjure.\n\
+                    \    json  : A json encoding of the Essence output.\n\
+                    \            It can be used by other tools integrating with Conjure\n\
+                    \            in order to avoid having to parse textual Essence."
+        , lineWidth
+            = 120
+            &= name "line-width"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Line width to use during pretty printing.\nDefault: 120"
+        }   &= name "streamline"
+            &= explicit
+            &= help "Generate streamlined Essence models."
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]
