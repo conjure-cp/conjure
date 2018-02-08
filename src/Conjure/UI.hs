@@ -177,7 +177,7 @@ data UI
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
         }
-    | Streamline
+    | Streamlining
         { essence                    :: FilePath
         , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
@@ -1144,7 +1144,7 @@ ui = modes
             &= help "Strengthen an Essence model as described in \"Reformulating \
                     \Essence Specifications for Robustness\",\n\
                     \which aims to make search faster."
-    , Streamline
+    , Streamlining
         { essence
             = def
             &= typ "ESSENCE_FILE"
@@ -1188,9 +1188,9 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width to use during pretty printing.\nDefault: 120"
-        }   &= name "streamline"
+        }   &= name "streamlining"
             &= explicit
-            &= help "Generate streamlined Essence models."
+            &= help "Generate streamliningd Essence models."
     ]      &= program "conjure"
            &= helpArg [explicit, name "help"]
            &= versionArg [explicit, name "version"]

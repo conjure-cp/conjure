@@ -177,7 +177,7 @@ mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
-mainWithArgs Streamline{..} =
+mainWithArgs Streamlining{..} =
     readModelFromFile essence >>=
       streamlining >>=
         writeModel lineWidth outputFormat (Just essenceOut)
