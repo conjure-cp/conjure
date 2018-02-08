@@ -1,13 +1,16 @@
-Number of decision variables: 6
-Their names are: a, b, c, x, y, f
-Number of streamliners: 10
-a % 2 = 1
-a % 2 = 0
-b % 2 = 1
-b % 2 = 0
-c % 2 = 1
-c % 2 = 0
-and([q1 % 2 = 1 | q1 <- x])
-and([q1 % 2 = 0 | q1 <- x])
-and([q2 % 2 = 1 | q2 <- y])
-and([q2 % 2 = 0 | q2 <- y])
+Streamliners for -- find a: int(1..10)
+    a % 2 = 1
+    a % 2 = 0
+Streamliners for -- find b: int(1..10)
+    b % 2 = 1
+    b % 2 = 0
+Streamliners for -- find c: int(1..10)
+    c % 2 = 1
+    c % 2 = 0
+Streamliners for -- find x: set (size 2) of int(1..3)
+    and([q1 % 2 = 1 | q1 <- x])
+    and([q1 % 2 = 0 | q1 <- x])
+Streamliners for -- find y: set of int(1..3)
+    and([q2 % 2 = 1 | q2 <- y])
+    and([q2 % 2 = 0 | q2 <- y])
+Streamliners for -- find f: function int(1..2) --> bool

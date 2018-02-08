@@ -9,24 +9,16 @@ import Conjure.Compute.DomainOf ( domainOf )
 
 
 streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m ()
-streamlining model = do
-
-    decisionVariables <- concatForM (mStatements model) $ \ statement ->
+streamlining model =
+    forM_ (mStatements model) $ \ statement ->
         case statement of
-            Declaration (FindOrGiven Find nm domain) ->
-                return [Reference nm (Just (DeclNoRepr Find nm domain NoRegion))]
-            _ -> return []
-
-    traceM $ show $ vcat [ "Number of decision variables:" <+> pretty (length decisionVariables)
-                         , "Their names are:" <+> prettyList id "," decisionVariables
-                         ]
-
-    streamliners <- streamlinersForAllVariables decisionVariables
-
-    traceM $ show $ "Number of streamliners:" <+> pretty (length streamliners)
-
-    forM_ streamliners $ \ s ->
-        traceM $ show $ pretty s
+            Declaration (FindOrGiven Find nm domain) -> do
+                let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
+                streamliners <- streamlinersForSingleVariable ref
+                traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
+                                     , vcat [ nest 4 (pretty s) | s <- streamliners ]
+                                     ]
+            _ -> return ()
 
 
 
@@ -34,8 +26,6 @@ type Streamliner = [Expression]
 
 type StreamlinerGen m = Expression -> m Streamliner
 
-streamlinersForAllVariables :: (MonadFail m, NameGen m) => [Expression] -> m Streamliner
-streamlinersForAllVariables xs = concatMapM streamlinersForSingleVariable xs
 
 -- given a reference to a top level variable, produce a list of all applicable streamliners
 streamlinersForSingleVariable :: (MonadFail m, NameGen m) => StreamlinerGen m
