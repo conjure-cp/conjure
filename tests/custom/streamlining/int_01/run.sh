@@ -1,4 +1,3 @@
 
-conjure streamlining test.essence --essence-out test-out.essence
+conjure streamlining test.essence
 
-rm test-out.essence

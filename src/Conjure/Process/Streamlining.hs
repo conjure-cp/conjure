@@ -7,7 +7,7 @@ import Conjure.Language
 import Conjure.Language.TypeOf ( typeOf )
 
 
-streamlining :: (MonadFail m, MonadLog m, MonadUserError m) => Model -> m Model
+streamlining :: (MonadFail m, MonadLog m, MonadUserError m) => Model -> m ()
 streamlining model = do
 
     decisionVariables <- concatForM (mStatements model) $ \ statement ->
@@ -27,7 +27,6 @@ streamlining model = do
     forM_ (concat streamliners) $ \ s ->
         traceM $ show $ pretty s
 
-    return model
 
 
 type Streamliner = [Statement]

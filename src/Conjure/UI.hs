@@ -179,7 +179,6 @@ data UI
         }
     | Streamlining
         { essence                    :: FilePath
-        , essenceOut                 :: FilePath
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -1149,14 +1148,6 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , essenceOut
-            = def
-            &= typ "ESSENCE_FILE"
-            &= typFile
-            &= name "essence-out"
-            &= groupname "Logging & Output"
-            &= explicit
-            &= help "Output file path."
         , logLevel
             = def
             &= name "log-level"
