@@ -177,7 +177,7 @@ mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
-mainWithArgs Streamlining{..} = readModelFromFile essence >>= streamlining
+mainWithArgs Streamlining{..} = runNameGen essence (readModelFromFile essence >>= streamlining)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat"]) $
