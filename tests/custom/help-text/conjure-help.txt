@@ -430,4 +430,30 @@
  General:
       --limit-time=INT                        Time limit in seconds (real
                                               time).
+ 
+ conjure streamlining [OPTIONS] ESSENCE_FILE
+   Generate streamliningd Essence models.
+ 
+ Logging & Output:
+      --log-level=LOGLEVEL                    Log level.
+      --output-format=FORMAT                  Conjure's output can be in
+                                              multiple formats.
+                                                  plain : The default
+                                                  binary: A binary encoding of
+                                              the Essence output.
+                                                          It can be read back in
+                                              by Conjure.
+                                                  json  : A json encoding of the
+                                              Essence output.
+                                                          It can be used by
+                                              other tools integrating with
+                                              Conjure
+                                                          in order to avoid
+                                              having to parse textual Essence.
+      --line-width=INT                        Line width to use during pretty
+                                              printing.
+                                              Default: 120
+ General:
+      --limit-time=INT                        Time limit in seconds (real
+                                              time).
 
