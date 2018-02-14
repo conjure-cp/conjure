@@ -8,6 +8,7 @@ source ${SCRIPT_DIR}/default_envvars.sh
 
 rm -rf dist \
        cabal.sandbox.config .cabal-sandbox \
+       .stack-work \
        src/RepositoryVersion.hs \
        cabal.config \
        etc/hs-deps/cabal.config-${GHC_VERSION}
