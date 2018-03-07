@@ -167,6 +167,15 @@ instance Pretty Declaration where
             isPrim val@ConstantEnum{} = Just (Right (Right val))
             isPrim _ = Nothing
 
+            isPrim1DT :: Constant -> Maybe [Prim]
+            -- isPrim1DT p@(viewConstantMatrix   -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantTuple    -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantSet      -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantMSet     -> Just{}) = isPrim1D p
+            isPrim1DT p@(viewConstantFunction -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantSequence -> Just{}) = isPrim1D p
+            isPrim1DT _ = Nothing
+
             isPrim1D :: Constant -> Maybe [Prim]
             isPrim1D (extract -> Just cells) = mapM isPrim cells
             isPrim1D _ = Nothing
@@ -192,12 +201,12 @@ instance Pretty Declaration where
                 maximum (0 : [ length (show i)          | i <- universeBi primTable :: [Integer] ]
                           ++ [ length (show (pretty i)) | i@ConstantEnum{} <- universeBi primTable ])
 
-            -- comment1D :: Int ->  [Prim] -> String
-            -- comment1D width primTable =
-            --     unlines
-            --         [ "$ Visualisation for " ++ show (pretty nm)
-            --         , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
-            --         ]
+            comment1D :: Int ->  [Prim] -> String
+            comment1D width primTable =
+                unlines
+                    [ "$ Visualisation for " ++ show (pretty nm)
+                    , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
+                    ]
 
             comment2D :: Int ->  [[Prim]] -> String
             comment2D width primTable =
@@ -221,12 +230,16 @@ instance Pretty Declaration where
                     _          -> id
 
             modifierC c =
-                case (isPrim2D c, isPrim3D c) of
-                    (Just primTable, _) ->
+                case (isPrim1DT c, isPrim2D c, isPrim3D c) of
+                    (Just primTable, _, _) ->
+                        if null primTable
+                            then id
+                            else \ s -> vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
+                    (_, Just primTable, _) ->
                         if null (concat primTable)
                             then id
                             else \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
-                    (_, Just primTable) ->
+                    (_, _, Just primTable) ->
                         if null (concat (concat primTable))
                             then id
                             else \ s -> vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]
