@@ -20,15 +20,26 @@ instance FromJSON  x => FromJSON  (OpPreImage x) where parseJSON = genericParseJ
 
 instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
     typeOf p@(OpPreImage f x) = do
-        TypeFunction from to <- typeOf f
+        fTy <- typeOf f
         xTy <- typeOf x
-        if typesUnify [xTy, to]
-            then return (TypeSet from)
-            else raiseTypeError p
+        case fTy of
+            TypeFunction from to -> do
+                if typesUnify [xTy, to]
+                    then return (TypeSet from)
+                    else raiseTypeError p
+            TypeSequence to -> do
+                if typesUnify [xTy, to]
+                    then return (TypeSet TypeInt)
+                    else raiseTypeError p
+            _ -> raiseTypeError p
 
 instance EvaluateOp OpPreImage where
     evaluateOp (OpPreImage (viewConstantFunction -> Just xs) a) =
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
+    evaluateOp (OpPreImage (viewConstantSequence -> Just xs) a) =
+        return $ ConstantAbstract $ AbsLitSet [ x | (n,y) <- zip allNats xs
+                                                  , let x = ConstantInt n
+                                                  , a == y ]
     evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
 
 instance SimplifyOp OpPreImage x where
