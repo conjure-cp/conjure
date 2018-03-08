@@ -172,7 +172,7 @@ instance Pretty Declaration where
             -- isPrim1DT p@(viewConstantTuple    -> Just{}) = isPrim1D p
             -- isPrim1DT p@(viewConstantSet      -> Just{}) = isPrim1D p
             -- isPrim1DT p@(viewConstantMSet     -> Just{}) = isPrim1D p
-            isPrim1DT p@(viewConstantFunction -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantFunction -> Just{}) = isPrim1D p
             -- isPrim1DT p@(viewConstantSequence -> Just{}) = isPrim1D p
             isPrim1DT _ = Nothing
 
