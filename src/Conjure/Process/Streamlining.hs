@@ -121,11 +121,11 @@ setAll innerStreamliner x = do
     case dom of
         DomainSet _ _ innerDom -> do
             nm <- nextName "q"
-            traceM $ show $ "setAll nm" <+> pretty nm
+            -- traceM $ show $ "setAll nm" <+> pretty nm
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
-            --traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
+            -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
             forM innerConstraints $ \ innerConstraint ->
                     return [essence| forAll &pat in &x . &innerConstraint |]
         _ -> return []
@@ -182,52 +182,46 @@ approxHalf innerStreamliner x = do
 monotonicallyIncreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
 monotonicallyIncreasing x = do
     dom <- domainOf x
-    traceM $ show $ "Monotonically Increasing"
+    -- traceM $ show $ "Monotonically Increasing"
     case dom of
         DomainFunction _ attrs (DomainInt _) (DomainInt _)-> do
-            i <- nextName "q"
-            j <- nextName "q"
-
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
-
-            return $return [essence| forAll &iPat in defined(&x).
-                                    forAll &jPat in defined(&x).
-                                     &i < &j -> &x(&i) <= &x(&j)|]
-
+            return $ return [essence|
+                forAll &iPat in defined(&x) .
+                    forAll &jPat in defined(&x) .
+                        &i < &j -> &x(&i) <= &x(&j)
+            |]
         _ -> return []
+
 
 monotonicallyDecreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
 monotonicallyDecreasing x = do
     dom <- domainOf x
     case dom of
         DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
-            traceM $ show $ "Monotonically Decreasing"
-
-            i <- nextName "q"
-            j <- nextName "q"
-
+            -- traceM $ show $ "Monotonically Decreasing"
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
-
-            return $return [essence| forAll &iPat in defined(&x).
-                                    forAll &jPat in defined(&x).
-                                     &i < &j -> &x(&i) >= &x(&j)|]
-
+            return $ return [essence|
+                forAll &iPat in defined(&x) .
+                    forAll &jPat in defined(&x) .
+                        &i < &j -> &x(&i) >= &x(&j)
+            |]
         _ -> return []
+
 
 smallestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
 smallestFirst x = do
     dom <- domainOf x
     case dom of
          DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
-            traceM $ show $ "Smallest First"
-            i <- nextName "q"
+            -- traceM $ show $ "Smallest First"
             (ipat, i) <- quantifiedVar
-
-
-            return $ return [essence| forAll &ipat in defined(&x).
-                                &x(min(defined(&x))) <= &x(&i)|]
+            return $ return [essence|
+                forAll &ipat in defined(&x) .
+                    &x(min(defined(&x))) <= &x(&i)
+            |]
 
 
 largestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -235,13 +229,12 @@ largestFirst x = do
     dom <- domainOf x
     case dom of
          DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
-
-            traceM $ show $ "Largest First"
+            -- traceM $ show $ "Largest First"
             (ipat, i) <- quantifiedVar
-
-
-            return $ return [essence| forAll &ipat in defined(&x).
-                                &x(max(defined(&x))) >= &x(&i)|]
+            return $ return [essence|
+                forAll &ipat in defined(&x) .
+                    &x(max(defined(&x))) >= &x(&i)
+            |]
 
 
 commutative :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -249,16 +242,15 @@ commutative x = do
     dom <- domainOf x
     case dom of
         DomainFunction () _ (DomainTuple [a, b]) c-> do
-            case (a==b) && (b==c) of
-                True -> do
-                    i <- nextName "q"
+            if (a==b) && (b==c)
+                then do
                     (ipat, i) <- quantifiedVar
-
-                    j <- nextName "q"
                     (jpat, j) <- quantifiedVar
-
-                    return $ return [essence| forAll(&ipat,&jpat) in defined(&x). &x((&i,&j)) = &x((&j,&i)) |]
-                False -> return []
+                    return $ return [essence|
+                        forAll (&ipat,&jpat) in defined(&x) .
+                            &x((&i,&j)) = &x((&j,&i))
+                    |]
+                else return []
         _ -> return []
 
 
@@ -267,16 +259,15 @@ nonCommutative x = do
     dom <- domainOf x
     case dom of
         DomainFunction () _ (DomainTuple [a, b]) c-> do
-            case (a==b) && (b==c) of
-                True -> do
-                    i <- nextName "q"
+            if (a==b) && (b==c)
+                then do
                     (ipat, i) <- quantifiedVar
-
-                    j <- nextName "q"
                     (jpat, j) <- quantifiedVar
-
-                    return $ return [essence| forAll(&ipat,&jpat) in defined(&x). &x((&i,&j)) != &x((&j,&i)) |]
-                False -> return []
+                    return $ return [essence|
+                        forAll (&ipat,&jpat) in defined(&x) .
+                            &x((&i,&j)) != &x((&j,&i))
+                    |]
+                else return []
         _ -> return []
 
 
@@ -284,25 +275,24 @@ associative:: (MonadFail m, NameGen m) => StreamlinerGen m
 associative x = do
     dom <- domainOf x
     case dom of
-        DomainFunction () _ (DomainTuple [a, b]) c-> do
-            case (a==b) && (b==c) of
-                True -> do
-                    i <- nextName "q"
+        DomainFunction () _ (DomainTuple [a, b]) c -> do
+            if (a==b) && (b==c)
+                then do
                     (ipat, i) <- quantifiedVar
-
-                    j <- nextName "q"
                     (jpat, j) <- quantifiedVar
-
-                    return $ return [essence| forAll(&ipat,&jpat) in defined(&x). &x((&x(&i,&j), &j)) = &x((&i, &x(&i, &j))) |]
-                False -> return []
+                    return $ return [essence|
+                        forAll (&ipat,&jpat) in defined(&x) .
+                            &x((&x(&i,&j), &j)) = &x((&i, &x(&i, &j)))
+                    |]
+                else return []
         _ -> return []
 
 
 onRange :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 onRange innerStreamliner x = do
-    traceM $ show $ "onRange" <+> pretty x
+    -- traceM $ show $ "onRange" <+> pretty x
     dom <- domainOf x
-    traceM $ show $ "onRange dom" <+> pretty dom
+    -- traceM $ show $ "onRange dom" <+> pretty dom
     case dom of
         DomainFunction () _ innerDomFr innerDomTo -> do
 
@@ -316,8 +306,8 @@ onRange innerStreamliner x = do
                 replaceWithRangeOfX (Reference n _) | n == nm = [essence| range(&x) |]
                 replaceWithRangeOfX p = p
 
-            traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
-            traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
+            -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
+            -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
             return (transformBi replaceWithRangeOfX innerConstraints)
 
@@ -399,9 +389,9 @@ onRange innerStreamliner x = do
 
 onDefined :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 onDefined innerStreamliner x = do
-    traceM $ show $ "Defined" <+> pretty x
+    -- traceM $ show $ "Defined" <+> pretty x
     dom <- domainOf x
-    traceM $ show $ "Defined dom" <+> pretty dom
+    -- traceM $ show $ "Defined dom" <+> pretty dom
     -- So we get the range and then we apply and then apply the rule to the range of the function
     dom <- domainOf x
     case dom of
@@ -417,8 +407,8 @@ onDefined innerStreamliner x = do
                 replaceWithRangeOfX (Reference n _) | n == nm = [essence| defined(&x) |]
                 replaceWithRangeOfX p = p
 
-            traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
-            traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
+            -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
+            -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
             return (transformBi replaceWithRangeOfX innerConstraints)
 
@@ -435,7 +425,7 @@ parts innerStreamliner x = do
     dom <- domainOf x
     case dom of
         DomainPartition _ _ partitionDomain -> do
-            traceM $ show $ "partition"
+            -- traceM $ show $ "partition"
             nm <- nextName "q"
             let partition = DomainSet () def (DomainSet () def partitionDomain)
                 ref =  Reference nm (Just (DeclNoRepr Find nm partition NoRegion))
