@@ -144,11 +144,15 @@ instance Hashable  Declaration
 instance ToJSON    Declaration where toJSON = genericToJSON jsonOptions
 instance FromJSON  Declaration where parseJSON = genericParseJSON jsonOptions
 
+-- this is only used in the instance below
+type Prim = Either Bool (Either Integer Constant)
+
 instance Pretty Declaration where
     pretty (FindOrGiven forg nm d) = hang (pretty forg <+> pretty nm <>  ":" ) 8 (pretty d)
     pretty (Letting nm (Domain x)) = hang ("letting" <+> pretty nm <+> "be domain") 8 (pretty x)
     pretty (Letting nm x) =
         let
+            extract :: Constant -> Maybe [Constant]
             extract (viewConstantMatrix   -> Just (_, rows)) = Just rows
             extract (viewConstantTuple    -> Just rows     ) = Just rows
             extract (viewConstantSet      -> Just rows     ) = Just rows
@@ -157,43 +161,61 @@ instance Pretty Declaration where
             extract (viewConstantSequence -> Just rows     ) = Just rows
             extract _ = Nothing
 
+            isPrim :: Constant -> Maybe Prim
             isPrim (ConstantBool val) = Just (Left val)
             isPrim (ConstantInt  val) = Just (Right (Left val))
             isPrim val@ConstantEnum{} = Just (Right (Right val))
             isPrim _ = Nothing
 
+            isPrim1DT :: Constant -> Maybe [Prim]
+            -- isPrim1DT p@(viewConstantMatrix   -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantTuple    -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantSet      -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantMSet     -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantFunction -> Just{}) = isPrim1D p
+            -- isPrim1DT p@(viewConstantSequence -> Just{}) = isPrim1D p
+            isPrim1DT _ = Nothing
+
+            isPrim1D :: Constant -> Maybe [Prim]
             isPrim1D (extract -> Just cells) = mapM isPrim cells
             isPrim1D _ = Nothing
 
+            isPrim2D :: Constant -> Maybe [[Prim]]
             isPrim2D (extract -> Just rows) = mapM isPrim1D rows
             isPrim2D (viewConstantRelation  -> Just table) = mapM (mapM isPrim) table
             isPrim2D (viewConstantPartition -> Just table) = mapM (mapM isPrim) table
             isPrim2D _ = Nothing
 
+            isPrim3D :: Constant -> Maybe [[[Prim]]]
             isPrim3D (extract -> Just table) = mapM isPrim2D table
             isPrim3D _ = Nothing
 
+            showPrim :: Int -> Prim -> String
             showPrim _ (Left True)  = "T"
             showPrim _ (Left False) = "_"
             showPrim n (Right (Left  i)) = padLeft n ' ' (show i)
             showPrim n (Right (Right i)) = padRight n ' ' (show (pretty i))
 
+            maxIntWidth :: Data a => a -> Int
             maxIntWidth primTable =
                 maximum (0 : [ length (show i)          | i <- universeBi primTable :: [Integer] ]
                           ++ [ length (show (pretty i)) | i@ConstantEnum{} <- universeBi primTable ])
 
-            -- comment1D width primTable =
-            --     unlines
-            --         [ "$ Here is a simple \"visualisation\" for the value above."
-            --         , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
-            --         ]
+            comment1D :: Int ->  [Prim] -> String
+            comment1D width primTable =
+                unlines
+                    [ "$ Visualisation for " ++ show (pretty nm)
+                    , "$ " ++ unwords [ showPrim width cell | cell <- primTable ]
+                    ]
 
+            comment2D :: Int ->  [[Prim]] -> String
             comment2D width primTable =
                 unlines
                     $ ( "$ Visualisation for " ++ show (pretty nm))
                     : [ "$ " ++ unwords [ showPrim width cell | cell <- row ]
                       | row <- primTable ]
 
+            comment3D :: Int -> [[[Prim]]] -> String
             comment3D width primTable =
                 unlines
                     $ ( "$ Visualisation for " ++ show (pretty nm))
@@ -208,12 +230,16 @@ instance Pretty Declaration where
                     _          -> id
 
             modifierC c =
-                case (isPrim2D c, isPrim3D c) of
-                    (Just primTable, _) ->
+                case (isPrim1DT c, isPrim2D c, isPrim3D c) of
+                    (Just primTable, _, _) ->
+                        if null primTable
+                            then id
+                            else \ s -> vcat [s, pretty (comment1D (maxIntWidth primTable) primTable)]
+                    (_, Just primTable, _) ->
                         if null (concat primTable)
                             then id
                             else \ s -> vcat [s, pretty (comment2D (maxIntWidth primTable) primTable)]
-                    (_, Just primTable) ->
+                    (_, _, Just primTable) ->
                         if null (concat (concat primTable))
                             then id
                             else \ s -> vcat [s, pretty (comment3D (maxIntWidth primTable) primTable)]

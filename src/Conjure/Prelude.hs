@@ -14,6 +14,7 @@ module Conjure.Prelude
     , sameLength
     , concatMapM, concatForM
     , timedIO, timedPutStrLn
+    , tick
     , isLeft, isRight
     , tracing
     , allCombinations
@@ -269,6 +270,12 @@ timedIO io = do
     end   <- getCPUTime
     let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
     return (a, diff)
+
+tick :: MonadIO m => Doc -> m ()
+tick msg = do
+    time <- liftIO getCPUTime
+    let seconds = fromIntegral time / ((10 :: Double) ^ (12 :: Int))
+    traceM $ show seconds ++ "\t" ++ show msg
 
 timedPutStrLn :: String -> IO ()
 timedPutStrLn str = do
