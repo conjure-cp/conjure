@@ -222,6 +222,7 @@ smallestFirst x = do
                 forAll &ipat in defined(&x) .
                     &x(min(defined(&x))) <= &x(&i)
             |]
+         _ -> return []
 
 
 largestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -235,6 +236,7 @@ largestFirst x = do
                 forAll &ipat in defined(&x) .
                     &x(max(defined(&x))) >= &x(&i)
             |]
+         _ -> return []
 
 
 commutative :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -393,7 +395,6 @@ onDefined innerStreamliner x = do
     dom <- domainOf x
     -- traceM $ show $ "Defined dom" <+> pretty dom
     -- So we get the range and then we apply and then apply the rule to the range of the function
-    dom <- domainOf x
     case dom of
         DomainFunction () _ innerDomFr _innerDomTo -> do
 
@@ -427,8 +428,8 @@ parts innerStreamliner x = do
         DomainPartition _ _ partitionDomain -> do
             -- traceM $ show $ "partition"
             nm <- nextName "q"
-            let partition = DomainSet () def (DomainSet () def partitionDomain)
-                ref =  Reference nm (Just (DeclNoRepr Find nm partition NoRegion))
+            let setDomain = DomainSet () def (DomainSet () def partitionDomain)
+                ref =  Reference nm (Just (DeclNoRepr Find nm setDomain NoRegion))
 
             innerConstraints <- innerStreamliner ref
 
