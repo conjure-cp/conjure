@@ -15,7 +15,7 @@ streamliningToStdout :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, M
 streamliningToStdout model = do
     streamliners <- streamlining model
     liftIO $ print $ prettyList prBraces ","
-        [ pretty (show (show i)) <> ":" <+> pretty cons
+        [ pretty (show (show i)) <> ":" <+> "\"" <> pretty cons <> "\""
         | (i, cons) <- zip allNats streamliners
         ]
 
