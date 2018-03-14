@@ -15,20 +15,19 @@ streamlining model =
             Declaration (FindOrGiven Find nm domain) -> do
                 let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
                 streamliners <- streamlinersForSingleVariable ref
-                traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
-                                     , vcat [ nest 4 (pretty s) | s <- streamliners ]
-                                     ]
+                -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
+                --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
+                --                      ]
+                traceM $ show $ prettyList prBraces ","
+                    [ pretty (show (show i)) <> ":" <+> pretty cons
+                    | (i, cons) <- zip allNats streamliners
+                    ]
             _ -> return ()
-
 
 
 type Streamliner = [Expression]
 
 type StreamlinerGen m = Expression -> m Streamliner
-
-
-
-
 
 
 -- given a reference to a top level variable, produce a list of all applicable streamliners
@@ -171,7 +170,10 @@ approxHalf innerStreamliner x = do
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             forM innerConstraints $ \ innerConstraint ->
-                return [essence| (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\ (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint)) |]
+                return [essence|
+                    (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
+                    (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
+                |]
 
         _ -> return []
 
