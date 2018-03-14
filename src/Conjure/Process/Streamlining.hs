@@ -89,7 +89,7 @@ intLowerHalf x = do
     ty <- typeOf x
     dom <- domainOf x
     case dom of
-        DomainInt [RangeBounded lower upper] -> do
+        DomainInt [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty TypeInt
                 then return $ return [essence| &x < 1 + (&upper -1) /2 |]
@@ -102,7 +102,7 @@ intUpperHalf x = do
     ty <- typeOf x
     dom <- domainOf x
     case dom of
-        DomainInt [RangeBounded lower upper] -> do
+        DomainInt [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty TypeInt
                 then return $ return [essence| &x > 1 + (&upper -1) /2 |]
@@ -135,7 +135,7 @@ setMost :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 setMost innerStreamliner x = do
     dom <- domainOf x
     case dom of
-        DomainSet _ (SetAttr (SizeAttr_Size size)) innerDom -> do
+        DomainSet _ (SetAttr (SizeAttr_Size _size)) innerDom -> do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
@@ -184,7 +184,7 @@ monotonicallyIncreasing x = do
     dom <- domainOf x
     -- traceM $ show $ "Monotonically Increasing"
     case dom of
-        DomainFunction _ attrs (DomainInt _) (DomainInt _)-> do
+        DomainFunction _ _attrs (DomainInt _) (DomainInt _)-> do
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
             return $ return [essence|
@@ -199,7 +199,7 @@ monotonicallyDecreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
 monotonicallyDecreasing x = do
     dom <- domainOf x
     case dom of
-        DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
+        DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
             -- traceM $ show $ "Monotonically Decreasing"
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
@@ -215,7 +215,7 @@ smallestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
 smallestFirst x = do
     dom <- domainOf x
     case dom of
-         DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
+         DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
             -- traceM $ show $ "Smallest First"
             (ipat, i) <- quantifiedVar
             return $ return [essence|
@@ -228,7 +228,7 @@ largestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
 largestFirst x = do
     dom <- domainOf x
     case dom of
-         DomainFunction _ attrs (DomainInt _) (DomainInt _) -> do
+         DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
             -- traceM $ show $ "Largest First"
             (ipat, i) <- quantifiedVar
             return $ return [essence|
@@ -294,7 +294,7 @@ onRange innerStreamliner x = do
     dom <- domainOf x
     -- traceM $ show $ "onRange dom" <+> pretty dom
     case dom of
-        DomainFunction () _ innerDomFr innerDomTo -> do
+        DomainFunction () _ _innerDomFr innerDomTo -> do
 
             let rangeSetDomain = DomainSet () def innerDomTo
 
@@ -395,7 +395,7 @@ onDefined innerStreamliner x = do
     -- So we get the range and then we apply and then apply the rule to the range of the function
     dom <- domainOf x
     case dom of
-        DomainFunction () _ innerDomFr innerDomTo -> do
+        DomainFunction () _ innerDomFr _innerDomTo -> do
 
             let rangeSetDomain = DomainSet () def innerDomFr
 
@@ -446,7 +446,7 @@ quasiRegular :: (MonadFail m, NameGen m) => StreamlinerGen m
 quasiRegular x = do
     dom <- domainOf x
     case dom of
-        DomainPartition _ _ partitionDomain -> do
+        DomainPartition{} -> do
             return $ return [essence|
                 minPartSize(&x, |participants(&x)| / |parts(&x)| - 1) /\
                 maxPartSize(&x, |participants(&x)|/ |parts(&x)| + 1)
