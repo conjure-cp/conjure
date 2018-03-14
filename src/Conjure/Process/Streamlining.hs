@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Process.Streamlining where
+module Conjure.Process.Streamlining ( streamlining ) where
 
 import Conjure.Prelude
 import Conjure.Language
@@ -36,28 +36,30 @@ streamlinersForSingleVariable :: (MonadFail m, NameGen m) => StreamlinerGen m
 streamlinersForSingleVariable x = concatMapM ($ x)
     [ intOdd
     , intEven
+    , intLowerHalf
+    , intUpperHalf
 
     , setAll streamlinersForSingleVariable
     , setHalf streamlinersForSingleVariable
-    , setMost  streamlinersForSingleVariable
+    , setMost streamlinersForSingleVariable
     , approxHalf streamlinersForSingleVariable
 
+    , monotonicallyIncreasing
+    , monotonicallyDecreasing
+    , smallestFirst
+    , largestFirst
     , commutative
     , nonCommutative
     , associative
     , onRange streamlinersForSingleVariable
     , onDefined streamlinersForSingleVariable
-    --, prefix streamlinersForSingleVariable
-    --, postfix streamlinersForSingleVariable
-    , smallestFirst
-    , largestFirst
-    , intLowerHalf
-    , intUpperHalf
-    , monotonicallyIncreasing
-    , monotonicallyDecreasing
+    -- , diagonal streamlinersForSingleVariable
+    -- , prefix streamlinersForSingleVariable
+    -- , postfix streamlinersForSingleVariable
 
     , parts streamlinersForSingleVariable
     , quasiRegular
+
     ]
 
 
@@ -316,6 +318,32 @@ onRange innerStreamliner x = do
         _ -> return []
 
 
+onDefined :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+onDefined innerStreamliner x = do
+    -- traceM $ show $ "Defined" <+> pretty x
+    dom <- domainOf x
+    -- traceM $ show $ "Defined dom" <+> pretty dom
+    -- So we get the range and then we apply and then apply the rule to the range of the function
+    case dom of
+        DomainFunction () _ innerDomFr _innerDomTo -> do
+
+            let rangeSetDomain = DomainSet () def innerDomFr
+
+            nm <- nextName "q"
+            let ref = Reference nm (Just (DeclNoRepr Find nm rangeSetDomain NoRegion))
+            innerConstraints <- innerStreamliner ref
+
+            let
+                replaceWithRangeOfX (Reference n _) | n == nm = [essence| defined(&x) |]
+                replaceWithRangeOfX p = p
+
+            -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
+            -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
+
+            return (transformBi replaceWithRangeOfX innerConstraints)
+
+        _ -> return []
+
 
 -- diagonal :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 -- diagonal innerStreamliner x = do
@@ -386,34 +414,6 @@ onRange innerStreamliner x = do
 --                 _ -> return []
 
 --         _ -> return []
-
-
-
-onDefined :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
-onDefined innerStreamliner x = do
-    -- traceM $ show $ "Defined" <+> pretty x
-    dom <- domainOf x
-    -- traceM $ show $ "Defined dom" <+> pretty dom
-    -- So we get the range and then we apply and then apply the rule to the range of the function
-    case dom of
-        DomainFunction () _ innerDomFr _innerDomTo -> do
-
-            let rangeSetDomain = DomainSet () def innerDomFr
-
-            nm <- nextName "q"
-            let ref = Reference nm (Just (DeclNoRepr Find nm rangeSetDomain NoRegion))
-            innerConstraints <- innerStreamliner ref
-
-            let
-                replaceWithRangeOfX (Reference n _) | n == nm = [essence| defined(&x) |]
-                replaceWithRangeOfX p = p
-
-            -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
-            -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
-
-            return (transformBi replaceWithRangeOfX innerConstraints)
-
-        _ -> return []
 
 
 ------------------------------------------------------------------------------
