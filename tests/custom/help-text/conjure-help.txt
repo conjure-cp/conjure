@@ -114,6 +114,16 @@
                                               --log-choices), or a json file.
  General:
       --limit-time=INT                        Limit in seconds of real time.
+ Streamlining:
+      --generate-streamliners=ITEM            A comma separated list of
+                                              integers.
+                                              If provided, the streamlining
+                                              constraints that correspond to the
+                                              given integers will be
+                                              generated.Run "conjure
+                                              streamlining ESSENCE_FILE" to
+                                              generate a list of all applicable
+                                              streamliners.
  
  conjure translate-parameter [OPTIONS]
    Refinement of Essence parameter files for a particular Essence' model.
@@ -307,6 +317,16 @@
       --solver=ITEM                           Backend solver. Possible values:
                                               minion/lingeling/minisat
                                               Default: minion
+ Streamlining:
+      --generate-streamliners=ITEM            A comma separated list of
+                                              integers.
+                                              If provided, the streamlining
+                                              constraints that correspond to the
+                                              given integers will be
+                                              generated.Run "conjure
+                                              streamlining ESSENCE_FILE" to
+                                              generate a list of all applicable
+                                              streamliners.
  
  conjure pretty [OPTIONS] FILE
    Pretty print as Essence file to stdout.
