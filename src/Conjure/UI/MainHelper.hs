@@ -27,7 +27,7 @@ import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
-import Conjure.Process.Streamlining ( streamlining )
+import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
 import Conjure.Language.NameResolution ( resolveNamesMulti )
 
 -- base
@@ -84,18 +84,22 @@ mainWithArgs Modelling{..} = do
             Compact -> userErr1 "The Compact heuristic isn't supported for questions."
             _       -> return ()
 
-        responsesList <- do
-            if null responses
-                then return Nothing
-                else do
-                    let parts = splitOn "," responses
-                    let intParts = mapMaybe readMay parts
-                    if length parts == length intParts
-                        then return (Just intParts)
-                        else userErr1 $ vcat [ "Cannot parse the value for --responses."
-                                             , "Expected a comma separated list of integers."
-                                             , "But got:" <+> pretty responses
-                                             ]
+        let
+            parseCommaSeparated flag str =
+                if null str
+                    then return Nothing
+                    else do
+                        let parts = splitOn "," str
+                        let intParts = mapMaybe readMay parts
+                        if length parts == length intParts
+                            then return (Just intParts)
+                            else userErr1 $ vcat [ "Cannot parse the value for" <+> flag
+                                                 , "Expected a comma separated list of integers."
+                                                 , "But got:" <+> pretty str
+                                                 ]
+
+        responsesList <- parseCommaSeparated "--responses" responses
+        generateStreamlinersList <- parseCommaSeparated "--generate-streamliners" generateStreamliners
 
         return Config.Config
             { Config.outputDirectory            = outputDirectory
@@ -121,8 +125,18 @@ mainWithArgs Modelling{..} = do
             , Config.smartFilenames             = smartFilenames
             , Config.lineWidth                  = lineWidth
             , Config.responses                  = responsesList
+            , Config.generateStreamliners       = generateStreamlinersList
             }
-    runNameGen model $ outputModels config model
+    
+    runNameGen model $ do
+        modelWithStreamliners <-
+            case Config.generateStreamliners config of
+                Nothing -> return model
+                Just ix -> do
+                    streamliners <- streamlining model
+                    let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
+                    return model { mStatements = mStatements model ++ [SuchThat chosen] }
+        outputModels config modelWithStreamliners
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
@@ -177,7 +191,7 @@ mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
-mainWithArgs Streamlining{..} = runNameGen essence (readModelFromFile essence >>= streamlining)
+mainWithArgs Streamlining{..} = runNameGen essence (readModelFromFile essence >>= streamliningToStdout)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat"]) $
@@ -238,6 +252,7 @@ mainWithArgs config@Solve{..} = do
                       , limitTime
                       , outputFormat
                       )
+                    , generateStreamliners
                     )
                     (outputDirectory </> ".conjure-checksum")
                     (pp logLevel "Using cached models." >> getEprimes)

@@ -48,6 +48,8 @@ data UI
         , savedChoices               :: Maybe FilePath
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | TranslateParameter
         { eprime                     :: FilePath            -- eprime, mandatory
@@ -121,6 +123,8 @@ data UI
         -- output
         , outputFormat               :: OutputFormat        -- Essence by default
         , lineWidth                  :: Int                 -- 120 by default
+        -- streamlining
+        , generateStreamliners       :: String
         }
     | Pretty
         { essence                    :: FilePath
@@ -412,6 +416,14 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "modelling"
             &= explicit
             &= help "The main act. Given a problem specification in Essence, \
@@ -838,6 +850,14 @@ ui = modes
             &= groupname "Logging & Output"
             &= explicit
             &= help "Line width for pretty printing.\nDefault: 120"
+        , generateStreamliners
+            = ""
+            &= name "generate-streamliners"
+            &= groupname "Streamlining"
+            &= explicit
+            &= help "A comma separated list of integers.\n\
+                    \If provided, the streamlining constraints that correspond to the given integers will be generated.\
+                    \Run \"conjure streamlining ESSENCE_FILE\" to generate a list of all applicable streamliners."
         }   &= name "solve"
             &= explicit
             &= help "A combined mode for convenience.\n\

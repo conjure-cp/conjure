@@ -1,6 +1,9 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Process.Streamlining ( streamlining ) where
+module Conjure.Process.Streamlining
+    ( streamlining
+    , streamliningToStdout
+    ) where
 
 import Conjure.Prelude
 import Conjure.Language
@@ -8,9 +11,17 @@ import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Compute.DomainOf ( domainOf )
 
 
-streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m ()
-streamlining model =
-    forM_ (mStatements model) $ \ statement ->
+streamliningToStdout :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, MonadIO m) => Model -> m ()
+streamliningToStdout model = do
+    streamliners <- streamlining model
+    liftIO $ print $ prettyList prBraces ","
+        [ pretty (show (show i)) <> ":" <+> pretty cons
+        | (i, cons) <- zip allNats streamliners
+        ]
+
+streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [Expression]
+streamlining model = do
+    concatForM (mStatements model) $ \ statement ->
         case statement of
             Declaration (FindOrGiven Find nm domain) -> do
                 let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
@@ -18,11 +29,8 @@ streamlining model =
                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
                 --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
                 --                      ]
-                traceM $ show $ prettyList prBraces ","
-                    [ pretty (show (show i)) <> ":" <+> pretty cons
-                    | (i, cons) <- zip allNats streamliners
-                    ]
-            _ -> return ()
+                return streamliners
+            _ -> return []
 
 
 type Streamliner = [Expression]

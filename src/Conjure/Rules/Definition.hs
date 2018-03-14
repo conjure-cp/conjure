@@ -101,6 +101,7 @@ data Config = Config
     , smartFilenames             :: Bool
     , lineWidth                  :: Int
     , responses                  :: Maybe [Int]
+    , generateStreamliners       :: Maybe [Int]
     }
     deriving (Eq, Ord, Show, Read, Data, Typeable)
 
@@ -129,6 +130,7 @@ instance Default Config where
         , smartFilenames             = False
         , lineWidth                  = 120
         , responses                  = Nothing
+        , generateStreamliners       = Nothing
         }
 
 data RuleResult m = RuleResult
