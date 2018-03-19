@@ -13,11 +13,20 @@ import Conjure.Compute.DomainOf ( domainOf )
 
 streamliningToStdout :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, MonadIO m) => Model -> m ()
 streamliningToStdout model = do
+    let
+        whitespace '\t' = ' '
+        whitespace '\n' = ' '
+        whitespace ch   = ch
+
+        showStr = pretty . show
+        
     streamliners <- streamlining model
+
     liftIO $ print $ prettyList prBraces ","
-        [ pretty (show (show i)) <> ":" <+> "\"" <> pretty cons <> "\""
+        [ (showStr $ show i) <> ":" <+> (showStr $ map whitespace $ show $ pretty cons)
         | (i, cons) <- zip allNats streamliners
         ]
+
 
 streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [Expression]
 streamlining model = do
