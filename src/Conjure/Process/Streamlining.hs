@@ -181,7 +181,8 @@ approxHalf:: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 approxHalf innerStreamliner x = do
     dom <- domainOf x
     case dom of
-        DomainSet _ (SetAttr (SizeAttr_Size size)) innerDom -> do
+        DomainSet _ _ innerDom -> do
+            let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
