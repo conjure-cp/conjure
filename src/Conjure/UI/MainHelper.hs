@@ -28,7 +28,7 @@ import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Process.ModelStrengthening ( strengthenModel )
 import Conjure.Process.Streamlining ( streamlining, streamliningToStdout )
-import Conjure.Language.NameResolution ( resolveNamesMulti )
+import Conjure.Language.NameResolution ( resolveNames, resolveNamesMulti )
 
 -- base
 import System.IO ( Handle, hSetBuffering, stdout, BufferMode(..) )
@@ -191,7 +191,8 @@ mainWithArgs ModelStrengthening{..} =
     readModelFromFile essence >>=
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
-mainWithArgs Streamlining{..} = runNameGen essence (readModelFromFile essence >>= streamliningToStdout)
+mainWithArgs Streamlining{..} = runNameGen essence
+    (readModelFromFile essence >>= resolveNames >>= streamliningToStdout)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat"]) $
