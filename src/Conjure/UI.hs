@@ -798,7 +798,7 @@ ui = modes
             &= groupname "Options for other tools"
             &= explicit
             &= help "Backend solver. \
-                    \Possible values: minion/lingeling/minisat\n\
+                    \Possible values: minion/lingeling/minisat/bc_minisat_all/nbc_minisat_all\n\
                     \Default: minion"
         , nbSolutions
             = "1"

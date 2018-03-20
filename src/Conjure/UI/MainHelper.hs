@@ -178,12 +178,14 @@ mainWithArgs ModelStrengthening{..} =
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
-    unless (solver `elem` ["minion", "lingeling", "minisat"]) $
+    unless (solver `elem` ["minion", "lingeling", "minisat", "bc_minisat_all", "nbc_minisat_all"]) $
         userErr1 ("Unsupported solver:" <+> pretty solver)
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
+    unless (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions == "all") $
+        userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readModelFromFile f
@@ -437,13 +439,19 @@ srMkArgs Solve{..} outBase modelPath =
         else ["-num-solutions", stringToText nbSolutions]
     ) ++
     ( case solver of
-        "minion"    -> [ "-minion" ]
-        "lingeling" -> [ "-sat"
-                       , "-sat-family", "lingeling"
-                       ]
-        "minisat"   -> [ "-sat"
-                       , "-sat-family", "minisat"
-                       ]
+        "minion"            -> [ "-minion" ]
+        "lingeling"         -> [ "-sat"
+                               , "-sat-family", "lingeling"
+                               ]
+        "minisat"           -> [ "-sat"
+                               , "-sat-family", "minisat"
+                               ]
+        "bc_minisat_all"    -> [ "-sat"
+                               , "-sat-family", "bc_minisat_all"
+                               ]
+        "nbc_minisat_all"   -> [ "-sat"
+                               , "-sat-family", "nbc_minisat_all"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
