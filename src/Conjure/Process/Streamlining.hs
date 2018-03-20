@@ -55,10 +55,15 @@ streamlinersForSingleVariable x = concatMapM ($ x)
     , intLowerHalf
     , intUpperHalf
 
+    , matrixAll streamlinersForSingleVariable
+    , matrixHalf streamlinersForSingleVariable
+    , matrixMost streamlinersForSingleVariable
+    , matrixApproxHalf streamlinersForSingleVariable
+
     , setAll streamlinersForSingleVariable
     , setHalf streamlinersForSingleVariable
     , setMost streamlinersForSingleVariable
-    , approxHalf streamlinersForSingleVariable
+    , setApproxHalf streamlinersForSingleVariable
 
     , monotonicallyIncreasing
     , monotonicallyDecreasing
@@ -129,15 +134,104 @@ intUpperHalf x = do
 
 
 ------------------------------------------------------------------------------
--- Sets
+-- Matrices
+------------------------------------------------------------------------------
+
+
+matrixAll :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+matrixAll innerStreamliner x = do
+    dom <- domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            nm <- nextName "q"
+            -- traceM $ show $ "matrixAll nm" <+> pretty nm
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+                
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
+            forM innerConstraints $ \ innerConstraint ->
+                    return [essence| forAll &pat : &indexDom . &innerConstraint |]
+        _ -> return []
+
+
+matrixMost :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+matrixMost innerStreamliner x = do
+    dom <- domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+                
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            forM innerConstraints $ \ innerConstraint ->
+                return [essence| 1 >= sum &pat : &indexDom . toInt(&innerConstraint) |]
+        _ -> return []
+
+
+matrixHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+matrixHalf innerStreamliner x = do
+    dom <- domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            let size = [essence| |`&indexDom`| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+                
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            forM innerConstraints $ \ innerConstraint ->
+                    return [essence| &size / 2 = (sum &pat : &indexDom . toInt(&innerConstraint)) |]
+        _ -> return []
+
+
+matrixApproxHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+matrixApproxHalf innerStreamliner x = do
+    dom <- domainOf x
+    case dom of
+        DomainMatrix indexDom innerDom -> do
+            let size = [essence| |`&indexDom`| |]
+            nm <- nextName "q"
+            let pat = Single nm
+                ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
+                
+                liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
+                liftMatrix p = p
+
+            innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
+            forM innerConstraints $ \ innerConstraint ->
+                return [essence|
+                    (&size/2) + 1 >= (sum &pat : &indexDom . toInt(&innerConstraint)) /\
+                    (&size/2 -1) <= (sum &pat : &indexDom . toInt(&innerConstraint))
+                |]
+        _ -> return []
+
+
+------------------------------------------------------------------------------
+-- Sets and MSets
 ------------------------------------------------------------------------------
 
 
 setAll :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 setAll innerStreamliner x = do
     dom <- domainOf x
-    case dom of
-        DomainSet _ _ innerDom -> do
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
             nm <- nextName "q"
             -- traceM $ show $ "setAll nm" <+> pretty nm
             let pat = Single nm
@@ -152,8 +246,13 @@ setAll innerStreamliner x = do
 setMost :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 setMost innerStreamliner x = do
     dom <- domainOf x
-    case dom of
-        DomainSet _ (SetAttr (SizeAttr_Size _size)) innerDom -> do
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
@@ -163,11 +262,17 @@ setMost innerStreamliner x = do
         _ -> return []
 
 
-setHalf ::(MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+setHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
 setHalf innerStreamliner x = do
     dom <- domainOf x
-    case dom of
-        DomainSet _ (SetAttr (SizeAttr_Size size)) innerDom -> do
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
+            let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
@@ -177,11 +282,16 @@ setHalf innerStreamliner x = do
         _ -> return []
 
 
-approxHalf:: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
-approxHalf innerStreamliner x = do
+setApproxHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
+setApproxHalf innerStreamliner x = do
     dom <- domainOf x
-    case dom of
-        DomainSet _ _ innerDom -> do
+    let minnerDom =
+            case dom of
+                DomainSet _ _ innerDom -> Just innerDom
+                DomainMSet _ _ innerDom -> Just innerDom
+                _ -> Nothing
+    case minnerDom of
+        Just innerDom -> do
             let size = [essence| |&x| |]
             nm <- nextName "q"
             let pat = Single nm
@@ -192,7 +302,6 @@ approxHalf innerStreamliner x = do
                     (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
-
         _ -> return []
 
 
@@ -278,7 +387,7 @@ commutative x = do
         _ -> return []
 
 
-nonCommutative:: (MonadFail m, NameGen m) => StreamlinerGen m
+nonCommutative :: (MonadFail m, NameGen m) => StreamlinerGen m
 nonCommutative x = do
     dom <- domainOf x
     case dom of
@@ -295,7 +404,7 @@ nonCommutative x = do
         _ -> return []
 
 
-associative:: (MonadFail m, NameGen m) => StreamlinerGen m
+associative :: (MonadFail m, NameGen m) => StreamlinerGen m
 associative x = do
     dom <- domainOf x
     case dom of
