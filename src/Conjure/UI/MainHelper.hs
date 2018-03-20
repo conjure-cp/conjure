@@ -184,7 +184,7 @@ mainWithArgs config@Solve{..} = do
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
-    unless (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions == "all") $
+    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
