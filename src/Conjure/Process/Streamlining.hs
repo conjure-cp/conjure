@@ -18,17 +18,22 @@ streamliningToStdout model = do
         whitespace '\n' = ' '
         whitespace ch   = ch
 
+        showStr :: String -> Doc
         showStr = pretty . show
         
     streamliners <- streamlining model
 
     liftIO $ print $ prettyList prBraces ","
-        [ (showStr $ show i) <> ":" <+> (showStr $ map whitespace $ show $ pretty cons)
-        | (i, cons) <- zip allNats streamliners
+        [ (showStr $ show i) <> ":" <+> prBraces (vcat
+            [ showStr "onVariable:" <+> showStr (show (pretty nm))
+            , showStr "groups:"     <+> prettyList prBrackets "," (map showStr groups)
+            , showStr "constraint:" <+> (showStr $ map whitespace $ show $ pretty cons)
+            ])
+        | (i, (nm, (cons, groups))) <- zip allNats streamliners
         ]
 
 
-streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [Expression]
+streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [(Name, Streamliner)]
 streamlining model = do
     concatForM (mStatements model) $ \ statement ->
         case statement of
@@ -38,13 +43,32 @@ streamlining model = do
                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
                 --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
                 --                      ]
-                return streamliners
-            _ -> return []
+                return [ (nm, s) | s <- streamliners ]
+            _ -> noStreamliner
 
 
-type Streamliner = [Expression]
+type StreamlinerGroup = String
 
-type StreamlinerGen m = Expression -> m Streamliner
+type Streamliner = (Expression, [StreamlinerGroup])
+
+type StreamlinerGen m = Expression -> m [Streamliner]
+
+mkStreamliner
+    :: Monad m
+    => StreamlinerGroup         -- the group label
+    -> Expression               -- the streamlining constraint
+    -> m [Streamliner]
+mkStreamliner grp x = return [(x, [grp])]
+
+noStreamliner :: Monad m => m [a]
+noStreamliner = return []
+
+attachGroup
+    :: Monad m
+    => [StreamlinerGroup]
+    -> Expression
+    -> m Streamliner
+attachGroup grps x = return (x, grps)
 
 
 -- given a reference to a top level variable, produce a list of all applicable streamliners
@@ -95,16 +119,16 @@ intOdd :: (MonadFail m, NameGen m) => StreamlinerGen m
 intOdd x = do
     ty <- typeOf x
     if typeUnify ty TypeInt
-        then return $ return [essence| &x % 2 = 1 |]
-        else return []
+        then mkStreamliner "IntOddEven" [essence| &x % 2 = 1 |]
+        else noStreamliner
 
 
 intEven :: MonadFail m => StreamlinerGen m
 intEven x = do
     ty <- typeOf x
     if typeUnify ty TypeInt
-        then return $ return [essence| &x % 2 = 0 |]
-        else return []
+        then mkStreamliner "IntOddEven" [essence| &x % 2 = 0 |]
+        else noStreamliner
 
 
 intLowerHalf :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -115,9 +139,9 @@ intLowerHalf x = do
         DomainInt [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty TypeInt
-                then return $ return [essence| &x < 1 + (&upper -1) /2 |]
-                else return []
-        _ -> return []
+                then mkStreamliner "IntLowHigh" [essence| &x < 1 + (&upper -1) /2 |]
+                else noStreamliner
+        _ -> noStreamliner
 
 
 intUpperHalf :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -128,9 +152,9 @@ intUpperHalf x = do
         DomainInt [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
             if typeUnify ty TypeInt
-                then return $ return [essence| &x > 1 + (&upper -1) /2 |]
-                else return []
-        _ -> return []
+                then mkStreamliner "IntLowHigh" [essence| &x > 1 + (&upper -1) /2 |]
+                else noStreamliner
+        _ -> noStreamliner
 
 
 ------------------------------------------------------------------------------
@@ -147,15 +171,15 @@ matrixAll innerStreamliner x = do
             -- traceM $ show $ "matrixAll nm" <+> pretty nm
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
-                
+
                 liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
                 liftMatrix p = p
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
             -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
-            forM innerConstraints $ \ innerConstraint ->
-                    return [essence| forAll &pat : &indexDom . &innerConstraint |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup grps [essence| forAll &pat : &indexDom . &innerConstraint |]
+        _ -> noStreamliner
 
 
 matrixMost :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -166,14 +190,14 @@ matrixMost innerStreamliner x = do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
-                
+
                 liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
                 liftMatrix p = p
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                return [essence| 1 >= sum &pat : &indexDom . toInt(&innerConstraint) |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence| 1 >= sum &pat : &indexDom . toInt(&innerConstraint) |]
+        _ -> noStreamliner
 
 
 matrixHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -185,14 +209,14 @@ matrixHalf innerStreamliner x = do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
-                
+
                 liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
                 liftMatrix p = p
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                    return [essence| &size / 2 = (sum &pat : &indexDom . toInt(&innerConstraint)) |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence| &size / 2 = (sum &pat : &indexDom . toInt(&innerConstraint)) |]
+        _ -> noStreamliner
 
 
 matrixApproxHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -204,17 +228,17 @@ matrixApproxHalf innerStreamliner x = do
             nm <- nextName "q"
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
-                
+
                 liftMatrix (Reference n _) | n == nm = [essence| &x[&ref] |]
                 liftMatrix p = p
 
             innerConstraints <- transformBi liftMatrix <$> innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                return [essence|
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
                     (&size/2) + 1 >= (sum &pat : &indexDom . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat : &indexDom . toInt(&innerConstraint))
-                |]
-        _ -> return []
+                    |]
+        _ -> noStreamliner
 
 
 ------------------------------------------------------------------------------
@@ -238,9 +262,9 @@ setAll innerStreamliner x = do
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
             -- traceM $ show $ "maybeInnerConstraint" <+> vcat (map pretty innerConstraints)
-            forM innerConstraints $ \ innerConstraint ->
-                    return [essence| forAll &pat in &x . &innerConstraint |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                    attachGroup grps [essence| forAll &pat in &x . &innerConstraint |]
+        _ -> noStreamliner
 
 
 setMost :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -257,9 +281,9 @@ setMost innerStreamliner x = do
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                return [essence| 1 >= sum &pat in &x . toInt(&innerConstraint) |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence| 1 >= sum &pat in &x . toInt(&innerConstraint) |]
+        _ -> noStreamliner
 
 
 setHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -277,9 +301,9 @@ setHalf innerStreamliner x = do
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                    return [essence| &size / 2 = (sum &pat in &x . toInt(&innerConstraint)) |]
-        _ -> return []
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence| &size / 2 = (sum &pat in &x . toInt(&innerConstraint)) |]
+        _ -> noStreamliner
 
 
 setApproxHalf :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -297,12 +321,12 @@ setApproxHalf innerStreamliner x = do
             let pat = Single nm
                 ref = Reference nm (Just (DeclNoRepr Find nm innerDom NoRegion))
             innerConstraints <- innerStreamliner ref
-            forM innerConstraints $ \ innerConstraint ->
-                return [essence|
+            forM innerConstraints $ \ (innerConstraint, grps) ->
+                attachGroup grps [essence|
                     (&size/2) + 1 >= (sum &pat in &x . toInt(&innerConstraint)) /\
                     (&size/2 -1) <= (sum &pat in &x . toInt(&innerConstraint))
                 |]
-        _ -> return []
+        _ -> noStreamliner
 
 
 ------------------------------------------------------------------------------
@@ -318,12 +342,12 @@ monotonicallyIncreasing x = do
         DomainFunction _ _attrs (DomainInt _) (DomainInt _)-> do
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
-            return $ return [essence|
+            mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &iPat in defined(&x) .
                     forAll &jPat in defined(&x) .
                         &i < &j -> &x(&i) <= &x(&j)
             |]
-        _ -> return []
+        _ -> noStreamliner
 
 
 monotonicallyDecreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -334,12 +358,12 @@ monotonicallyDecreasing x = do
             -- traceM $ show $ "Monotonically Decreasing"
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
-            return $ return [essence|
+            mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &iPat in defined(&x) .
                     forAll &jPat in defined(&x) .
                         &i < &j -> &x(&i) >= &x(&j)
             |]
-        _ -> return []
+        _ -> noStreamliner
 
 
 smallestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -349,11 +373,11 @@ smallestFirst x = do
          DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
             -- traceM $ show $ "Smallest First"
             (ipat, i) <- quantifiedVar
-            return $ return [essence|
+            mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &ipat in defined(&x) .
                     &x(min(defined(&x))) <= &x(&i)
             |]
-         _ -> return []
+         _ -> noStreamliner
 
 
 largestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -363,11 +387,11 @@ largestFirst x = do
          DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
             -- traceM $ show $ "Largest First"
             (ipat, i) <- quantifiedVar
-            return $ return [essence|
+            mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &ipat in defined(&x) .
                     &x(max(defined(&x))) >= &x(&i)
             |]
-         _ -> return []
+         _ -> noStreamliner
 
 
 commutative :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -379,12 +403,12 @@ commutative x = do
                 then do
                     (ipat, i) <- quantifiedVar
                     (jpat, j) <- quantifiedVar
-                    return $ return [essence|
+                    mkStreamliner "FuncCommutative" [essence|
                         forAll (&ipat,&jpat) in defined(&x) .
                             &x((&i,&j)) = &x((&j,&i))
                     |]
-                else return []
-        _ -> return []
+                else noStreamliner
+        _ -> noStreamliner
 
 
 nonCommutative :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -396,12 +420,12 @@ nonCommutative x = do
                 then do
                     (ipat, i) <- quantifiedVar
                     (jpat, j) <- quantifiedVar
-                    return $ return [essence|
+                    mkStreamliner "FuncCommutative" [essence|
                         forAll (&ipat,&jpat) in defined(&x) .
                             &x((&i,&j)) != &x((&j,&i))
                     |]
-                else return []
-        _ -> return []
+                else noStreamliner
+        _ -> noStreamliner
 
 
 associative :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -413,12 +437,12 @@ associative x = do
                 then do
                     (ipat, i) <- quantifiedVar
                     (jpat, j) <- quantifiedVar
-                    return $ return [essence|
+                    mkStreamliner "FuncAssociative" [essence|
                         forAll (&ipat,&jpat) in defined(&x) .
                             &x((&x(&i,&j), &j)) = &x((&i, &x(&i, &j)))
                     |]
-                else return []
-        _ -> return []
+                else noStreamliner
+        _ -> noStreamliner
 
 
 onRange :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -442,9 +466,11 @@ onRange innerStreamliner x = do
             -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
             -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
-            return (transformBi replaceWithRangeOfX innerConstraints)
+            return [ (transform replaceWithRangeOfX cons, grps)
+                   | (cons, grps) <- innerConstraints
+                   ]
 
-        _ -> return []
+        _ -> noStreamliner
 
 
 onDefined :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -469,9 +495,11 @@ onDefined innerStreamliner x = do
             -- traceM $ show $ "innerConstraints 1" <+> vcat (map pretty innerConstraints)
             -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
-            return (transformBi replaceWithRangeOfX innerConstraints)
+            return [ (transform replaceWithRangeOfX cons, grps)
+                   | (cons, grps) <- innerConstraints
+                   ]
 
-        _ -> return []
+        _ -> noStreamliner
 
 
 -- diagonal :: (MonadFail m, NameGen m) => StreamlinerGen m -> StreamlinerGen m
@@ -490,13 +518,13 @@ onDefined innerStreamliner x = do
 --                     (ipat, i) <- quantifiedvar
 
 --                     innerconstraints <- innerstreamliner ref
---                     return $ return [essence| find &ref: function &a --> &domto such that forall &ipat: &a. (&i, &i) in defined(&x) -> &ref(&i) = &x((&i,&i)),
+--                     return $ attachGroup grps [essence| find &ref: function &a --> &domto such that forall &ipat: &a. (&i, &i) in defined(&x) -> &ref(&i) = &x((&i,&i)),
 --                                     forall &ipat: &a . &i in defined(&ref) -> &ref(&i) = &x((&i,&i)) |]
 --                 False -> do
---                     return []
---         _ -> return []
+--                     noStreamliner
+--         _ -> noStreamliner
 
--- 
+--
 -- prefix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- prefix innerStreamliner x = do
 --     traceM $ show $ "prefix"
@@ -516,10 +544,10 @@ onDefined innerStreamliner x = do
 --                 -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
 --                     return (transformBi replaceWithRangeOfX innerConstraints)
---                 _ -> return []
+--                 _ -> noStreamliner
 
---         _ -> return []
--- 
+--         _ -> noStreamliner
+--
 
 -- postfix :: (MonadFail m, NameGen m) => StreamlinerGen m ->  StreamlinerGen m
 -- postfix innerStreamliner x = do
@@ -540,9 +568,9 @@ onDefined innerStreamliner x = do
 --                 -- traceM $ show $ "innerConstraints 2" <+> vcat (map pretty (transformBi replaceWithRangeOfX innerConstraints))
 
 --                     return (transformBi replaceWithRangeOfX innerConstraints)
---                 _ -> return []
+--                 _ -> noStreamliner
 
---         _ -> return []
+--         _ -> noStreamliner
 
 
 ------------------------------------------------------------------------------
@@ -562,14 +590,15 @@ parts innerStreamliner x = do
 
             innerConstraints <- innerStreamliner ref
 
-
             let
                 replaceWithRangeOfX (Reference n _) | n == nm = [essence| parts(&x) |]
                 replaceWithRangeOfX p = p
 
-            return (transformBi replaceWithRangeOfX innerConstraints)
+            return [ (transform replaceWithRangeOfX cons, grps)
+                   | (cons, grps) <- innerConstraints
+                   ]
 
-        _ -> return []
+        _ -> noStreamliner
 
 
 quasiRegular :: (MonadFail m, NameGen m) => StreamlinerGen m
@@ -577,8 +606,8 @@ quasiRegular x = do
     dom <- domainOf x
     case dom of
         DomainPartition{} -> do
-            return $ return [essence|
+            mkStreamliner "PartitionRegular" [essence|
                 minPartSize(&x, |participants(&x)| / |parts(&x)| - 1) /\
                 maxPartSize(&x, |participants(&x)|/ |parts(&x)| + 1)
             |]
-        _ -> return []
+        _ -> noStreamliner

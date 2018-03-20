@@ -135,7 +135,7 @@ mainWithArgs Modelling{..} = do
                 Just ix -> do
                     streamliners <- streamlining model
                     let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
-                    return model { mStatements = mStatements model ++ [SuchThat chosen] }
+                    return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
         outputModels config modelWithStreamliners
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
