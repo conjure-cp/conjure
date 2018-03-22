@@ -2,6 +2,7 @@ module Conjure.UI.IO
     ( readModelFromFile
     , readModelPreambleFromFile
     , readModelInfoFromFile
+    , readParamOrSolutionFromFile
     , writeModel, writeModels
     , readModel
     ) where
@@ -11,8 +12,10 @@ import Conjure.Prelude
 import Conjure.UserError
 import Conjure.UI
 import Conjure.Language.Definition
-import Conjure.Language.Parser
+import qualified Conjure.Language.Parser as Parser
+import qualified Conjure.Language.ParserC as ParserC
 import Conjure.Language.Pretty
+import Conjure.Language.Parser ( Parser)
 
 -- aeson
 import qualified Data.Aeson ( decodeStrict )
@@ -36,7 +39,17 @@ readModelFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel (Just id) pair
+            readModel Parser.parseModel (Just id) pair
+
+
+readParamOrSolutionFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
+readParamOrSolutionFromFile fp = do
+    con <- liftIO $ BS.readFile fp
+    case Data.Serialize.decode con of
+        Right res -> return res
+        Left _ -> do
+            pair <- liftIO $ pairWithContents fp
+            readModel ParserC.parseModel (Just id) pair
 
 
 readModelPreambleFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
@@ -46,7 +59,7 @@ readModelPreambleFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel (Just onlyPreamble) pair
+            readModel Parser.parseModel (Just onlyPreamble) pair
 
 readModelInfoFromFile :: (MonadIO m, MonadFail m, MonadUserError m) => FilePath -> m Model
 readModelInfoFromFile fp = do
@@ -55,16 +68,21 @@ readModelInfoFromFile fp = do
         Right res -> return res
         Left _ -> do
             pair <- liftIO $ pairWithContents fp
-            readModel Nothing pair
+            readModel Parser.parseModel Nothing pair
 
 
-readModel :: (MonadUserError m, MonadFail m) => Maybe (Text -> Text) -> (FilePath, Text) -> m Model
-readModel preprocess (fp, con) = do
+readModel
+    :: (MonadUserError m, MonadFail m)
+    => Parser Model
+    -> Maybe (Text -> Text)
+    -> (FilePath, Text)
+    -> m Model
+readModel modelParser preprocess (fp, con) = do
 
     model <- case preprocess of
         Nothing -> return def
         Just prep ->
-            case runLexerAndParser parseModel fp (prep con) of
+            case Parser.runLexerAndParser modelParser fp (prep con) of
                 Left  e -> userErr1 e
                 Right x -> return x
 

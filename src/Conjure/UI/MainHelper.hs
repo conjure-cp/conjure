@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, writeModel )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -21,8 +21,9 @@ import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
-import Conjure.Language.NameGen ( runNameGen )
+import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
+import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -134,8 +135,8 @@ mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- maybe (return def) readModelFromFile essenceParamO
-    eprimeSolutionF <- readModelFromFile eprimeSolution
+    essenceParamF <- maybe (return def) readParamOrSolutionFromFile essenceParamO
+    eprimeSolutionF <- readParamOrSolutionFromFile eprimeSolution
     output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
@@ -373,13 +374,14 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
+    let tr = translateSolution eprimeModel def
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
-                                    , eprimeModel, def
                                     , lineWidth, outputFormat
                                     )
+                                    tr
                                     (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
@@ -412,13 +414,14 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
+            let tr = translateSolution eprimeModel essenceParam
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
-                                            , eprimeModel, essenceParam
                                             , lineWidth, outputFormat
                                             )
+                                            tr
                                             (1::Int))
             srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
@@ -459,16 +462,17 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: (FilePath, FilePath, FilePath, FilePath, Model, Model, Int, OutputFormat)
+    :: (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
+    -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
     -> IO [Either String (FilePath, FilePath, FilePath)]
 srStdoutHandler
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , eprimeModel, essenceParam
              , lineWidth, outputFormat
              )
+        tr
         solutionNumber h = do
     eof <- hIsEOF h
     if eof
@@ -477,21 +481,21 @@ srStdoutHandler
             return []
         else do
             line <- hGetLine h
+            putStrLn $ "SR: " ++ line
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
                     let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
                     let filenameEprimeSol  = mkFilename ".eprime-solution"
                     let filenameEssenceSol = mkFilename ".solution"
-                    eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
+                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
                     writeFile filenameEprimeSol (render lineWidth eprimeSol)
-                    essenceSol <- ignoreLogs $ runNameGen () $
-                                                    translateSolution eprimeModel essenceParam eprimeSol
+                    essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
                     writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
                     fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
-                         (srStdoutHandler args (solutionNumber+1) h)
+                         (srStdoutHandler args tr (solutionNumber+1) h)
                 Nothing ->
                     fmap (Left line :)
-                         (srStdoutHandler args solutionNumber h)
+                         (srStdoutHandler args tr solutionNumber h)
 
 
 srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
