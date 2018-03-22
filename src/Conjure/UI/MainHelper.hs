@@ -481,7 +481,6 @@ srStdoutHandler
             return []
         else do
             line <- hGetLine h
-            putStrLn $ "SR: " ++ line
             case stripPrefix "Solution: " line of
                 Just solutionText -> do
                     let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
