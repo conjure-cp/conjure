@@ -560,6 +560,8 @@ parseLiteral = label "value" $ msum
             return (ConstantBool x)
 
         pInt = ConstantInt . fromInteger <$> integer
+                <|>
+               (do lexeme L_Minus ; negate <$> pInt)
 
         pMatrix = do
             lexeme L_OpenBracket
