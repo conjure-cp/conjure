@@ -89,6 +89,7 @@ data UI
         , numberingStart             :: Int
         , smartFilenames             :: Bool
         , responses                  :: String
+        , solutionsInOneFile         :: Bool
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -622,6 +623,13 @@ ui = modes
             &= help "A comma separated list of integers.\n\
                     \If provided, these will be used as the answers during \
                     \interactive model generation instead of prompting the user."
+        , solutionsInOneFile
+            = False
+            &= name "solutions-in-one-file"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Place all solutions in a single file instead of generating a separate file per solution.\n\
+                    \Off by default."
         , logLevel
             = def
             &= name "log-level"

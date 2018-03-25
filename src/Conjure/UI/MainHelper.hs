@@ -6,7 +6,7 @@ module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..), OutputFormat(..) )
+import Conjure.UI ( UI(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
@@ -269,7 +269,7 @@ mainWithArgs config@Solve{..} = do
                     if null essenceParams
                         then do
                             let solutions' = [ solution
-                                             | (_, _, solution) <- solutions ]
+                                             | (_, _, Just solution) <- solutions ]
                             case solutions' of
                                 [solution] ->
                                     copySolution solution (essenceDir
@@ -286,7 +286,7 @@ mainWithArgs config@Solve{..} = do
                             let (_paramDir, paramFilename) = splitFileName essenceParam
                             let paramBasename = takeBaseName paramFilename
                             let solutions' = [ solution
-                                             | (_, essenceParam', solution) <- solutions
+                                             | (_, essenceParam', Just solution) <- solutions
                                              , essenceParam == essenceParam' ]
                             case solutions' of
                                 [solution] ->
@@ -329,7 +329,7 @@ mainWithArgs config@Solve{..} = do
         savileRows
             :: [(FilePath, Model)]      -- models
             -> [(FilePath, Model)]      -- params
-            -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
+            -> IO (Either [Doc] [(FilePath, FilePath, Maybe FilePath)])
         savileRows eprimes params = fmap combineResults $
             if null params
                 then autoParallel [ savileRowNoParam config m
@@ -340,13 +340,13 @@ mainWithArgs config@Solve{..} = do
                                   , p <- params
                                   ]
 
-        validating :: [(FilePath, FilePath, FilePath)] -> IO ()
+        validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
         validating solutions =
             if null essenceParams
                 then autoParallel_ [ validateSolutionNoParam config sol
-                                   | (_, _, sol) <- solutions ]
+                                   | (_, _, Just sol) <- solutions ]
                 else autoParallel_ [ validateSolutionWithParams config sol p
-                                   | (_, p, sol) <- solutions ]
+                                   | (_, p, Just sol) <- solutions ]
 
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
@@ -368,18 +368,19 @@ savileRowNoParam
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
-          , FilePath        -- solution
+          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
           ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def
+    let tr = translateSolution eprimeModel def        
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
+                                    solutionsInOneFile
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
-                                    , lineWidth, outputFormat
+                                    , lineWidth
                                     )
                                     tr
                                     (1::Int))
@@ -395,7 +396,7 @@ savileRowWithParams
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
-          , FilePath        -- solution
+          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
           ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
@@ -417,9 +418,10 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let tr = translateSolution eprimeModel essenceParam
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
+                                            solutionsInOneFile
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
-                                            , lineWidth, outputFormat
+                                            , lineWidth
                                             )
                                             tr
                                             (1::Int))
@@ -462,15 +464,17 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
+    :: Bool
+    -> (FilePath, FilePath, FilePath, FilePath, Int)
     -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
-    -> IO [Either String (FilePath, FilePath, FilePath)]
+    -> IO [Either String (FilePath, FilePath, Maybe FilePath)]
 srStdoutHandler
+        solutionsInOneFile
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , lineWidth, outputFormat
+             , lineWidth
              )
         tr
         solutionNumber h = do
@@ -482,19 +486,34 @@ srStdoutHandler
         else do
             line <- hGetLine h
             case stripPrefix "Solution: " line of
-                Just solutionText -> do
-                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
-                    let filenameEprimeSol  = mkFilename ".eprime-solution"
-                    let filenameEssenceSol = mkFilename ".solution"
-                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
-                    writeFile filenameEprimeSol (render lineWidth eprimeSol)
-                    essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
-                    writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
-                    fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
-                         (srStdoutHandler args tr (solutionNumber+1) h)
                 Nothing ->
                     fmap (Left line :)
-                         (srStdoutHandler args tr solutionNumber h)
+                         (srStdoutHandler solutionsInOneFile args tr solutionNumber h)
+                Just solutionText -> do
+                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
+                    essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
+                    case solutionsInOneFile of
+                        False -> do
+                            let mkFilename ext = outputDirectory </> outBase
+                                                        ++ "-solution" ++ padLeft 6 '0' (show solutionNumber)
+                                                        ++ ext
+                            let filenameEprimeSol  = mkFilename ".eprime-solution"
+                            let filenameEssenceSol = mkFilename ".solution"
+                            writeFile filenameEprimeSol  (render lineWidth eprimeSol)
+                            writeFile filenameEssenceSol (render lineWidth essenceSol)
+                            fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
+                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                        True -> do
+                            let mkFilename ext = outputDirectory </> outBase
+                                                        ++ ext
+                            let filenameEprimeSol  = mkFilename ".eprime-solutions"
+                            let filenameEssenceSol = mkFilename ".solutions"
+                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
+                            appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
+                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
+                            appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
+                            fmap (Right (modelPath, paramPath, Nothing) :)
+                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
 
 
 srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
