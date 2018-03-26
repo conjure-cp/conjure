@@ -508,6 +508,10 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solutions"
                             let filenameEssenceSol = mkFilename ".solutions"
+                            -- remove the solutions files before writing the first solution
+                            when (solutionNumber == 1) $ do
+                                removeFileIfExists filenameEprimeSol
+                                removeFileIfExists filenameEssenceSol
                             appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
                             appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
                             appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
