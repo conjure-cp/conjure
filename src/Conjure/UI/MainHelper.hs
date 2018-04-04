@@ -133,7 +133,7 @@ mainWithArgs Modelling{..} = do
             case Config.generateStreamliners config of
                 Nothing -> return model
                 Just ix -> do
-                    streamliners <- streamlining model
+                    streamliners <- pure model >>= resolveNames >>= streamlining
                     let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
                     return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
         outputModels config modelWithStreamliners
