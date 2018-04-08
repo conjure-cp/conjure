@@ -3,8 +3,8 @@
  Conjure: The Automated Constraint Modelling Tool
  
  conjure [COMMAND] ... [OPTIONS]
-   The command line interface of Conjure takes a command name as the first
-   argument followed by more arguments depending on the command.
+   The command line interface of Conjure takes a command name as the first argument followed by more arguments depending
+   on the command.
    This help text gives a list of the available commands.
    For details of a command, pass the --help flag after the command name.
    For example: 'conjure translate-solution --help'
@@ -14,8 +14,7 @@
       --version                               Print version information
  
  conjure [modelling] [OPTIONS] ESSENCE_FILE
-   The main act. Given a problem specification in Essence, produce constraint
-   programming models in Essence'.
+   The main act. Given a problem specification in Essence, produce constraint programming models in Essence'.
  
  Logging & Output:
    -o --output-directory=DIR                  Where to save generated models.
@@ -23,23 +22,15 @@
       --numbering-start=INT                   Starting value for output files.
                                               Default value: 1
       --smart-filenames                       Use "smart names" for models.
-                                              Directs Conjure to use the answers
-                                              when producing a filename and to
-                                              ignore the order of questions.
-                                              Only useful if 'f' is used for
-                                              questions.
+                                              Directs Conjure to use the answers when producing a filename and to ignore
+                                              the order of questions. Only useful if 'f' is used for questions.
       --log-level=LOGLEVEL                    Log level.
       --verbose-trail                         Generate verbose trails.
-      --rewrites-trail                        Generate trails about the
-                                              applied rewritings.
-      --log-rule-fails                        Generate logs for rule failures.
-                                              (Caution: can be a lot!)
-      --log-rule-successes                    Generate logs for rule
-                                              applications.
-      --log-rule-attempts                     Generate logs for rule attempts.
-                                              (Caution: can be a lot!)
-      --log-choices                           Store the choices in a way that
-                                              can be reused by -al
+      --rewrites-trail                        Generate trails about the applied rewritings.
+      --log-rule-fails                        Generate logs for rule failures. (Caution: can be a lot!)
+      --log-rule-successes                    Generate logs for rule applications.
+      --log-rule-attempts                     Generate logs for rule attempts. (Caution: can be a lot!)
+      --log-choices                           Store the choices in a way that can be reused by -al
       --output-format=FORMAT                  Format to use for output.
                                                   plain : default
                                                   binary: can be read by Conjure
@@ -47,70 +38,38 @@
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
-      --responses=ITEM                        A comma separated list of
-                                              integers.
-                                              If provided, these will be used as
-                                              the answers during interactive
-                                              model generation instead of
-                                              prompting the user.
-   -q --strategy-q=STRATEGY                   Strategy for selecting the next
-                                              question to answer. Options: f
-                                              (for first), i (for interactive),
-                                              r (for random), x (for all).
-                                              Prepend a (for auto) to
-                                              automatically skip when there is
-                                              only one option at any point.
+      --responses=ITEM                        A comma separated list of integers.
+                                              If provided, these will be used as the answers during interactive model
+                                              generation instead of prompting the user.
+   -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
+                                              first), i (for interactive), r (for random), x (for all). Prepend a (for
+                                              auto) to automatically skip when there is only one option at any point.
                                               Default value: f
-   -a --strategy-a=STRATEGY                   Strategy for selecting an
-                                              answer. Same options as
-                                              strategy-q.
-                                               c picks the most 'compact' option
-                                              at every decision point.
-                                               s picks the 'sparsest' option at
-                                              every decision point: useful for
+   -a --strategy-a=STRATEGY                   Strategy for selecting an answer. Same options as strategy-q.
+                                               c picks the most 'compact' option at every decision point.
+                                               s picks the 'sparsest' option at every decision point: useful for
                                               --representations-givens
-                                               l (for follow log) tries to pick
-                                              given choices as far as possible
+                                               l (for follow log) tries to pick given choices as far as possible
                                               Default value: ai
-      --representations=STRATEGY              Strategy for choosing a
-                                              representation.
-                                              Default value: same as
-                                              --strategy-a
-      --representations-finds=STRATEGY        Strategy for choosing a
-                                              representation for a decision
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-givens=STRATEGY       Strategy for choosing a
-                                              representation for a parameter.
+      --representations=STRATEGY              Strategy for choosing a representation.
+                                              Default value: same as --strategy-a
+      --representations-finds=STRATEGY        Strategy for choosing a representation for a decision variable.
+                                              Default value: same as --representations
+      --representations-givens=STRATEGY       Strategy for choosing a representation for a parameter.
                                               Default value: s (for sparse)
-      --representations-auxiliaries=STRATEGY  Strategy for choosing a
-                                              representation for an auxiliary
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-quantifieds=STRATEGY  Strategy for choosing a
-                                              representation for a quantified
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-cuts=STRATEGY         Strategy for choosing a
-                                              representation for cuts in
-                                              'branching on'.
-                                              Default value: same as
-                                              --representations-cuts
-      --channelling                           Whether to produce channelled
-                                              models (true by default).
-      --representation-levels                 Whether to use built-in
-                                              precedence levels when choosing
-                                              representations. Used to cut down
-                                              the number of generated models.
+      --representations-auxiliaries=STRATEGY  Strategy for choosing a representation for an auxiliary variable.
+                                              Default value: same as --representations
+      --representations-quantifieds=STRATEGY  Strategy for choosing a representation for a quantified variable.
+                                              Default value: same as --representations
+      --representations-cuts=STRATEGY         Strategy for choosing a representation for cuts in 'branching on'.
+                                              Default value: same as --representations-cuts
+      --channelling                           Whether to produce channelled models (true by default).
+      --representation-levels                 Whether to use built-in precedence levels when choosing representations.
+                                              Used to cut down the number of generated models.
                                               Default: true
       --seed=INT                              Random number generator seed.
-      --limit-models=INT                      Maximum number of models to
-                                              generate.
-      --choices=FILE                          Choices to use for -al, either
-                                              an eprime file (created by
+      --limit-models=INT                      Maximum number of models to generate.
+      --choices=FILE                          Choices to use for -al, either an eprime file (created by
                                               --log-choices), or a json file.
  General:
       --limit-time=INT                        Limit in seconds of real time.
@@ -120,15 +79,11 @@
    The model needs to be generated by Conjure.
  
  Flags:
-      --eprime=FILE                           An Essence' model generated by
-                                              Conjure.
-      --essence-param=FILE                    An Essence parameter for the
-                                              original problem specification.
-      --eprime-param=FILE                     An Essence' parameter matching
-                                              the Essence' model.
-                                              Default is 'foo.eprime-param' if
-                                              the Essence parameter file is
-                                              named 'foo.param'.
+      --eprime=FILE                           An Essence' model generated by Conjure.
+      --essence-param=FILE                    An Essence parameter for the original problem specification.
+      --eprime-param=FILE                     An Essence' parameter matching the Essence' model.
+                                              Default is 'foo.eprime-param' if the Essence parameter file is named
+                                              'foo.param'.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
       --output-format=FORMAT                  Format to use for output.
@@ -144,20 +99,14 @@
    Translation of solutions back to Essence.
  
  Flags:
-      --eprime=FILE                           An Essence' model generated by
-                                              Conjure.
+      --eprime=FILE                           An Essence' model generated by Conjure.
                                               Mandatory.
-      --essence-param=FILE                    An Essence parameter for the
-                                              original problem specification.
+      --essence-param=FILE                    An Essence parameter for the original problem specification.
                                               Mandatory.
-      --eprime-solution=FILE                  An Essence' solution for the
-                                              corresponding Essence' model.
-      --essence-solution=FILE                 An Essence solution for the
-                                              original problem specification.
-                                              By default, its value is the value
-                                              of --eprime-solution with
-                                              extensions replaced by
-                                              '.solution'.
+      --eprime-solution=FILE                  An Essence' solution for the corresponding Essence' model.
+      --essence-solution=FILE                 An Essence solution for the original problem specification.
+                                              By default, its value is the value of --eprime-solution with extensions
+                                              replaced by '.solution'.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
       --output-format=FORMAT                  Format to use for output.
@@ -173,8 +122,7 @@
    Validating a solution.
  
  Flags:
-      --essence=FILE                          Problem specification in
-                                              Essence.
+      --essence=FILE                          Problem specification in Essence.
       --param=FILE                            Essence parameter file.
       --solution=FILE                         Essence solution.
  Logging & Output:
@@ -190,18 +138,15 @@
  
  conjure solve [OPTIONS] ESSENCE_FILE [PARAMETER_FILE(s)]
    A combined mode for convenience.
-   Runs Conjure in modelling mode followed by parameter translation if required,
-   then Savile Row + Minion to solve, and then solution translation.
+   Runs Conjure in modelling mode followed by parameter translation if required, then Savile Row + Minion to solve, and
+   then solution translation.
  
  General:
       --validate-solutions                    Enable solution validation.
       --limit-time=INT                        Limit in seconds of real time.
-      --number-of-solutions=ITEM              Number of solutions to find;
-                                              "all" enumerates all solutions.
+      --number-of-solutions=ITEM              Number of solutions to find; "all" enumerates all solutions.
                                               Default: 1
-      --copy-solutions                        Whether to place a copy of
-                                              solution(s) next to the Essence
-                                              file or not.
+      --copy-solutions                        Whether to place a copy of solution(s) next to the Essence file or not.
                                               Default: on
  Logging & Output:
    -o --output-directory=DIR                  Where to save generated models.
@@ -209,27 +154,18 @@
       --numbering-start=INT                   Starting value for output files.
                                               Default value: 1
       --smart-filenames                       Use "smart names" for models.
-                                              Directs Conjure to use the answers
-                                              when producing a filename and to
-                                              ignore the order of questions.
-                                              Only useful if 'f' is used for
-                                              questions.
-      --solutions-in-one-file                 Place all solutions in a single
-                                              file instead of generating a
-                                              separate file per solution.
+                                              Directs Conjure to use the answers when producing a filename and to ignore
+                                              the order of questions. Only useful if 'f' is used for questions.
+      --solutions-in-one-file                 Place all solutions in a single file instead of generating a separate
+                                              file per solution.
                                               Off by default.
       --log-level=LOGLEVEL                    Log level.
       --verbose-trail                         Generate verbose trails.
-      --rewrites-trail                        Generate trails about the
-                                              applied rewritings.
-      --log-rule-fails                        Generate logs for rule failures.
-                                              (Caution: can be a lot!)
-      --log-rule-successes                    Generate logs for rule
-                                              applications.
-      --log-rule-attempts                     Generate logs for rule attempts.
-                                              (Caution: can be a lot!)
-      --log-choices                           Store the choices in a way that
-                                              can be reused by -al
+      --rewrites-trail                        Generate trails about the applied rewritings.
+      --log-rule-fails                        Generate logs for rule failures. (Caution: can be a lot!)
+      --log-rule-successes                    Generate logs for rule applications.
+      --log-rule-attempts                     Generate logs for rule attempts. (Caution: can be a lot!)
+      --log-choices                           Store the choices in a way that can be reused by -al
       --output-format=FORMAT                  Format to use for output.
                                                   plain : default
                                                   binary: can be read by Conjure
@@ -237,79 +173,44 @@
       --line-width=INT                        Line width for pretty printing.
                                               Default: 120
  Model generation:
-      --responses=ITEM                        A comma separated list of
-                                              integers.
-                                              If provided, these will be used as
-                                              the answers during interactive
-                                              model generation instead of
-                                              prompting the user.
-   -q --strategy-q=STRATEGY                   Strategy for selecting the next
-                                              question to answer. Options: f
-                                              (for first), i (for interactive),
-                                              r (for random), x (for all).
-                                              Prepend a (for auto) to
-                                              automatically skip when there is
-                                              only one option at any point.
+      --responses=ITEM                        A comma separated list of integers.
+                                              If provided, these will be used as the answers during interactive model
+                                              generation instead of prompting the user.
+   -q --strategy-q=STRATEGY                   Strategy for selecting the next question to answer. Options: f (for
+                                              first), i (for interactive), r (for random), x (for all). Prepend a (for
+                                              auto) to automatically skip when there is only one option at any point.
                                               Default value: f
-   -a --strategy-a=STRATEGY                   Strategy for selecting an
-                                              answer. Same options as
-                                              strategy-q.
-                                               c picks the most 'compact' option
-                                              at every decision point.
-                                               s picks the 'sparsest' option at
-                                              every decision point: useful for
+   -a --strategy-a=STRATEGY                   Strategy for selecting an answer. Same options as strategy-q.
+                                               c picks the most 'compact' option at every decision point.
+                                               s picks the 'sparsest' option at every decision point: useful for
                                               --representations-givens
-                                               l (for follow log) tries to pick
-                                              given choices as far as possible
+                                               l (for follow log) tries to pick given choices as far as possible
                                               Default value: c
-      --representations=STRATEGY              Strategy for choosing a
-                                              representation.
-                                              Default value: same as
-                                              --strategy-a
-      --representations-finds=STRATEGY        Strategy for choosing a
-                                              representation for a decision
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-givens=STRATEGY       Strategy for choosing a
-                                              representation for a parameter.
+      --representations=STRATEGY              Strategy for choosing a representation.
+                                              Default value: same as --strategy-a
+      --representations-finds=STRATEGY        Strategy for choosing a representation for a decision variable.
+                                              Default value: same as --representations
+      --representations-givens=STRATEGY       Strategy for choosing a representation for a parameter.
                                               Default value: s (for sparse)
-      --representations-auxiliaries=STRATEGY  Strategy for choosing a
-                                              representation for an auxiliary
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-quantifieds=STRATEGY  Strategy for choosing a
-                                              representation for a quantified
-                                              variable.
-                                              Default value: same as
-                                              --representations
-      --representations-cuts=STRATEGY         Strategy for choosing a
-                                              representation for cuts in
-                                              'branching on'.
-                                              Default value: same as
-                                              --representations-cuts
-      --channelling                           Whether to produce channelled
-                                              models (true by default).
-      --representation-levels                 Whether to use built-in
-                                              precedence levels when choosing
-                                              representations. Used to cut down
-                                              the number of generated models.
+      --representations-auxiliaries=STRATEGY  Strategy for choosing a representation for an auxiliary variable.
+                                              Default value: same as --representations
+      --representations-quantifieds=STRATEGY  Strategy for choosing a representation for a quantified variable.
+                                              Default value: same as --representations
+      --representations-cuts=STRATEGY         Strategy for choosing a representation for cuts in 'branching on'.
+                                              Default value: same as --representations-cuts
+      --channelling                           Whether to produce channelled models (true by default).
+      --representation-levels                 Whether to use built-in precedence levels when choosing representations.
+                                              Used to cut down the number of generated models.
                                               Default: true
       --seed=INT                              Random number generator seed.
-      --limit-models=INT                      Maximum number of models to
-                                              generate.
-      --use-existing-models=FILE              File names of Essence' models
-                                              generated beforehand.
-                                              If given, Conjure skips the
-                                              modelling phase and uses the
-                                              existing models for solving.
-                                              The models should be inside the
-                                              output directory (See -o).
+      --limit-models=INT                      Maximum number of models to generate.
+      --use-existing-models=FILE              File names of Essence' models generated beforehand.
+                                              If given, Conjure skips the modelling phase and uses the existing models
+                                              for solving.
+                                              The models should be inside the output directory (See -o).
  Options for other tools:
       --savilerow-options=ITEM                Options passed to Savile Row.
-      --solver-options=ITEM                   Options passed to the backend
-                                              solver.
+      --solver-options=ITEM                   Options passed to the backend solver.
       --solver=ITEM                           Backend solver. Possible values:
                                               minion/lingeling/minisat/bc_minisat_all/nbc_minisat_all
                                               Default: minion
@@ -319,8 +220,7 @@
    This mode can be used to view a binary Essence file in textual form.
  
  Flags:
-      --normalise-quantified                  Normalise the names of
-                                              quantified variables.
+      --normalise-quantified                  Normalise the names of quantified variables.
       --remove-unused                         Remove unused declarations.
  Logging & Output:
       --log-level=LOGLEVEL                    Log level.
@@ -377,8 +277,7 @@
  Logging & Output:
       --json=JSON_FILE                        Output JSON file.
                                               Default is 'foo.essence-json'
-                                              if the Essence file is named
-                                              'foo.essence'
+                                              if the Essence file is named 'foo.essence'
       --log-level=LOGLEVEL                    Log level.
       --output-format=FORMAT                  Format to use for output.
                                                   plain : default
@@ -390,8 +289,7 @@
       --limit-time=INT                        Limit in seconds of real time.
  
  conjure parameter-generator [OPTIONS] ESSENCE_FILE
-   Generate an Essence model describing the instances of the problem class
-   defined in the input Essence model.
+   Generate an Essence model describing the instances of the problem class defined in the input Essence model.
    An error will be printed if the model has infinitely many instances.
  
  Logging & Output:
@@ -407,33 +305,22 @@
       --limit-time=INT                        Limit in seconds of real time.
  
  conjure model-strengthening [OPTIONS] ESSENCE_FILE
-   Strengthen an Essence model as described in "Reformulating Essence
-   Specifications for Robustness",
+   Strengthen an Essence model as described in "Reformulating Essence Specifications for Robustness",
    which aims to make search faster.
  
  Logging & Output:
       --essence-out=FILE                      Output file path.
       --log-level=LOGLEVEL                    Log level.
-      --log-rule-successes                    Generate logs for rule
-                                              applications.
-      --output-format=FORMAT                  Conjure's output can be in
-                                              multiple formats.
+      --log-rule-successes                    Generate logs for rule applications.
+      --output-format=FORMAT                  Conjure's output can be in multiple formats.
                                                   plain : The default
-                                                  binary: A binary encoding of
-                                              the Essence output.
-                                                          It can be read back in
-                                              by Conjure.
-                                                  json  : A json encoding of the
-                                              Essence output.
-                                                          It can be used by
-                                              other tools integrating with
-                                              Conjure
-                                                          in order to avoid
-                                              having to parse textual Essence.
-      --line-width=INT                        Line width to use during pretty
-                                              printing.
+                                                  binary: A binary encoding of the Essence output.
+                                                          It can be read back in by Conjure.
+                                                  json  : A json encoding of the Essence output.
+                                                          It can be used by other tools integrating with Conjure
+                                                          in order to avoid having to parse textual Essence.
+      --line-width=INT                        Line width to use during pretty printing.
                                               Default: 120
  General:
-      --limit-time=INT                        Time limit in seconds (real
-                                              time).
+      --limit-time=INT                        Time limit in seconds (real time).
 
