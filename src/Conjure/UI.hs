@@ -786,8 +786,9 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= typFile
-            &= help "Paths of Essence' models generated beforehand. \
-                    \If given, Conjure skips the modelling phase and uses existing models for solving."
+            &= help "File names of Essence' models generated beforehand.\n\
+                    \If given, Conjure skips the modelling phase and uses the existing models for solving.\n\
+                    \The models should be inside the output directory (See -o)."
         , savilerowOptions
             = def
             &= name "savilerow-options"

@@ -299,11 +299,13 @@
       --seed=INT                              Random number generator seed.
       --limit-models=INT                      Maximum number of models to
                                               generate.
-      --use-existing-models=FILE              Paths of Essence' models
-                                              generated beforehand. If given,
-                                              Conjure skips the modelling phase
-                                              and uses existing models for
-                                              solving.
+      --use-existing-models=FILE              File names of Essence' models
+                                              generated beforehand.
+                                              If given, Conjure skips the
+                                              modelling phase and uses the
+                                              existing models for solving.
+                                              The models should be inside the
+                                              output directory (See -o).
  Options for other tools:
       --savilerow-options=ITEM                Options passed to Savile Row.
       --solver-options=ITEM                   Options passed to the backend
