@@ -218,7 +218,7 @@ conjure-help:
 	@echo "<br />"                                                                      >> conjure-help.html
 	@echo '::'          >  conjure-help.txt
 	@echo               >> conjure-help.txt
-	@conjure --help=all,text \
+	@conjure --help=all,text,120 \
 	| sed -ne '/Release version/d' \
 	 -e '/Repository version/d' \
 	 -e 's/^/ /p'       >> conjure-help.txt

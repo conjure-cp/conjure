@@ -90,6 +90,7 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
                ]
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
+enumerateDomain (DomainInt []) = fail "enumerateDomain: infinite domain"
 enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainUnnamed _ (ConstantInt n)) = return (map ConstantInt [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
@@ -130,6 +131,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
             , solver                        = "minion"
             , nbSolutions                   = show enumerateDomainMax
             , copySolutions                 = False
+            , solutionsInOneFile            = False
             , logLevel                      = LogNone
             -- default values for the rest
             , essenceParams                 = []

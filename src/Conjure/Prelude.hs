@@ -123,7 +123,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getLine )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception as X ( catch, throwIO, SomeException )
 

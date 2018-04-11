@@ -18,17 +18,26 @@ sanityChecks model = do
         check m = do
             forM_ (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given _ _) -> return () -- skip
-                Declaration FindOrGiven{}           -> mapM_ (checkDomain (Just st)) (universeBi (forgetRefs st))
-                _                                   -> mapM_ (checkDomain Nothing  ) (universeBi (forgetRefs st))
+                Declaration FindOrGiven{}           -> mapM_ (checkDomain True  (Just st)) (universeBi (forgetRefs st))
+                _                                   -> mapM_ (checkDomain False (Just st)) (universeBi (forgetRefs st))
+            forM_ (mStatements m) $ \ st -> case st of
+                SuchThat{} -> 
+                    forM_ (universeBi st) $ \case
+                        x@Comprehension{} ->
+                            forM_ (universeBi x) $ \case
+                                GenDomainNoRepr _ dom -> checkDomain True (Just st) dom
+                                _                     -> return ()
+                        _ -> return ()
+                _ -> return ()
             mapM_ checkFactorial (universeBi $ mStatements m)
             statements2 <- transformBiM checkLit (mStatements m)
             return m { mStatements = statements2 }
 
         -- check for mset attributes
         -- check for binary relation attrobutes
-        checkDomain :: MonadWriter [Doc] m => Maybe Statement -> Domain () Expression -> m ()
-        checkDomain mstmt domain = case domain of
-            DomainInt rs | inFind mstmt && isInfinite rs -> recordErr
+        checkDomain :: MonadWriter [Doc] m => Bool -> Maybe Statement -> Domain () Expression -> m ()
+        checkDomain checkForInfinity mstmt domain = case domain of
+            DomainInt rs | checkForInfinity && isInfinite rs -> recordErr
                         [ "Infinite integer domain."
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
@@ -120,10 +129,6 @@ isInfinite [RangeOpen{}] = True
 isInfinite [RangeLowerBounded{}] = True
 isInfinite [RangeUpperBounded{}] = True
 isInfinite _ = False
-
-inFind :: Maybe Statement -> Bool
-inFind (Just (Declaration (FindOrGiven Find _ _))) = True
-inFind _ = False
 
 forgetRefs :: Statement -> Statement
 forgetRefs = transformBi f

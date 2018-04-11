@@ -1,36 +1,23 @@
 {-# LANGUAGE RecordWildCards #-}
 
-module Conjure.Language.Parser
-    ( runLexerAndParser
-    , parseIO
-    , parseModel
-    , parseTopLevels
-    , parseExpr
-    , parseDomain
-    , parseDomainWithRepr
-    , Parser, ParserState(..)
-    ) where
+module Conjure.Language.ParserC ( parseModel ) where
 
 -- conjure
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
-import Conjure.Language.Domain.AddAttributes
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
-import Conjure.Language.Expression.Op
 import Conjure.Language.Pretty
-import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace, lexemeText, runLexer )
+import Conjure.Language.Lexer ( Lexeme(..), LexemePos(..), lexemeFace )
+import Conjure.Language.Parser ( Parser, ParserState(..) )
 
 -- megaparsec
-import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, ParsecT, getPosition, setPosition )
-import Text.Megaparsec.Error ( ParseError(..), Message(..), errorPos )
-import Text.Megaparsec.Pos ( SourcePos(..), sourceLine, sourceColumn )
+import Text.Megaparsec.Prim ( (<?>), label, token, try, eof, getPosition, setPosition )
+import Text.Megaparsec.Error ( Message(..) )
+import Text.Megaparsec.Pos ( SourcePos(..) )
 import Text.Megaparsec.Combinator ( between, sepBy, sepBy1, sepEndBy, sepEndBy1 )
 import Text.Megaparsec.ShowToken ( showToken )
-import Text.Megaparsec.Expr ( makeExprParser, Operator(..) )
-import qualified Text.Megaparsec.Prim as P ( runParser )
 
 -- text
 import qualified Data.Text as T
@@ -67,23 +54,6 @@ parseModel = inCompleteFile $ do
         }
 
 
-parseIO :: MonadFail m => Parser a -> String -> m a
-parseIO p s =
-    case runLexerAndParser (inCompleteFile p) "" (T.pack s) of
-        Left err -> fail err
-        Right x  -> return x
-
-
-translateQnName :: Text -> Text
-translateQnName qnName = case qnName of
-    "forAll" -> "and"
-    "exists" -> "or"
-    _        -> qnName
-
-
-
-
-
 --------------------------------------------------------------------------------
 -- Actual parsers --------------------------------------------------------------
 --------------------------------------------------------------------------------
@@ -92,38 +62,6 @@ parseTopLevels :: Parser [Statement]
 parseTopLevels = do
     let one = msum
                 [ do
-                    lexeme L_find
-                    decls <- flip sepEndBy1 comma $ do
-                        is <- commaSeparated parseNameOrMeta
-                        j  <- colon >> parseDomain
-                        return [ Declaration (FindOrGiven Find i j)
-                               | i <- is ]
-                    return $ concat decls
-                    <?> "find statement"
-                , do
-                    lexeme L_given
-                    decls <- commaSeparated $ do
-                        is <- commaSeparated parseName
-                        msum
-                            [ do
-                                colon
-                                j <- parseDomain
-                                return [ Declaration (FindOrGiven Given i j)
-                                       | i <- is ]
-                            , do
-                                lexeme L_new
-                                msum
-                                    [ do
-                                        lexeme L_type
-                                        lexeme L_enum
-                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
-                                        return [ Declaration (GivenDomainDefnEnum i)
-                                               | i <- is ]
-                                    ]
-                            ]
-                    return $ concat decls
-                    <?> "given statement"
-                , do
                     lexeme L_letting
                     decls <- commaSeparated $ do
                         is <- commaSeparated parseName
@@ -162,46 +100,8 @@ parseTopLevels = do
                             ]
                     return $ concat decls
                     <?> "letting statement"
-                , do
-                    lexeme L_where
-                    xs <- commaSeparated parseExpr
-                    return [Where xs]
-                    <?> "where statement"
-                , do
-                    lexeme L_such
-                    lexeme L_that
-                    xs <- commaSeparated parseExpr
-                    return [SuchThat xs]
-                    <?> "such that statement"
-                , do
-                    lexeme L_minimising
-                    x <- parseExpr
-                    return [ Objective Minimising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_maximising
-                    x <- parseExpr
-                    return [ Objective Maximising x ]
-                    <?> "objective"
-                , do
-                    lexeme L_branching
-                    lexeme L_on
-                    xs <- brackets $ commaSeparated parseSearchOrder
-                    return [ SearchOrder xs ]
-                    <?> "branching on"
-                , do
-                    lexeme L_heuristic
-                    nm <- parseName
-                    return [ SearchHeuristic nm ]
-                    <?> "branching on"
                 ] <?> "statement"
     concat <$> some one
-
-parseSearchOrder :: Parser SearchOrder
-parseSearchOrder = msum [try pBranchingOn, pCut]
-    where
-        pBranchingOn = BranchingOn <$> parseName
-        pCut = Cut <$> parseExpr
 
 parseRange :: Parser a -> Parser (Range a)
 parseRange p = msum [try pRange, pSingle] <?> "range"
@@ -224,21 +124,6 @@ parseDomain = (forgetRepr <$> parseDomainWithRepr) <?> "domain"
 
 parseDomainWithRepr :: Parser (Domain HasRepresentation Expression)
 parseDomainWithRepr = pDomainAtom
-    -- TODO: uncomment the following to parse (union, intersect and minus) for domains
-    -- let
-    --     mergeOp op before after = DomainOp (Name (lexemeText op)) [before,after]
-    --
-    -- in
-    --     makeExprParser (pDomainAtom <?> "domain")
-    --         [ [ InfixL $ do lexeme L_Minus
-    --                         return $ mergeOp L_Minus
-    --           , InfixL $ do lexeme L_union
-    --                         return $ mergeOp L_union
-    --           ]
-    --         , [ InfixL $ do lexeme L_intersect
-    --                         return $ mergeOp L_intersect
-    --           ]
-    --         ]
 
     where
 
@@ -623,252 +508,25 @@ parseMetaVariable = do
     LMetaVar iden <- satisfyT isMeta
     return (T.unpack iden)
 
-metaVarInE :: String -> Expression
-metaVarInE = ExpressionMetaVar
-
 parseExpr :: Parser Expression
-parseExpr =
-    let
-        mergeOp op = mkBinOp (lexemeText op)
-
-        operatorsGrouped = operators
-            |> sortBy  (\ (_,a) (_,b) -> compare a b )
-            |> groupBy (\ (_,a) (_,b) -> a == b )
-            |> reverse
-
-        parseUnaryNegate = do
-            lexeme L_Minus
-            return $ \ x -> mkOp "negate" [x]
-
-        parseUnaryNot = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "not" [x]
-
-    in
-        makeExprParser (parseAtomicExpr <?> "expression")
-            [ [ case descr of
-                    Binary op FLeft               -> InfixL $ do lexeme op
-                                                                 return $ mergeOp op
-                    Binary op FNone               -> InfixN $ do lexeme op
-                                                                 return $ mergeOp op
-                    Binary op FRight              -> InfixR $ do lexeme op
-                                                                 return $ mergeOp op
-                    UnaryPrefix L_Minus           -> Prefix $ foldr1 (.) <$> some parseUnaryNegate
-                    UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
-                    UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
-              | (descr, _) <- operatorsInGroup
-              ] 
-            | operatorsInGroup <- operatorsGrouped
-            ]
+parseExpr = parseAtomicExpr <?> "expression"
 
 parseAtomicExpr :: Parser Expression
-parseAtomicExpr = do
-    let
-        prefixes = do
-            fs <- some $ msum parsePrefixes
-            return $ foldr1 (.) fs
-        postfixes = do
-            fs <- some $ msum parsePostfixes
-            return $ foldr1 (.) (reverse fs)
-        withPrefix  x = try x <|> do f <- prefixes; i <- x; return $ f i
-        withPostfix x = do i <- x; mf <- optional postfixes; return $ case mf of Nothing -> i
-                                                                                 Just f  -> f i
-    withPrefix (withPostfix parseAtomicExprNoPrePost) <?> "expression"
-
+parseAtomicExpr = parseAtomicExprNoPrePost <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
-parseAtomicExprNoPrePost = msum $ map try $ concat
-    [ [parseQuantifiedExpr]
-    , parseOthers
-    , [metaVarInE <$> parseMetaVariable]
-    , [parseAAC]
-    , [parseReference]
-    , [parseLiteral]
-    , [parseDomainAsExpr]
-    , [parseWithLocals]
-    , [parseComprehension]
-    , [parens parseExpr]
-    ]
+parseAtomicExprNoPrePost = msum [try parseLiteral, parseTyped]
 
-parseComprehension :: Parser Expression
-parseComprehension = brackets $ do
-    x   <- parseExpr
-    lexeme L_Bar
-    gens <- commaSeparated (letting <|> try generator <|> condition)
-    return (Comprehension x (concat gens))
-    where
-        generator :: Parser [GeneratorOrCondition]
-        generator = do
-            pats <- commaSeparated parseAbstractPattern
-            msum
-                [ do
-                    lexeme L_Colon
-                    domain <- parseDomain
-                    return [Generator (GenDomainNoRepr pat domain) | pat <- pats]
-                , do
-                    lexeme L_LeftArrow
-                    expr <- parseExpr
-                    return [Generator (GenInExpr       pat expr)   | pat <- pats]
-                ]
-        condition :: Parser [GeneratorOrCondition]
-        condition = return . Condition <$> parseExpr
-        letting :: Parser [GeneratorOrCondition]
-        letting = do
-            lexeme L_letting
-            nm <- parseNameOrMeta
-            lexeme L_be
-            x  <- parseExpr
-            return [ComprehensionLetting nm x]
-
-parseDomainAsExpr :: Parser Expression
-parseDomainAsExpr = Domain <$> betweenTicks parseDomain
-
-parsePrefixes :: [Parser (Expression -> Expression)]
-parsePrefixes = [parseUnaryMinus, parseUnaryNot]
-    where
-        parseUnaryMinus = do
-            lexeme L_Minus
-            return $ \ x -> mkOp "negate" [x]
-        parseUnaryNot = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "not" [x]
-
-parsePostfixes :: [Parser (Expression -> Expression)]
-parsePostfixes = [parseIndexed,parseFactorial,parseFuncApply]
-    where
-        parseIndexed :: Parser (Expression -> Expression)
-        parseIndexed = do
-            let
-                pIndexer = try pRList <|> (do i <- parseExpr ; return $ \ m -> Op (MkOpIndexing (OpIndexing m i)))
-                pRList   = do
-                    i <- optional parseExpr
-                    dotdot
-                    j <- optional parseExpr
-                    return $ \ m -> Op (MkOpSlicing (OpSlicing m i j))
-            is <- brackets $ commaSeparated pIndexer
-            return $ \ x -> foldl (\ m f -> f m ) x is
-        parseFactorial :: Parser (Expression -> Expression)
-        parseFactorial = do
-            lexeme L_ExclamationMark
-            return $ \ x -> mkOp "factorial" [x]
-        parseFuncApply :: Parser (Expression -> Expression)
-        parseFuncApply = parens $ do
-            xs <- commaSeparated parseExpr
-            let underscore = Reference "_" Nothing
-            let ys = [ if underscore == x then Nothing else Just x | x <- xs ]
-            return $ \ x -> Op $ MkOpRelationProj $ OpRelationProj x ys
-
-parseAAC :: Parser Expression
-parseAAC = do
-    let
-        isAttr (LIdentifier txt) | Just _ <- Name txt `lookup` allSupportedAttributes = True
-        isAttr _ = False
-    LIdentifier attr <- satisfyT isAttr
-    let n = fromMaybe (bug "parseAAC") (lookup (Name attr) allSupportedAttributes)
-    args <- parens $ countSep (n+1) parseExpr comma
-    case (n, args) of
-        (0, [e  ]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
-                                        (fromString (textToString attr)) Nothing
-        (1, [e,v]) -> return $ Op $ MkOpAttributeAsConstraint $ OpAttributeAsConstraint e
-                                        (fromString (textToString attr)) (Just v)
-        _ -> fail "parseAAC"
-
-parseOthers :: [Parser Expression]
-parseOthers = [ parseFunctional l
-              | l <- functionals
-              ] ++ [parseTyped, parseTwoBars]
-    where
-
-        parseTwoBars :: Parser Expression
-        parseTwoBars = do
-            x <- between (lexeme L_Bar) (lexeme L_Bar) parseExpr
-            return (mkOp "twoBars" [x])
-
-        parseTyped :: Parser Expression
-        parseTyped = parens $ do
-            x  <- parseExpr
-            lexeme L_Colon
-            d  <- betweenTicks parseDomain
-            ty <- typeOfDomain d
-            return (Typed x ty)
-
-        parseFunctional :: Lexeme -> Parser Expression
-        parseFunctional l = do
-            lexeme l
-            xs <- parens $ commaSeparated parseExpr
-            return $ case (l,xs) of
-                (L_image, [y,z]) -> Op $ MkOpImage $ OpImage y z
-                _ -> mkOp (fromString $ show $ lexemeFace l) xs
-
-parseWithLocals :: Parser Expression
-parseWithLocals = braces $ do
-    i  <- parseExpr
-    lexeme L_At
-    js <- parseTopLevels
-    let decls =
-            [ Declaration (FindOrGiven LocalFind nm dom)
-            | Declaration (FindOrGiven Find nm dom) <- js ]
-    let cons = concat
-            [ xs
-            | SuchThat xs <- js
-            ]
-    let locals = if null decls
-                    then DefinednessConstraints cons
-                    else AuxiliaryVars (decls ++ [SuchThat cons])
-    return (WithLocals i locals)
-
-parseNameOrMeta :: Parser Name
-parseNameOrMeta = parseName <|> NameMetaVar <$> parseMetaVariable
+parseTyped :: Parser Expression
+parseTyped = parens $ do
+    x  <- parseExpr
+    lexeme L_Colon
+    d  <- betweenTicks parseDomain
+    ty <- typeOfDomain d
+    return (Typed x ty)
 
 parseName :: Parser Name
 parseName = Name <$> identifierText
-
-parseReference :: Parser Expression
-parseReference = Reference <$> parseName <*> pure Nothing
-
-parseQuantifiedExpr :: Parser Expression
-parseQuantifiedExpr = do
-    Name qnName <- parseName
-    qnPats      <- commaSeparated parseAbstractPattern
-    qnOver      <- msum [ Left  <$> (colon *> parseDomain)
-                        , Right <$> do
-                            lexeme L_in
-                            over <- parseExpr
-                            return (\ pat -> GenInExpr pat over )
-                        , Right <$> do
-                            lexeme L_subsetEq
-                            over <- parseExpr
-                            return (\ pat -> GenInExpr pat (Op $ MkOpPowerSet $ OpPowerSet over) )
-                        ]
-    qnGuard     <- optional (comma *> parseExpr)
-    qnBody      <- dot *> parseExpr <?> "body of a quantified expression"
-
-    let qnMap pat = case qnOver of
-            Left dom -> GenDomainNoRepr pat dom
-            Right op -> op pat
-
-    return $ mkOp (translateQnName qnName)
-           $ return
-           $ Comprehension qnBody
-           $ [ Generator (qnMap pat) | pat    <- qnPats    ] ++
-             [ Condition g           | Just g <- [qnGuard] ]
-
-
-parseAbstractPattern :: Parser AbstractPattern
-parseAbstractPattern = label "pattern" $ msum
-    [ AbstractPatternMetaVar <$> parseMetaVariable
-    , Single <$> parseName
-    , do
-        void $ optional $ lexeme L_tuple
-        xs <- parens $ commaSeparated parseAbstractPattern
-        return (AbsPatTuple xs)
-    , do
-        xs <- brackets $ commaSeparated parseAbstractPattern
-        return (AbsPatMatrix xs)
-    , do
-        xs <- braces $ commaSeparated parseAbstractPattern
-        return (AbsPatSet xs)
-    ]
 
 parseLiteral :: Parser Expression
 parseLiteral = label "value" $ msum
@@ -902,6 +560,8 @@ parseLiteral = label "value" $ msum
             return (ConstantBool x)
 
         pInt = ConstantInt . fromInteger <$> integer
+                <|>
+               (do lexeme L_Minus ; negate <$> pInt)
 
         pMatrix = do
             lexeme L_OpenBracket
@@ -979,36 +639,6 @@ parseLiteral = label "value" $ msum
                 inner = braces (commaSeparated0 parseExpr)
 
 
-
-data ParserState = ParserState { enumDomains :: [Name] }
-type Parser a = StateT ParserState (ParsecT [LexemePos] Identity) a
-
-runLexerAndParser :: MonadFail m => Parser a -> String -> T.Text -> m a
-runLexerAndParser p file inp = do
-    ls <- runLexer inp
-    case runParser p file ls of
-        Left (msg, line, col) ->
-            let theLine = T.lines inp |> drop (line-1) |> take 1
-            in  fail $ vcat
-                    [ msg
-                    , vcat (map pretty theLine)
-                    , pretty $ replicate (col-1) ' ' ++ "^"
-                    ]
-        Right x -> return x
-
-runParser :: Parser a -> String -> [LexemePos] -> Either (Doc, Int, Int) a
-runParser p file ls = either modifyErr Right (P.runParser (evalStateT p (ParserState [])) file ls)
-    where
-        modifyErr :: ParseError -> Either (Doc, Int, Int) a
-        modifyErr e = Left $
-            let pos  = errorPos e
-            in  ( if file `isPrefixOf` show e
-                    then                       pretty (show e)
-                    else pretty file <> ":" <> pretty (show e)
-                , sourceLine   pos
-                , sourceColumn pos
-                )
-
 identifierText :: Parser T.Text
 identifierText = do
     LIdentifier i <- satisfyT isIdentifier
@@ -1047,9 +677,6 @@ dot = lexeme L_Dot <?> "dot"
 
 dotdot :: Parser ()
 dotdot = (dot >> dot) <?> ".."
-
-colon :: Parser ()
-colon = lexeme L_Colon <?> "colon"
 
 
 -- parses a specified number of elements separated by the given separator
