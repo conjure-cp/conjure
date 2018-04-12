@@ -32,7 +32,7 @@ streamliningToStdout multiModel model = do
             [ showStr "onVariable:"      <+> showStr (show (pretty nm))
             , showStr "groups:"          <+> prettyList prBrackets "," (map showStr groups)
             , showStr "constraint:"      <+> (showStr $ map whitespace $ show $ pretty cons)
-            , showStr "modelIdentifier:" <+> pretty modelI
+            , showStr "modelIdentifier:" <+> showStr modelI
             ])
         | (i, (nm, (cons, groups), modelI)) <- zip allNats streamliners
         ]
@@ -64,13 +64,13 @@ streamlining True model = do
                         , logRuleAttempts            = False
                         , logChoices                 = False
                         , strategyQ                  = PickFirst
-                        , strategyA                  = Auto Interactive
-                        , representations            = Auto Interactive
-                        , representationsFinds       = Auto Interactive
+                        , strategyA                  = PickAll
+                        , representations            = PickAll
+                        , representationsFinds       = PickAll
                         , representationsGivens      = Sparse
-                        , representationsAuxiliaries = Auto Interactive
-                        , representationsQuantifieds = Interactive
-                        , representationsCuts        = Auto Interactive
+                        , representationsAuxiliaries = PickAll
+                        , representationsQuantifieds = PickAll
+                        , representationsCuts        = PickAll
                         , outputDirectory            = "conjure-output"
                         , channelling                = False
                         , representationLevels       = True
@@ -82,25 +82,14 @@ streamlining True model = do
                         , generateStreamliners       = Nothing
                         }
         models <- collectModels config model { mStatements = mStatements model ++ [SuchThat [cons]] }
-        liftIO $ putStrLn $ "generated models: " ++ show (length models)
-        return [(nm, (cons, groups), "")]
+        forM models $ \ m -> do
+            let mResponses = [ choice
+                             | (_question, choice, numOptions) <- m |> mInfo |> miTrailCompact
+                             , numOptions > 1
+                             ]
+            traceM $ show mResponses
+            return (nm, (cons, groups), show mResponses)
 
-
-
---
---
---
---
---     concatForM (mStatements model) $ \ statement ->
---         case statement of
---             Declaration (FindOrGiven Find nm domain) -> do
---                 let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
---                 streamliners <- streamlinersForSingleVariable ref
---                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
---                 --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
---                 --                      ]
---                 return [ (nm, s) | s <- streamliners ]
---             _ -> noStreamliner
 
 
 type StreamlinerGroup = String
