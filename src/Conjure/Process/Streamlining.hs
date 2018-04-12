@@ -9,10 +9,14 @@ import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Compute.DomainOf ( domainOf )
+import Conjure.UI.Model ( collectModels, Config(..) )
+import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
-streamliningToStdout :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, MonadIO m) => Model -> m ()
-streamliningToStdout model = do
+streamliningToStdout
+    :: (MonadIO m, MonadFail m, MonadLog m, MonadUserError m, NameGen m, EnumerateDomain m)
+    => Bool -> Model -> m ()
+streamliningToStdout multiModel model = do
     let
         whitespace '\t' = ' '
         whitespace '\n' = ' '
@@ -21,20 +25,23 @@ streamliningToStdout model = do
         showStr :: String -> Doc
         showStr = pretty . show
         
-    streamliners <- streamlining model
+    streamliners <- streamlining multiModel model
 
     liftIO $ print $ prettyList prBraces ","
         [ (showStr $ show i) <> ":" <+> prBraces (vcat
-            [ showStr "onVariable:" <+> showStr (show (pretty nm))
-            , showStr "groups:"     <+> prettyList prBrackets "," (map showStr groups)
-            , showStr "constraint:" <+> (showStr $ map whitespace $ show $ pretty cons)
+            [ showStr "onVariable:"      <+> showStr (show (pretty nm))
+            , showStr "groups:"          <+> prettyList prBrackets "," (map showStr groups)
+            , showStr "constraint:"      <+> (showStr $ map whitespace $ show $ pretty cons)
+            , showStr "modelIdentifier:" <+> pretty modelI
             ])
-        | (i, (nm, (cons, groups))) <- zip allNats streamliners
+        | (i, (nm, (cons, groups), modelI)) <- zip allNats streamliners
         ]
 
 
-streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [(Name, Streamliner)]
-streamlining model = do
+streamlining
+    :: (MonadIO m, MonadFail m, MonadLog m, MonadUserError m, NameGen m, EnumerateDomain m)
+    => Bool -> Model -> m [(Name, Streamliner, ModelIdentifier)]
+streamlining False model = do
     concatForM (mStatements model) $ \ statement ->
         case statement of
             Declaration (FindOrGiven Find nm domain) -> do
@@ -43,11 +50,62 @@ streamlining model = do
                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
                 --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
                 --                      ]
-                return [ (nm, s) | s <- streamliners ]
+                return [ (nm, s, "c") | s <- streamliners ]
             _ -> noStreamliner
+streamlining True model = do
+    streamliners <- streamlining False model
+    concatForM streamliners $ \ (nm, (cons, groups), _) -> do
+        let config = Config
+                        { logLevel                   = LogNone
+                        , verboseTrail               = False
+                        , rewritesTrail              = False
+                        , logRuleFails               = False
+                        , logRuleSuccesses           = False
+                        , logRuleAttempts            = False
+                        , logChoices                 = False
+                        , strategyQ                  = PickFirst
+                        , strategyA                  = Auto Interactive
+                        , representations            = Auto Interactive
+                        , representationsFinds       = Auto Interactive
+                        , representationsGivens      = Sparse
+                        , representationsAuxiliaries = Auto Interactive
+                        , representationsQuantifieds = Interactive
+                        , representationsCuts        = Auto Interactive
+                        , outputDirectory            = "conjure-output"
+                        , channelling                = False
+                        , representationLevels       = True
+                        , limitModels                = Nothing
+                        , numberingStart             = 1
+                        , smartFilenames             = False
+                        , lineWidth                  = 120
+                        , responses                  = Nothing
+                        , generateStreamliners       = Nothing
+                        }
+        models <- collectModels config model { mStatements = mStatements model ++ [SuchThat [cons]] }
+        liftIO $ putStrLn $ "generated models: " ++ show (length models)
+        return [(nm, (cons, groups), "")]
+
+
+
+--
+--
+--
+--
+--     concatForM (mStatements model) $ \ statement ->
+--         case statement of
+--             Declaration (FindOrGiven Find nm domain) -> do
+--                 let ref = Reference nm (Just (DeclNoRepr Find nm domain NoRegion))
+--                 streamliners <- streamlinersForSingleVariable ref
+--                 -- traceM $ show $ vcat [ "Streamliners for --" <+> pretty statement
+--                 --                      , vcat [ nest 4 (pretty s) | s <- streamliners ]
+--                 --                      ]
+--                 return [ (nm, s) | s <- streamliners ]
+--             _ -> noStreamliner
 
 
 type StreamlinerGroup = String
+
+type ModelIdentifier = String
 
 type Streamliner = (Expression, [StreamlinerGroup])
 

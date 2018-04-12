@@ -134,9 +134,9 @@ mainWithArgs Modelling{..} = do
             case Config.generateStreamliners config of
                 Nothing -> return model
                 Just ix -> do
-                    streamliners <- pure model >>= resolveNames >>= streamlining
+                    streamliners <- pure model >>= resolveNames >>= streamlining False
                     let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
-                    return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
+                    return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _), _) <- chosen]] }
         outputModels config modelWithStreamliners
 mainWithArgs TranslateParameter{..} = do
     when (null eprime      ) $ userErr1 "Mandatory field --eprime"
@@ -193,7 +193,7 @@ mainWithArgs ModelStrengthening{..} =
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs Streamlining{..} = runNameGen essence
-    (readModelFromFile essence >>= resolveNames >>= streamliningToStdout)
+    (readModelFromFile essence >>= resolveNames >>= streamliningToStdout multiModel)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat", "bc_minisat_all", "nbc_minisat_all"]) $
