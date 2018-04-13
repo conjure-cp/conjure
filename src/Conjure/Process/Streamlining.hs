@@ -31,6 +31,7 @@ streamliningToStdout model = do
             ])
         | (i, (nm, (cons, groups))) <- zip allNats streamliners
         ]
+    traceM $ show $ "Number of streamliners: " <+> pretty (length streamliners)
 
 
 streamlining :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m) => Model -> m [(Name, Streamliner)]
