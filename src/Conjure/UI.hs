@@ -184,7 +184,6 @@ data UI
         }
     | Streamlining
         { essence                    :: FilePath
-        , multiModel                 :: Bool
         , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , outputFormat               :: OutputFormat        -- Essence by default
@@ -1178,11 +1177,6 @@ ui = modes
             = def
             &= typ "ESSENCE_FILE"
             &= argPos 0
-        , multiModel
-            = False
-            &= name "multi-model"
-            &= explicit
-            &= help "Generate streamliners for multiple models."
         , logLevel
             = def
             &= name "log-level"

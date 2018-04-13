@@ -6,7 +6,6 @@
 
 module Conjure.UI.Model
     ( outputModels
-    , collectModels
     , Strategy(..), Config(..), parseStrategy
     , nbUses
     ) where
@@ -103,7 +102,7 @@ import Data.Generics.Uniplate.Zipper as Zipper ( right, up )
 
 -- pipes
 import Pipes ( Producer, await, yield, (>->), cat )
-import qualified Pipes.Prelude as Pipes ( foldM, toListM )
+import qualified Pipes.Prelude as Pipes ( foldM )
 
 
 outputModels
@@ -168,16 +167,6 @@ outputModels config model = do
                 (const $ return ())
                 (toCompletion config model
                     >-> limitModelsIfNeeded)
-
-collectModels
-    :: (MonadIO m, MonadFail m, NameGen m, EnumerateDomain m)
-    => Config
-    -> Model
-    -> m [Model]
-collectModels config model = do
-    models <- Pipes.toListM (toCompletion config model)
-    return [m | Right m <- models]
-
 
 
 toCompletion
