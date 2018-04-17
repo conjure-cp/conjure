@@ -13,7 +13,7 @@ import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
 import Conjure.UI.TranslateSolution ( translateSolution )
 import Conjure.UI.ValidateSolution ( validateSolution )
-import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone )
+import Conjure.UI.TypeCheck ( typeCheckModel_StandAlone, typeCheckModel )
 import Conjure.UI.LogFollow ( refAnswers )
 import Conjure.UI.Split ( outputSplittedModels, removeUnusedDecls )
 import Conjure.UI.VarSymBreaking ( outputVarSymBreaking )
@@ -134,7 +134,7 @@ mainWithArgs Modelling{..} = do
             case Config.generateStreamliners config of
                 Nothing -> return model
                 Just ix -> do
-                    streamliners <- pure model >>= resolveNames >>= streamlining
+                    streamliners <- pure model >>= resolveNames >>= typeCheckModel >>= streamlining
                     let chosen = [ streamliner | (i, streamliner) <- zip [1..] streamliners, i `elem` ix ]
                     return model { mStatements = mStatements model ++ [SuchThat [x | (_, (x, _)) <- chosen]] }
         outputModels config modelWithStreamliners
@@ -193,7 +193,7 @@ mainWithArgs ModelStrengthening{..} =
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs Streamlining{..} = runNameGen essence
-    (readModelFromFile essence >>= resolveNames >>= streamliningToStdout)
+    (readModelFromFile essence >>= resolveNames >>= typeCheckModel >>= streamliningToStdout)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
     unless (solver `elem` ["minion", "lingeling", "minisat", "bc_minisat_all", "nbc_minisat_all"]) $
