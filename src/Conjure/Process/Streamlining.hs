@@ -331,7 +331,7 @@ setApproxHalf innerStreamliner x = do
 
 
 ------------------------------------------------------------------------------
--- Functions
+-- Functions and Sequences
 ------------------------------------------------------------------------------
 
 
@@ -339,8 +339,13 @@ monotonicallyIncreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
 monotonicallyIncreasing x = do
     dom <- domainOf x
     -- traceM $ show $ "Monotonically Increasing"
-    case dom of
-        DomainFunction _ _attrs (DomainInt _) (DomainInt _)-> do
+    let
+        applicable = case dom of
+                        DomainFunction _ _ DomainInt{} DomainInt{} -> True
+                        DomainSequence _ _             DomainInt{} -> True
+                        _ -> False
+    if applicable
+        then do
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
             mkStreamliner "FuncIncreaseDecrease" [essence|
@@ -348,14 +353,19 @@ monotonicallyIncreasing x = do
                     forAll &jPat in defined(&x) .
                         &i < &j -> &x(&i) <= &x(&j)
             |]
-        _ -> noStreamliner
+        else noStreamliner
 
 
 monotonicallyDecreasing :: (MonadFail m, NameGen m) => StreamlinerGen m
 monotonicallyDecreasing x = do
     dom <- domainOf x
-    case dom of
-        DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
+    let
+        applicable = case dom of
+                        DomainFunction _ _ DomainInt{} DomainInt{} -> True
+                        DomainSequence _ _             DomainInt{} -> True
+                        _ -> False
+    if applicable
+        then do
             -- traceM $ show $ "Monotonically Decreasing"
             (iPat, i) <- quantifiedVar
             (jPat, j) <- quantifiedVar
@@ -364,42 +374,52 @@ monotonicallyDecreasing x = do
                     forAll &jPat in defined(&x) .
                         &i < &j -> &x(&i) >= &x(&j)
             |]
-        _ -> noStreamliner
+        else noStreamliner
 
 
 smallestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
 smallestFirst x = do
     dom <- domainOf x
-    case dom of
-         DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
+    let
+        applicable = case dom of
+                        DomainFunction _ _ DomainInt{} DomainInt{} -> True
+                        DomainSequence _ _             DomainInt{} -> True
+                        _ -> False
+    if applicable
+        then do
             -- traceM $ show $ "Smallest First"
             (ipat, i) <- quantifiedVar
             mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &ipat in defined(&x) .
                     &x(min(defined(&x))) <= &x(&i)
             |]
-         _ -> noStreamliner
+         else noStreamliner
 
 
 largestFirst :: (MonadFail m, NameGen m) => StreamlinerGen m
 largestFirst x = do
     dom <- domainOf x
-    case dom of
-         DomainFunction _ _attrs (DomainInt _) (DomainInt _) -> do
+    let
+        applicable = case dom of
+                        DomainFunction _ _ DomainInt{} DomainInt{} -> True
+                        DomainSequence _ _             DomainInt{} -> True
+                        _ -> False
+    if applicable
+        then do
             -- traceM $ show $ "Largest First"
             (ipat, i) <- quantifiedVar
             mkStreamliner "FuncIncreaseDecrease" [essence|
                 forAll &ipat in defined(&x) .
                     &x(max(defined(&x))) >= &x(&i)
             |]
-         _ -> noStreamliner
+         else noStreamliner
 
 
 commutative :: (MonadFail m, NameGen m) => StreamlinerGen m
 commutative x = do
     dom <- domainOf x
     case dom of
-        DomainFunction () _ (DomainTuple [a, b]) c-> do
+        DomainFunction () _ (DomainTuple [a, b]) c -> do
             if (a==b) && (b==c)
                 then do
                     (ipat, i) <- quantifiedVar
@@ -416,7 +436,7 @@ nonCommutative :: (MonadFail m, NameGen m) => StreamlinerGen m
 nonCommutative x = do
     dom <- domainOf x
     case dom of
-        DomainFunction () _ (DomainTuple [a, b]) c-> do
+        DomainFunction () _ (DomainTuple [a, b]) c -> do
             if (a==b) && (b==c)
                 then do
                     (ipat, i) <- quantifiedVar
@@ -451,8 +471,13 @@ onRange innerStreamliner x = do
     -- traceM $ show $ "onRange" <+> pretty x
     dom <- domainOf x
     -- traceM $ show $ "onRange dom" <+> pretty dom
-    case dom of
-        DomainFunction () _ _innerDomFr innerDomTo -> do
+    let
+        minnerDomTo = case dom of
+                        DomainFunction _ _ DomainInt{} innerDomTo -> return innerDomTo
+                        DomainSequence _ _             innerDomTo -> return innerDomTo
+                        _ -> Nothing
+    case minnerDomTo of
+        Just innerDomTo -> do
 
             let rangeSetDomain = DomainSet () def innerDomTo
 
@@ -480,8 +505,13 @@ onDefined innerStreamliner x = do
     dom <- domainOf x
     -- traceM $ show $ "Defined dom" <+> pretty dom
     -- So we get the range and then we apply and then apply the rule to the range of the function
-    case dom of
-        DomainFunction () _ innerDomFr _innerDomTo -> do
+    let
+        minnerDomFr = case dom of
+                        DomainFunction _ _ innerDomFr _ -> return innerDomFr
+                        _ -> Nothing
+
+    case minnerDomFr of
+        Just innerDomFr -> do
 
             let rangeSetDomain = DomainSet () def innerDomFr
 
