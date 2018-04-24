@@ -284,8 +284,10 @@ Library
     if impl(ghc == 8.0.*)
         build-depends: template-haskell == 2.11.*
         ghc-options: -Wno-redundant-constraints
-    if impl(ghc >= 8.2)
+    if impl(ghc == 8.2.*)
         build-depends: template-haskell == 2.12.*
+    if impl(ghc == 8.4.*)
+        build-depends: template-haskell == 2.13.*
 
     default-extensions:
         FlexibleContexts
