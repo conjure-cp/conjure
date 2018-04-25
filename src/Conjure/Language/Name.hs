@@ -7,6 +7,9 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Pretty
 
+-- base
+import qualified Data.Semigroup as Semigroup ( (<>) )
+
 -- text
 import qualified Data.Text as T
 
@@ -44,6 +47,9 @@ instance Pretty Name where
     pretty (Name n) = pretty n
     pretty (MachineName base n rest) = pretty base <> pretty n <> hcat (map pretty rest)
     pretty (NameMetaVar n) = "&" <> pretty n
+
+instance Semigroup Name where
+    (<>) = mappend
 
 instance Monoid Name where
     mempty = ""
