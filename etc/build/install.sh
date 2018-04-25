@@ -272,13 +272,16 @@ else
     SPLIT_OBJS=""
 fi
 
-if [ ${GHC_VERSION} = "head" ] ; then
-    rm -f cabal.config
-elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
-    cp etc/hs-deps/cabal.config-${GHC_VERSION} cabal.config
-    echo "using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION}"
-else
-    echo "not using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION} not found"
+if ! [ $DEVELOPMENT_MODE = "yes" ]; then
+    if [ ${GHC_VERSION} = "head" ] ; then
+        rm -f cabal.config
+    elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
+        cp etc/hs-deps/cabal.config-${GHC_VERSION} cabal.config
+        echo "using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION}"
+    else
+        rm -f cabal.config
+        echo "not using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION} not found"
+    fi
 fi
 
 # install conjure, finally
