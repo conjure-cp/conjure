@@ -1,5 +1,6 @@
 
 SHELL := /bin/bash
+GHC_VERSION?="8.2"		# default, override by calling the makefile like so: "GHC_VERSION=8.2 make"
 
 .PHONY: install
 install:
@@ -12,10 +13,12 @@ install:
 	@stack install
 	@rm stack.yaml
 
+
 .PHONY: install-with-tests
 install-with-tests:
+	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-8.2.yaml stack.yaml
+	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 	@stack setup
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
