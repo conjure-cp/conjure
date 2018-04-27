@@ -40,7 +40,7 @@ build_script:
 test_script:
 - cmd: >-
 
-    stack test --ghc-options "-with-rtsopts=-M2G" --test-arguments "--hide-successes -p parse_print +RTS -s"
+    stack test --no-terminal --skip-ghc-check --ghc-options "-with-rtsopts=-M2G" --test-arguments "--hide-successes -p parse_print +RTS -s"
 
 
 # shorter paths to avoid problems
