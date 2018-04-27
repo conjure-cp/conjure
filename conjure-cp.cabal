@@ -289,6 +289,9 @@ Library
     if impl(ghc == 8.4.*)
         build-depends: template-haskell == 2.13.*
 
+    if impl(ghc < 8.4)
+        build-depends: semigroups >= 0.18.4
+
     default-extensions:
         FlexibleContexts
         FlexibleInstances
