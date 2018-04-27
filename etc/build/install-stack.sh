@@ -8,11 +8,11 @@ source ${SCRIPT_DIR}/default_envvars.sh
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
 
-if ! which stack 2> /dev/null > /dev/null; then
+if ! which stack ; then
     echo "Installing Haskell build tool stack to ${BIN_DIR}"
-    if which curl 2> /dev/null > /dev/null; then
+    if which curl ; then
         curl -sSL https://get.haskellstack.org/ | sh -s - -d ${BIN_DIR}
-    elif which wget 2> /dev/null > /dev/null; then
+    elif which wget ; then
         wget -qO- https://get.haskellstack.org/ | sh -s - -d ${BIN_DIR}
     else
         echo "You seem to have neither curl nor wget on this computer."

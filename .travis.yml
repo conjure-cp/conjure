@@ -93,7 +93,7 @@ install:
   - which ghc || ghc --version || true
 
   # Haskell Stack
-  - (stack --version) || etc/build/install-stack.sh
+  - (stack --version) || etc/build/install-stack.sh || true
   - stack --version                          # print version
 
   # Conjure
