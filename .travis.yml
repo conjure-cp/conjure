@@ -119,7 +119,9 @@ script:
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
   - echo "Time elapsed so far is ${ELAPSED} seconds."
   # - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
+  - cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
   - ((time stack test --no-terminal --skip-ghc-check --test-arguments "--limit-time 10 +RTS -s") > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
+  - rm stack.yaml
   - if ! grep -A20 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
 
 cache:
@@ -129,6 +131,7 @@ cache:
     - ${HOME}/.ghc
     - ${HOME}/.tools
     - .cabal-sandbox
+    - .stack-work
     - dist
   timeout: 600
 
