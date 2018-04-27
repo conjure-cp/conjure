@@ -108,7 +108,7 @@ elif [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     ghc --version
 elif [ $INSTALL_GHC = "yes" ]; then
     echo "GHC version ${GHC_VERSION} not found. Installing."
-    if [ "$(grep ${GHC_VERSION} ${PLATFORM} ${GMP_VERSION} etc/build/ghc_urls.txt)" ]; then
+    if grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt ; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt | cut -d ' ' -f 4)
         URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
         wget --no-check-certificate -c "${URL}"
