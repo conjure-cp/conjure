@@ -3,7 +3,7 @@
 # before_install
 # install                           -- fetch/build non-haskell dependencies: savilerow, minion, lingeling
 #                                   -- build conjure
-#                                   -- save all these executables under $(pwd)/bin
+#                                   -- save all these executables under ${HOME}/.local/bin
 # before_script
 # script                            -- running tests
 # after_success                     -- attempt cabal freeze
@@ -27,62 +27,44 @@ matrix:
   include:
 
     - os: linux
-      env: GHC=8.0.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.0.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.0.2]}}
+      env: GHC=7.10 SR="-O2" SOL=minion
+      compiler: ": # GHC 7.10"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, ghc-7.10.3]}}
 
     - os: linux
-      env: GHC=8.2.2 SR="-O0" SOL=minion
-      compiler: ": # GHC 8.2.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.2.2]}}
-    - os: linux
-      env: GHC=8.2.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.2.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-8.2.2]}}
-    - os: linux
-      env: GHC=8.2.2 SR="-O0" SOL=lingeling
-      compiler: ": # GHC 8.2.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.2.2]}}
-    - os: linux
-      env: GHC=8.2.2 SR="-O2" SOL=lingeling
-      compiler: ": # GHC 8.2.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-1.24, ghc-8.2.2]}}
-    - os: osx
-      osx_image: xcode8.2
-      env: GHC=8.2.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.2.2"
+      env: GHC=8.0 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.0"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, ghc-8.0.2]}}
 
     - os: linux
-      env: GHC=8.4.2 SR="-O0" SOL=minion
-      compiler: ": # GHC 8.4.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-2.0, ghc-8.4.2]}}
+      env: GHC=8.2 SR="-O0" SOL=minion
+      compiler: ": # GHC 8.2"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, ghc-8.2.2]}}
     - os: linux
-      env: GHC=8.4.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.4.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-2.0, ghc-8.4.2]}}
+      env: GHC=8.2 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.2"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, ghc-8.2.2]}}
     - os: linux
-      env: GHC=8.4.2 SR="-O0" SOL=lingeling
-      compiler: ": # GHC 8.4.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-2.0, ghc-8.4.2]}}
+      env: GHC=8.2 SR="-O0" SOL=lingeling
+      compiler: ": # GHC 8.2"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.2.2]}}
     - os: linux
-      env: GHC=8.4.2 SR="-O2" SOL=lingeling
-      compiler: ": # GHC 8.4.2"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, cabal-install-2.0, ghc-8.4.2]}}
+      env: GHC=8.2 SR="-O2" SOL=lingeling
+      compiler: ": # GHC 8.2"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.2.2]}}
     - os: osx
       osx_image: xcode8.2
-      env: GHC=8.4.2 SR="-O2" SOL=minion
-      compiler: ": # GHC 8.4.2"
+      env: GHC=8.2 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.2"
 
     - os: linux
       env: GHC=head SR="-O2" SOL=minion
       compiler: ": # GHC head"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, cabal-install-1.24, ghc-head]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [g++-4.9, ghc-head]}}
 
   allow_failures:
-    - env: GHC=8.2.2 SR="-O0" SOL=lingeling
-    - env: GHC=8.2.2 SR="-O2" SOL=lingeling
-    - env: GHC=8.4.2 SR="-O0" SOL=lingeling
-    - env: GHC=8.4.2 SR="-O2" SOL=lingeling
+    - env: GHC=8.2 SR="-O0" SOL=lingeling
+    - env: GHC=8.2 SR="-O2" SOL=lingeling
     - env: GHC=head SR="-O2" SOL=minion
     - os: osx
 
@@ -97,8 +79,7 @@ before_install:
   - unset SR
   - unset SOL
   #
-  - export CABALVER=1.24
-  - export BIN_DIR=$(pwd)/bin
+  - export BIN_DIR=${HOME}/.local/bin
   - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
   - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
   - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
@@ -106,16 +87,19 @@ before_install:
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export COMPILER_C=gcc-4.9 ; export COMPILER_CPP=g++-4.9 ; fi
 
 install:
-  - mkdir -p bin
+  - mkdir -p ${HOME}/.local/bin
 
-  # take the config file out of the cache
-  - if [ -f .cabal-sandbox/cabal.sandbox.config ] ; then mv .cabal-sandbox/cabal.sandbox.config . ; fi
+  # Download and unpack the stack executable
+  - |
+    if [ `uname` = "Darwin" ]
+    then
+      travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+    else
+      travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+    fi
 
   # Conjure
-  - cabal --version || echo "cabal not found"
-  - echo "$(ghc --version) [$(ghc --print-project-git-commit-id 2> /dev/null || echo '?')]"
-  - echo ${PATH}
-  - OPTIMISATION=-O1 BUILD_TESTS=yes CORES=2 INSTALL_GHC=yes INSTALL_CABAL=yes make install-with-cabal
+  - make install-with-tests
   - conjure --version                        # print version
 
   # Savile Row
@@ -130,29 +114,24 @@ install:
   - (minion | grep 'Minion Version 1.8') || etc/build/download-minion.sh
   - minion help | head -n2                   # print version
 
-  - ls -Alh $(find bin -type f)
-
-  - cp cabal.sandbox.config .cabal-sandbox   # move the config file under the sandbox so it is cached
+  - ls -Alh $(find ${HOME}/.local/bin -type f)
 
 script:
   - touch conjure-testing.stdout
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
   - echo "Time elapsed so far is ${ELAPSED} seconds."
   # - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
-  - ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
+  - ((time stack test --no-terminal --skip-ghc-check --test-arguments "--limit-time 10 +RTS -s") > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
   - if ! grep -A20 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
   - cabal sdist   # tests that a source-distribution can be generated
-
-after_success:
-  - make freeze
 
 cache:
   directories:
     - ${HOME}/.cabal
+    - ${HOME}/.local/bin
     - ${HOME}/.ghc
     - ${HOME}/.tools
     - .cabal-sandbox
     - dist
-    - bin
   timeout: 600
 
