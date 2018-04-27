@@ -89,14 +89,9 @@ before_install:
 install:
   - mkdir -p ${HOME}/.local/bin
 
-  # Download and unpack the stack executable
-  - |
-    if [ `uname` = "Darwin" ]
-    then
-      travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
-    else
-      travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
-    fi
+  # Haskell Stack
+  - (stack --version) || etc/build/install-stack.sh
+  - stack --version                          # print version
 
   # Conjure
   - make install-with-tests
