@@ -94,7 +94,7 @@ install:
   - stack --version                          # print version
 
   # Conjure
-  - make install-with-tests
+  - BUILD_TESTS=true make install
   - conjure --version                        # print version
 
   # Savile Row

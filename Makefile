@@ -1,33 +1,31 @@
 
 SHELL := /bin/bash
-GHC_VERSION?="8.2"		# default, override by calling the makefile like so: "GHC_VERSION=8.2 make"
+
+# these are default values
+# override by calling the makefile like so: "GHC_VERSION=8.2 make"
+GHC_VERSION?=8.2
 CI?=false
+BUILD_TESTS?=false
 
 .PHONY: install
 install:
-	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-8.2.yaml stack.yaml
-	@stack setup
-	@bash etc/build/version.sh
-	@stack runhaskell etc/build/gen_Operator.hs
-	@stack runhaskell etc/build/gen_Expression.hs
-	@stack install
-	@rm stack.yaml
-
-
-.PHONY: install-with-tests
-install-with-tests:
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
+	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
+	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 	@stack setup
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@if ${CI} ; then\
-	    stack install --no-terminal --test --no-run-tests;\
-	else\
+	@if ${BUILD_TESTS} && ${CI} ; then\
+		stack install --test --no-run-tests --no-terminal;\
+	elif ${BUILD_TESTS} && ! ${CI} ; then\
 		stack install --test --no-run-tests;\
+	elif ! ${BUILD_TESTS} && ${CI} ; then\
+		stack install --no-terminal;\
+	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install;\
 	fi
 	@rm stack.yaml
 
