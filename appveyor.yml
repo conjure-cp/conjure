@@ -20,7 +20,7 @@ build_script:
 
     REM install GHC
 
-    stack setup | FIND /V "Extracting  "
+    stack setup --no-terminal | FIND /V "Extracting  "
 
 
     REM this is make preinstall, translated to CMD
@@ -34,7 +34,7 @@ build_script:
 
     REM compile conjure
 
-    stack build --test --no-run-tests --ghc-options "-with-rtsopts=-M2G"
+    stack build --no-terminal --test --no-run-tests --ghc-options "-with-rtsopts=-M2G"
 
 
 test_script:

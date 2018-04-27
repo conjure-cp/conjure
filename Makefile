@@ -1,6 +1,7 @@
 
 SHELL := /bin/bash
 GHC_VERSION?="8.2"		# default, override by calling the makefile like so: "GHC_VERSION=8.2 make"
+CI?=false
 
 .PHONY: install
 install:
@@ -23,7 +24,11 @@ install-with-tests:
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@stack install --test --no-run-tests
+	@if ${CI} ; then\
+	    stack install --no-terminal --test --no-run-tests;\
+	else\
+		stack install --test --no-run-tests;\
+	fi
 	@rm stack.yaml
 
 .PHONY: install-using-cabal
