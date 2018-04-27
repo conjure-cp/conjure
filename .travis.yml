@@ -80,7 +80,7 @@ before_install:
   - unset SOL
   #
   - export BIN_DIR=${HOME}/.local/bin
-  - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:/opt/cabal/${CABALVER}/bin:${HOME}/.cabal/bin:${PATH}
+  - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}/bin:${HOME}/.cabal/bin:${PATH}
   - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
   - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
   - if [ "${TRAVIS_OS_NAME}" == "osx" ];   then export COMPILER_C=gcc     ; export COMPILER_CPP=g++     ; fi
@@ -88,6 +88,9 @@ before_install:
 
 install:
   - mkdir -p ${HOME}/.local/bin
+
+  # GHC version
+  - which ghc || ghc --version || true
 
   # Haskell Stack
   - (stack --version) || etc/build/install-stack.sh
