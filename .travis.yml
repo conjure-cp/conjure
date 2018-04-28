@@ -58,6 +58,27 @@ matrix:
       compiler: ": # GHC 8.2"
 
     - os: linux
+      env: GHC=8.4 SR="-O0" SOL=minion
+      compiler: ": # GHC 8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+    - os: linux
+      env: GHC=8.4 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+    - os: linux
+      env: GHC=8.4 SR="-O0" SOL=lingeling
+      compiler: ": # GHC 8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+    - os: linux
+      env: GHC=8.4 SR="-O2" SOL=lingeling
+      compiler: ": # GHC 8.4"
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+    - os: osx
+      osx_image: xcode8.4
+      env: GHC=8.4 SR="-O2" SOL=minion
+      compiler: ": # GHC 8.4"
+
+    - os: linux
       env: GHC=head SR="-O2" SOL=minion
       compiler: ": # GHC head"
       addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-head]}}
@@ -66,6 +87,8 @@ matrix:
     - env: GHC=7.10 SR="-O2" SOL=minion
     - env: GHC=8.2 SR="-O0" SOL=lingeling
     - env: GHC=8.2 SR="-O2" SOL=lingeling
+    - env: GHC=8.4 SR="-O0" SOL=lingeling
+    - env: GHC=8.4 SR="-O2" SOL=lingeling
     - env: GHC=head SR="-O2" SOL=minion
 
 before_install:
