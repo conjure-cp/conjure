@@ -3,9 +3,10 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.2 make"
-GHC_VERSION?=8.2
-CI?=false
-BUILD_TESTS?=false
+export GHC_VERSION?=8.2
+export BIN_DIR?=${HOME}/.local/bin
+export CI?=false
+export BUILD_TESTS?=false
 
 .PHONY: install
 install:
