@@ -21,5 +21,5 @@ if ! which stack 2> /dev/null > /dev/null; then
     fi
 fi
 
-ls -l ${BIN_DIR}/stack
-${BIN_DIR}/stack --version
+ls -l $(which stack)
+stack --version
