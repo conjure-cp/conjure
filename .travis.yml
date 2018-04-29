@@ -103,8 +103,6 @@ before_install:
   - unset SOL
   #
   - export BIN_DIR=${HOME}/.local/bin
-  - ls -l /opt/ghc
-  - ls -l /opt/ghc/${GHC_VERSION}*/bin
   - echo $PATH
   - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}*/bin:${HOME}/.cabal/bin:${PATH}
   - echo $PATH
