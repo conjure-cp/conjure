@@ -14,9 +14,9 @@ if ! which stack 2> /dev/null > /dev/null; then
     echo "Installing Haskell build tool stack to ${BIN_DIR}"
     if $CI; then
         if [ `uname` = "Darwin" ] ; then
-            travis_retry curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
+            curl --insecure -L https://www.stackage.org/stack/osx-x86_64 | tar xz --strip-components=1 --include '*/stack' -C ~/.local/bin
         else
-            travis_retry curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
+            curl -L https://www.stackage.org/stack/linux-x86_64 | tar xz --wildcards --strip-components=1 -C ~/.local/bin '*/stack'
         fi
     else
         if which curl 2> /dev/null > /dev/null; then
