@@ -19,11 +19,19 @@ install:
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@if ${BUILD_TESTS} && ${CI} ; then\
+	@if  [ ${GHC_VERSION} = "head"] &&   ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --resolver nightly --test --no-run-tests --no-terminal;\
+	elif [ ${GHC_VERSION} = "head"] &&   ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --resolver nightly --test --no-run-tests;\
+	elif [ ${GHC_VERSION} = "head"] && ! ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --resolver nightly --no-terminal;\
+	elif [ ${GHC_VERSION} = "head"] && ! ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --resolver nightly;\
+	elif   ${BUILD_TESTS} &&   ${CI} ; then\
 		stack install --test --no-run-tests --no-terminal;\
-	elif ${BUILD_TESTS} && ! ${CI} ; then\
+	elif   ${BUILD_TESTS} && ! ${CI} ; then\
 		stack install --test --no-run-tests;\
-	elif ! ${BUILD_TESTS} && ${CI} ; then\
+	elif ! ${BUILD_TESTS} &&   ${CI} ; then\
 		stack install --no-terminal;\
 	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
 		stack install;\
