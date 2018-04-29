@@ -104,7 +104,7 @@ before_install:
   #
   - export BIN_DIR=${HOME}/.local/bin
   - echo $PATH
-  - export PATH=${BIN_DIR}:/opt/ghc/${GHC_VERSION}*/bin:${HOME}/.cabal/bin:${PATH}
+  - export PATH=${BIN_DIR}:/opt/ghc/bin:${HOME}/.cabal/bin:${PATH}
   - echo $PATH
   - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
   - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
