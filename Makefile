@@ -15,7 +15,11 @@ install:
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
-	@stack setup
+	@if  [ ${GHC_VERSION} == "head" ] ; then\
+		stack setup --resolver nightly;\
+	else\
+		stack setup;\
+	fi
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
