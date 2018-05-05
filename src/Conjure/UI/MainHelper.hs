@@ -251,6 +251,7 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
+        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
             when validateSolutionsOpt $ liftIO $ validating solutions
             when copySolutions $ do
