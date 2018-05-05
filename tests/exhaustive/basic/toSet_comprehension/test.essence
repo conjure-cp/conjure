@@ -1,0 +1,14 @@
+
+given n : int
+find flags : matrix indexed by [int(1..n)] of bool
+find val   : matrix indexed by [int(1..n)] of int(1..3)
+
+find x : int(n)
+
+such that
+    x = sum([ i
+            | i <- toSet([val[j] | j : int(1..n), flags[j]])
+            ])
+
+such that forAll i : int(1..n) . flags[i]
+such that forAll i : int(1..n-1) . val[i] <= val[i+1]
