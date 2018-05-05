@@ -7,7 +7,7 @@ find x : int(n)
 
 such that
     x = sum([ i
-            | i <- toSet([val[j] | j : int(1..n), flags[j]])
+            | i <- toMSet(toSet(toMSet(toSet([val[j] | j : int(1..n), flags[j]]))))
             ])
 
 such that forAll i : int(1..n) . flags[i]
