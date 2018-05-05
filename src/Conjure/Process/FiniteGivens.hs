@@ -52,6 +52,7 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
     let essenceLettings   = extractLettings essenceParam
+                         ++ eprimeModel |> mInfo |> miLettings
     let nbExtraGivens     = eprimeModel |> mInfo |> miNbExtraGivens
     let expectedExtras    = [ MachineName "fin" extraGiven []
                             | extraGiven <- [1..nbExtraGivens]
@@ -61,10 +62,12 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
         case (lookup name essenceGivens, lookup name essenceLettings) of
             (Nothing, _) -> bug $ "Not found:" <+> pretty name
             (_, Nothing) -> return []
-            (Just domain, Just expr) -> do
+            (Just domain', Just expr) -> do
+                logDebugVerbose $ "finiteGivensParam domain' " <+> pretty domain'
+                domain  <- fmap Constant <$> instantiateDomain essenceLettings domain'
                 logDebugVerbose $ "finiteGivensParam domain  " <+> pretty domain
                 logDebugVerbose $ "finiteGivensParam expr    " <+> pretty expr
-                constant <- instantiateExpression [] expr
+                constant <- instantiateExpression essenceLettings expr
                 logDebugVerbose $ "finiteGivensParam constant" <+> pretty constant
                 (_, _, f) <- mkFinite domain
                 outs <- f constant
