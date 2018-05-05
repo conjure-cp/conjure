@@ -942,6 +942,10 @@ normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (norm
 normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
 normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
 normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)
+normaliseDomain  norm (DomainRecord           doms     ) = DomainRecord  [ (n, normaliseDomain norm d)
+                                                                         | (n, d) <- doms ]
+normaliseDomain  norm (DomainVariant          doms     ) = DomainVariant [ (n, normaliseDomain norm d)
+                                                                         | (n, d) <- doms ]
 normaliseDomain  norm (DomainTuple            doms     ) = DomainTuple $ map (normaliseDomain norm) doms
 normaliseDomain  norm (DomainMatrix           dom1 dom2) = DomainMatrix      (normaliseDomain norm dom1)
                                                                              (normaliseDomain norm dom2)

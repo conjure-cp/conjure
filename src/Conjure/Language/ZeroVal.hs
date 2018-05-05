@@ -14,8 +14,14 @@ zeroVal DomainBool = return $ ConstantBool False
 zeroVal (DomainInt []) = return $ ConstantInt 0
 zeroVal (DomainInt (r:_)) = zeroValR r
 zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
--- TODO: add DomainRecord
--- TODO: add DomainVariant
+zeroVal (DomainRecord xs) = do
+    values <- forM xs $ \ (nm, dom) -> do
+        z <- zeroVal dom
+        return (nm, z)
+    return $ ConstantAbstract $ AbsLitRecord values
+zeroVal (DomainVariant xs@((nm, dom):_)) = do
+    z <- zeroVal dom
+    return $ ConstantAbstract $ AbsLitVariant (Just [(n, forgetRepr d) | (n,d) <- xs]) nm z
 zeroVal (DomainMatrix index inner) = do
     z  <- zeroVal inner
     is <- case index of
