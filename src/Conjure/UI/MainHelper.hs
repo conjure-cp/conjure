@@ -66,7 +66,7 @@ mainWithArgs Modelling{..} = do
         Nothing -> return ()
 
     let
-        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty strategyQ))
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
                                  (parseStrategy s)
 
