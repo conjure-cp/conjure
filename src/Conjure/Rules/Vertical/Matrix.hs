@@ -197,7 +197,7 @@ rule_Comprehension_ToSet_List_DuplicateFree :: Rule
 rule_Comprehension_ToSet_List_DuplicateFree = "matrix-toSet-listInside-nodups" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
         (gocBefore, (pat, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat@Single{} expr) -> return (pat, expr)
+            Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToMSet] expr)
             _ -> na "rule_Comprehension_ToSet"
         -- we *can* assume that the list is duplicate-free!
         (True, list) <- match opToSetWithFlag expr
