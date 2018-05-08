@@ -534,15 +534,18 @@ srCleanUp stdoutSR solutions = do
                                ]])
         | or [ T.isInfixOf "Exception in thread" combinedSR
              , T.isInfixOf "ERROR" combinedSR
-             ] ->      bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+             , T.isInfixOf "Sub-process exited with error code" combinedSR
+             ] ->
+             return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                , "Savile Row stderr:"    <+> pretty stderrSR
+                                , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                ]])
         | exitCodeSR == 0 -> return (Right solutions)
-        | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+        | otherwise -> 
+            return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                               , "Savile Row stderr:"    <+> pretty stderrSR
+                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                               ]])
 
 
 validateSolutionNoParam :: UI -> FilePath -> IO ()
