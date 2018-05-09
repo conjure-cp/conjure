@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Process.Sanity ( sanityChecks ) where
+module Conjure.Process.Sanity ( sanityChecks, isInfinite ) where
 
 import Conjure.Prelude
 import Conjure.UserError
