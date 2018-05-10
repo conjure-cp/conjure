@@ -50,7 +50,7 @@ install:
 		stack install --local-bin-path ${BIN_DIR};\
 	fi
 	@echo Copying Savile Row to ${BIN_DIR}
-	@cp etc/savilerow/* ${BIN_DIR}
+	@cp -r etc/savilerow/* ${BIN_DIR}
 	@rm stack.yaml
 
 .PHONY: install-using-cabal
