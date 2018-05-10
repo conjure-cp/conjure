@@ -19,7 +19,11 @@ cat all-tests-list | grep 'conjure/exhaustive' >> test_commands
 rm all-tests-list
 
 function t {
-    ./conjure-testing --limit-time 0 -p "$1"
+    if [[ $1 = *"-"* ]] ; then
+        ./conjure-testing --limit-time 0 -p "/$1/"
+    else
+        ./conjure-testing --limit-time 0 -p "$1"
+    fi
 }
 export -f t
 
