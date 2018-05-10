@@ -10,36 +10,47 @@ export BUILD_TESTS?=false
 
 .PHONY: install
 install:
+	@echo "Using GHC version ${GHC_VERSION} (major version)"
+	@echo "Set the environment variable GHC_VERSION to change this"
+	@echo "For example: \"GHC_VERSION=8.4 make install\""
+	@echo "Supported versions: 7.10, 8.0, 8.2, 8.4"
+	@echo ""
+	@echo "Installing executables to ${BIN_DIR}"
+	@echo "Set the environment variable BIN_DIR to change this"
+	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
+	@echo ""
 	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
 	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
 	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
 	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
 	@if  [ ${GHC_VERSION} == "head" ] ; then\
-		stack setup --resolver nightly;\
+		stack --local-bin-path ${BIN_DIR} setup --resolver nightly;\
 	else\
-		stack setup;\
+		stack --local-bin-path ${BIN_DIR} setup;\
 	fi
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
 	@if  [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --resolver nightly --test --no-run-tests --no-terminal;\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests --no-terminal;\
 	elif [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --resolver nightly --test --no-run-tests;\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests;\
 	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --resolver nightly --no-terminal;\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --no-terminal;\
 	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --resolver nightly;\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly;\
 	elif   ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --test --no-run-tests --no-terminal;\
+		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests --no-terminal;\
 	elif   ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install --test --no-run-tests;\
+		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests;\
 	elif ! ${BUILD_TESTS} &&   ${CI} ; then\
-		stack install --no-terminal;\
+		stack install --local-bin-path ${BIN_DIR} --no-terminal;\
 	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
-		stack install;\
+		stack install --local-bin-path ${BIN_DIR};\
 	fi
+	@echo Copying Savile Row to ${BIN_DIR}
+	@cp etc/savilerow/* ${BIN_DIR}
 	@rm stack.yaml
 
 .PHONY: install-using-cabal
