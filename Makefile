@@ -51,7 +51,6 @@ install:
 	fi
 	@echo Copying Savile Row to ${BIN_DIR}
 	@cp -r etc/savilerow/* ${BIN_DIR}
-	@rm stack.yaml
 
 .PHONY: install-using-cabal
 install-using-cabal:
