@@ -47,6 +47,7 @@ module Conjure.Prelude
     ) where
 
 import GHC.Err as X ( error )
+import GHC.Stack as X ( HasCallStack )
 
 -- basic data types
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
