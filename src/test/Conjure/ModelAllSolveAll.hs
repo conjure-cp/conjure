@@ -24,7 +24,7 @@ import System.Environment ( withArgs )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
-import Test.Tasty.HUnit ( Assertion, testCaseSteps, assertFailure )
+import Test.Tasty.HUnit ( Assertion, testCaseSteps )
 import Test.Tasty.Options ( IsOption(..) )
 
 -- shelly
