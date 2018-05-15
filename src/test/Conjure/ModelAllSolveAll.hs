@@ -153,7 +153,7 @@ type Step = String -> Assertion
 testSingleDir :: HasCallStack => TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
 testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles{..} =
     if shouldRun
-        then return $ testCaseSteps name $ \ step -> do
+        then return $ testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
                 conjuring step
                 sequence_ (savileRows step)
                 validating step

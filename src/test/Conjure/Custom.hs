@@ -64,7 +64,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                        ]
     in
         if shouldRun
-            then return $ testCaseSteps name $ \ step -> do
+            then return $ testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
                 step "Running"
                 (stdout, stderr) <- sh $ errExit False $ do
                     -- stdout <- run (tBaseDir </> "run.sh") []
