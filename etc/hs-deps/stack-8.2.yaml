@@ -6,5 +6,8 @@ install-ghc: true
 extra-deps:
 - megaparsec-4.4.0
 - transformers-0.5.5.0
-- tasty-1.1
+- git: git@github.com:feuerbach/tasty
+  commit: bb5f01b250329878d2c3f7de8ea7c27778f33bde
+  subdirs:
+  - core
 - tasty-ant-xml-1.1.4
