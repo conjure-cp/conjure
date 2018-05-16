@@ -372,7 +372,8 @@ Test-Suite conjure-testing
                      , shelly
                      , system-filepath
                      -- see https://github.com/feuerbach/tasty/issues/220
-                     , tasty >= 1.1
+                     -- see https://github.com/feuerbach/tasty/issues/221
+                     , tasty >= 1.1.0.1
                      , tasty-ant-xml
                      , tasty-hunit
                      , text
