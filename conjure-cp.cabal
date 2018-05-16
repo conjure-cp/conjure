@@ -295,13 +295,13 @@ Library
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        LambdaCase
         MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        LambdaCase
-        MultiWayIf
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -328,8 +328,15 @@ Executable conjure
                      , cmdargs
                      , terminal-size >= 0.3.2.1
     default-extensions:
+        FlexibleContexts
+        FlexibleInstances
+        LambdaCase
+        MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
+        ScopedTypeVariables
+        TypeOperators
     ghc-options:
         -O2
         -fwarn-incomplete-patterns
@@ -378,10 +385,15 @@ Test-Suite conjure-testing
                      , tasty-hunit
                      , text
     default-extensions:
+        FlexibleContexts
+        FlexibleInstances
+        LambdaCase
+        MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
-        LambdaCase
-        MultiWayIf
+        ScopedTypeVariables
+        TypeOperators
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
