@@ -1,4 +1,5 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable #-}
+{-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Constant
     ( Constant(..)
@@ -313,8 +314,8 @@ validateConstantForDomain name
     d@(DomainTuple ds) = nested c d $ zipWithM_ (validateConstantForDomain name) cs ds
 
 validateConstantForDomain name
-    c@(ConstantAbstract (AbsLitRecord cs))
-    d@(DomainRecord ds)
+    c@(ConstantAbstract (AbsLitRecord (sortOn fst -> cs)))
+    d@(DomainRecord (sortOn fst -> ds))
         | map fst cs == map fst ds
             = nested c d $ zipWithM_ (validateConstantForDomain name) (map snd cs) (map snd ds)
         | otherwise

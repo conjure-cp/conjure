@@ -131,6 +131,7 @@ Library
                      , Conjure.Language.ModelStats
                      , Conjure.Language.Lexer
                      , Conjure.Language.Parser
+                     , Conjure.Language.ParserC
                      , Conjure.Language.Pretty
                      , Conjure.Language.NameResolution
                      , Conjure.Language.ZeroVal
@@ -267,7 +268,8 @@ Library
                      , temporary
                      , text
                      , time
-                     , transformers >= 0.4
+                     -- has a performance-related fix
+                     , transformers >= 0.5.3.0
                      , uniplate
                      , unordered-containers
                      , vector
@@ -285,20 +287,26 @@ Library
     if impl(ghc == 8.0.*)
         build-depends: template-haskell == 2.11.*
         ghc-options: -Wno-redundant-constraints
-    if impl(ghc >= 8.2)
+    if impl(ghc == 8.2.*)
         build-depends: template-haskell == 2.12.*
+    if impl(ghc == 8.4.*)
+        build-depends: template-haskell == 2.13.*
+
+    if impl(ghc < 8.4)
+        build-depends: semigroups >= 0.18.4
 
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        LambdaCase
         MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
         ScopedTypeVariables
         TypeOperators
-        LambdaCase
-        MultiWayIf
     ghc-options:
+        -O2
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
@@ -323,9 +331,17 @@ Executable conjure
                      , cmdargs
                      , terminal-size >= 0.3.2.1
     default-extensions:
+        FlexibleContexts
+        FlexibleInstances
+        LambdaCase
+        MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
+        ScopedTypeVariables
+        TypeOperators
     ghc-options:
+        -O2
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns
         -fwarn-missing-signatures
@@ -365,15 +381,22 @@ Test-Suite conjure-testing
                      , Diff
                      , shelly
                      , system-filepath
-                     , tasty
+                     -- see https://github.com/feuerbach/tasty/issues/220
+                     -- see https://github.com/feuerbach/tasty/issues/221
+                     , tasty >= 1.1.0.1
                      , tasty-ant-xml
                      , tasty-hunit
                      , text
     default-extensions:
+        FlexibleContexts
+        FlexibleInstances
+        LambdaCase
+        MultiParamTypeClasses
+        MultiWayIf
         NoImplicitPrelude
         OverloadedStrings
-        LambdaCase
-        MultiWayIf
+        ScopedTypeVariables
+        TypeOperators
     ghc-options:
         -fwarn-incomplete-patterns
         -fwarn-incomplete-uni-patterns

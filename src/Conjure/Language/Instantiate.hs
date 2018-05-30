@@ -58,7 +58,7 @@ instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (ins
 
 
 newtype HasUndef = HasUndef Any
-    deriving (Monoid)
+    deriving (Semigroup, Monoid)
 
 instantiateE
     :: ( MonadFail m

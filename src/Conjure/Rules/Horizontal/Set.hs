@@ -3,7 +3,7 @@
 module Conjure.Rules.Horizontal.Set where
 
 import Conjure.Rules.Import
-
+import Conjure.Process.Sanity ( isInfinite )
 
 rule_Comprehension_Literal :: Rule
 rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule where
@@ -375,6 +375,9 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
         TypeSet TypeInt <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
         DomainSet _ _ inner <- domainOf s
+        case inner of
+            DomainInt rs | isInfinite rs -> na "rule_Param_MaxOfSet"
+            _ -> return ()
         return
             ( "min of a parameter set"
             , case inner of
@@ -392,6 +395,9 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
         TypeSet TypeInt <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
         DomainSet _ _ inner <- domainOf s
+        case inner of
+            DomainInt rs | isInfinite rs -> na "rule_Param_MaxOfSet"
+            _ -> return ()
         return
             ( "max of a parameter set"
             , case inner of

@@ -14,6 +14,7 @@ module Conjure.Prelude
     , sameLength
     , concatMapM, concatForM
     , timedIO, timedPutStrLn
+    , tick
     , isLeft, isRight
     , tracing
     , allCombinations
@@ -46,6 +47,7 @@ module Conjure.Prelude
     ) where
 
 import GHC.Err as X ( error )
+import GHC.Stack as X ( HasCallStack )
 
 -- basic data types
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
@@ -113,7 +115,8 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
 import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe
                               , isNothing, isJust )
-import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
+import Data.Semigroup    as X ( Semigroup )
+import Data.Monoid       as X ( Monoid(mempty, mappend), mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum
@@ -122,7 +125,7 @@ import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap
                               )
 import Data.Traversable  as X ( Traversable, mapM, forM, sequence )
 
-import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, getLine )
+import System.IO as X ( FilePath, IO, putStr, putStrLn, print, writeFile, appendFile, getLine )
 import System.IO.Error ( isDoesNotExistError )
 import Control.Exception as X ( catch, throwIO, SomeException )
 
@@ -269,6 +272,12 @@ timedIO io = do
     end   <- getCPUTime
     let diff = fromIntegral (end - start) / ((10 :: Double) ^ (12 :: Int))
     return (a, diff)
+
+tick :: MonadIO m => Doc -> m ()
+tick msg = do
+    time <- liftIO getCPUTime
+    let seconds = fromIntegral time / ((10 :: Double) ^ (12 :: Int))
+    traceM $ show seconds ++ "\t" ++ show msg
 
 timedPutStrLn :: String -> IO ()
 timedPutStrLn str = do

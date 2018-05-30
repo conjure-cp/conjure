@@ -28,12 +28,12 @@ For more precise control, you might want to consider installing the Haskell tool
 
     git clone git@github.com:conjure-cp/conjure.git
     cd conjure
-    make
+    make install
 
 Installation is known to work with
-`GHC-7.8.4 <http://www.haskell.org/ghc/download_ghc_7_8_4>`_,
-`GHC-7.10.3 <http://www.haskell.org/ghc/download_ghc_7_10_3>`_, and
-`GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8.0.2>`_.
+`GHC-8.0.2 <http://www.haskell.org/ghc/download_ghc_8_0_2.html>`_, and
+`GHC-8.2.2 <http://www.haskell.org/ghc/download_ghc_8_2_2.html>`_, and
+`GHC-8.4.2 <http://www.haskell.org/ghc/download_ghc_8_4_2.html>`_.
 
 
 Installing Savile Row

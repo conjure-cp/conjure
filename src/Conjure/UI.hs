@@ -92,6 +92,7 @@ data UI
         , numberingStart             :: Int
         , smartFilenames             :: Bool
         , responses                  :: String
+        , solutionsInOneFile         :: Bool
         -- flags related to logging
         , logLevel                   :: LogLevel
         , verboseTrail               :: Bool
@@ -651,6 +652,13 @@ ui = modes
             &= help "A comma separated list of integers.\n\
                     \If provided, these will be used as the answers during \
                     \interactive model generation instead of prompting the user."
+        , solutionsInOneFile
+            = False
+            &= name "solutions-in-one-file"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Place all solutions in a single file instead of generating a separate file per solution.\n\
+                    \Off by default."
         , logLevel
             = def
             &= name "log-level"
@@ -830,8 +838,9 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= typFile
-            &= help "Paths of Essence' models generated beforehand. \
-                    \If given, Conjure skips the modelling phase and uses existing models for solving."
+            &= help "File names of Essence' models generated beforehand.\n\
+                    \If given, Conjure skips the modelling phase and uses the existing models for solving.\n\
+                    \The models should be inside the output directory (See -o)."
         , savilerowOptions
             = def
             &= name "savilerow-options"
@@ -850,7 +859,7 @@ ui = modes
             &= groupname "Options for other tools"
             &= explicit
             &= help "Backend solver. \
-                    \Possible values: minion/lingeling/minisat\n\
+                    \Possible values: minion/lingeling/minisat/bc_minisat_all/nbc_minisat_all\n\
                     \Default: minion"
         , nbSolutions
             = "1"

@@ -21,7 +21,7 @@ tests = do
     return (testGroup "type-checking" testCases)
 
 testSingle :: FilePath -> TestTree
-testSingle fp = testCase fp $ do
+testSingle fp = testCase (map (\ ch -> if ch == '/' then '.' else ch) fp) $ do
     model <- readModelFromFile fp
     result <- runUserErrorT $ ignoreLogs $ runNameGen () $ typeCheckModel_StandAlone model
     case result of

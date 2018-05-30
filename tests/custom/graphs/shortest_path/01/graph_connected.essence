@@ -1,0 +1,36 @@
+
+$ given n : int
+letting n be 3
+
+find g : relation of (int(1..n) * int(1..n))
+
+such that
+    forAll i,j : int(1..n) . g(i,j) = g(j,i)
+
+$ graph 1
+such that
+    g(1,2),
+    (sum i,j: int(1..n) . toInt(g(i,j))) = 2
+
+$ P[i,j] = x (with x in {1..n}) means, there is a path from i to j of length x. and that it is the shortest path.
+$ P[i,j] > n, means there isn't a path
+find P : function (total) (int(1..n), int(1..n)) --> int(1..n+1)
+such that
+    forAll i,j : int(1..n) .
+        P((i,j)) =
+        min([ n+1               $ redundant
+
+            $ if there is an edge, the shortest path is that. so 1.
+            , [n+1, 1; int(0..1)][toInt(g(i,j))]
+
+            $ the min path i-k-j
+            , min([ P((i,k)) + P((k,j))
+                  | k : int(1..n)
+                  ])
+
+            ])
+
+$ connected
+find connected : bool
+such that connected <-> (forAll i,j : int(1..n) . P((i,j)) <= n)
+

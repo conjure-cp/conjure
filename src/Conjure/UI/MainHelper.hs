@@ -6,8 +6,8 @@ module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..), OutputFormat(..) )
-import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, writeModel )
+import Conjure.UI ( UI(..) )
+import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
 import Conjure.UI.TranslateParameter ( translateParameter )
@@ -21,8 +21,9 @@ import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
-import Conjure.Language.NameGen ( runNameGen )
+import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
+import qualified Conjure.Language.ParserC as ParserC ( parseModel )
 import Conjure.Language.ModelDiff ( modelDiffIO )
 import Conjure.Rules.Definition ( viewAuto, Strategy(..) )
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -65,7 +66,7 @@ mainWithArgs Modelling{..} = do
         Nothing -> return ()
 
     let
-        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty strategyQ))
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
                                  (parseStrategy s)
 
@@ -142,8 +143,8 @@ mainWithArgs TranslateSolution{..} = do
     when (null eprime        ) $ userErr1 "Mandatory field --eprime"
     when (null eprimeSolution) $ userErr1 "Mandatory field --eprime-solution"
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- maybe (return def) readModelFromFile essenceParamO
-    eprimeSolutionF <- readModelFromFile eprimeSolution
+    essenceParamF <- maybe (return def) readParamOrSolutionFromFile essenceParamO
+    eprimeSolutionF <- readParamOrSolutionFromFile eprimeSolution
     output <- runNameGen () $ translateSolution eprimeF essenceParamF eprimeSolutionF
     let outputFilename = fromMaybe (dropExtension eprimeSolution ++ ".solution") essenceSolutionO
     writeModel lineWidth outputFormat (Just outputFilename) output
@@ -186,12 +187,14 @@ mainWithArgs ModelStrengthening{..} =
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
-    unless (solver `elem` ["minion", "lingeling", "minisat"]) $
+    unless (solver `elem` ["minion", "lingeling", "minisat", "bc_minisat_all", "nbc_minisat_all"]) $
         userErr1 ("Unsupported solver:" <+> pretty solver)
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
                        ])
+    when (solver `elem` ["bc_minisat_all", "nbc_minisat_all"] && nbSolutions /= "all") $
+        userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
         p <- readModelFromFile f
@@ -256,6 +259,7 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
+        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
             when validateSolutionsOpt $ liftIO $ validating solutions
             when copySolutions $ do
@@ -274,7 +278,7 @@ mainWithArgs config@Solve{..} = do
                     if null essenceParams
                         then do
                             let solutions' = [ solution
-                                             | (_, _, solution) <- solutions ]
+                                             | (_, _, Just solution) <- solutions ]
                             case solutions' of
                                 [solution] ->
                                     copySolution solution (essenceDir
@@ -291,7 +295,7 @@ mainWithArgs config@Solve{..} = do
                             let (_paramDir, paramFilename) = splitFileName essenceParam
                             let paramBasename = takeBaseName paramFilename
                             let solutions' = [ solution
-                                             | (_, essenceParam', solution) <- solutions
+                                             | (_, essenceParam', Just solution) <- solutions
                                              , essenceParam == essenceParam' ]
                             case solutions' of
                                 [solution] ->
@@ -334,7 +338,7 @@ mainWithArgs config@Solve{..} = do
         savileRows
             :: [(FilePath, Model)]      -- models
             -> [(FilePath, Model)]      -- params
-            -> IO (Either [Doc] [(FilePath, FilePath, FilePath)])
+            -> IO (Either [Doc] [(FilePath, FilePath, Maybe FilePath)])
         savileRows eprimes params = fmap combineResults $
             if null params
                 then autoParallel [ savileRowNoParam config m
@@ -345,13 +349,13 @@ mainWithArgs config@Solve{..} = do
                                   , p <- params
                                   ]
 
-        validating :: [(FilePath, FilePath, FilePath)] -> IO ()
+        validating :: [(FilePath, FilePath, Maybe FilePath)] -> IO ()
         validating solutions =
             if null essenceParams
                 then autoParallel_ [ validateSolutionNoParam config sol
-                                   | (_, _, sol) <- solutions ]
+                                   | (_, _, Just sol) <- solutions ]
                 else autoParallel_ [ validateSolutionWithParams config sol p
-                                   | (_, p, sol) <- solutions ]
+                                   | (_, p, Just sol) <- solutions ]
 
 
 pp :: MonadIO m => LogLevel -> Doc -> m ()
@@ -373,19 +377,21 @@ savileRowNoParam
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
-          , FilePath        -- solution
+          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
           ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
+    let tr = translateSolution eprimeModel def        
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
+                                    solutionsInOneFile
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
-                                    , eprimeModel, def
-                                    , lineWidth, outputFormat
+                                    , lineWidth
                                     )
+                                    tr
                                     (1::Int))
     srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowNoParam _ _ = bug "savileRowNoParam"
@@ -399,7 +405,7 @@ savileRowWithParams
         [Doc]               -- user error
         [ ( FilePath        -- model
           , FilePath        -- param
-          , FilePath        -- solution
+          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
           ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
@@ -418,13 +424,15 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
             let srArgs = "-in-param"
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
+            let tr = translateSolution eprimeModel essenceParam
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
+                                            solutionsInOneFile
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
-                                            , eprimeModel, essenceParam
-                                            , lineWidth, outputFormat
+                                            , lineWidth
                                             )
+                                            tr
                                             (1::Int))
             srCleanUp (stringToText $ unlines stdoutSR) solutions
 savileRowWithParams _ _ _ = bug "savileRowWithParams"
@@ -445,13 +453,19 @@ srMkArgs Solve{..} outBase modelPath =
         else ["-num-solutions", stringToText nbSolutions]
     ) ++
     ( case solver of
-        "minion"    -> [ "-minion" ]
-        "lingeling" -> [ "-sat"
-                       , "-sat-family", "lingeling"
-                       ]
-        "minisat"   -> [ "-sat"
-                       , "-sat-family", "minisat"
-                       ]
+        "minion"            -> [ "-minion" ]
+        "lingeling"         -> [ "-sat"
+                               , "-sat-family", "lingeling"
+                               ]
+        "minisat"           -> [ "-sat"
+                               , "-sat-family", "minisat"
+                               ]
+        "bc_minisat_all"    -> [ "-sat"
+                               , "-sat-family", "bc_minisat_all"
+                               ]
+        "nbc_minisat_all"   -> [ "-sat"
+                               , "-sat-family", "nbc_minisat_all"
+                               ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]
@@ -459,16 +473,19 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 
 srStdoutHandler
-    :: (FilePath, FilePath, FilePath, FilePath, Model, Model, Int, OutputFormat)
+    :: Bool
+    -> (FilePath, FilePath, FilePath, FilePath, Int)
+    -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
-    -> IO [Either String (FilePath, FilePath, FilePath)]
+    -> IO [Either String (FilePath, FilePath, Maybe FilePath)]
 srStdoutHandler
+        solutionsInOneFile
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , eprimeModel, essenceParam
-             , lineWidth, outputFormat
+             , lineWidth
              )
+        tr
         solutionNumber h = do
     eof <- hIsEOF h
     if eof
@@ -478,20 +495,38 @@ srStdoutHandler
         else do
             line <- hGetLine h
             case stripPrefix "Solution: " line of
-                Just solutionText -> do
-                    let mkFilename ext = outputDirectory </> outBase ++ "-solution" ++ padLeft 6 '0' (show solutionNumber) ++ ext
-                    let filenameEprimeSol  = mkFilename ".eprime-solution"
-                    let filenameEssenceSol = mkFilename ".solution"
-                    eprimeSol  <- readModel (Just id) ("<memory>", stringToText solutionText)
-                    writeFile filenameEprimeSol (render lineWidth eprimeSol)
-                    essenceSol <- ignoreLogs $ runNameGen () $
-                                                    translateSolution eprimeModel essenceParam eprimeSol
-                    writeModel lineWidth outputFormat (Just filenameEssenceSol) essenceSol
-                    fmap (Right (modelPath, paramPath, filenameEssenceSol) :)
-                         (srStdoutHandler args (solutionNumber+1) h)
                 Nothing ->
                     fmap (Left line :)
-                         (srStdoutHandler args solutionNumber h)
+                         (srStdoutHandler solutionsInOneFile args tr solutionNumber h)
+                Just solutionText -> do
+                    eprimeSol  <- readModel ParserC.parseModel (Just id) ("<memory>", stringToText solutionText)
+                    essenceSol <- ignoreLogs $ runNameGen () $ tr eprimeSol
+                    case solutionsInOneFile of
+                        False -> do
+                            let mkFilename ext = outputDirectory </> outBase
+                                                        ++ "-solution" ++ padLeft 6 '0' (show solutionNumber)
+                                                        ++ ext
+                            let filenameEprimeSol  = mkFilename ".eprime-solution"
+                            let filenameEssenceSol = mkFilename ".solution"
+                            writeFile filenameEprimeSol  (render lineWidth eprimeSol)
+                            writeFile filenameEssenceSol (render lineWidth essenceSol)
+                            fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
+                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
+                        True -> do
+                            let mkFilename ext = outputDirectory </> outBase
+                                                        ++ ext
+                            let filenameEprimeSol  = mkFilename ".eprime-solutions"
+                            let filenameEssenceSol = mkFilename ".solutions"
+                            -- remove the solutions files before writing the first solution
+                            when (solutionNumber == 1) $ do
+                                removeFileIfExists filenameEprimeSol
+                                removeFileIfExists filenameEssenceSol
+                            appendFile filenameEprimeSol  ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
+                            appendFile filenameEprimeSol  ("\n" ++ render lineWidth eprimeSol  ++ "\n\n")
+                            appendFile filenameEssenceSol ("$ Solution: " ++ padLeft 6 '0' (show solutionNumber))
+                            appendFile filenameEssenceSol ("\n" ++ render lineWidth essenceSol ++ "\n\n")
+                            fmap (Right (modelPath, paramPath, Nothing) :)
+                                 (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
 
 
 srCleanUp :: Text -> sols -> Sh (Either [Doc] sols)
@@ -507,15 +542,18 @@ srCleanUp stdoutSR solutions = do
                                ]])
         | or [ T.isInfixOf "Exception in thread" combinedSR
              , T.isInfixOf "ERROR" combinedSR
-             ] ->      bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+             , T.isInfixOf "Sub-process exited with error code" combinedSR
+             ] ->
+             return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                , "Savile Row stderr:"    <+> pretty stderrSR
+                                , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                ]])
         | exitCodeSR == 0 -> return (Right solutions)
-        | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+        | otherwise -> 
+            return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                               , "Savile Row stderr:"    <+> pretty stderrSR
+                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                               ]])
 
 
 validateSolutionNoParam :: UI -> FilePath -> IO ()

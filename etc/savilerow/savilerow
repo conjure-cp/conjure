@@ -1,0 +1,26 @@
+#!/bin/bash
+
+# get savilerow installation directory
+DIR="$( cd "$( dirname "$0" )" && pwd )"
+
+if [ -f "$DIR/bin/minion" ]; then
+    MINION_ARG="-minion-bin $DIR/bin/minion"
+else
+    MINION_ARG=""
+fi
+
+if [ -f "$DIR/bin/fzn-chuffed" ]; then
+    CHUFFED_ARG="-chuffed-bin $DIR/bin/fzn-chuffed"
+else
+    CHUFFED_ARG=""
+fi
+
+if [ -f "$DIR/bin/fzn-gecode" ]; then
+    GECODE_ARG="-gecode-bin $DIR/bin/fzn-gecode"
+else
+    GECODE_ARG=""
+fi
+
+#  May add -XX:+UseCompressedOops -- allegedly reduces size of object references. May be default anyway.
+
+java -ea -XX:ParallelGCThreads=1 -Xmx8G -jar "$DIR/savilerow.jar" ${MINION_ARG} ${CHUFFED_ARG} ${GECODE_ARG} "$@"
