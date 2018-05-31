@@ -68,7 +68,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
                                 [essence|
                                     forAll &iPat : int(1..&maxSize) .
                                         forAll &jPat : int(&i+1..&maxSize) .
-                                             &i <= &marker /\ &j <= &marker -> &values[&i] != &values[&j]
+                                             &j <= &marker -> &values[&i] != &values[&j]
                                 |]
 
                 dontCareAfterMarker marker values = do

@@ -831,7 +831,7 @@ such that
     and([x_setRemoveSingle_size = 1, x_setRemoveSingle_conjure_aux66 = 1, x_setRemoveSingle_conjure_aux67 = 1,
          x_setRemoveSingle_conjure_aux68 = 1;
              int(1..4)]),
-    and([and([q4 <= x_ExplicitVarSizeWithMarkerR2_Marker /\ q5 <= x_ExplicitVarSizeWithMarkerR2_Marker ->
+    and([and([q5 <= x_ExplicitVarSizeWithMarkerR2_Marker ->
               or([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q9] /\
                   !x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9]
                       | q9 : int(a..b)])
