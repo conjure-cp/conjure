@@ -2114,11 +2114,12 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             collectLowerBounds (RangeBounded x _) = return x
             collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
 
-            collectLowerBoundsD (DomainInt rs) = mapM collectLowerBounds rs
+            collectLowerBoundsD (DomainInt rs) = fromList <$> mapM collectLowerBounds rs
+            collectLowerBoundsD (DomainIntE x) = return x
             collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
 
         bounds <- collectLowerBoundsD domBody
-        let lowerBound = make opMin (fromList bounds)
+        let lowerBound = make opMin bounds
 
         -- for each element, we do element-lowerBound+1
         -- this makes sure the smallest element is 1

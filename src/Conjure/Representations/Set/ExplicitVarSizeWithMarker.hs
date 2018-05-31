@@ -5,6 +5,7 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 -- conjure
 import Conjure.Prelude
 import Conjure.Language
+import Conjure.Language.TypeOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
@@ -49,14 +50,26 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             maxSize <- getMaxSize attrs innerDomain
             let
                 orderingUpToMarker marker values = do
-                    (iPat, i) <- quantifiedVar
-                    (jPat, j) <- quantifiedVar
-                    return $ return $ -- list
-                        [essence|
-                            forAll &iPat : int(1..&maxSize) .
-                                forAll &jPat : int(&i+1..&maxSize) .
-                                     &i <= &marker /\ &j <= &marker -> &values[&i] != &values[&j]
-                        |]
+                    innerDomainTy <- typeOf innerDomain
+                    case innerDomainTy of
+                        TypeInt{} -> do
+                            (iPat, i) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence|
+                                    allDiff([ &values[&i]
+                                            | &iPat : int(1..&maxSize)
+                                            , &i <= &marker
+                                            ])
+                                    |]
+                        _ -> do
+                            (iPat, i) <- quantifiedVar
+                            (jPat, j) <- quantifiedVar
+                            return $ return $ -- list
+                                [essence|
+                                    forAll &iPat : int(1..&maxSize) .
+                                        forAll &jPat : int(&i+1..&maxSize) .
+                                             &i <= &marker /\ &j <= &marker -> &values[&i] != &values[&j]
+                                |]
 
                 dontCareAfterMarker marker values = do
                     (iPat, i) <- quantifiedVar
