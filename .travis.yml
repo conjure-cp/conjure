@@ -122,11 +122,13 @@ script:
   - touch conjure-testing.stdout
   - export ELAPSED=$(($(date +%s) - ${STARTTIME}))
   - echo "Time elapsed so far is ${ELAPSED} seconds."
-  # - if [ ${ELAPSED} -gt 900 ] ; then echo "Skipping the tests, or else travis will (very probably) time out." ; else ((time dist/build/conjure-testing/conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true; fi
   - cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
   - ls -l .stack-work/dist/*/*/build/conjure-testing/conjure-testing
   - cp .stack-work/dist/*/*/build/conjure-testing/conjure-testing ${BIN_DIR}/conjure-testing
-  - ((time conjure-testing --limit-time 10 +RTS -s) > >(tee conjure-testing.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing.stderr >&2)) || true
+  - ((time conjure-testing -p parse +RTS -s) > >(tee conjure-testing-1.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing-1.stderr >&2)) || true
+  - ((time conjure-testing -p sns   +RTS -s) > >(tee conjure-testing-2.stdout | grep -v "Conjuring\|Savile\ Row\|Validating\|Checking\|Running") 2> >(tee conjure-testing-2.stderr >&2)) || true
+  - cat conjure-testing-*.stdout > conjure-testing.stdout
+  - cat conjure-testing-*.stderr > conjure-testing.stderr
   - rm stack.yaml
   - if ! grep -A20 FAIL conjure-testing.stdout; then echo "Success!"; else exit 1 ; fi
 
