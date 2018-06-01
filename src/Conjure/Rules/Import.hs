@@ -15,6 +15,7 @@ import Conjure.Language.TypeOf as X ( typeOf )
 import Conjure.Compute.DomainOf as X ( domainOf, indexDomainsOf )
 import Conjure.Compute.DomainUnion as X ( domainUnion, domainUnions )
 import Conjure.Language.DomainSizeOf as X ( domainSizeOf )
+import Conjure.Language.Instantiate as X ( entailed )
 
 import Conjure.Rules.Definition as X ( Rule(..), namedRule, matchFirst )
 import Conjure.Representations as X ( downX1 )
