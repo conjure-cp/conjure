@@ -458,8 +458,15 @@ instance DomainOf x => DomainOf (OpMinus x) where
     domainOf (OpMinus x y) = do
         xDom :: Dom <- domainOf x
         yDom :: Dom <- domainOf y
-        let low = [essence| min(`&xDom`) - max(`&yDom`) |]
-        let upp = [essence| max(`&xDom`) - min(`&yDom`) |]
+
+        xDom_Min <- minOfDomain xDom
+        xDom_Max <- maxOfDomain xDom
+        yDom_Min <- minOfDomain yDom
+        yDom_Max <- maxOfDomain yDom
+
+        let low = [essence| &xDom_Min - &yDom_Max |]
+        let upp = [essence| &xDom_Max - &yDom_Min |]
+
         return (DomainInt [RangeBounded low upp] :: Dom)
 
 instance (Pretty x, TypeOf x) => DomainOf (OpMod x) where
