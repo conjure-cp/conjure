@@ -375,7 +375,10 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def        
+    let tr = translateSolution eprimeModel def
+    when (logLevel >= LogDebug) $ do
+        liftIO $ putStrLn "Using the following options for Savile Row:"
+        liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     solutionsInOneFile
@@ -417,6 +420,9 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
             let tr = translateSolution eprimeModel essenceParam
+            when (logLevel >= LogDebug) $ do
+                liftIO $ putStrLn "Using the following options for Savile Row:"
+                liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             solutionsInOneFile
