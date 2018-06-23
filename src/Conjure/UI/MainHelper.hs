@@ -6,7 +6,7 @@ module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..) )
+import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
@@ -385,6 +385,7 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , lineWidth
+                                    , outputFormat
                                     )
                                     tr
                                     (1::Int))
@@ -429,6 +430,7 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
                                             , lineWidth
+                                            , outputFormat
                                             )
                                             tr
                                             (1::Int))
@@ -472,7 +474,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 srStdoutHandler
     :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int)
+    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
     -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
@@ -481,7 +483,7 @@ srStdoutHandler
         solutionsInOneFile
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , lineWidth
+             , lineWidth, outputFormat
              )
         tr
         solutionNumber h = do
@@ -506,8 +508,10 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solution"
                             let filenameEssenceSol = mkFilename ".solution"
-                            writeFile filenameEprimeSol  (render lineWidth eprimeSol)
-                            writeFile filenameEssenceSol (render lineWidth essenceSol)
+                            writeModel lineWidth Plain (Just filenameEprimeSol) eprimeSol
+                            writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
+                            when (outputFormat == JSON) $
+                                writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
                         True -> do
