@@ -7,6 +7,12 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
         matrix indexed by [int(1..4), int(1..4)] of int(1..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..4), int(1..4)] of bool
+branching on
+    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 such that
     and([q50 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
          x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q50] = 2

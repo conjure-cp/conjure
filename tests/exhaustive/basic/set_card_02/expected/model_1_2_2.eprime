@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1..2)] of int(1..2)
+branching on [s_Occurrence, s_Explicit]
 such that
     or([s_Explicit[q10] = 2 | q10 : int(1..2)]),
     2 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)]),

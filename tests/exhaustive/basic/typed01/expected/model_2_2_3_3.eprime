@@ -6,6 +6,9 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
+branching on
+    [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values,
+     y_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values]
 such that
     x_ExplicitVarSizeWithDummy[1] != 2 /\
     (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = x_ExplicitVarSizeWithDummy[1])

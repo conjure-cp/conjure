@@ -18,6 +18,14 @@ find r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithF
 find r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..84), int(1..2)] of int(2..3)
 find r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_3: matrix indexed by [int(1..84)] of int(4..10)
+branching on
+    [r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker, r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1,
+     r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence,
+     r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3, r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Marker,
+     r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_1,
+     r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Flags,
+     r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_2_ExplicitVarSizeWithFlags_Values,
+     r_RelationAsSetR4_ExplicitVarSizeWithMarkerR4_Values_3]
 such that
     and([q46 <= r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Marker ->
          or([and([a_RelationAsSetR6_ExplicitR6_1[q48] = r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_1[q46],

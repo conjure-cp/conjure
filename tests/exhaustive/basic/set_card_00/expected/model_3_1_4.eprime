@@ -5,6 +5,9 @@ find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1.
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_Occurrence,
+     s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     s_Occurrence[s_ExplicitVarSizeWithMarker_Marker],
     2 <= s_ExplicitVarSizeWithMarker_Marker ->

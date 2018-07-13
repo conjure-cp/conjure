@@ -7,6 +7,9 @@ find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-20..3)
+branching on
+    [s_Occurrence, s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values,
+     x]
 such that
     and([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q27] != 5, i != s_ExplicitVarSizeWithDummy[q27],
               allDiff([i + s_ExplicitVarSizeWithDummy[q27], i * s_ExplicitVarSizeWithDummy[q27],

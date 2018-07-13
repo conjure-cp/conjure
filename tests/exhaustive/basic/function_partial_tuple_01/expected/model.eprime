@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find x_FunctionNDPartial_Flags: matrix indexed by [int(7..8), bool] of bool
 find x_FunctionNDPartial_Values: matrix indexed by [int(7..8), bool] of int(13, 17)
+branching on [x_FunctionNDPartial_Flags, x_FunctionNDPartial_Values]
 such that
     x_FunctionNDPartial_Values[7, true] = 13,
     x_FunctionNDPartial_Flags[7, true],

@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
 find x_Occurrence: matrix indexed by [int(1..4)] of bool
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence]
 such that
     and([or([x_ExplicitVarSizeWithFlags_Flags[q13] /\ x_ExplicitVarSizeWithFlags_Values[q13] = q14_1 | q13 : int(1..4)])
          /\ !x_Occurrence[q14_2]

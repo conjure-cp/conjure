@@ -6,6 +6,10 @@ find b_PartitionOccurrence_NumParts: int(1..2)
 find b_PartitionOccurrence_WhichPart: matrix indexed by [int(1..2)] of int(1..2)
 find b_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
 find b_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence, b_PartitionOccurrence_NumParts,
+     b_PartitionOccurrence_WhichPart, b_PartitionOccurrence_PartSizes, b_PartitionOccurrence_FirstIndex]
 such that
     or([q28 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
         (toInt(or([q142 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\

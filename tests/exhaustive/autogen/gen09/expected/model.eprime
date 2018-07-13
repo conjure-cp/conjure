@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find var1_Function1DPartial_Flags: matrix indexed by [bool] of bool
 find var1_Function1DPartial_Values: matrix indexed by [bool] of bool
+branching on [var1_Function1DPartial_Flags, var1_Function1DPartial_Values]
 such that
     or([var1_Function1DPartial_Flags[q5] /\ !(q5 /\ false = var1_Function1DPartial_Values[q5]) | q5 : bool]) \/
     !or([var1_Function1DPartial_Flags[q10] /\ (q10 /\ var1_Function1DPartial_Values[q10] = false) | q10 : bool]),

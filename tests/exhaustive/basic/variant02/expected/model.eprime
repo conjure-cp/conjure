@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x__tag: int(1..2)
 find x_a: bool
 find x_b: int(0, 4)
+branching on [x__tag, x_a, x_b]
 such that
     x__tag = 1 -> x_a /\ x__tag = 1,
     x__tag = 2 -> x_b = 0 /\ x__tag = 2,

@@ -2,5 +2,6 @@ language ESSENCE' 1.0
 
 letting n be 2
 find square_FunctionND: matrix indexed by [int(1..2), int(1..2)] of int(1..2)
+branching on [square_FunctionND]
 such that allDiff([square_FunctionND[q1_1, q1_2] | q1_1 : int(1..2), q1_2 : int(1..2)])
 

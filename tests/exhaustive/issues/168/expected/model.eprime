@@ -6,6 +6,7 @@ find fs_Function1DR3_1: matrix indexed by [int(a..b)] of int(1)
 find fs_Function1DR3_2_Explicit_1: matrix indexed by [int(a..b), int(1..2)] of int(10, 11)
 find fs_Function1DR3_2_Explicit_2: matrix indexed by [int(a..b), int(1..2)] of int(12, 13)
 find fs_Function1DR3_3: matrix indexed by [int(a..b)] of int(4)
+branching on [fs_Function1DR3_1, fs_Function1DR3_2_Explicit_1, fs_Function1DR3_2_Explicit_2, fs_Function1DR3_3]
 such that
     or([fs_Function1DR3_2_Explicit_1[a, q7] = 11 /\ fs_Function1DR3_2_Explicit_2[a, q7] = 13 | q7 : int(1..2)]),
     or([fs_Function1DR3_2_Explicit_1[b, q9] = 10 /\ fs_Function1DR3_2_Explicit_2[b, q9] = 12 | q9 : int(1..2)]),

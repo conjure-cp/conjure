@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find a_RelationAsMatrix: matrix indexed by [int(1..2), bool] of bool
 find b_RelationAsMatrix: matrix indexed by [int(1..2), bool] of bool
+branching on [a_RelationAsMatrix, b_RelationAsMatrix]
 such that
     or([a_RelationAsMatrix[q7_1, q7_2] /\
         (sum([toInt(a_RelationAsMatrix[q23_1, q23_2]) * catchUndef(toInt(q23_1 = q7_1 /\ q23_2 = q7_2), 0)

@@ -5,6 +5,9 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
 find x_Occurrence: matrix indexed by [int(1..4)] of bool
+branching on
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitVarSizeWithFlags_Values, x_Occurrence]
 such that
     or([q29 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q29] = 1 | q29 : int(1..4)]),
     or([q31 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q31] = 2 | q31 : int(1..4)]),

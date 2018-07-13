@@ -5,6 +5,11 @@ find var1_RelationAsSetR5R7_ExplicitR5R7_1_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2), int(1..2)] of bool
 find var1_RelationAsSetR5R7_ExplicitR5R7_2_ExplicitWithFlags_Flags: matrix indexed by [int(1..2), int(1..0)] of int(0)
 find var1_RelationAsSetR5R7_ExplicitR5R7_2_ExplicitWithFlags_Values: matrix indexed by [int(1..2), int(1..0)] of bool
+branching on
+    [var1_RelationAsSetR5R7_ExplicitR5R7_1_ExplicitVarSizeWithMarker_Marker,
+     var1_RelationAsSetR5R7_ExplicitR5R7_1_ExplicitVarSizeWithMarker_Values,
+     var1_RelationAsSetR5R7_ExplicitR5R7_2_ExplicitWithFlags_Flags,
+     var1_RelationAsSetR5R7_ExplicitR5R7_2_ExplicitWithFlags_Values]
 such that
     var1_RelationAsSetR5R7_ExplicitR5R7_1_ExplicitVarSizeWithMarker_Marker[1] <
     var1_RelationAsSetR5R7_ExplicitR5R7_1_ExplicitVarSizeWithMarker_Marker[2]

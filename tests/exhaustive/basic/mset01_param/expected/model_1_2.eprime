@@ -7,6 +7,9 @@ find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
 find x_ExplicitWithRepetition_Flag: int(0..4)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..4)] of int(1..2)
+branching on
+    [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values, x_ExplicitWithRepetition_Flag,
+     x_ExplicitWithRepetition_Values]
 such that
     and([sum([g_ExplicitWithFlags_Flags[q25]
                   | q25 : int(1..fin1), g_ExplicitWithFlags_Values[q25] = g_ExplicitWithFlags_Values[q24]])

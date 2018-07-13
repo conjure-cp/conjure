@@ -2,5 +2,6 @@ language ESSENCE' 1.0
 
 letting let1 be 14
 find i: int(14..20)
+branching on [i]
 such that or([i = j * j | j : int(0..5)])
 

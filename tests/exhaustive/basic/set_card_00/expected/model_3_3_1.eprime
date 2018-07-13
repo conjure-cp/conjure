@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find s_ExplicitVarSizeWithMarker_Marker: int(0..2)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_Occurrence]
 such that
     or([q6 <= s_ExplicitVarSizeWithMarker_Marker /\
         s_ExplicitVarSizeWithMarker_Values[q6] = s_ExplicitVarSizeWithMarker_Marker

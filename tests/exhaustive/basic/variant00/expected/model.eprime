@@ -19,6 +19,9 @@ find t2__tag: int(1..2)
 find t2_a: bool
 find t2_b: int(0, 4)
 find someInt: int(0)
+branching on
+    [x__tag, x_a, x_b, y1__tag, y1_a, y1_b, y2__tag, y2_a, y2_b, z__tag, z_a, z_b, t1__tag, t1_a, t1_b, t2__tag, t2_a,
+     t2_b, someInt]
 such that
     x_a,
     x__tag = 1,

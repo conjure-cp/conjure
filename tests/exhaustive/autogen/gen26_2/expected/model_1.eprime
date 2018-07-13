@@ -7,6 +7,10 @@ find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithM
         matrix indexed by [int(1..0)] of int(0..let3)
 find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..0), int(1..let3)] of bool
+branching on
+    [var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     false,
     10 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,

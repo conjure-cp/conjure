@@ -15,6 +15,7 @@ given fin9: int
 given r_a: int(fin6..fin7)
 given r_b: int(fin8..fin9)
 find r_in_p: bool
+branching on [x, r_in_p]
 such that
     x = sum([p_Explicit_a[q1] + p_Explicit_b[q1] | q1 : int(1..fin1)]),
     r_in_p = or([p_Explicit_a[q3] = r_a /\ p_Explicit_b[q3] = r_b | q3 : int(1..fin1)])

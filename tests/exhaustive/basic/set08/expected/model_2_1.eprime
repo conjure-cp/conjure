@@ -6,6 +6,9 @@ find x_ExplicitVarSizeWithFlags_Values_2: matrix indexed by [int(1..16)] of int(
 find x_ExplicitVarSizeWithMarker_Marker: int(0..16)
 find x_ExplicitVarSizeWithMarker_Values_1: matrix indexed by [int(1..16)] of int(1..4)
 find x_ExplicitVarSizeWithMarker_Values_2: matrix indexed by [int(1..16)] of int(3..6)
+branching on
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values_1, x_ExplicitVarSizeWithFlags_Values_2,
+     x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values_1, x_ExplicitVarSizeWithMarker_Values_2]
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q18] ->
          x_ExplicitVarSizeWithFlags_Values_1[q18] = x_ExplicitVarSizeWithFlags_Values_2[q18]

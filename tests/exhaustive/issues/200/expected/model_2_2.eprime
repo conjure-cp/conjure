@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 letting n be 5
 letting let1 be 4
 find quasigroup_Explicit: matrix indexed by [int(1..5)] of int(0..4)
+branching on [quasigroup_Explicit]
 such that
     and([quasigroup_Explicit[q3] * quasigroup_Explicit[q4] * (quasigroup_Explicit[q4] * quasigroup_Explicit[q3]) =
          quasigroup_Explicit[q3]

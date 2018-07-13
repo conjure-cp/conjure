@@ -6,6 +6,7 @@ find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-25..4)
+branching on [s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, x]
 such that
     and([and([s_ExplicitVarSizeWithDummy[q16] != 5, s_ExplicitVarSizeWithDummy[q17] != 5,
               s_ExplicitVarSizeWithDummy[q16] != s_ExplicitVarSizeWithDummy[q17],

@@ -4,6 +4,8 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(2..5)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
+branching on
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithDummy, y_Occurrence]
 such that
     and([q14 <= x_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithDummy[q15] != 6 ->
          x_ExplicitVarSizeWithMarker_Values[q14] + 2 = y_ExplicitVarSizeWithDummy[q15]

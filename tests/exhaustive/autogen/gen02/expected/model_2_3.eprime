@@ -9,6 +9,11 @@ find var2_ExplicitVarSizeWithFlagsR5_Flags: matrix indexed by [int(1..4)] of boo
 find var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of int(0..2)
 find var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..2)] of bool
+branching on
+    [var2_ExplicitVarSizeWithMarkerR4_Marker, var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags,
+     var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values, var2_ExplicitVarSizeWithFlagsR5_Flags,
+     var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker,
+     var2_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     or([q47 <= var2_ExplicitVarSizeWithMarkerR4_Marker /\
         sum([toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q47, q48]) | q48 : int(1..2)])

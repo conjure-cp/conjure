@@ -2,5 +2,6 @@ language ESSENCE' 1.0
 
 given E_EnumSize: int
 find x_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13, 17)
+branching on [x_Function1D]
 such that true
 

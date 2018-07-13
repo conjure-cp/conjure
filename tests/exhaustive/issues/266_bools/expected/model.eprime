@@ -5,6 +5,7 @@ given f_FunctionAsRelation_RelationAsSet_Explicit_1: matrix indexed by [int(1..f
 given f_FunctionAsRelation_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of bool
 find fprime_Function1DPartial_Flags: matrix indexed by [bool] of bool
 find fprime_Function1DPartial_Values: matrix indexed by [bool] of bool
+branching on [fprime_Function1DPartial_Flags, fprime_Function1DPartial_Values]
 such that
     and([fprime_Function1DPartial_Values[f_FunctionAsRelation_RelationAsSet_Explicit_1[q5]] =
          f_FunctionAsRelation_RelationAsSet_Explicit_2[q5]

@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 find r_RelationAsMatrix: matrix indexed by [int(1..9), int(1..9)] of bool
+branching on [r_RelationAsMatrix]
 such that
     and([!r_RelationAsMatrix[q1, q1] | q1 : int(1..9)]),
     and([r_RelationAsMatrix[q1, q2] -> r_RelationAsMatrix[q2, q1] | q1 : int(1..9), q2 : int(1..9)]),

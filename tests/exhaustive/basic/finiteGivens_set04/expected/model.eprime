@@ -7,6 +7,7 @@ given fin4: int
 given a_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4 + 1)
 letting let1 be -1000
 find x: int(-1000..1000)
+branching on [x]
 such that
     x =
     max([max([a_ExplicitR6_ExplicitVarSizeWithDummy[q1, q3]

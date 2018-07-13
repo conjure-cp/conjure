@@ -6,6 +6,7 @@ given b: int
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (b - a))] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
+branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     and([and([or([x_ExplicitVarSizeWithDummy[q25] != b + 1 /\
                   x_ExplicitVarSizeWithDummy[q25] = t_ExplicitVarSizeWithDummy[q23]
