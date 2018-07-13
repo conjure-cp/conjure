@@ -564,6 +564,7 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                     SizeAttr_MinMaxSize _ x -> return x
                     _ -> fail "rule_Subsequence maxSize"
 
+        -- for each value in a, find an index into b such that these indices are in increasing order
         return
             ( "Horizontal rule for subsequence on 2 sequences"
             , do
@@ -581,7 +582,10 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                             , SuchThat
                                 [ [essence| and([ image(&aux, &i-1) < image(&aux, &i)
                                                 | &iPat : int(2..&aMaxSize)
+                                                , &i <= |&aux|
                                                 ])
+                                  |]
+                                , [essence| |&a| = |&aux|
                                   |]
                                 ]
                             ])
