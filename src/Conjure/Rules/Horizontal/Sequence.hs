@@ -565,6 +565,8 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                     _ -> fail "rule_Subsequence maxSize"
 
         -- for each value in a, find an index into b such that these indices are in increasing order
+        -- when there are multiple mappings that produce the same "a" (i.e. when there are duplicates in b)
+        -- this is does not functionally define the aux variable
         return
             ( "Horizontal rule for subsequence on 2 sequences"
             , do
