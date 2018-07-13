@@ -193,7 +193,7 @@ parseTopLevels = do
                     lexeme L_heuristic
                     nm <- parseName
                     return [ SearchHeuristic nm ]
-                    <?> "branching on"
+                    <?> "heuristic"
                 ] <?> "statement"
     concat <$> some one
 
