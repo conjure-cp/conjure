@@ -337,7 +337,7 @@ checkExpectedAndExtraFiles step srOptions TestDirFiles{..} = do
     let extras = S.difference outputs expecteds
 
     step "Checking extra files"
-    unless (S.null extras) $ assert $ prettyList id ", " (S.toList extras)
+    unless (S.null extras) $ assert $ "Unexpected files:" <+> prettyList id ", " (S.toList extras)
 
     step "Checking expected files"
     forM_ expecteds $ \ item -> do
