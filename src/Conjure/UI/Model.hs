@@ -1210,6 +1210,7 @@ horizontalRules =
     , Horizontal.Sequence.rule_Comprehension_Image
     , Horizontal.Sequence.rule_Image_Literal_Bool
     , Horizontal.Sequence.rule_Image_Literal_Int
+    , Horizontal.Sequence.rule_Eq_Empty
     , Horizontal.Sequence.rule_Eq
     , Horizontal.Sequence.rule_Eq_Comprehension
     , Horizontal.Sequence.rule_Neq

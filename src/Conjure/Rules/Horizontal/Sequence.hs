@@ -78,12 +78,32 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
             )
 
 
+rule_Eq_Empty :: Rule
+rule_Eq_Empty = "sequence-eq-empty" `namedRule` theRule where
+    theRule p = do
+        (x,y)          <- match opEq p
+        TypeSequence{} <- typeOf x
+        TypeSequence{} <- typeOf y
+        other <- case (match sequenceLiteral x, match sequenceLiteral y) of
+            (Just (_, []), _) -> return y
+            (_, Just (_, [])) -> return x
+            _                 -> na "sequence not empty"
+        return
+            ( "Horizontal rule for sequence equality, one side empty"
+            , return [essence| |&other| = 0 |]
+            )
+
+
 rule_Eq :: Rule
 rule_Eq = "sequence-eq" `namedRule` theRule where
     theRule p = do
         (x,y)          <- match opEq p
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
+        case (match sequenceLiteral x, match sequenceLiteral y) of
+            (Just (_, []), _) -> na "Sequence{rule_Eq}: one side empty"
+            (_, Just (_, [])) -> na "Sequence{rule_Eq}: one side empty"
+            _            -> return ()
         return
             ( "Horizontal rule for sequence equality"
             , do
