@@ -1003,8 +1003,8 @@ allRules config =
       ]
     , [ rule_PartialEvaluate
       ]
-    , paramRules
-    , [ rule_ChooseRepr                 config
+    ] ++ paramRules ++
+    [ [ rule_ChooseRepr                 config
       , rule_ChooseReprForComprehension config
       , rule_ChooseReprForLocals        config
       ]
@@ -1019,13 +1019,15 @@ allRules config =
 --   Some things are easier when everything involved is a param.
 --   These rules aren't necessary for correctness, but they can help remove some verbose expressions from the output.
 --   Make Savile Row happier so it makes us happier. :)
-paramRules :: [Rule]
+paramRules :: [[Rule]]
 paramRules =
-    [ Horizontal.Set.rule_Param_MinOfSet
-    , Horizontal.Set.rule_Param_MaxOfSet
-    , Horizontal.Set.rule_Param_Card
-    , Horizontal.Function.rule_Param_DefinedRange
-    , Horizontal.Relation.rule_Param_Card
+    [ [ Horizontal.Set.rule_Param_MinOfSet
+      , Horizontal.Set.rule_Param_MaxOfSet
+      , Horizontal.Set.rule_Param_Card
+      ]
+    , [ Horizontal.Function.rule_Param_DefinedRange
+      , Horizontal.Relation.rule_Param_Card
+      ]
     ]
 
 verticalRules :: [Rule]
