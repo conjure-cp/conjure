@@ -52,6 +52,7 @@ srOptionsMk srExtraOptions =
     -- , "-solver-options" , "-cpulimit 1200"
     , "-all-solutions"
     , "-preprocess"     , "None"
+    , "-S0"
     ] ++ map stringToText (words srExtraOptions)
 
 

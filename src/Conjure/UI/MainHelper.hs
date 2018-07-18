@@ -446,6 +446,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
+    , "-S0"
     , "-solutions-to-stdout-one-line"
     ] ++
     ( if nbSolutions == "all"
