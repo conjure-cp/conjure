@@ -16,13 +16,16 @@ find sides : sequence (size nbGames) of set (size 2) of PLAYER
 find winner : sequence (size nbGames) of PLAYER
 find loser : sequence (size nbGames) of PLAYER
 
+$ a game is composed of a winner and a loser
+such that
+    forAll (game, players) in sides .
+        {winner(game), loser(game)} = sides(game)
+
 $ winner stays on, loser waits
 such that
     forAll (game, players) in sides . game < nbGames ->
-        forAll {player1, player2} subsetEq players .
-            or([ winner(game) = player1 /\ loser(game) = player2 /\ player1 in sides(game+1) /\ !(player2 in sides(game+1))
-               , winner(game) = player2 /\ loser(game) = player1 /\ player2 in sides(game+1) /\ !(player1 in sides(game+1))
-               ])
+         winner(game) in sides(game+1) /\
+        !(loser(game) in sides(game+1))
 
 $ totals
 such that
