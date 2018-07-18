@@ -1,0 +1,42 @@
+
+$ instance
+
+letting PLAYER be new type enum {Hazard, Modric, Mbappe}
+letting nbGamesPerPlayer be function (Hazard --> 10, Modric --> 14, Mbappe --> 18)
+
+$ to parameterise, use the following definitions
+$ given PLAYER new type enum
+$ given nbGamesPerPlayer : function (total) PLAYER --> int
+
+$ model
+
+letting nbGames be sum(range(nbGamesPerPlayer)) / 2
+
+find sides : sequence (size nbGames) of set (size 2) of PLAYER
+find winner : sequence (size nbGames) of PLAYER
+find loser : sequence (size nbGames) of PLAYER
+
+$ winner stays on, loser waits
+such that
+    forAll (game, players) in sides . game < nbGames ->
+        forAll {player1, player2} subsetEq players .
+            or([ winner(game) = player1 /\ loser(game) = player2 /\ player1 in sides(game+1) /\ !(player2 in sides(game+1))
+               , winner(game) = player2 /\ loser(game) = player1 /\ player2 in sides(game+1) /\ !(player1 in sides(game+1))
+               ])
+
+$ totals
+such that
+    forAll p : PLAYER .
+         nbGamesPerPlayer(p) = sum([ 1 | (game, players) <- sides, p in players ])
+
+
+$ second riddle, from: https://twitter.com/EmmanuelHebrard/status/1018970604437950467
+$ nobody played 6 games in a row
+such that
+    forAll game : int(1..nbGames-5) .
+        !(exists p : PLAYER .
+            forAll i : int(game..game+5) . p in sides(i))
+
+$ such that winner(2) = Hazard       $ UNSAT
+$ such that winner(2) = Modric       $ UNSAT
+such that winner(2) = Mbappe       $ SAT
