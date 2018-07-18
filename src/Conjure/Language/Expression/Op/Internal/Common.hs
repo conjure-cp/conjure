@@ -280,6 +280,8 @@ boolsOut b = return <$> boolOut b
 
 intsOut :: MonadFail m => Doc -> Constant -> m [Integer]
 intsOut doc (viewConstantMatrix -> Just (_, cs)) = concat <$> mapM (intsOut doc) cs
+intsOut doc (viewConstantSet -> Just cs) = concat <$> mapM (intsOut doc) cs
+intsOut doc (viewConstantMSet -> Just cs) = concat <$> mapM (intsOut doc) cs
 intsOut doc b = return <$> intOut ("intsOut" <+> doc) b
 
 raiseTypeError :: MonadFail m => Pretty a => a -> m b
