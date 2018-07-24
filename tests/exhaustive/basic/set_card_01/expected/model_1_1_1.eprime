@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [s_Occurrence]
 such that
     s_Occurrence[1],
     1 = sum([toInt(s_Occurrence[q1]) | q1 : int(1..2)])

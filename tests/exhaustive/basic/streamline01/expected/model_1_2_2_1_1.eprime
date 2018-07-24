@@ -5,6 +5,7 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 find conjure_aux1: int(1..2)
+branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Occurrence, s_Explicit]
 such that
     and([s_Occurrence[q14] -> f_Function1DPartial_Flags[q14] | q14 : int(1..2)]),
     and([s_Occurrence[q13] -> q13 >= conjure_aux1 | q13 : int(1..2)]),

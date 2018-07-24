@@ -6,6 +6,9 @@ find x_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
+branching on
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence,
+     y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values, y_Occurrence]
 such that
     and([q16 <= x_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithFlags_Flags[q17] ->
          x_ExplicitVarSizeWithMarker_Values[q16] + 2 = y_ExplicitVarSizeWithFlags_Values[q17]

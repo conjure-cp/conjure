@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find y_1_1: matrix indexed by [int(1, 2)] of int(10, 11)
 find y_1_2_Function1DR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2, 3)
 find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
+branching on [y_1_1, y_1_2_Function1DR6_ExplicitVarSizeWithDummy, y_1_3]
 such that
     and([and([y_1_1[q7] = [10, 11; int(1..2)][q7],
               and([and([or([y_1_2_Function1DR6_ExplicitVarSizeWithDummy[q7, q10, q18] != 3 /\

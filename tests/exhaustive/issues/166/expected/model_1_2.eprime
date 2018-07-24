@@ -4,6 +4,7 @@ find y_1_1: matrix indexed by [int(1, 2)] of int(10, 11)
 find y_1_2_Function1DR2_Occurrence: matrix indexed by [int(1, 2), int(1..3), int(1, 2)] of bool
 find y_1_3: matrix indexed by [int(1, 2)] of int(33, 55)
 find y_1_2_Function1DR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1, 2), int(1..3), int(1..2)] of int(1, 2, 3)
+branching on [y_1_1, y_1_2_Function1DR2_Occurrence, y_1_3, y_1_2_Function1DR6_ExplicitVarSizeWithDummy]
 such that
     and([and([y_1_1[q25] = [10, 11; int(1..2)][q25],
               and([and([y_1_2_Function1DR2_Occurrence[q25, q28, 1] | 1 = q25, 1 = q28]) /\

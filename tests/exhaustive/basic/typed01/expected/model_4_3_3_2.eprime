@@ -7,6 +7,10 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 find y_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find y_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(1)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
+branching on
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithMarker_Marker, y_ExplicitVarSizeWithMarker_Values,
+     y_ExplicitVarSizeWithDummy]
 such that
     x_ExplicitVarSizeWithFlags_Flags[1] /\
     (1 <= y_ExplicitVarSizeWithMarker_Marker /\

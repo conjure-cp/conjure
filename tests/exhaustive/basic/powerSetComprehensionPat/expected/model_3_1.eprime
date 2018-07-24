@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x_ExplicitVarSizeWithMarker_Marker: int(0..7)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..7)] of int(1..7)
 find x_Occurrence: matrix indexed by [int(1..7)] of bool
+branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence]
 such that
     and([q10 <= x_ExplicitVarSizeWithMarker_Marker /\ q11 <= x_ExplicitVarSizeWithMarker_Marker ->
          |x_ExplicitVarSizeWithMarker_Values[q10] - x_ExplicitVarSizeWithMarker_Values[q11]| >= 3

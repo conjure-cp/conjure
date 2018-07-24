@@ -6,6 +6,9 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..3)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1..3)
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..3)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..3)] of int(1..3)
+branching on
+    [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_ExplicitVarSizeWithMarker_Marker,
+     s_ExplicitVarSizeWithMarker_Values, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     and([and([f_Function1DPartial_Flags[q22] ->
               or([q24 <= s_ExplicitVarSizeWithMarker_Marker /\

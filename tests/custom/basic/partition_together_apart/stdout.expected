@@ -14,6 +14,7 @@ find d: bool
 find e: bool
 find e1: bool
 find e2: bool
+branching on [a, b_Occurrence, c_Occurrence, d, e, e1, e2]
 such that
     a,
     and([b_Occurrence[q3] -> or([1 = q3, 2 = q3, 3 = q3, 4 = q3, 5 = q3, 6 = q3; int(1..6)]) | q3 : int(1..6)]),

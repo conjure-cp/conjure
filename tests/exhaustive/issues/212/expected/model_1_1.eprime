@@ -5,6 +5,7 @@ given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
 given fin2: int
 given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
 find x_Occurrence: matrix indexed by [int(0..5)] of bool
+branching on [x_Occurrence]
 such that
     and([x_Occurrence[q2] ->
          or([a_Explicit[q4] = q2 | q4 : int(1..fin1), or([b_Explicit[q6] = a_Explicit[q4] | q6 : int(1..fin2)])])

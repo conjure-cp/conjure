@@ -5,6 +5,10 @@ find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithM
         matrix indexed by [int(1..2)] of int(0..2)
 find var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2), int(1..2)] of int(1..2)
+branching on
+    [var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     !(and([q57 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker ->
            or([q67 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\

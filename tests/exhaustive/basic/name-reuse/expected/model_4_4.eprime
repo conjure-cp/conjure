@@ -4,6 +4,7 @@ find conjure_aux1: int(1)
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
 find conjure_aux2: int(1..4)
+branching on [conjure_aux1, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     and([s_ExplicitVarSizeWithFlags_Flags[q7] -> s_ExplicitVarSizeWithFlags_Values[q7] >= conjure_aux2
              | q7 : int(1..4)]),

@@ -1,19 +1,59 @@
 
 SHELL := /bin/bash
 
-.PHONY: install-with-stack
-install-with-stack:
+# these are default values
+# override by calling the makefile like so: "GHC_VERSION=8.2 make"
+export GHC_VERSION?=8.2
+export BIN_DIR?=${HOME}/.local/bin
+export CI?=false
+export BUILD_TESTS?=false
+
+.PHONY: install
+install:
+	@echo "Using GHC version ${GHC_VERSION} (major version)"
+	@echo "Set the environment variable GHC_VERSION to change this"
+	@echo "For example: \"GHC_VERSION=8.4 make install\""
+	@echo "Supported versions: 8.0, 8.2, 8.4"
+	@echo ""
+	@echo "Installing executables to ${BIN_DIR}"
+	@echo "Set the environment variable BIN_DIR to change this"
+	@echo "For example: \"BIN_DIR=your/preferred/path make install\""
+	@echo ""
+	@echo Using Stack file: etc/hs-deps/stack-${GHC_VERSION}.yaml
+	@if ${BUILD_TESTS} ; then echo "BUILD_TESTS=true"; fi
+	@if ${CI} ; then echo "CI=true"; fi
 	@bash etc/build/install-stack.sh
-	@cp etc/hs-deps/stack-8.2.yaml stack.yaml
-	@stack setup
+	@cp etc/hs-deps/stack-${GHC_VERSION}.yaml stack.yaml
+	@if  [ ${GHC_VERSION} == "head" ] ; then\
+		stack --local-bin-path ${BIN_DIR} setup --resolver nightly;\
+	else\
+		stack --local-bin-path ${BIN_DIR} setup;\
+	fi
 	@bash etc/build/version.sh
 	@stack runhaskell etc/build/gen_Operator.hs
 	@stack runhaskell etc/build/gen_Expression.hs
-	@stack install
-	@rm stack.yaml
+	@if  [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests --no-terminal;\
+	elif [ ${GHC_VERSION} == "head" ] &&   ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --test --no-run-tests;\
+	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly --no-terminal;\
+	elif [ ${GHC_VERSION} == "head" ] && ! ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --resolver nightly;\
+	elif   ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests --no-terminal;\
+	elif   ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --test --no-run-tests;\
+	elif ! ${BUILD_TESTS} &&   ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR} --no-terminal;\
+	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
+		stack install --local-bin-path ${BIN_DIR};\
+	fi
+	@echo Copying Savile Row to ${BIN_DIR}
+	@cp -r etc/savilerow/* ${BIN_DIR}
 
-.PHONY: install-with-cabal
-install-with-cabal:
+.PHONY: install-using-cabal
+install-using-cabal:
 	@bash etc/build/install.sh
 
 .PHONY: preinstall
@@ -29,7 +69,7 @@ freeze:
 .PHONY: refreeze
 refreeze:
 	@make clean
-	@BUILD_TESTS=yes make install-with-cabal
+	@BUILD_TESTS=yes make install-using-cabal
 	@make freeze
 
 .PHONY: clean

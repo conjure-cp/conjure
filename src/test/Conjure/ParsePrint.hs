@@ -53,7 +53,7 @@ isTestDir baseDir dir = do
 -- we know at this point that the second FilePath points to a directory D,
 -- which contains + an Essence file D/D.essence
 testSingleDir :: TestDirFiles -> TestTree
-testSingleDir TestDirFiles{..} = testCaseSteps name $ \ step -> do
+testSingleDir TestDirFiles{..} = testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
     step "Conjuring"
     model_ <- runUserErrorT (readModelFromFile essenceFile)
     let

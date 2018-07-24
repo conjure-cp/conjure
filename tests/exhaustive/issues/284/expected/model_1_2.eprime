@@ -4,6 +4,7 @@ find f_Function1DPartial_Flags: matrix indexed by [int(1..3)] of bool
 find f_Function1DPartial_Values: matrix indexed by [int(1..3)] of int(1..3)
 find conjure_aux1_Occurrence: matrix indexed by [int(1..3)] of bool
 find conjure_aux2_Explicit: matrix indexed by [int(1..3)] of int(1..3)
+branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values]
 such that
     2 = sum([toInt(conjure_aux1_Occurrence[q6]) | q6 : int(1..3)]),
     and([f_Function1DPartial_Flags[q7] -> conjure_aux1_Occurrence[f_Function1DPartial_Values[q7]] | q7 : int(1..3)]),

@@ -4,6 +4,8 @@ find a_Function1DPartial_Flags: matrix indexed by [int(1..2)] of bool
 find a_Function1DPartial_Values: matrix indexed by [int(1..2)] of bool
 find b_Function1DPartial_Flags: matrix indexed by [int(1..2)] of bool
 find b_Function1DPartial_Values: matrix indexed by [int(1..2)] of bool
+branching on
+    [a_Function1DPartial_Flags, a_Function1DPartial_Values, b_Function1DPartial_Flags, b_Function1DPartial_Values]
 such that
     or([a_Function1DPartial_Flags[q9] /\
         (sum([toInt(a_Function1DPartial_Flags[q30]) *

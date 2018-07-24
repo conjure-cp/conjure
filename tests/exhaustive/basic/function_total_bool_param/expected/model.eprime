@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x_Function1D: matrix indexed by [bool] of int(13, 17)
 given fin1: int
 given p_Function1D: matrix indexed by [bool] of int(13, 17)
+branching on [x_Function1D]
 such that
     and([x_Function1D[q3] = p_Function1D[q3] | q3 : bool]),
     and([p_Function1D[q4] = x_Function1D[q4] | q4 : bool])

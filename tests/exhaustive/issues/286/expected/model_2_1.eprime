@@ -6,6 +6,11 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDumm
         matrix indexed by [int(1..b), int(1..b)] of int(1..b + 1)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker: int(0..b)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..b), int(1..b)] of bool
+branching on
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 such that
     sum([toInt(q59 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) | q59 : int(1..b)]) <=
     sum([1   | q60_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),

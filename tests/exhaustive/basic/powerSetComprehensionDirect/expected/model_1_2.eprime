@@ -5,6 +5,7 @@ given a: int
 given b: int
 find x_Occurrence: matrix indexed by [int(a..b)] of bool
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
+branching on [x_Occurrence, x_ExplicitVarSizeWithDummy]
 such that
     and([and([x_Occurrence[t_ExplicitVarSizeWithDummy[q16]]
                   | q16 : int(1..1 + (b - a)), t_ExplicitVarSizeWithDummy[q16] != b + 1])

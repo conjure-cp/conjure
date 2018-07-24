@@ -4,6 +4,9 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values__tag: matrix indexed by [int(1..4)] of int(1..2)
 find x_ExplicitVarSizeWithFlags_Values_theBool: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values_theInt: matrix indexed by [int(1..4)] of int(1..2)
+branching on
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values__tag,
+     x_ExplicitVarSizeWithFlags_Values_theBool, x_ExplicitVarSizeWithFlags_Values_theInt]
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlags_Values__tag[q1] < x_ExplicitVarSizeWithFlags_Values__tag[q1 + 1] \/

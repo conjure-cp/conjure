@@ -4,6 +4,7 @@ given k: int
 given n: int(1..30)
 letting seqLength be k * n
 find seq_Function1D: matrix indexed by [int(1..seqLength)] of int(1..n)
+branching on [seq_Function1D]
 such that
     and([seq_Function1D[i] = seq_Function1D[j] -> seq_Function1D[i] = j - i - 1
              | i : int(1..seqLength), j : int(1..seqLength), i < j]),

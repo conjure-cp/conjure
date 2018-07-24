@@ -9,6 +9,11 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
         matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..4)] of int(1..4)
+branching on
+    [x_PartitionOccurrence_NumParts, x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes,
+     x_PartitionOccurrence_FirstIndex, x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     and([q51 <= x_PartitionOccurrence_NumParts ->
          sum([toInt(x_PartitionOccurrence_WhichPart[q54] = q51) | q54 : int(1..4)]) = 2

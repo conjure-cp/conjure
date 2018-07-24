@@ -9,6 +9,10 @@ letting let1 be 8
 find states_ExplicitBoundedR9_Length: int(0..10)
 find states_ExplicitBoundedR9_Values_Function1D: matrix indexed by [int(1..10), int(3, 5, 8)] of int(0..8)
 find nbActions: int(7)
+branching on
+    [actions_ExplicitBounded_Length, actions_ExplicitBounded_Values_1, actions_ExplicitBounded_Values_2,
+     actions_ExplicitBounded_Values_3, states_ExplicitBoundedR9_Length, states_ExplicitBoundedR9_Values_Function1D,
+     nbActions]
 such that
     actions_ExplicitBounded_Length = states_ExplicitBoundedR9_Length - 1,
     and([q37 <= actions_ExplicitBounded_Length ->

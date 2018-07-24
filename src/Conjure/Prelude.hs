@@ -47,6 +47,7 @@ module Conjure.Prelude
     ) where
 
 import GHC.Err as X ( error )
+import GHC.Stack as X ( HasCallStack )
 
 -- basic data types
 import Data.Bool as X ( Bool(..), (||), (&&), not, otherwise )
@@ -114,7 +115,8 @@ import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, 
 import Data.List.Split   as X ( splitOn, chunksOf )
 import Data.Maybe        as X ( Maybe(..), catMaybes, listToMaybe, fromMaybe, maybe, maybeToList, mapMaybe
                               , isNothing, isJust )
-import Data.Monoid       as X ( Monoid, mempty, mappend, mconcat, Any(..) )
+import Data.Semigroup    as X ( Semigroup )
+import Data.Monoid       as X ( Monoid(mempty, mappend), mconcat, Any(..) )
 import Data.Tuple        as X ( fst, snd, swap, curry, uncurry )
 
 import Data.Foldable     as X ( Foldable, mapM_, forM_, sequence_, fold, foldMap, toList, maximum, minimum

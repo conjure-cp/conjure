@@ -4,6 +4,9 @@ find x_PartitionOccurrence_NumParts: int(1..4)
 find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
+branching on
+    [x_PartitionOccurrence_NumParts, x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes,
+     x_PartitionOccurrence_FirstIndex]
 such that
     and([q11 <= x_PartitionOccurrence_NumParts ->
          sum([toInt(x_PartitionOccurrence_WhichPart[q14] = q11) | q14 : int(1..4)]) = 2

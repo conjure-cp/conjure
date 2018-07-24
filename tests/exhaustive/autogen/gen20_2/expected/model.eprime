@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 find var1: int(1..5, 3..4)
+branching on [var1]
 such that
     var1 = -2 \/ !(var1 = -2),
     var1 = 3,

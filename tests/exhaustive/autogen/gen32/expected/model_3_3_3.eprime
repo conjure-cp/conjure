@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 letting let1 be -4
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
 find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+branching on [var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values]
 such that
     or([q5 <= var2_ExplicitVarSizeWithMarker_Marker /\
         !or([q7 <= var2_ExplicitVarSizeWithMarker_Marker /\

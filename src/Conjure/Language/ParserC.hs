@@ -48,7 +48,7 @@ parseModel = inCompleteFile $ do
     l  <- optional pLanguage
     xs <- many parseTopLevels
     return Model
-        { mLanguage = fromMaybe (LanguageVersion "Essence" [0]) l
+        { mLanguage = fromMaybe def l
         , mStatements = concat xs
         , mInfo = def
         }

@@ -4,6 +4,9 @@ find x_ExplicitVarSizeWithFlagsR5_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..2)] of int(1..2)
+branching on
+    [x_ExplicitVarSizeWithFlagsR5_Flags, x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     and([x_ExplicitVarSizeWithFlagsR5_Flags[q1 + 1] ->
          x_ExplicitVarSizeWithFlagsR5_Values_ExplicitVarSizeWithMarker_Marker[q1] <

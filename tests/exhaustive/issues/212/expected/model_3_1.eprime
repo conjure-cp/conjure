@@ -7,6 +7,7 @@ given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
 find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
 find x_Occurrence: matrix indexed by [int(0..5)] of bool
+branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence]
 such that
     and([q6 <= x_ExplicitVarSizeWithMarker_Marker ->
          or([a_Explicit[q8] = x_ExplicitVarSizeWithMarker_Values[q6]

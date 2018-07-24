@@ -123,8 +123,8 @@ instance Pretty JSON.Object where
         where
             f (key, Array value)
                 | all (\ v -> case v of String{} -> True ; _ -> False ) value
-                = pretty (show key) <> ":" <+> prettyArrayVCat value
-            f (key, value) = pretty (show key) <> ":" <+> pretty value
+                = pretty (show key) <> ":" <++> prettyArrayVCat value
+            f (key, value) = pretty (show key) <> ":" <++> pretty value
 
             keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
                        , "strategyQ", "strategyA"

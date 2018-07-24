@@ -6,6 +6,10 @@ find var6_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSize
         matrix indexed by [int(1..2)] of int(0..2)
 find var6_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit:
         matrix indexed by [int(1..2), int(1..2), int(1..0)] of int(2, 5)
+branching on
+    [var6_ExplicitVarSizeWithMarkerR17R5R3_Marker,
+     var6_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker,
+     var6_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit]
 such that
     2 <= var6_ExplicitVarSizeWithMarkerR17R5R3_Marker ->
     var6_ExplicitVarSizeWithMarkerR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1] <

@@ -5,6 +5,9 @@ find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
+branching on
+    [x_Occurrence, x_ExplicitVarSizeWithDummy, y_Occurrence, y_ExplicitVarSizeWithFlags_Flags,
+     y_ExplicitVarSizeWithFlags_Values]
 such that
     and([x_Occurrence[i] /\ y_Occurrence[j] -> i + 2 = j | i : int(2..5), j : int(2..5)]),
     1 <= sum([toInt(x_Occurrence[q1]) | q1 : int(2..5)]),

@@ -3,5 +3,6 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
+branching on [b, i, x]
 such that (x = 2 /\ 2 = i /\ allDiff([5, x; int(1..2)])) = b
 

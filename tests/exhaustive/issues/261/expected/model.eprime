@@ -4,6 +4,7 @@ given fin1: int
 letting let1 be fin1
 find a_Function1DPartial_Flags: matrix indexed by [int(0..let1)] of bool
 find a_Function1DPartial_Values: matrix indexed by [int(0..let1)] of int(1..3)
+branching on [a_Function1DPartial_Flags, a_Function1DPartial_Values]
 such that
     and([a_Function1DPartial_Flags[q1] /\ a_Function1DPartial_Flags[q2] ->
          a_Function1DPartial_Values[q1] != a_Function1DPartial_Values[q2]

@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..12)] of int(0..3)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..12)] of int(1..4)
+branching on [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values]
 such that
     and([x_ExplicitWithFlags_Flags[q1 + 1] > 0 -> x_ExplicitWithFlags_Values[q1] < x_ExplicitWithFlags_Values[q1 + 1]
              | q1 : int(1..11)]),

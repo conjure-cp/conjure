@@ -3,5 +3,6 @@ language ESSENCE' 1.0
 letting let1 be -4
 find var1_ExplicitVarSizeWithMarker_Marker: int(0..1)
 find var1_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1)] of int(-4)
+branching on [var1_ExplicitVarSizeWithMarker_Marker, var1_ExplicitVarSizeWithMarker_Values]
 such that 1 > var1_ExplicitVarSizeWithMarker_Marker -> var1_ExplicitVarSizeWithMarker_Values[1] = -4
 

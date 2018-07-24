@@ -2,5 +2,6 @@ language ESSENCE' 1.0
 
 given E_EnumSize: int
 find x_Function1D: matrix indexed by [int(1..E_EnumSize)] of int(13..14)
+branching on [x_Function1D]
 such that and([or([x_Function1D[q2] = q1 | q2 : int(1..E_EnumSize)]) | q1 : int(13..14)])
 

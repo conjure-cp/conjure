@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     and([or([x_ExplicitVarSizeWithFlags_Flags[q7] /\ x_ExplicitVarSizeWithFlags_Values[q7] = q10_1 | q7 : int(1..4)]) /\
          !or([x_ExplicitVarSizeWithFlags_Flags[q9] /\ x_ExplicitVarSizeWithFlags_Values[q9] = q10_2 | q9 : int(1..4)])

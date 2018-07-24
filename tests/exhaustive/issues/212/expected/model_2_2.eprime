@@ -5,6 +5,7 @@ given a_Explicit: matrix indexed by [int(1..fin1)] of int(0..5)
 given fin2: int
 given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
+branching on [x_ExplicitVarSizeWithDummy]
 such that
     and([x_ExplicitVarSizeWithDummy[q6] != 6 ->
          or([a_Explicit[q8] = x_ExplicitVarSizeWithDummy[q6]

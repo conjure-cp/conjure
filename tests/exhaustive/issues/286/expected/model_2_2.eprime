@@ -4,6 +4,9 @@ given b: int
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..b)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..b), int(1..b)] of int(1..b + 1)
+branching on
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
 such that
     sum([toInt(q23 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) | q23 : int(1..b)]) <=
     sum([1   | q24_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),

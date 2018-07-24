@@ -788,7 +788,14 @@ Examples:
 Sequence operators
 ~~~~~~~~~~~~~~~~~~
 
-For two sequences ``s`` and ``t``, ``subsequence(s,t)`` tests whether there is a function ``f`` such that the list of values taken by ``s`` occurs in the same order in the list of values taken by ``t``, and ``substring(s,t)`` tests whether the list of values taken by ``s`` occurs in the same order and contiguously in the list of values taken by ``t``.
+For two sequences ``s`` and ``t``, ``s subsequence t`` tests whether the list of values taken by ``s`` occurs in the same order in the list of values taken by ``t``, and ``s substring t`` tests whether the list of values taken by ``s`` occurs in the same order and contiguously in the list of values taken by ``t``.
+
+.. code-block:: essence
+
+   letting s be sequence(1,1)
+   letting t be sequence(2,1,3,1)
+   find a : bool such that s subsequence t $ true
+   find b : bool such that s substring t $ false
 
 
 Enumerated type operators

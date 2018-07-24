@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find var1_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find var1_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of bool
+branching on [var1_ExplicitVarSizeWithFlags_Flags, var1_ExplicitVarSizeWithFlags_Values]
 such that
     false,
     var1_ExplicitVarSizeWithFlags_Flags[2] ->

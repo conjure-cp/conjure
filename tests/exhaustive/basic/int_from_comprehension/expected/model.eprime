@@ -5,5 +5,6 @@ given fin2: int
 given m: matrix indexed by [int(1..6)] of int(fin1..fin2)
 letting let1 be [m[i] / 2 | i : int(1..6), i % 2 = 0]
 find x: int(let1)
+branching on [x]
 such that true
 

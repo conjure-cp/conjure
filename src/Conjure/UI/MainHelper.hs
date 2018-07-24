@@ -6,7 +6,7 @@ module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..) )
+import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
@@ -67,7 +67,7 @@ mainWithArgs Modelling{..} = do
         Nothing -> return ()
 
     let
-        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty strategyQ))
+        parseStrategy_ s = maybe (userErr1 ("Not a valid strategy:" <+> pretty s))
                                  return
                                  (parseStrategy s)
 
@@ -269,6 +269,7 @@ mainWithArgs config@Solve{..} = do
     msolutions <- liftIO $ savileRows eprimesParsed essenceParamsParsed
     case msolutions of
         Left msg        -> userErr msg
+        Right []        -> pp logLevel "No solutions found."
         Right solutions -> do
             when validateSolutionsOpt $ liftIO $ validating solutions
             when copySolutions $ do
@@ -392,13 +393,17 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def        
+    let tr = translateSolution eprimeModel def
+    when (logLevel >= LogDebug) $ do
+        liftIO $ putStrLn "Using the following options for Savile Row:"
+        liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     solutionsInOneFile
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , lineWidth
+                                    , outputFormat
                                     )
                                     tr
                                     (1::Int))
@@ -434,12 +439,16 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
             let tr = translateSolution eprimeModel essenceParam
+            when (logLevel >= LogDebug) $ do
+                liftIO $ putStrLn "Using the following options for Savile Row:"
+                liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             solutionsInOneFile
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
                                             , lineWidth
+                                            , outputFormat
                                             )
                                             tr
                                             (1::Int))
@@ -455,6 +464,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
+    , "-S0"
     , "-solutions-to-stdout-one-line"
     ] ++
     ( if nbSolutions == "all"
@@ -483,7 +493,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 srStdoutHandler
     :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int)
+    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
     -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
@@ -492,7 +502,7 @@ srStdoutHandler
         solutionsInOneFile
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , lineWidth
+             , lineWidth, outputFormat
              )
         tr
         solutionNumber h = do
@@ -517,8 +527,10 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solution"
                             let filenameEssenceSol = mkFilename ".solution"
-                            writeFile filenameEprimeSol  (render lineWidth eprimeSol)
-                            writeFile filenameEssenceSol (render lineWidth essenceSol)
+                            writeModel lineWidth Plain (Just filenameEprimeSol) eprimeSol
+                            writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
+                            when (outputFormat == JSON) $
+                                writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
                         True -> do
@@ -551,15 +563,18 @@ srCleanUp stdoutSR solutions = do
                                ]])
         | or [ T.isInfixOf "Exception in thread" combinedSR
              , T.isInfixOf "ERROR" combinedSR
-             ] ->      bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+             , T.isInfixOf "Sub-process exited with error code" combinedSR
+             ] ->
+             return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                , "Savile Row stderr:"    <+> pretty stderrSR
+                                , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                ]])
         | exitCodeSR == 0 -> return (Right solutions)
-        | otherwise -> bug $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                  , "Savile Row stderr:"    <+> pretty stderrSR
-                                  , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                  ]
+        | otherwise -> 
+            return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                               , "Savile Row stderr:"    <+> pretty stderrSR
+                               , "Savile Row exit-code:" <+> pretty exitCodeSR
+                               ]])
 
 
 validateSolutionNoParam :: UI -> FilePath -> IO ()

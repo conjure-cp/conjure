@@ -4,6 +4,7 @@ letting n be 5
 letting let1 be 4
 find quasigroup_Occurrence: matrix indexed by [int(0..4)] of bool
 find quasigroup_Explicit: matrix indexed by [int(1..5)] of int(0..4)
+branching on [quasigroup_Occurrence, quasigroup_Explicit]
 such that
     and([quasigroup_Occurrence[a] /\ quasigroup_Occurrence[b] -> a * b * (b * a) = a
              | a : int(0..4), b : int(0..4), b > a]),

@@ -18,6 +18,7 @@ given r__tag: int(1..2)
 given r_a: int(fin6..fin7)
 given r_b: int(fin8..fin9)
 find r_in_p: bool
+branching on [x, y, r_in_p]
 such that
     x = sum([p_Explicit_a[q1] | q1 : int(1..fin1), p_Explicit__tag[q1] = 1]),
     and([p_Explicit__tag[q1] = 1 | q1 : int(1..fin1), p_Explicit__tag[q1] = 1]),

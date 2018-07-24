@@ -3,5 +3,6 @@ language ESSENCE' 1.0
 given fin1: int
 given nnodes: int(1..20)
 given demand_ExplicitR2_Occurrence: matrix indexed by [int(1..fin1), int(1..nnodes)] of bool
+branching on []
 such that true
 

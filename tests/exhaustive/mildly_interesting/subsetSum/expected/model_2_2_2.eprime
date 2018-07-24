@@ -9,6 +9,7 @@ letting let1 be fin1
 letting let2 be [nums_Explicit[q7] | q7 : int(1..fin1)]
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..let1)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..let1)] of int(let2)
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q10] ->
          or([nums_Explicit[q12] = x_ExplicitVarSizeWithFlags_Values[q10] | q12 : int(1..fin1)])

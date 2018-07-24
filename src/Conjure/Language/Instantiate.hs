@@ -4,6 +4,7 @@ module Conjure.Language.Instantiate
     ( instantiateExpression
     , instantiateDomain
     , trySimplify
+    , entailed
     ) where
 
 -- conjure
@@ -58,7 +59,7 @@ instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (ins
 
 
 newtype HasUndef = HasUndef Any
-    deriving (Monoid)
+    deriving (Semigroup, Monoid)
 
 instantiateE
     :: ( MonadFail m
@@ -400,3 +401,16 @@ bind (AbsPatSet    pats) (ConstantAbstract (AbsLitSet      vals))
     | length pats == length vals = and <$> zipWithM bind pats vals
     | otherwise                  = return False
 bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:" <+> pretty val]
+
+
+-- check if the given expression can be evaluated to True
+-- False means it is not entailed, as opposed to "it is known to be false"
+entailed :: (MonadUserError m, EnumerateDomain m) => Expression -> m Bool
+entailed x = do
+    -- traceM $ show $ "entailed x:" <+> pretty x
+    c <- trySimplify x
+    -- traceM $ show $ "entailed c:" <+> pretty c
+    case c of
+        Constant (ConstantBool True) -> return True
+        _                            -> return False
+

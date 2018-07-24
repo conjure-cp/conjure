@@ -5,6 +5,7 @@ find f_Function1DPartial_Values: matrix indexed by [int(1..2)] of int(1..2)
 letting let1 be 1
 find s_Explicit: matrix indexed by [int(1)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Explicit, s_Occurrence]
 such that
     f_Function1DPartial_Flags[s_Explicit[1]],
     s_Explicit[1] != s_Explicit[1] ->

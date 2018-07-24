@@ -24,7 +24,7 @@ import System.Environment ( withArgs )
 
 -- tasty
 import Test.Tasty ( TestTree, testGroup )
-import Test.Tasty.HUnit ( Assertion, testCaseSteps, assertFailure )
+import Test.Tasty.HUnit ( Assertion, testCaseSteps )
 import Test.Tasty.Options ( IsOption(..) )
 
 -- shelly
@@ -52,6 +52,7 @@ srOptionsMk srExtraOptions =
     -- , "-solver-options" , "-cpulimit 1200"
     , "-all-solutions"
     , "-preprocess"     , "None"
+    , "-S0"
     ] ++ map stringToText (words srExtraOptions)
 
 
@@ -83,7 +84,7 @@ instance IsOption TestTimeLimit where
                                   ]
 
 
-tests :: IO (TestTimeLimit -> TestTree)
+tests :: HasCallStack => IO (TestTimeLimit -> TestTree)
 tests = do
     srExtraOptions <- do
         env <- getEnvironment
@@ -111,7 +112,7 @@ data TestDirFiles = TestDirFiles
 
 
 -- returns True if the argument points to a directory that is not hidden
-isTestDir :: FilePath -> FilePath -> IO (Maybe TestDirFiles)
+isTestDir :: HasCallStack => FilePath -> FilePath -> IO (Maybe TestDirFiles)
 isTestDir baseDir dir = do
     dirContents <- getDirectoryContents dir
     expectedTime <-
@@ -150,10 +151,10 @@ type Step = String -> Assertion
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
+testSingleDir :: HasCallStack => TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
 testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles{..} =
     if shouldRun
-        then return $ testCaseSteps name $ \ step -> do
+        then return $ testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
                 conjuring step
                 sequence_ (savileRows step)
                 validating step
@@ -191,7 +192,7 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles
                                                        ]
 
 
-savileRowNoParam :: Step -> [Text] -> TestDirFiles -> FilePath -> Assertion
+savileRowNoParam :: HasCallStack => Step -> [Text] -> TestDirFiles -> FilePath -> Assertion
 savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
     step (unwords ["Savile Row:", modelPath])
     let outBase = dropExtension modelPath
@@ -219,19 +220,19 @@ savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
                 res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel def eprimeSolution
                 case res of
-                    Left errs -> assertFailure $ renderNormal $ vcat errs
+                    Left errs -> assert $ vcat errs
                     Right s  -> do
                         let filename = outputsDir </> outBase ++ "-solution" ++ padLeft 6 '0' (show i) ++ ".solution"
                         writeFile filename (renderNormal s)
                 
         | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
-        | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                           , "Savile Row stderr:"    <+> pretty stderrSR
-                                                           , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                                           ]
+        | otherwise -> assert $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                     , "Savile Row stderr:"    <+> pretty stderrSR
+                                     , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                     ]
 
 
-savileRowWithParams :: Step -> [Text] -> TestDirFiles -> FilePath -> FilePath -> Assertion
+savileRowWithParams :: HasCallStack => Step -> [Text] -> TestDirFiles -> FilePath -> FilePath -> Assertion
 savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
     step (unwords ["Savile Row:", modelPath, paramPath])
     fileShouldExist (outputsDir </> modelPath)
@@ -265,18 +266,18 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
                 res <- runUserErrorT $ ignoreLogs $ runNameGen () $
                             translateSolution eprimeModel param eprimeSolution
                 case res of
-                    Left errs -> assertFailure $ renderNormal $ vcat errs
+                    Left errs -> assert $ vcat errs
                     Right s  -> do
                         let filename = outputsDir </> outBase ++ "-solution" ++ padLeft 6 '0' (show i) ++ ".solution"
                         writeFile filename (renderNormal s)
         | T.isInfixOf "where false" stdouterrSR -> return ()
-        | otherwise -> assertFailure $ renderNormal $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
-                                                           , "Savile Row stderr:"    <+> pretty stderrSR
-                                                           , "Savile Row exit-code:" <+> pretty exitCodeSR
-                                                           ]
+        | otherwise -> assert $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
+                                     , "Savile Row stderr:"    <+> pretty stderrSR
+                                     , "Savile Row exit-code:" <+> pretty exitCodeSR
+                                     ]
 
 
-validateSolutionNoParam :: Step -> TestDirFiles -> [FilePath] -> Assertion
+validateSolutionNoParam :: HasCallStack => Step -> TestDirFiles -> [FilePath] -> Assertion
 validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
     step "Validating solutions"
     essence <- readModelFromFile essenceFile
@@ -288,11 +289,11 @@ validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
             [essence2, param2, solution2] <- resolveNamesMulti [essence, def, solution]
             validateSolution essence2 param2 solution2
         case result of
-            Left errs -> assertFailure $ renderNormal $ vcat errs
+            Left errs -> assert $ vcat errs
             Right () -> return ()
 
 
-validateSolutionWithParams :: Step -> TestDirFiles -> [(FilePath, [FilePath])] -> Assertion
+validateSolutionWithParams :: HasCallStack => Step -> TestDirFiles -> [(FilePath, [FilePath])] -> Assertion
 validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
     step "Validating solutions"
     essence <- readModelFromFile essenceFile
@@ -307,7 +308,7 @@ validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
                 [essence2, param2, solution2] <- resolveNamesMulti [essence, param, solution]
                 validateSolution essence2 param2 solution2
             case result of
-                Left errs -> assertFailure $ renderNormal $ vcat errs
+                Left errs -> assert $ vcat errs
                 Right () -> return ()
 
 
@@ -337,7 +338,7 @@ checkExpectedAndExtraFiles step srOptions TestDirFiles{..} = do
     let extras = S.difference outputs expecteds
 
     step "Checking extra files"
-    unless (S.null extras) $ assertFailure $ show $ prettyList id ", " (S.toList extras)
+    unless (S.null extras) $ assert $ "Unexpected files:" <+> prettyList id ", " (S.toList extras)
 
     step "Checking expected files"
     forM_ expecteds $ \ item -> do
@@ -361,11 +362,11 @@ checkExpectedAndExtraFiles step srOptions TestDirFiles{..} = do
                     diffsString = fmap (fmapDiff (fmap textToString)) diffs
 
                 unless (null diffs) $
-                    assertFailure $ renderNormal $ vcat ["files differ.", pretty (ppDiff diffsString)]
-            else assertFailure $ "file doesn't exist: " ++ generatedPath
+                    assert $ vcat ["files differ.", pretty (ppDiff diffsString)]
+            else assert $ pretty $ "file doesn't exist: " ++ generatedPath
 
 
-equalNumberOfSolutions :: Step -> TestDirFiles -> Assertion
+equalNumberOfSolutions :: HasCallStack => Step -> TestDirFiles -> Assertion
 equalNumberOfSolutions step TestDirFiles{..} = do
     step "Checking number of solutions"
     dirShouldExist outputsDir
@@ -404,7 +405,7 @@ equalNumberOfSolutions step TestDirFiles{..} = do
             ]
 
     unless (null differentOnes) $
-        assertFailure $ show $ vcat
+        assert $ vcat
             [ maybe
                 id
                 (\ p -> hang ("For parameter" <+> pretty p) 4 )
@@ -416,7 +417,7 @@ equalNumberOfSolutions step TestDirFiles{..} = do
             ]
 
 
-noDuplicateSolutions :: Step -> TestDirFiles -> Assertion
+noDuplicateSolutions :: HasCallStack => Step -> TestDirFiles -> Assertion
 noDuplicateSolutions step TestDirFiles{..} = do
     step "Checking duplicate solutions"
     dirShouldExist outputsDir
@@ -467,7 +468,7 @@ noDuplicateSolutions step TestDirFiles{..} = do
             |> map (\ grp -> (fst (head grp), map snd grp) )
 
     unless (null grouped) $
-        assertFailure $ show $ vcat
+        assert $ vcat
             [ case param of
                 Nothing -> "For model" <+> pretty model <++> rest
                 Just p  -> "For parameter" <+> pretty p <> ", for model" <+> pretty model <++> rest
@@ -477,20 +478,24 @@ noDuplicateSolutions step TestDirFiles{..} = do
             ]
 
 
-dirShouldExist :: FilePath -> Assertion
+assert :: HasCallStack => Doc -> Assertion
+assert doc = error (renderNormal doc)
+
+
+dirShouldExist :: HasCallStack => FilePath -> Assertion
 dirShouldExist d = do
     b <- doesDirectoryExist d
     unless b $
-        assertFailure $ "dir does not exist: " ++ d
+        assert $ pretty ("dir does not exist: " ++ d)
 
-fileShouldExist :: FilePath -> Assertion
+fileShouldExist :: HasCallStack => FilePath -> Assertion
 fileShouldExist f = do
     b <- doesFileExist f
     unless b $
-        assertFailure $ "file does not exist: " ++ f
+        assert $ pretty ("file does not exist: " ++ f)
 
 
-modelAll :: FilePath -> FilePath -> FilePath -> IO ()
+modelAll :: HasCallStack => FilePath -> FilePath -> FilePath -> IO ()
 modelAll tBaseDir dir essenceFile = do
     additionalArgs <- catch (words . textToString <$> T.readFile (tBaseDir ++ "/additional-arguments.txt"))
                             (\ (_ :: SomeException) -> return [] )

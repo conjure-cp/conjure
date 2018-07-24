@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x: int(1..3)
 find b: bool
 find cs: matrix indexed by [int(1..3)] of bool
+branching on [x, b, cs]
 such that
     b,
     and([cs[i] | i : int(1..3)])

@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# This script will install ghc + cabal + happy + conjure.
+# This script will install ghc + cabal + conjure.
 # It will only install these tools if they aren't already installed.
 #
 # It uses a cabal-sanbox, so dependencies are installed locally.
@@ -24,15 +24,8 @@ set -o nounset
 SCRIPT_DIR="$( cd "$( dirname "$0" )" && pwd )"
 source "${SCRIPT_DIR}"/default_envvars.sh
 
-CABAL_VERSION="2.0.0.0"
-HAPPY_VERSION="1.19.5"
-HSCOLOUR_VERSION="1.20.3"
-
-CABAL_VERSION_CHECK="2.0.0.0"
-HAPPY_VERSION_CHECK="1.19"
-HSCOLOUR_VERSION_CHECK="1.20"
-
-
+CABAL_VERSION="2.2.0.0"
+CABAL_VERSION_CHECK="2.2.0.0"
 
 
 OS=$(uname)
@@ -115,7 +108,7 @@ elif [ "$(ghc --version | grep $GHC_VERSION)" ]; then
     ghc --version
 elif [ $INSTALL_GHC = "yes" ]; then
     echo "GHC version ${GHC_VERSION} not found. Installing."
-    if [ "$(grep ${GHC_VERSION} ${PLATFORM} ${GMP_VERSION} etc/build/ghc_urls.txt)" ]; then
+    if grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt ; then
         GHC_TARBALL=$(grep "${GHC_VERSION} ${PLATFORM} ${GMP_VERSION}" etc/build/ghc_urls.txt | cut -d ' ' -f 4)
         URL="http://www.haskell.org/ghc/dist/${GHC_VERSION}/${GHC_TARBALL}"
         wget --no-check-certificate -c "${URL}"
@@ -175,46 +168,8 @@ else
     cabal update
 fi
 
-# installing happy
-if [ "$(happy --version | head -n 1 | grep ${HAPPY_VERSION_CHECK})" ]; then
-    echo "happy version ${HAPPY_VERSION_CHECK} found."
-else
-    echo "happy version ${HAPPY_VERSION_CHECK} not found. Installing version ${HAPPY_VERSION}."
-    rm -rf dist/tools
-    mkdir -p dist/tools
-    pushd dist/tools
-    cabal install "happy-${HAPPY_VERSION}" -O2 \
-        --force-reinstalls \
-        --disable-documentation \
-        --disable-library-profiling \
-        --disable-profiling
-    popd
-    rm -rf dist/tools
-fi
-
-# installing hscolour
-if [ $BUILD_DOCS = "yes" ]; then
-    if [ "$(hscolour --version | head -n 1 | grep ${HSCOLOUR_VERSION_CHECK})" ]; then
-        echo "hscolour version ${HSCOLOUR_VERSION_CHECK} found."
-    else
-        echo "hscolour version ${HSCOLOUR_VERSION_CHECK} not found. Installing version ${HSCOLOUR_VERSION}."
-        rm -rf dist/tools
-        mkdir -p dist/tools
-        pushd dist/tools
-        cabal install "hscolour-${HSCOLOUR_VERSION}" -O2 \
-            --reinstall \
-            --force-reinstalls \
-            --disable-documentation \
-            --disable-library-profiling \
-            --disable-profiling
-        popd
-        rm -rf dist/tools
-    fi
-fi
-
 ghc   --version
 cabal --version
-happy --version
 
 make preinstall
 
@@ -272,13 +227,16 @@ else
     SPLIT_OBJS=""
 fi
 
-if [ ${GHC_VERSION} = "head" ] ; then
-    rm -f cabal.config
-elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
-    cp etc/hs-deps/cabal.config-${GHC_VERSION} cabal.config
-    echo "using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION}"
-else
-    echo "not using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION} not found"
+if ! [ $DEVELOPMENT_MODE = "yes" ]; then
+    if [ ${GHC_VERSION} = "head" ] ; then
+        rm -f cabal.config
+    elif [ -f etc/hs-deps/cabal.config-${GHC_VERSION} ]; then
+        cp etc/hs-deps/cabal.config-${GHC_VERSION} cabal.config
+        echo "using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION}"
+    else
+        rm -f cabal.config
+        echo "not using a cabal freeze file: etc/hs-deps/cabal.config-${GHC_VERSION} not found"
+    fi
 fi
 
 # install conjure, finally
