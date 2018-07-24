@@ -10,7 +10,7 @@ $ given nbGamesPerPlayer : function (total) PLAYER --> int
 
 $ model
 
-letting nbGames be sum(range(nbGamesPerPlayer)) / 2
+letting nbGames be sum([ nb | (player, nb) <- nbGamesPerPlayer ]) / 2
 
 find sides : sequence (size nbGames) of set (size 2) of PLAYER
 find winner : sequence (size nbGames) of PLAYER
