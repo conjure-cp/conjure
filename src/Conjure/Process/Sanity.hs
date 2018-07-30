@@ -41,6 +41,12 @@ sanityChecks model = do
                         [ "Infinite integer domain."
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
+            DomainMatrix index _
+                | domainCanIndexMatrix index -> return ()
+                | otherwise -> recordErr
+                        [ "A matrix cannot be indexed with this domain:" <++> pretty index
+                        , "Context:" <++> maybe (pretty domain) pretty mstmt
+                        ]
             DomainSequence _ (SequenceAttr size _) _ ->
                 case size of
                     SizeAttr_Size{} -> return ()
