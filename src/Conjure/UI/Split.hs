@@ -46,12 +46,12 @@ split m = do
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat
-            |> nub                  -- remove duplicates
+            |> sortNub              -- remove duplicates
             |> subsequences         -- generate all subsequences
             |> tail                 -- drop the first, contains nothing
           ) $ \ stmts ->
         Pipes.yield $ removeUnusedDecls $ upd $ decls ++ stmts
-    forM_ (nub decls) $ \ decl ->
+    forM_ (sortNub decls) $ \ decl ->
         Pipes.yield $ upd [decl]
 
 

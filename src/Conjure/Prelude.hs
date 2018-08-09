@@ -94,7 +94,7 @@ import Data.Data         as X ( Data, Typeable )
 import Data.Default      as X ( Default, def )
 import Data.Either       as X ( Either(..), either, lefts, rights, partitionEithers )
 import Data.Function     as X ( id, const, flip, on, ($), (.) )
-import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub, nubBy
+import Data.List         as X ( (\\), intercalate, intersperse, minimumBy, nub
                               , group, groupBy, sort, sortBy
                               , genericLength, genericIndex, genericTake
                               , isSuffixOf, isPrefixOf, isInfixOf

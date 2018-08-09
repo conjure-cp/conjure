@@ -142,7 +142,7 @@ arbitraryDomainAndConstant = sized dispatch
 
             rs <- genRanges numSingles numPairs
 
-            let allVals = nub $ sort $ concat
+            let allVals = sortNub $ concat
                     [ vals
                     | r <- rs
                     , let vals = case r of
@@ -204,7 +204,7 @@ arbitraryDomainAndConstant = sized dispatch
                                                 ])
                                 else do
                                     elems <- vectorOf (fromInteger size) constantGen
-                                    let sorted = sort $ nub elems
+                                    let sorted = sortNub elems
                                     if length sorted == length elems
                                         then return $ ConstantAbstract $ AbsLitSet sorted
                                         else try (n+1)
@@ -227,7 +227,7 @@ arbitraryDomainAndConstant = sized dispatch
                                dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf (fromInteger numElems) constantGen
-                        let sorted = sort $ nub elems
+                        let sorted = sortNub elems
                         return $ ConstantAbstract $ AbsLitSet sorted
                    )
 
@@ -256,7 +256,7 @@ arbitraryDomainAndConstant = sized dispatch
                                 else do
                                     numElems <- choose (minSize, maxSize)
                                     elems <- vectorOf (fromInteger numElems) constantGen
-                                    let sorted = sort $ nub elems
+                                    let sorted = sortNub elems
                                     if genericLength sorted >= minSize
                                         then return $ ConstantAbstract $ AbsLitSet sorted
                                         else try (n+1)
