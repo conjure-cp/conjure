@@ -119,12 +119,20 @@ onlyPreamble
 
 
 writeModel :: MonadIO m => Int -> OutputFormat -> Maybe FilePath -> Model -> m ()
-writeModel  lnWidth Plain  Nothing   spec = liftIO $    putStrLn     (render lnWidth spec)
-writeModel  lnWidth Plain  (Just fp) spec = liftIO $    writeFile fp (render lnWidth spec)
+writeModel  lnWidth Plain  Nothing   spec
+    | lnWidth == 0                        = liftIO $    putStrLn     (show           spec)
+    | otherwise                           = liftIO $    putStrLn     (render lnWidth spec)
+writeModel  lnWidth Plain  (Just fp) spec
+    | lnWidth == 0                        = liftIO $    writeFile fp (show           spec)
+    | otherwise                           = liftIO $    writeFile fp (render lnWidth spec)
 writeModel _lnWidth Binary Nothing   spec = liftIO $ BS.putStrLn     (Data.Serialize.encode spec)
 writeModel _lnWidth Binary (Just fp) spec = liftIO $ BS.writeFile fp (Data.Serialize.encode spec)
-writeModel  lnWidth JSON   Nothing   spec = liftIO $    putStrLn     (render lnWidth (toJSON spec))
-writeModel  lnWidth JSON   (Just fp) spec = liftIO $    writeFile fp (render lnWidth (toJSON spec))
+writeModel  lnWidth JSON   Nothing   spec
+    | lnWidth == 0                        = liftIO $    putStrLn     (show           (toJSON spec))
+    | otherwise                           = liftIO $    putStrLn     (render lnWidth (toJSON spec))
+writeModel  lnWidth JSON   (Just fp) spec
+    | lnWidth == 0                        = liftIO $    writeFile fp (show           (toJSON spec))
+    | otherwise                           = liftIO $    writeFile fp (render lnWidth (toJSON spec))
 
 
 writeModels :: MonadIO m => Int -> OutputFormat -> FilePath -> String -> [Model] -> m ()
