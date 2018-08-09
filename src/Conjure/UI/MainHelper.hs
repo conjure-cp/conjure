@@ -149,7 +149,12 @@ mainWithArgs ValidateSolution{..} = do
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
-    model0 <- readModelFromFile essence
+    model0 <- if or [ s `isSuffixOf` essence
+                    | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
+                then do
+                    liftIO $ putStrLn "Parsing as a parameter file"
+                    readParamOrSolutionFromFile essence
+                else readModelFromFile essence
     let model1 = model0
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
