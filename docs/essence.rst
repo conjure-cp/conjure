@@ -375,6 +375,8 @@ A matrix domain is denoted by the keywords ``matrix indexed by``,
 followed by a list of domains separated by commas inside square brackets,
 followed by the keyword ``of``, and another domain.
 
+A matrix can be indexed only by integer, Boolean, or enumerated domains.
+
 Matrix domains are the most basic container-like domains in Essence.
 They are used when the decision variable or the problem parameter does not have any further relevant structure.
 Using another kind of domain is more appropriate for most problem specifications in Essence.
