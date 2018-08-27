@@ -1,8 +1,11 @@
 
-# After v2.1.0
+# v2.2.0 (2018-08-27)
 
 - Bug fix: Avoid generating names that are used in the input file.
 - Improvements to the refinement of partitions. Do not generate redundant structural constraints.
+- Many more (I promise to write them soon!)
+
+For now, check [this page](https://github.com/conjure-cp/conjure/compare/v2.1.0...v2.2.0) which lists all changes since the previous release.
 
 # v2.1.0 (2017-08-24)
 
