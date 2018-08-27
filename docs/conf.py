@@ -51,7 +51,7 @@ master_doc = 'index'
 
 # General information about the project.
 project = u'Conjure'
-copyright = u'2009-2017, Özgür Akgün'
+copyright = u'2009-2018, Özgür Akgün'
 author = u'Özgür Akgün'
 
 # The version info for the project you're documenting, acts as replacement for
