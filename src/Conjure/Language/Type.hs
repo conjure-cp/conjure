@@ -9,6 +9,7 @@ module Conjure.Language.Type
     , matrixNumDims
     , innerTypeOf
     , isPrimitiveType
+    , typeCanIndexMatrix
     ) where
 
 -- conjure
@@ -194,3 +195,9 @@ isPrimitiveType TypeBool{} = True
 isPrimitiveType TypeInt{} = True
 isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
 isPrimitiveType _ = False
+
+typeCanIndexMatrix :: Type -> Bool
+typeCanIndexMatrix TypeBool{} = True
+typeCanIndexMatrix TypeInt {} = True
+typeCanIndexMatrix TypeEnum{} = True
+typeCanIndexMatrix _          = False

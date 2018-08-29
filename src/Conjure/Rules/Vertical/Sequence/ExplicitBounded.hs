@@ -92,3 +92,43 @@ rule_Image_Bool = "sequence-image{ExplicitBounded}-bool" `namedRule` theRule whe
                     ( "Sequence image, ExplicitBounded representation, bool"
                     , return [essence| { &p' @ such that &flagsCombined } |]
                     )
+
+rule_Leq :: Rule
+rule_Leq = "sequence-leq{ExplicitBounded}" `namedRule` theRule where
+    theRule [essence| &a ~<= &b |] = do
+        TypeSequence aInnerTy    <- typeOf a
+        TypeSequence bInnerTy    <- typeOf b
+        unless (typeCanIndexMatrix aInnerTy && typeCanIndexMatrix bInnerTy) $ na "rule_Leq"
+        Sequence_ExplicitBounded <- representationOf a
+        Sequence_ExplicitBounded <- representationOf b
+        [aLength, aValues]       <- downX1 a
+        [bLength, bValues]       <- downX1 b
+        return
+            ( "Mapping over a sequence, ExplicitBounded representation"
+            , return [essence|
+                flatten([&aValues, [&aLength]]) <=lex
+                flatten([&bValues, [&bLength]])
+                             |]
+               )
+    theRule _ = na "rule_Comprehension"
+
+
+rule_Lt :: Rule
+rule_Lt = "sequence-lt{ExplicitBounded}" `namedRule` theRule where
+    theRule [essence| &a ~< &b |] = do
+        TypeSequence aInnerTy    <- typeOf a
+        TypeSequence bInnerTy    <- typeOf b
+        unless (typeCanIndexMatrix aInnerTy && typeCanIndexMatrix bInnerTy) $ na "rule_Lt"
+        Sequence_ExplicitBounded <- representationOf a
+        Sequence_ExplicitBounded <- representationOf b
+        [aLength, aValues]       <- downX1 a
+        [bLength, bValues]       <- downX1 b
+        return
+            ( "Mapping over a sequence, ExplicitBounded representation"
+            , return [essence|
+                flatten([&aValues, [&aLength]]) <lex
+                flatten([&bValues, [&bLength]])
+                             |]
+               )
+    theRule _ = na "rule_Comprehension"
+

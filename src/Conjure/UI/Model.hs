@@ -1125,6 +1125,8 @@ verticalRules =
     , Vertical.Sequence.ExplicitBounded.rule_Card
     , Vertical.Sequence.ExplicitBounded.rule_Image_Bool
     , Vertical.Sequence.ExplicitBounded.rule_Image_NotABool
+    , Vertical.Sequence.ExplicitBounded.rule_Leq
+    , Vertical.Sequence.ExplicitBounded.rule_Lt
 
     , Vertical.Relation.RelationAsMatrix.rule_Comprehension
     , Vertical.Relation.RelationAsMatrix.rule_Image
