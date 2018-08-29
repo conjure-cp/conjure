@@ -110,7 +110,7 @@ rule_Leq = "sequence-leq{ExplicitBounded}" `namedRule` theRule where
                 flatten([&bValues, [&bLength]])
                              |]
                )
-    theRule _ = na "rule_Comprehension"
+    theRule _ = na "rule_Leq"
 
 
 rule_Lt :: Rule
@@ -130,5 +130,5 @@ rule_Lt = "sequence-lt{ExplicitBounded}" `namedRule` theRule where
                 flatten([&bValues, [&bLength]])
                              |]
                )
-    theRule _ = na "rule_Comprehension"
+    theRule _ = na "rule_Lt"
 
