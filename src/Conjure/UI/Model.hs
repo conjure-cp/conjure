@@ -86,7 +86,7 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
-import qualified Conjure.Rules.Vertical.Permutation.AsSequences as Vertical.Permutation.AsSequences
+import qualified Conjure.Rules.Vertical.Permutation.AsFunction as Vertical.Permutation.AsFunction
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1136,7 +1136,7 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
-    , Vertical.Permutation.AsSequences.rule_Comprehension
+    , Vertical.Permutation.AsFunction.rule_Comprehension
 
     ]
 

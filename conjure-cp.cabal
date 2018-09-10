@@ -171,7 +171,7 @@ Library
                      , Conjure.Representations.Relation.RelationAsSet
                      , Conjure.Representations.Partition.Occurrence
                      , Conjure.Representations.Partition.PartitionAsSet
-                     , Conjure.Representations.Permutation.AsSequences
+                     , Conjure.Representations.Permutation.AsFunction
 
                      -- definitions of rules
                      , Conjure.Rules.Definition
@@ -211,7 +211,8 @@ Library
                      , Conjure.Rules.Vertical.Partition.PartitionAsSet
                      , Conjure.Rules.Vertical.Partition.Occurrence
 
-                     , Conjure.Rules.Vertical.Permutation.AsSequences                    
+                     , Conjure.Rules.Horizontal.Permutation
+                     , Conjure.Rules.Vertical.Permutation.AsFunction
  
                      , Conjure.Rules.BubbleUp
                      , Conjure.Rules.DontCare

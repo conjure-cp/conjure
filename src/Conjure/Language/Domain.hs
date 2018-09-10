@@ -795,7 +795,7 @@ data HasRepresentation
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
     | Partition_Occurrence
-    | Permutation_AsSequences
+    | Permutation_AsFunction
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -921,7 +921,7 @@ textToRepresentation t []             | t == "RelationAsMatrix"           = retu
 textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
 textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
 textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
-textToRepresentation t []             | t == "PermutationAsSequences"     = return Permutation_AsSequences
+textToRepresentation t []             | t == "PermutationAsFunction"     = return Permutation_AsFunction
 textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
 
 representationToShortText :: HasRepresentation -> Text
@@ -942,7 +942,7 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
-representationToShortText Permutation_AsSequences        = "PermutationAsSequences"
+representationToShortText Permutation_AsFunction        = "PermutationAsFunction"
 representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text
