@@ -13,6 +13,7 @@ module Conjure.Language.Domain
     , SequenceAttr(..)
     , RelationAttr(..), BinaryRelationAttrs(..), BinaryRelationAttr(..)
     , PartitionAttr(..)
+    , PermutationAttr(..)
     , AttrName(..)
     , DomainAttributes(..), DomainAttribute(..)         -- only for parsing
     , textToRepresentation, representationToShortText, representationToFullText
@@ -71,6 +72,7 @@ data Domain r x
     | DomainSequence  r (SequenceAttr x) (Domain r x)
     | DomainRelation  r (RelationAttr x) [Domain r x]
     | DomainPartition r (PartitionAttr x) (Domain r x)
+    | DomainPermutation r (PermutationAttr x) (Domain r x)
     | DomainOp Name [Domain r x]
     | DomainReference Name (Maybe (Domain r x))
     | DomainMetaVar String
@@ -153,6 +155,7 @@ typeOfDomain (DomainFunction  _ _ x y) = TypeFunction   <$> typeOf x <*> typeOf 
 typeOfDomain (DomainSequence  _ _ x  ) = TypeSequence   <$> typeOf x
 typeOfDomain (DomainRelation  _ _ xs ) = TypeRelation   <$> mapM typeOf xs
 typeOfDomain (DomainPartition _ _ x  ) = TypePartition  <$> typeOf x
+typeOfDomain (DomainPermutation _ _ x )  = TypePermutation <$> typeOf x
 typeOfDomain p@(DomainOp _ ds) = do
     ts <- mapM typeOfDomain ds
     if typesUnify ts
@@ -191,8 +194,8 @@ changeRepr rep = go
             DomainSequence rep attr (go d)
         go (DomainRelation _   attr ds) =
             DomainRelation rep attr (map go ds)
-        go (DomainPartition _   attr d) =
-            DomainPartition rep attr (go d)
+        go (DomainPartition _   attr d) = DomainPartition rep attr (go d)
+        go (DomainPermutation _ attr d) = DomainPermutation rep attr (go d)
         go (DomainOp op ds) = DomainOp op (map go ds)
         go (DomainReference x r) = DomainReference x (fmap go r)
         go (DomainMetaVar x) = DomainMetaVar x
@@ -243,6 +246,7 @@ reprTree (DomainFunction  r _ a b) = Tree (Just r) [reprTree a, reprTree b]
 reprTree (DomainSequence  r _ a  ) = Tree (Just r) [reprTree a]
 reprTree (DomainRelation  r _ as ) = Tree (Just r) (map reprTree as)
 reprTree (DomainPartition r _ a  ) = Tree (Just r) [reprTree a]
+reprTree (DomainPermutation r _ a)   = Tree (Just r) [reprTree a]
 reprTree DomainOp{}        = Tree Nothing []
 reprTree DomainReference{} = Tree Nothing []
 reprTree DomainMetaVar{}   = Tree Nothing []
@@ -268,6 +272,7 @@ applyReprTree (DomainFunction  _ attr a b) (Tree (Just r) [aRepr, bRepr]) = Doma
 applyReprTree (DomainSequence  _ attr a  ) (Tree (Just r) [aRepr]) = DomainSequence r attr <$> applyReprTree a aRepr
 applyReprTree (DomainRelation  _ attr as ) (Tree (Just r) asRepr) = DomainRelation r attr <$> zipWithM applyReprTree as asRepr
 applyReprTree (DomainPartition _ attr a  ) (Tree (Just r) [aRepr]) = DomainPartition r attr <$> applyReprTree a aRepr
+applyReprTree (DomainPermutation _ attr a ) (Tree (Just r) [aRepr]) = DomainPermutation r attr <$> applyReprTree a aRepr
 applyReprTree dom@DomainOp{}        (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainReference{} (Tree Nothing []) = return (defRepr dom)
 applyReprTree dom@DomainMetaVar{}   (Tree Nothing []) = return (defRepr dom)
@@ -680,6 +685,25 @@ instance Pretty a => Pretty (PartitionAttr a) where
                 else prettyList prParens "," inside
 
 
+
+data PermutationAttr x
+    = PermutationAttr (SizeAttr x)
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+instance Serialize a => Serialize (PermutationAttr a)
+instance Hashable  a => Hashable  (PermutationAttr a)
+instance ToJSON    a => ToJSON    (PermutationAttr a) where toJSON = genericToJSON jsonOptions
+instance FromJSON  a => FromJSON  (PermutationAttr a) where parseJSON = genericParseJSON jsonOptions
+instance Default (PermutationAttr a) where def = PermutationAttr def
+instance Pretty a => Pretty (PermutationAttr a) where
+    pretty (PermutationAttr a ) =
+        let inside = filter (/=prEmpty) [pretty a]
+        in  if null inside
+                then prEmpty
+                else prettyList prParens "," inside
+
+
+
+
 data DomainAttributes a = DomainAttributes [DomainAttribute a]
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
@@ -771,6 +795,7 @@ data HasRepresentation
 
     | Partition_AsSet HasRepresentation HasRepresentation       -- carries: representations for the inner sets
     | Partition_Occurrence
+    | Permutation_AsSequences
 
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
@@ -841,6 +866,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainPartition r attrs inner)
         = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
+    pretty (DomainPermutation r attrs inner) = hang ("permutation" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
 
     pretty d@DomainOp{} = pretty (show d)
 
@@ -895,6 +921,7 @@ textToRepresentation t []             | t == "RelationAsMatrix"           = retu
 textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
 textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
 textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
+textToRepresentation t []             | t == "PermutationAsSequences"     = return Permutation_AsSequences
 textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
 
 representationToShortText :: HasRepresentation -> Text
@@ -915,6 +942,7 @@ representationToShortText Relation_AsMatrix              = "RelationAsMatrix"
 representationToShortText Relation_AsSet{}               = "RelationAsSet"
 representationToShortText Partition_AsSet{}              = "PartitionAsSet"
 representationToShortText Partition_Occurrence           = "PartitionOccurrence"
+representationToShortText Permutation_AsSequences        = "PermutationAsSequences"
 representationToShortText r = bug ("representationToShortText:" <+> pretty (show r))
 
 representationToFullText :: HasRepresentation -> Text

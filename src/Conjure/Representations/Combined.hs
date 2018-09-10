@@ -36,6 +36,7 @@ import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
+import Conjure.Representations.Permutation.AsSequences
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
@@ -181,6 +182,9 @@ dispatch domain = do
                                                     (bug "reprOptions inside dispatch")
                                                     (bug "useLevels inside dispatch")
             _ -> nope
+        DomainPermutation r _ _ -> case r of
+            Permutation_AsSequences          -> permutationAsSequences
+            _ -> nope
         _ -> nope
 
 
@@ -201,6 +205,7 @@ reprsStandardOrderNoLevels = return $ concat
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
       , partitionOccurrence
+      , permutationAsSequences
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
       , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
@@ -224,6 +229,7 @@ reprsStandardOrder =
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrder) True
       , partitionOccurrence
+      , permutationAsSequences
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
       , relationAsSet      dispatch (reprOptions reprsStandardOrder) True
@@ -254,6 +260,7 @@ reprsSparseOrder = map return
     , partitionAsSet     dispatch (reprOptions reprsSparseOrder) False
 
     , partitionOccurrence                                     -- redundant
+    , permutationAsSequences
     ]
 
 

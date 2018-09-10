@@ -116,6 +116,9 @@ data Lexeme
     | L_minNumParts
     | L_maxNumParts
 
+    -- type: permutation
+    | L_permutation
+
     -- operators, page 21 of the holy paper
     | L_union
     | L_intersect
@@ -354,6 +357,8 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_sequence, "sequence" )
     , ( L_relation, "relation" )
     , ( L_partition, "partition" )
+
+    , ( L_permutation, "permutation" )
     -- , ( L_regular, "regular" )
     -- , ( L_partSize, "partSize" )
     -- , ( L_minPartSize, "minPartSize" )

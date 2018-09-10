@@ -35,6 +35,7 @@ data Type
     | TypeSequence Type
     | TypeRelation [Type]
     | TypePartition Type
+    | TypePermutation Type
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Type
@@ -68,6 +69,7 @@ instance Pretty Type where
     pretty (TypeSequence x) = "sequence of" <+> pretty x
     pretty (TypePartition x) = "partition from" <+> pretty x
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
+    pretty (TypePermutation x) = "permutation of" <+> pretty x
 
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool
@@ -110,6 +112,7 @@ typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- also 
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
+typeUnify (TypePermutation a) (TypePermutation b) = typeUnify a b
 typeUnify _ _ = False
 
 -- | Check whether a given list of types unify with each other or not.
@@ -162,6 +165,7 @@ mostDefined = foldr f TypeAny
         f x (TypeRelation [TypeAny]) = x
         f (TypeRelation as) (TypeRelation bs) | length as == length bs = TypeRelation (zipWith f as bs)
         f (TypePartition a) (TypePartition b) = TypePartition (f a b)
+        f (TypePermutation a) (TypePermutation b) = TypePermutation (f a b)
         f _ _ = TypeAny
 
 matrixNumDims :: Type -> Int
@@ -187,6 +191,7 @@ innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
 innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
+innerTypeOf (TypePermutation t) = return (TypePermutation t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
 
 isPrimitiveType :: Type -> Bool
