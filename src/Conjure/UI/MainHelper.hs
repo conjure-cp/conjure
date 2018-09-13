@@ -128,7 +128,7 @@ mainWithArgs TranslateParameter{..} = do
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- readModelFromFile essenceParam
+    essenceParamF <- readParamOrSolutionFromFile essenceParam
     output <- runNameGen () $ translateParameter eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
@@ -144,8 +144,8 @@ mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
     essence2  <- readModelFromFile essence
-    param2    <- maybe (return def) readModelFromFile essenceParamO
-    solution2 <- readModelFromFile essenceSolution
+    param2    <- maybe (return def) readParamOrSolutionFromFile essenceParamO
+    solution2 <- readParamOrSolutionFromFile essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
@@ -194,7 +194,7 @@ mainWithArgs config@Solve{..} = do
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
-        p <- readModelFromFile f
+        p <- readParamOrSolutionFromFile f
         return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
@@ -568,7 +568,7 @@ validateSolutionNoParam :: UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
-    solution <- readModelFromFile solutionPath
+    solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
     result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
     case result of
@@ -581,8 +581,8 @@ validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
-    param    <- readModelFromFile paramPath
-    solution <- readModelFromFile solutionPath
+    param    <- readParamOrSolutionFromFile paramPath
+    solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
     result   <- runExceptT $ ignoreLogs $ runNameGen ()
                                 $ validateSolution essenceM2 param2 solution2
