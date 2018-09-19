@@ -5,6 +5,7 @@ find s_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1..4)
 find s_Occurrence: matrix indexed by [int(1..4)] of bool
 find conjure_aux2: int(1..4)
+branching on [conjure_aux1, s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, s_Occurrence]
 such that
     and([q6 <= s_ExplicitVarSizeWithMarker_Marker -> s_ExplicitVarSizeWithMarker_Values[q6] >= conjure_aux2
              | q6 : int(1..4)]),

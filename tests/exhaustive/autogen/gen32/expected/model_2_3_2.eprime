@@ -4,6 +4,8 @@ letting let1 be -4
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
 find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
+branching on
+    [var2_ExplicitVarSizeWithDummy, var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values]
 such that
     or([var2_ExplicitVarSizeWithDummy[q17] != 6 /\
         !or([q19 <= var2_ExplicitVarSizeWithMarker_Marker /\

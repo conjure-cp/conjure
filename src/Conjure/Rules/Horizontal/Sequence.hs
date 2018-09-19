@@ -78,12 +78,32 @@ rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
             )
 
 
+rule_Eq_Empty :: Rule
+rule_Eq_Empty = "sequence-eq-empty" `namedRule` theRule where
+    theRule p = do
+        (x,y)          <- match opEq p
+        TypeSequence{} <- typeOf x
+        TypeSequence{} <- typeOf y
+        other <- case (match sequenceLiteral x, match sequenceLiteral y) of
+            (Just (_, []), _) -> return y
+            (_, Just (_, [])) -> return x
+            _                 -> na "sequence not empty"
+        return
+            ( "Horizontal rule for sequence equality, one side empty"
+            , return [essence| |&other| = 0 |]
+            )
+
+
 rule_Eq :: Rule
 rule_Eq = "sequence-eq" `namedRule` theRule where
     theRule p = do
         (x,y)          <- match opEq p
         TypeSequence{} <- typeOf x
         TypeSequence{} <- typeOf y
+        case (match sequenceLiteral x, match sequenceLiteral y) of
+            (Just (_, []), _) -> na "Sequence{rule_Eq}: one side empty"
+            (_, Just (_, [])) -> na "Sequence{rule_Eq}: one side empty"
+            _            -> return ()
         return
             ( "Horizontal rule for sequence equality"
             , do
@@ -564,6 +584,9 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                     SizeAttr_MinMaxSize _ x -> return x
                     _ -> fail "rule_Subsequence maxSize"
 
+        -- for each value in a, find an index into b such that these indices are in increasing order
+        -- when there are multiple mappings that produce the same "a" (i.e. when there are duplicates in b)
+        -- this is does not functionally define the aux variable
         return
             ( "Horizontal rule for subsequence on 2 sequences"
             , do
@@ -581,7 +604,10 @@ rule_Subsequence = "subsequence" `namedRule` theRule where
                             , SuchThat
                                 [ [essence| and([ image(&aux, &i-1) < image(&aux, &i)
                                                 | &iPat : int(2..&aMaxSize)
+                                                , &i <= |&aux|
                                                 ])
+                                  |]
+                                , [essence| |&a| = |&aux|
                                   |]
                                 ]
                             ])

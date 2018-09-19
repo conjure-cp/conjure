@@ -5,6 +5,7 @@ given g_ExplicitWithFlags_Flags: matrix indexed by [int(1..fin1)] of int(0..2)
 given g_ExplicitWithFlags_Values: matrix indexed by [int(1..fin1)] of int(1..2)
 find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..2)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
+branching on [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values]
 such that
     and([sum([g_ExplicitWithFlags_Flags[q9]
                   | q9 : int(1..fin1), g_ExplicitWithFlags_Values[q9] = g_ExplicitWithFlags_Values[q8]])

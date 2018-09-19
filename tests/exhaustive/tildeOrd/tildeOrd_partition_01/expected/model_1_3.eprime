@@ -7,6 +7,12 @@ find b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
         matrix indexed by [int(1..2)] of int(0..2)
 find b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..2), int(1..2)] of int(1..2)
+branching on
+    [a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence,
+     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     b_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     or([q33 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
         (toInt(or([q167 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\

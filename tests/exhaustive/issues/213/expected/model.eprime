@@ -6,6 +6,7 @@ find s_Function1D: matrix indexed by [int(1..n)] of int(0..let1)
 letting let2 be n - 1
 letting let3 be n - 1
 find v_Function1D: matrix indexed by [int(1..let2)] of int(1..let3)
+branching on [s_Function1D, v_Function1D]
 such that
     and([v_Function1D[i] = |s_Function1D[i + 1] - s_Function1D[i]| | i : int(1..n - 1)]),
     allDiff(v_Function1D),

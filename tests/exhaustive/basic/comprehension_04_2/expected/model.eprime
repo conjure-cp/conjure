@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x: int(0..1000)
 find y: int(7, 8)
 find z: bool
+branching on [x, y, z]
 such that
     x =
     sum([toInt(or([i_ExplicitVarSizeWithMarker_Values_1[q5] = y /\ i_ExplicitVarSizeWithMarker_Values_2[q5] = z

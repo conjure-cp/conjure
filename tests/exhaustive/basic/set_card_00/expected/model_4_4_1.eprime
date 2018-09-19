@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_Occurrence]
 such that
     or([s_ExplicitVarSizeWithFlags_Flags[q13] /\
         s_ExplicitVarSizeWithFlags_Values[q13] = sum([toInt(s_ExplicitVarSizeWithFlags_Flags[q15]) | q15 : int(1..2)])

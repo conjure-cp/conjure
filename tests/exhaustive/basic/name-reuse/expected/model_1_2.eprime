@@ -4,6 +4,7 @@ find conjure_aux1: int(1)
 find s_Occurrence: matrix indexed by [int(1..4)] of bool
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find conjure_aux2: int(1..4)
+branching on [conjure_aux1, s_Occurrence, s_ExplicitVarSizeWithDummy]
 such that
     and([s_Occurrence[q11] -> q11 >= conjure_aux2 | q11 : int(1..4)]),
     sum([toInt(s_Occurrence[q11]) | q11 : int(1..4)]) > 0 ->

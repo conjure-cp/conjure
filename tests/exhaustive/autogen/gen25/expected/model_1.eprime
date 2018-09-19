@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 letting let1 be 5
 find var3_ExplicitVarSizeWithMarker_Marker: int(0..5)
 find var3_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..5)] of bool
+branching on [var3_ExplicitVarSizeWithMarker_Marker, var3_ExplicitVarSizeWithMarker_Values]
 such that
     and([q1 + 1 <= var3_ExplicitVarSizeWithMarker_Marker ->
          var3_ExplicitVarSizeWithMarker_Values[q1] < var3_ExplicitVarSizeWithMarker_Values[q1 + 1]

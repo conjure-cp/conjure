@@ -9,6 +9,11 @@ find var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes:
         matrix indexed by [int(1..2), int(1..2)] of int(0)
 find var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex:
         matrix indexed by [int(1..2), int(1..2)] of int(2, 5)
+branching on
+    [var6_ExplicitVarSizeWithFlagsR18_Flags, var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts,
+     var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart,
+     var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes,
+     var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex]
 such that
     var6_ExplicitVarSizeWithFlagsR18_Flags[2] ->
     var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[1] <

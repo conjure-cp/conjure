@@ -2,5 +2,6 @@ language ESSENCE' 1.0
 
 find var1_ExplicitWithFlags_Flags: matrix indexed by [int(4, 2), int(1..0)] of int(0)
 find var1_ExplicitWithFlags_Values: matrix indexed by [int(4, 2), int(1..0)] of bool
+branching on [var1_ExplicitWithFlags_Flags, var1_ExplicitWithFlags_Values]
 such that true
 

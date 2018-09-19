@@ -4,6 +4,7 @@ find s_Occurrence: matrix indexed by [int(1..4)] of bool
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-16..3)
+branching on [s_Occurrence, x]
 such that
     and([s_Occurrence[i] /\ s_Occurrence[j] -> min([i + j, i - j, i * j, i / j; int(1..4)]) <= conjure_aux1
              | i : int(1..4), j : int(1..4), i != j, allDiff([i + j, i * j, i / j; int(1..3)]), (i - j) % 2 = 0]),

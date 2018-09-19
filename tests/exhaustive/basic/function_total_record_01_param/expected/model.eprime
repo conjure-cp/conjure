@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x_FunctionND: matrix indexed by [int(7..8), bool] of int(13, 17)
 given fin1: int
 given p_FunctionND: matrix indexed by [int(7..8), bool] of int(13, 17)
+branching on [x_FunctionND]
 such that
     and([sum([x_FunctionND[q6_fst, q6_snd] | q6_fst : int(7..8), q6_snd : bool, q6_fst = q4_fst /\ q6_snd = q4_snd]) =
          p_FunctionND[q4_fst, q4_snd]

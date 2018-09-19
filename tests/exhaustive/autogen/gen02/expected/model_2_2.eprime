@@ -5,6 +5,9 @@ find var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags:
         matrix indexed by [int(1..4), int(1..2)] of bool
 find var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..4), int(1..2)] of bool
+branching on
+    [var2_ExplicitVarSizeWithMarkerR4_Marker, var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags,
+     var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values]
 such that
     or([q14 <= var2_ExplicitVarSizeWithMarkerR4_Marker /\
         sum([toInt(var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q14, q15]) | q15 : int(1..2)])

@@ -15,5 +15,6 @@ given acrossClueCoords_Explicit_3: matrix indexed by [int(1..fin1)] of int(fin6.
 given acrossClueCoords_Explicit_4: matrix indexed by [int(1..fin1)] of int(fin8..fin9)
 letting let1 be [acrossClueCoords_Explicit_1[q3] | q3 : int(1..fin1)]
 find across: matrix indexed by [int(let1)] of int(0)
+branching on [across]
 such that 0 = across[2]
 

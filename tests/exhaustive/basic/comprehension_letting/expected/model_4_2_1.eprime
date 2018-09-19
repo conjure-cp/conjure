@@ -7,6 +7,8 @@ find s_Occurrence: matrix indexed by [int(1..4)] of bool
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-20..3)
+branching on
+    [s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_ExplicitVarSizeWithDummy, s_Occurrence, x]
 such that
     and([and([s_ExplicitVarSizeWithFlags_Flags[q29], s_ExplicitVarSizeWithDummy[q30] != 5,
               s_ExplicitVarSizeWithFlags_Values[q29] != s_ExplicitVarSizeWithDummy[q30],

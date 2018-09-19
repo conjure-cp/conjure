@@ -3,6 +3,9 @@ language ESSENCE' 1.0
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..4), int(1..4)] of int(1..5)
+branching on
+    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
 such that
     or([q33 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
         (or([x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q33, q37] != 5 /\

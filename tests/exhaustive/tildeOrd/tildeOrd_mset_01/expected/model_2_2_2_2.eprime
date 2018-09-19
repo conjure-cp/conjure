@@ -4,6 +4,9 @@ find a_ExplicitWithRepetition_Flag: int(3)
 find a_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
 find b_ExplicitWithRepetition_Flag: int(3)
 find b_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
+branching on
+    [a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, b_ExplicitWithRepetition_Flag,
+     b_ExplicitWithRepetition_Values]
 such that
     or([sum([toInt(a_ExplicitWithRepetition_Values[q34] = a_ExplicitWithRepetition_Values[q13])
                  | q34 : int(1..3), q34 <= 3])

@@ -8,6 +8,9 @@ find x_ExplicitVarSizeWithMarker_Marker: int(0..6)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..6)] of int(0..5)
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..6)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..6)] of int(0..5)
+branching on
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitVarSizeWithFlags_Values]
 such that
     and([q18 <= x_ExplicitVarSizeWithMarker_Marker ->
          or([a_Explicit[q20] = x_ExplicitVarSizeWithMarker_Values[q18]

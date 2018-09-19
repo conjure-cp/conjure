@@ -4,6 +4,9 @@ find var1_PartitionOccurrence_NumParts: int(1..2)
 find var1_PartitionOccurrence_WhichPart: matrix indexed by [int(1..2)] of int(1..2)
 find var1_PartitionOccurrence_PartSizes: matrix indexed by [int(1..2)] of int(0..2)
 find var1_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [var1_PartitionOccurrence_NumParts, var1_PartitionOccurrence_WhichPart, var1_PartitionOccurrence_PartSizes,
+     var1_PartitionOccurrence_FirstIndex]
 such that
     !(and([q51 <= var1_PartitionOccurrence_NumParts ->
            or([q61 <= var1_PartitionOccurrence_NumParts /\

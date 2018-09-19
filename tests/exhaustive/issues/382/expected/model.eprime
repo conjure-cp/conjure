@@ -4,6 +4,7 @@ find a_Function1D: matrix indexed by [int(1..2)] of int(1..2)
 find b: int(1..2)
 find t: bool
 find conjure_aux1: int(1..2)
+branching on [a_Function1D, b, t]
 such that
     a_Function1D[1] = 1,
     a_Function1D[2] = 1,

@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on [s_Occurrence, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     s_Occurrence[sum([toInt(s_Occurrence[q12]) | q12 : int(1..2)])],
     s_ExplicitVarSizeWithFlags_Flags[2] -> s_ExplicitVarSizeWithFlags_Values[1] < s_ExplicitVarSizeWithFlags_Values[2],

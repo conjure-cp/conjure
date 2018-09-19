@@ -2,6 +2,7 @@ language ESSENCE' 1.0
 
 find x_1: matrix indexed by [int(1..2)] of bool
 find x_2: matrix indexed by [int(1..2)] of int(1..4)
+branching on [x_1, x_2]
 such that
     x_1[1] = x_1[2],
     x_2[1] = 1,

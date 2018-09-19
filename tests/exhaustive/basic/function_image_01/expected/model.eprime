@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find b: bool
 find i: int(0..5)
 find x: int(1..2)
+branching on [b, i, x]
 such that
     toInt(false = b) * 5 + toInt(b) * catchUndef(x, 0) = i,
     false = b \/ b

@@ -1,6 +1,7 @@
 language ESSENCE' 1.0
 
 find x_FunctionND: matrix indexed by [int(1..2), int(1..3)] of int(1..3)
+branching on [x_FunctionND]
 such that
     and([allDiff([x_FunctionND[i, q3_2] | q3_2 : int(1..3)]) | i : int(1..2)]),
     and([allDiff([x_FunctionND[q5_1, i] | q5_1 : int(1..2)]) | i : int(1..3)])

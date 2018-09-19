@@ -15,6 +15,9 @@ find bitmap: matrix indexed by [int(1..n), int(1..n)] of bool
 given fin3: int
 given prefilled_Explicit_1: matrix indexed by [int(1..fin3)] of int(1..n)
 given prefilled_Explicit_2: matrix indexed by [int(1..fin3)] of int(1..n)
+branching on
+    [horizontalLocs_ExplicitBounded_Length, horizontalLocs_ExplicitBounded_Values, verticalLocs_ExplicitBounded_Length,
+     verticalLocs_ExplicitBounded_Values, bitmap]
 such that
     and([horizontalLocs_ExplicitBounded_Length[row] = horizontalClues_ExplicitBounded_Length[row] | row : int(1..n)]),
     and([and([and([horizontalLocs_ExplicitBounded_Values[row, q10] >

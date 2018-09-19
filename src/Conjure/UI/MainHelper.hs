@@ -6,7 +6,7 @@ module Conjure.UI.MainHelper ( mainWithArgs, savilerowScriptName ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
-import Conjure.UI ( UI(..) )
+import Conjure.UI ( UI(..), OutputFormat(..) )
 import Conjure.UI.IO ( readModel, readModelFromFile, readModelInfoFromFile, readParamOrSolutionFromFile, writeModel )
 import Conjure.UI.Model ( parseStrategy, outputModels )
 import qualified Conjure.UI.Model as Config ( Config(..) )
@@ -136,7 +136,7 @@ mainWithArgs TranslateParameter{..} = do
     when (null essenceParam) $ userErr1 "Mandatory field --essence-param"
     let outputFilename = fromMaybe (dropExtension essenceParam ++ ".eprime-param") eprimeParam
     eprimeF <- readModelInfoFromFile eprime
-    essenceParamF <- readModelFromFile essenceParam
+    essenceParamF <- readParamOrSolutionFromFile essenceParam
     output <- runNameGen () $ translateParameter eprimeF essenceParamF
     writeModel lineWidth outputFormat (Just outputFilename) output
 mainWithArgs TranslateSolution{..} = do
@@ -152,12 +152,17 @@ mainWithArgs ValidateSolution{..} = do
     when (null essence        ) $ userErr1 "Mandatory field --essence"
     when (null essenceSolution) $ userErr1 "Mandatory field --solution"
     essence2  <- readModelFromFile essence
-    param2    <- maybe (return def) readModelFromFile essenceParamO
-    solution2 <- readModelFromFile essenceSolution
+    param2    <- maybe (return def) readParamOrSolutionFromFile essenceParamO
+    solution2 <- readParamOrSolutionFromFile essenceSolution
     [essence3, param3, solution3] <- runNameGen () $ resolveNamesMulti [essence2, param2, solution2]
     runNameGen () $ validateSolution essence3 param3 solution3
 mainWithArgs Pretty{..} = do
-    model0 <- readModelFromFile essence
+    model0 <- if or [ s `isSuffixOf` essence
+                    | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
+                then do
+                    liftIO $ putStrLn "Parsing as a parameter file"
+                    readParamOrSolutionFromFile essence
+                else readModelFromFile essence
     let model1 = model0
                     |> (if normaliseQuantified then normaliseQuantifiedVariables else id)
                     |> (if removeUnused then removeUnusedDecls else id)
@@ -197,7 +202,7 @@ mainWithArgs config@Solve{..} = do
         userErr1 $ "The solvers bc_minisat_all and nbc_minisat_all only work with --number-of-solutions=all"
     essenceM <- readModelFromFile essence
     essenceParamsParsed <- forM essenceParams $ \ f -> do
-        p <- readModelFromFile f
+        p <- readParamOrSolutionFromFile f
         return (f, p)
     let givens = [ nm | Declaration (FindOrGiven Given nm _) <- mStatements essenceM ]
               ++ [ nm | Declaration (GivenDomainDefnEnum nm) <- mStatements essenceM ]
@@ -383,13 +388,17 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
     let srArgs = srMkArgs ui outBase modelPath
-    let tr = translateSolution eprimeModel def        
+    let tr = translateSolution eprimeModel def
+    when (logLevel >= LogDebug) $ do
+        liftIO $ putStrLn "Using the following options for Savile Row:"
+        liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
     (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                 (liftIO . srStdoutHandler
                                     solutionsInOneFile
                                     ( outputDirectory, outBase
                                     , modelPath, "<no param file>"
                                     , lineWidth
+                                    , outputFormat
                                     )
                                     tr
                                     (1::Int))
@@ -425,12 +434,16 @@ savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essencePar
                        : stringToText (outputDirectory </> outBase ++ ".eprime-param")
                        : srMkArgs ui outBase modelPath
             let tr = translateSolution eprimeModel essenceParam
+            when (logLevel >= LogDebug) $ do
+                liftIO $ putStrLn "Using the following options for Savile Row:"
+                liftIO $ putStrLn $ "    savilerow " ++ unwords (map textToString srArgs)
             (stdoutSR, solutions) <- partitionEithers <$> runHandle savilerowScriptName srArgs
                                         (liftIO . srStdoutHandler
                                             solutionsInOneFile
                                             ( outputDirectory, outBase
                                             , modelPath, paramPath
                                             , lineWidth
+                                            , outputFormat
                                             )
                                             tr
                                             (1::Int))
@@ -446,6 +459,7 @@ srMkArgs Solve{..} outBase modelPath =
     , "-out-aux"        , stringToText $ outputDirectory </> outBase ++ ".eprime-aux"
     , "-out-info"       , stringToText $ outputDirectory </> outBase ++ ".eprime-info"
     , "-run-solver"
+    , "-S0"
     , "-solutions-to-stdout-one-line"
     ] ++
     ( if nbSolutions == "all"
@@ -474,7 +488,7 @@ srMkArgs _ _ _ = bug "srMkArgs"
 
 srStdoutHandler
     :: Bool
-    -> (FilePath, FilePath, FilePath, FilePath, Int)
+    -> (FilePath, FilePath, FilePath, FilePath, Int, OutputFormat)
     -> (Model -> NameGenM (IdentityT IO) Model)
     -> Int
     -> Handle
@@ -483,7 +497,7 @@ srStdoutHandler
         solutionsInOneFile
         args@( outputDirectory, outBase
              , modelPath, paramPath
-             , lineWidth
+             , lineWidth, outputFormat
              )
         tr
         solutionNumber h = do
@@ -508,8 +522,10 @@ srStdoutHandler
                                                         ++ ext
                             let filenameEprimeSol  = mkFilename ".eprime-solution"
                             let filenameEssenceSol = mkFilename ".solution"
-                            writeFile filenameEprimeSol  (render lineWidth eprimeSol)
-                            writeFile filenameEssenceSol (render lineWidth essenceSol)
+                            writeModel lineWidth Plain (Just filenameEprimeSol) eprimeSol
+                            writeModel lineWidth Plain (Just filenameEssenceSol) essenceSol
+                            when (outputFormat == JSON) $
+                                writeModel lineWidth JSON (Just (filenameEssenceSol ++ ".json")) essenceSol
                             fmap (Right (modelPath, paramPath, Just filenameEssenceSol) :)
                                  (srStdoutHandler solutionsInOneFile args tr (solutionNumber+1) h)
                         True -> do
@@ -560,7 +576,7 @@ validateSolutionNoParam :: UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
-    solution <- readModelFromFile solutionPath
+    solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, solution]
     result   <- runExceptT $ ignoreLogs $ runNameGen () $ validateSolution essenceM2 def solution2
     case result of
@@ -573,8 +589,8 @@ validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence
-    param    <- readModelFromFile paramPath
-    solution <- readModelFromFile solutionPath
+    param    <- readParamOrSolutionFromFile paramPath
+    solution <- readParamOrSolutionFromFile solutionPath
     [essenceM2, param2, solution2] <- ignoreLogs $ runNameGen () $ resolveNamesMulti [essenceM, param, solution]
     result   <- runExceptT $ ignoreLogs $ runNameGen ()
                                 $ validateSolution essenceM2 param2 solution2

@@ -5,6 +5,9 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
 find x_Occurrence: matrix indexed by [int(1)] of bool
 find y_Occurrence: matrix indexed by [int(1)] of bool
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
+branching on
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence, y_Occurrence,
+     y_ExplicitVarSizeWithDummy]
 such that
     x_ExplicitVarSizeWithFlags_Flags[1] /\ y_Occurrence[x_ExplicitVarSizeWithFlags_Values[1]] -> false,
     x_ExplicitVarSizeWithFlags_Flags[1] = false -> x_ExplicitVarSizeWithFlags_Values[1] = 1,

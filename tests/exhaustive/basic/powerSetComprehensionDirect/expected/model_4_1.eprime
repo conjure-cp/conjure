@@ -6,6 +6,7 @@ given b: int
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..1 + (b - a))] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
 find x_Occurrence: matrix indexed by [int(a..b)] of bool
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence]
 such that
     and([and([or([x_ExplicitVarSizeWithFlags_Flags[q19] /\
                   x_ExplicitVarSizeWithFlags_Values[q19] = t_ExplicitVarSizeWithDummy[q17]

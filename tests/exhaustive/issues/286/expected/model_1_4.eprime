@@ -7,6 +7,10 @@ find p_PartitionOccurrence_NumParts: int(1..b)
 find p_PartitionOccurrence_WhichPart: matrix indexed by [int(1..b)] of int(1..b)
 find p_PartitionOccurrence_PartSizes: matrix indexed by [int(1..b)] of int(0..b)
 find p_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..b)] of int(1..b)
+branching on
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence, p_PartitionOccurrence_NumParts,
+     p_PartitionOccurrence_WhichPart, p_PartitionOccurrence_PartSizes, p_PartitionOccurrence_FirstIndex]
 such that
     sum([toInt(q49 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) | q49 : int(1..b)]) <=
     sum([1   | q50_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),

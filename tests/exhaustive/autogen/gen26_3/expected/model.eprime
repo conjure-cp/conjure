@@ -9,6 +9,11 @@ find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2:
         matrix indexed by [int(1), int(1..let2), int(2..4, 0)] of bool
 find var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3:
         matrix indexed by [int(1), int(1..let2), int(2..4, 0)] of bool
+branching on
+    [var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Marker,
+     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_1,
+     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_2,
+     var3_PartitionAsSet_ExplicitR5_ExplicitVarSizeWithMarker_Values_3]
 such that
     false,
     and([1 =

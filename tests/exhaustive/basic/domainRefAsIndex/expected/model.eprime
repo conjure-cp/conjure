@@ -4,6 +4,7 @@ find a: int(1..3)
 find b: int(1..3)
 find c: int(1..3)
 find x: int(1..3)
+branching on [a, b, c, x]
 such that
     a + b + c = 5,
     [a, b, c; int(1..3)][x] = 3

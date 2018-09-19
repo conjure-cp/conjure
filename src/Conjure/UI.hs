@@ -354,7 +354,7 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= help "Strategy for choosing a representation for cuts in 'branching on'.\n\
-                    \Default value: same as --representations-cuts"
+                    \Default value: same as --representations"
         , channelling
             = True
             &= name "channelling"
@@ -775,7 +775,7 @@ ui = modes
             &= groupname "Model generation"
             &= explicit
             &= help "Strategy for choosing a representation for cuts in 'branching on'.\n\
-                    \Default value: same as --representations-cuts"
+                    \Default value: same as --representations"
         , channelling
             = True
             &= name "channelling"

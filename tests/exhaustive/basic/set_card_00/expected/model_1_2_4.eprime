@@ -4,6 +4,8 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2)] of int(1..3)
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+branching on
+    [s_Occurrence, s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     or([s_ExplicitVarSizeWithDummy[q30] != 3 /\
         s_ExplicitVarSizeWithDummy[q30] = sum([toInt(s_Occurrence[q31]) | q31 : int(1..2)])

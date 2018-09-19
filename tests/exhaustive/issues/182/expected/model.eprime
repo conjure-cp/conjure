@@ -7,6 +7,10 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
         matrix indexed by [int(1..4)] of int(0..4)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..4), int(1..2)] of int(1..2)
+branching on
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     and([1 =
          sum([toInt(q17 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker /\

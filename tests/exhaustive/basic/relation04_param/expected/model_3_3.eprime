@@ -13,6 +13,11 @@ find r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithM
 find r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..84), int(1..2)] of int(2..3)
 find r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_3: matrix indexed by [int(1..84)] of int(4..10)
+branching on
+    [r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker, r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1,
+     r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Marker,
+     r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_2_ExplicitVarSizeWithMarker_Values,
+     r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_3]
 such that
     and([q17 <= r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Marker ->
          or([and([a_RelationAsSetR6_ExplicitR6_1[q19] = r_RelationAsSetR5_ExplicitVarSizeWithMarkerR5_Values_1[q17],

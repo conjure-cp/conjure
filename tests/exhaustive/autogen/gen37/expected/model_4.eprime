@@ -7,6 +7,11 @@ find var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values:
 find var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag: matrix indexed by [int(1..2)] of int(0)
 find var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Values:
         matrix indexed by [int(1..2), int(1..0)] of bool
+branching on
+    [var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags,
+     var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values,
+     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag,
+     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Values]
 such that
     var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, ..] <lex
     var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, ..]

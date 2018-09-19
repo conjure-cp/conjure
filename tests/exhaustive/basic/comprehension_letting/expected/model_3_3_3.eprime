@@ -5,6 +5,7 @@ find s_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1.
 letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-16..3)
+branching on [s_ExplicitVarSizeWithMarker_Marker, s_ExplicitVarSizeWithMarker_Values, x]
 such that
     and([and([q4 <= s_ExplicitVarSizeWithMarker_Marker, q5 <= s_ExplicitVarSizeWithMarker_Marker,
               s_ExplicitVarSizeWithMarker_Values[q4] != s_ExplicitVarSizeWithMarker_Values[q5],
