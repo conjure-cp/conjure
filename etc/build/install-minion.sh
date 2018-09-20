@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
+export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export COMPILER=${COMPILER:-""}
 
 rm -rf ~/tmp-install-minion

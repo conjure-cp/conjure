@@ -10,7 +10,7 @@ export INSTALL_GHC=${INSTALL_GHC:-no}
 export INSTALL_CABAL=${INSTALL_CABAL:-no}
 export OPTIMISATION=${OPTIMISATION:-"-O2"}
 export LLVM=${LLVM:-"llvm-off"}
-export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
+export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 export BUILD_DOCS=${BUILD_DOCS:-no}
 export BUILD_TESTS=${BUILD_TESTS:-no}
 export RUN_TESTS=${RUN_TESTS:-no}
@@ -21,5 +21,5 @@ export SPLIT_OBJS=${SPLIT_OBJS:-no}
 export DEVELOPMENT_MODE=${DEVELOPMENT_MODE:-no}
 
 export PATH="${HOME}/.tools/ghc/${GHC_VERSION}/bin":$PATH
-export PATH="${HOME}/.cabal/bin":$PATH
+export PATH="${HOME}/.local/bin":$PATH
 export PATH="${BIN_DIR}":$PATH

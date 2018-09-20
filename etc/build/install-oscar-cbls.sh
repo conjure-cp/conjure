@@ -15,7 +15,7 @@ else
 fi
 
 
-export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
+export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
 rm -rf ~/tmp-install-oscar-cbls
 mkdir ~/tmp-install-oscar-cbls
