@@ -22,6 +22,7 @@ find findDoubleAdd_k: int([nums_Explicit[q40] | q40 : int(1..fin1)])
 find findDoubleAdd_activation: bool
 find findDoubleAdd_nSize: int(1)
 SNSNeighbourhood findDoubleAdd : (findDoubleAdd_nSize, findDoubleAdd_activation, hasX, [findDoubleAdd_k])
+branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 SNSIncumbentMapping([x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values],
                     [incumbent_x_ExplicitVarSizeWithMarker_Marker, incumbent_x_ExplicitVarSizeWithMarker_Values])
 such that

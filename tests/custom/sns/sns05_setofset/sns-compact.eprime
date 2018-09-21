@@ -7,6 +7,7 @@ find incumbent_x_ExplicitVarSizeWithMarkerR2_Marker: int(0..2 ** (1 + (b - a)))
 find x_ExplicitVarSizeWithMarkerR2_Values_Occurrence: matrix indexed by [int(1..2 ** (1 + (b - a))), int(a..b)] of bool
 find incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence:
         matrix indexed by [int(1..2 ** (1 + (b - a))), int(a..b)] of bool
+branching on [x_ExplicitVarSizeWithMarkerR2_Marker, x_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 SNSGroup x_neighbourhoodGroup : [x_ExplicitVarSizeWithMarkerR2_Marker, x_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 find x_setAddSingle_conjure_aux31: int(1..2 ** (1 + (b - a)))
 find x_setAddSingle_conjure_aux32: int(1..2 ** (1 + (b - a)))
