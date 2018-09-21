@@ -3,7 +3,7 @@
 set -o errexit
 set -o nounset
 
-export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
+export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
 rm -rf ~/tmp-install-lingeling
 mkdir ~/tmp-install-lingeling
