@@ -116,3 +116,13 @@ hlint:
 	    -i "Use ++" \
 	    -i "Redundant return" \
 	    -i "Monad law, left identity"
+
+.PHONY: solvers
+solvers:
+	download-minion.sh
+	install-chuffed.sh
+	install-gecode.sh
+	install-glucose.sh
+	install-lingeling.sh
+	install-open-wbo.sh
+

@@ -9,7 +9,7 @@ export COMPILER=${COMPILER:-""}
 rm -rf ~/tmp-install-minion
 mkdir ~/tmp-install-minion
 pushd ~/tmp-install-minion
-hg clone https://bitbucket.org/stacs_cp/minion
+git clone git@github.com:minion/minion.git
 mkdir -p minion/build
 (
     cd minion/build

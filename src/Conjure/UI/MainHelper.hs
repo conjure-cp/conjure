@@ -184,7 +184,11 @@ mainWithArgs ModelStrengthening{..} =
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
     -- some sanity checks
-    unless (solver `elem` ["minion", "lingeling", "minisat", "bc_minisat_all", "nbc_minisat_all"]) $
+    unless (solver `elem` [ "minion", "gecode", "chuffed"
+                          , "glucose", "lingeling", "minisat"
+                          , "bc_minisat_all", "nbc_minisat_all"
+                          , "open-wbo"
+                          ]) $
         userErr1 ("Unsupported solver:" <+> pretty solver)
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
@@ -460,6 +464,11 @@ srMkArgs Solve{..} outBase modelPath =
     ) ++
     ( case solver of
         "minion"            -> [ "-minion" ]
+        "gecode"            -> [ "-gecode" ]
+        "chuffed"           -> [ "-chuffed"]
+        "glucose"           -> [ "-sat"
+                               , "-sat-family", "glucose"
+                               ]
         "lingeling"         -> [ "-sat"
                                , "-sat-family", "lingeling"
                                ]
@@ -472,6 +481,7 @@ srMkArgs Solve{..} outBase modelPath =
         "nbc_minisat_all"   -> [ "-sat"
                                , "-sat-family", "nbc_minisat_all"
                                ]
+        "open-wbo"          -> [ "-maxsat" ]
         _ -> bug ("Unknown solver:" <+> pretty solver)
     ) ++ map stringToText (concatMap words savilerowOptions)
       ++ if null solverOptions then [] else [ "-solver-options", stringToText (unwords (concatMap words solverOptions)) ]

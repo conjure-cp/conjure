@@ -212,7 +212,17 @@
       --savilerow-options=ITEM                Options passed to Savile Row.
       --solver-options=ITEM                   Options passed to the backend solver.
       --solver=ITEM                           Backend solver. Possible values:
-                                              minion/lingeling/minisat/bc_minisat_all/nbc_minisat_all
+                                               - minion (CP solver)
+                                               - gecode (CP solver)
+                                               - chuffed (CP solver)
+                                               - glucose (SAT solver)
+                                               - lingeling (SAT solver)
+                                               - minisat (SAT solver)
+                                               - bc_minisat_all (AllSAT solver, only works with
+                                              --number-of-solutions=all)
+                                               - nbc_minisat_all (AllSAT solver, only works with
+                                              --number-of-solutions=all)
+                                               - open-wbo (MaxSAT solver, only works with optimisation problems)
                                               Default: minion
  
  conjure pretty [OPTIONS] FILE
