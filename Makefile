@@ -119,10 +119,10 @@ hlint:
 
 .PHONY: solvers
 solvers:
-	download-minion.sh
-	install-chuffed.sh
-	install-gecode.sh
-	install-glucose.sh
-	install-lingeling.sh
-	install-open-wbo.sh
+	# etc/build/download-minion.sh
+	etc/build/install-chuffed.sh
+	etc/build/install-gecode.sh
+	etc/build/install-glucose.sh
+	etc/build/install-lingeling.sh
+	etc/build/install-open-wbo.sh
 
