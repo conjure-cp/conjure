@@ -14,7 +14,7 @@ mkdir build
 cd build
 cmake ..
 cmake --build .
-cp fzn-gecode ${BIN_DIR}/fzn-gecode
+cp bin/fzn-gecode ${BIN_DIR}/fzn-gecode
 echo "gecode executable is at ${BIN_DIR}/fzn-gecode"
 ls -l ${BIN_DIR}/fzn-gecode
 popd
