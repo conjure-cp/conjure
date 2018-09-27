@@ -125,4 +125,6 @@ solvers:
 	etc/build/install-glucose.sh
 	etc/build/install-lingeling.sh
 	etc/build/install-open-wbo.sh
+	etc/build/install-bc_minisat_all.sh
+	etc/build/install-nbc_minisat_all.sh
 
