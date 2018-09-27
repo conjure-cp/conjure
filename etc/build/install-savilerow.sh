@@ -5,9 +5,9 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ~/tmp-install-savilerow
-mkdir ~/tmp-install-savilerow
-pushd ~/tmp-install-savilerow
+rm -rf ${BIN_DIR}/tmp-install-savilerow
+mkdir ${BIN_DIR}/tmp-install-savilerow
+pushd ${BIN_DIR}/tmp-install-savilerow
 
 OS=$(uname)
 
@@ -34,5 +34,5 @@ else
     exit 1
 fi
 
-rm -rf ~/tmp-install-savilerow
+rm -rf ${BIN_DIR}/tmp-install-savilerow
 
