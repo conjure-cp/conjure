@@ -119,7 +119,7 @@ hlint:
 
 .PHONY: solvers
 solvers:
-	# etc/build/download-minion.sh
+	etc/build/install-minion.sh
 	etc/build/install-chuffed.sh
 	etc/build/install-gecode.sh
 	etc/build/install-glucose.sh
