@@ -10,6 +10,7 @@ mkdir ${BIN_DIR}/tmp-install-gecode
 pushd ${BIN_DIR}/tmp-install-gecode
 git clone https://github.com/Gecode/gecode.git
 cd gecode
+git checkout release-6.0.1
 mkdir build
 cd build
 cmake ..
