@@ -44,7 +44,7 @@ import System.FilePath ( splitFileName, takeBaseName, (<.>) )
 import qualified Filesystem.Path as Sys ( FilePath )
 
 -- directory
-import System.Directory ( copyFile )
+import System.Directory ( copyFile, findExecutable )
 
 -- shelly
 import Shelly ( runHandle, lastStderr, lastExitCode, errExit, Sh )
@@ -183,13 +183,24 @@ mainWithArgs ModelStrengthening{..} =
       strengthenModel logLevel logRuleSuccesses >>=
         writeModel lineWidth outputFormat (Just essenceOut)
 mainWithArgs config@Solve{..} = do
+    let executables = [ ( "minion"          , "minion" )
+                      , ( "gecode"          , "fzn-gecode" )
+                      , ( "chuffed"         , "fzn-chuffed" )
+                      , ( "glucose"         , "glucose-syrup" )
+                      , ( "lingeling"       , "lingeling" )
+                      , ( "minisat"         , "minisat" )
+                      , ( "bc_minisat_all"  , "bc_minisat_all_release" )
+                      , ( "nbc_minisat_all" , "nbc_minisat_all_release" )
+                      , ( "open-wbo"        , "open-wbo" )
+                      ]
     -- some sanity checks
-    unless (solver `elem` [ "minion", "gecode", "chuffed"
-                          , "glucose", "lingeling", "minisat"
-                          , "bc_minisat_all", "nbc_minisat_all"
-                          , "open-wbo"
-                          ]) $
-        userErr1 ("Unsupported solver:" <+> pretty solver)
+    case lookup solver executables of
+        Nothing -> userErr1 ("Unsupported solver:" <+> pretty solver)
+        Just ex -> do
+            fp <- liftIO $ findExecutable ex
+            case fp of
+                Nothing -> userErr1 ("Cannot find executable" <+> pretty ex <+> "(for solver" <+> pretty solver <> ")")
+                Just _  -> return ()
     unless (nbSolutions == "all" || all isDigit nbSolutions) $
         userErr1 (vcat [ "The value for --number-of-solutions must either be a number or the string \"all\"."
                        , "Was given:" <+> pretty nbSolutions
