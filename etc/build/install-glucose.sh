@@ -8,7 +8,7 @@ export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 rm -rf ${BIN_DIR}/tmp-install-glucose
 mkdir ${BIN_DIR}/tmp-install-glucose
 pushd ${BIN_DIR}/tmp-install-glucose
-wget http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-syrup-4.1.tgz
+wget --no-check-certificate -c http://www.labri.fr/perso/lsimon/downloads/softwares/glucose-syrup-4.1.tgz
 tar -xvzf glucose-syrup-4.1.tgz
 cd glucose-syrup-4.1/
 cd parallel
