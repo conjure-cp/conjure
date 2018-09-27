@@ -10,6 +10,7 @@ mkdir ${BIN_DIR}/tmp-install-chuffed
 pushd ${BIN_DIR}/tmp-install-chuffed
 git clone https://github.com/chuffed/chuffed.git
 cd chuffed
+git checkout 0.10.2
 mkdir build
 cd build
 cmake ..
