@@ -13,11 +13,11 @@ OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
     wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-mac.tgz
-    tar -xvzf savilerow-1.7.0RC-mac.tgz
+    tar zxf savilerow-1.7.0RC-mac.tgz
     mv savilerow-1.7.0RC-mac/bin/minion ${BIN_DIR}/minion
 elif [ "$OS" == "Linux" ]; then
     wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-linux.tgz
-    tar -xvzf savilerow-1.7.0RC-linux.tgz
+    tar zxf savilerow-1.7.0RC-linux.tgz
     mv savilerow-1.7.0RC-linux/bin/minion ${BIN_DIR}/minion
 else
     echo "Cannot determine your OS, uname reports: ${OS}"

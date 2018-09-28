@@ -13,7 +13,7 @@ OS=$(uname)
 
 if [ "$OS" == "Darwin" ]; then
     wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-mac.tgz
-    tar -xvzf savilerow-1.7.0RC-mac.tgz
+    tar zxf savilerow-1.7.0RC-mac.tgz
     mv savilerow-1.7.0RC-mac/savilerow.jar ${BIN_DIR}/savilerow.jar
     mv savilerow-1.7.0RC-mac/lib ${BIN_DIR}/
     echo '#!/bin/bash'                                                               >  ${BIN_DIR}/savilerow
@@ -22,7 +22,7 @@ if [ "$OS" == "Darwin" ]; then
     chmod +x ${BIN_DIR}/savilerow
 elif [ "$OS" == "Linux" ]; then
     wget --no-check-certificate -c https://savilerow.cs.st-andrews.ac.uk/savilerow-1.7.0RC-linux.tgz
-    tar -xvzf savilerow-1.7.0RC-linux.tgz
+    tar zxf savilerow-1.7.0RC-linux.tgz
     mv savilerow-1.7.0RC-linux/savilerow.jar ${BIN_DIR}/savilerow.jar
     mv savilerow-1.7.0RC-linux/lib ${BIN_DIR}/
     echo '#!/bin/bash'                                                               >  ${BIN_DIR}/savilerow
