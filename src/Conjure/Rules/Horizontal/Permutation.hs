@@ -2,25 +2,8 @@
 
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
---import Conjure.Rules.Definition
---import Conjure.Process.Enumerate
 import Data.List (cycle)
 
--- uniplate
---import Data.Generics.Uniplate.Zipper as Zipper ( up, hole )
-
-
--- | want this to be 
--- [_ | (i, j) <- compose(f, g)
---     , ...]
--- becomes
--- [_ | i : int(1..10)
---    , g(i) in defined(f)
---    , letting j be f(g(i))
---    ]
-rule_Composition_Comprehension :: Rule
-rule_Composition_Comprehension =
-  error "permutation: rule_Composition_Comprehension not defined yet" 
 
 rule_Apply :: Rule
 rule_Apply = "permutation-apply{rule_Apply}" `namedRule` theRule where
@@ -46,8 +29,8 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
     if typesUnify [inner, typeI]
        then do        
            innerD <- domainOf i
-           let prmTup p = take (length p) $ zip (cycle p) (drop 1 $ cycle p)
-               permTups = join $ prmTup <$> elems 
+           let prmTup pt = take (length pt) $ zip (cycle pt) (drop 1 $ cycle pt)
+               permTups  = join $ prmTup <$> elems 
            let outLiteral = make matrixLiteral
                                (TypeMatrix TypeInt (TypeTuple [inner,inner]))
                                (DomainInt [RangeBounded 1 (fromInt (genericLength permTups))])
@@ -61,7 +44,7 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
                 (fPat, f)  <- quantifiedVar
                 (tPat, t)  <- quantifiedVar
                 (gPat, g)  <- quantifiedVar
-                (ePat, e)  <- quantifiedVar
+                (ePat, _)  <- quantifiedVar
                 return $ WithLocals 
                            [essence| &h |]
                           (AuxiliaryVars 
