@@ -228,6 +228,7 @@ functionals =
     , L_max
     , L_allDiff
     , L_alldifferent_except
+    , L_apply
     , L_catchUndef
     , L_dontCare
     , L_hist
@@ -248,6 +249,8 @@ functionals =
     , L_party
     , L_participants
     , L_parts
+    , L_permute
+    , L_permutationTuples
     , L_freq
     , L_toInt
     , L_flatten

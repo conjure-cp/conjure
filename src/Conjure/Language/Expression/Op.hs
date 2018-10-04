@@ -117,6 +117,12 @@ mkOp op xs =
             L_party        -> inject $ MkOpParty        $ OpParty        (arg xs 0 "party")
                                                                          (arg xs 1 "party")
             L_participants -> inject $ MkOpParticipants $ OpParticipants (arg xs 0 "participants")
+            L_permute      -> inject $ MkOpPermute      $ OpPermute      (arg xs 0 "permute")
+                                                                         (arg xs 1 "permute")
+            L_permutationTuples -> inject $ MkOpPermutationTuples $ OpPermutationTuples (arg xs 0 "permutationTuples")
+            L_apply        -> inject $ MkOpApply        $ OpApply        (arg xs 0 "apply")
+                                                                         (arg xs 1 "apply")
+
             L_active       -> inject $ MkOpActive       $ OpActive       (arg xs 0 "active")
                                                                          (arg xs 1 "active" |> nameOut |> fromMaybe (bug "active"))
             L_pred         -> inject $ MkOpPred         $ OpPred         (arg xs 0 "pred")

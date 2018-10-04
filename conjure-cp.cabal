@@ -50,6 +50,7 @@ Library
                      , Conjure.Language.Expression.Op.AllDiffExcept
                      , Conjure.Language.Expression.Op.And
                      , Conjure.Language.Expression.Op.Apart
+                     , Conjure.Language.Expression.Op.Apply
                      , Conjure.Language.Expression.Op.AttributeAsConstraint
                      , Conjure.Language.Expression.Op.CatchUndef
                      , Conjure.Language.Expression.Op.Defined
@@ -87,6 +88,8 @@ Library
                      , Conjure.Language.Expression.Op.Participants
                      , Conjure.Language.Expression.Op.Parts
                      , Conjure.Language.Expression.Op.Party
+                     , Conjure.Language.Expression.Op.Permute
+                     , Conjure.Language.Expression.Op.PermutationTuples
                      , Conjure.Language.Expression.Op.Pow
                      , Conjure.Language.Expression.Op.PowerSet
                      , Conjure.Language.Expression.Op.Pred
@@ -252,6 +255,7 @@ Library
                      , megaparsec >= 4.1.1 && < 5
                      , mtl
                      , parallel-io
+                     , permutation-safe
                      , pipes
                      , pretty > 1.1.1.1
                      -- >= 2.9 because of the TH fix: https://github.com/nick8325/quickcheck/issues/101

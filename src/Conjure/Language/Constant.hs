@@ -20,6 +20,7 @@ module Conjure.Language.Constant
     , viewConstantSequence
     , viewConstantRelation
     , viewConstantPartition
+    , viewConstantPermutation
     ) where
 
 -- conjure
@@ -415,7 +416,10 @@ validateConstantForDomain name
     c@(ConstantAbstract (AbsLitPartition valss))
     d@(DomainPartition _ _ dInner) = nested c d $
         mapM_ (\ val -> validateConstantForDomain name val dInner ) (concat valss)
-
+validateConstantForDomain name
+    c@(ConstantAbstract (AbsLitPermutation valss))
+    d@(DomainPermutation _ _ dInner) = nested c d $
+        mapM_ (\ val -> validateConstantForDomain name val dInner ) (concat valss)
 validateConstantForDomain name c@(TypedConstant c' _) d = nested c d $ validateConstantForDomain name c' d
 
 validateConstantForDomain name c d = constantNotInDomain name c d
@@ -511,3 +515,7 @@ viewConstantPartition (ConstantAbstract (AbsLitPartition xs)) = return xs
 viewConstantPartition (TypedConstant c _) = viewConstantPartition c
 viewConstantPartition constant = fail ("Expecting a partition, but got:" <++> pretty constant)
 
+viewConstantPermutation :: MonadFail m => Constant -> m [[Constant]]
+viewConstantPermutation (ConstantAbstract (AbsLitPermutation xs)) = return xs
+viewConstantPermutation (TypedConstant c _) = viewConstantPermutation c
+viewConstantPermutation constant = fail ("Expecting a permutation, but got:" <++> pretty constant)

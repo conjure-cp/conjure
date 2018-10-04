@@ -866,7 +866,7 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainPartition r attrs inner)
         = hang ("partition" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
-    pretty (DomainPermutation r attrs inner) = hang ("permutation" <+> prettyAttrs r attrs <+> "from") 4 (pretty inner)
+    pretty (DomainPermutation r attrs inner) = hang ("permutation" <+> prettyAttrs r attrs <+> "of") 4 (pretty inner)
 
     pretty d@DomainOp{} = pretty (show d)
 

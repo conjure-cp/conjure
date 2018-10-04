@@ -280,6 +280,26 @@ opToSet _ =
     )
 
 
+opPermutationTuples
+    :: ( Op x :< x
+       , Pretty x
+       , MonadFail m
+       )
+    => Proxy (m :: * -> *)
+    -> ( x -> x
+       , x -> m x
+       )
+opPermutationTuples _ =
+    ( inject . MkOpPermutationTuples . OpPermutationTuples 
+    , \ p -> do
+            op <- project p
+            case op of
+                MkOpPermutationTuples (OpPermutationTuples x) -> return x
+                _ -> na ("Lenses.opPermutationTuples:" <++> pretty p)
+    )
+
+
+
 opToSetWithFlag
     :: ( Op x :< x
        , Pretty x
@@ -1277,6 +1297,32 @@ functionLiteral _ =
         extract (Typed x _) = extract x
         extract (Constant (TypedConstant x _)) = extract (Constant x)
         extract p = na ("Lenses.functionLiteral:" <+> pretty p)
+
+
+permutationLiteral
+    :: MonadFail m
+    => Proxy (m :: * -> *)
+    -> ( Type -> [[Expression]] -> Expression
+       , Expression -> m (Type, [[Expression]])
+       )
+permutationLiteral _ =
+    ( \ ty elems ->
+        if null elems
+            then Typed (AbstractLiteral (AbsLitPermutation elems)) ty
+            else        AbstractLiteral (AbsLitPermutation elems)
+    , \ p -> do
+        ty <- typeOf p
+        xs <- followAliases extract p
+        return (ty, xs)
+    )
+    where
+        extract (Constant (ConstantAbstract (AbsLitPermutation xs))) = return [ [Constant z | z <- x] | x <- xs ]
+        extract (AbstractLiteral (AbsLitPermutation xs)) = return xs
+        extract (Typed x _) = extract x
+        extract (Constant (TypedConstant x _)) = extract (Constant x)
+        extract p = na ("Lenses.permutationLiteral:" <+> pretty p)
+
+
 
 
 sequenceLiteral

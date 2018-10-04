@@ -1,1 +1,1 @@
-stack build --fast
+stack install --fast

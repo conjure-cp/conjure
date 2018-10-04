@@ -183,7 +183,8 @@ dispatch domain = do
                                                     (bug "useLevels inside dispatch")
             _ -> nope
         DomainPermutation r _ _ -> case r of
-            Permutation_AsFunction          -> permutationAsFunction
+            Permutation_AsFunction          -> permutationAsFunction dispatch
+
             _ -> nope
         _ -> nope
 
@@ -205,7 +206,7 @@ reprsStandardOrderNoLevels = return $ concat
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrderNoLevels) False
       , partitionOccurrence
-      , permutationAsFunction
+      , permutationAsFunction dispatch
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrderNoLevels)
       , relationAsSet      dispatch (reprOptions reprsStandardOrderNoLevels) False
@@ -229,7 +230,7 @@ reprsStandardOrder =
       , relationAsMatrix
       , partitionAsSet     dispatch (reprOptions reprsStandardOrder) True
       , partitionOccurrence
-      , permutationAsFunction
+      , permutationAsFunction dispatch
       ]
     , [ functionAsRelation dispatch (reprOptions reprsStandardOrder)
       , relationAsSet      dispatch (reprOptions reprsStandardOrder) True
@@ -260,7 +261,7 @@ reprsSparseOrder = map return
     , partitionAsSet     dispatch (reprOptions reprsSparseOrder) False
 
     , partitionOccurrence                                     -- redundant
-    , permutationAsFunction
+    , permutationAsFunction dispatch
     ]
 
 

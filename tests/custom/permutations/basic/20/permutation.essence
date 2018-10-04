@@ -1,0 +1,6 @@
+
+find p : permutation (size 10) of int(1..10)
+find q : permutation (size 10) of int(1..10) 
+
+such that
+   and([ permute(p, b) = a | (a,b) <- q])

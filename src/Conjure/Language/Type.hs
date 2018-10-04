@@ -191,7 +191,7 @@ innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
 innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
-innerTypeOf (TypePermutation t) = return (TypePermutation t)
+innerTypeOf (TypePermutation t) = return (TypeTuple [t,t])
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))
 
 isPrimitiveType :: Type -> Bool

@@ -87,6 +87,7 @@ import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Par
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
 import qualified Conjure.Rules.Vertical.Permutation.AsFunction as Vertical.Permutation.AsFunction
+import qualified Conjure.Rules.Horizontal.Permutation as Horizontal.Permutation
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
 import qualified Conjure.Rules.DontCare as DontCare
@@ -1136,7 +1137,9 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
-    , Vertical.Permutation.AsFunction.rule_Comprehension
+
+    , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
+
 
     ]
 
@@ -1263,6 +1266,10 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
+    , Horizontal.Permutation.rule_Permute_Literal
+    , Horizontal.Permutation.rule_Apply
+
+
     ]
 
 
@@ -1338,6 +1345,8 @@ delayedRules =
         , Vertical.Matrix.rule_Comprehension_SingletonDomain
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
+
+        , Vertical.Permutation.AsFunction.rule_Permute
         ]
     ,   [ rule_ReducerToComprehension
         ]
