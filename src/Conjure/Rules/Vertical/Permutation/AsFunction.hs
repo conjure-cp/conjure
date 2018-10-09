@@ -29,7 +29,8 @@ rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction
 rule_Permute :: Rule
 rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
   theRule [essence| permute(&p, &i) |] = do
-    case p of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+    --TODO is bubble-delay necessary here?
+--    case p of WithLocals{} -> na "bubble-delay" ; _ -> return ()
     TypePermutation inner <- typeOf p 
     typeI <- typeOf i
     [f] <- downX1 p
@@ -42,3 +43,15 @@ rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
        else na "rule_Permute"
   theRule _ = na "rule_Permute"
 
+
+--rule_Permute_Set :: Rule
+--rule_Permute_Set = "permutation-permute-set{AsFunction}" `namedRule` theRule where
+--  theRule [essence| permute(&p,&i) |] = do
+--    TypePermutation (TypeUnnamed nameperm) <- typeOf p
+--    TypeSet (TypeUnnamed nameset) <- i
+--    if nameperm == nameset
+--       then applyPermutationOverSet
+--       else na "rule_Permute_Set"
+--  theRule _ = na "rule_Permute_Set"
+--
+--applyPermutationOverSet = error "applyPermutationOverSet"

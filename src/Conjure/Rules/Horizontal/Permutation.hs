@@ -1,9 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
-
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.List (cycle)
-
 
 rule_Apply :: Rule
 rule_Apply = "permutation-apply{rule_Apply}" `namedRule` theRule where
@@ -21,6 +19,7 @@ rule_Apply = "permutation-apply{rule_Apply}" `namedRule` theRule where
   theRule _ = na "rule_Apply"
 
 
+
 rule_Permute_Literal :: Rule
 rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` theRule where
   theRule [essence| permute(&p, &i) |] = do
@@ -30,7 +29,7 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
        then do        
            innerD <- domainOf i
            let prmTup pt = take (length pt) $ zip (cycle pt) (drop 1 $ cycle pt)
-               permTups  = join $ prmTup <$> elems 
+               permTups = join $ prmTup <$> elems 
            let outLiteral = make matrixLiteral
                                (TypeMatrix TypeInt (TypeTuple [inner,inner]))
                                (DomainInt [RangeBounded 1 (fromInt (genericLength permTups))])

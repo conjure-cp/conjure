@@ -4,13 +4,11 @@ module Conjure.Language.Expression.Op.PermutationTuples where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Bug
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
-import Data.List (cycle)
 
 data OpPermutationTuples x = OpPermutationTuples x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)

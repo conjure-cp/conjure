@@ -1073,11 +1073,13 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_ToSet_List_DuplicateFree
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
+--    , Vertical.Matrix.rule_Matrix_Leq_Symbreak_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
     , Vertical.Matrix.rule_Matrix_DotLeq_Decompose
+--    , Vertical.Matrix.rule_Matrix_DotLeq_Symbreak_Decompose
     , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 

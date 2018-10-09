@@ -4,7 +4,7 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq, decomposeLexDotLeqSym  )
 
 
 rule_Comprehension_Literal :: Rule
@@ -379,6 +379,37 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
 
 rule_Matrix_Leq_Primitive :: Rule
 rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
+    theRule [essence| &x .<= permute(&perm, &y) |]  = do
+        tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
+        ty@(TypeMatrix _ yinner) <- typeOf y
+        (TypePermutation pinner) <- typeOf perm
+        if typesUnify [yinner, pinner]
+          then do
+            unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
+            unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+            x' <- flattenIfNeeded x
+            y' <- flattenIfNeeded y
+            dy'@(DomainMatrix dyindex _) <- domainOf y'
+            return
+                ( "Horizontal rule for matrix <="
+                , do
+                  (dPat, d) <- quantifiedVar
+                  (pyName, py) <- auxiliaryVar
+                  return $ WithLocals
+                            [essence| &x' <=lex &py |]
+                         (AuxiliaryVars
+                           --TODO need union of permutation and dy domains
+                           [ Declaration (FindOrGiven LocalFind pyName dy')
+                           , SuchThat
+                             [ [essence|
+                                  forAll &dPat : &dyindex .
+                                    &py[&d] = permute(&perm,&y'[&d]) 
+                               |]
+                             ]
+                           ]
+                         )
+                )
+          else na "rule_Matrix_Leq_Symbreak_Primitive" 
     theRule p = do
         (x,y)           <- case (match opLeq p, match opDotLeq p) of
                                 (Just a, _) -> return a
@@ -446,6 +477,17 @@ rule_Matrix_DotLt_Decompose = "matrix-DotLt-tuple" `namedRule` theRule where
 
 rule_Matrix_DotLeq_Decompose :: Rule
 rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
+    theRule p@[essence| &x .<= permute(&perm, &y) |] = do
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        xs              <- downX1 x
+        ys              <- downX1 y
+        return
+            ( "Horizontal rule for matrix .<=, decomposing"
+            , return $ decomposeLexDotLeqSym p perm xs ys
+            )
     theRule p = do
         (x,y)           <- match opDotLeq p
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
@@ -458,6 +500,62 @@ rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
             ( "Horizontal rule for matrix .<=, decomposing"
             , return $ decomposeLexDotLeq p xs ys
             )
+
+-- HACK
+-- Moved inside rule_Matrix_DotLeq_Decompose since we need to do this refinement first
+-- otherwise compact will choose the other as it will also match and we fail
+rule_Matrix_DotLeq_Symbreak_Decompose :: Rule
+rule_Matrix_DotLeq_Symbreak_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
+    theRule p@[essence| &x .<= permute(&perm, &y) |] = do
+        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeMatrix{} <- typeOf y
+        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
+        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
+        xs              <- downX1 x
+        ys              <- downX1 y
+        return
+            ( "Horizontal rule for matrix .<=, decomposing"
+            , return $ decomposeLexDotLeqSym p perm xs ys
+            )
+    theRule _ = na "rule_Matrix_DotLeq_Symbreak_Decompose"
+
+-- HACK
+-- Moved inside rule_Matrix_Leq_Primitive since we need to do this refinement first
+-- otherwise compact will choose the other as it will also match and we fail
+rule_Matrix_Leq_Symbreak_Primitive :: Rule
+rule_Matrix_Leq_Symbreak_Primitive = "matrix-Leq-symbreak-primitive" `namedRule` theRule where
+    theRule [essence| &x .<= permute(&perm, &y) |]  = do
+        tx@TypeMatrix{} <- typeOf x        -- TODO: check if x and y have the same arity
+        ty@(TypeMatrix _ yinner) <- typeOf y
+        (TypePermutation pinner) <- typeOf perm
+        if typesUnify [yinner, pinner]
+          then do
+            unless (isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
+            unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+            x' <- flattenIfNeeded x
+            y' <- flattenIfNeeded y
+            dy'@(DomainMatrix dyindex _) <- domainOf y'
+            return
+                ( "Horizontal rule for matrix <="
+                , do
+                  (dPat, d) <- quantifiedVar
+                  (pyName, py) <- auxiliaryVar
+                  return $ WithLocals
+                            [essence| &x' <=lex &py |]
+                         (AuxiliaryVars
+                           --TODO need union of permutation and dy domains
+                           [ Declaration (FindOrGiven LocalFind pyName dy')
+                           , SuchThat
+                             [ [essence|
+                                  forAll &dPat : &dyindex .
+                                    &py[&d] = permute(&perm,&y'[&d]) 
+                               |]
+                             ]
+                           ]
+                         )
+                )
+          else na "rule_Matrix_Leq_Symbreak_Primitive" 
+    theRule _ = na "rule_Matrix_Leq_Symbreak_Primitive" 
 
 
 rule_Comprehension_SingletonDomain :: Rule

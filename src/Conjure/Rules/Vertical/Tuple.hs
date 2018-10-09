@@ -11,6 +11,7 @@ rule_Tuple_Eq = "tuple-eq" `namedRule` theRule where
         (x,y)       <- match opEq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -25,6 +26,7 @@ rule_Tuple_Neq = "tuple-neq" `namedRule` theRule where
         (x,y)       <- match opNeq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -39,6 +41,7 @@ rule_Tuple_Lt = "tuple-Lt" `namedRule` theRule where
         (x,y)       <- match opLt p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -53,6 +56,7 @@ rule_Tuple_Leq = "tuple-Leq" `namedRule` theRule where
         (x,y)       <- match opLeq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -67,6 +71,7 @@ rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
         (x,y)       <- match opDotLt p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -81,6 +86,7 @@ rule_Tuple_DotLeq = "tuple-DotLeq" `namedRule` theRule where
         (x,y)       <- match opDotLeq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -95,6 +101,7 @@ rule_Tuple_TildeLt = "tuple-TildeLt" `namedRule` theRule where
         (x,y)       <- match opTildeLt p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
@@ -109,12 +116,24 @@ rule_Tuple_TildeLeq = "tuple-TildeLeq" `namedRule` theRule where
         (x,y)       <- match opTildeLeq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
         TypeTuple{} <- typeOf y
+--        failExceptForTuplesOfSameArity x y
         xs          <- downX1 x
         ys          <- downX1 y
         return
             ( "Horizontal rule for tuple .<="
             , return $ decomposeLexTildeLeq p xs ys
             )
+
+failExceptForTuplesOfSameArity :: MonadFail m => Expression -> Expression -> m () 
+failExceptForTuplesOfSameArity (AbstractLiteral (AbsLitTuple a)) (AbstractLiteral (AbsLitTuple b)) = 
+  if length a == length b
+     then return ()
+     else fail "failExceptForTuplesOfSameArity: These tuples are not of the same arity."
+failExceptForTuplesOfSameArity (Domain (DomainTuple a)) (Domain (DomainTuple b)) = 
+  if length a == length b
+     then return ()
+     else fail "failExceptForTuplesOfSameArity: These tuples are not of the same arity."
+failExceptForTuplesOfSameArity _ _ = fail "failExceptForTuplesOfSameArity: These things are not tuples."
 
 
 decomposeLexLt :: Expression -> [Expression] -> [Expression] -> Expression
@@ -149,6 +168,16 @@ decomposeLexDotLeq p = unroll
         unroll (a:as) (b:bs) = let rest = unroll as bs
                                in  [essence| (&a .< &b) \/ ((&a = &b) /\ &rest) |]
         unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
+decomposeLexDotLeqSym :: Expression -> Expression
+                      -> [Expression] -> [Expression] -> Expression
+decomposeLexDotLeqSym p perm = unroll
+    where
+        unroll [a]    [b]    = [essence| &a .<= permute(&perm, &b) |]
+        unroll (a:as) (b:bs) = let rest = unroll as bs
+                               in  [essence| (&a .< apply(&perm,&b)) \/ ((&a = apply(&perm,&b)) /\ &rest) |]
+        unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
+
 
 
 decomposeLexTildeLt :: Expression -> [Expression] -> [Expression] -> Expression
