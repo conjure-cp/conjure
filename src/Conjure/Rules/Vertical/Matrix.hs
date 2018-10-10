@@ -480,6 +480,7 @@ rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
     theRule p@[essence| &x .<= permute(&perm, &y) |] = do
         tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
         ty@TypeMatrix{} <- typeOf y
+        TypePermutation{} <- typeOf perm
         when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
         when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
         xs              <- downX1 x

@@ -82,6 +82,17 @@ rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
 
 rule_Tuple_DotLeq :: Rule
 rule_Tuple_DotLeq = "tuple-DotLeq" `namedRule` theRule where
+    theRule p@[essence| &x .<= permute(&perm, &y) |] = do
+        tx@TypeTuple{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        ty@TypeTuple{} <- typeOf y
+        TypePermutation{} <- typeOf perm
+        xs              <- downX1 x
+        ys              <- downX1 y
+        return
+            ( "Horizontal rule for matrix .<=, decomposing"
+            , return $ decomposeLexDotLeqSym p perm xs ys
+            )
+
     theRule p = do
         (x,y)       <- match opDotLeq p
         TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
@@ -175,7 +186,7 @@ decomposeLexDotLeqSym p perm = unroll
     where
         unroll [a]    [b]    = [essence| &a .<= permute(&perm, &b) |]
         unroll (a:as) (b:bs) = let rest = unroll as bs
-                               in  [essence| (&a .< apply(&perm,&b)) \/ ((&a = apply(&perm,&b)) /\ &rest) |]
+                               in  [essence| (&a .< permute(&perm,&b)) \/ ((&a = permute(&perm,&b)) /\ &rest) |]
         unroll _ _ = bug ("arity mismatch in:" <+> pretty p)
 
 
