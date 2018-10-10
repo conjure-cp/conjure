@@ -13,9 +13,9 @@ cd gecode
 git checkout release-6.0.1
 mkdir build
 cd build
-cmake ..
-cmake --build .
-cp bin/fzn-gecode ${BIN_DIR}/fzn-gecode
+../configure --disable-qt --disable-gist --enable-static
+make
+cp tools/flatzinc/fzn-gecode ${BIN_DIR}/fzn-gecode
 echo "gecode executable is at ${BIN_DIR}/fzn-gecode"
 ls -l ${BIN_DIR}/fzn-gecode
 popd
