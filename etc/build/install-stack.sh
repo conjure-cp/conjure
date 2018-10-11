@@ -27,7 +27,7 @@ if ! which stack 2> /dev/null > /dev/null; then
         if dlStack ; then
             echo "Downloaded stack."
         else
-            echo "Couldn't downloaded stack, attempting build from source."
+            echo "Couldn't download stack, attempting build from source."
             if which curl 2> /dev/null > /dev/null; then
                 curl -sSL https://get.haskellstack.org/ | sh -s - -d ${BIN_DIR}
             elif which wget 2> /dev/null > /dev/null; then
