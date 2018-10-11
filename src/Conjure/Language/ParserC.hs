@@ -506,7 +506,7 @@ parseAtomicExpr = parseAtomicExprNoPrePost <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
 -- parseAtomicExprNoPrePost | trace "parseAtomicExprNoPrePost" True = msum [try parseLiteral, parseTyped]
-parseAtomicExprNoPrePost = msum [try parseLiteral, parseTyped]
+parseAtomicExprNoPrePost = msum [try parseLiteral, parseReference, parseTyped]
 
 parseTyped :: Parser Expression
 -- parseTyped | trace "parseTyped" True = parens $ do
@@ -519,6 +519,9 @@ parseTyped = parens $ do
 
 parseName :: Parser Name
 parseName = Name <$> identifierText
+
+parseReference :: Parser Expression
+parseReference = Reference <$> parseName <*> pure Nothing
 
 parseLiteral :: Parser Expression
 parseLiteral = label "value" (do p <- pCore ; p)

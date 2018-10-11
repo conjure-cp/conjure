@@ -1,0 +1,13 @@
+language Essence 1.3
+
+given items new type enum
+
+given capacity : int
+
+given gain, weight : function (total) items --> int(0..capacity)
+
+find knapsack : set of items
+
+such that sum([ weight(i) | i <- knapsack ]) <= capacity
+such that sum([ gain(i) | i <- knapsack ]) >= 80
+
