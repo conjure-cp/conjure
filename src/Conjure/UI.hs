@@ -125,6 +125,7 @@ data UI
         }
     | IDE
         { essence                    :: FilePath            -- Optional, will read from stdin if not provided
+        , logLevel                   :: LogLevel
         , limitTime                  :: Maybe Int
         , lineWidth                  :: Int                 -- 120 by default
         }
@@ -865,7 +866,15 @@ ui = modes
         { essence
             = def
             &= typFile
-            &= argPos 0
+            &= name "essence"
+            &= explicit
+            &= help "Problem specification in Essence."
+        , logLevel
+            = def
+            &= name "log-level"
+            &= groupname "Logging & Output"
+            &= explicit
+            &= help "Log level."
         , limitTime
             = Nothing
             &= name "limit-time"
