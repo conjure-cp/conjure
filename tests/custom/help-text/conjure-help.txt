@@ -225,6 +225,16 @@
                                                - open-wbo (MaxSAT solver, only works with optimisation problems)
                                               Default: minion
  
+ conjure ide [OPTIONS] FILE
+   IDE support features for Conjure.
+   Not intended for direct use.
+ 
+ General:
+      --limit-time=INT                        Limit in seconds of real time.
+ Logging & Output:
+      --line-width=INT                        Line width for pretty printing.
+                                              Default: 120
+ 
  conjure pretty [OPTIONS] FILE
    Pretty print as Essence file to stdout.
    This mode can be used to view a binary Essence file in textual form.
