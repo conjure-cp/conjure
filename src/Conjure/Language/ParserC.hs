@@ -59,15 +59,36 @@ parseModel = inCompleteFile $ do
 --------------------------------------------------------------------------------
 
 parseTopLevels :: Parser [Statement]
--- parseTopLevels = trace "parseTopLevels" $ do
 parseTopLevels = do
     let one = do
                 lexeme L_letting
                 i <- parseName
                 lexeme L_be
-                j <- parseExpr
-                return (Declaration (Letting i j))
-                    <?> "letting statement"
+                msum
+                    [ do
+                        lexeme L_new
+                        lexeme L_type
+                        msum
+                            [ do
+                                lexeme L_of
+                                lexeme $ LIdentifier "size"
+                                j <- parseExpr
+                                return $ Declaration (LettingDomainDefnUnnamed i j)
+                            , do
+                                lexeme L_enum
+                                ys <- braces (commaSeparated parseName) <|> return []
+                                modify (\ st -> st { enumDomains = [i] ++ enumDomains st } )
+                                return $ Declaration (LettingDomainDefnEnum i ys)
+                            ]
+                    , do
+                        lexeme L_domain
+                        j <- parseDomain
+                        return $ Declaration (Letting i (Domain j))
+                    , do
+                        j <- parseExpr
+                        return $ Declaration (Letting i j)
+                    ]
+                <?> "letting statement"
     some one
 
 parseRange :: Parser a -> Parser (Range a)
