@@ -30,7 +30,7 @@ import qualified Data.Text.IO as T ( getContents )
 import qualified Data.Text.Encoding as T ( encodeUtf8 )
 
 -- bytestring
-import qualified Data.ByteString as BS ( readFile, writeFile, getContents )
+import qualified Data.ByteString as BS ( readFile, writeFile )
 import qualified Data.ByteString.Char8 as BS ( putStrLn )
 
 
