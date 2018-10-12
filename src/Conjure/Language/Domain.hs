@@ -287,6 +287,8 @@ getIndices d = ([], d)
 domainCanIndexMatrix :: Domain r x -> Bool
 domainCanIndexMatrix DomainBool{} = True
 domainCanIndexMatrix DomainInt {} = True
+domainCanIndexMatrix DomainIntE{} = True
+domainCanIndexMatrix DomainEnum{} = True
 domainCanIndexMatrix _            = False
 
 

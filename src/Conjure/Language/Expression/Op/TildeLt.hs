@@ -52,7 +52,7 @@ instance EvaluateOp OpTildeLt where
                                | j <- cs
                                ]
                          ]
-                   | let cs = nub (as ++ bs)
+                   | let cs = sortNub (as ++ bs)
                    , i <- cs
                    ]
             tilLt (viewConstantMSet -> Just as)

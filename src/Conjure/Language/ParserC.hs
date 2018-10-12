@@ -60,48 +60,36 @@ parseModel = inCompleteFile $ do
 
 parseTopLevels :: Parser [Statement]
 parseTopLevels = do
-    let one = msum
-                [ do
-                    lexeme L_letting
-                    decls <- commaSeparated $ do
-                        is <- commaSeparated parseName
-                        lexeme L_be
+    let one = do
+                lexeme L_letting
+                i <- parseName
+                lexeme L_be
+                msum
+                    [ do
+                        lexeme L_new
+                        lexeme L_type
                         msum
                             [ do
-                                lexeme L_new
-                                lexeme L_type
-                                msum
-                                    [ do
-                                        lexeme L_of
-                                        lexeme $ LIdentifier "size"
-                                        j <- parseExpr
-                                        return [ Declaration (LettingDomainDefnUnnamed i j)
-                                               | i <- is
-                                               ]
-                                    , do
-                                        lexeme L_enum
-                                        ys <- braces (commaSeparated parseName) <|> return []
-                                        modify (\ st -> st { enumDomains = is ++ enumDomains st } )
-                                        return [ Declaration (LettingDomainDefnEnum i ys)
-                                               | i <- is
-                                               ]
-                                    ]
-                            , do
-                                lexeme L_domain
-                                j <- parseDomain
-                                return [ Declaration (Letting i (Domain j))
-                                       | i <- is
-                                       ]
-                            , do
+                                lexeme L_of
+                                lexeme $ LIdentifier "size"
                                 j <- parseExpr
-                                return [ Declaration (Letting i j)
-                                       | i <- is
-                                       ]
+                                return $ Declaration (LettingDomainDefnUnnamed i j)
+                            , do
+                                lexeme L_enum
+                                ys <- braces (commaSeparated parseName) <|> return []
+                                modify (\ st -> st { enumDomains = [i] ++ enumDomains st } )
+                                return $ Declaration (LettingDomainDefnEnum i ys)
                             ]
-                    return $ concat decls
-                    <?> "letting statement"
-                ] <?> "statement"
-    concat <$> some one
+                    , do
+                        lexeme L_domain
+                        j <- parseDomain
+                        return $ Declaration (Letting i (Domain j))
+                    , do
+                        j <- parseExpr
+                        return $ Declaration (Letting i j)
+                    ]
+                <?> "letting statement"
+    some one
 
 parseRange :: Parser a -> Parser (Range a)
 parseRange p = msum [try pRange, pSingle] <?> "range"
@@ -509,15 +497,19 @@ parseMetaVariable = do
     return (T.unpack iden)
 
 parseExpr :: Parser Expression
+-- parseExpr | trace "parseExpr" True = parseAtomicExpr <?> "expression"
 parseExpr = parseAtomicExpr <?> "expression"
 
 parseAtomicExpr :: Parser Expression
+-- parseAtomicExpr | trace "parseAtomicExpr" True = parseAtomicExprNoPrePost <?> "expression"
 parseAtomicExpr = parseAtomicExprNoPrePost <?> "expression"
 
 parseAtomicExprNoPrePost :: Parser Expression
-parseAtomicExprNoPrePost = msum [try parseLiteral, parseTyped]
+-- parseAtomicExprNoPrePost | trace "parseAtomicExprNoPrePost" True = msum [try parseLiteral, parseTyped]
+parseAtomicExprNoPrePost = msum [try parseLiteral, parseReference, parseTyped]
 
 parseTyped :: Parser Expression
+-- parseTyped | trace "parseTyped" True = parens $ do
 parseTyped = parens $ do
     x  <- parseExpr
     lexeme L_Colon
@@ -528,22 +520,12 @@ parseTyped = parens $ do
 parseName :: Parser Name
 parseName = Name <$> identifierText
 
+parseReference :: Parser Expression
+parseReference = Reference <$> parseName <*> pure Nothing
+
 parseLiteral :: Parser Expression
-parseLiteral = label "value" $ msum
-    [ Constant <$> pBool
-    , Constant <$> pInt
-    , mkAbstractLiteral <$> pMatrix
-    , mkAbstractLiteral <$> pTupleWith
-    , mkAbstractLiteral <$> pTupleWithout
-    , mkAbstractLiteral <$> pRecord
-    , AbstractLiteral <$> pVariant
-    , mkAbstractLiteral <$> pSet
-    , mkAbstractLiteral <$> pMSet
-    , mkAbstractLiteral <$> pFunction
-    , mkAbstractLiteral <$> pSequence
-    , mkAbstractLiteral <$> pRelation
-    , mkAbstractLiteral <$> pPartition
-    ]
+parseLiteral = label "value" (do p <- pCore ; p)
+
     where
 
         -- convert x to a constant if possible
@@ -553,18 +535,30 @@ parseLiteral = label "value" $ msum
                 Nothing -> AbstractLiteral x
                 Just c  -> Constant c
 
-        pBool = do
-            x <- False <$ lexeme L_false
-                 <|>
-                 True  <$ lexeme L_true
-            return (ConstantBool x)
+        pCore :: Parser (Parser Expression)
+        pCore = satisfyL $ \case
+                L_false       -> Just $ return $ Constant $ ConstantBool False
+                L_true        -> Just $ return $ Constant $ ConstantBool True
+                LIntLiteral i -> Just $ return $ Constant $ ConstantInt (fromInteger i)
+                L_OpenBracket -> Just pMatrix
+                L_tuple       -> Just pTupleWith
+                L_OpenParen   -> Just pTupleWithout
+                L_record      -> Just pRecord
+                L_variant     -> Just pVariant
+                L_OpenCurly   -> Just pSet
+                L_mset        -> Just pMSet
+                L_function    -> Just pFunction
+                L_sequence    -> Just pSequence
+                L_relation    -> Just pRelation
+                L_partition   -> Just pPartition
+                L_Minus       -> Just $ do
+                    p <- pCore
+                    res <- p
+                    return (negate res)
+                _ -> Nothing
 
-        pInt = ConstantInt . fromInteger <$> integer
-                <|>
-               (do lexeme L_Minus ; negate <$> pInt)
-
-        pMatrix = do
-            lexeme L_OpenBracket
+        pMatrix = mkAbstractLiteral <$> do
+            -- lexeme L_OpenBracket
             xs <- commaSeparated0 parseExpr
             msum
                 [ do
@@ -578,17 +572,19 @@ parseLiteral = label "value" $ msum
                     return (AbsLitMatrix r xs)
                 ]
 
-        pTupleWith = do
-            lexeme L_tuple
+        pTupleWith = mkAbstractLiteral <$> do
+            -- lexeme L_tuple
             xs <- parens $ commaSeparated0 parseExpr
             return (AbsLitTuple xs)
 
-        pTupleWithout = do
-            xs <- parens $ countSepAtLeast 2 parseExpr comma
+        pTupleWithout = mkAbstractLiteral <$> do
+            -- xs <- parens $ countSepAtLeast 2 parseExpr comma
+            xs <- countSepAtLeast 2 parseExpr comma
+            lexeme L_CloseParen
             return (AbsLitTuple xs)
 
-        pRecord = do
-            lexeme L_record
+        pRecord = mkAbstractLiteral <$> do
+            -- lexeme L_record
             let one = do n <- parseName
                          lexeme L_Eq
                          x <- parseExpr
@@ -596,8 +592,8 @@ parseLiteral = label "value" $ msum
             xs <- braces $ commaSeparated0 one
             return $ AbsLitRecord xs
 
-        pVariant = do
-            lexeme L_variant
+        pVariant = mkAbstractLiteral <$> do
+            -- lexeme L_variant
             let one = do n <- parseName
                          lexeme L_Eq
                          x <- parseExpr
@@ -605,34 +601,36 @@ parseLiteral = label "value" $ msum
             (n,x) <- braces one
             return $ AbsLitVariant Nothing n x
 
-        pSet = do
-            xs <- braces (commaSeparated0 parseExpr)
+        pSet = mkAbstractLiteral <$> do
+            -- xs <- braces (commaSeparated0 parseExpr)
+            xs <- commaSeparated0 parseExpr
+            lexeme L_CloseCurly
             return (AbsLitSet xs)
 
-        pMSet = do
-            lexeme L_mset
+        pMSet = mkAbstractLiteral <$> do
+            -- lexeme L_mset
             xs <- parens (commaSeparated0 parseExpr)
             return (AbsLitMSet xs)
 
-        pFunction = do
-            lexeme L_function
+        pFunction = mkAbstractLiteral <$> do
+            -- lexeme L_function
             xs <- parens (commaSeparated0 inner)
             return (AbsLitFunction xs)
             where
                 inner = arrowedPair parseExpr
 
-        pSequence = do
-            lexeme L_sequence
+        pSequence = mkAbstractLiteral <$> do
+            -- lexeme L_sequence
             xs <- parens (commaSeparated0 parseExpr)
             return (AbsLitSequence xs)
 
-        pRelation = do
-            lexeme L_relation
-            xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
-            return (AbsLitRelation [is | AbsLitTuple is <- xs])
+        pRelation = mkAbstractLiteral <$> do
+            -- lexeme L_relation
+            xs <- parens (commaSeparated0 (parseLiteral))
+            return (AbsLitRelation [is | AbstractLiteral (AbsLitTuple is) <- xs])
 
-        pPartition = do
-            lexeme L_partition
+        pPartition = mkAbstractLiteral <$> do
+            -- lexeme L_partition
             xs <- parens (commaSeparated0 inner)
             return (AbsLitPartition xs)
             where
@@ -650,7 +648,25 @@ satisfyT :: (Lexeme -> Bool) -> Parser Lexeme
 satisfyT predicate = token nextPos testTok
     where
         testTok :: LexemePos -> Either [Message] Lexeme
-        testTok (LexemePos tok _ _) = if predicate tok then Right tok else Left [Unexpected (showToken tok)]
+        testTok (LexemePos tok _ _) =
+            -- trace ("satisfyT: " ++ show pos ++ "\t" ++ show tok) $
+            if predicate tok
+                then Right tok
+                else Left [Unexpected (showToken tok)]
+
+        nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
+        nextPos _ _ (LexemePos _ _ pos) = pos
+
+satisfyL :: forall a . (Lexeme -> Maybe a) -> Parser a
+satisfyL predicate = token nextPos testTok
+    where
+        testTok :: LexemePos -> Either [Message] a
+        testTok (LexemePos tok _ _) =
+            -- trace ("satisfyL: " ++ show pos ++ "\t" ++ show tok) $
+            case predicate tok of
+                Nothing  -> Left [Unexpected (showToken tok)]
+                Just res -> Right res
+
         nextPos :: Int -> SourcePos -> LexemePos -> SourcePos
         nextPos _ _ (LexemePos _ _ pos) = pos
 
@@ -702,6 +718,7 @@ brackets :: Parser a -> Parser a
 brackets = between (lexeme L_OpenBracket) (lexeme L_CloseBracket)
 
 lexeme :: Lexeme -> Parser ()
+-- lexeme l = trace ("lexeme: " ++ show l) (void (satisfyT (l==)) <?> show (lexemeFace l))
 lexeme l = void (satisfyT (l==)) <?> show (lexemeFace l)
 
 arrowedPair :: Parser a -> Parser (a,a)

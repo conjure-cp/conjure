@@ -62,8 +62,15 @@ instance DomainSizeOf Expression Expression where
         maxSize  <- getMaxSize
         maxOccur <- getMaxOccur
         return (make opPow maxOccur maxSize)
-    domainSizeOf (DomainSequence _ (SequenceAttr sizeAttr _) innerTo) =
-        domainSizeOf $ DomainRelation def (RelationAttr sizeAttr def) [innerTo, innerTo]
+    domainSizeOf d@(DomainSequence _ (SequenceAttr sizeAttr jectivityAttr) innerTo) = do
+        size <- case sizeAttr of
+            SizeAttr_None           -> fail ("Infinite domain:" <+> pretty d)
+            SizeAttr_Size s         -> return s
+            SizeAttr_MinSize _      -> fail ("Infinite domain:" <+> pretty d)
+            SizeAttr_MaxSize s      -> return s
+            SizeAttr_MinMaxSize _ s -> return s
+        domainSizeOf $ DomainFunction def (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
+            (DomainInt [RangeBounded 1 size]) innerTo
     domainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) =
         domainSizeOf $ DomainRelation def (RelationAttr sizeAttr def) [innerFr, innerTo]
     domainSizeOf (DomainRelation _ (RelationAttr sizeAttr _binRelAttr) inners) =

@@ -262,7 +262,7 @@ valuesInIntDomain ranges =
         isFinite = Nothing `notElem` allRanges
 
         allValues :: [Integer]
-        allValues = nub $ concat $ catMaybes allRanges
+        allValues = sortNub $ concat $ catMaybes allRanges
 
 
 -- | Assuming both the value and the domain are normalised

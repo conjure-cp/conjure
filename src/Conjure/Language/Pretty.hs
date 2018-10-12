@@ -126,19 +126,21 @@ instance Pretty JSON.Object where
                 = pretty (show key) <> ":" <++> prettyArrayVCat value
             f (key, value) = pretty (show key) <> ":" <++> pretty value
 
-            keyOrder = [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
-                       , "strategyQ", "strategyA"
-                       , "trailCompact", "trailVerbose", "trailRewrites"
-                       , "nameGenState", "nbExtraGivens"
-                       , "representations", "representationsTree"
-                       , "originalDomains"
-                       , "questionAnswered"
-                       , "before", "after"
-                       ]
+            keyOrder :: M.HashMap Text Int
+            keyOrder = M.fromList $
+                zip [ "finds", "givens", "enumGivens", "enumLettings", "unnameds"
+                    , "strategyQ", "strategyA"
+                    , "trailCompact", "trailVerbose", "trailRewrites"
+                    , "nameGenState", "nbExtraGivens"
+                    , "representations", "representationsTree"
+                    , "originalDomains"
+                    , "questionAnswered"
+                    , "before", "after"
+                    ] [1..]
 
             comp a b =
-                let preferred = compare <$> elemIndex a keyOrder
-                                        <*> elemIndex b keyOrder
+                let preferred = compare <$> M.lookup a keyOrder
+                                        <*> M.lookup b keyOrder
                 in  fromMaybe (compare a b) preferred
 
 instance Pretty JSON.Array where

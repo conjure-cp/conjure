@@ -3,7 +3,7 @@ SHELL := /bin/bash
 
 # these are default values
 # override by calling the makefile like so: "GHC_VERSION=8.2 make"
-export GHC_VERSION?=8.2
+export GHC_VERSION?=8.4
 export BIN_DIR?=${HOME}/.local/bin
 export CI?=false
 export BUILD_TESTS?=false
@@ -116,3 +116,15 @@ hlint:
 	    -i "Use ++" \
 	    -i "Redundant return" \
 	    -i "Monad law, left identity"
+
+.PHONY: solvers
+solvers:
+	@etc/build/silent-wrapper.sh etc/build/install-minion.sh
+	@etc/build/silent-wrapper.sh etc/build/install-chuffed.sh
+	@etc/build/silent-wrapper.sh etc/build/install-gecode.sh
+	@etc/build/silent-wrapper.sh etc/build/install-glucose.sh
+	@etc/build/silent-wrapper.sh etc/build/install-lingeling.sh
+	@etc/build/silent-wrapper.sh etc/build/install-open-wbo.sh
+	@etc/build/silent-wrapper.sh etc/build/install-bc_minisat_all.sh
+	@etc/build/silent-wrapper.sh etc/build/install-nbc_minisat_all.sh
+

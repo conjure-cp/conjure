@@ -15,11 +15,11 @@ else
 fi
 
 
-export BIN_DIR=${BIN_DIR:-${HOME}/.cabal/bin}
+export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ~/tmp-install-oscar-cbls
-mkdir ~/tmp-install-oscar-cbls
-pushd ~/tmp-install-oscar-cbls
+rm -rf ${BIN_DIR}/tmp-install-oscar-cbls
+mkdir ${BIN_DIR}/tmp-install-oscar-cbls
+pushd ${BIN_DIR}/tmp-install-oscar-cbls
 hg clone ssh://hg@bitbucket.org/oscarlib/oscar-releases
 cd oscar-releases/oscar-cbls-flatzinc
 bash setup.sh
@@ -28,5 +28,5 @@ cp mzn-oscar-cbls ${BIN_DIR}/mzn-oscar-cbls
 cp -r mznlib-cbls ${BIN_DIR}/mznlib-cbls
 ls -l ${BIN_DIR}/*cbls
 popd
-rm -rf ~/tmp-install-oscar-cbls
+rm -rf ${BIN_DIR}/tmp-install-oscar-cbls
 
