@@ -129,6 +129,20 @@ rule_DotLt = "set-DotLt" `namedRule` theRule where
 
 rule_DotLeq :: Rule
 rule_DotLeq = "set-DotLeq" `namedRule` theRule where
+  --This works but not for occurrence rep
+    theRule [essence| &a .<= permute(&perm, &b) |] = do
+        TypeSet{} <- typeOf a
+        TypeSet{} <- typeOf b
+        TypePermutation{} <- typeOf perm
+        sameRepresentation a b
+        ma <- tupleLitIfNeeded <$> downX1 a
+        mb <- tupleLitIfNeeded <$> downX1 b
+        return
+            ( "Horizontal rule for set .<="
+                <+> pretty ([essence| &ma .<= permute(&perm, &mb) |])
+
+            , return $ [essence| &ma .<= permute(&perm, &mb) |]
+            )
     theRule p = do
         (a,b)     <- match opDotLeq p
         TypeSet{} <- typeOf a

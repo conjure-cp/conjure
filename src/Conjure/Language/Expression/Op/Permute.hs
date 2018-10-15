@@ -25,6 +25,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPermute x) where
         pTy <- typeOf p
         iTy <- typeOf i
         case (pTy,iTy) of
+            (TypePermutation pTyInner, TypeSet mTyInner) ->
+             if typesUnify $ [pTyInner, mTyInner]
+               then return $ TypeSet mTyInner
+               else raiseTypeError inp 
             (TypePermutation pTyInner, TypeTuple mTyInner) ->
              if typesUnify $ [pTyInner] ++ mTyInner
                then return $ TypeTuple mTyInner

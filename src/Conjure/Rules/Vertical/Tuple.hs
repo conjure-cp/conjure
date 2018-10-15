@@ -83,8 +83,8 @@ rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
 rule_Tuple_DotLeq :: Rule
 rule_Tuple_DotLeq = "tuple-DotLeq" `namedRule` theRule where
     theRule p@[essence| &x .<= permute(&perm, &y) |] = do
-        tx@TypeTuple{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        ty@TypeTuple{} <- typeOf y
+        TypeTuple{} <- typeOf x     -- TODO: check matrix index & tuple arity
+        TypeTuple{} <- typeOf y
         TypePermutation{} <- typeOf perm
         xs              <- downX1 x
         ys              <- downX1 y
