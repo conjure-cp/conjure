@@ -1,0 +1,100 @@
+ == lexer.essence ==
+Error: Lexing error: # y = 2
+
+
+
+ == parser.essence ==
+Error:
+    parser.essence:7:28:
+unexpected =
+expecting comma, end of input, operator, rest of statement, or statement
+    such that x + y = z, x = 1 = y = 2
+                               ^
+
+
+ == type.essence ==
+Error:
+    In a 'such that' statement: x union y = 2
+    Error:
+        When type checking: x union y
+        Arguments expected to be one of these types: set of ?, mset of ?, function ? --> ?, relation of (?)
+        lhs        : x
+        type of lhs: int
+        rhs        : y
+        type of rhs: int
+
+
+ == category.essence ==
+Error:
+    Category checking failed.
+    The domain   : int(x..y)
+    Its category : decision
+    In the definition of: t
+    
+
+
+ == wellformed.essence ==
+{"mInfo":
+     {"finds": [],
+      "givens": [],
+      "enumGivens": [],
+      "enumLettings": [],
+      "lettings": [],
+      "unnameds": [],
+      "strategyQ": {"Auto": {"Interactive": []}},
+      "strategyA": {"Auto": {"Interactive": []}},
+      "trailCompact": [],
+      "trailVerbose": [],
+      "trailRewrites": [],
+      "nameGenState": [],
+      "nbExtraGivens": 0,
+      "representations": [],
+      "representationsTree": [],
+      "originalDomains": [],
+      "questionAnswered": []},
+ "mLanguage":
+     {"language": {"Name": "Essence"},
+      "version": [1, 3]},
+ "mStatements":
+     [{"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "x"},
+                 {"DomainInt":
+                      [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 3}}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "y"},
+                 {"DomainInt":
+                      [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 3}}]}]}]}},
+      {"Declaration":
+           {"FindOrGiven":
+                ["Find", {"Name": "z"},
+                 {"DomainInt":
+                      [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 3}}]}]}]}},
+      {"SuchThat":
+           [{"Op":
+                 {"MkOpEq":
+                      [{"Op":
+                            {"MkOpSum":
+                                 {"AbstractLiteral":
+                                      {"AbsLitMatrix":
+                                           [{"DomainInt":
+                                                 [{"RangeBounded":
+                                                       [{"Constant": {"ConstantInt": 1}},
+                                                        {"Constant": {"ConstantInt": 2}}]}]},
+                                            [{"Reference": [{"Name": "x"}, null]},
+                                             {"Reference": [{"Name": "y"}, null]}]]}}}},
+                       {"Reference": [{"Name": "z"}, null]}]}},
+            {"Op": {"MkOpEq": [{"Reference": [{"Name": "x"}, null]}, {"Constant": {"ConstantInt": 1}}]}},
+            {"Op": {"MkOpEq": [{"Reference": [{"Name": "y"}, null]}, {"Constant": {"ConstantInt": 2}}]}},
+            {"Op":
+                 {"MkOpAllDiff":
+                      {"AbstractLiteral":
+                           {"AbsLitMatrix":
+                                [{"DomainInt":
+                                      [{"RangeBounded":
+                                            [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 3}}]}]},
+                                 [{"Reference": [{"Name": "x"}, null]}, {"Reference": [{"Name": "y"}, null]},
+                                  {"Reference": [{"Name": "z"}, null]}]]}}}}]}]}
+
+

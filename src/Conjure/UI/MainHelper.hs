@@ -156,6 +156,7 @@ mainWithArgs IDE{..} = do
             then readModelFromStdin
             else readModelFromFile essence    
     void $ runNameGen () $ typeCheckModel_StandAlone essence2
+    writeModel lineWidth JSON Nothing essence2
 mainWithArgs Pretty{..} = do
     model0 <- if or [ s `isSuffixOf` essence
                     | s <- [".param", ".eprime-param", ".solution", ".eprime.solution"] ]
