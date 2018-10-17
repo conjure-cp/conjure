@@ -20,9 +20,11 @@ addNeighbourhoods
     => Config.Config -> Model -> m Model
 addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) = return inpModel
 addNeighbourhoods config inpModel = do
+    let brachingOns = [ nm | SearchOrder xs <- mStatements inpModel, BranchingOn nm <- xs ]
     neighbourhoods <-
         concatForM (mStatements inpModel) $ \case
-            Declaration (FindOrGiven Find nm dom) -> generateNeighbourhoods nm (Reference nm Nothing) dom
+            Declaration (FindOrGiven Find nm dom)
+                | nm `elem` brachingOns -> generateNeighbourhoods nm (Reference nm Nothing) dom
             _ -> return []
     -- TODO: this is here only temporarily, remove!
     traceM $ unlines [ "Generated the following SNS Neighbourhoods (" ++ show (length neighbourhoods) ++ " of them in total)"
@@ -1242,6 +1244,8 @@ functionLessDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ Par
 functionLessDefined _ _ _ = return []
 
 
+-- diff at n places
+
 functionAnySwap :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 functionAnySwap theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
     let generatorName = "functionAnySwap"
@@ -1262,6 +1266,8 @@ functionAnySwap theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _)
         )]
 functionAnySwap _ _ _ = return []
 
+
+-- permute
 
 
 functionCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
