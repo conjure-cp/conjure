@@ -28,7 +28,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSlicing x) where
         return ty
 
 instance EvaluateOp OpSlicing where
-    evaluateOp (OpSlicing (viewConstantMatrix -> Just (DomainInt index, vals)) lb ub) = do
+    evaluateOp (OpSlicing (viewConstantMatrix -> Just (DomainInt _ index, vals)) lb ub) = do
         indexVals <- valuesInIntDomain index
         outVals   <- fmap catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
             case lb of
@@ -36,7 +36,7 @@ instance EvaluateOp OpSlicing where
                 _ -> case ub of
                     Just (ConstantInt upper) | upper < thisIndex -> return Nothing
                     _ -> return $ Just (thisIndex, thisVal)
-        let outDomain = DomainInt $ map (RangeSingle . ConstantInt . fst) outVals
+        let outDomain = DomainInt Nothing $ map (RangeSingle . ConstantInt . fst) outVals
         return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
     evaluateOp op = na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 

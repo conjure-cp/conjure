@@ -48,7 +48,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         -- | If value is in the set then that value's index maps to a bool
         downC :: TypeOf_DownC m
         downC ( name
-              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges))
+              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt _ intRanges))
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -66,7 +66,7 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         -- | Reversal of downC - if innerDom value zips with matrix true then it's in
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
+        up ctxt (name, domain@(DomainSet _ _ (DomainInt _ intRanges)))=
             case lookup (outName domain name) ctxt of
                 Just constantMatrix ->
                     case viewConstantMatrix constantMatrix of

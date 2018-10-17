@@ -116,7 +116,7 @@ translateParameter eprimeModel0 essenceParam0 = do
                                             ]
                                         else return $ Just (n, d, TypedConstant c cTy)
                         else return $ Just (n, d, v)
-            | (n, d) <- essenceGivens' ++ [ (n, DomainInt []) | n <- generatedLettingNames ]
+            | (n, d) <- essenceGivens' ++ [ (n, DomainInt Nothing []) | n <- generatedLettingNames ]
             ]
     logDebug $ "[essenceGivensAndLettings ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d

@@ -23,7 +23,7 @@ instance BinaryOperator (OpMinus x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
     typeOf p@(OpMinus a b) = sameToSameToSame p a b
-                                [ TypeInt
+                                [ TypeInt Nothing
                                 , TypeSet TypeAny
                                 , TypeMSet TypeAny
                                 , TypeFunction TypeAny TypeAny

@@ -11,8 +11,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
 
 zeroVal :: (MonadFail m, EnumerateDomain m, Pretty r) => Domain r Constant -> m Constant
 zeroVal DomainBool = return $ ConstantBool False
-zeroVal (DomainInt []) = return $ ConstantInt 0
-zeroVal (DomainInt (r:_)) = zeroValR r
+zeroVal (DomainInt _ []) = return $ ConstantInt 0
+zeroVal (DomainInt _ (r:_)) = zeroValR r
 zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
 zeroVal (DomainRecord xs) = do
     values <- forM xs $ \ (nm, dom) -> do
@@ -25,7 +25,7 @@ zeroVal (DomainVariant xs@((nm, dom):_)) = do
 zeroVal (DomainMatrix index inner) = do
     z  <- zeroVal inner
     is <- case index of
-            DomainInt rs -> rangesInts rs
+            DomainInt _ rs -> rangesInts rs
             _ -> fail $ "Matrix indexed by a domain that isn't int:" <+> pretty index
     return $ ConstantAbstract $ AbsLitMatrix index $ replicate (length is) z
 zeroVal d@(DomainSet _ (SetAttr sizeAttr) inner) = do

@@ -14,8 +14,8 @@ primitive = Representation
     { rCheck = \ _ domain -> return $
         case domain of
             DomainBool -> [DomainBool]
-            DomainIntE x -> [DomainIntE x]
-            DomainInt rs -> [DomainInt rs]
+            DomainIntE name x -> [DomainIntE name x]
+            DomainInt name rs -> [DomainInt name rs]
             _ -> []
     , rDownD      = const $ return Nothing
     , rStructural = \ _ _ _ -> return (\ _ -> return [] )

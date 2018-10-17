@@ -28,7 +28,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSucc x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpSucc where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSucc (ConstantBool False)) = return (ConstantBool True)
     evaluateOp (OpSucc (ConstantBool True )) = return (ConstantBool False)          -- undef
     evaluateOp (OpSucc (ConstantInt x)) = return (ConstantInt (succ x))

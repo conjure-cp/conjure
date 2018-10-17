@@ -32,11 +32,11 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             _ -> domainSizeOf innerDomain
 
         calcDummyDomain :: Pretty r => Domain r Expression -> Domain r Expression
-        calcDummyDomain (DomainInt [RangeBounded lb ub]) =
-                DomainInt [RangeBounded lb [essence| &ub + 1 |]]
-        calcDummyDomain dom@(DomainInt ranges) =
+        calcDummyDomain (DomainInt name [RangeBounded lb ub]) =
+                DomainInt name [RangeBounded lb [essence| &ub + 1 |]]
+        calcDummyDomain dom@(DomainInt name ranges) =
             let dummyElem = calcDummyElem dom
-            in  DomainInt (ranges ++ [RangeSingle dummyElem])
+            in  DomainInt name (ranges ++ [RangeSingle dummyElem])
         calcDummyDomain dom = bug ("ExplicitVarSizeWithDummy.calcDummyDomain" <+> pretty dom)
 
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
@@ -45,8 +45,8 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             in  [essence| &theMax + 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
-        calcDummyElemC (DomainInt []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
-        calcDummyElemC (DomainInt rs) = ConstantInt $
+        calcDummyElemC (DomainInt _ []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
+        calcDummyElemC (DomainInt _ rs) = ConstantInt $
             1 + maximum [ i
                         | r <- rs
                         , i <- case r of
@@ -63,7 +63,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( outName domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 maxSize])
+                      (DomainInt Nothing [RangeBounded 1 maxSize])
                       domainWithDummy
                   ) ]
         downD _ = na "{downD} ExplicitVarSizeWithDummy"

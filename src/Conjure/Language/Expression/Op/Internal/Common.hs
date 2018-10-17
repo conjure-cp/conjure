@@ -85,7 +85,7 @@ intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
 intToInt p a = do
     tya <- typeOf a
     case tya of
-        TypeInt -> return TypeInt
+        TypeInt name -> return $ TypeInt name
         _       -> fail $ vcat
             [ "When type checking:" <+> pretty p
             , "Argument expected to be an int, but it is:" <++> pretty tya
@@ -97,8 +97,14 @@ intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        (TypeInt, TypeInt) -> return TypeInt
-        (_, TypeInt)       -> fail $ vcat
+        (TypeInt namea, TypeInt nameb) -> 
+          if namea == nameb
+             then return $ TypeInt namea
+             else fail$ vcat
+               [ "When type checking:" <+> pretty p
+               , "TypeInt names are not equal:" <+> pretty namea <+> pretty nameb
+               ]
+        (_, TypeInt _)       -> fail $ vcat
             [ "When type checking:" <+> pretty p
             ,  "First argument expected to be an int, but it is:" <++> pretty tya
             ]

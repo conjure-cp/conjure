@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "mset-comprehension-literal" `namedRule` theRule wh
             _ -> na "rule_Comprehension_Literal"
         (TypeMSet tau, elems) <- match msetLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix TypeInt tau)
-                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt Nothing) tau)
+                            (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -38,7 +38,7 @@ rule_Comprehension_ToSet_Literal = "mset-comprehension-toSet-literal" `namedRule
         mset                  <- match opToSet expr
         (TypeMSet tau, elems) <- match msetLiteral mset
         let outLiteralDomain = mkDomainIntB 1 (fromInt $ genericLength elems)
-        let outLiteral = make matrixLiteral (TypeMatrix TypeInt tau) outLiteralDomain elems
+        let outLiteral = make matrixLiteral (TypeMatrix (TypeInt Nothing) tau) outLiteralDomain elems
         let upd val old = lambdaToFunction pat old val
         return
             ( "Comprehension on toSet of mset literals"
@@ -185,7 +185,7 @@ rule_DotLeq = "mset-DotLeq" `namedRule` theRule where
 rule_MaxMin :: Rule
 rule_MaxMin = "mset-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
-        TypeMSet TypeInt <- typeOf s
+        TypeMSet (TypeInt Nothing) <- typeOf s
         return
             ( "Horizontal rule for mset max"
             , do
@@ -193,7 +193,7 @@ rule_MaxMin = "mset-max-min" `namedRule` theRule where
                 return [essence| max([&i | &iPat <- &s]) |]
             )
     theRule [essence| min(&s) |] = do
-        TypeMSet TypeInt <- typeOf s
+        TypeMSet (TypeInt Nothing) <- typeOf s
         return
             ( "Horizontal rule for mset min"
             , do

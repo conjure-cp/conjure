@@ -17,7 +17,7 @@ removeUnnamedsFromModel model = do
     statements' <- forM (mStatements model) $ \ st ->
             case st of
                 Declaration (LettingDomainDefnUnnamed name size) -> do
-                    let outDomain = mkDomainIntB 1 size
+                    let outDomain = mkDomainIntBNamed name 1 size
                     return $ Declaration $ Letting name $ Domain outDomain
                 _ -> return st
     return model { mStatements = statements' }

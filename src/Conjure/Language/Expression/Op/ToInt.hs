@@ -22,7 +22,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
     typeOf p@(OpToInt x) = do
         ty <- typeOf x
         case ty of
-            TypeBool -> return TypeInt
+            TypeBool -> return $ TypeInt Nothing
             _ -> raiseTypeError $ vcat
                 [ pretty p
                 , "Expected type bool."

@@ -280,14 +280,14 @@ parseDomainWithRepr = pDomainAtom
             lexeme L_int
             x <- parens parseExpr
             case typeOf x of
-                Just TypeInt -> return $ DomainInt [RangeSingle x]
-                _ -> return $ DomainIntE x
+                Just (TypeInt Nothing)-> return $ DomainInt Nothing [RangeSingle x]
+                _ -> return $ DomainIntE Nothing x
 
         pInt = do
             lexeme L_int
             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
-            return $ DomainInt xs
+            return $ DomainInt Nothing xs
 
         pReference = do
             r  <- identifierText

@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "partition-comprehension-literal" `namedRule` theRu
             _ -> na "rule_Comprehension_Literal"
         (TypePartition tau, elems) <- match partitionLiteral p
         let outLiteral = make matrixLiteral
-                            (TypeMatrix TypeInt (TypeSet tau))
-                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt Nothing) (TypeSet tau))
+                            (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitSet e)
                             | e <- elems
                             ]

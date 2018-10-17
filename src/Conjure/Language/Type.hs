@@ -9,6 +9,7 @@ module Conjure.Language.Type
     , matrixNumDims
     , innerTypeOf
     , isPrimitiveType
+    , containsType
     ) where
 
 -- conjure
@@ -21,7 +22,7 @@ import Conjure.Language.Pretty
 data Type
     = TypeAny
     | TypeBool
-    | TypeInt
+    | TypeInt (Maybe Name)
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
@@ -46,7 +47,8 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
-    pretty TypeInt = "int"
+    pretty (TypeInt Nothing) = "int"
+    pretty (TypeInt (Just name)) = "int:" <> pretty name
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
@@ -76,9 +78,11 @@ typeUnify :: Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-typeUnify TypeInt TypeInt = True
-typeUnify TypeInt TypeEnum{} = True
-typeUnify TypeEnum{} TypeInt = True
+typeUnify (TypeInt a) (TypeInt b) = a == b
+typeUnify (TypeInt (Nothing)) (TypeEnum _) = False
+typeUnify (TypeInt (Just a)) (TypeEnum b) = a == b
+typeUnify (TypeEnum _) (TypeInt (Nothing)) = False
+typeUnify (TypeEnum b) (TypeInt (Just a)) = a == b
 typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
@@ -188,7 +192,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
-innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt,t])
+innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt Nothing,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf (TypePermutation t) = return (TypeTuple [t,t])
@@ -199,3 +203,12 @@ isPrimitiveType TypeBool{} = True
 isPrimitiveType TypeInt{} = True
 isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
 isPrimitiveType _ = False
+
+containsType :: Type -> Type -> Bool 
+containsType container containee =
+  if typesUnify [container, containee]
+    then True
+    else case innerTypeOf container of
+           Nothing -> False
+           Just so -> containsType so containee 
+

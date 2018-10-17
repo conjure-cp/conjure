@@ -90,18 +90,18 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
                ]
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
-enumerateDomain (DomainInt []) = fail "enumerateDomain: infinite domain"
-enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainInt _ []) = fail "enumerateDomain: infinite domain"
+enumerateDomain (DomainInt Nothing rs) = concatMapM enumerateRange rs
 enumerateDomain (DomainUnnamed _ (ConstantInt n)) = return (map ConstantInt [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
 enumerateDomain (DomainTuple ds) = do
     inners <- mapM enumerateDomain ds
     return $ map (ConstantAbstract . AbsLitTuple) (sequence inners)
-enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
+enumerateDomain (DomainMatrix (DomainInt name indexDom) innerDom) = do
     inners <- enumerateDomain innerDom
     indexInts <- rangesInts indexDom
     return
-        [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
+        [ ConstantAbstract (AbsLitMatrix (DomainInt name indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
 

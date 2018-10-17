@@ -36,11 +36,11 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeList inn
-                | typesUnify [TypeInt, tyI] -> return inn
+                | typesUnify [TypeInt Nothing, tyI] -> return inn
                 | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
                     [ "The expression:"  <+> pretty p
                     , "Indexing:"        <+> pretty m
-                    , "Expected type of index:" <+> pretty TypeInt
+                    , "Expected type of index:" <+> pretty (TypeInt Nothing)
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeTuple inns   -> do
@@ -80,7 +80,7 @@ instance EvaluateOp OpIndexing where
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt index, vals)) (ConstantInt x)) = do
+    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt x)) = do
         ty   <- typeOf m
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo

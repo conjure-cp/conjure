@@ -36,7 +36,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
                                                      , "Expected an integer or a collection."
                                                      , "But got:" <+> pretty ty
                                                      ]
-        return TypeInt
+        return $ TypeInt Nothing
 
 instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
@@ -54,7 +54,7 @@ instance EvaluateOp OpTwoBars where
             (viewConstantPartition -> Just xs)      -> return $ ConstantInt $ genericLength $ sortNub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt rs) -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant (DomainInt _ rs) -> ConstantInt . genericLength <$> rangesInts rs
             DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 

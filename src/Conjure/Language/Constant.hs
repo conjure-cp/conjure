@@ -94,7 +94,7 @@ instance Arbitrary Constant where
 
 instance TypeOf Constant where
     typeOf ConstantBool{}             = return TypeBool
-    typeOf ConstantInt{}              = return TypeInt
+    typeOf ConstantInt{}              = return $ TypeInt Nothing
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
     typeOf (ConstantField _ ty)       = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
@@ -104,8 +104,8 @@ instance TypeOf Constant where
 
 instance DomainSizeOf Constant Integer where
     domainSizeOf DomainBool{} = return 2
-    domainSizeOf (DomainIntE x) = bug ("not implemented, domainSizeOf DomainIntE" <+> pretty (show x))
-    domainSizeOf (DomainInt rs) = domainSizeOfRanges rs
+    domainSizeOf (DomainIntE _ x) = bug ("not implemented, domainSizeOf DomainIntE" <+> pretty (show x))
+    domainSizeOf (DomainInt _ rs) = domainSizeOfRanges rs
     domainSizeOf DomainEnum{} = fail "domainSizeOf: Unknown for given enum."
     domainSizeOf (DomainTuple ds) = product <$> mapM domainSizeOf ds
     domainSizeOf (DomainMatrix index inner) = intPow <$> domainSizeOf inner <*> domainSizeOf index
@@ -168,7 +168,7 @@ instance Pretty Constant where
                     (indices,inner) = first (index:) $ collect innerNested
                     collect (TypeMatrix i j) = first (i:) $ collect j
                     collect x = ([],x)
-            pretty' TypeInt = "int()"
+            pretty' (TypeInt _) = "int()"
             pretty' t = pretty t
         in
             prParens $ "[] : `" <> pretty' ty <> "`"
@@ -271,9 +271,9 @@ validateConstantForDomain :: forall m r . (MonadFail m, Pretty r) => Name -> Con
 
 validateConstantForDomain _ ConstantBool{} DomainBool{} = return ()
 
-validateConstantForDomain _ _ (DomainInt []) = return ()              -- no restrictions
+validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
 
-validateConstantForDomain name c@(ConstantInt i) d@(DomainInt rs) =
+validateConstantForDomain name c@(ConstantInt i) d@(DomainInt _ rs) =
     let
         intInRange RangeOpen                                      = True
         intInRange (RangeSingle (ConstantInt a))                  = i == a
@@ -308,7 +308,7 @@ validateConstantForDomain name
             lu2 = mapM lu
 
         rs <- mapM lu2 ranges
-        validateConstantForDomain name c (DomainInt rs :: Domain r Constant)
+        validateConstantForDomain name c (DomainInt Nothing rs :: Domain r Constant)
 
 validateConstantForDomain name
     c@(ConstantAbstract (AbsLitTuple cs))
@@ -335,7 +335,7 @@ validateConstantForDomain name
     d@(DomainMatrix dIndex dInner) = do
         nested c d $
             mapM_ (\ val -> validateConstantForDomain name val dInner ) vals
-        unless (cIndex == dIndex || cIndex == DomainInt []) $ fail $ vcat
+        unless (cIndex == dIndex || cIndex == DomainInt Nothing []) $ fail $ vcat
             [ "The indices do not match between the value and the domain."
             , "Value :" <+> pretty c
             , "Domain:" <+> pretty d
@@ -490,7 +490,7 @@ viewConstantFunction  (TypedConstant c _) = viewConstantFunction c
 viewConstantFunction  constant = do
     let
         suggestion = case constant of
-            ConstantAbstract (AbsLitMatrix (DomainInt rs) vals) -> do
+            ConstantAbstract (AbsLitMatrix (DomainInt Nothing rs) vals) -> do
                 froms <- valuesInIntDomain rs
                 return $ Just $ pretty $ AbsLitFunction (zip (map ConstantInt froms) vals)
             _ -> return Nothing

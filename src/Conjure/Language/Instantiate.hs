@@ -128,7 +128,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 ty
         else
             return $ ConstantAbstract $ AbsLitMatrix
-                (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
+                (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength constants))])
                 constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
@@ -223,15 +223,15 @@ instantiateD
     -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
-instantiateD (DomainIntE x) = do
+instantiateD (DomainIntE name x) = do
     x' <- instantiateE x
     let vals = case (x', viewConstantMatrix x', viewConstantSet x') of
                 (ConstantInt{}, _, _) -> [x']
                 (_, Just (_, xs), _) -> xs
                 (_, _, Just xs) -> xs
                 _ -> []
-    return (DomainInt (map RangeSingle vals))
-instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
+    return (DomainInt name (map RangeSingle vals))
+instantiateD (DomainInt name ranges) = DomainInt name <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
     case lookup nm st of

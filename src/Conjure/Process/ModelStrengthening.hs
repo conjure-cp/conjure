@@ -781,7 +781,7 @@ forAllIneqToIneqSum _ (_, cs) = do
     partsAreNumeric (_, _, e1, e2) = (&&) <$> domainIsNumeric e1 <*> domainIsNumeric e2
     domainIsNumeric e = case domainOf e of
                              Right DomainInt{}           -> return True
-                             Right (DomainAny _ TypeInt) -> return True
+                             Right (DomainAny _ (TypeInt _)) -> return True
                              _                           -> return False
     -- Replace the forAll with the (in)equality between sums
     mkConstraint :: (Generator, Maybe ExpressionZ, Expression, Expression) -> Maybe ExpressionZ

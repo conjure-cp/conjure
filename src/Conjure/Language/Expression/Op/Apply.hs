@@ -37,7 +37,7 @@ instance EvaluateOp OpApply where
         gt <- typeOf g
         ht <- typeOf h
         case (gt, ht) of
-          (TypePermutation TypeInt, TypePermutation TypeInt) ->
+          (TypePermutation (TypeInt _), TypePermutation (TypeInt _)) ->
             let appI xss i = case filter (i `elem`) xss  of
                                [] -> return i
                                [k] -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle k

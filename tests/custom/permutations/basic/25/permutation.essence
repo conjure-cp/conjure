@@ -1,0 +1,15 @@
+
+given n : int
+given m : int
+
+find p : permutation of int(1..m)
+
+find x : matrix indexed by [int(1..n)] of int(1..n)
+
+find y : matrix indexed by [int(1..n)] of int(n..m)
+
+
+such that
+     y = permute(p,x)
+  /\ allDiff(y)
+  /\ allDiff(x) 

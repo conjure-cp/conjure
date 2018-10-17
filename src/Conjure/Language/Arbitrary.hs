@@ -106,7 +106,7 @@ arbitraryDomainAndConstant = sized dispatch
         intBounded = do
             l <- choose (0 :: Integer, 100)
             u <- choose (l, 200)
-            return ( DomainInt [RangeBounded (ConstantInt l) (ConstantInt u)]
+            return ( DomainInt Nothing [RangeBounded (ConstantInt l) (ConstantInt u)]
                    , ConstantInt <$> choose (l,u)
                    )
 
@@ -114,7 +114,7 @@ arbitraryDomainAndConstant = sized dispatch
         intSingles = do
             count <- choose (1 :: Integer, 20)
             vals  <- vectorOf (fromInteger count) (choose (0 :: Integer, 100))
-            return ( DomainInt (map (RangeSingle . ConstantInt) vals)
+            return ( DomainInt Nothing (map (RangeSingle . ConstantInt) vals)
                    , ConstantInt <$> pickFromList vals
                    )
 
@@ -153,7 +153,7 @@ arbitraryDomainAndConstant = sized dispatch
 
             if null allVals
                 then bug "allVals null"
-                else return ( DomainInt rs
+                else return ( DomainInt Nothing rs
                             , ConstantInt <$> pickFromList allVals
                             )
 

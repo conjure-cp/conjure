@@ -32,7 +32,7 @@ finiteGivens m = flip evalStateT 1 $ do
         case st of
             Declaration (FindOrGiven Given name domain) -> do
                 (domain', extras, _) <- mkFinite domain
-                return $ [ Declaration $ FindOrGiven Given e (DomainInt []) | e <- extras ]
+                return $ [ Declaration $ FindOrGiven Given e (DomainInt Nothing []) | e <- extras ]
                       ++ [ Declaration $ FindOrGiven Given name domain'                   ]
             _ -> return [st]
     namegenst <- exportNameGenState
@@ -365,11 +365,11 @@ mkFiniteInner
          , [Name]
          , [Constant] -> m [(Name, Constant)]
          )
-mkFiniteInner (DomainInt []) = do
+mkFiniteInner (DomainInt name []) = do
     fr <- nextName "fin"
     to <- nextName "fin"
     return
-        ( DomainInt [RangeBounded (fromName fr) (fromName to)]
+        ( DomainInt name [RangeBounded (fromName fr) (fromName to)]
         , [fr, to]
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
@@ -378,20 +378,20 @@ mkFiniteInner (DomainInt []) = do
                        , (to, ConstantInt (maximum0 ints))
                        ]
         )
-mkFiniteInner (DomainInt [RangeLowerBounded low]) = do
+mkFiniteInner (DomainInt name [RangeLowerBounded low]) = do
     new <- nextName "fin"
     return
-        ( DomainInt [RangeBounded low (fromName new)]
+        ( DomainInt name [RangeBounded low (fromName new)]
         , [new]
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
                 return [ (new, ConstantInt (maximum0 ints)) ]
         )
-mkFiniteInner (DomainInt [RangeUpperBounded upp]) = do
+mkFiniteInner (DomainInt name [RangeUpperBounded upp]) = do
     new <- nextName "fin"
     return
-        ( DomainInt [RangeBounded (fromName new) upp]
+        ( DomainInt name [RangeBounded (fromName new) upp]
         , [new]
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)

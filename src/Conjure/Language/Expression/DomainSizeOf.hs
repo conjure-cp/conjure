@@ -22,12 +22,12 @@ import Conjure.Language.Pretty
 
 instance DomainSizeOf Expression Expression where
     domainSizeOf DomainBool = return 2
-    domainSizeOf (DomainInt [] ) = fail "domainSizeOf infinite integer domain"
-    domainSizeOf (DomainInt [r]) = domainSizeOfRange r
-    domainSizeOf (DomainInt rs ) = make opSum . fromList <$> mapM domainSizeOfRange rs
+    domainSizeOf (DomainInt _ [] ) = fail "domainSizeOf infinite integer domain"
+    domainSizeOf (DomainInt _ [r]) = domainSizeOfRange r
+    domainSizeOf (DomainInt _ rs ) = make opSum . fromList <$> mapM domainSizeOfRange rs
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
-        in  Reference n' (Just (DeclHasRepr Given n' (DomainInt [])))
+        in  Reference n' (Just (DeclHasRepr Given n' (DomainInt (Just n) [])))
     domainSizeOf (DomainUnnamed _ x) = return x
     domainSizeOf (DomainTuple []) = return 1
     domainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM domainSizeOf xs

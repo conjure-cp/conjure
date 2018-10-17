@@ -31,8 +31,8 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
            let prmTup pt = take (length pt) $ zip (cycle pt) (drop 1 $ cycle pt)
                permTups = join $ prmTup <$> elems 
            let outLiteral = make matrixLiteral
-                               (TypeMatrix TypeInt (TypeTuple [inner,inner]))
-                               (DomainInt [RangeBounded 1 (fromInt (genericLength permTups))])
+                               (TypeMatrix (TypeInt Nothing) (TypeTuple [inner,inner]))
+                               (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength permTups))])
                                [ AbstractLiteral (AbsLitTuple [a,b])
                                | (a,b) <- permTups 
                                ]

@@ -29,7 +29,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
                     else raiseTypeError p
             TypeSequence to -> do
                 if typesUnify [xTy, to]
-                    then return (TypeSet TypeInt)
+                    then return (TypeSet (TypeInt Nothing))
                     else raiseTypeError p
             _ -> raiseTypeError p
 

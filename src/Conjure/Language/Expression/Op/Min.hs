@@ -39,19 +39,19 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside min:" <+> pretty ty
                                        ]
         case tyInner of
-            TypeInt  -> return ()
+            TypeInt Nothing -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside min:" <+> pretty ty
                                        ]
         return tyInner
 
 instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
-    evaluateOp (OpMin (DomainInConstant (DomainInt rs))) = do
+    evaluateOp (OpMin (DomainInConstant (DomainInt Nothing rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef TypeInt "Empty collection in min"
+            then mkUndef (TypeInt Nothing) "Empty collection in min"
             else ConstantInt (minimum is)
     evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
         case xs of
@@ -61,7 +61,7 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt _ -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
                     _ -> na "evaluateOp{OpMin}"
@@ -73,7 +73,7 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
                     _ -> na "evaluateOp{OpMin}"
@@ -85,7 +85,7 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
                         return $ ConstantInt (minimum is)
                     _ -> na "evaluateOp{OpMin}"

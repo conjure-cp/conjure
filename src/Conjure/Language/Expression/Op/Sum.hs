@@ -23,12 +23,12 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
     typeOf p@(OpSum x) = do
         ty <- typeOf x
         case ty of
-            TypeList TypeAny -> return TypeInt
-            TypeList TypeInt -> return TypeInt
-            TypeMatrix _ TypeAny -> return TypeInt
-            TypeMatrix _ TypeInt -> return TypeInt
-            TypeSet TypeInt -> return TypeInt
-            TypeMSet TypeInt -> return TypeInt
+            TypeList TypeAny -> return $ TypeInt Nothing
+            TypeList (TypeInt Nothing) -> return $ TypeInt Nothing
+            TypeMatrix _ TypeAny -> return $ TypeInt Nothing
+            TypeMatrix _ (TypeInt Nothing) -> return $ TypeInt Nothing
+            TypeSet (TypeInt Nothing) -> return $ TypeInt Nothing
+            TypeMSet (TypeInt Nothing) -> return $ TypeInt Nothing
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -37,10 +37,10 @@ instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus
 
 instance EvaluateOp OpSum where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpSum x)
         | Just xs <- listOut x
-        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+        , any isUndef xs                      = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut "OpSum" x
 
 instance (OpSum x :< x) => SimplifyOp OpSum x where

@@ -24,7 +24,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         tyE <- typeOf e
         case tyM of
             TypeMSet tyE'
-                | tyE `typeUnify` tyE' -> return TypeInt
+                | tyE `typeUnify` tyE' -> return $ TypeInt Nothing
                 | otherwise            -> raiseTypeError $ vcat
                     [ "The first argument of freq is expected to be a multi-set."
                     , pretty p

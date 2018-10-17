@@ -23,7 +23,7 @@ instance (Pretty x, TypeOf x) => TypeOf (OpDefined x) where
         ty <- typeOf x
         case ty of
             TypeFunction a _ -> return (TypeSet a)
-            TypeSequence _   -> return (TypeSet TypeInt)
+            TypeSequence _   -> return (TypeSet $ TypeInt Nothing)
             _                -> raiseTypeError p
 
 instance EvaluateOp OpDefined where

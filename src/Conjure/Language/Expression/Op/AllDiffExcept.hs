@@ -23,7 +23,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiffExcept x) where
         tyX <- typeOf x
         tyN <- typeOf n
         case tyN of
-            TypeInt -> return ()
+            TypeInt _ -> return ()
             _ -> raiseTypeError p
         case tyX of
             TypeList{} -> return TypeBool

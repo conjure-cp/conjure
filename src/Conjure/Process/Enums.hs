@@ -33,7 +33,7 @@ removeEnumsFromModel =
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
+                            let outDomain = mkDomainIntBNamed ename 1 (fromInt (genericLength names))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
                                              , zip names allNats
@@ -57,7 +57,7 @@ removeEnumsFromModel =
                 onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
+                    = DomainInt (Just nm) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = return (DomainReference nm (Just d))
@@ -75,8 +75,8 @@ removeEnumsFromModel =
                     case st of
                         Declaration (GivenDomainDefnEnum name) -> do
                             let nameS      = name `mappend` "_EnumSize"
-                            let outDomainS = DomainInt []
-                            let outDomain  = mkDomainIntB 1
+                            let outDomainS = DomainInt (Just name) []
+                            let outDomain  = mkDomainIntBNamed name 1
                                                 (Reference nameS (Just (Alias (Domain outDomainS))))
                             modify ([(name, outDomain)] `mappend`)
                             return [ Declaration (FindOrGiven Given nameS         outDomainS)
@@ -88,7 +88,7 @@ removeEnumsFromModel =
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt ranges
+                    = DomainInt (Just nm) ranges
                 onD (DomainEnum      nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -127,7 +127,7 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
+                    let outDomain = mkDomainIntBNamed ename 1 (fromInt (genericLength names))
                     case names `intersect` namesBefore of
                         [] -> modify ( ( [(ename, outDomain)]
                                      , zip names allNats
@@ -151,7 +151,7 @@ removeEnumsFromParam model param = do
         onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
-            = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
+            = DomainInt (Just nm) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
         onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
             = return (DomainReference nm (Just d))

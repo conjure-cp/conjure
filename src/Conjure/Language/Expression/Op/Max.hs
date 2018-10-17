@@ -39,19 +39,19 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside max:" <+> pretty ty
                                        ]
         case tyInner of
-            TypeInt  -> return ()
+            TypeInt Nothing  -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside max:" <+> pretty ty
                                        ]
         return tyInner
 
 instance EvaluateOp OpMax where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
-    evaluateOp (OpMax (DomainInConstant (DomainInt rs))) = do
+    evaluateOp (OpMax (DomainInConstant (DomainInt Nothing rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef TypeInt "Empty collection in max"
+            then mkUndef (TypeInt Nothing) "Empty collection in max"
             else ConstantInt (maximum is)
     evaluateOp (OpMax coll@(viewConstantMatrix -> Just (_, xs))) =
         case xs of
@@ -61,7 +61,7 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
                     _ -> na "evaluateOp{OpMax}"
@@ -73,7 +73,7 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
                     _ -> na "evaluateOp{OpMax}"
@@ -85,7 +85,7 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt -> do
+                    TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
                         return $ ConstantInt (maximum is)
                     _ -> na "evaluateOp{OpMax}"

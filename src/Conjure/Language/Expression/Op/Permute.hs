@@ -25,29 +25,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPermute x) where
         pTy <- typeOf p
         iTy <- typeOf i
         case (pTy,iTy) of
-            (TypePermutation pTyInner, TypeSet mTyInner) ->
-             if typesUnify $ [pTyInner, mTyInner]
-               then return $ TypeSet mTyInner
-               else raiseTypeError inp 
-            (TypePermutation pTyInner, TypeTuple mTyInner) ->
-             if typesUnify $ [pTyInner] ++ mTyInner
-               then return $ TypeTuple mTyInner
-               else raiseTypeError inp 
-            (TypePermutation pTyInner, TypeMatrix indx mTyInner) ->
-             if typesUnify [pTyInner, mTyInner]
-               then return $ TypeMatrix indx mTyInner
-               else raiseTypeError inp 
-            (TypePermutation pTyInner, iTyIs) ->
-              if typesUnify [iTyIs, pTyInner]
-                 then return pTyInner
-                 else raiseTypeError inp
+            (TypePermutation _, thing) -> return thing
             _ -> raiseTypeError inp
 
 instance EvaluateOp OpPermute where
     evaluateOp op@(OpPermute (viewConstantPermutation -> Just xss) i) = do
         ti <- typeOf i
         case ti of
-          TypeInt -> case filter (i `elem`) xss  of
+          TypeInt _-> case filter (i `elem`) xss  of
                          [] -> return i
                          [h] -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle h
                          _ -> bug "evaluateOp{OpPermute} element should only be in one cycle of permutation"

@@ -79,7 +79,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
 
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
-                    if innerType `typeUnify` TypeInt
+                    if innerType `typeUnify` TypeInt Nothing
                         then do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
