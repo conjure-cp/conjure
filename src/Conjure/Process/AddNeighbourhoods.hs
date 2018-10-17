@@ -111,7 +111,9 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
     , sequenceRemoveLeft
     , functionLessInjective
     , functionMoreInjective
-    , functionAnySwap
+    , functionRelaxNPoints
+    , functionDiffAtNPoints
+    , functionPermuteNPoints
     , functionMoreDefined
     , functionLessDefined
     ]
@@ -1244,11 +1246,10 @@ functionLessDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ Par
 functionLessDefined _ _ _ = return []
 
 
--- diff at n places
-
-functionAnySwap :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionAnySwap theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
-    let generatorName = "functionAnySwap"
+-- relax n points, rest stays the same
+functionRelaxNPoints :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionRelaxNPoints theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
+    let generatorName = "functionRelaxNPoints"
     let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
                 Left err -> bug err
                 Right size -> size
@@ -1259,15 +1260,65 @@ functionAnySwap theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _)
          , \ neighbourhoodSize ->
                 [essenceStmts|
                     such that
-                        &neighbourhoodSize * 2
-                            = sum([ toInt(&theVar(&i) != &theIncumbentVar(&i))
-                                  | &iPat  <- defined(&theIncumbentVar)])
+                        sum([ &theVar(&i) = &theIncumbentVar(&i)
+                            | &iPat : &functionFromDomain
+                            ]) = |&theVar| - &neighbourhoodSize
                 |]
         )]
-functionAnySwap _ _ _ = return []
+functionRelaxNPoints _ _ _ = return []
 
 
--- permute
+-- diff at n points, rest stays the same
+functionDiffAtNPoints :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionDiffAtNPoints theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
+    let generatorName = "functionDiffAtNPoints"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    (iPat, i) <- quantifiedVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        sum([ &theVar(&i) = &theIncumbentVar(&i)
+                            | &iPat : &functionFromDomain
+                            ]) = |&theVar| - &neighbourhoodSize,
+                        sum([ &theVar(&i) != &theIncumbentVar(&i)
+                            | &iPat : &functionFromDomain
+                            ]) = &neighbourhoodSize
+                |]
+        )]
+functionDiffAtNPoints _ _ _ = return []
+
+
+-- permute n points, rest stays the same
+functionPermuteNPoints :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionPermuteNPoints theIncumbentVar theVar (DomainFunction _ _ functionFromDomain _) = do
+    let generatorName = "functionPermuteNPoints"
+    let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
+                Left err -> bug err
+                Right size -> size
+    (iPat, i) <- quantifiedVar
+    (jPat, j) <- quantifiedVar
+    return
+        [( generatorName
+        , calculatedMaxNhSize
+         , \ neighbourhoodSize ->
+                [essenceStmts|
+                    such that
+                        sum([ &theVar(&i) = &theIncumbentVar(&i)
+                            | &iPat : &functionFromDomain
+                            ]) = |&theVar| - &neighbourhoodSize,
+                        sum([ &theVar(&i) = &theIncumbentVar(&j)
+                            | &iPat : &functionFromDomain
+                            , &jPat : &functionFromDomain
+                            , &i < &j
+                            ]) = &neighbourhoodSize
+                |]
+        )]
+functionPermuteNPoints _ _ _ = return []
 
 
 functionCrossOver :: NameGen m =>  Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
