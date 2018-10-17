@@ -859,7 +859,16 @@ ui = modes
             &= groupname "Options for other tools"
             &= explicit
             &= help "Backend solver. \
-                    \Possible values: minion/lingeling/minisat/bc_minisat_all/nbc_minisat_all\n\
+                    \Possible values:\n\
+                    \ - minion (CP solver)\n\
+                    \ - gecode (CP solver)\n\
+                    \ - chuffed (CP solver)\n\
+                    \ - glucose (SAT solver)\n\
+                    \ - lingeling (SAT solver)\n\
+                    \ - minisat (SAT solver)\n\
+                    \ - bc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
+                    \ - nbc_minisat_all (AllSAT solver, only works with --number-of-solutions=all)\n\
+                    \ - open-wbo (MaxSAT solver, only works with optimisation problems)\n\
                     \Default: minion"
         , nbSolutions
             = "1"

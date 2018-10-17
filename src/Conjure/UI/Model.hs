@@ -920,17 +920,25 @@ sliceThemMatrices model = do
         -- we also descend into components of the matrix-typed expression during slicing
         onExpr :: Monad m => Expression -> m Expression
         onExpr p = do
+            let computeExistingSlices t =
+                    case match opSlicing t of
+                        Nothing -> return 0
+                        Just (t', _, _) -> (+1) <$> computeExistingSlices t'
             let isIndexedMatrix = do
                     (m, is) <- match opMatrixIndexing p
                     tyM     <- typeOf m
-                    return (m, is, tyM)
+                    nSlices <- computeExistingSlices m
+                    return (m, nSlices, is, tyM)
             case isIndexedMatrix of
                 Nothing -> descendM onExpr p
-                Just (m, is, tyM) -> do
+                Just (m, existingSlices, is, tyM) -> do
                     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
                         nestingLevel (TypeList     a) = 1 + nestingLevel a
                         nestingLevel _ = 0 :: Int
-                    let howMany = nestingLevel tyM - length is
+                    -- "is" is the number of existing indices
+                    -- "nestingLevel" is the nesting level of the original matrix
+                    -- "existingSlices" is the number of existing slices
+                    let howMany = nestingLevel tyM - existingSlices - length is
                     let unroll a 0 = a
                         unroll a i = make opSlicing (unroll a (i-1)) Nothing Nothing
                     m'  <- descendM onExpr m

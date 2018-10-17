@@ -5,16 +5,18 @@ set -o nounset
 
 export BIN_DIR=${BIN_DIR:-${HOME}/.local/bin}
 
-rm -rf ~/tmp-install-lingeling
-mkdir ~/tmp-install-lingeling
-pushd ~/tmp-install-lingeling
-wget -c http://fmv.jku.at/lingeling/lingeling-ayv-86bf266-140429.zip
-unzip lingeling-ayv-86bf266-140429.zip
-./build.sh
+rm -rf ${BIN_DIR}/tmp-install-lingeling
+mkdir ${BIN_DIR}/tmp-install-lingeling
+pushd ${BIN_DIR}/tmp-install-lingeling
+wget --no-check-certificate -c http://fmv.jku.at/lingeling/lingeling-bbc-9230380-160707.tar.gz
+tar xzf lingeling-bbc-9230380-160707.tar.gz
+cd lingeling-bbc-9230380-160707
+./configure.sh
+make
 mkdir -p ${BIN_DIR}
-cp binary/lingeling ${BIN_DIR}/lingeling
+cp lingeling ${BIN_DIR}/lingeling
 echo "lingeling executable is at ${BIN_DIR}/lingeling"
 ls -l ${BIN_DIR}/lingeling
 popd
-rm -rf ~/tmp-install-lingeling
+rm -rf ${BIN_DIR}/tmp-install-lingeling
 
