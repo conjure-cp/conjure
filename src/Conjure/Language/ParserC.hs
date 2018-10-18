@@ -515,7 +515,7 @@ parseLiteral = label "value" (do p <- pCore ; p)
         pCore = satisfyL $ \case
                 L_false       -> Just $ return $ Constant $ ConstantBool False
                 L_true        -> Just $ return $ Constant $ ConstantBool True
-                LIntLiteral i -> Just $ return $ Constant $ ConstantInt (fromInteger i)
+                LIntLiteral i -> Just $ return $ Constant $ ConstantInt Nothing (fromInteger i)
                 L_OpenBracket -> Just pMatrix
                 L_tuple       -> Just pTupleWith
                 L_OpenParen   -> Just pTupleWithout

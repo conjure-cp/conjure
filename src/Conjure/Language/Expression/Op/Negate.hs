@@ -23,7 +23,7 @@ instance TypeOf x => TypeOf (OpNegate x) where
 
 instance EvaluateOp OpNegate where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpNegate x) = ConstantInt . negate <$> intOut "OpNegate" x
+    evaluateOp (OpNegate x) = ConstantInt Nothing . negate <$> intOut "OpNegate" x
 
 instance SimplifyOp OpNegate x where
     simplifyOp _ = na "simplifyOp{OpNegate}"

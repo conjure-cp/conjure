@@ -11,8 +11,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
 
 zeroVal :: (MonadFail m, EnumerateDomain m, Pretty r) => Domain r Constant -> m Constant
 zeroVal DomainBool = return $ ConstantBool False
-zeroVal (DomainInt _ []) = return $ ConstantInt 0
-zeroVal (DomainInt _ (r:_)) = zeroValR r
+zeroVal (DomainInt Nothing []) = return $ ConstantInt Nothing 0
+zeroVal (DomainInt Nothing (r:_)) = zeroValR r
 zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
 zeroVal (DomainRecord xs) = do
     values <- forM xs $ \ (nm, dom) -> do
@@ -81,5 +81,5 @@ getMin d (SizeAttr_MinMaxSize x _) = returnInt d x
 
 
 returnInt :: (MonadFail m, Pretty r, Pretty x) => Domain r x -> Constant -> m Integer
-returnInt _ (ConstantInt x) = return x
+returnInt _ (ConstantInt _ x) = return x
 returnInt d _ = fail $ "Attribute expected to be an int in:" <+> pretty d

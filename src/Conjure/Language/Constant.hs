@@ -45,7 +45,7 @@ import Test.QuickCheck ( Arbitrary(..), oneof )
 
 data Constant
     = ConstantBool Bool
-    | ConstantInt Integer
+    | ConstantInt (Maybe Name) Integer
     | ConstantEnum Name   {- name for the enum domain -}
                    [Name] {- values in the enum domain -}
                    Name   {- the literal -}
@@ -70,7 +70,7 @@ instance Ord Constant where
 
     -- the "usual" comparisons
     compare (ConstantBool a) (ConstantBool b) = compare a b
-    compare (ConstantInt a) (ConstantInt b) = compare a b
+    compare (ConstantInt _ a) (ConstantInt _ b) = compare a b
     compare (ConstantEnum _ aVals aVal) (ConstantEnum _ bVals bVal) =
         compare (elemIndex aVal aVals, aVal) (elemIndex bVal bVals, bVal)
     compare (ConstantField a1 a2) (ConstantField b1 b2) = compare (a1,a2) (b1,b2)
@@ -89,12 +89,12 @@ instance FromJSON  Constant where parseJSON = genericParseJSON jsonOptions
 instance Arbitrary Constant where
     arbitrary = oneof
         [ ConstantBool <$> arbitrary
-        , ConstantInt <$> arbitrary
+        , ConstantInt Nothing <$> arbitrary
         ]
 
 instance TypeOf Constant where
     typeOf ConstantBool{}             = return TypeBool
-    typeOf ConstantInt{}              = return $ TypeInt Nothing
+    typeOf (ConstantInt name _)       = return $ TypeInt name 
     typeOf (ConstantEnum defn _ _ )   = return (TypeEnum defn)
     typeOf (ConstantField _ ty)       = return ty
     typeOf (ConstantAbstract x    )   = typeOf x
@@ -114,17 +114,17 @@ instance DomainSizeOf Constant Integer where
             SizeAttr_None -> do
                 innerSize <- domainSizeOf inner
                 return (2 `intPow` innerSize)
-            SizeAttr_Size (ConstantInt size) -> do
+            SizeAttr_Size (ConstantInt Nothing size) -> do
                 innerSize <- domainSizeOf inner
                 return (nchoosek (product . enumFromTo 1) innerSize size)
             SizeAttr_MinSize{} -> do
                 -- TODO: we can do better here
                 innerSize <- domainSizeOf inner
                 return (2 `intPow` innerSize)
-            SizeAttr_MaxSize (ConstantInt maxSize) -> do
+            SizeAttr_MaxSize (ConstantInt Nothing maxSize) -> do
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [0 .. maxSize] ]
-            SizeAttr_MinMaxSize (ConstantInt minSize) (ConstantInt maxSize) -> do
+            SizeAttr_MinMaxSize (ConstantInt Nothing minSize) (ConstantInt Nothing maxSize) -> do
                 innerSize <- domainSizeOf inner
                 return $ sum [ nchoosek (product . enumFromTo 1) innerSize k | k <- [minSize .. maxSize] ]
             _ -> fail ("domainSizeOf{Constant}" <+> pretty d)
@@ -151,7 +151,7 @@ domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
 domainSizeOfRanges = fmap genericLength . valuesInIntDomain
 
 instance DomainSizeOf Constant Constant where
-    domainSizeOf = fmap ConstantInt . domainSizeOf
+    domainSizeOf = fmap (ConstantInt Nothing) . domainSizeOf
 
 instance Pretty Constant where
 
@@ -175,7 +175,7 @@ instance Pretty Constant where
 
     pretty (ConstantBool False)          = "false"
     pretty (ConstantBool True )          = "true"
-    pretty (ConstantInt  x    )          = pretty x
+    pretty (ConstantInt _ x   )          = pretty x
     pretty (ConstantEnum _ _ x)          = pretty x
     pretty (ConstantField n _)           = pretty n
     pretty (ConstantAbstract x)          = pretty x
@@ -184,8 +184,8 @@ instance Pretty Constant where
     pretty (ConstantUndefined reason ty) = "undefined" <> prParens (pretty reason <+> ":" <+> "`" <> pretty ty <> "`")
 
 instance ExpressionLike Constant where
-    fromInt = ConstantInt
-    intOut _ (ConstantInt x) = return x
+    fromInt = ConstantInt Nothing
+    intOut _ (ConstantInt Nothing x) = return x
     intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
                                , "Called from:" <+> doc
                                ]
@@ -228,17 +228,17 @@ normaliseConstant (TypedConstant c ty) = TypedConstant (normaliseConstant c) ty
 normaliseConstant x@ConstantUndefined{} = x
 
 instance Num Constant where
-    ConstantInt x + ConstantInt y = ConstantInt (x+y)
+    ConstantInt Nothing x + ConstantInt Nothing y = ConstantInt Nothing (x+y)
     x + y = bug $ vcat [ "Num Constant (+)", "x:" <+> pretty x, "y:" <+> pretty y ]
-    ConstantInt x - ConstantInt y = ConstantInt (x-y)
+    ConstantInt Nothing x - ConstantInt Nothing y = ConstantInt Nothing (x-y)
     x - y = bug $ vcat [ "Num Constant (-)", "x:" <+> pretty x, "y:" <+> pretty y ]
-    ConstantInt x * ConstantInt y = ConstantInt (x*y)
+    ConstantInt Nothing x * ConstantInt Nothing y = ConstantInt Nothing (x*y)
     x * y = bug $ vcat [ "Num Constant (*)", "x:" <+> pretty x, "y:" <+> pretty y ]
-    abs (ConstantInt x) = ConstantInt (abs x)
+    abs (ConstantInt Nothing x) = ConstantInt Nothing (abs x)
     abs x = bug $ vcat [ "Num Constant abs", "x:" <+> pretty x ]
-    signum (ConstantInt x) = ConstantInt (signum x)
+    signum (ConstantInt Nothing x) = ConstantInt Nothing (signum x)
     signum x = bug $ vcat [ "Num Constant signum", "x:" <+> pretty x ]
-    fromInteger = ConstantInt . fromInteger
+    fromInteger = ConstantInt Nothing . fromInteger
 
 
 valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
@@ -254,8 +254,8 @@ valuesInIntDomain ranges =
             [ vals
             | r <- ranges
             , let vals = case r of
-                    RangeSingle (ConstantInt x) -> return [x]
-                    RangeBounded (ConstantInt l) (ConstantInt u) -> return [l..u]
+                    RangeSingle (ConstantInt Nothing x) -> return [x]
+                    RangeBounded (ConstantInt Nothing l) (ConstantInt Nothing u) -> return [l..u]
                     _ -> Nothing
             ]
 
@@ -273,17 +273,17 @@ validateConstantForDomain _ ConstantBool{} DomainBool{} = return ()
 
 validateConstantForDomain _ _ (DomainInt _ []) = return ()              -- no restrictions
 
-validateConstantForDomain name c@(ConstantInt i) d@(DomainInt _ rs) =
+validateConstantForDomain name c@(ConstantInt Nothing i) d@(DomainInt Nothing rs) =
     let
         intInRange RangeOpen                                      = True
-        intInRange (RangeSingle (ConstantInt a))                  = i == a
-        intInRange (RangeLowerBounded (ConstantInt a))            = i >= a
-        intInRange (RangeUpperBounded (ConstantInt a))            = i <= a
-        intInRange (RangeBounded (ConstantInt a) (ConstantInt b)) = i >= a && i <= b
+        intInRange (RangeSingle (ConstantInt Nothing a))                  = i == a
+        intInRange (RangeLowerBounded (ConstantInt Nothing a))            = i >= a
+        intInRange (RangeUpperBounded (ConstantInt Nothing a))            = i <= a
+        intInRange (RangeBounded (ConstantInt Nothing a) (ConstantInt Nothing b)) = i >= a && i <= b
         intInRange _                                              = False
     in  unless (any intInRange rs) (constantNotInDomain name c d)
 
-validateConstantForDomain _ (ConstantInt i) (DomainUnnamed _ (ConstantInt a)) | i >= 1 && i <= a = return ()
+validateConstantForDomain _ (ConstantInt (Just cname) i) (DomainUnnamed uname (ConstantInt Nothing a)) | cname == uname && i >= 1 && i <= a = return ()
 
 validateConstantForDomain _ _ (DomainEnum _ Nothing _) = return ()    -- no restrictions
 validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
@@ -294,14 +294,14 @@ validateConstantForDomain name c d@(DomainEnum _ _ Nothing) =
                 ]
 validateConstantForDomain name
     c@ConstantInt{}
-    d@(DomainEnum _ (Just ranges) (Just mp)) = nested c d $ do
+    d@(DomainEnum name'' (Just ranges) (Just mp)) = nested c d $ do
         let
             -- lu :: MonadFail m => Name -> m Constant
             lu (ConstantEnum _ _ nm) =
                 case lookup nm mp of
                     Nothing -> fail $ "No value for:" <+> pretty nm
-                    Just v  -> return (ConstantInt v)
-            lu (ConstantInt v) = return (ConstantInt v)
+                    Just v  -> return (ConstantInt (Just name'') v)
+            lu (ConstantInt name' v) = return (ConstantInt name' v)
             lu x = fail $ "validateConstantForDomain.lu" <+> pretty x
 
             -- lu2 :: MonadFail m => Range Name -> m (Range Constant)
@@ -346,10 +346,10 @@ validateConstantForDomain name
     d@(DomainSet _ (SetAttr sizeAttr) dInner) = do
         let cardinalityOK = case sizeAttr of
                 SizeAttr_None -> True
-                SizeAttr_Size (ConstantInt s) -> s == genericLength vals
-                SizeAttr_MinSize (ConstantInt s) -> s <= genericLength vals
-                SizeAttr_MaxSize (ConstantInt s) -> genericLength vals <= s
-                SizeAttr_MinMaxSize (ConstantInt smin) (ConstantInt smax) ->
+                SizeAttr_Size (ConstantInt Nothing s) -> s == genericLength vals
+                SizeAttr_MinSize (ConstantInt Nothing s) -> s <= genericLength vals
+                SizeAttr_MaxSize (ConstantInt Nothing s) -> genericLength vals <= s
+                SizeAttr_MinMaxSize (ConstantInt Nothing smin) (ConstantInt Nothing smax) ->
                     smin <= genericLength vals && genericLength vals <= smax
                 _ -> False
         unless cardinalityOK $ fail $ vcat
@@ -366,10 +366,10 @@ validateConstantForDomain name
     d@(DomainMSet _ (MSetAttr sizeAttr occurAttr) dInner) = do
         let cardinalityOK = case sizeAttr of
                 SizeAttr_None -> True
-                SizeAttr_Size (ConstantInt s) -> s == genericLength vals
-                SizeAttr_MinSize (ConstantInt s) -> s <= genericLength vals
-                SizeAttr_MaxSize (ConstantInt s) -> genericLength vals <= s
-                SizeAttr_MinMaxSize (ConstantInt smin) (ConstantInt smax) ->
+                SizeAttr_Size (ConstantInt Nothing s) -> s == genericLength vals
+                SizeAttr_MinSize (ConstantInt Nothing s) -> s <= genericLength vals
+                SizeAttr_MaxSize (ConstantInt Nothing s) -> genericLength vals <= s
+                SizeAttr_MinMaxSize (ConstantInt Nothing smin) (ConstantInt Nothing smax) ->
                     smin <= genericLength vals && genericLength vals <= smax
                 _ -> False
         unless cardinalityOK $ fail $ vcat
@@ -381,9 +381,9 @@ validateConstantForDomain name
             ]
         let occurOK = case occurAttr of
                 OccurAttr_None -> True
-                OccurAttr_MinOccur (ConstantInt s) -> and [ s <= occ | (_, occ) <- histogram vals ]
-                OccurAttr_MaxOccur (ConstantInt s) -> and [ occ <= s | (_, occ) <- histogram vals ]
-                OccurAttr_MinMaxOccur (ConstantInt smin) (ConstantInt smax) ->
+                OccurAttr_MinOccur (ConstantInt Nothing s) -> and [ s <= occ | (_, occ) <- histogram vals ]
+                OccurAttr_MaxOccur (ConstantInt Nothing s) -> and [ occ <= s | (_, occ) <- histogram vals ]
+                OccurAttr_MinMaxOccur (ConstantInt Nothing smin) (ConstantInt Nothing smax) ->
                     and [ smin <= occ && occ <= smax | (_, occ) <- histogram vals ]
                 _ -> False
         unless occurOK $ fail $ vcat
@@ -446,12 +446,12 @@ constantNotInDomain n c d = fail $ vcat
 
 viewConstantBool      :: MonadFail m => Constant -> m Bool
 viewConstantBool      (ConstantBool i) = return i
-viewConstantBool      (ConstantInt  0) = return False
-viewConstantBool      (ConstantInt  1) = return True
+viewConstantBool      (ConstantInt Nothing 0) = return False
+viewConstantBool      (ConstantInt Nothing 1) = return True
 viewConstantBool      constant = fail ("Expecting a boolean integer, but got:" <++> pretty constant)
 
 viewConstantInt       :: MonadFail m => Constant -> m Integer
-viewConstantInt       (ConstantInt i) = return i
+viewConstantInt       (ConstantInt _ i) = return i
 viewConstantInt       constant = fail ("Expecting an integer, but got:" <++> pretty constant)
 
 viewConstantTuple     :: MonadFail m => Constant -> m [Constant]
@@ -492,7 +492,7 @@ viewConstantFunction  constant = do
         suggestion = case constant of
             ConstantAbstract (AbsLitMatrix (DomainInt Nothing rs) vals) -> do
                 froms <- valuesInIntDomain rs
-                return $ Just $ pretty $ AbsLitFunction (zip (map ConstantInt froms) vals)
+                return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt Nothing) froms) vals)
             _ -> return Nothing
     suggestion >>= \case
         Nothing  -> fail ("Expecting a function, but got:" <++> pretty constant)

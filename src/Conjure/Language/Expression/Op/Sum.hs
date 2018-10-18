@@ -41,7 +41,7 @@ instance EvaluateOp OpSum where
     evaluateOp p@(OpSum x)
         | Just xs <- listOut x
         , any isUndef xs                      = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpSum x) = ConstantInt . sum <$> intsOut "OpSum" x
+    evaluateOp (OpSum x) = ConstantInt Nothing . sum <$> intsOut "OpSum" x
 
 instance (OpSum x :< x) => SimplifyOp OpSum x where
     simplifyOp (OpSum x)

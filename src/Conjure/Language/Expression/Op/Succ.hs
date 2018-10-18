@@ -31,7 +31,7 @@ instance EvaluateOp OpSucc where
     evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSucc (ConstantBool False)) = return (ConstantBool True)
     evaluateOp (OpSucc (ConstantBool True )) = return (ConstantBool False)          -- undef
-    evaluateOp (OpSucc (ConstantInt x)) = return (ConstantInt (succ x))
+    evaluateOp (OpSucc (ConstantInt name x)) = return (ConstantInt name (succ x))
     evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
 
 instance SimplifyOp OpSucc x where

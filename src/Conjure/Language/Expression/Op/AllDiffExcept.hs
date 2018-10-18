@@ -31,8 +31,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiffExcept x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpAllDiffExcept where
-    evaluateOp (OpAllDiffExcept (viewConstantMatrix -> Just (_, vals)) (viewConstantInt -> Just n)) = do
-        let vals' = filter (ConstantInt n/=) vals
+    evaluateOp (OpAllDiffExcept (viewConstantMatrix -> Just (_, vals)) someint) = do
+        let vals' = filter (someint/=) vals
         return $ ConstantBool $ length vals' == length (sortNub vals')
     evaluateOp op = na $ "evaluateOp{OpAllDiffExcept}:" <++> pretty (show op)
 

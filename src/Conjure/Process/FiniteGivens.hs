@@ -211,7 +211,7 @@ mkFiniteOutermost (DomainSet () _ inner) = do
                 set <- failToUserError $ viewConstantSet constant
                 let setSize = genericLength set
                 innerValues <- innerF set
-                return $ innerValues ++ [(s, ConstantInt setSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing setSize)]
         )
 mkFiniteOutermost (DomainMSet () attr@(MSetAttr SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -235,7 +235,7 @@ mkFiniteOutermost (DomainMSet () (MSetAttr _ occurAttr) inner) = do
                 set <- failToUserError $ viewConstantMSet constant
                 let setSize = genericLength set
                 innerValues <- innerF set
-                return $ innerValues ++ [(s, ConstantInt setSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing setSize)]
         )
 mkFiniteOutermost (DomainSequence () attr@(SequenceAttr SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -259,7 +259,7 @@ mkFiniteOutermost (DomainSequence () (SequenceAttr _ jectivityAttr) inner) = do
                 set <- failToUserError $ viewConstantSequence constant
                 let setSize = genericLength set
                 innerValues <- innerF set
-                return $ innerValues ++ [(s, ConstantInt setSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing setSize)]
         )
 mkFiniteOutermost (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr innerTo) = do
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
@@ -289,7 +289,7 @@ mkFiniteOutermost (DomainFunction () (FunctionAttr _ partialityAttr jectivityAtt
                 let functionSize = genericLength function
                 innerFrValues <- innerFrF (map fst function)
                 innerToValues <- innerToF (map snd function)
-                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionSize)]
+                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt Nothing functionSize)]
         )
 mkFiniteOutermost (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) = do
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
@@ -315,7 +315,7 @@ mkFiniteOutermost (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
                 relation <- failToUserError $ viewConstantRelation constant
                 let relationSize = genericLength relation
                 innersValues <- zipWithM ($) innersF (transpose relation)
-                return $ concat innersValues ++ [(s, ConstantInt relationSize)]
+                return $ concat innersValues ++ [(s, ConstantInt Nothing relationSize)]
         )
 mkFiniteOutermost (DomainPartition () attr@(PartitionAttr SizeAttr_Size{} SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -345,8 +345,8 @@ mkFiniteOutermost (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) =
                 let numPartsVal = genericLength parts
                 let partsSizeVal = maximum0 $ map genericLength parts
                 innerValues <- mapM innerF parts
-                return $ concat innerValues ++ [ (numPartsFin, ConstantInt numPartsVal)
-                                               , (partsSizeFin, ConstantInt partsSizeVal)
+                return $ concat innerValues ++ [ (numPartsFin, ConstantInt Nothing numPartsVal)
+                                               , (partsSizeFin, ConstantInt Nothing partsSizeVal)
                                                ]
         )
 mkFiniteOutermost d = return (d, [], const (return []))
@@ -374,8 +374,8 @@ mkFiniteInner (DomainInt name []) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (fr, ConstantInt (minimum ints))
-                       , (to, ConstantInt (maximum0 ints))
+                return [ (fr, ConstantInt Nothing (minimum ints))
+                       , (to, ConstantInt Nothing (maximum0 ints))
                        ]
         )
 mkFiniteInner (DomainInt name [RangeLowerBounded low]) = do
@@ -386,7 +386,7 @@ mkFiniteInner (DomainInt name [RangeLowerBounded low]) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (new, ConstantInt (maximum0 ints)) ]
+                return [ (new, ConstantInt Nothing (maximum0 ints)) ]
         )
 mkFiniteInner (DomainInt name [RangeUpperBounded upp]) = do
     new <- nextName "fin"
@@ -396,7 +396,7 @@ mkFiniteInner (DomainInt name [RangeUpperBounded upp]) = do
         , \ constants -> do
                 logDebug $ "mkFiniteInner DomainInt" <+> vcat (map pretty constants)
                 ints <- failToUserError $ mapM viewConstantInt constants
-                return [ (new, ConstantInt (minimum ints)) ]
+                return [ (new, ConstantInt Nothing (minimum ints)) ]
         )
 mkFiniteInner (DomainTuple inners) = do
     mids <- mapM mkFiniteInner inners
@@ -476,7 +476,7 @@ mkFiniteInner (DomainSet () _ inner) = do
                 sets <- failToUserError $ mapM viewConstantSet constants
                 let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
-                return $ innerValues ++ [(s, ConstantInt setMaxSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing setMaxSize)]
         )
 mkFiniteInner (DomainMSet () attr@(MSetAttr SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -499,7 +499,7 @@ mkFiniteInner (DomainMSet () (MSetAttr _ occurAttr) inner) = do
                 sets <- failToUserError $ mapM viewConstantMSet constants
                 let setMaxSize = maximum0 $ map genericLength sets
                 innerValues <- innerF (concat sets)
-                return $ innerValues ++ [(s, ConstantInt setMaxSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing setMaxSize)]
         )
 mkFiniteInner (DomainSequence () attr@(SequenceAttr SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -522,7 +522,7 @@ mkFiniteInner (DomainSequence () (SequenceAttr _ jectivityAttr) inner) = do
                 seqs <- failToUserError $ mapM viewConstantSequence constants
                 let seqMaxSize = maximum0 $ map genericLength seqs
                 innerValues <- innerF (concat seqs)
-                return $ innerValues ++ [(s, ConstantInt seqMaxSize)]
+                return $ innerValues ++ [(s, ConstantInt Nothing seqMaxSize)]
         )
 mkFiniteInner (DomainFunction () attr@(FunctionAttr SizeAttr_Size{} _ _) innerFr innerTo) = do
     (innerFr', innerFrExtras, innerFrF) <- mkFiniteInner innerFr
@@ -552,7 +552,7 @@ mkFiniteInner (DomainFunction () (FunctionAttr _ partialityAttr jectivityAttr) i
                 let functionMaxSize = maximum0 $ map genericLength functions
                 innerFrValues <- innerFrF (map fst (concat functions))
                 innerToValues <- innerToF (map snd (concat functions))
-                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt functionMaxSize)]
+                return $ innerFrValues ++ innerToValues ++ [(s, ConstantInt Nothing functionMaxSize)]
         )
 mkFiniteInner (DomainRelation () attr@(RelationAttr SizeAttr_Size{} _) inners) = do
     (inners', innersExtras, innersF) <- unzip3 <$> mapM mkFiniteInner inners
@@ -578,7 +578,7 @@ mkFiniteInner (DomainRelation () (RelationAttr _ binRelAttr) inners) = do
                 relations <- failToUserError $ mapM viewConstantRelation constants
                 let relationMaxSize = maximum0 $ map genericLength relations
                 innersValues <- zipWithM ($) innersF (transpose $ concat relations)
-                return $ concat innersValues ++ [(s, ConstantInt relationMaxSize)]
+                return $ concat innersValues ++ [(s, ConstantInt Nothing relationMaxSize)]
         )
 mkFiniteInner (DomainPartition () attr@(PartitionAttr SizeAttr_Size{} SizeAttr_Size{} _) inner) = do
     (inner', innerExtras, innerF) <- mkFiniteInner inner
@@ -608,8 +608,8 @@ mkFiniteInner (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) = do
                 let numPartsVal = maximum0 $ map genericLength parts
                 let partsSizeVal = maximum0 $ map genericLength parts
                 innerValues <- mapM innerF (concat parts)
-                return $ concat innerValues ++ [ (numPartsFin, ConstantInt numPartsVal)
-                                               , (partsSizeFin, ConstantInt partsSizeVal)
+                return $ concat innerValues ++ [ (numPartsFin,  ConstantInt Nothing numPartsVal)
+                                               , (partsSizeFin, ConstantInt Nothing partsSizeVal)
                                                ]
         )
 mkFiniteInner d = return (d, [], const (return []))

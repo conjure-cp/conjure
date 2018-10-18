@@ -178,5 +178,5 @@ domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =
     case dom of
         DomainBool -> return [ConstantBool False, ConstantBool True]
-        DomainInt Nothing rs -> map ConstantInt <$> valuesInIntDomain rs
+        DomainInt name rs -> map (ConstantInt name) <$> valuesInIntDomain rs
         _ -> fail ("domainValues, not supported:" <+> pretty dom)

@@ -38,7 +38,7 @@ instance EvaluateOp OpPreImage where
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
     evaluateOp (OpPreImage (viewConstantSequence -> Just xs) a) =
         return $ ConstantAbstract $ AbsLitSet [ x | (n,y) <- zip allNats xs
-                                                  , let x = ConstantInt n
+                                                  , let x = ConstantInt Nothing n
                                                   , a == y ]
     evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
 

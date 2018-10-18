@@ -188,14 +188,15 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainIntE{}, c) -> c
             (DomainInt{} , c) -> c
 
-            (DomainEnum      ename _ _, ConstantInt i) ->
-                fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
-                          (lookup (i, ename) ctxt)
+            (DomainEnum      ename _ _, ConstantInt nname i) ->
+                if (Just ename) == nname
+                   then fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename)) (lookup (i, ename) ctxt)
+                   else bug $ "addEnumsAndUnnamedsBack 1: ConstantInt tag didn't match" <+> pretty (i, ename)
 
-            (DomainReference ename _  , ConstantInt i) ->
+            (DomainReference ename _  , ConstantInt nname i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else ConstantInt i -- assume this was an int if if is not in the unnameds list
+                    else ConstantInt nname i -- assume this was an int if if is not in the unnameds list
 
             (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
                 ConstantAbstract $ AbsLitTuple

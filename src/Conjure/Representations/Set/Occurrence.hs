@@ -58,7 +58,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                       , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
-                          , let isIn = ConstantInt v `elem` constants
+                          , let isIn = ConstantInt Nothing v `elem` constants
                           ]
                       )
                     ]
@@ -73,7 +73,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                         Just (_, vals) -> do
                             innerDomainVals <- valuesInIntDomain intRanges
                             return (name, ConstantAbstract $ AbsLitSet
-                                            [ ConstantInt v
+                                            [ ConstantInt Nothing v
                                             | (v,b) <- zip innerDomainVals vals
                                             , viewConstantBool b == Just True
                                             ] )

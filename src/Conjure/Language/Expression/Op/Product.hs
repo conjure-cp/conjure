@@ -41,7 +41,7 @@ instance EvaluateOp OpProduct where
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
         , any isUndef xs                      = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
+    evaluateOp (OpProduct x) = ConstantInt Nothing . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

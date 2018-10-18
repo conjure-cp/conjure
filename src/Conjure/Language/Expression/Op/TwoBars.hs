@@ -42,19 +42,19 @@ instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
         case x of
             -- absolute value
-            ConstantInt y                      -> return $ ConstantInt $ abs y
+            ConstantInt Nothing y                      -> return $ ConstantInt Nothing $ abs y
 
             -- cardinality of a constant
-            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt $ genericLength                    xs
-            (viewConstantSet       -> Just xs)      -> return $ ConstantInt $ genericLength $ sortNub          xs
-            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt $ genericLength                    xs
-            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt $ genericLength $ sortNub          xs
-            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt $ genericLength                    xs
-            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt $ genericLength $ sortNub          xs
-            (viewConstantPartition -> Just xs)      -> return $ ConstantInt $ genericLength $ sortNub $ concat xs
+            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt Nothing $ genericLength                    xs
+            (viewConstantSet       -> Just xs)      -> return $ ConstantInt Nothing $ genericLength $ sortNub          xs
+            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt Nothing $ genericLength                    xs
+            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt Nothing $ genericLength $ sortNub          xs
+            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt Nothing $ genericLength                    xs
+            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt Nothing $ genericLength $ sortNub          xs
+            (viewConstantPartition -> Just xs)      -> return $ ConstantInt Nothing $ genericLength $ sortNub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt _ rs) -> ConstantInt . genericLength <$> rangesInts rs
+            DomainInConstant (DomainInt _ rs) -> ConstantInt Nothing . genericLength <$> rangesInts rs
             DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 

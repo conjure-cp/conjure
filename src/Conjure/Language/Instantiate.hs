@@ -245,7 +245,7 @@ instantiateD (DomainEnum nm rs0 _) = do
                 |> fmap4 e2c'
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
-            Just (Constant (ConstantInt i)) -> return (n, i)
+            Just (Constant (ConstantInt _ i)) -> return (n, i)
             Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
             Just _  -> fail $ "Incompatible value for member of enum domain:" <+> pretty n
     return (DomainEnum nm (rs :: Maybe [Range Constant]) (Just mp))

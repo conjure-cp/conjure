@@ -19,23 +19,23 @@ tests = testGroup "domainSize"
     [ testCase "domain size of bool is 2" $
         domainSizeConstant DomainBool @?= Right 2
     , testCase "domain size of int(1..100)" $
-        domainSizeConstant (DomainInt Nothing [RangeBounded (ConstantInt 1) (ConstantInt 100)]) @?= Right 100
+        domainSizeConstant (DomainInt Nothing [RangeBounded (ConstantInt Nothing 1) (ConstantInt Nothing 100)]) @?= Right 100
     , testCase "domain size of int(1,...,100)" $
-        domainSizeConstant (DomainInt Nothing (map (RangeSingle . ConstantInt) [1 .. 100])) @?= Right 100
+        domainSizeConstant (DomainInt Nothing (map (RangeSingle . ConstantInt Nothing) [1 .. 100])) @?= Right 100
     , testCase "domain size of int(13)" $
-        domainSizeConstant (DomainInt Nothing [RangeSingle (ConstantInt 13)]) @?= Right 1
+        domainSizeConstant (DomainInt Nothing [RangeSingle (ConstantInt Nothing 13)]) @?= Right 1
     , testCase "domain size of int(13,1..100)" $
-        domainSizeConstant (DomainInt Nothing [ RangeSingle (ConstantInt 13)
-                                      , RangeBounded (ConstantInt 1) (ConstantInt 100)
+        domainSizeConstant (DomainInt Nothing [ RangeSingle (ConstantInt Nothing 13)
+                                      , RangeBounded (ConstantInt Nothing 1) (ConstantInt Nothing 100)
                                       ]) @?= Right 100
     , testCase "domain size of int(113,1..100)" $
-        domainSizeConstant (DomainInt Nothing [ RangeSingle (ConstantInt 113)
-                                      , RangeBounded (ConstantInt 1) (ConstantInt 100)
+        domainSizeConstant (DomainInt Nothing [ RangeSingle (ConstantInt Nothing 113)
+                                      , RangeBounded (ConstantInt Nothing 1) (ConstantInt Nothing 100)
                                       ]) @?= Right 101
     , testCase "domain size of set of bool #1" $
         domainSizeConstant (DomainSet () (SetAttr SizeAttr_None) DomainBool) @?= Right 4
     , testCase "domain size of set of bool #2" $
         let setOfSize n = DomainSet () (SetAttr (SizeAttr_Size n))
-        in  domainSizeConstant (setOfSize (ConstantInt 2) DomainBool) @?= Right 1
+        in  domainSizeConstant (setOfSize (ConstantInt Nothing 2) DomainBool) @?= Right 1
     ]
 

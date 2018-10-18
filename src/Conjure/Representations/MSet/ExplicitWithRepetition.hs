@@ -144,7 +144,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         return $ Just
                             [ ( nameFlag domain name
                               , defRepr flagDomain
-                              , ConstantInt (genericLength constants)
+                              , ConstantInt Nothing (genericLength constants)
                               )
                             , ( nameValues domain name
                               , DomainMatrix indexDomain innerDomain
@@ -156,7 +156,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         maxSize    <- getMaxSize attrs innerDomain
                         maxSizeInt <-
                             case maxSize of
-                                ConstantInt x -> return x
+                                ConstantInt Nothing x -> return x
                                 _ -> fail $ vcat
                                         [ "Expecting an integer for the maxSize attribute."
                                         , "But got:" <+> pretty maxSize
@@ -172,7 +172,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         return $ Just
                             [ ( nameFlag domain name
                               , defRepr flagDomain
-                              , ConstantInt (genericLength constants)
+                              , ConstantInt Nothing (genericLength constants)
                               )
                             , ( nameValues domain name
                               , DomainMatrix indexDomain innerDomain

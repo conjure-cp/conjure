@@ -80,7 +80,7 @@ instance EvaluateOp OpIndexing where
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt x)) = do
+    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt _ x)) = do
         ty   <- typeOf m
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo
@@ -96,7 +96,7 @@ instance EvaluateOp OpIndexing where
                     [ "Matrix is multiply defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]
-    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt x)) = return (at vals (fromInteger (x-1)))
+    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt _ x)) = return (at vals (fromInteger (x-1)))
     evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat

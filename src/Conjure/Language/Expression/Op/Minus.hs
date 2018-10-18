@@ -34,7 +34,7 @@ instance EvaluateOp OpMinus where
     evaluateOp p | any isUndef (childrenBi p) = do
         ty <- typeOf p
         return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
+    evaluateOp (OpMinus (ConstantInt Nothing a) (ConstantInt Nothing b)) = return $ ConstantInt Nothing (a - b)
     evaluateOp (OpMinus (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         let outs =
                 [ a

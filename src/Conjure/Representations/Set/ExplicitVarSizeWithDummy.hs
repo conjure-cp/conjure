@@ -46,12 +46,12 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
         calcDummyElemC (DomainInt _ []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
-        calcDummyElemC (DomainInt _ rs) = ConstantInt $
+        calcDummyElemC (DomainInt _ rs) = ConstantInt Nothing $
             1 + maximum [ i
                         | r <- rs
                         , i <- case r of
-                            RangeSingle (ConstantInt x) -> [x]
-                            RangeBounded (ConstantInt x) (ConstantInt y) -> [x..y]
+                            RangeSingle (ConstantInt Nothing x) -> [x]
+                            RangeBounded (ConstantInt Nothing x) (ConstantInt Nothing y) -> [x..y]
                             _ -> bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty r)
                         ]
         calcDummyElemC d = bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty d)
@@ -127,7 +127,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt Nothing x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize

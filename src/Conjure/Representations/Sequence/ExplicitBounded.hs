@@ -194,7 +194,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , DomainInt Nothing [RangeBounded size size]
-                  , ConstantInt (genericLength constants)
+                  , ConstantInt Nothing (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (DomainInt Nothing [RangeBounded 1 size]) innerDomain
@@ -209,7 +209,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt Nothing x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -221,7 +221,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt (genericLength constants)
+                  , ConstantInt Nothing (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -239,7 +239,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt card ->
+                        ConstantInt Nothing card ->
                             case viewConstantMatrix constantMatrix of
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))

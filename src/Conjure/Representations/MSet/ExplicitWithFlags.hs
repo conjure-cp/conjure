@@ -138,7 +138,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
 
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt Nothing x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -148,8 +148,8 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z
 
-            let counts = map (ConstantInt . snd) constants
-            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt 0)
+            let counts = map (ConstantInt Nothing . snd) constants
+            let falses = replicate (fromInteger (maxSizeInt - genericLength constants)) (ConstantInt Nothing 0)
 
             return $ Just
                 [ ( nameFlag domain name
@@ -174,7 +174,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract $ AbsLitMSet $ concat
                                                     [ replicate (fromInteger i) v
-                                                    | (ConstantInt i,v) <- zip flags vals
+                                                    | (ConstantInt Nothing i,v) <- zip flags vals
                                                     ] )
                                 _ -> fail $ vcat
                                         [ "Expecting a matrix literal for:" <+> pretty (nameValues domain name)

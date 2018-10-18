@@ -930,7 +930,7 @@ parseLiteral = label "value" $ msum
                  True  <$ lexeme L_true
             return (ConstantBool x)
 
-        pInt = ConstantInt . fromInteger <$> integer
+        pInt = ConstantInt Nothing . fromInteger <$> integer
 
         pMatrix = do
             lexeme L_OpenBracket

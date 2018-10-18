@@ -52,7 +52,7 @@ instance EvaluateOp OpMin where
         is <- rangesInts rs
         return $ if null is
             then mkUndef (TypeInt Nothing) "Empty collection in min"
-            else ConstantInt (minimum is)
+            else ConstantInt Nothing (minimum is)
     evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
         case xs of
             [] -> do
@@ -63,7 +63,7 @@ instance EvaluateOp OpMin where
                 case tyInner of
                     TypeInt _ -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (minimum is)
+                        return $ ConstantInt Nothing (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -75,7 +75,7 @@ instance EvaluateOp OpMin where
                 case tyInner of
                     TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (minimum is)
+                        return $ ConstantInt Nothing (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -87,7 +87,7 @@ instance EvaluateOp OpMin where
                 case tyInner of
                     TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (minimum is)
+                        return $ ConstantInt Nothing (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 

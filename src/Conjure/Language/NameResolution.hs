@@ -101,7 +101,7 @@ resolveStatement st =
                     modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
                 LettingDomainDefnEnum _ nms -> do
-                    modify ( [ (nm, Alias (Constant (ConstantInt i)))
+                    modify ( [ (nm, Alias (Constant (ConstantInt (Just nm) i)))
                              | (nm, i) <- zip nms [1..]
                              ] ++)
                     return st

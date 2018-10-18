@@ -32,11 +32,11 @@ instance EvaluateOp OpSlicing where
         indexVals <- valuesInIntDomain index
         outVals   <- fmap catMaybes $ forM (zip indexVals vals) $ \ (thisIndex, thisVal) ->
             case lb of
-                Just (ConstantInt lower) | lower > thisIndex -> return Nothing
+                Just (ConstantInt Nothing lower) | lower > thisIndex -> return Nothing
                 _ -> case ub of
-                    Just (ConstantInt upper) | upper < thisIndex -> return Nothing
+                    Just (ConstantInt Nothing upper) | upper < thisIndex -> return Nothing
                     _ -> return $ Just (thisIndex, thisVal)
-        let outDomain = DomainInt Nothing $ map (RangeSingle . ConstantInt . fst) outVals
+        let outDomain = DomainInt Nothing $ map (RangeSingle . ConstantInt Nothing . fst) outVals
         return $ ConstantAbstract $ AbsLitMatrix outDomain (map snd outVals)
     evaluateOp op = na $ "evaluateOp{OpSlicing}:" <++> pretty (show op)
 

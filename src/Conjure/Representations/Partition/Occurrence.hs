@@ -241,15 +241,15 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                               , mem `elem` pVals
                                               ]
                         ]
-                numPartsVal   = ConstantInt (genericLength vals)
+                numPartsVal   = ConstantInt Nothing (genericLength vals)
                 whichPartVal  = ConstantAbstract (AbsLitMatrix
                                     (forgetRepr innerDomain)
-                                    (map (ConstantInt . fst) whichPartValInside))
+                                    (map (ConstantInt Nothing . fst) whichPartValInside))
                 partSizesVal  = ConstantAbstract (AbsLitMatrix
                                     (DomainInt Nothing [RangeBounded 1 maxNumParts'])
-                                    (map (ConstantInt . genericLength) vals
+                                    (map (ConstantInt Nothing . genericLength) vals
                                         ++ replicate (fromInteger (maxNumParts - genericLength vals))
-                                                     (ConstantInt 0)))
+                                                     (ConstantInt Nothing 0)))
                 firstIndexVal = ConstantAbstract (AbsLitMatrix
                                     (DomainInt Nothing [RangeBounded 1 maxNumParts'])
                                     ([ case lookup p whichPartValInside of
@@ -281,7 +281,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                     return
                         ( name
                         , normaliseConstant $ ConstantAbstract $ AbsLitPartition
-                            [ [ member | (member, b) <- zip members whichPartValues, b == ConstantInt bucket ]
+                            [ [ member | (member, b) <- zip members whichPartValues, b == ConstantInt Nothing bucket ]
                             | bucket <- [1..numPartsValue]
                             ]
                         )

@@ -163,7 +163,7 @@ instance Pretty Declaration where
 
             isPrim :: Constant -> Maybe Prim
             isPrim (ConstantBool val) = Just (Left val)
-            isPrim (ConstantInt  val) = Just (Right (Left val))
+            isPrim (ConstantInt Nothing val) = Just (Right (Left val))
             isPrim val@ConstantEnum{} = Just (Right (Right val))
             isPrim _ = Nothing
 
@@ -576,7 +576,7 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 e2c :: MonadFail m => Expression -> m Constant
 e2c (Constant c) = return c
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
-e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt x))))) = return $ ConstantInt $ negate x
+e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt Nothing x))))) = return $ ConstantInt Nothing $ negate x
 e2c x = fail ("e2c, not a constant:" <+> pretty x)
 
 -- | generate a fresh name for a quantified variable.

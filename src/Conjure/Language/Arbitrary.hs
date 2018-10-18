@@ -106,24 +106,24 @@ arbitraryDomainAndConstant = sized dispatch
         intBounded = do
             l <- choose (0 :: Integer, 100)
             u <- choose (l, 200)
-            return ( DomainInt Nothing [RangeBounded (ConstantInt l) (ConstantInt u)]
-                   , ConstantInt <$> choose (l,u)
+            return ( DomainInt Nothing [RangeBounded (ConstantInt Nothing l) (ConstantInt Nothing u)]
+                   , ConstantInt Nothing <$> choose (l,u)
                    )
 
         intSingles :: Gen (Domain r Constant, Gen Constant)
         intSingles = do
             count <- choose (1 :: Integer, 20)
             vals  <- vectorOf (fromInteger count) (choose (0 :: Integer, 100))
-            return ( DomainInt Nothing (map (RangeSingle . ConstantInt) vals)
-                   , ConstantInt <$> pickFromList vals
+            return ( DomainInt Nothing (map (RangeSingle . ConstantInt Nothing) vals)
+                   , ConstantInt Nothing <$> pickFromList vals
                    )
 
         intMixed :: Gen (Domain r Constant, Gen Constant)
         intMixed = do
-            let single = RangeSingle . ConstantInt <$> choose (0 :: Integer, 100)
+            let single = RangeSingle . ConstantInt Nothing <$> choose (0 :: Integer, 100)
             let pair = do l <- choose (0 :: Integer, 100)
                           u <- choose (l, 200)
-                          return $ RangeBounded (ConstantInt l) (ConstantInt u)
+                          return $ RangeBounded (ConstantInt Nothing l) (ConstantInt Nothing u)
 
             numSingles <- choose (1 :: Int, 10)
             numPairs <- choose (1 :: Int, 10)
@@ -146,15 +146,15 @@ arbitraryDomainAndConstant = sized dispatch
                     [ vals
                     | r <- rs
                     , let vals = case r of
-                            RangeSingle (ConstantInt i) -> [i]
-                            RangeBounded (ConstantInt l) (ConstantInt u) -> [l..u]
+                            RangeSingle (ConstantInt Nothing i) -> [i]
+                            RangeBounded (ConstantInt Nothing l) (ConstantInt Nothing u) -> [l..u]
                             _ -> []
                     ]
 
             if null allVals
                 then bug "allVals null"
                 else return ( DomainInt Nothing rs
-                            , ConstantInt <$> pickFromList allVals
+                            , ConstantInt Nothing <$> pickFromList allVals
                             )
 
         -- enum :: Gen (Domain HasRepresentation Constant, Gen Constant)
@@ -194,7 +194,7 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         repr
-                        (SetAttr (SizeAttr_Size (ConstantInt size)))
+                        (SetAttr (SizeAttr_Size (ConstantInt Nothing size)))
                         dom
             return ( domainOut
                    , let try n =
@@ -223,7 +223,7 @@ arbitraryDomainAndConstant = sized dispatch
             maxSize <- choose (0 :: Integer, sizeUpTo)
             repr <- pickFromList [Set_ExplicitVarSizeWithFlags, Set_ExplicitVarSizeWithMarker]
             return ( DomainSet repr
-                               (SetAttr (SizeAttr_MaxSize (ConstantInt maxSize)))
+                               (SetAttr (SizeAttr_MaxSize (ConstantInt Nothing maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf (fromInteger numElems) constantGen
@@ -244,8 +244,8 @@ arbitraryDomainAndConstant = sized dispatch
                     DomainSet
                         repr
                         (SetAttr (SizeAttr_MinMaxSize
-                                    (ConstantInt minSize)
-                                    (ConstantInt maxSize)))
+                                    (ConstantInt Nothing minSize)
+                                    (ConstantInt Nothing maxSize)))
                         dom
             return ( domainOut
                    , let try n =

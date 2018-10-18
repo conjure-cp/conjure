@@ -52,7 +52,7 @@ instance EvaluateOp OpMax where
         is <- rangesInts rs
         return $ if null is
             then mkUndef (TypeInt Nothing) "Empty collection in max"
-            else ConstantInt (maximum is)
+            else ConstantInt Nothing (maximum is)
     evaluateOp (OpMax coll@(viewConstantMatrix -> Just (_, xs))) =
         case xs of
             [] -> do
@@ -63,7 +63,7 @@ instance EvaluateOp OpMax where
                 case tyInner of
                     TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (maximum is)
+                        return $ ConstantInt Nothing (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -75,7 +75,7 @@ instance EvaluateOp OpMax where
                 case tyInner of
                     TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (maximum is)
+                        return $ ConstantInt Nothing (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -87,7 +87,7 @@ instance EvaluateOp OpMax where
                 case tyInner of
                     TypeInt Nothing -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (maximum is)
+                        return $ ConstantInt Nothing (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp _ = na "evaluateOp{OpMax}"
 
