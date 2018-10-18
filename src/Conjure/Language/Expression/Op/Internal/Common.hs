@@ -85,8 +85,8 @@ intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
 intToInt p a = do
     tya <- typeOf a
     case tya of
-        TypeInt -> return TypeInt
-        _       -> fail $ vcat
+        TypeInt t -> return (TypeInt t)
+        _         -> fail $ vcat
             [ "When type checking:" <+> pretty p
             , "Argument expected to be an int, but it is:" <++> pretty tya
             ]
@@ -97,10 +97,15 @@ intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        (TypeInt, TypeInt) -> return TypeInt
-        (_, TypeInt)       -> fail $ vcat
+        (TypeInt aTag, TypeInt bTag)
+            | aTag == bTag -> return (TypeInt aTag)
+            | otherwise    ->  fail $ vcat
+                [ "When type checking:" <+> pretty p
+                , "Arguments have different tags."
+                ]
+        (_, TypeInt _)       -> fail $ vcat
             [ "When type checking:" <+> pretty p
-            ,  "First argument expected to be an int, but it is:" <++> pretty tya
+            , "First argument expected to be an int, but it is:" <++> pretty tya
             ]
         _                  -> fail $ vcat
             [ "When type checking:" <+> pretty p
@@ -122,8 +127,9 @@ boolToBoolToBool p a b = do
             , "Second argument expected to be a bool, but it is:" <++> pretty tyb
             ]
 
+
 sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> m Type
-sameToSameToBool p a b tys= do
+sameToSameToBool p a b tys = do
     tyA <- typeOf a
     tyB <- typeOf b
     let tyAB = mostDefined [tyA,tyB]
