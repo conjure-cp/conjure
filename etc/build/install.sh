@@ -150,7 +150,7 @@ elif [ $INSTALL_CABAL = "yes" ]; then
     mkdir cabal-install-tmp
     pushd cabal-install-tmp
     wget --no-check-certificate -c "http://hackage.haskell.org/packages/archive/cabal-install/${CABAL_VERSION}/cabal-install-${CABAL_VERSION}.tar.gz"
-    tar -zxvf "cabal-install-${CABAL_VERSION}.tar.gz"
+    tar zxf "cabal-install-${CABAL_VERSION}.tar.gz"
     pushd "cabal-install-${CABAL_VERSION}"
     EXTRA_CONFIGURE_OPTS="" bash bootstrap.sh --user --no-doc
     popd
