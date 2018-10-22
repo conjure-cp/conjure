@@ -22,13 +22,18 @@ instance BinaryOperator (OpPow x) where
     opLexeme _ = L_Pow
 
 instance (TypeOf x, Pretty x) => TypeOf (OpPow x) where
-    typeOf p@(OpPow a b) = intToIntToInt p a b
+  typeOf p@(OpPow a b) = do
+    ta <- typeOf a
+    tb <- typeOf b
+    case (ta, tb) of
+      (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
+      _ -> raiseTypeError p
 
 instance EvaluateOp OpPow where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpPow x y)
-        | y >= 0    = ConstantInt <$> ((^) <$> intOut "pow x" x <*> intOut "pow y" y)
-        | otherwise = return $ mkUndef TypeInt $ "negative exponent:" <+> pretty p
+        | y >= 0    = ConstantInt NoTag <$> ((^) <$> intOut "pow x" x <*> intOut "pow y" y)
+        | otherwise = return $ mkUndef (TypeInt NoTag) $ "negative exponent:" <+> pretty p
 
 instance SimplifyOp OpPow x where
     simplifyOp _ = na "simplifyOp{OpPow}"
