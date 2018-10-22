@@ -32,8 +32,8 @@ inferAttributes = flip evalStateT [] . go where
                         LettingDomainDefnUnnamed nm x -> do
                             x' <- resolveX x
                             modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
-                        LettingDomainDefnEnum _ nms -> do
-                            modify ( [ (nm, Alias (Constant (ConstantInt i)))
+                        LettingDomainDefnEnum ename nms -> do
+                            modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                                      | (nm, i) <- zip nms [1..]
                                      ] ++)
                         GivenDomainDefnEnum{}       -> return ()             -- ignoring

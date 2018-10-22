@@ -1146,9 +1146,9 @@ constantInt
        , Expression -> m Integer
        )
 constantInt _ =
-    ( Constant . ConstantInt
+    ( Constant . ConstantInt NoTag
     , \ p -> case p of
-            (Constant (ConstantInt i)) -> return i
+            (Constant (ConstantInt NoTag i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 
@@ -1460,9 +1460,9 @@ fixRelationProj = transformBi f
 
 
 maxOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-maxOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.maxOfDomain []"
-maxOfDomain (DomainInt [r]) = maxOfRange r
-maxOfDomain (DomainInt rs ) = do
+maxOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.maxOfDomain []"
+maxOfDomain (DomainInt _ [r]) = maxOfRange r
+maxOfDomain (DomainInt _ rs ) = do
     xs <- mapM maxOfRange rs
     return (make opMax (fromList xs))
 maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
@@ -1473,9 +1473,9 @@ maxOfRange (RangeBounded _ x) = return x
 maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty r)
 
 minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-minOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.minOfDomain []"
-minOfDomain (DomainInt [r]) = minOfRange r
-minOfDomain (DomainInt rs ) = do
+minOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.minOfDomain []"
+minOfDomain (DomainInt _ [r]) = minOfRange r
+minOfDomain (DomainInt _ rs ) = do
     xs <- mapM minOfRange rs
     return (make opMin (fromList xs))
 minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)

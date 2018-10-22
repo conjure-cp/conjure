@@ -20,7 +20,7 @@ module Conjure.Language.Domain
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , reprTreeEncoded
     , forgetRepr, changeRepr, defRepr
-    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainAny
+    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBTagged, mkDomainAny
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
@@ -87,6 +87,9 @@ mkDomainInt = DomainInt NoTag
 
 mkDomainIntB :: x -> x -> Domain () x
 mkDomainIntB l u = DomainInt NoTag [RangeBounded l u]
+
+mkDomainIntBTagged :: IntTag -> x -> x -> Domain () x
+mkDomainIntBTagged t l u = DomainInt t [RangeBounded l u]
 
 mkDomainAny :: Doc -> Type -> Domain r x
 mkDomainAny reason = DomainAny (stringToText $ show reason)

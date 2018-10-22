@@ -163,7 +163,7 @@ instance Pretty Declaration where
 
             isPrim :: Constant -> Maybe Prim
             isPrim (ConstantBool val) = Just (Left val)
-            isPrim (ConstantInt  val) = Just (Right (Left val))
+            isPrim (ConstantInt _ val) = Just (Right (Left val))
             isPrim val@ConstantEnum{} = Just (Right (Right val))
             isPrim _ = Nothing
 
@@ -576,7 +576,7 @@ instance FromJSON  InBubble where parseJSON = genericParseJSON jsonOptions
 e2c :: MonadFail m => Expression -> m Constant
 e2c (Constant c) = return c
 e2c (AbstractLiteral c) = ConstantAbstract <$> mapM e2c c
-e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt x))))) = return $ ConstantInt $ negate x
+e2c (Op (MkOpNegate (OpNegate (Constant (ConstantInt NoTag x))))) = return $ ConstantInt NoTag $ negate x
 e2c x = fail ("e2c, not a constant:" <+> pretty x)
 
 -- | generate a fresh name for a quantified variable.
@@ -759,7 +759,7 @@ instance VarSymBreakingDescription AbstractPattern where
 patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing
 patternToExpr (AbsPatTuple  ts) = AbstractLiteral $ AbsLitTuple  $ map patternToExpr ts
-patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix (DomainInt [RangeBounded 1 (fromInt (genericLength ts))])
+patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength ts))])
                                                                  $ map patternToExpr ts
 patternToExpr (AbsPatSet    ts) = AbstractLiteral $ AbsLitSet    $ map patternToExpr ts
 patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"

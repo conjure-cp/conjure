@@ -12,6 +12,7 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
+import Conjure.Language.Type
 
 -- text
 import Data.Text as T ( pack )
@@ -33,7 +34,7 @@ removeEnumsFromModel =
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
+                            let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromInt (genericLength names))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
                                              , zip names allNats
@@ -57,7 +58,7 @@ removeEnumsFromModel =
                 onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
+                    = DomainInt (TagEnum nm) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = return (DomainReference nm (Just d))
@@ -75,8 +76,8 @@ removeEnumsFromModel =
                     case st of
                         Declaration (GivenDomainDefnEnum name) -> do
                             let nameS      = name `mappend` "_EnumSize"
-                            let outDomainS = DomainInt []
-                            let outDomain  = mkDomainIntB 1
+                            let outDomainS = DomainInt (TagEnum name) []
+                            let outDomain  = mkDomainIntBTagged (TagEnum name) 1
                                                 (Reference nameS (Just (Alias (Domain outDomainS))))
                             modify ([(name, outDomain)] `mappend`)
                             return [ Declaration (FindOrGiven Given nameS         outDomainS)
@@ -88,7 +89,7 @@ removeEnumsFromModel =
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
-                    = DomainInt ranges
+                    = DomainInt (TagEnum nm) ranges
                 onD (DomainEnum      nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -127,7 +128,7 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = mkDomainIntB 1 (fromInt (genericLength names))
+                    let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromInt (genericLength names))
                     case names `intersect` namesBefore of
                         [] -> modify ( ( [(ename, outDomain)]
                                      , zip names allNats
@@ -151,7 +152,7 @@ removeEnumsFromParam model param = do
         onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
         onD (DomainEnum nm (Just ranges) _)
             | Just _ <- lookup nm enumDomainNames
-            = DomainInt <$> mapM (mapM (nameToX nameToIntMapping)) ranges
+            = DomainInt (TagEnum nm) <$> mapM (mapM (nameToX nameToIntMapping)) ranges
         onD (DomainEnum nm Nothing _)
             | Just d <- lookup nm enumDomainNames
             = return (DomainReference nm (Just d))
@@ -188,14 +189,16 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainIntE{}, c) -> c
             (DomainInt{} , c) -> c
 
-            (DomainEnum      ename _ _, ConstantInt i) ->
+            (DomainEnum      ename _ _, ConstantInt (TagEnum tname) i) | ename == tname ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
                           (lookup (i, ename) ctxt)
 
-            (DomainReference ename _  , ConstantInt i) ->
+            (DomainReference ename _  , ConstantInt (TagUnnamed tname) i) | ename == tname ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
-                    else ConstantInt i -- assume this was an int if if is not in the unnameds list
+                    else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat  [ "domain  :" <+> pretty domain
+                                                                                  , "constant:" <+> pretty constant
+                                                                                  ]
 
             (DomainTuple ds, ConstantAbstract (AbsLitTuple cs)) ->
                 ConstantAbstract $ AbsLitTuple
