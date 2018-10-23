@@ -15,7 +15,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
         tyInner <- typeOf body
-        let ty = TypeMatrix TypeInt tyInner
+        let ty = TypeMatrix (TypeInt NoTag) tyInner
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
             , return $ if null elems
@@ -503,7 +503,7 @@ rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
         (matrix, indexer)            <- match opIndexing p
-        (_, DomainInt ranges, elems) <- match matrixLiteral matrix
+        (_, DomainInt _ ranges, elems) <- match matrixLiteral matrix
         indexInts                    <- rangesInts ranges
         indexerInt                   <- intOut "rule_MatrixIndexing" indexer
         if length indexInts == length elems

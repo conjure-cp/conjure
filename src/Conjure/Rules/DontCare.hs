@@ -21,12 +21,12 @@ rule_Int :: Rule
 rule_Int = "dontCare-int" `namedRule` theRule where
     theRule p = do
         x       <- match opDontCare p
-        TypeInt <- typeOf x
+        TypeInt _ <- typeOf x
         xDomain <- domainOf x
         let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
         let val = case xDomain of
-                DomainInt [] -> raiseBug
-                DomainInt (r:_) -> case r of
+                DomainInt _ [] -> raiseBug
+                DomainInt _ (r:_) -> case r of
                     RangeOpen -> raiseBug
                     RangeSingle v -> v
                     RangeLowerBounded v -> v
@@ -122,12 +122,12 @@ handleDontCares p =
             typX <- typeOf x
             case typX of
                 TypeBool -> return (make opEq x (fromBool False))
-                TypeInt -> do
+                TypeInt _ -> do
                     domX <- domainOf x
                     let raiseBug = bug ("dontCare on domain:" <+> pretty domX)
                     let val = case domX of
-                            DomainInt [] -> raiseBug
-                            DomainInt (r:_) -> case r of
+                            DomainInt _ [] -> raiseBug
+                            DomainInt _ (r:_) -> case r of
                                 RangeOpen -> raiseBug
                                 RangeSingle v -> v
                                 RangeLowerBounded v -> v

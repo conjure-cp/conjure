@@ -610,7 +610,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix TypeInt ty
+        f (TypeList ty) = TypeMatrix (TypeInt NoTag) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -665,7 +665,7 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt (TagEnum name) [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
@@ -1726,7 +1726,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ TypeInt  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -1758,7 +1758,7 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
         return
             ( "Cardinality of a domain"
             , case d of
-                DomainInt [RangeBounded 1 u] -> return u
+                DomainInt _ [RangeBounded 1 u] -> return u
                 _ -> do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum([ 1 | &iPat : &d ]) |]
@@ -1929,7 +1929,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             collectLowerBounds (RangeBounded x _) = return x
             collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
 
-            collectLowerBoundsD (DomainInt rs) = mapM collectLowerBounds rs
+            collectLowerBoundsD (DomainInt _ rs) = mapM collectLowerBounds rs
             collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
 
         bounds <- collectLowerBoundsD domBody

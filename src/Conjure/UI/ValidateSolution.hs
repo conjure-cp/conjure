@@ -7,7 +7,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( mostDefined )
+import Conjure.Language.Type 
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -86,7 +86,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
                     let domain = mkDomainIntB 1 (fromInt (genericLength val))
-                    let values = [ (n, Constant (ConstantInt i))
+                    let values = [ (n, Constant (ConstantInt (TagEnum nm) i))
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
@@ -97,7 +97,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                          ]
         Declaration (LettingDomainDefnEnum nm val) -> do
                     let domain = mkDomainIntB 1 (fromInt (genericLength val))
-                    let values = [ (n, Constant (ConstantInt i))
+                    let values = [ (n, Constant (ConstantInt (TagEnum nm) i))
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
@@ -105,7 +105,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
             case [ nms | Declaration (LettingDomainDefnEnum nm2 nms) <- mStatements essenceSolution , nm == nm2 ] of
                 [nms] -> do
                     let domain = mkDomainIntB 1 (fromInt (genericLength nms))
-                    let values = [ (n, Constant (ConstantInt i))
+                    let values = [ (n, Constant (ConstantInt (TagUnnamed nm) i))
                                  | (i,n) <- zip allNats nms
                                  ]
                     modify (((nm, Domain domain) : values) ++)
