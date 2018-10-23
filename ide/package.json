@@ -1,0 +1,78 @@
+{
+    "name": "conjure",
+    "displayName": "CONJURE",
+    "description": "",
+    "version": "0.0.1",
+    "publisher": "revilotom",
+    "engines": {
+        "vscode": "^1.27.0"
+    },
+    "main": "./out/extension",
+    "categories": [
+        "Programming Languages",
+        "Formatters"
+    ],
+    "activationEvents": [
+        "onLanguage:essence"
+    ],
+    "contributes": {
+        "commands": [
+            {
+                "command": "catCoding.start",
+                "title": "Start new cat coding session",
+                "category": "Cat Coding"
+            }
+        ],
+        "languages": [
+            {
+                "id": "essence",
+                "aliases": [
+                    "Essence",
+                    "essence"
+                ],
+                "extensions": [
+                    ".essence",
+                    ".eprime",
+                    ".param",
+                    ".essence-param",
+                    ".eprime-param",
+                    ".solution",
+                    ".eprime-solution",
+                    ".essence-solution"
+                ],
+                "configuration": "./language-configuration.json"
+            }
+        ],
+        "grammars": [
+            {
+                "language": "essence",
+                "scopeName": "source.essence",
+                "path": "./syntaxes/Essence.tmLanguage"
+            }
+        ]
+    },
+    "scripts": {
+        "vscode:prepublish": "npm run compile",
+        "compile": "tsc -p ./",
+        "watch": "tsc -watch -p ./",
+        "postinstall": "node ./node_modules/vscode/bin/install",
+        "test": "npm run compile && node ./node_modules/vscode/bin/test"
+    },
+    "devDependencies": {
+        "@types/mocha": "^2.2.42",
+        "@types/node": "^8.10.36",
+        "tslint": "^5.8.0",
+        "typescript": "^2.6.1",
+        "vscode": "^1.1.21"
+    },
+    "dependencies": {
+        "@types/mathjs": "^4.4.1",
+        "create-html": "^4.1.0",
+        "d3-node": "^2.1.0",
+        "deep-rename-keys": "^0.2.1",
+        "is-empty": "^1.2.0",
+        "mathjs": "^5.2.1",
+        "sleep": "^5.2.3",
+        "sqlite3": "^4.0.2"
+    }
+}
