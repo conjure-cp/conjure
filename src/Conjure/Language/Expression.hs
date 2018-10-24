@@ -507,7 +507,7 @@ instance ReferenceContainer Expression where
 
 instance ExpressionLike Expression where
     fromInt = Constant . fromInt
-    fromIntWithTag i t= Constant $ fromIntWithTag i t
+    fromIntWithTag i t = Constant $ fromIntWithTag i t
     intOut doc (Constant c) = intOut ("intOut{Expression}" <+> doc) c
     intOut doc x = fail $ vcat [ "Expecting a constant, but got:" <++> pretty x
                                , "Called from:" <+> doc
