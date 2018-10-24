@@ -17,8 +17,8 @@ removeUnnamedsFromModel :: MonadFail m => Model -> m Model
 removeUnnamedsFromModel model = do
     statements' <- forM (mStatements model) $ \ st ->
             case st of
-                Declaration (LettingDomainDefnUnnamed name size) -> do
-                    let outDomain = mkDomainIntBTagged (TagUnnamed name) 1 size
+                Declaration (LettingDomainDefnUnnamed name@(Name nameText) size) -> do
+                    let outDomain = mkDomainIntBTagged (TagUnnamed nameText) 1 size
                     return $ Declaration $ Letting name $ Domain outDomain
                 _ -> return st
     return model { mStatements = statements' }

@@ -101,7 +101,7 @@ resolveStatement st =
                     x' <- resolveX x
                     modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
-                LettingDomainDefnEnum ename nms -> do
+                LettingDomainDefnEnum (Name ename) nms -> do
                     modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                              | (nm, i) <- zip nms [1..]
                              ] ++)

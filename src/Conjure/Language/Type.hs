@@ -73,8 +73,8 @@ instance Pretty Type where
 
 
 data IntTag = NoTag
-            | TagEnum Name
-            | TagUnnamed Name
+            | TagEnum Text
+            | TagUnnamed Text
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize IntTag

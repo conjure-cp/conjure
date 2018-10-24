@@ -665,7 +665,7 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt (TagEnum name) [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt NoTag [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum

@@ -3,6 +3,7 @@
 -- | This is an extremely simplified version of type-strengthening
 module Conjure.Process.InferAttributes ( inferAttributes ) where
 
+import Conjure.Bug
 import Conjure.Prelude
 import Conjure.Language
 import Conjure.Language.Domain.AddAttributes ( mkMin )
@@ -32,10 +33,11 @@ inferAttributes = flip evalStateT [] . go where
                         LettingDomainDefnUnnamed nm x -> do
                             x' <- resolveX x
                             modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
-                        LettingDomainDefnEnum ename nms -> do
+                        LettingDomainDefnEnum (Name ename) nms -> do
                             modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                                      | (nm, i) <- zip nms [1..]
                                      ] ++)
+                        LettingDomainDefnEnum{}     -> bug "inferAttributes"
                         GivenDomainDefnEnum{}       -> return ()             -- ignoring
                 _ -> return ()
         transformBiM inferAttributesD m
