@@ -96,6 +96,8 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 vals  -> userErr1 $ vcat [ "Multiple values for enum domain" <+> pretty nm <+> "in the parameter file."
                                          , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
                                          ]
+        Declaration GivenDomainDefnEnum{} ->
+            bug "validateSolution GivenDomainDefnEnum, some other type of Name"
         Declaration (LettingDomainDefnEnum nm@(Name nmText) val) -> do
                     let domain = mkDomainIntBTagged (TagEnum nmText) 1 (fromInt (genericLength val))
                     let values = [ (n, Constant (ConstantInt (TagEnum nmText) i))
