@@ -42,7 +42,7 @@ instance SimplifyOp OpSucc x where
     simplifyOp _ = na "simplifyOp{OpSucc}"
 
 instance Pretty x => Pretty (OpSucc x) where
-    prettyPrec _ (OpSucc x) = "pred" <> prParens (pretty x)
+    prettyPrec _ (OpSucc x) = "succ" <> prParens (pretty x)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpSucc x) where
     varSymBreakingDescription (OpSucc a) = JSON.Object $ M.fromList
