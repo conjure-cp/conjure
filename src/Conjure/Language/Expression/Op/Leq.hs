@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpLeq x) where
       tb <- typeOf b
       case (ta, tb) of
         (TypeInt (TagEnum ata), TypeInt (TagEnum bt)) | ata == bt
-          -> return $ TypeInt (TagEnum ata)
+          -> return TypeBool
         _ -> sameToSameToBool p a b
                                 [TypeBool, TypeInt NoTag, TypeEnum "?"]
 
