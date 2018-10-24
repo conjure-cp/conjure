@@ -38,7 +38,8 @@ removeEnumsFromModel =
                     case st of
                         Declaration (LettingDomainDefnEnum ename@(Name enameText) names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntBTagged (TagEnum enameText) 1
+                            let outDomain = mkDomainIntBTagged (TagEnum enameText)
+                                                (fromIntWithTag 1 (TagEnum enameText))
                                                 (fromIntWithTag (genericLength names) (TagEnum enameText)) 
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
@@ -82,7 +83,8 @@ removeEnumsFromModel =
                         Declaration (GivenDomainDefnEnum name@(Name nameText)) -> do
                             let nameS      = name `mappend` "_EnumSize"
                             let outDomainS = DomainInt (TagEnum nameText) []
-                            let outDomain  = mkDomainIntBTagged (TagEnum nameText) 1
+                            let outDomain  = mkDomainIntBTagged (TagEnum nameText)
+                                                (fromIntWithTag 1 (TagEnum nameText))
                                                 (Reference nameS (Just (Alias (Domain outDomainS))))
                             modify ([(name, outDomain)] `mappend`)
                             return [ Declaration (FindOrGiven Given nameS         outDomainS)
@@ -133,7 +135,8 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename@(Name enameText) names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = mkDomainIntBTagged (TagEnum enameText) 1
+                    let outDomain = mkDomainIntBTagged (TagEnum enameText)
+                                        (fromIntWithTag 1 (TagEnum enameText))
                                         (fromIntWithTag (genericLength names) (TagEnum enameText))
                     case names `intersect` namesBefore of
                         [] -> modify ( ( [(ename, outDomain)]
