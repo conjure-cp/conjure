@@ -187,7 +187,7 @@ homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
         else fail $ vcat [ "Not uniformly typed:" <+> msg
-                         , "Involved types are:" <+> vcat (map pretty xs)
+                         , "Involved types are:" <+> vcat (map (\tx -> pretty tx <> " " <> stringToDoc (show tx)) xs)
                          ]
 
 innerTypeOf :: MonadFail m => Type -> m Type

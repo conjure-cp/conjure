@@ -17,6 +17,8 @@ import Conjure.Language.Type
 -- text
 import Data.Text as T ( pack )
 
+import Data.List (cycle)
+
 
 -- | The argument is a model before nameResolution.
 --   Only intended to work on problem specifications.
@@ -34,10 +36,10 @@ removeEnumsFromModel =
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromIntWithTag (genericLength names) (TagEnum ename))
+                            let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromIntWithTag (genericLength names) (TagEnum ename)) 
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
-                                             , zip names allNats
+                                             , zip names (zip (cycle [ename]) allNats)
                                              ) `mappend` )
                                 repeated -> userErr1 $ vcat
                                     [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
@@ -51,8 +53,8 @@ removeEnumsFromModel =
             let
                 onX :: Monad m => Expression -> m Expression
                 onX (Reference nm Nothing)
-                    | Just i <- lookup nm nameToIntMapping
-                    = return (fromIntWithTag i (TagEnum nm))
+                    | Just (ename, i) <- lookup nm nameToIntMapping
+                    = return (fromIntWithTag i (TagEnum ename))
                 onX p = return p
 
                 onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
@@ -131,7 +133,7 @@ removeEnumsFromParam model param = do
                     let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromIntWithTag (genericLength names) (TagEnum ename))
                     case names `intersect` namesBefore of
                         [] -> modify ( ( [(ename, outDomain)]
-                                     , zip names allNats
+                                     , zip names (zip (cycle [ename]) allNats)
                                      ) `mappend` )
                         repeated -> userErr1 $ vcat
                             [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
@@ -145,8 +147,8 @@ removeEnumsFromParam model param = do
     let
         onX :: Monad m => Expression -> m Expression
         onX (Reference nm Nothing)
-            | Just i <- lookup nm nameToIntMapping
-            = return (fromIntWithTag i (TagEnum nm))
+            | Just (ename, i) <- lookup nm nameToIntMapping
+            = return (fromIntWithTag i (TagEnum ename))
         onX p = return p
 
         onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
@@ -248,8 +250,8 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
                                                              , "constant:" <+> pretty constant
                                                              ])
 
-nameToX :: MonadFail m => [(Name, Integer)] -> Expression -> m Expression
+nameToX :: MonadFail m => [(Name, (Name, Integer))] -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
     Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-    Just i  -> return (fromIntWithTag i (TagEnum nm))
+    Just (ename, i)  -> return (fromIntWithTag i (TagEnum ename))
 nameToX _ x = return x
