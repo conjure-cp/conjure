@@ -248,7 +248,10 @@ instantiateD (DomainEnum nm rs0 _) = do
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
             Just (Constant (ConstantInt _ i)) -> return (n, i)
             Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
-            Just _  -> fail $ "Incompatible value for member of enum domain:" <+> pretty n
+            Just c  -> fail $ vcat [ "Incompatible value for member of enum domain:" <+> pretty nm
+                                   , "    Looking up for member:" <+> pretty n
+                                   , "    Expected an integer, but got:" <+> pretty c
+                                   ]
     return (DomainEnum nm (rs :: Maybe [Range Constant]) (Just mp))
 instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
