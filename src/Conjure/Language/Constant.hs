@@ -184,6 +184,7 @@ instance Pretty Constant where
 
 instance ExpressionLike Constant where
     fromInt = ConstantInt NoTag
+    fromIntWithTag i t = ConstantInt t i
     intOut _ (ConstantInt _ x) = return x
     intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
                                , "Called from:" <+> doc

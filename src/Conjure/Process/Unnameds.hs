@@ -7,6 +7,7 @@ module Conjure.Process.Unnameds
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
 
 
 -- | The argument is a model before nameResolution.
@@ -17,7 +18,7 @@ removeUnnamedsFromModel model = do
     statements' <- forM (mStatements model) $ \ st ->
             case st of
                 Declaration (LettingDomainDefnUnnamed name size) -> do
-                    let outDomain = mkDomainIntB 1 size
+                    let outDomain = mkDomainIntBTagged (TagUnnamed name) 1 size
                     return $ Declaration $ Letting name $ Domain outDomain
                 _ -> return st
     return model { mStatements = statements' }

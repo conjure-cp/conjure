@@ -34,7 +34,7 @@ removeEnumsFromModel =
                     case st of
                         Declaration (LettingDomainDefnEnum ename names) -> do
                             namesBefore <- gets (map fst . snd)
-                            let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromInt (genericLength names))
+                            let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromIntWithTag (genericLength names) (TagEnum ename))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
                                              , zip names allNats
@@ -52,7 +52,7 @@ removeEnumsFromModel =
                 onX :: Monad m => Expression -> m Expression
                 onX (Reference nm Nothing)
                     | Just i <- lookup nm nameToIntMapping
-                    = return (fromInt i)
+                    = return (fromIntWithTag i (TagEnum nm))
                 onX p = return p
 
                 onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
@@ -128,7 +128,7 @@ removeEnumsFromParam model param = do
             case st of
                 Declaration (LettingDomainDefnEnum ename names) -> do
                     namesBefore <- gets (map fst . snd)
-                    let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromInt (genericLength names))
+                    let outDomain = mkDomainIntBTagged (TagEnum ename) 1 (fromIntWithTag (genericLength names) (TagEnum ename))
                     case names `intersect` namesBefore of
                         [] -> modify ( ( [(ename, outDomain)]
                                      , zip names allNats
@@ -146,7 +146,7 @@ removeEnumsFromParam model param = do
         onX :: Monad m => Expression -> m Expression
         onX (Reference nm Nothing)
             | Just i <- lookup nm nameToIntMapping
-            = return (fromInt i)
+            = return (fromIntWithTag i (TagEnum nm))
         onX p = return p
 
         onD :: MonadFail m => Domain () Expression -> m (Domain () Expression)
@@ -189,11 +189,11 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
             (DomainIntE{}, c) -> c
             (DomainInt{} , c) -> c
 
-            (DomainEnum      ename _ _, ConstantInt (TagEnum tname) i) | ename == tname ->
+            (DomainEnum      ename _ _, ConstantInt _ i) ->
                 fromMaybe (bug $ "addEnumsAndUnnamedsBack 1:" <+> pretty (i, ename))
                           (lookup (i, ename) ctxt)
 
-            (DomainReference ename _  , ConstantInt (TagUnnamed tname) i) | ename == tname ->
+            (DomainReference ename _  , ConstantInt _ i) ->
                 if ename `elem` unnameds
                     then ConstantEnum ename [] (mconcat [ename, "_", Name (T.pack (show i))])
                     else bug $ "addEnumsAndUnnamedsBack Unnamed:" <++> vcat  [ "domain  :" <+> pretty domain
@@ -251,5 +251,5 @@ addEnumsAndUnnamedsBack unnameds ctxt = helper
 nameToX :: MonadFail m => [(Name, Integer)] -> Expression -> m Expression
 nameToX nameToIntMapping (Reference nm _) = case lookup nm nameToIntMapping of
     Nothing -> fail (pretty nm <+> "is used in a domain, but it isn't a member of the enum domain.")
-    Just i  -> return (fromInt i)
+    Just i  -> return (fromIntWithTag i (TagEnum nm))
 nameToX _ x = return x
