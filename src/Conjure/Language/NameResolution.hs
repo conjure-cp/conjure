@@ -106,6 +106,7 @@ resolveStatement st =
                              | (nm, i) <- zip nms [1..]
                              ] ++)
                     return st
+                LettingDomainDefnEnum{} -> bug "resolveStatement, Name"
                 GivenDomainDefnEnum{}       -> return st             -- ignoring
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
         SearchHeuristic nm -> do
