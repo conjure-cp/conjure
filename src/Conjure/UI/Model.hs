@@ -652,6 +652,37 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
+predSucc :: MonadFail m => Model -> m Model
+predSucc m = do
+    let
+        replacePredSucc [essence| pred(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| false |]
+                                -- since True becomes False
+                                --       False becomes out-of-bounds, hence False
+                TypeInt{}  -> do
+                    let xNoTag = dropTag x
+                    return [essence| &xNoTag - 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc [essence| succ(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| !&x |]
+                                -- since False becomes True
+                                --       True becomes out-of-bounds, hence False
+                                -- "succ" is exactly "negate" on bools
+                TypeInt{}  -> do
+                    let xNoTag = dropTag x
+                    return [essence| &xNoTag + 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc x = return x
+
+    st <- transformBiM replacePredSucc (mStatements m)
+    return m { mStatements = st }
+    where
+
+
 updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
@@ -932,6 +963,7 @@ prologue model = do
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= predSucc                      >>= logDebugIdModel "[predSucc]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
@@ -1311,9 +1343,6 @@ otherRules =
 
         , rule_DomainCardinality
         , rule_DomainMinMax
-
-        , rule_Pred
-        , rule_Succ
 
         , rule_ComplexAbsPat
 
@@ -1785,33 +1814,6 @@ rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
     getDomain (Domain d) = return d
     getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
     getDomain _ = na "rule_DomainMinMax.getDomain"
-
-
-rule_Pred :: Rule
-rule_Pred = "pred" `namedRule` theRule where
-    theRule [essence| pred(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
-                                                                -- since True becomes False
-                                                                --       False becomes out-of-bounds, hence False
-            TypeInt{}  -> return ( "Predecessor of integer", return [essence| &x - 1 |] )
-            _          -> na "rule_Pred"
-    theRule _ = na "rule_Pred"
-
-
-rule_Succ :: Rule
-rule_Succ = "succ" `namedRule` theRule where
-    theRule [essence| succ(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
-                                                                -- since False becomes True
-                                                                --       True becomes out-of-bounds, hence False
-                                                                -- "succ" is exactly "negate" on bools
-            TypeInt{}  -> return ( "Succecessor of integer", return [essence| &x + 1 |] )
-            _          -> na "rule_Succ"
-    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule

@@ -2,7 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
-    , IntTag(..)
+    , IntTag(..), dropTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -81,6 +81,9 @@ instance Serialize IntTag
 instance Hashable  IntTag
 instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
 instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
+
+dropTag :: Data a => a -> a
+dropTag = transformBi (const NoTag)
 
 
 -- | Check whether two types unify or not.
