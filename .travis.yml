@@ -110,8 +110,7 @@ install:
   - (lingeling --help > /dev/null) || (CC=${COMPILER_C} etc/build/install-lingeling.sh)
 
   # Minion
-  # - (minion | grep 'Minion Version 2') || (COMPILER=${COMPILER_CPP} etc/build/install-minion.sh)
-  - (minion | grep 'Minion Version 1.8') || etc/build/download-minion.sh
+  - (minion | grep 'Minion Version 1.8') || etc/build/install-minion.sh
   - minion help | head -n2                   # print version
 
   - ls -Alh $(find ${HOME}/.local/bin -type f)
