@@ -25,7 +25,7 @@ instance ( TypeOf x, Pretty x
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
         ty <- typeOf dom
         case ty of
-            TypeInt NoTag  -> return ty
+            TypeInt NoTag -> return ty
             TypeInt (TagEnum _) -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
@@ -48,7 +48,8 @@ instance ( TypeOf x, Pretty x
         return tyInner
 
 instance EvaluateOp OpMin where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
     evaluateOp (OpMin (DomainInConstant (DomainInt NoTag rs))) = do
         is <- rangesInts rs

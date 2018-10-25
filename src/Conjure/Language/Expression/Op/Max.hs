@@ -25,8 +25,8 @@ instance ( TypeOf x, Pretty x
     typeOf p@(OpMax x) | Just (dom :: Domain () x) <- project x = do
         ty <- typeOf dom
         case ty of
-            TypeInt NoTag  -> return ty
-            TypeInt (TagEnum _)  -> return ty
+            TypeInt NoTag -> return ty
+            TypeInt (TagEnum _) -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
     typeOf p@(OpMax x) = do
