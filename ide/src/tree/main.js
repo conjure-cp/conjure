@@ -1,14 +1,24 @@
 console.log("Start!!!!");
 
-(function () {
+let bgColour = getComputedStyle(document.body).getPropertyValue('--background-color');
 
-    let panel = jsPanel.create({
-        theme: 'black filled',
-        headerTitle: 'my panel #1',
-        position: 'center-left 0 58',
-        contentSize: '450 250',
-        content: '<div id="pane"> </div>'
-    });
+let panel = jsPanel.create({
+    theme: bgColour + ' filled',
+    headerTitle: 'my panel #1',
+    position: 'bottom-right 0 58',
+    contentSize: {
+        // width: 450,
+        width: () => {
+            return $(document).width() / 3;
+        },
+        height: () => {
+            return $(document).height();
+        }
+    },
+    content: '<div id="pane"> </div>'
+});
+
+(function () {
 
     const vscode = acquireVsCodeApi();
 
@@ -102,7 +112,7 @@ console.log("Start!!!!");
         function focusNode(node) {
             scale = zoom.scale();
 
-            let x = viewerWidth / 2 - node.x;
+            let x = viewerWidth / 3 - node.x;
             let y = 200 - node.y;
 
             d3.select('g').transition()
@@ -117,7 +127,7 @@ console.log("Start!!!!");
             let nodes = tree.nodes(root).reverse(),
                 links = tree.links(nodes);
             // Normalize for fixed-depth.
-            nodes.forEach((d)  => { d.y = d.depth * 100; });
+            nodes.forEach((d) => { d.y = d.depth * 100; });
             // Declare the nodes…
             let node = svg.selectAll("g.node")
                 .data(nodes, (d) => { return d.id || (d.id = ++i); });
@@ -198,102 +208,108 @@ console.log("Start!!!!");
 
         }
 
+        let remember = [];
+
         function showDomains(d) {
 
-            function tabulate(data, columns) {
-                var table = d3.select('#pane').append('table')
-                var thead = table.append('thead')
-                var tbody = table.append('tbody');
-
-                // append the header row
-                thead.append('tr')
-                    .selectAll('th')
-                    .data(columns).enter()
-                    .append('th')
-                    .text(function (column) { return column; });
-
-                // create a row for each object in the data
-                var rows = tbody.selectAll('tr')
-                    .data(data)
-                    .enter()
-                    .append('tr');
-
-                // create a cell in each row for each column
-                var cells = rows.selectAll('td')
-                    .data((row) => {
-                        return columns.map((column) => {
-                            return { column: column, value: row[column] };
-                        });
-                    })
-                    .enter()
-                    .append('td')
-                    .text((d) => { return d.value; });
-
-                return table;
-            }
-
-            panel.setHeaderTitle("Domains at Node: " + d.minionID);
+            panel.setHeaderTitle("State at Node: " + d.minionID);
             $("#pane").empty();
-            tabulate(d.Domains, ['name', 'range']);
+            // tabulate(d.Domains, ['name', 'range']);
+
+            $('#pane').treeview({
+                expandIcon: "glyphicon glyphicon-triangle-right",
+                collapseIcon: "glyphicon glyphicon-triangle-bottom",
+                color: "white",
+                backColor: bgColour,
+                onhoverColor: "purple",
+                borderColor: bgColour,
+                showBorder: false,
+                showTags: true,
+                highlightSelected: false,
+                selectedColor: "blue",
+                selectedBackColor: bgColour,
+                data: d.Domains,
+                onNodeExpanded: (event, data) => {
+                    console.log(data);
+                    if (!remember.includes(data.nodeId)) {
+                        remember.push(data.nodeId);
+                    }
+                },
+
+                onNodeCollapsed: (event, data) => {
+                    remember.splice(remember.indexOf(data.nodeId), 1)
+                }
+            });
+
+            $('#pane').treeview('collapseAll', { silent: true });
+
+            console.log(remember);
+
+            remember.forEach(element => {
+                console.log(element);
+                $('#pane').treeview('expandNode', [element, { levels: 1, silent: true }]);
+
+            })
+
         }
 
-    // Toggle children on click.
-    function nodeclick(d) {
-        if (d.children) {
-            d._children = d.children;
-            d.children = null;
-        } else {
-            // console.log("Children expanded!!!");
-            d.children = d._children;
-            d._children = null;
-        }
-        update(d);
-    }
-
-    // Control Controllers ------------------------
-
-    function walkTree(d, collapse) {
-
-        if (collapse) {
+        // Toggle children on click.
+        function nodeclick(d) {
             if (d.children) {
                 d._children = d.children;
                 d.children = null;
-            }
-
-            if (d._children) {
-                d._children.forEach(child => {
-                    walkTree(child, collapse);
-                });
-            }
-        }
-        else {
-            if (d._children) {
+            } else {
+                // console.log("Children expanded!!!");
                 d.children = d._children;
                 d._children = null;
             }
+            update(d);
+        }
 
-            if (d.children) {
-                d.children.forEach(child => {
-                    walkTree(child, collapse);
-                });
+        // Control Controllers ------------------------
+
+        function walkTree(d, collapse) {
+
+            if (collapse) {
+                if (d.children) {
+                    d._children = d.children;
+                    d.children = null;
+                }
+
+                if (d._children) {
+                    d._children.forEach(child => {
+                        walkTree(child, collapse);
+                    });
+                }
+            }
+            else {
+                if (d._children) {
+                    d.children = d._children;
+                    d._children = null;
+                }
+
+                if (d.children) {
+                    d.children.forEach(child => {
+                        walkTree(child, collapse);
+                    });
+                }
             }
         }
-    }
 
-    function collapser() {
-        walkTree(root, true);
+        function collapser() {
+            walkTree(root, true);
+            update(root);
+            // focusNode(root);
+        }
+
+        function expander() {
+            walkTree(root, false);
+            update(root);
+            // focusNode(root);
+        }
+
         update(root);
-        // focusNode(root);
-    }
+        focusNode(root);
 
-    function expander() {
-        walkTree(root, false);
-        update(root);
-        // focusNode(root);
-    }
-
-    update(root);
-    focusNode(root);
-
-});
+    });
 }())

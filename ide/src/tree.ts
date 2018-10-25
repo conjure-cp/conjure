@@ -49,7 +49,8 @@ export default class Tree {
         let essence = (fs.readFileSync("/home/tom/Downloads/example.essence", 'utf8'));
         let eprime = (fs.readFileSync("/home/tom/Downloads/conjure-output/model000001.eprime", 'utf8'));
         let minion = (fs.readFileSync("/home/tom/Downloads/conjure-output/model000001.eprime-minion", 'utf8'));
-        let contents = Parser.parseJson(fs.readFileSync("/home/tom/Downloads/out.json", 'utf8'), essence, eprime, minion);
+        let parser = new Parser(fs.readFileSync("/home/tom/Downloads/out.json", 'utf8'), essence, eprime, minion);
+        let contents = parser.parseJson();
         // return;
 
 
@@ -95,18 +96,26 @@ export default class Tree {
         const cssUri = css.with({ scheme: 'vscode-resource' });
         const scriptPath = vscode.Uri.file(path.join(Tree.context.extensionPath, 'src/tree', 'main.js'));
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
+        const explorer = vscode.Uri.file(path.join(Tree.context.extensionPath, 'src/tree', 'explorer.js'));
+        const explorerUri = explorer.with({ scheme: 'vscode-resource' });
+        const treeView = vscode.Uri.file(path.join(Tree.context.extensionPath, 'node_modules/bootstrap-treeview/public/js', 'bootstrap-treeview.js'));
+        const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
 
         // External scripts
         const jspanelCSS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.css";
+        const bootstrap = "https://stackpath.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css";
         const jspanelJS ="https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
-        const jquery ="http://code.jquery.com/jquery-1.10.2.min.js";
+        const jquery ="http://code.jquery.com/jquery-2.1.3.min.js";
+
+
 
         var htmlFile = createHTML({
             title: 'example',
-            script: [jspanelJS, d3, jquery, scriptUri],
+            script: [jspanelJS, d3, jquery, treeViewUri, scriptUri] ,
+            // script: [jquery, treeViewUri, explorerUri],
             scriptAsync: false,
-            css: [jspanelCSS, cssUri],
+            css: [jspanelCSS, bootstrap, cssUri],
             lang: 'en',
             dir: 'rtl',
             head: '<meta name="description" content="example">',
