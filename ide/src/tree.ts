@@ -42,14 +42,29 @@ export default class Tree {
     // }
 
 
+    private static async getFolder() {
+        let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
+        if (folder) {
+            console.log(folder[0].path);
+            return folder[0].path;
+        }
+    }
+
+
     public static async activate(context: vscode.ExtensionContext) {
 
         Tree.context = context;
 
-        let essence = (fs.readFileSync("/home/tom/Downloads/example.essence", 'utf8'));
-        let eprime = (fs.readFileSync("/home/tom/Downloads/conjure-output/model000001.eprime", 'utf8'));
-        let minion = (fs.readFileSync("/home/tom/Downloads/conjure-output/model000001.eprime-minion", 'utf8'));
-        let parser = new Parser(fs.readFileSync("/home/tom/Downloads/out.json", 'utf8'), essence, eprime, minion);
+
+        let testDir = await this.getFolder();
+
+        // let testDir = "/home/tom/Downloads";
+
+        let eprime = (fs.readFileSync(testDir + "/conjure-output/model000001.eprime", 'utf8'));
+        let minion = (fs.readFileSync(testDir + "/conjure-output/model000001.eprime-minion", 'utf8'));
+        let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+
+        let parser = new Parser(json, eprime, minion);
         let contents = parser.parseJson();
         // return;
 
@@ -59,8 +74,8 @@ export default class Tree {
         // let contents = await this.getFile();
 
         const panel = vscode.window.createWebviewPanel(
-            'catCoding', // Identifies the type of the webview. Used internally
-            "Cat Coding", // Title of the panel displayed to the user
+            'treeVis', // Identifies the type of the webview. Used internally
+            "Tree Visualiser", // Title of the panel displayed to the user
             vscode.ViewColumn.One, // Editor column to show the new webview panel in.
             { "enableScripts": true } // Webview options. More on these later.
         );
@@ -87,7 +102,7 @@ export default class Tree {
     }
 
     private static getWebContent(): string {
-        
+
         // Internal files
         const html = vscode.Uri.file(path.join(Tree.context.extensionPath, 'src/tree', 'main.html'));
         const htmlUri = html.with({ scheme: 'vscode-resource' });
@@ -98,21 +113,21 @@ export default class Tree {
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
         const explorer = vscode.Uri.file(path.join(Tree.context.extensionPath, 'src/tree', 'explorer.js'));
         const explorerUri = explorer.with({ scheme: 'vscode-resource' });
-        const treeView = vscode.Uri.file(path.join(Tree.context.extensionPath, 'node_modules/bootstrap-treeview/public/js', 'bootstrap-treeview.js'));
+        const treeView = vscode.Uri.file(path.join(Tree.context.extensionPath, 'node_modules/bootstrap-treeview/dist', 'bootstrap-treeview.min.js'));
         const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
 
         // External scripts
         const jspanelCSS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.css";
         const bootstrap = "https://stackpath.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css";
-        const jspanelJS ="https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
+        const jspanelJS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
-        const jquery ="http://code.jquery.com/jquery-2.1.3.min.js";
+        const jquery = "http://code.jquery.com/jquery-2.1.3.min.js";
 
 
 
         var htmlFile = createHTML({
             title: 'example',
-            script: [jspanelJS, d3, jquery, treeViewUri, scriptUri] ,
+            script: [jspanelJS, d3, jquery, treeViewUri, scriptUri],
             // script: [jquery, treeViewUri, explorerUri],
             scriptAsync: false,
             css: [jspanelCSS, bootstrap, cssUri],

@@ -2,6 +2,7 @@ import fs = require('fs');
 import * as math from 'mathjs';
 let rename = require('deep-rename-keys');
 let empty = require('is-empty');
+let d3 = require("d3");
 
 
 class TreeNode {
@@ -81,9 +82,9 @@ export default class Parser {
     public minionFile: string;
     public jsonAux = new RegExp('aux[0-9]+');
 
-    constructor(jsonFile: string, essenceFile: string, eprimeFile: string, minionFile: string) {
+    constructor(jsonFile: string, eprimeFile: string, minionFile: string) {
         this.jsonFile = jsonFile;
-        this.essenceFile = essenceFile;
+        // this.essenceFile = essenceFile;
         this.eprimeFile = eprimeFile;
         this.minionFile = minionFile;
         this.auxMap = {};
@@ -282,8 +283,8 @@ export default class Parser {
         });
 
 
-        return [{"text" : "Expressions", "nodes": expressionList},
-         {"text": "Variables", "nodes" : varList}, {"text" : "Sets", "nodes" : setList}];
+        return [{"text" : "Items", "nodes" : [{"text" : "Expressions", "nodes": expressionList},
+         {"text": "Variables", "nodes" : varList}, {"text" : "Sets", "nodes" : setList}]}];
 
 
     }
@@ -305,7 +306,7 @@ export default class Parser {
                     obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
                 }
             }
-            console.log(obj);
+            // console.log(obj);
 
 
             if (this.jsonAux.test(key)) {
@@ -351,26 +352,25 @@ export default class Parser {
         return map;
     }
 
-    public parseTree(obj: any) {
+    public parseTree(obj: any, map : any) {
 
-        obj["minionID"] = String(obj["name"]);
+        obj["minionID"] = Number(obj["name"]);
         let domains = this.parseDomains(obj["Domains"]);
-
-        obj["Domains"] = this.domainsToHierachy(Object.values(domains));
+        delete obj.Domains;
+        let treeViewDomains = this.domainsToHierachy(Object.values(domains));
+        map[obj["minionID"]] = treeViewDomains;
 
         let splitted = obj['branchVar'].split("_");
         if (splitted.length > 1) {
             if (splitted[0] in domains) {
                 let num = Number(splitted[splitted.length - 1]);
-                if (obj['branchVal'] === "1") {
+                if (obj['branchVal'] === 1) {
                     obj["name"] = "Accept " + num + " in " + splitted[0];
                 }
                 else {
                     obj["name"] = "Reject " + num + " from " + splitted[0];
                 }
-
             }
-
         }
         else {
             obj["name"] = "Set " + obj['branchVar'] + " to " + obj['branchVal'];
@@ -397,7 +397,7 @@ export default class Parser {
 
         else {
             obj.children.forEach((element: any) => {
-                this.parseTree(element);
+                this.parseTree(element, map);
             });
         }
     }
@@ -409,8 +409,11 @@ export default class Parser {
             return key;
         });
 
-        this.parseTree(obj);
-        // console.log(obj);
-        return obj;
+        let map = {};
+        this.parseTree(obj, map);
+        console.log(map);
+        console.log(obj);
+        let tree = d3.layout.tree();
+        return {"tree" : obj, "map": map};
     }
 }

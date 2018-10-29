@@ -10,15 +10,22 @@ body{
     font-size: 18px; 
 }
 
+
 .node circle {
     fill: #fff;
-    stroke: steelblue;
+    stroke: var(--vscode-editorSuggestWidget-highlightForeground);
     stroke-width: 3px;
+    transition: stroke 500ms;
+}
+
+.selected {
+    stroke: salmon !important;
+    transition: stroke 500ms;
 }
 
 .node text {
     font: 18px sans-serif;
-    fill: var(--vscode-editor-foreground)
+    fill: #fff;
 }
 
 .node--internal text {
@@ -27,6 +34,6 @@ body{
 
 .link {
     fill: none;
-    stroke: salmon;
+    stroke: var(--vscode-terminal-ansiGreen);
     stroke-width: 2px;
 }

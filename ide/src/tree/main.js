@@ -5,14 +5,14 @@ let bgColour = getComputedStyle(document.body).getPropertyValue('--background-co
 let panel = jsPanel.create({
     theme: bgColour + ' filled',
     headerTitle: 'my panel #1',
-    position: 'bottom-right 0 58',
+    position: 'right-top 0 58',
     contentSize: {
         // width: 450,
         width: () => {
             return $(document).width() / 3;
         },
         height: () => {
-            return $(document).height();
+            return $(document).height() * 0.9;
         }
     },
     content: '<div id="pane"> </div>'
@@ -28,7 +28,12 @@ let panel = jsPanel.create({
 
     window.addEventListener('message', event => {
 
-        const root = event.data; // The JSON data our extension sent
+        const root = event.data.tree; // The JSON data our extension sent
+        const domainMap = event.data.map; // The JSON data our extension sent
+        let nodeMap = {};
+        let selectedNode;
+        let selectedCircle;
+        let init = true;
 
         // Add controls
         d3.select("#controls")
@@ -48,37 +53,44 @@ let panel = jsPanel.create({
             .attr("type", "button")
             .attr("value", "Find Root")
             .on("click", () => {
-                focusNode(root);
+                selectNode(root.minionID);
+                focusNode(nodeMap[root.minionID]);
             });
 
         d3.select("#controls")
             .append("input")
             .attr("type", "button")
-            .attr("value", "Play")
+            .attr("value", "Previous")
             .on("click", () => {
-                duration = 0;
-                function p(node) {
-                    // console.log(node);
-                    d3.select(".node circle")
-                        .transition()
-                        // .duration(1000)
-                        .style("fill", "red");
-                    nodeclick(node);
-                    return;
-
-                    // console.log(d3.select(node));
-                    // d3.select(node).property("delay","500");
-                    // console.log(d3.select(node));
-                    // nodeclick(node);
-                    if (node.children) {
-                        node.children.forEach(child => {
-                            p(child);
-                        });
-                    }
+                selectedNode = (selectedNode - 1) % (Object.keys(domainMap).length + 1);
+                if (selectedNode == 0) {
+                    selectedNode = Object.keys(domainMap).length;
                 }
-                collapser();
-                p(root);
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
             });
+
+        d3.select("#controls")
+            .append("input")
+            .attr("type", "button")
+            .attr("value", "Next")
+            .on("click", () => {
+                selectedNode = (selectedNode + 1) % (Object.keys(domainMap).length + 1);
+                if (selectedNode == 0) {
+                    selectedNode++;
+                }
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
+            });
+
+        d3.select("#controls")
+            .append("input")
+            .attr("type", "button")
+            .attr("value", "Toggle")
+            .on("click", () => {
+                nodeToggle(nodeMap[selectedNode]);
+            });
+
 
         // set the dimensions and margins of the diagram
         let viewerWidth = $(document).width();
@@ -88,10 +100,13 @@ let panel = jsPanel.create({
             height = viewerHeight - margin.top - margin.bottom;
 
         let i = 0, duration = 750;
-        let tree = d3.layout.tree()
-            .size([height, width]);
+        let tree = d3.layout.tree().size([height, width]);
+
         let diagonal = d3.svg.diagonal()
-            .projection((d) => { return [d.x, d.y]; });
+            .projection((d) => { 
+                return [d.x, d.y]; 
+            
+            });
 
 
         let zoom = d3.behavior.zoom()
@@ -106,14 +121,32 @@ let panel = jsPanel.create({
 
         function zoomed() {
             svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+            // zoom.translate(d3.event.translate);
 
         }
 
         function focusNode(node) {
             scale = zoom.scale();
+            let x = -node.x * scale;
+            let y = -node.y * scale;
 
-            let x = viewerWidth / 3 - node.x;
-            let y = 200 - node.y;
+
+            x += width/3;
+            y += height/2;
+
+            // let x = viewerWidth / 3 - node.x;
+            // let y = (200 * scale) - node.y;
+
+            
+
+
+            // x = 400;
+            // y = 400;
+
+
+            console.log("scale: ", scale);
+            console.log("moving x: ", x);
+            console.log("moving y: ", y);
 
             d3.select('g').transition()
                 .duration(duration)
@@ -126,6 +159,7 @@ let panel = jsPanel.create({
             // Compute the new tree layout.
             let nodes = tree.nodes(root).reverse(),
                 links = tree.links(nodes);
+
             // Normalize for fixed-depth.
             nodes.forEach((d) => { d.y = d.depth * 100; });
             // Declare the nodes…
@@ -134,11 +168,17 @@ let panel = jsPanel.create({
             // Enter the nodes.
             let nodeEnter = node.enter().append("g")
                 .attr("class", "node")
+                .attr("id", (d) => {
+                    return "node" + d.minionID;
+                })
                 .attr("transform", (d) => {
+                    nodeMap[Number(d.minionID)] = d;
                     return "translate(" + source.x0 + "," + source.y0 + ")";
                 })
-                .on("click", nodeclick)
-                .on("mouseover", showDomains);
+                .on("click", (d) => {
+                    selectNode(d.minionID);
+                });
+            // .on("mouseover", showDomains);
 
             nodeEnter.append("circle")
                 .transition()
@@ -208,13 +248,14 @@ let panel = jsPanel.create({
 
         }
 
-        let remember = [];
 
-        function showDomains(d) {
+        function showDomains(minionID) {
 
-            panel.setHeaderTitle("State at Node: " + d.minionID);
+            panel.setHeaderTitle("Status at Node: " + minionID);
+            let treeView = $('#pane');
+            let expandedNodes = treeView.treeview('getExpanded');
+
             $("#pane").empty();
-            // tabulate(d.Domains, ['name', 'range']);
 
             $('#pane').treeview({
                 expandIcon: "glyphicon glyphicon-triangle-right",
@@ -228,33 +269,34 @@ let panel = jsPanel.create({
                 highlightSelected: false,
                 selectedColor: "blue",
                 selectedBackColor: bgColour,
-                data: d.Domains,
-                onNodeExpanded: (event, data) => {
-                    console.log(data);
-                    if (!remember.includes(data.nodeId)) {
-                        remember.push(data.nodeId);
-                    }
-                },
-
-                onNodeCollapsed: (event, data) => {
-                    remember.splice(remember.indexOf(data.nodeId), 1)
-                }
+                data: domainMap[minionID]
             });
 
-            $('#pane').treeview('collapseAll', { silent: true });
+            if (init) {
+                $('#pane').treeview('expandAll', { levels: 10000000001, silent: true });
+                let treeView = $('#pane');
+                expandedNodes = treeView.treeview('getExpanded');
+                init = false;
+            }
 
-            console.log(remember);
-
-            remember.forEach(element => {
-                console.log(element);
-                $('#pane').treeview('expandNode', [element, { levels: 1, silent: true }]);
-
+            expandedNodes.forEach(element => {
+                $('#pane').treeview('expandNode', [element.nodeId, { levels: 1, silent: true }]);
             })
 
         }
 
+        function selectNode(minionID) {
+            if (selectedCircle) {
+                selectedCircle.classed("selected", false);
+            }
+            selectedCircle = d3.select("#node" + minionID).select("circle");
+            selectedCircle.classed("selected", true);
+            selectedNode = Number(minionID);
+            showDomains(selectedNode);
+        }
+
         // Toggle children on click.
-        function nodeclick(d) {
+        function nodeToggle(d) {
             if (d.children) {
                 d._children = d.children;
                 d.children = null;
@@ -299,17 +341,17 @@ let panel = jsPanel.create({
         function collapser() {
             walkTree(root, true);
             update(root);
-            // focusNode(root);
+            focusNode(root);
         }
 
         function expander() {
             walkTree(root, false);
             update(root);
-            // focusNode(root);
+            focusNode(root);
         }
 
         update(root);
+        selectNode(root.minionID);
         focusNode(root);
-
     });
 }())
