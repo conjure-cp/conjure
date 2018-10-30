@@ -156,6 +156,33 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
+            DominanceRelation x -> do
+                mty <- runExceptT $ typeOf x
+                case mty of
+                    Right TypeBool -> return ()
+                    Left err -> tell $ return $ vcat
+                        [ "In the dominance_relation statement:" <++> pretty st
+                        , "Error:" <++> pretty err
+                        ]
+                    Right ty -> tell $ return $ vcat
+                        [ "In the dominance_relation statement:" <++> pretty st
+                        , "Expected type `bool`, but got:" <++> pretty ty
+                        ]
+                return st
+            IncomparabilityFunction _ x -> do
+                mty <- runExceptT $ typeOf x
+                case mty of
+                    -- Can be generalised to other orderable types
+                    Right TypeInt{} -> return ()
+                    Left err -> tell $ return $ vcat
+                        [ "In the incomparability_function statement:" <++> pretty st
+                        , "Error:" <++> pretty err
+                        ]
+                    Right ty -> tell $ return $ vcat
+                        [ "In the incomparability_function statement:" <++> pretty st
+                        , "Expected type `int`, but got:" <++> pretty ty
+                        ]
+                return st
     unless (null errs) (userErr errs)
 
     -- now that everything knows its type, we can recover

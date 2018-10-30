@@ -37,12 +37,14 @@ split m = do
     let
         -- Right indicates "declarations", out of these only the needed ones will stay.
         -- Left indicates "other statements", subsets of these will be in the output.
-        toPermute st@Declaration{}       = Right st
-        toPermute st@SearchOrder{}       = Right st
-        toPermute st@SearchHeuristic{}   = Right st
-        toPermute (Where xs)             = Left [Where [x] | x <- xs]
-        toPermute st@Objective{}         = Left [st]
-        toPermute (SuchThat xs)          = Left [SuchThat [x] | x <- xs]
+        toPermute st@Declaration{}             = Right st
+        toPermute st@SearchOrder{}             = Right st
+        toPermute st@SearchHeuristic{}         = Right st
+        toPermute (Where xs)                   = Left [Where [x] | x <- xs]
+        toPermute st@Objective{}               = Left [st]
+        toPermute (SuchThat xs)                = Left [SuchThat [x] | x <- xs]
+        toPermute st@DominanceRelation{}       = Right st
+        toPermute st@IncomparabilityFunction{} = Right st
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat

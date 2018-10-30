@@ -55,6 +55,8 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
+    | DominanceRelation Expression
+    | IncomparabilityFunction AscDesc Expression
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -69,6 +71,8 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
+    pretty (DominanceRelation x) = "dominance_relation" <+> pretty x
+    pretty (IncomparabilityFunction ascDesc x) = "incomparability_function" <+> pretty ascDesc <+> pretty x
 
 instance VarSymBreakingDescription Statement where
     varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
@@ -91,6 +95,31 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
+    varSymBreakingDescription (DominanceRelation x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String $ "DominanceRelation")
+        , ("children", varSymBreakingDescription x)
+        ]
+    varSymBreakingDescription (IncomparabilityFunction ascDesc x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String $ "IncomparabilityFunction-" `mappend` stringToText (show ascDesc))
+        , ("children", varSymBreakingDescription x)
+        ]
+
+
+------------------------------------------------------------------------------------------------------------------------
+-- AscDesc -------------------------------------------------------------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------------
+
+data AscDesc = Ascending | Descending
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize AscDesc
+instance Hashable  AscDesc
+instance ToJSON    AscDesc where toJSON = genericToJSON jsonOptions
+instance FromJSON  AscDesc where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty AscDesc where
+    pretty Ascending = "ascending"
+    pretty Descending = "descending"
 
 
 ------------------------------------------------------------------------------------------------------------------------
