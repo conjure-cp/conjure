@@ -108,6 +108,7 @@ mkOp op xs =
                                                                          (arg xs 1 "inverse")
             L_freq         -> inject $ MkOpFreq         $ OpFreq         (arg xs 0 "freq")
                                                                          (arg xs 1 "freq")
+            L_fromSolution -> inject $ MkOpFromSolution $ OpFromSolution (arg xs 0 "fromSolution")
             L_hist         -> inject $ MkOpHist         $ OpHist         (arg xs 0 "hist")
             L_parts        -> inject $ MkOpParts        $ OpParts        (arg xs 0 "parts")
             L_together     -> inject $ MkOpTogether     $ OpTogether     (arg xs 0 "together")
