@@ -3,7 +3,7 @@
 {-# LANGUAGE ViewPatterns #-}
 
 module Conjure.Language.Expression
-    ( Statement(..), SearchOrder(..), Objective(..)
+    ( Statement(..), SearchOrder(..), AscDesc(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
     , Expression(..), ReferenceTo(..), Region(..), InBubble(..)
     , AbstractLiteral(..)

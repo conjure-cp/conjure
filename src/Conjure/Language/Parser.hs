@@ -194,8 +194,29 @@ parseTopLevels = do
                     nm <- parseName
                     return [ SearchHeuristic nm ]
                     <?> "heuristic"
+                , do
+                    lexeme L_dominance_relation
+                    x <- parseExpr
+                    return [ DominanceRelation x ]
+                    <?> "dominance_relation"
+                , do
+                    lexeme L_incomparability_function
+                    ascDesc <- parseAscDesc
+                    x <- parseExpr
+                    return [ IncomparabilityFunction ascDesc x ]
                 ] <?> "statement"
     concat <$> some one
+
+parseAscDesc :: Parser AscDesc
+parseAscDesc = do
+    pos <- getPosition
+    l <- identifierText
+    case l of
+        "ascending" -> return Ascending
+        "descending" -> return Descending
+        _ -> do
+            setPosition pos
+            fail $ "After incomparability_function, expected one of ascending/descending, but got:" <+> pretty l
 
 parseSearchOrder :: Parser SearchOrder
 parseSearchOrder = msum [try pBranchingOn, pCut]

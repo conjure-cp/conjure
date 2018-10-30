@@ -53,6 +53,10 @@ data Lexeme
     | L_on
     | L_heuristic
 
+    | L_dominance_relation
+    | L_incomparability_function
+    | L_fromSolution
+
     -- type: boolean
     | L_bool
     | L_false
@@ -323,6 +327,10 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     , ( L_branching  , "branching"  )
     , ( L_on         , "on"         )
     , ( L_heuristic  , "heuristic"  )
+
+    , ( L_dominance_relation, "dominance_relation")
+    , ( L_incomparability_function, "incomparability_function")
+    , ( L_fromSolution, "fromSolution")
 
     , ( L_bool, "bool" )
     , ( L_false, "false" )
