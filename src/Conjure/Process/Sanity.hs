@@ -16,6 +16,8 @@ sanityChecks model = do
 
         check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
+            upToOneObjective m
+            upToOneDominance m
             forM_ (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given _ _) -> return () -- skip
                 Declaration FindOrGiven{}           -> mapM_ (checkDomain True  (Just st)) (universeBi (forgetRefs st))
@@ -121,6 +123,22 @@ sanityChecks model = do
                 , "Context:" <++> pretty p
                 ]
         checkFactorial _ = return ()
+
+        upToOne :: MonadWriter [Doc] m => (Statement -> Bool) -> Doc -> Model -> m ()
+        upToOne f message m = do
+            let found = [ st | st <- mStatements m, f st ]
+            unless (length found <= 1) $ recordErr
+                [ "Expected up to one" <+> message <+> "statement, but got:" <+> pretty (length found)
+                , vcat $ map (nest 4 . ("-" <+>) . pretty) found
+                ]
+
+        upToOneObjective :: MonadWriter [Doc] m => Model -> m ()
+        upToOneObjective = upToOne (\ st -> case st of Objective{} -> True; _ -> False) "objective"
+
+        upToOneDominance :: MonadWriter [Doc] m => Model -> m ()
+        upToOneDominance m = do
+            upToOne (\ st -> case st of DominanceRelation{} -> True; _ -> False) "dominance_relation" m
+            upToOne (\ st -> case st of IncomparabilityFunction{} -> True; _ -> False) "incomparability_function" m
 
     (model', errs) <- runWriterT (check model)
     if null errs
