@@ -2,7 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
-    , IntTag(..), dropTag, addTag, hasTag, HasTag, containsTag
+    , IntTag(..), dropTag, addTag, containsTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -88,19 +88,8 @@ dropTag = transformBi (const NoTag)
 addTag :: Data a => IntTag -> a -> a
 addTag t = transformBi (const t)
 
-containsTag :: Data a => a -> Maybe IntTag
-containsTag dat = headMay $ universeBi dat 
-  where headMay [] = Nothing
-        headMay (h:_) = Just h
-
---TODO deprecate in favour of containsTag
-class HasTag t where
-  hasTag :: MonadFail m => t -> m IntTag
-
-instance HasTag Type where
-  hasTag (TypeInt tag) = return tag
-  hasTag t = fail $ stringToDoc $ "hasTag: expected TypeInt got " ++ show t
-
+containsTag :: (MonadFail m, Data a) => a -> m IntTag
+containsTag dat = return $ head $ universeBi dat 
 
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool

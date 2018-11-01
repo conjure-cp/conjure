@@ -6,6 +6,7 @@ module Conjure.Representations.Set.ExplicitVarSizeWithDummy ( setExplicitVarSize
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
+import Conjure.Language.TypeOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Representations.Internal
@@ -44,7 +45,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
         calcDummyElem dom =
             let theMax = bugFail "calcDummyElem: maxOfDomain" (maxOfDomain dom)
-                tag    = bugFail "calcDummyElem: hasTag" (hasTag dom) 
+                tag    = bugFail "calcDummyElem: containsTag" (containsTag =<< typeOf dom) 
             in  addTag tag [essence| &theMax +forced 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant

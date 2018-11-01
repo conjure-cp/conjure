@@ -585,7 +585,7 @@ instance (ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
 instance (ExpressionLike x, DomainOf x, TypeOf x) => DomainOf (OpSumForced x) where
     domainOf (OpSumForced x)
         | Just xs <- listOut x
-        , Just tag <- hasTag =<< innerTypeOf =<< typeOf x
+        , Just tag <- containsTag =<< typeOf x 
         , not (null xs) = do
         doms <- mapM domainOf xs
         let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
@@ -594,7 +594,7 @@ instance (ExpressionLike x, DomainOf x, TypeOf x) => DomainOf (OpSumForced x) wh
         let upp  = [essence| sum(&upps) |]
         return (DomainInt tag [RangeBounded low upp] :: Dom)
     domainOf (OpSumForced x)
-        | Just tag <- hasTag =<< innerTypeOf =<< typeOf x
+        | Just tag <- containsTag =<< typeOf x 
         = return (DomainInt tag (addTag tag [RangeBounded 0 0]))
     domainOf _ = bug "domainOf: OpSumForced: expected an integer tag to be present" 
 
