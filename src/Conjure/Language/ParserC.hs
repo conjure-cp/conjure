@@ -125,6 +125,7 @@ parseDomainWithRepr = pDomainAtom
             , pSequence
             , pRelation
             , pPartition
+            , pPermutation
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
@@ -263,6 +264,13 @@ parseDomainWithRepr = pDomainAtom
             lexeme L_from
             y <- parseDomainWithRepr
             return $ DomainPartition r x y
+        pPermutation = do
+            lexeme L_permutation
+            r <- parseRepr
+            x <- parsePermutationAttr
+            lexeme L_of -- $ trace (textToString $ representationToShortText r) L_of
+            y <- parseDomainWithRepr
+            return $ DomainPermutation r x y
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
@@ -445,6 +453,26 @@ parsePartitionAttr = do
     let isRegular  = DAName "regular"  `elem` attrs
     return PartitionAttr {..}
 
+parsePermutationAttr :: Parser (PermutationAttr Expression)
+parsePermutationAttr = do
+    pos <- getPosition
+    DomainAttributes attrs <- parseAttributes
+    checkExtraAttributes pos "permutation" attrs
+        [ "size", "minSize", "maxSize"
+        ]
+    size <- case filterSizey attrs of
+        [DANameValue "size"    a] -> return (SizeAttr_Size a)
+        [DANameValue "minSize" a] -> return (SizeAttr_MinSize a)
+        [DANameValue "maxSize" a] -> return (SizeAttr_MaxSize a)
+        [DANameValue "maxSize" b, DANameValue "minSize" a] -> return (SizeAttr_MinMaxSize a b)
+        [] -> return SizeAttr_None
+        as -> do
+            setPosition pos
+            fail ("incompatible attributes:" <+> stringToDoc (show as))
+    return (PermutationAttr size)
+
+
+
 
 checkExtraAttributes :: SourcePos -> Doc -> [DomainAttribute a] -> [Name] -> Parser ()
 checkExtraAttributes pos ty attrs supported = do
@@ -551,6 +579,7 @@ parseLiteral = label "value" (do p <- pCore ; p)
                 L_sequence    -> Just pSequence
                 L_relation    -> Just pRelation
                 L_partition   -> Just pPartition
+                L_permutation -> Just pPermutation
                 L_Minus       -> Just $ do
                     p <- pCore
                     res <- p
@@ -635,6 +664,13 @@ parseLiteral = label "value" (do p <- pCore ; p)
             return (AbsLitPartition xs)
             where
                 inner = braces (commaSeparated0 parseExpr)
+
+        pPermutation = mkAbstractLiteral <$> do
+            -- lexeme L_permutation
+            xs <- parens (commaSeparated0 inner)
+            return (AbsLitPermutation xs)
+            where
+                inner = parens (commaSeparated0 parseExpr)
 
 
 identifierText :: Parser T.Text

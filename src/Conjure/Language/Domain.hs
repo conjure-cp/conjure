@@ -123,7 +123,7 @@ instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
 typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
-typeOfDomain d@(DomainIntE name x)          = do
+typeOfDomain d@(DomainIntE x)          = do
     ty <- typeOf x
     case ty of
         TypeInt{}              -> return ()       -- pre recoverDomainInt
@@ -822,16 +822,14 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty DomainBool = "bool"
 
-    pretty (DomainIntE _ x) = "int" <> prParens (pretty x)
+    pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
     pretty (DomainInt _ []) = "int"
 
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
-
-    pretty (DomainInt _ []) = "int"
-    pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
-
+ 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
+
     pretty (DomainEnum name _             _) = pretty name
 
     pretty (DomainUnnamed name _) = pretty name

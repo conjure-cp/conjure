@@ -32,7 +32,7 @@ rule_Int = "dontCare-int" `namedRule` theRule where
                     RangeLowerBounded v -> v
                     RangeUpperBounded v -> v
                     RangeBounded v _ -> v
-                DomainIntE _ v -> [essence| min(&v) |]
+                DomainIntE v -> [essence| min(&v) |]
                 _ -> raiseBug
         return
             ( "dontCare value for this integer is" <+> pretty val
@@ -133,7 +133,7 @@ handleDontCares p =
                                 RangeLowerBounded v -> v
                                 RangeUpperBounded v -> v
                                 RangeBounded v _ -> v
-                            DomainIntE _ v -> [essence| min(&v) |]
+                            DomainIntE v -> [essence| min(&v) |]
                             _ -> raiseBug
                     return $ make opEq x val
                 TypeTuple{} -> do

@@ -68,11 +68,6 @@ instance DomainOf Expression where
             return (tyToDom ty)
 
     indexDomainsOf (Reference _ (Just refTo)) = indexDomainsOf refTo
-            tyToDom _ = []
-        in
-            return (tyToDom ty)
-
-    indexDomainsOf (Reference _ (Just refTo)) = indexDomainsOf refTo
     indexDomainsOf (Constant x) = indexDomainsOf x
     indexDomainsOf (AbstractLiteral x) = indexDomainsOf x
     indexDomainsOf (Op x) = indexDomainsOf x

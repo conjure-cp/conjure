@@ -44,9 +44,6 @@ removeEnumsFromModel =
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
                                              , zip names (zip (cycle [ename]) allNats)
-                            case names `intersect` namesBefore of
-                                [] -> modify ( ( [(ename, outDomain)]
-                                             , zip names (zip (cycle [ename]) allNats)
                                              ) `mappend` )
                                 repeated -> userErr1 $ vcat
                                     [ "Some members of this enum domain (" <> pretty ename <> ") seem to be defined"
@@ -73,11 +70,6 @@ removeEnumsFromModel =
                     = return (DomainReference nm (Just d))
                 onD (DomainReference nm Nothing)
                     | Just d <- lookup nm enumDomainNames
-                onD (DomainEnum nm Nothing _)
-                    | Just d <- lookup nm enumDomainNames
-                    = return (DomainReference nm (Just d))
-                onD (DomainReference nm Nothing)
-                    | Just d <- lookup nm enumDomainNames
                     = return (DomainReference nm (Just d))
                 onD p = return p
 
@@ -98,17 +90,14 @@ removeEnumsFromModel =
                             return [ Declaration (FindOrGiven Given nameS         outDomainS)
                                    , Declaration (Letting           name  (Domain outDomain))
                                    ]
-                                                (Reference nameS (Just (Alias (Domain outDomainS))))
-                            modify ([(name, outDomain)] `mappend`)
-                            return [ Declaration (FindOrGiven Given nameS         outDomainS)
-                                   , Declaration (Letting           name  (Domain outDomain))
-                                   ]
                         _ -> return [st]
 
             let
+
                 onD :: Domain () Expression -> Domain () Expression
                 onD (DomainEnum nm@(Name nmText) (Just ranges) _)
                     | Just _ <- lookup nm enumDomainNames
+                    = DomainInt (TagEnum nmText) ranges
                 onD (DomainEnum nm Nothing _)
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
@@ -116,6 +105,7 @@ removeEnumsFromModel =
                     | Just d <- lookup nm enumDomainNames
                     = DomainReference nm (Just d)
                 onD p = p
+
 
             let model' = model { mStatements = concat statements'
                                     |> transformBi onD

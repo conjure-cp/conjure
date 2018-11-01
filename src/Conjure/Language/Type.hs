@@ -11,6 +11,7 @@ module Conjure.Language.Type
     , innerTypeOf
     , isPrimitiveType
     , typeCanIndexMatrix
+    , containsType
     ) where
 
 -- conjure
@@ -72,18 +73,6 @@ instance Pretty Type where
     pretty (TypePartition x) = "partition from" <+> pretty x
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
     pretty (TypePermutation x) = "permutation of" <+> pretty x
-
-
-data IntTag = NoTag
-            | TagEnum Name
-            | TagUnnamed Name
-    deriving (Eq, Ord, Show, Data, Typeable, Generic)
-
-instance Serialize IntTag
-instance Hashable  IntTag
-instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
-instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
-
 
 
 data IntTag = NoTag
@@ -239,3 +228,12 @@ typeCanIndexMatrix TypeBool{} = True
 typeCanIndexMatrix TypeInt {} = True
 typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
+
+
+containsType :: Type -> Type -> Bool 
+containsType container containee =
+  if typesUnify [container, containee]
+    then True
+    else case innerTypeOf container of
+           Nothing -> False
+           Just so -> containsType so containee 

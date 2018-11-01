@@ -162,7 +162,7 @@ typeCheckModel model1 = do
     -- DomainInt [RangeSingle x] from DomainIntE x, if x has type int
     let
         domainIntERecover :: forall m . MonadFail m => Domain () Expression -> m (Domain () Expression)
-        domainIntERecover d@(DomainIntE name x) = do
+        domainIntERecover d@(DomainIntE x) = do
             ty <- typeOf x
             return $ case ty of
                 TypeInt t -> DomainInt t [RangeSingle x]

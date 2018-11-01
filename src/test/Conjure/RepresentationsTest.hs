@@ -372,13 +372,6 @@ tests = testGroup "representations"
                            , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
                                [ ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 2, ConstantBool True ]
                                , ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 3, ConstantBool False]
-                    ]
-            mid = [ ( "x_1", DomainMatrix   (intDomain 1 3) DomainBool
-                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3) [ConstantBool False, ConstantBool False, ConstantBool True] )
-                  , ( "x_2", DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 1 3, DomainBool])
-                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
-                               [ ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 2, ConstantBool True ]
-                               , ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 3, ConstantBool False]
                                , ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 4, ConstantBool False]
                                ] )
                   , ( "x_3", DomainMatrix   (intDomain 1 3) (intDomain 2 5)
@@ -430,11 +423,6 @@ tests = testGroup "representations"
                         [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, (ConstantInt NoTag) 2], ConstantBool True ], (ConstantInt NoTag) 4]
                         , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, (ConstantInt NoTag) 3], ConstantBool False], (ConstantInt NoTag) 6]
                         , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , (ConstantInt NoTag) 4], ConstantBool False], (ConstantInt NoTag) 8]
-                        ]
-                    , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
-                        [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, (ConstantInt NoTag) 4], ConstantBool True ], (ConstantInt NoTag) 4]
-                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , (ConstantInt NoTag) 5], ConstantBool False], (ConstantInt NoTag) 7]
-                        , ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool True , (ConstantInt NoTag) 6], ConstantBool False], (ConstantInt NoTag) 9]
                         ]
                     , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
                         [ ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantAbstract $ AbsLitTuple [ConstantBool False, (ConstantInt NoTag) 4], ConstantBool True ], (ConstantInt NoTag) 4]
@@ -610,13 +598,6 @@ tests = testGroup "representations"
                 , ( "x_2" , DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 0 9,DomainMatrix (intDomain 1 2) (intDomain 0 9)])
                           , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
                               [ ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 2,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt NoTag) 1,(ConstantInt NoTag) 3]]
-                        ]
-                    ]
-            mid =
-                [ ( "x_1" , DomainBool,ConstantBool False )
-                , ( "x_2" , DomainMatrix   (intDomain 1 3) (DomainTuple [intDomain 0 9,DomainMatrix (intDomain 1 2) (intDomain 0 9)])
-                          , ConstantAbstract $ AbsLitMatrix (intDomain 1 3)
-                              [ ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 2,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt NoTag) 1,(ConstantInt NoTag) 3]]
                               , ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 4,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt NoTag) 3,(ConstantInt NoTag) 5]]
                               , ConstantAbstract $ AbsLitTuple [(ConstantInt NoTag) 5,ConstantAbstract $ AbsLitMatrix (intDomain 1 2) [(ConstantInt NoTag) 5,(ConstantInt NoTag) 6]]
                               ] )
@@ -695,11 +676,6 @@ tests = testGroup "representations"
                         , ConstantAbstract $ AbsLitSet [(ConstantInt NoTag) 5, (ConstantInt NoTag) 6]
                         , ConstantAbstract $ AbsLitSet [(ConstantInt NoTag) 5, (ConstantInt NoTag) 7]
                         , ConstantAbstract $ AbsLitSet [(ConstantInt NoTag) 5, (ConstantInt NoTag) 8]
-                        ]
-                  ) ]
-            low =
-                [ ( "x_ExplicitR3_Explicit"
-                  , DomainMatrix   (intDomain 1 4) (DomainMatrix (intDomain 1 2) (intDomain 0 9))
                         ]
                   ) ]
             low =
@@ -1247,5 +1223,4 @@ instance Show (Pr (Name, Constant)) where
 
 instance Show (Pr [(Name, Constant)]) where
     show (Pr xs) = intercalate "\n" $ map (show . Pr) xs
-
 

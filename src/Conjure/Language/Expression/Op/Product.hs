@@ -45,16 +45,9 @@ instance EvaluateOp OpProduct where
 
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
-<<<<<<< HEAD
-        , any isUndef xs                      = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt Nothing . product <$> intsOut "OpProduct" x
-||||||| merged common ancestors
-        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
-=======
         , any isUndef xs                      = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
->>>>>>> taggedints
+
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

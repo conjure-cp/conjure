@@ -216,11 +216,6 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                             , "But got:" <+> pretty maxSize
                             , "When working on:" <+> pretty name
                             , "With domain:" <+> pretty domain
-                    _ -> fail $ vcat
-                            [ "Expecting an integer for the maxSize attribute."
-                            , "But got:" <+> pretty maxSize
-                            , "When working on:" <+> pretty name
-                            , "With domain:" <+> pretty domain
                             ]
             z <- zeroVal innerDomain
             let zeroes = replicate (fromInteger (maxSizeInt - genericLength constants)) z

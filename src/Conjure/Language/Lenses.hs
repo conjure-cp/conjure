@@ -1173,10 +1173,6 @@ constantInt _ =
     )
 
 
-matrixLiteral
-            _ -> na ("Lenses.constantInt:" <++> pretty p)
-    )
-
 
 matrixLiteral
     :: MonadFail m
