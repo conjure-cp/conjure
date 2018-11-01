@@ -15,7 +15,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
         tyInner <- typeOf body
-        let ty = TypeMatrix (TypeInt Nothing) tyInner
+        let ty = TypeMatrix (TypeInt NoTag) tyInner
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
             , return $ if null elems

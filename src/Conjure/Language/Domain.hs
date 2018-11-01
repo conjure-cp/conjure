@@ -21,7 +21,7 @@ module Conjure.Language.Domain
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , reprTreeEncoded
     , forgetRepr, changeRepr, defRepr
-    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBNamed, mkDomainAny
+    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBTagged, mkDomainAny
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
@@ -54,13 +54,8 @@ import Data.Data ( toConstr, constrIndex )
 data Domain r x
     = DomainAny Text Type
     | DomainBool
-<<<<<<< HEAD
-    | DomainIntE (Maybe Name) x
-    | DomainInt (Maybe Name) [Range x]
-=======
     | DomainIntE x
     | DomainInt IntTag [Range x]
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
     | DomainEnum
         Name
         (Maybe [Range x])           -- subset of values for this domain
@@ -90,21 +85,13 @@ mkDomainBool :: Domain () x
 mkDomainBool = DomainBool
 
 mkDomainInt :: [Range x] -> Domain () x
-<<<<<<< HEAD
-mkDomainInt = DomainInt Nothing
-
-mkDomainIntB :: x -> x -> Domain () x
-mkDomainIntB l u = DomainInt Nothing [RangeBounded l u]
-
-mkDomainIntBNamed :: Name -> x -> x -> Domain () x
-mkDomainIntBNamed name l u = DomainInt (Just name) [RangeBounded l u]
-
-=======
 mkDomainInt = DomainInt NoTag
 
 mkDomainIntB :: x -> x -> Domain () x
 mkDomainIntB l u = DomainInt NoTag [RangeBounded l u]
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
+
+mkDomainIntBTagged :: IntTag -> x -> x -> Domain () x
+mkDomainIntBTagged t l u = DomainInt t [RangeBounded l u]
 
 mkDomainAny :: Doc -> Type -> Domain r x
 mkDomainAny reason = DomainAny (stringToText $ show reason)
@@ -118,26 +105,16 @@ instance Arbitrary x => Arbitrary (Domain r x) where
     arbitrary = sized f
         where
             f 0 = oneof [ return DomainBool
-<<<<<<< HEAD
-                        , DomainInt Nothing <$> arbitrary
-=======
                         , DomainInt NoTag <$> arbitrary
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
                         -- , DomainEnum <$> arbitrary <*> arbitrary
                         ]
             f s = do
                 arity <- choose (2 :: Int, 10)
                 DomainTuple <$> vectorOf arity (f (div s 10))
     shrink DomainBool = []
-<<<<<<< HEAD
-    shrink (DomainInt Nothing []) = [DomainBool]
-    shrink (DomainInt Nothing [r]) = DomainBool : DomainInt Nothing [] : [DomainInt Nothing [r'] | r' <- shrink r]
-    shrink (DomainInt Nothing rs) = [DomainInt Nothing (init rs)]
-=======
     shrink (DomainInt _ []) = [DomainBool]
     shrink (DomainInt t [r]) = DomainBool : DomainInt t [] : [DomainInt t [r'] | r' <- shrink r]
     shrink (DomainInt t rs) = [DomainInt t (init rs)]
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
     shrink _ = []
 
 instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
@@ -149,21 +126,6 @@ typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE name x)          = do
     ty <- typeOf x
     case ty of
-<<<<<<< HEAD
-        TypeInt _                -> return ()       -- pre recoverDomainInt
-        TypeList     (TypeInt _) -> return ()
-        TypeMatrix _ (TypeInt _) -> return ()
-        TypeSet      (TypeInt _) -> return ()
-        _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
-                         , "In domain:" <+> pretty d
-                         ]
-    return $ TypeInt name
-typeOfDomain d@(DomainInt name rs)          = do
-    forM_ rs $ \ r -> forM_ r $ \ x -> do
-        ty <- typeOf x
-        case ty of
-            TypeInt _ -> return ()
-=======
         TypeInt{}              -> return ()       -- pre recoverDomainInt
         TypeList     TypeInt{} -> return ()
         TypeMatrix _ TypeInt{} -> return ()
@@ -177,16 +139,11 @@ typeOfDomain d@(DomainInt t rs)        = do
         ty <- typeOf x
         case ty of
             TypeInt{} -> return ()
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
             _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                              , "For:" <+> pretty x
                              , "In domain:" <+> pretty d
                              ]
-<<<<<<< HEAD
-    return $ TypeInt name
-=======
     return (TypeInt t)
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
@@ -222,13 +179,8 @@ changeRepr rep = go
     where
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
-<<<<<<< HEAD
-        go (DomainIntE name x) = DomainIntE name x
-        go (DomainInt name rs) = DomainInt name rs
-=======
         go (DomainIntE x) = DomainIntE x
         go (DomainInt t rs) = DomainInt t rs
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
         go (DomainTuple ds) = DomainTuple (map go ds)
@@ -876,11 +828,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
 
-<<<<<<< HEAD
-=======
     pretty (DomainInt _ []) = "int"
     pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _             _) = pretty name
@@ -1026,11 +975,7 @@ representationToFullText r = representationToShortText r
 
 normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool
-<<<<<<< HEAD
-normaliseDomain  norm (DomainInt name rs        ) = DomainInt name $ sort $ map (normaliseRange norm) (expandRanges rs)
-=======
 normaliseDomain  norm (DomainInt t rs           ) = DomainInt t $ sort $ map (normaliseRange norm) (expandRanges rs)
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
 normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
 normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
 normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)

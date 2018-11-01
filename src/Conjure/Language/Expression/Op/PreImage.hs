@@ -29,7 +29,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpPreImage x) where
                     else raiseTypeError p
             TypeSequence to -> do
                 if typesUnify [xTy, to]
-                    then return (TypeSet (TypeInt Nothing))
+                    then return (TypeSet (TypeInt NoTag))
                     else raiseTypeError p
             _ -> raiseTypeError p
 
@@ -38,7 +38,7 @@ instance EvaluateOp OpPreImage where
         return $ ConstantAbstract $ AbsLitSet [ x | (x,y) <- xs, a == y ]
     evaluateOp (OpPreImage (viewConstantSequence -> Just xs) a) =
         return $ ConstantAbstract $ AbsLitSet [ x | (n,y) <- zip allNats xs
-                                                  , let x = ConstantInt Nothing n
+                                                  , let x = ConstantInt NoTag n
                                                   , a == y ]
     evaluateOp op = na $ "evaluateOp{OpPreImage}:" <++> pretty (show op)
 

@@ -85,13 +85,8 @@ intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
 intToInt p a = do
     tya <- typeOf a
     case tya of
-<<<<<<< HEAD
-        TypeInt name -> return $ TypeInt name
-        _       -> fail $ vcat
-=======
         TypeInt t -> return (TypeInt t)
         _         -> fail $ vcat
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
             [ "When type checking:" <+> pretty p
             , "Argument expected to be an int, but it is:" <++> pretty tya
             ]
@@ -102,22 +97,12 @@ intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-<<<<<<< HEAD
-        (TypeInt namea, TypeInt nameb) -> 
-          if namea == nameb
-             then return $ TypeInt namea
-             else fail$ vcat
-               [ "When type checking:" <+> pretty p
-               , "TypeInt names are not equal:" <+> pretty namea <+> pretty nameb
-               ]
-=======
         (TypeInt aTag, TypeInt bTag)
             | aTag == bTag -> return (TypeInt aTag)
             | otherwise    ->  fail $ vcat
                 [ "When type checking:" <+> pretty p
                 , "Arguments have different tags."
                 ]
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
         (_, TypeInt _)       -> fail $ vcat
             [ "When type checking:" <+> pretty p
             , "First argument expected to be an int, but it is:" <++> pretty tya
@@ -199,6 +184,7 @@ data EssenceOperatorParsingDescr = Binary Lexeme Fixity | UnaryPrefix Lexeme
 operators :: [(EssenceOperatorParsingDescr, Int)]
 operators =
     [ ( Binary L_Plus         FLeft   ,  600 )
+    , ( Binary L_PlusForced   FLeft   ,  600 )
     , ( Binary L_Minus        FLeft   ,  600 )
     , ( Binary L_Times        FLeft   ,  700 )
     , ( Binary L_Div          FLeft   ,  700 )

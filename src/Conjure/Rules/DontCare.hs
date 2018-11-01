@@ -20,9 +20,9 @@ rule_Bool = "dontCare-bool" `namedRule` theRule where
 rule_Int :: Rule
 rule_Int = "dontCare-int" `namedRule` theRule where
     theRule p = do
-        x       <- match opDontCare p
+        x         <- match opDontCare p
         TypeInt _ <- typeOf x
-        xDomain <- domainOf x
+        xDomain   <- domainOf x
         let raiseBug = bug ("dontCare on domain:" <+> pretty xDomain)
         let val = case xDomain of
                 DomainInt _ [] -> raiseBug

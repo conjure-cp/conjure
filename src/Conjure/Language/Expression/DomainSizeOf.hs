@@ -15,6 +15,7 @@ import Conjure.Language.Domain
 import Conjure.Language.Expression.Op
 import Conjure.Language.Lenses
 import Conjure.Language.TH
+import Conjure.Language.Type
 
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Pretty
@@ -27,7 +28,7 @@ instance DomainSizeOf Expression Expression where
     domainSizeOf (DomainInt _ rs ) = make opSum . fromList <$> mapM domainSizeOfRange rs
     domainSizeOf (DomainEnum n Nothing _) = return $
         let n' = n `mappend` "_EnumSize"
-        in  Reference n' (Just (DeclHasRepr Given n' (DomainInt (Just n) [])))
+        in  Reference n' (Just (DeclHasRepr Given n' (DomainInt NoTag [])))
     domainSizeOf (DomainUnnamed _ x) = return x
     domainSizeOf (DomainTuple []) = return 1
     domainSizeOf (DomainTuple xs) = make opProduct . fromList <$> mapM domainSizeOf xs
@@ -70,7 +71,7 @@ instance DomainSizeOf Expression Expression where
             SizeAttr_MaxSize s      -> return s
             SizeAttr_MinMaxSize _ s -> return s
         domainSizeOf $ DomainFunction def (FunctionAttr sizeAttr PartialityAttr_Partial jectivityAttr)
-            (DomainInt [RangeBounded 1 size]) innerTo
+            (DomainInt NoTag [RangeBounded 1 size]) innerTo
     domainSizeOf (DomainFunction _ (FunctionAttr sizeAttr _ _) innerFr innerTo) =
         domainSizeOf $ DomainRelation def (RelationAttr sizeAttr def) [innerFr, innerTo]
     domainSizeOf (DomainRelation _ (RelationAttr sizeAttr _binRelAttr) inners) =

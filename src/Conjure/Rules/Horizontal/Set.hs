@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
             _ -> na "rule_Comprehension_Literal"
         (TypeSet tau, elems) <- match setLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt Nothing) tau)
-                            (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt NoTag) tau)
+                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -205,7 +205,7 @@ rule_Union = "set-union" `namedRule` theRule where
         return
             ( "Horizontal rule for set union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt Nothing [RangeBounded 1 2])
+                (DomainInt NoTag [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (mkModifier x)) ]
@@ -313,7 +313,7 @@ rule_PowerSet_Comprehension = "set-powerSet-comprehension" `namedRule` theRule w
 rule_MaxMin :: Rule
 rule_MaxMin = "set-max-min" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
-        TypeSet (TypeInt Nothing) <- typeOf s
+        TypeSet (TypeInt _) <- typeOf s
         return
             ( "Horizontal rule for set max"
             , do
@@ -321,7 +321,7 @@ rule_MaxMin = "set-max-min" `namedRule` theRule where
                 return [essence| max([&i | &iPat <- &s]) |]
             )
     theRule [essence| min(&s) |] = do
-        TypeSet (TypeInt Nothing) <- typeOf s
+        TypeSet (TypeInt _) <- typeOf s
         return
             ( "Horizontal rule for set min"
             , do
@@ -387,16 +387,16 @@ rule_CardViaFreq = "set-card-via-freq" `namedRule` theRule where
 rule_Param_MinOfSet :: Rule
 rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
     theRule [essence| min(&s) |] = do
-        TypeSet (TypeInt Nothing) <- typeOf s
+        TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MinOfSet"
         DomainSet _ _ inner <- domainOf s
         case inner of
-            DomainInt Nothing rs | isInfinite rs -> na "rule_Param_MaxOfSet"
+            DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"
             _ -> return ()
         return
             ( "min of a parameter set"
             , case inner of
-                DomainInt Nothing [RangeBounded l _] -> return l
+                DomainInt _ [RangeBounded l _] -> return l
                 _ -> do
                     (iPat, i) <- quantifiedVar
                     return [essence| min([ &i | &iPat : &inner ]) |]
@@ -407,16 +407,16 @@ rule_Param_MinOfSet = "param-min-of-set" `namedRule` theRule where
 rule_Param_MaxOfSet :: Rule
 rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
     theRule [essence| max(&s) |] = do
-        TypeSet (TypeInt Nothing) <- typeOf s
+        TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_MaxOfSet"
         DomainSet _ _ inner <- domainOf s
         case inner of
-            DomainInt Nothing rs | isInfinite rs -> na "rule_Param_MaxOfSet"
+            DomainInt _ rs | isInfinite rs -> na "rule_Param_MaxOfSet"
             _ -> return ()
         return
             ( "max of a parameter set"
             , case inner of
-                DomainInt Nothing [RangeBounded _ u] -> return u
+                DomainInt _ [RangeBounded _ u] -> return u
                 _ -> do
                     (iPat, i) <- quantifiedVar
                     return [essence| max([ &i | &iPat : &inner ]) |]
@@ -427,7 +427,7 @@ rule_Param_MaxOfSet = "param-max-of-set" `namedRule` theRule where
 rule_Param_Card :: Rule
 rule_Param_Card = "param-card-of-set" `namedRule` theRule where
     theRule [essence| |&s| |] = do
-        TypeSet (TypeInt Nothing) <- typeOf s
+        TypeSet (TypeInt _) <- typeOf s
         unless (categoryOf s == CatParameter) $ na "rule_Param_Card"
         DomainSet _ (SetAttr (SizeAttr_Size n)) _ <- domainOf s
         return

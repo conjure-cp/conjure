@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeSequence t, elems) <- match sequenceLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt Nothing) t)
-                            (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt NoTag) t)
+                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -60,7 +60,7 @@ rule_Image_Literal_Int :: Rule
 rule_Image_Literal_Int = "sequence-image-literal-int" `namedRule` theRule where
     theRule p = do
         (func, arg)                   <- match opImage p
-        (TypeSequence (TypeInt Nothing), elems) <- match sequenceLiteral func
+        (TypeSequence (TypeInt _), elems) <- match sequenceLiteral func
         return
             ( "Image of sequence literal"
             , return $
@@ -464,7 +464,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
                         case match opRestrict func of
                             Nothing -> return ()
                             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted sequences
-                        TypeSequence (TypeInt Nothing) <- typeOf func
+                        TypeSequence (TypeInt _) <- typeOf func
                         return (func, arg)
                 case try of
                     Nothing -> return (const ch)        -- do not fail if a child is not of proper form

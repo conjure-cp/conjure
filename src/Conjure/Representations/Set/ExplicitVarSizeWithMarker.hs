@@ -46,7 +46,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithMarker (SetAttr attrs) innerDomain) = do
-            maxSize <- getMaxSize attrs innerDomain
+            maxSize <- dropTag <$> getMaxSize attrs innerDomain
             let
                 orderingUpToMarker marker values = do
                     (iPat, i) <- quantifiedVar
@@ -99,7 +99,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt Nothing x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -111,7 +111,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt Nothing (genericLength constants)
+                  , ConstantInt NoTag (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -125,7 +125,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt Nothing card ->
+                        ConstantInt _ card ->
                             case (viewConstantMatrix constantMatrix, constantMatrix) of
                                 (Just (_, vals), _) ->
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))

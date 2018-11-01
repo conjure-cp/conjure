@@ -22,13 +22,18 @@ instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 
 instance (TypeOf x, Pretty x) => TypeOf (OpMod x) where
-    typeOf p@(OpMod a b) = intToIntToInt p a b
+    typeOf p@(OpMod a b) = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
+        _ -> raiseTypeError p
 
 instance EvaluateOp OpMod where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpMod x y)
-        | y /= 0    = ConstantInt Nothing <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
-        | otherwise = return $ mkUndef (TypeInt Nothing) $ "modulo zero:" <+> pretty p
+        | y /= 0    = ConstantInt NoTag <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
+        | otherwise = return $ mkUndef (TypeInt NoTag) $ "modulo zero:" <+> pretty p
 
 instance SimplifyOp OpMod x where
     simplifyOp _ = na "simplifyOp{OpMod}"

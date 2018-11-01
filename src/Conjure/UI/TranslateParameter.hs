@@ -7,7 +7,7 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
-import Conjure.Language.Type ( Type(..), mostDefined )
+import Conjure.Language.Type 
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
@@ -116,7 +116,7 @@ translateParameter eprimeModel0 essenceParam0 = do
                                             ]
                                         else return $ Just (n, d, TypedConstant c cTy)
                         else return $ Just (n, d, v)
-            | (n, d) <- essenceGivens' ++ [ (n, DomainInt Nothing []) | n <- generatedLettingNames ]
+            | (n, d) <- essenceGivens' ++ [ (n, DomainInt NoTag []) | n <- generatedLettingNames ]
             ]
     logDebug $ "[essenceGivensAndLettings ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d

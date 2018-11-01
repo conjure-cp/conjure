@@ -48,7 +48,7 @@ setOccurrence = Representation chck downD structuralCons downC up
         -- | If value is in the set then that value's index maps to a bool
         downC :: TypeOf_DownC m
         downC ( name
-              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt _ intRanges))
+              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt t intRanges))
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -58,7 +58,7 @@ setOccurrence = Representation chck downD structuralCons downC up
                       , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
-                          , let isIn = ConstantInt Nothing v `elem` constants
+                          , let isIn = ConstantInt t v `elem` constants
                           ]
                       )
                     ]
@@ -66,14 +66,14 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         -- | Reversal of downC - if innerDom value zips with matrix true then it's in
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainSet _ _ (DomainInt _ intRanges)))=
+        up ctxt (name, domain@(DomainSet _ _ (DomainInt t intRanges)))=
             case lookup (outName domain name) ctxt of
                 Just constantMatrix ->
                     case viewConstantMatrix constantMatrix of
                         Just (_, vals) -> do
                             innerDomainVals <- valuesInIntDomain intRanges
                             return (name, ConstantAbstract $ AbsLitSet
-                                            [ ConstantInt Nothing v
+                                            [ ConstantInt t v
                                             | (v,b) <- zip innerDomainVals vals
                                             , viewConstantBool b == Just True
                                             ] )

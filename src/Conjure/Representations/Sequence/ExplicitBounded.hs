@@ -40,11 +40,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         innerDomain)) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt Nothing [RangeBounded size size]
+                  , DomainInt NoTag [RangeBounded size size]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt Nothing [RangeBounded 1 size])
+                      (DomainInt NoTag [RangeBounded 1 size])
                       innerDomain
                   ) ]
         downD (name, domain@(DomainSequence
@@ -54,11 +54,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             maxSize <- getMaxSize sizeAttr
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt Nothing [RangeBounded 0 maxSize]
+                  , DomainInt NoTag [RangeBounded 0 maxSize]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt Nothing [RangeBounded 1 maxSize])
+                      (DomainInt NoTag [RangeBounded 1 maxSize])
                       innerDomain
                   ) ]
         downD _ = na "{downD} ExplicitBounded"
@@ -67,11 +67,12 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
             let injectiveCons values = do
                     innerType <- typeOf innerDomain
-                    if typeUnify innerType (TypeInt Nothing)
-                        then do
+                    case innerType of
+                      TypeInt _ -> do
                             return $ return $ -- list
                                 [essence| allDiff(&values) |]
-                        else do
+
+                      _ ->  do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- list
@@ -193,12 +194,12 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
               ) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt Nothing [RangeBounded size size]
-                  , ConstantInt Nothing (genericLength constants)
+                  , DomainInt NoTag [RangeBounded size size]
+                  , ConstantInt NoTag (genericLength constants)
                   )
                 , ( nameValues domain name
-                  , DomainMatrix (DomainInt Nothing [RangeBounded 1 size]) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (DomainInt Nothing [RangeBounded 1 size]) constants
+                  , DomainMatrix (DomainInt NoTag [RangeBounded 1 size]) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (DomainInt NoTag [RangeBounded 1 size]) constants
                   )
                 ]
         downC ( name
@@ -209,7 +210,12 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt Nothing x -> return x
+                    ConstantInt _ x -> return x
+                    _ -> fail $ vcat
+                            [ "Expecting an integer for the maxSize attribute."
+                            , "But got:" <+> pretty maxSize
+                            , "When working on:" <+> pretty name
+                            , "With domain:" <+> pretty domain
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -221,7 +227,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt Nothing (genericLength constants)
+                  , ConstantInt NoTag (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -239,7 +245,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt Nothing card ->
+                        ConstantInt _ card ->
                             case viewConstantMatrix constantMatrix of
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))

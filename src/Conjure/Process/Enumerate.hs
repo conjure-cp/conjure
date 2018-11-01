@@ -91,17 +91,17 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
 enumerateDomain (DomainInt _ []) = fail "enumerateDomain: infinite domain"
-enumerateDomain (DomainInt Nothing rs) = concatMapM enumerateRange rs
-enumerateDomain (DomainUnnamed nm (ConstantInt _ n)) = return (map (ConstantInt (Just nm)) [1..n])
+enumerateDomain (DomainInt _ rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainUnnamed _ (ConstantInt t n)) = return (map (ConstantInt t) [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
 enumerateDomain (DomainTuple ds) = do
     inners <- mapM enumerateDomain ds
     return $ map (ConstantAbstract . AbsLitTuple) (sequence inners)
-enumerateDomain (DomainMatrix (DomainInt name indexDom) innerDom) = do
+enumerateDomain (DomainMatrix (DomainInt t indexDom) innerDom) = do
     inners <- enumerateDomain innerDom
     indexInts <- rangesInts indexDom
     return
-        [ ConstantAbstract (AbsLitMatrix (DomainInt name indexDom) vals)
+        [ ConstantAbstract (AbsLitMatrix (DomainInt t indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
 
@@ -193,7 +193,8 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
 
 enumerateRange :: MonadFail m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]
-enumerateRange (RangeBounded (ConstantInt Nothing x) (ConstantInt Nothing y)) = return $ map (ConstantInt Nothing) [x..y]
+enumerateRange (RangeBounded (ConstantInt tx x) (ConstantInt ty y)) | tx == ty
+  = return $ ConstantInt tx <$> [x..y]
 enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
 enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
 enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"

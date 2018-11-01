@@ -22,8 +22,14 @@ instance BinaryOperator (OpLt x) where
     opLexeme _ = L_Lt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpLt x) where
-    typeOf p@(OpLt a b) = sameToSameToBool p a b
-                                [TypeBool, TypeInt Nothing, TypeEnum "?"]
+    typeOf p@(OpLt a b) = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeInt (TagEnum aTag), TypeInt (TagEnum bTag)) | aTag == bTag
+          -> return TypeBool
+        _ -> sameToSameToBool p a b
+                                [TypeBool, TypeInt NoTag, TypeEnum "?"]
 
 instance EvaluateOp OpLt where
     evaluateOp (OpLt x y) = return $ ConstantBool $ x < y

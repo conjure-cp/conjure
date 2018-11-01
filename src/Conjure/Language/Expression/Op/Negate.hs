@@ -19,11 +19,11 @@ instance ToJSON    x => ToJSON    (OpNegate x) where toJSON = genericToJSON json
 instance FromJSON  x => FromJSON  (OpNegate x) where parseJSON = genericParseJSON jsonOptions
 
 instance TypeOf x => TypeOf (OpNegate x) where
-    typeOf (OpNegate a) = do TypeInt Nothing <- typeOf a ; return (TypeInt Nothing)
+    typeOf (OpNegate a) = do TypeInt NoTag <- typeOf a ; return (TypeInt NoTag)
 
 instance EvaluateOp OpNegate where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpNegate x) = ConstantInt Nothing . negate <$> intOut "OpNegate" x
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpNegate x) = ConstantInt NoTag . negate <$> intOut "OpNegate" x
 
 instance SimplifyOp OpNegate x where
     simplifyOp _ = na "simplifyOp{OpNegate}"

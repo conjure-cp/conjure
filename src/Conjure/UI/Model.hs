@@ -255,8 +255,8 @@ remaining config modelZipper minfo = do
                                 [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
-                                , "Type before:" <+> pretty tyBefore
-                                , "Type after :" <+> pretty tyAfter
+                                , "Type before:" <+> pretty (show tyBefore)
+                                , "Type after :" <+> pretty (show tyAfter)
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName
@@ -613,7 +613,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix (TypeInt Nothing) ty
+        f (TypeList ty) = TypeMatrix (TypeInt NoTag) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -655,6 +655,37 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
+predSucc :: MonadFail m => Model -> m Model
+predSucc m = do
+    let
+        replacePredSucc [essence| pred(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| false |]
+                                -- since True becomes False
+                                --       False becomes out-of-bounds, hence False
+                TypeInt{}  -> do
+                    let xNoTag = dropTag x
+                    return [essence| &xNoTag - 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc [essence| succ(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| !&x |]
+                                -- since False becomes True
+                                --       True becomes out-of-bounds, hence False
+                                -- "succ" is exactly "negate" on bools
+                TypeInt{}  -> do
+                    let xNoTag = dropTag x
+                    return [essence| &xNoTag + 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc x = return x
+
+    st <- transformBiM replacePredSucc (mStatements m)
+    return m { mStatements = st }
+    where
+
+
 updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
@@ -668,7 +699,7 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt Nothing [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt NoTag [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
@@ -935,6 +966,7 @@ prologue model = do
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= predSucc                      >>= logDebugIdModel "[predSucc]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
@@ -1324,9 +1356,6 @@ otherRules =
 
         , rule_DomainCardinality
         , rule_DomainMinMax
-
-        , rule_Pred
-        , rule_Succ
 
         , rule_ComplexAbsPat
 
@@ -1741,7 +1770,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ (TypeInt _) -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -1773,7 +1802,7 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
         return
             ( "Cardinality of a domain"
             , case d of
-                DomainInt Nothing [RangeBounded 1 u] -> return u
+                DomainInt _ [RangeBounded 1 u] -> return u
                 _ -> do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum([ 1 | &iPat : &d ]) |]
@@ -1800,33 +1829,6 @@ rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
     getDomain (Domain d) = return d
     getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
     getDomain _ = na "rule_DomainMinMax.getDomain"
-
-
-rule_Pred :: Rule
-rule_Pred = "pred" `namedRule` theRule where
-    theRule [essence| pred(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
-                                                                -- since True becomes False
-                                                                --       False becomes out-of-bounds, hence False
-            TypeInt{}  -> return ( "Predecessor of integer", return [essence| &x - 1 |] )
-            _          -> na "rule_Pred"
-    theRule _ = na "rule_Pred"
-
-
-rule_Succ :: Rule
-rule_Succ = "succ" `namedRule` theRule where
-    theRule [essence| succ(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
-                                                                -- since False becomes True
-                                                                --       True becomes out-of-bounds, hence False
-                                                                -- "succ" is exactly "negate" on bools
-            TypeInt{}  -> return ( "Succecessor of integer", return [essence| &x + 1 |] )
-            _          -> na "rule_Succ"
-    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule

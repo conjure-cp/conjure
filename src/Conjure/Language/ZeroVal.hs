@@ -11,8 +11,8 @@ import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain )
 
 zeroVal :: (MonadFail m, EnumerateDomain m, Pretty r) => Domain r Constant -> m Constant
 zeroVal DomainBool = return $ ConstantBool False
-zeroVal (DomainInt Nothing []) = return $ ConstantInt Nothing 0
-zeroVal (DomainInt Nothing (r:_)) = zeroValR r
+zeroVal (DomainInt t []) = return $ ConstantInt t 0
+zeroVal (DomainInt _ (r:_)) = zeroValR r
 zeroVal (DomainTuple ds) = ConstantAbstract . AbsLitTuple <$> mapM zeroVal ds
 zeroVal (DomainRecord xs) = do
     values <- forM xs $ \ (nm, dom) -> do

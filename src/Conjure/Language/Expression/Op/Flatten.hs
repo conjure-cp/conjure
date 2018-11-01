@@ -42,7 +42,7 @@ instance EvaluateOp OpFlatten where
             flat c = [c]
         let flattened = flat m
         return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength flattened))])
+                    (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened)
     evaluateOp (OpFlatten (Just n) m) = do
         let flat lvl c | lvl < 0 = return [c]
@@ -50,7 +50,7 @@ instance EvaluateOp OpFlatten where
             flat _ _ = fail $ "Cannot flatten" <+> pretty n <+> "levels."
         flattened <- flat n m
         return (ConstantAbstract $ AbsLitMatrix
-                    (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength flattened))])
+                    (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength flattened))])
                     flattened)
 
 instance SimplifyOp OpFlatten x where

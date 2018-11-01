@@ -17,8 +17,8 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeFunction fr to, elems) <- match functionLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt Nothing) (TypeTuple [fr,to]))
-                            (DomainInt Nothing [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt NoTag) (TypeTuple [fr,to]))
+                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]
@@ -592,7 +592,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
-        TypeFunction _ (TypeInt Nothing) <- typeOf func
+        TypeFunction _ (TypeInt _) <- typeOf func
         return
             ( "Function image, int."
             , do
@@ -612,7 +612,7 @@ rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theR
     theRule p = do
         (matrix, indices)                      <- match opMatrixIndexing p
         (func, arg)                            <- match opImage matrix
-        TypeFunction _ (TypeMatrix _ (TypeInt Nothing))  <- typeOf func
+        TypeFunction _ (TypeMatrix _ (TypeInt _))  <- typeOf func
         return
             ( "Function image, matrix of int."
             , do
@@ -636,7 +636,7 @@ rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRul
         TypeFunction _ (TypeTuple ts) <- typeOf func
         iInt                          <- match constantInt index
         case atMay ts (fromInteger (iInt-1)) of
-            Just (TypeInt Nothing) -> return ()
+            Just (TypeInt _) -> return ()
             _            -> na "rule_Image_IntTupleIndexed"
         return
             ( "Function image, tuple of int."
@@ -796,7 +796,7 @@ rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule 
         return
             ( "Horizontal rule for function union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt Nothing [RangeBounded 1 2])
+                (DomainInt NoTag [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat mkx) ]

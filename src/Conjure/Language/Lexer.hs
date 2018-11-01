@@ -173,6 +173,7 @@ data Lexeme
     -- arithmetic operators
 
     | L_Plus                --    +           -- sum, infix : (int,int) -> int
+    | L_PlusForced
     | L_Minus               --    -           -- (subtraction, infix : (int,int) -> int) OR (unary minus : int -> int)
     | L_Times               --    *           -- multiplication, infix : (int,int) -> int
     | L_Div                 --    /           -- integer division, infix
@@ -413,6 +414,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
     -- , ( L_quantifier, "quantifier" )
     -- , ( L_representation, "representation" )
     , ( L_Plus            , "+"     )
+    , ( L_PlusForced      , "+forced" )
     , ( L_Minus           , "-"     )
     , ( L_Times           , "*"     )
     , ( L_Div             , "/"     )

@@ -49,7 +49,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                 case attrs of
                     MSetAttr (SizeAttr_Size size) _ -> do
                         let indexDomain = mkDomainIntB 1 size
-                        let flagDomain  = defRepr $ DomainInt Nothing [RangeSingle size]
+                        let flagDomain  = defRepr $ DomainInt NoTag [RangeSingle size]
                         return (indexDomain, flagDomain)
                     _ -> do
                         maxSize <- getMaxSize attrs innerDomain
@@ -139,12 +139,12 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
               ) = case attrs of
                     MSetAttr (SizeAttr_Size size) _ -> do
                         let indexDomain = mkDomainIntB 1 size
-                        let flagDomain  = DomainInt Nothing [RangeSingle size]
+                        let flagDomain  = DomainInt NoTag [RangeSingle size]
 
                         return $ Just
                             [ ( nameFlag domain name
                               , defRepr flagDomain
-                              , ConstantInt Nothing (genericLength constants)
+                              , ConstantInt NoTag (genericLength constants)
                               )
                             , ( nameValues domain name
                               , DomainMatrix indexDomain innerDomain
@@ -156,7 +156,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         maxSize    <- getMaxSize attrs innerDomain
                         maxSizeInt <-
                             case maxSize of
-                                ConstantInt Nothing x -> return x
+                                ConstantInt _ x -> return x
                                 _ -> fail $ vcat
                                         [ "Expecting an integer for the maxSize attribute."
                                         , "But got:" <+> pretty maxSize
@@ -172,7 +172,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                         return $ Just
                             [ ( nameFlag domain name
                               , defRepr flagDomain
-                              , ConstantInt Nothing (genericLength constants)
+                              , ConstantInt NoTag (genericLength constants)
                               )
                             , ( nameValues domain name
                               , DomainMatrix indexDomain innerDomain

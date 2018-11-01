@@ -36,15 +36,15 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeList inn
-                | typesUnify [TypeInt Nothing, tyI] -> return inn
+                | typesUnify [TypeInt NoTag, tyI] -> return inn
                 | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
                     [ "The expression:"  <+> pretty p
                     , "Indexing:"        <+> pretty m
-                    , "Expected type of index:" <+> pretty (TypeInt Nothing)
+                    , "Expected type of index:" <+> pretty (TypeInt NoTag)
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeTuple inns   -> do
-                TypeInt{} <- typeOf i
+                TypeInt NoTag <- typeOf i
                 case intOut "OpIndexing" i of
                     Nothing -> fail $ "Tuples can only be indexed by constants:" <++> pretty p
                     Just iInt | iInt <= 0 || iInt > genericLength inns -> fail $ "Out of bounds tuple indexing:" <++> pretty p
@@ -80,7 +80,7 @@ instance EvaluateOp OpIndexing where
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt _ x)) = do
+    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt tagd index, vals)) (ConstantInt tagc x)) | tagd == tagc = do
         ty   <- typeOf m
         tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                            TypeList tyTo     -> return tyTo
@@ -96,7 +96,7 @@ instance EvaluateOp OpIndexing where
                     [ "Matrix is multiply defined at this point:" <+> pretty x
                     , "Matrix value:" <+> pretty m
                     ]
-    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt _ x)) = return (at vals (fromInteger (x-1)))
+    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt NoTag x)) = return (at vals (fromInteger (x-1)))
     evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
         case lookup name vals of
             Nothing -> bug $ vcat

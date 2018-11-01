@@ -152,14 +152,14 @@ parseDomainWithRepr = pDomainAtom
             lexeme L_int
             x <- parens parseExpr
             case typeOf x of
-                Just (TypeInt Nothing) -> return $ DomainInt Nothing [RangeSingle x]
-                _ -> return $ DomainIntE Nothing x
+                Just (TypeInt NoTag) -> return $ DomainInt NoTag [RangeSingle x]
+                _ -> return $ DomainIntE x
 
         pInt = do
             lexeme L_int
             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
-            return $ DomainInt Nothing xs
+            return $ DomainInt NoTag xs
 
         pReference = do
             r  <- identifierText
@@ -539,7 +539,7 @@ parseLiteral = label "value" (do p <- pCore ; p)
         pCore = satisfyL $ \case
                 L_false       -> Just $ return $ Constant $ ConstantBool False
                 L_true        -> Just $ return $ Constant $ ConstantBool True
-                LIntLiteral i -> Just $ return $ Constant $ ConstantInt Nothing (fromInteger i)
+                LIntLiteral i -> Just $ return $ Constant $ ConstantInt NoTag (fromInteger i)
                 L_OpenBracket -> Just pMatrix
                 L_tuple       -> Just pTupleWith
                 L_OpenParen   -> Just pTupleWithout

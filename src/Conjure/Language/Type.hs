@@ -2,7 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
-    , IntTag(..)
+    , IntTag(..), dropTag, addTag, containsTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -10,11 +10,7 @@ module Conjure.Language.Type
     , matrixNumDims
     , innerTypeOf
     , isPrimitiveType
-<<<<<<< HEAD
-    , containsType
-=======
     , typeCanIndexMatrix
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
     ) where
 
 -- conjure
@@ -27,11 +23,7 @@ import Conjure.Language.Pretty
 data Type
     = TypeAny
     | TypeBool
-<<<<<<< HEAD
-    | TypeInt (Maybe Name)
-=======
     | TypeInt IntTag
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
@@ -56,12 +48,7 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
-<<<<<<< HEAD
-    pretty (TypeInt Nothing) = "int"
-    pretty (TypeInt (Just name)) = "int:" <> pretty name
-=======
     pretty TypeInt{} = "int"
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
@@ -98,20 +85,32 @@ instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
 instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
 
 
+
+data IntTag = NoTag
+            | TagEnum Text
+            | TagUnnamed Text
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize IntTag
+instance Hashable  IntTag
+instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
+instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
+
+dropTag :: Data a => a -> a
+dropTag = transformBi (const NoTag)
+
+addTag :: Data a => IntTag -> a -> a
+addTag t = transformBi (const t)
+
+containsTag :: (MonadFail m, Data a) => a -> m IntTag
+containsTag dat = return $ head $ universeBi dat 
+
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-<<<<<<< HEAD
-typeUnify (TypeInt a) (TypeInt b) = a == b
-typeUnify (TypeInt (Nothing)) (TypeEnum _) = False
-typeUnify (TypeInt (Just a)) (TypeEnum b) = a == b
-typeUnify (TypeEnum _) (TypeInt (Nothing)) = False
-typeUnify (TypeEnum b) (TypeInt (Just a)) = a == b
-=======
 typeUnify (TypeInt t1) (TypeInt t2) = t1 == t2
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
 typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
@@ -212,7 +211,9 @@ homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
         else fail $ vcat [ "Not uniformly typed:" <+> msg
+--                         , "Involved types are:" <+> vcat (map (\tx -> pretty tx <> " " <> stringToDoc (show tx)) xs)
                          , "Involved types are:" <+> vcat (map pretty xs)
+
                          ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
@@ -221,11 +222,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
-<<<<<<< HEAD
-innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt Nothing,t])
-=======
 innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt NoTag,t])
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf (TypePermutation t) = return (TypeTuple [t,t])
@@ -237,19 +234,8 @@ isPrimitiveType TypeInt{} = True
 isPrimitiveType (TypeMatrix index inner) = and [isPrimitiveType index, isPrimitiveType inner]
 isPrimitiveType _ = False
 
-<<<<<<< HEAD
-containsType :: Type -> Type -> Bool 
-containsType container containee =
-  if typesUnify [container, containee]
-    then True
-    else case innerTypeOf container of
-           Nothing -> False
-           Just so -> containsType so containee 
-
-=======
 typeCanIndexMatrix :: Type -> Bool
 typeCanIndexMatrix TypeBool{} = True
 typeCanIndexMatrix TypeInt {} = True
 typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
->>>>>>> f8c15eb3160b509a17e3d70103b237ea8d666c04

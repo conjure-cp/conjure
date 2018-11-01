@@ -22,7 +22,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
     typeOf p@(OpToInt x) = do
         ty <- typeOf x
         case ty of
-            TypeBool -> return $ TypeInt Nothing
+            TypeBool -> return $ TypeInt NoTag
             _ -> raiseTypeError $ vcat
                 [ pretty p
                 , "Expected type bool."
@@ -30,9 +30,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpToInt x) where
                 ]
 
 instance EvaluateOp OpToInt where
-    evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt Nothing 0)
-    evaluateOp (OpToInt (ConstantBool True )) = return (ConstantInt Nothing 1)
-    evaluateOp (OpToInt ConstantUndefined{})  = return (ConstantInt Nothing 0)
+    evaluateOp (OpToInt (ConstantBool False)) = return (ConstantInt NoTag 0)
+    evaluateOp (OpToInt (ConstantBool True )) = return (ConstantInt NoTag 1)
+    evaluateOp (OpToInt ConstantUndefined{})  = return (ConstantInt NoTag 0)
     evaluateOp op = na $ "evaluateOp{OpToInt}:" <++> pretty (show op)
 
 instance SimplifyOp OpToInt x where

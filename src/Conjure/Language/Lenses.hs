@@ -1166,9 +1166,14 @@ constantInt
        , Expression -> m Integer
        )
 constantInt _ =
-    ( Constant . ConstantInt Nothing
+    ( Constant . ConstantInt NoTag
     , \ p -> case p of
-            (Constant (ConstantInt Nothing i)) -> return i
+            (Constant (ConstantInt NoTag i)) -> return i
+            _ -> na ("Lenses.constantInt:" <++> pretty p)
+    )
+
+
+matrixLiteral
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 

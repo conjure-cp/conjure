@@ -22,18 +22,18 @@ instance (TypeOf x, Pretty x) => TypeOf (OpHist x) where
     typeOf p@(OpHist a) = do
         tyA <- typeOf a
         case tyA of
-            TypeMSet     aInner -> return $ TypeMatrix (TypeInt Nothing) $ TypeTuple [aInner, TypeInt Nothing]
-            TypeMatrix _ aInner -> return $ TypeMatrix (TypeInt Nothing) $ TypeTuple [aInner, TypeInt Nothing]
-            TypeList     aInner -> return $ TypeMatrix (TypeInt Nothing) $ TypeTuple [aInner, TypeInt Nothing]
+            TypeMSet     aInner -> return $ TypeMatrix (TypeInt NoTag) $ TypeTuple [aInner, (TypeInt NoTag)]
+            TypeMatrix _ aInner -> return $ TypeMatrix (TypeInt NoTag) $ TypeTuple [aInner, (TypeInt NoTag)]
+            TypeList     aInner -> return $ TypeMatrix (TypeInt NoTag) $ TypeTuple [aInner, (TypeInt NoTag)]
             _ -> raiseTypeError p
 
 instance EvaluateOp OpHist where
     evaluateOp (OpHist (viewConstantMSet -> Just cs)) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt Nothing [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
-        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt Nothing n] | (e, n) <- histogram cs ]
+        (DomainInt NoTag [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
+        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt NoTag n] | (e, n) <- histogram cs ]
     evaluateOp (OpHist (viewConstantMatrix -> Just (_, cs))) = return $ ConstantAbstract $ AbsLitMatrix
-        (DomainInt Nothing [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
-        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt Nothing n] | (e, n) <- histogram cs ]
+        (DomainInt NoTag [RangeBounded 1 (fromInt $ genericLength $ histogram cs)])
+        [ ConstantAbstract $ AbsLitTuple [e, ConstantInt NoTag n] | (e, n) <- histogram cs ]
     evaluateOp op = na $ "evaluateOp{OpHist}:" <++> pretty (show op)
 
 instance SimplifyOp OpHist x where

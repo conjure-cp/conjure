@@ -23,12 +23,12 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
         case ty of
-            TypeList TypeAny -> return $ TypeInt Nothing
-            TypeList (TypeInt Nothing) -> return (TypeInt Nothing)
-            TypeMatrix _ TypeAny -> return $ TypeInt Nothing
-            TypeMatrix _ (TypeInt Nothing) -> return (TypeInt Nothing)
-            TypeSet (TypeInt Nothing) -> return (TypeInt Nothing)
-            TypeMSet (TypeInt Nothing) -> return (TypeInt Nothing)
+            TypeList TypeAny -> return (TypeInt NoTag)
+            TypeList (TypeInt NoTag) -> return (TypeInt NoTag)
+            TypeMatrix _ TypeAny -> return (TypeInt NoTag)
+            TypeMatrix _ (TypeInt NoTag) -> return (TypeInt NoTag)
+            TypeSet (TypeInt NoTag) -> return (TypeInt NoTag)
+            TypeMSet (TypeInt NoTag) -> return (TypeInt NoTag)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -37,11 +37,24 @@ instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
+        , any isUndef xs                      = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
+
+    evaluateOp p@(OpProduct x)
+        | Just xs <- listOut x
+<<<<<<< HEAD
         , any isUndef xs                      = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpProduct x) = ConstantInt Nothing . product <$> intsOut "OpProduct" x
+||||||| merged common ancestors
+        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
+=======
+        , any isUndef xs                      = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
+>>>>>>> taggedints
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

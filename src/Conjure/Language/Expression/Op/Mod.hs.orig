@@ -1,0 +1,65 @@
+{-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable #-}
+
+module Conjure.Language.Expression.Op.Mod where
+
+import Conjure.Prelude
+import Conjure.Language.Expression.Op.Internal.Common
+
+import qualified Data.Aeson as JSON             -- aeson
+import qualified Data.HashMap.Strict as M       -- unordered-containers
+import qualified Data.Vector as V               -- vector
+
+
+data OpMod x = OpMod x x
+    deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
+
+instance Serialize x => Serialize (OpMod x)
+instance Hashable  x => Hashable  (OpMod x)
+instance ToJSON    x => ToJSON    (OpMod x) where toJSON = genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpMod x) where parseJSON = genericParseJSON jsonOptions
+
+instance BinaryOperator (OpMod x) where
+    opLexeme _ = L_Mod
+
+instance (TypeOf x, Pretty x) => TypeOf (OpMod x) where
+    typeOf p@(OpMod a b) = do
+      ta <- typeOf a
+      tb <- typeOf b
+      case (ta, tb) of
+        (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
+        _ -> raiseTypeError p
+
+instance EvaluateOp OpMod where
+<<<<<<< HEAD
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt Nothing) $ "Has undefined children:" <+> pretty p
+||||||| merged common ancestors
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+=======
+    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+>>>>>>> taggedints
+    evaluateOp p@(OpMod x y)
+<<<<<<< HEAD
+        | y /= 0    = ConstantInt Nothing <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
+        | otherwise = return $ mkUndef (TypeInt Nothing) $ "modulo zero:" <+> pretty p
+||||||| merged common ancestors
+        | y /= 0    = ConstantInt <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
+        | otherwise = return $ mkUndef TypeInt $ "modulo zero:" <+> pretty p
+=======
+        | y /= 0    = ConstantInt NoTag <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
+        | otherwise = return $ mkUndef (TypeInt NoTag) $ "modulo zero:" <+> pretty p
+>>>>>>> taggedints
+
+instance SimplifyOp OpMod x where
+    simplifyOp _ = na "simplifyOp{OpMod}"
+
+instance Pretty x => Pretty (OpMod x) where
+    prettyPrec prec op@(OpMod a b) = prettyPrecBinOp prec [op] a b
+
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpMod x) where
+    varSymBreakingDescription (OpMod a b) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpMod")
+        , ("children", JSON.Array $ V.fromList
+            [ varSymBreakingDescription a
+            , varSymBreakingDescription b
+            ])
+        ]
