@@ -1,9 +1,9 @@
 Error 1:
-    Expected up to one dominance_relation statement, but got: 2
+    Expected at most one 'dominance_relation' statement, but got 2.
         - dominance_relation or([!(i in fromSolution(s)) | i <- s])
         - dominance_relation !(s subsetEq fromSolution(s))
 Error 2:
-    Expected up to one incomparability_function statement, but got: 3
+    Expected at most one 'incomparability_function' statement, but got 3.
         - incomparability_function descending |s|
         - incomparability_function ascending 42
         - incomparability_function descending max(s)

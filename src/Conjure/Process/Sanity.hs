@@ -17,6 +17,8 @@ sanityChecks model = do
         check :: (MonadFail m, MonadWriter [Doc] m) => Model -> m Model
         check m = do
             upToOneObjective m
+            upToOneHeuristic m
+            upToOneBranchingOn m
             upToOneDominance m
             forM_ (mStatements m) $ \ st -> case st of
                 Declaration (FindOrGiven Given _ _) -> return () -- skip
@@ -128,12 +130,18 @@ sanityChecks model = do
         upToOne f message m = do
             let found = [ st | st <- mStatements m, f st ]
             unless (length found <= 1) $ recordErr
-                [ "Expected up to one" <+> message <+> "statement, but got:" <+> pretty (length found)
+                [ "Expected at most one \'" <> message <> "\' statement, but got" <+> pretty (length found) <> "."
                 , vcat $ map (nest 4 . ("-" <+>) . pretty) found
                 ]
 
         upToOneObjective :: MonadWriter [Doc] m => Model -> m ()
         upToOneObjective = upToOne (\ st -> case st of Objective{} -> True; _ -> False) "objective"
+
+        upToOneHeuristic :: MonadWriter [Doc] m => Model -> m ()
+        upToOneHeuristic = upToOne (\ st -> case st of SearchHeuristic{} -> True; _ -> False) "heuristic"
+
+        upToOneBranchingOn :: MonadWriter [Doc] m => Model -> m ()
+        upToOneBranchingOn = upToOne (\ st -> case st of SearchOrder{} -> True; _ -> False) "branching on"
 
         upToOneDominance :: MonadWriter [Doc] m => Model -> m ()
         upToOneDominance m = do
