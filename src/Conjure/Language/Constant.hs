@@ -59,6 +59,10 @@ data Constant
 instance Eq Constant where
     a == b = compare a b == EQ
 
+instance HasTag Constant where
+  hasTag (ConstantInt t _) = return t
+  hasTag t = fail $ stringToDoc $ "hasTag: expected ConstantInt got " ++ show t
+
 -- implementing the Eq&Ord instances by hand, because we want to special case the TypedConstant constructor
 instance Ord Constant where
 

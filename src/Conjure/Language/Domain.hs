@@ -79,6 +79,11 @@ data Domain r x
 instance (VarSymBreakingDescription x, ToJSON r) => VarSymBreakingDescription (Domain r x) where
     varSymBreakingDescription domain = toJSON $ fmap varSymBreakingDescription domain
 
+instance HasTag (Domain r x) where
+  hasTag (DomainInt tag _) = return tag
+  hasTag _ = fail $ stringToDoc $ "hasTag: expected DomainInt" 
+
+
 mkDomainBool :: Domain () x
 mkDomainBool = DomainBool
 

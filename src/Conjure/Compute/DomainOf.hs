@@ -133,6 +133,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpSubstring x) = domainOf x
     domainOf (MkOpSucc x) = domainOf x
     domainOf (MkOpSum x) = domainOf x
+    domainOf (MkOpSumForced x) = domainOf x
     domainOf (MkOpSupset x) = domainOf x
     domainOf (MkOpSupsetEq x) = domainOf x
     domainOf (MkOpTildeLeq x) = domainOf x
@@ -204,6 +205,7 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpSubstring x) = indexDomainsOf x
     indexDomainsOf (MkOpSucc x) = indexDomainsOf x
     indexDomainsOf (MkOpSum x) = indexDomainsOf x
+    indexDomainsOf (MkOpSumForced x) = indexDomainsOf x
     indexDomainsOf (MkOpSupset x) = indexDomainsOf x
     indexDomainsOf (MkOpSupsetEq x) = indexDomainsOf x
     indexDomainsOf (MkOpTildeLeq x) = indexDomainsOf x
@@ -578,6 +580,23 @@ instance (ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
         let upp  = [essence| sum(&upps) |]
         return (DomainInt NoTag [RangeBounded low upp] :: Dom)
     domainOf _ = return $ DomainInt NoTag [RangeBounded 0 0]
+
+
+instance (ExpressionLike x, DomainOf x, TypeOf x) => DomainOf (OpSumForced x) where
+    domainOf (OpSumForced x)
+        | Just xs <- listOut x
+        , Just tag <- hasTag =<< innerTypeOf =<< typeOf x
+        , not (null xs) = do
+        doms <- mapM domainOf xs
+        let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
+        let low  = [essence| sum(&lows) |]
+        let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
+        let upp  = [essence| sum(&upps) |]
+        return (DomainInt tag [RangeBounded low upp] :: Dom)
+    domainOf (OpSumForced x)
+        | Just tag <- hasTag =<< innerTypeOf =<< typeOf x
+        = return (DomainInt tag (addTag tag [RangeBounded 0 0]))
+    domainOf _ = bug "domainOf: OpSumForced: expected an integer tag to be present" 
 
 instance DomainOf (OpSupset x) where
     domainOf _ = return DomainBool

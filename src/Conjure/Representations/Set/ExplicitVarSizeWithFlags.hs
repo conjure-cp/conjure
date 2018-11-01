@@ -48,7 +48,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithFlags (SetAttr attrs) innerDomain) = do
-            maxSize <- getMaxSize attrs innerDomain
+            maxSize <- dropTag <$> getMaxSize attrs innerDomain
             let
                 orderingWhenFlagged flags values = do
                     (iPat, i) <- quantifiedVar

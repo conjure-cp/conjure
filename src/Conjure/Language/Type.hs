@@ -2,7 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
-    , IntTag(..), dropTag
+    , IntTag(..), dropTag, addTag, hasTag, HasTag, containsTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -84,6 +84,22 @@ instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
 
 dropTag :: Data a => a -> a
 dropTag = transformBi (const NoTag)
+
+addTag :: Data a => IntTag -> a -> a
+addTag t = transformBi (const t)
+
+containsTag :: Data a => a -> Maybe IntTag
+containsTag dat = headMay $ universeBi dat 
+  where headMay [] = Nothing
+        headMay (h:_) = Just h
+
+--TODO deprecate in favour of containsTag
+class HasTag t where
+  hasTag :: MonadFail m => t -> m IntTag
+
+instance HasTag Type where
+  hasTag (TypeInt tag) = return tag
+  hasTag t = fail $ stringToDoc $ "hasTag: expected TypeInt got " ++ show t
 
 
 -- | Check whether two types unify or not.

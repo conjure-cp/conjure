@@ -252,8 +252,8 @@ remaining config modelZipper minfo = do
                                 [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
-                                , "Type before:" <+> pretty tyBefore
-                                , "Type after :" <+> pretty tyAfter
+                                , "Type before:" <+> pretty (show tyBefore)
+                                , "Type after :" <+> pretty (show tyAfter)
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName

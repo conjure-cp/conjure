@@ -46,7 +46,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithMarker (SetAttr attrs) innerDomain) = do
-            maxSize <- getMaxSize attrs innerDomain
+            maxSize <- dropTag <$> getMaxSize attrs innerDomain
             let
                 orderingUpToMarker marker values = do
                     (iPat, i) <- quantifiedVar
