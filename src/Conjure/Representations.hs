@@ -83,4 +83,8 @@ onOp p@(MkOpIndexing (OpIndexing m i)) = do
     xs <- downX1 m
     let iIndexed x = Op (MkOpIndexing (OpIndexing x i))
     return (map iIndexed xs)
+onOp (MkOpFromSolution (OpFromSolution x)) = do
+    ys <- downX1 x
+    let wrap y = Op (MkOpFromSolution (OpFromSolution y))
+    return (map wrap ys)
 onOp op = fail ("downX1.onOp:" <++> pretty op)
