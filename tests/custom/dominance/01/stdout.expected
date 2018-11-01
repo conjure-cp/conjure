@@ -1,7 +1,10 @@
-language Essence 1.3
+language ESSENCE' 1.0
 
-find s: set (minSize 3) of int(1..5)
-such that sum([i | i <- s]) >= 11
-dominance_relation !(s subsetEq fromSolution(s))
-incomparability_function descending |s|
+find s_Occurrence: matrix indexed by [int(1..5)] of bool
+dominance_relation !and([s_Occurrence[q2] -> fromSolution(s_Occurrence)[q2] | q2 : int(1..5)])
+incomparability_function descending sum([toInt(s_Occurrence[q3]) | q3 : int(1..5)])
+branching on [s_Occurrence]
+such that
+    sum([toInt(s_Occurrence[i]) * catchUndef(i, 0) | i : int(1..5)]) >= 11,
+    3 <= sum([toInt(s_Occurrence[q1]) | q1 : int(1..5)])
 
