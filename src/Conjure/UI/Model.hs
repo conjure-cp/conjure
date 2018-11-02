@@ -1113,7 +1113,6 @@ verticalRules =
     , Vertical.Matrix.rule_Comprehension_ToSet_List_DuplicateFree
     , Vertical.Matrix.rule_Matrix_Eq
     , Vertical.Matrix.rule_Matrix_Neq
-    , Vertical.Matrix.rule_Matrix_Permute
     , Vertical.Matrix.rule_Matrix_Leq_Primitive
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
@@ -1183,6 +1182,7 @@ verticalRules =
 
 
     , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
+    , Vertical.Permutation.AsFunction.rule_Matrix_Permute
 
 
     ]
@@ -1312,6 +1312,7 @@ horizontalRules =
 
     , Horizontal.Permutation.rule_Permute_Literal
     , Horizontal.Permutation.rule_Apply
+
 
 
     ]

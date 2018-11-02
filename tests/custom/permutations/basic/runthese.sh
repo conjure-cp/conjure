@@ -1,1 +1,1 @@
-stack test --fast --test-arguments "-p custom.permutations.basic"
+stack test --test-arguments "-p custom.permutations.basic"
