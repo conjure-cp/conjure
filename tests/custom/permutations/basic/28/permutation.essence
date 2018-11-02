@@ -1,0 +1,12 @@
+letting MYTYPE be new type enum {THING1, THING2, THING3, THING4, THING5}
+
+letting p be permutation ((THING3,THING4))
+
+find x : set (size 4) of MYTYPE 
+
+find y : set (size 4) of MYTYPE 
+
+
+such that
+     y = permute(p,x)
+

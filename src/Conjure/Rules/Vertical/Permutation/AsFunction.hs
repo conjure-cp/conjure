@@ -32,55 +32,49 @@ rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
   theRule [essence| permute(&p, &i) |] = do
     TypePermutation inner <- typeOf p 
     typeI <- typeOf i
-    [f] <- downX1 p
-    if typesUnify [inner, typeI]
-       then return
-              ( "Vertical rule for permutation application to a single value (permute), AsFunction representation"
-              , do
-                return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
-              )
-       else na "rule_Permute"
+    if typeI `containsType` inner
+      then do
+        [f] <- downX1 p
+        if typesUnify [inner, typeI]
+          then return
+                 ( "Vertical rule for permutation application to a single value" 
+                 , do
+                   return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                 )
+          else na "rule_Permute" --If we hit this then we should hit a refinement error
+      else return
+             ( "Vertical rule for permutation application to a type the permutation doesn't care about"
+             , do
+               return [essence| &i |]
+             )
   theRule _ = na "rule_Permute"
 
-
--- TODO need to permute on the indices too
 rule_Matrix_Permute :: Rule
 rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
     theRule [essence| permute(&perm, &y) |]  = do
-        ty@(TypeMatrix _ yinner) <- typeOf y
-        (TypePermutation pinner) <- typeOf perm
-        if typesUnify [yinner, pinner]
-          then do
-            unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-            y' <- flattenIfNeeded y
-            DomainMatrix dyindex dyinner <- domainOf y'
-            DomainPermutation _ _ dpinner <- domainOf perm
-            dun <- domainUnion dpinner dyinner
-            return
-                ( "Horizontal rule for permute matrix"
-                , do
-                  (dPat, d) <- quantifiedVar
-                  (pyName, py) <- auxiliaryVar
-                  return $ WithLocals
-                            [essence| &py |]
-                         (AuxiliaryVars
-                           --TODO need union of permutation and dy domains
-                           [ Declaration (FindOrGiven LocalFind pyName
-                                            (DomainMatrix dyindex dun))
-                           , SuchThat
-                             [ [essence|
-                                  forAll &dPat : &dyindex .
-                                    &py[&d] = permute(&perm,&y'[&d]) 
-                               |]
-                             ]
-                           ]
-                         )
-                )
-          else if yinner `containsType` pinner
-                 then error "rule_Matrix_Permute recursion not defined yet" 
-                 else return ( "horixontal rule for permute matrix no type match"
-                             , return [essence| &y |]
-                             )
+        ty@(TypeMatrix _ _) <- typeOf y
+        (TypePermutation _) <- typeOf perm
+        unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        y' <- flattenIfNeeded y
+        dm@(DomainMatrix dyindex _) <- domainOf y'
+        return
+            ( "Horizontal rule for permute matrix"
+            , do
+              (dPat, d) <- quantifiedVar
+              (pyName, py) <- auxiliaryVar
+              return $ WithLocals
+                        [essence| &py |]
+                     (AuxiliaryVars
+                       [ Declaration (FindOrGiven LocalFind pyName dm)
+                       , SuchThat
+                         [ [essence|
+                              forAll &dPat : &dyindex .
+                                &py[&d] = permute(&perm,&y'[permute(&perm,&d)]) 
+                           |]
+                         ]
+                       ]
+                     )
+            )
     theRule _ = na "rule_Matrix_Permute"
 
 

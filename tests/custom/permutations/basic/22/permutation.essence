@@ -1,9 +1,11 @@
 
 given n : int
+letting MYTYPE be new type enum {THING1, THING2, THING3, THING4, THING5}
 
-find x : matrix indexed by [int(1..n)] of int(1..n)
 
-find y : matrix indexed by [int(1..n)] of int(1..n)
+find x : matrix indexed by [int(1..n)] of MYTYPE 
+
+find y : matrix indexed by [int(1..n)] of MYTYPE 
 
 
 such that
