@@ -18,9 +18,14 @@
     "contributes": {
         "commands": [
             {
-                "command": "catCoding.start",
-                "title": "Start new cat coding session",
-                "category": "Cat Coding"
+                "command": "conjure.model",
+                "title": "model essence",
+                "category": "Conjure"
+            },
+            {
+                "command": "conjure.solve",
+                "title": "solve essence",
+                "category": "Conjure"
             }
         ],
         "languages": [
@@ -61,6 +66,7 @@
     "devDependencies": {
         "@types/mocha": "^2.2.42",
         "@types/node": "^8.10.36",
+        "gulp": "^4.0.0",
         "tslint": "^5.8.0",
         "typescript": "^2.6.1",
         "vscode": "^1.1.21"
@@ -73,11 +79,14 @@
         "d3-3": "0.0.0",
         "d3-node": "^2.1.0",
         "deep-rename-keys": "^0.2.1",
+        "file-extension": "^4.0.5",
         "is-empty": "^1.2.0",
         "jquery": "^3.3.1",
+        "jsondiffpatch": "^0.3.11",
         "mathjs": "^5.2.1",
         "popper": "^1.0.1",
         "sleep": "^5.2.3",
-        "sqlite3": "^4.0.2"
+        "sqlite3": "^4.0.2",
+        "vinyl-source-stream": "^2.0.0"
     }
 }

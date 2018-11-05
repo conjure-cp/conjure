@@ -1,22 +1,5 @@
-console.log("Start!!!!");
-
-let bgColour = getComputedStyle(document.body).getPropertyValue('--background-color');
-
-let panel = jsPanel.create({
-    theme: bgColour + ' filled',
-    headerTitle: 'my panel #1',
-    position: 'right-top 0 58',
-    contentSize: {
-        // width: 450,
-        width: () => {
-            return $(document).width() / 3;
-        },
-        height: () => {
-            return $(document).height() * 0.9;
-        }
-    },
-    content: '<div id="pane"> </div>'
-});
+let panel = require('./util/panel.js');
+let colours = require('./util/colours.js');
 
 (function () {
 
@@ -29,11 +12,80 @@ let panel = jsPanel.create({
     window.addEventListener('message', event => {
 
         const root = event.data.tree; // The JSON data our extension sent
-        const domainMap = event.data.map; // The JSON data our extension sent
+        const treeviewDomainMap = event.data.treeviewDomainMap; // The JSON data our extension sent
+        const normalDomainMap = event.data.normalDomainMap; // The JSON data our extension sent
+
+        let parentMap = {};
         let nodeMap = {};
         let selectedNode;
         let selectedCircle;
         let init = true;
+        let allTreeViewNodes;
+
+        Mousetrap.bind('n', next, 'keydown')
+        Mousetrap.bind('p', previous, 'keydown')
+        Mousetrap.bind('r', goRight, 'keydown')
+        Mousetrap.bind('l', goLeft, 'keydown')
+        Mousetrap.bind('u', goUp, 'keydown')
+
+        function goUp() {
+
+            let nextNode;
+
+            if (selectedNode in parentMap) {
+                nextNode = parentMap[selectedNode];
+            }
+            else {
+                for (const key in nodeMap) {
+                    if (nodeMap[key].children) {
+                        if (nodeMap[key].children.includes(nodeMap[selectedNode])) {
+                            nextNode = nodeMap[key];
+                            break;
+                        }
+                    }
+                }
+            }
+
+            parentMap[selectedNode] = nextNode;
+            selectedNode = nextNode.minionID;
+
+            selectNode(selectedNode);
+            focusNode(nodeMap[selectedNode]);
+        }
+
+        function goLeft() {
+            if (nodeMap[selectedNode].children.length > 0) {
+                selectedNode = nodeMap[selectedNode].children[0].minionID;
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
+            }
+        }
+
+        function goRight() {
+            if (nodeMap[selectedNode].children.length == 2) {
+                selectedNode = nodeMap[selectedNode].children[1].minionID;
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
+            }
+        }
+
+        function next() {
+            selectedNode = (selectedNode + 1) % (Object.keys(treeviewDomainMap).length + 1);
+            if (selectedNode == 0) {
+                selectedNode++;
+            }
+            selectNode(selectedNode);
+            focusNode(nodeMap[selectedNode]);
+        }
+
+        function previous() {
+            selectedNode = (selectedNode - 1) % (Object.keys(treeviewDomainMap).length + 1);
+            if (selectedNode == 0) {
+                selectedNode = Object.keys(treeviewDomainMap).length;
+            }
+            selectNode(selectedNode);
+            focusNode(nodeMap[selectedNode]);
+        }
 
         // Add controls
         d3.select("#controls")
@@ -62,12 +114,7 @@ let panel = jsPanel.create({
             .attr("type", "button")
             .attr("value", "Previous")
             .on("click", () => {
-                selectedNode = (selectedNode - 1) % (Object.keys(domainMap).length + 1);
-                if (selectedNode == 0) {
-                    selectedNode = Object.keys(domainMap).length;
-                }
-                selectNode(selectedNode);
-                focusNode(nodeMap[selectedNode]);
+                previous();
             });
 
         d3.select("#controls")
@@ -75,12 +122,7 @@ let panel = jsPanel.create({
             .attr("type", "button")
             .attr("value", "Next")
             .on("click", () => {
-                selectedNode = (selectedNode + 1) % (Object.keys(domainMap).length + 1);
-                if (selectedNode == 0) {
-                    selectedNode++;
-                }
-                selectNode(selectedNode);
-                focusNode(nodeMap[selectedNode]);
+                next();
             });
 
         d3.select("#controls")
@@ -103,11 +145,10 @@ let panel = jsPanel.create({
         let tree = d3.layout.tree().size([height, width]);
 
         let diagonal = d3.svg.diagonal()
-            .projection((d) => { 
-                return [d.x, d.y]; 
-            
-            });
+            .projection((d) => {
+                return [d.x, d.y];
 
+            });
 
         let zoom = d3.behavior.zoom()
             .on("zoom", zoomed);
@@ -119,6 +160,29 @@ let panel = jsPanel.create({
             .attr("height", viewerHeight)
             .append("g")
 
+
+        var data = [
+            { name: 'left', orient: "134", refX: 20, refY: -4, colour: "red" },
+            { name: 'right', orient: "40", refX: 20, refY: 5.5, colour: "orange" },
+            { name: 'straight', orient: "auto", refX: 20, refY: 0, colour: "yellow" }
+        ]
+
+
+        svg.append("svg:defs").selectAll("marker")
+            .data(data)      // Different link/path types can be defined here
+            .enter()
+            .append("svg:marker")    // This section adds in the arrows
+            .attr('id', function (d) { return 'marker_' + d.name })
+            .attr("viewBox", "0 -5 10 10")
+            .attr("orient", (d) => { return d.orient })
+            .attr("refX", (d) => { return d.refX })
+            .attr("refY", (d) => { return d.refY })
+            .attr("markerWidth", 10)
+            .attr("markerHeight", 6)
+            .append("svg:path")
+            .attr("d", "M0, -5L10, 0L0, 5")
+            .style("fill", (d) => { return "#0dbc79" });
+
         function zoomed() {
             svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
             // zoom.translate(d3.event.translate);
@@ -126,27 +190,13 @@ let panel = jsPanel.create({
         }
 
         function focusNode(node) {
+            // scale = 7;
             scale = zoom.scale();
             let x = -node.x * scale;
             let y = -node.y * scale;
 
-
-            x += width/3;
-            y += height/2;
-
-            // let x = viewerWidth / 3 - node.x;
-            // let y = (200 * scale) - node.y;
-
-            
-
-
-            // x = 400;
-            // y = 400;
-
-
-            console.log("scale: ", scale);
-            console.log("moving x: ", x);
-            console.log("moving y: ", y);
+            x += width / 3;
+            y += height / 2;
 
             d3.select('g').transition()
                 .duration(duration)
@@ -173,7 +223,9 @@ let panel = jsPanel.create({
                 })
                 .attr("transform", (d) => {
                     nodeMap[Number(d.minionID)] = d;
-                    return "translate(" + source.x0 + "," + source.y0 + ")";
+                    if (source.x0 && source.y0) {
+                        return "translate(" + source.x0 + "," + source.y0 + ")";
+                    }
                 })
                 .on("click", (d) => {
                     selectNode(d.minionID);
@@ -185,11 +237,13 @@ let panel = jsPanel.create({
                 .attr("r", 10)
                 .attr("stroke", (d) => { return d.children || d._children ? "steelblue" : "#00c13f"; })
                 .style("fill", (d) => { return d.children || d._children ? "#6ac4a1" : "#fff"; });
-            //.attr("r", 10)
-            //.style("fill", "#fff");
+
             nodeEnter.append("text")
                 .attr("y", (d) => {
-                    return d.children || d._children ? -18 : 18;
+                    if (d.children || d._children) {
+                        return 42;
+                    }
+                    return 20;
                 })
                 .attr("dy", ".35em")
                 .attr("text-anchor", "middle")
@@ -223,10 +277,27 @@ let panel = jsPanel.create({
             // Enter the links.
             link.enter().insert("path", "g")
                 .attr("class", "link")
+                .attr("marker-end", (d) => {
+                    // console.log(d);
+                    if (d.source.children.length == 1) {
+                        return "url(#marker_straight)";
+                    }
+
+                    if (d.source.children[0] == d.target) {
+                        return "url(#marker_left)";
+                    }
+
+                    return "url(#marker_right)";
+
+                })
                 .attr("d", (d) => {
-                    let o = { x: source.x0, y: source.y0 };
-                    return diagonal({ source: o, target: o });
-                });
+
+                    if (source.x0 && source.y0) {
+
+                        let o = { x: source.x0, y: source.y0 };
+                        return diagonal({ source: o, target: o });
+                    }
+                })
             // Transition links to their new position.
             link.transition()
                 .duration(duration)
@@ -245,15 +316,66 @@ let panel = jsPanel.create({
                 d.x0 = d.x;
                 d.y0 = d.y;
             });
-
         }
-
 
         function showDomains(minionID) {
 
-            panel.setHeaderTitle("Status at Node: " + minionID);
+            let setAttributeList = ["Cardinality", "Excluded", "Included"];
+
+            function unselectAll() {
+                let selected = treeView.treeview('getSelected');
+                selected.forEach(element => {
+                    treeView.treeview('unselectNode', [element, { silent: true }]);
+                });
+            }
+
+            function selectVariable(diff, m) {
+
+                if (setAttributeList.includes(m.text)) {
+                    treeView.treeview('selectNode', [m.nodeId, { silent: true }]);
+                }
+
+                if (m.text in normalDomainMap[minionID]) {
+
+                    let variable = normalDomainMap[minionID][m.text];
+
+                    if (!("table" in variable)) {
+                        treeView.treeview('selectNode', [m.nodeId, { silent: true }]);
+                    }
+                }
+
+                if (!(typeof diff === 'string')) {
+
+                    for (const key in diff) {
+                        if (key != "_t") {
+                            selectVariable(diff[key], m[key]);
+                        }
+                    }
+                }
+            }
+
+            function selectChanged() {
+
+                unselectAll();
+
+                if (minionID != 1) {
+
+                    let delta = jsondiffpatch.diff(treeviewDomainMap[minionID - 1], treeviewDomainMap[minionID]);
+
+                    if (delta) {
+                        selectVariable(delta, allTreeViewNodes);
+                    }
+                }
+            }
+
+            let expandedNodes;
             let treeView = $('#pane');
-            let expandedNodes = treeView.treeview('getExpanded');
+
+            panel.setHeaderTitle("Status at Node: " + minionID);
+
+            if (!init) {
+                expandedNodes = treeView.treeview('getExpanded');
+            }
 
             $("#pane").empty();
 
@@ -261,21 +383,30 @@ let panel = jsPanel.create({
                 expandIcon: "glyphicon glyphicon-triangle-right",
                 collapseIcon: "glyphicon glyphicon-triangle-bottom",
                 color: "white",
-                backColor: bgColour,
+                backColor: colours.bgColour,
                 onhoverColor: "purple",
-                borderColor: bgColour,
+                borderColor: colours.bgColour,
                 showBorder: false,
                 showTags: true,
-                highlightSelected: false,
-                selectedColor: "blue",
-                selectedBackColor: bgColour,
-                data: domainMap[minionID]
+                highlightSelected: true,
+                multiSelect: true,
+                selectedColor: "black",
+                selectedBackColor: "coral",
+                data: treeviewDomainMap[minionID],
+                onNodeSelected: function (event, node) {
+                    treeView.treeview('unselectNode', [node.nodeId, { silent: true }]);
+                    selectChanged();
+                    // console.log(node);
+                },
+                // onSearchComplete: (event, node) => {
+                //     // console.log(node);
+                // }
             });
 
             if (init) {
-                $('#pane').treeview('expandAll', { levels: 10000000001, silent: true });
-                let treeView = $('#pane');
+                treeView.treeview('expandAll', { levels: 10000000001, silent: true });
                 expandedNodes = treeView.treeview('getExpanded');
+                allTreeViewNodes = expandedNodes;
                 init = false;
             }
 
@@ -283,6 +414,7 @@ let panel = jsPanel.create({
                 $('#pane').treeview('expandNode', [element.nodeId, { levels: 1, silent: true }]);
             })
 
+            selectChanged();
         }
 
         function selectNode(minionID) {
@@ -351,7 +483,8 @@ let panel = jsPanel.create({
         }
 
         update(root);
-        selectNode(root.minionID);
-        focusNode(root);
+        // selectNode(root.minionID);
+        selectNode(1);
+        focusNode(nodeMap[1]);
     });
 }())

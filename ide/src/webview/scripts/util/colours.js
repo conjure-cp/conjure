@@ -1,0 +1,2 @@
+module.exports.bgColour = getComputedStyle(document.body).getPropertyValue('--background-color');
+module.exports.linkColour = getComputedStyle(document.body).getPropertyValue('---vscode-terminal-ansiGreen');

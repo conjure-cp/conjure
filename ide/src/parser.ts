@@ -2,7 +2,8 @@ import fs = require('fs');
 import * as math from 'mathjs';
 let rename = require('deep-rename-keys');
 let empty = require('is-empty');
-let d3 = require("d3");
+// let jsondiffpatch = require('jsondiffpatch').create();
+// let d3 = require("d3");
 
 
 class TreeNode {
@@ -16,29 +17,46 @@ class TreeNode {
 }
 
 class Variable {
-    public name: string | undefined;
+    public name: string;
     public range: string | undefined;
-    public type: string | undefined;
+    public type: Type | undefined;
 
-    constructor(name?: string, range?: string, type?: string) {
-        this.name = name;
+    constructor(name?: string, range?: string, type?: Type) {
+        if (name) {
+            this.name = name;
+        }
+        else {
+            this.name = "name not set yet";
+        }
         this.range = range;
         this.type = type;
     }
+
+    public getPrettyRange() {
+
+        let t : string = "UNKNOWN";
+
+        if (this.type === Type.Int){
+            t = "int";
+        }
+
+        if (this.range) {
+            return t + this.range;
+        }
+    }
 }
 
-class Expression extends Variable{
-    constructor(v: Variable){
-        super(v.name, v.range, v.type);
+class Expression extends Variable {
+    constructor(v: Variable) {
+        super(v.name, v.range, Type.Int);
     }
 }
 
 class SetVar extends Variable {
 
     public table: any | undefined;
-    public rejects: number[] = [];
-    public chosen: number[] = [];
-    public size: number | undefined;
+    private excluded: number[] = [];
+    private included: number[] = [];
 
 
     // constructor(name : string, range : string, type : string, size : number){
@@ -47,37 +65,65 @@ class SetVar extends Variable {
         this.table = {};
     }
 
-    public getProperties() {
+    private getProperties() {
+
+        this.excluded = [];
+        this.included = [];
+
         for (const key in this.table) {
             switch (this.table[key]) {
-                case Status.Rejected:
-                    this.rejects.push(Number(key));
+                case Status.Excluded:
+                    this.excluded.push(Number(key));
                     break;
-                case Status.Accepted:
-                    this.chosen.push(Number(key));
+                case Status.Included:
+                    this.included.push(Number(key));
                     break;
                 default:
                     break;
             }
         }
+    }
 
-        this.size = Object.keys(this.table).length - this.rejects.length;
+    public getIncluded() {
+        this.getProperties();
+        return "int(" + this.included + ")";
+    }
+
+    public getExcluded() {
+        this.getProperties();
+        return "int(" + this.excluded + ")";
+    }
+
+    public getCardinality(): any {
+        this.getProperties();
+        let maxLength = (Object.keys(this.table).length - this.excluded.length);
+        if (maxLength !== this.included.length) {
+            return "int(" + this.included.length + ".." + maxLength + ")";
+        }
+        else {
+            return "int(" + maxLength + ")";
+        }
     }
 }
 
 enum Status {
-    Accepted,
-    Rejected,
+    Included,
+    Excluded,
     Unknown
 }
 
+enum Type {
+    Int,
+    Occurrence,
+    ExplicitVarSizeWithDummy
+}
 
 export default class Parser {
 
     // public parseJson(jsonFile: string, esenceFile: string, eprimeFile: string, minionFile: string, ) {
     public auxMap: any;
     public jsonFile: string;
-    public essenceFile: string;
+    public essenceFile: string | undefined;
     public eprimeFile: string;
     public minionFile: string;
     public jsonAux = new RegExp('aux[0-9]+');
@@ -140,6 +186,44 @@ export default class Parser {
     }
 
 
+    public domainsToHierachy(values: any) {
+
+        let varList: any[] = [];
+        let setList: any[] = [];
+        let expressionList: any[] = [];
+
+        values.forEach((element: Variable) => {
+            let obj: any = {};
+            obj.nodes = [];
+            if (element instanceof SetVar) {
+                let set = <SetVar>element;
+                obj.text = set.name;
+                obj.nodes.push({ "text": "Type", "nodes": [{ "text": set.type }] });
+                obj.nodes.push({ "text": "Cardinality", "nodes": [{ "text": set.getCardinality() }] });
+                obj.nodes.push({ "text": "Excluded", "nodes": [{ "text": set.getExcluded() }] });
+                obj.nodes.push({ "text": "Included", "nodes": [{ "text": set.getIncluded() }] });
+                setList.push(obj);
+            }
+            else {
+                obj.text = element.name;
+                obj.nodes.push({ "text": element.getPrettyRange() });
+                if (element instanceof Expression) {
+                    expressionList.push(obj);
+                }
+                else {
+                    varList.push(obj);
+                }
+            }
+
+        });
+
+        return [{
+            "text": "Items", "nodes": [{ "text": "Expressions", "nodes": expressionList },
+            { "text": "Variables", "nodes": varList }, { "text": "Sets", "nodes": setList }]
+        }];
+
+    }
+
     public static flattenArray(arr: any) {
         return arr.reduce((flat: any, toFlatten: any) => {
             return flat.concat(Array.isArray(toFlatten) ? Parser.flattenArray(toFlatten) : toFlatten);
@@ -176,7 +260,6 @@ export default class Parser {
 
     public parseEprime() {
 
-        // let domainArray: Variable[] = [];
         let map: any = {};
 
         let lines: string[] = this.eprimeFile.split("\n");
@@ -188,46 +271,32 @@ export default class Parser {
         let uncommented = (lines.join(''));
         let representations = JSON.parse(uncommented.split("Conjure's")[1]).representations;
 
-        let flat = (Parser.flattenObject(representations));
-        let variable: Variable = new Variable();
-
-        let nameSeen = false;
-
-        for (const key in flat) {
-
-            if (key.includes("Name")) {
-
-                if (nameSeen) {
-                    if (variable.name) {
-                        map[variable.name] = variable;
-                    }
-                    variable = new Variable();
-                    nameSeen = false;
+        for (const key in representations) {
+            let variable: Variable = new Variable();
+            let varObj = representations[key];
+            variable.name = varObj[0].Name;
+            if (varObj[1].DomainInt) {
+                variable.type = Type.Int;
+            }
+            if (varObj[1].DomainSet) {
+                variable = new SetVar(variable);
+                let array = varObj[1].DomainSet;
+                if (array[0].Set_Occurrence) {
+                    variable.type = Type.Occurrence;
                 }
-                variable.name = flat[key];
-                nameSeen = true;
-            }
-
-            if (key.includes("DomainInt")) {
-                variable.type = "int";
-            }
-
-            if (key.includes("DomainSet")) {
-                if (key.includes("Set_Occurrence")) {
-                    variable = new SetVar(variable);
-                    variable.type = "Occurrence";
-                    if (variable.name) {
-                        map[variable.name] = variable;
-                    }
-                    variable = new Variable();
+                if (array[0].Set_ExplicitVarSizeWithDummy) {
+                    variable.type = Type.ExplicitVarSizeWithDummy;
                 }
             }
 
+            map[variable.name] = variable;
         }
+
+        // console.log(map);
         return map;
     }
 
-    public parseAux(key: string) {
+    public parseAuxOccurence(key: string) {
         let minoinAux = new RegExp(key + ' #(.*)');
         let match = minoinAux.exec(this.minionFile);
         let intermediate: string = key;
@@ -249,44 +318,7 @@ export default class Parser {
         return intermediate;
     }
 
-    public domainsToHierachy(values: any) {
-
-        let varList: any[] = [];
-        let setList: any[] = [];
-        let expressionList: any[] = [];
-
-        values.forEach((element: Variable) => {
-            let obj: any = {};
-            obj.nodes = [];
-            if (element instanceof SetVar) {
-                let set = <SetVar>element;
-                // console.log(set);
-                obj.text = set.name;
-                set.getProperties();
-                obj.nodes.push({ "text": "Type", "nodes": [{ "text": set.type }] });
-                obj.nodes.push({ "text": "Cardinality", "nodes": [{ "text": set.size }] });
-                obj.nodes.push({ "text": "Rejected", "nodes": [{ "text": set.rejects.toString() }] });
-                obj.nodes.push({ "text": "Chosen", "nodes": [{ "text": set.chosen.toString() }] });
-                setList.push(obj);
-            }
-            else {
-                obj.text = element.name;
-                obj.nodes.push({ "text": element.range});
-                if (element instanceof Expression){
-                    expressionList.push(obj);
-                }
-                else{
-                    varList.push(obj);
-                }
-            }
-
-        });
-
-
-        return [{"text" : "Items", "nodes" : [{"text" : "Expressions", "nodes": expressionList},
-         {"text": "Variables", "nodes" : varList}, {"text" : "Sets", "nodes" : setList}]}];
-
-
+    public parseAuxDummy(key: string) {
     }
 
     public parseDomains(obj: any) {
@@ -297,26 +329,24 @@ export default class Parser {
 
         for (let i = 0; i < sorted.length; i++) {
 
-            let variable = new Variable();
-
             let key = sorted[i];
+            let variable = new Variable();
 
             for (let i = 0; i < obj[key].length; i++) {
                 if (!(obj[key][i][0] === obj[key][i][1])) {
-                    obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
+                    variable.range = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
+                }
+                else {
+                    variable.range = "(" + Array.from(new Set(Parser.flattenArray(obj[key]))).toString() + ")";
                 }
             }
-            // console.log(obj);
-
 
             if (this.jsonAux.test(key)) {
-                variable.name = math.simplify(this.parseAux(key)).toString();
-                variable.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
+                variable.name = math.simplify(this.parseAuxOccurence(key)).toString();
                 map[variable.name] = new Expression(variable);
             }
             else {
                 variable.name = key;
-                variable.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
 
                 let split = variable.name.split("_");
 
@@ -328,47 +358,55 @@ export default class Parser {
                         let set = <SetVar>map[setName];
                         let number = split[split.length - 1];
 
-                        let splits = variable.range.split("..");
+                        if (variable.range) {
 
-                        if (splits.length === 1) {
-                            if (variable.range === "0") {
-                                set.table[number] = Status.Rejected;
+                            let splits = variable.range.split("..");
+
+                            if (splits.length === 1) {
+                                // console.log(variable.range);
+                                if (variable.range === "(0)") {
+                                    set.table[number] = Status.Excluded;
+                                }
+                                else {
+                                    set.table[number] = Status.Included;
+                                }
                             }
                             else {
-                                set.table[number] = Status.Accepted;
+                                set.table[number] = Status.Unknown;
                             }
+                            map[setName] = set;
                         }
-                        else {
-                            set.table[number] = Status.Unknown;
-                        }
-                        map[setName] = set;
                     }
                 }
                 else {
+                    variable.type = map[variable.name].type;
                     map[variable.name] = variable;
                 }
             }
+
         }
         return map;
     }
 
-    public parseTree(obj: any, map : any) {
+    public parseTree(obj: any, treeviewDomainMap: any, normalDomainMap: any) {
 
         obj["minionID"] = Number(obj["name"]);
         let domains = this.parseDomains(obj["Domains"]);
+        // console.log(domains);
+        normalDomainMap[obj["minionID"]] = domains;
         delete obj.Domains;
         let treeViewDomains = this.domainsToHierachy(Object.values(domains));
-        map[obj["minionID"]] = treeViewDomains;
+        treeviewDomainMap[obj["minionID"]] = treeViewDomains;
 
         let splitted = obj['branchVar'].split("_");
         if (splitted.length > 1) {
             if (splitted[0] in domains) {
                 let num = Number(splitted[splitted.length - 1]);
                 if (obj['branchVal'] === 1) {
-                    obj["name"] = "Accept " + num + " in " + splitted[0];
+                    obj["name"] = "Include " + num + " in " + splitted[0];
                 }
                 else {
-                    obj["name"] = "Reject " + num + " from " + splitted[0];
+                    obj["name"] = "Exclude " + num + " from " + splitted[0];
                 }
             }
         }
@@ -397,23 +435,29 @@ export default class Parser {
 
         else {
             obj.children.forEach((element: any) => {
-                this.parseTree(element, map);
+                this.parseTree(element, treeviewDomainMap, normalDomainMap);
             });
         }
     }
 
     public parseJson() {
         let obj = JSON.parse(this.jsonFile.toString());
+
         obj = rename(obj, (key: any) => {
             if (key === 'Node') { return 'name'; }
             return key;
         });
 
-        let map = {};
-        this.parseTree(obj, map);
-        console.log(map);
-        console.log(obj);
-        let tree = d3.layout.tree();
-        return {"tree" : obj, "map": map};
+        let treeviewDomainMap = {};
+        let normalDomainMap = {};
+        this.parseTree(obj, treeviewDomainMap, normalDomainMap);
+        console.log(treeviewDomainMap);
+        // console.log(normalDomainMap);
+
+        return {
+            "tree": obj,
+            "treeviewDomainMap": treeviewDomainMap,
+            "normalDomainMap": normalDomainMap
+        };
     }
 }
