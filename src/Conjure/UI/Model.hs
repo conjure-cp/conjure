@@ -1182,9 +1182,15 @@ verticalRules =
 
 
     , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
+    , Vertical.Permutation.AsFunction.rule_Relation_Permute
+    , Vertical.Permutation.AsFunction.rule_Relation_Permute_Comprehension
     , Vertical.Permutation.AsFunction.rule_Set_Permute
-
+    , Vertical.Permutation.AsFunction.rule_Tuple_Permute
+    , Vertical.Permutation.AsFunction.rule_Tuple_Permute_Comprehension
     , Vertical.Permutation.AsFunction.rule_Matrix_Permute
+    , Vertical.Permutation.AsFunction.rule_Matrix_Permute_Comprehension
+
+
 
 
     ]
@@ -1311,6 +1317,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Participants
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
+
 
     , Horizontal.Permutation.rule_Permute_Literal
     , Horizontal.Permutation.rule_Permute_Literal_Comprehension

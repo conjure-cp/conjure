@@ -24,7 +24,9 @@ rule_Permute_Literal :: Rule
 rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` theRule where
   theRule [essence| permute(&p, &i) |] = do
     (TypePermutation inner, elems) <- match permutationLiteral p 
+    case i of WithLocals{} -> na "bubble-delay" ; _ -> return ()
     typeI <- typeOf i
+--    traceM $ show typeI
     if typeI `containsType` inner
       then do
         if typesUnify [inner, typeI]
@@ -74,6 +76,7 @@ rule_Permute_Literal_Comprehension = "permutation-permute-literal-comprehension{
     (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
       Generator (GenInExpr pat [essence| permute(&p, &i) |]) -> return (pat, p, i)
       _ -> na "rule_Comprehension"
+    case i of WithLocals{} -> na "bubble-delay" ; _ -> return ()
     (TypePermutation inner, elems) <- match permutationLiteral p 
     typeI <- typeOf i
     if typeI `containsType` inner
