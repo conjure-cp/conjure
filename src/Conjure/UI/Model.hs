@@ -1182,6 +1182,8 @@ verticalRules =
 
 
     , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
+    , Vertical.Permutation.AsFunction.rule_Set_Permute
+
     , Vertical.Permutation.AsFunction.rule_Matrix_Permute
 
 
@@ -1311,6 +1313,7 @@ horizontalRules =
     , Horizontal.Partition.rule_In
 
     , Horizontal.Permutation.rule_Permute_Literal
+    , Horizontal.Permutation.rule_Permute_Literal_Comprehension
     , Horizontal.Permutation.rule_Apply
 
 
@@ -1388,7 +1391,10 @@ delayedRules =
         , Vertical.Matrix.rule_Concatenate_Singleton
         , Vertical.Matrix.rule_MatrixIndexing
 
+--        , Horizontal.Permutation.rule_Permute_Literal
+--        , Horizontal.Permutation.rule_Permute_Literal_Comprehension
         , Vertical.Permutation.AsFunction.rule_Permute
+        , Vertical.Permutation.AsFunction.rule_Permute_Comprehension
         ]
     ,   [ rule_ReducerToComprehension
         ]

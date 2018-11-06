@@ -49,6 +49,38 @@ rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
              )
   theRule _ = na "rule_Permute"
 
+
+rule_Permute_Comprehension :: Rule
+rule_Permute_Comprehension = "permutation-permute{AsFunction}" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+      Generator (GenInExpr pat [essence| permute(&p, &i) |]) -> return (pat, p, i)
+      _ -> na "rule_Comprehension"
+
+    TypePermutation inner <- typeOf p 
+    typeI <- typeOf i
+    if typeI `containsType` inner
+      then do
+        [f] <- downX1 p
+        if typesUnify [inner, typeI]
+          then return
+                 ( "Vertical rule for permutation application to a single value" 
+                 , return 
+                   (Comprehension body $ gocBefore
+                                     ++ [Generator (GenInExpr pat
+                    [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |])]
+                                     ++ gocAfter)
+                 )
+          else na "rule_Permute" --If we hit this then we should hit a refinement error
+      else return
+             ( "Vertical rule for permutation application to a type the permutation doesn't care about"
+             , return 
+                   (Comprehension body $ gocBefore
+                                     ++ [Generator (GenInExpr pat [essence| &i |])]
+                                     ++ gocAfter)
+             )
+  theRule _ = na "rule_Permute"
+
 rule_Matrix_Permute :: Rule
 rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
     theRule [essence| permute(&perm, &y) |]  = do
@@ -78,14 +110,36 @@ rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
     theRule _ = na "rule_Matrix_Permute"
 
 
---rule_Permute_Set :: Rule
---rule_Permute_Set = "permutation-permute-set{AsFunction}" `namedRule` theRule where
---  theRule [essence| permute(&p,&i) |] = do
---    TypePermutation (TypeUnnamed nameperm) <- typeOf p
---    TypeSet (TypeUnnamed nameset) <- i
---    if nameperm == nameset
---       then applyPermutationOverSet
---       else na "rule_Permute_Set"
---  theRule _ = na "rule_Permute_Set"
---
---applyPermutationOverSet = error "applyPermutationOverSet"
+rule_Set_Permute :: Rule
+rule_Set_Permute = "set-permute" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+      (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+         Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
+         _ -> na "rule_Comprehension"
+      (TypeSet _) <- typeOf y
+      (TypePermutation _) <- typeOf perm
+
+      ds <- domainOf y
+      return
+          ( "Horizontal rule for permute set"
+          , do
+            (dPat, d) <- quantifiedVar
+            (pyName, py) <- auxiliaryVar
+            return $ WithLocals
+                   (Comprehension body $ gocBefore
+                                     ++ [Generator (GenInExpr pat [essence| &py |])]
+                                     ++ gocAfter)
+                   (AuxiliaryVars
+                     [ Declaration (FindOrGiven LocalFind pyName ds)
+                     , SuchThat
+                       [ [essence|
+                               |&y| = |&py|
+                            /\ forAll &dPat in &y .
+                                 permute(&perm, &d) in &py
+                         |]
+                       ]
+                     ]
+                   )
+          )
+    theRule _ = na "rule_Set_Permute"
+
