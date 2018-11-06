@@ -652,8 +652,8 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-predSucc :: MonadFail m => Model -> m Model
-predSucc m = do
+dropTagForSR :: MonadFail m => Model -> m Model
+dropTagForSR m = do
     let
         replacePredSucc [essence| pred(&x) |] = do
             ty <- typeOf x
@@ -662,7 +662,7 @@ predSucc m = do
                                 -- since True becomes False
                                 --       False becomes out-of-bounds, hence False
                 TypeInt{}  -> do
-                    let xNoTag = dropTag x
+                    let xNoTag = reTag NoTag x
                     return [essence| &xNoTag - 1 |]
                 _          -> bug "predSucc"
         replacePredSucc [essence| succ(&x) |] = do
@@ -673,9 +673,11 @@ predSucc m = do
                                 --       True becomes out-of-bounds, hence False
                                 -- "succ" is exactly "negate" on bools
                 TypeInt{}  -> do
-                    let xNoTag = dropTag x
+                    let xNoTag = reTag NoTag x
                     return [essence| &xNoTag + 1 |]
                 _          -> bug "predSucc"
+        replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
+        replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
@@ -963,7 +965,7 @@ prologue model = do
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
-    >>= predSucc                      >>= logDebugIdModel "[predSucc]"
+    >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= return . inlineDecVarLettings >>= logDebugIdModel "[inlineDecVarLettings]"
     >>= topLevelBubbles               >>= logDebugIdModel "[topLevelBubbles]"
@@ -1352,8 +1354,6 @@ otherRules =
         , rule_QuantifierShift2
         , rule_QuantifierShift3
 
-        , rule_DotLt_IntLike
-        , rule_DotLeq_IntLike
         ]
 
     ,   [ rule_Comprehension_Simplify
@@ -1993,38 +1993,6 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
                                 ]
                             ]
                         ])
-            )
-
-
-rule_DotLt_IntLike :: Rule
-rule_DotLt_IntLike = "intLike-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLt p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLt_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLt a b)
-            , return $ make opLt a b
-            )
-
-
-rule_DotLeq_IntLike :: Rule
-rule_DotLeq_IntLike = "intLike-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLeq p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLeq_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLeq a b)
-            , return $ make opLeq a b
             )
 
 
