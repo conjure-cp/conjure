@@ -44,10 +44,15 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeTuple inns   -> do
-                TypeInt NoTag <- typeOf i
+                TypeInt t <- typeOf i
+                case t of
+                    NoTag -> return ()
+                    AnyTag -> return ()
+                    _ -> fail $ "Tuples cannot be indexed by enums/unnameds:" <++> pretty p
                 case intOut "OpIndexing" i of
                     Nothing -> fail $ "Tuples can only be indexed by constants:" <++> pretty p
-                    Just iInt | iInt <= 0 || iInt > genericLength inns -> fail $ "Out of bounds tuple indexing:" <++> pretty p
+                    Just iInt | iInt <= 0 || iInt > genericLength inns ->
+                                    fail $ "Out of bounds tuple indexing:" <++> pretty p
                               | otherwise -> return (at inns (fromInteger (iInt-1)))
             TypeRecord inns  -> do
                 nm <- nameOut i
@@ -80,26 +85,28 @@ instance EvaluateOp OpIndexing where
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt tagd index, vals)) (ConstantInt tagc x)) | tagd == tagc = do
-        ty   <- typeOf m
-        tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
-                           TypeList tyTo     -> return tyTo
-                           _ -> fail "evaluateOp{OpIndexing}"
-        indexVals <- valuesInIntDomain index
-        case [ v | (i, v) <- zip indexVals vals, i == x ] of
-            [v] -> return v
-            []  -> return $ mkUndef tyTo $ vcat
-                    [ "Matrix is not defined at this point:" <+> pretty x
-                    , "Matrix value:" <+> pretty m
-                    ]
-            _   -> return $ mkUndef tyTo $ vcat
-                    [ "Matrix is multiply defined at this point:" <+> pretty x
-                    , "Matrix value:" <+> pretty m
-                    ]
-    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt NoTag x)) = return (at vals (fromInteger (x-1)))
+    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt tagd index, vals)) (ConstantInt tagc x))
+        | tagd == tagc = do
+            ty   <- typeOf m
+            tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
+                               TypeList tyTo     -> return tyTo
+                               _ -> bug "evaluateOp{OpIndexing}"
+            indexVals <- valuesInIntDomain index
+            case [ v | (i, v) <- zip indexVals vals, i == x ] of
+                [v] -> return v
+                []  -> return $ mkUndef tyTo $ vcat
+                        [ "Matrix is not defined at this point:" <+> pretty x
+                        , "Matrix value:" <+> pretty m
+                        ]
+                _   -> return $ mkUndef tyTo $ vcat
+                        [ "Matrix is multiply defined at this point:" <+> pretty x
+                        , "Matrix value:" <+> pretty m
+                        ]
+    evaluateOp (OpIndexing (viewConstantTuple -> Just vals) (ConstantInt _ x)) =
+        return (at vals (fromInteger (x-1)))
     evaluateOp rec@(OpIndexing (viewConstantRecord -> Just vals) (ConstantField name _)) =
         case lookup name vals of
-            Nothing -> bug $ vcat
+            Nothing -> fail $ vcat
                     [ "Record doesn't have a member with this name:" <+> pretty name
                     , "Record:" <+> pretty rec
                     ]
