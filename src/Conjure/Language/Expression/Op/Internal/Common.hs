@@ -184,7 +184,6 @@ data EssenceOperatorParsingDescr = Binary Lexeme Fixity | UnaryPrefix Lexeme
 operators :: [(EssenceOperatorParsingDescr, Int)]
 operators =
     [ ( Binary L_Plus         FLeft   ,  600 )
-    , ( Binary L_PlusForced   FLeft   ,  600 )
     , ( Binary L_Minus        FLeft   ,  600 )
     , ( Binary L_Times        FLeft   ,  700 )
     , ( Binary L_Div          FLeft   ,  700 )
