@@ -1874,6 +1874,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
         let bodySkipped = opSkip theGuard body
@@ -1923,6 +1924,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
         domBody <- domainOf body
