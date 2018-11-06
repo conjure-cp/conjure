@@ -22,13 +22,17 @@ instance FromJSON  x => FromJSON  (OpProduct x) where parseJSON = genericParseJS
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeAny -> return (TypeInt NoTag)
-            TypeList (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeMatrix _ TypeAny -> return (TypeInt NoTag)
-            TypeMatrix _ (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeSet (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeMSet (TypeInt NoTag) -> return (TypeInt NoTag)
+        innerTy <- case ty of
+            TypeList t -> return t
+            TypeMatrix _ t -> return t
+            TypeSet t -> return t
+            TypeMSet t -> return t
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
+        case innerTy of
+            TypeInt NoTag -> return (TypeInt AnyTag)
+            TypeInt AnyTag -> return (TypeInt AnyTag)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
