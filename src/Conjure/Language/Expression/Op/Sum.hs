@@ -22,13 +22,17 @@ instance FromJSON  x => FromJSON  (OpSum x) where parseJSON = genericParseJSON j
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpSum x) where
     typeOf p@(OpSum x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeAny -> return (TypeInt NoTag)
-            TypeList (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeMatrix _ TypeAny -> return (TypeInt NoTag)
-            TypeMatrix _ (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeSet (TypeInt NoTag) -> return (TypeInt NoTag)
-            TypeMSet (TypeInt NoTag) -> return (TypeInt NoTag)
+        innerTy <- case ty of
+            TypeList t -> return t
+            TypeMatrix _ t -> return t
+            TypeSet t -> return t
+            TypeMSet t -> return t
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
+        case innerTy of
+            TypeInt NoTag -> return (TypeInt AnyTag)
+            TypeInt AnyTag -> return (TypeInt AnyTag)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -37,11 +41,9 @@ instance BinaryOperator (OpSum x) where
     opLexeme _ = L_Plus
 
 instance EvaluateOp OpSum where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp p@(OpSum x)
-        | Just xs <- listOut x
-        , any isUndef xs                      = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpSum x) = ConstantInt NoTag . sum <$> intsOut "OpSum" x
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpSum x) = ConstantInt AnyTag . sum <$> intsOut "OpSum" x
 
 instance (OpSum x :< x) => SimplifyOp OpSum x where
     simplifyOp (OpSum x)

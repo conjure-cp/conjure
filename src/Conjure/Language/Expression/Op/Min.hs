@@ -49,12 +49,12 @@ instance ( TypeOf x, Pretty x
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
     evaluateOp (OpMin (DomainInConstant (DomainInt NoTag rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef (TypeInt NoTag) "Empty collection in min"
+            then mkUndef (TypeInt AnyTag) "Empty collection in min"
             else ConstantInt NoTag (minimum is)
     evaluateOp (OpMin (DomainInConstant (DomainInt (TagEnum t) rs))) = do
         is <- rangesInts rs

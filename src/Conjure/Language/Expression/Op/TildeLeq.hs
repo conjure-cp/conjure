@@ -25,7 +25,7 @@ instance BinaryOperator (OpTildeLeq x) where
     opLexeme _ = L_TildeLeq
 
 instance (TypeOf x, Pretty x) => TypeOf (OpTildeLeq x) where
-    typeOf p@(OpTildeLeq a b) = sameToSameToBool p a b []
+    typeOf p@(OpTildeLeq a b) = sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpTildeLeq where
     evaluateOp (OpTildeLeq x y) = do

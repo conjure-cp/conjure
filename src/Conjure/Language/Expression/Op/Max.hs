@@ -48,12 +48,13 @@ instance ( TypeOf x, Pretty x
         return tyInner
 
 instance EvaluateOp OpMax where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
     evaluateOp (OpMax (DomainInConstant (DomainInt NoTag rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef (TypeInt NoTag) "Empty collection in max"
+            then mkUndef (TypeInt AnyTag) "Empty collection in max"
             else ConstantInt NoTag (maximum is)
     evaluateOp (OpMax (DomainInConstant (DomainInt (TagEnum t) rs))) = do
         is <- rangesInts rs

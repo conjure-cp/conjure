@@ -22,7 +22,8 @@ instance TypeOf x => TypeOf (OpNegate x) where
     typeOf (OpNegate a) = do TypeInt NoTag <- typeOf a ; return (TypeInt NoTag)
 
 instance EvaluateOp OpNegate where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpNegate x) = ConstantInt NoTag . negate <$> intOut "OpNegate" x
 
 instance SimplifyOp OpNegate x where
