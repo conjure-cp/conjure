@@ -71,7 +71,7 @@ rule_Permute_Comprehension = "permutation-permute{AsFunction}" `namedRule` theRu
                     [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |])]
                                      ++ gocAfter)
                  )
-          else na "rule_Permute" --If we hit this then we should hit a refinement error
+          else na "rule_Permute"
       else return
              ( "Vertical rule for permutation application to a type the permutation doesn't care about"
              , return 
@@ -85,28 +85,31 @@ rule_Matrix_Permute :: Rule
 rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
     theRule [essence| permute(&perm, &y) |]  = do
         ty@(TypeMatrix _ _) <- typeOf y
-        (TypePermutation _) <- typeOf perm
-        unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        y' <- flattenIfNeeded y
-        dm@(DomainMatrix dyindex _) <- domainOf y'
-        return
-            ( "Horizontal rule for permute matrix"
-            , do
-              (dPat, d) <- quantifiedVar
-              (pyName, py) <- auxiliaryVar
-              return $ WithLocals
-                        [essence| &py |]
-                     (AuxiliaryVars
-                       [ Declaration (FindOrGiven LocalFind pyName dm)
-                       , SuchThat
-                         [ [essence|
-                              forAll &dPat : &dyindex .
-                                &py[&d] = permute(&perm,&y'[permute(&perm,&d)]) 
-                           |]
-                         ]
-                       ]
-                     )
-            )
+        (TypePermutation inn) <- typeOf perm
+        if not $ typesUnify [ty, inn]
+          then do
+            unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+            y' <- flattenIfNeeded y
+            dm@(DomainMatrix dyindex _) <- domainOf y'
+            return
+                ( "Horizontal rule for permute matrix"
+                , do
+                  (dPat, d) <- quantifiedVar
+                  (pyName, py) <- auxiliaryVar
+                  return $ WithLocals
+                            [essence| &py |]
+                         (AuxiliaryVars
+                           [ Declaration (FindOrGiven LocalFind pyName dm)
+                           , SuchThat
+                             [ [essence|
+                                  forAll &dPat : &dyindex .
+                                    &py[&d] = permute(&perm,&y'[permute(&perm,&d)]) 
+                               |]
+                             ]
+                           ]
+                         )
+                )
+          else na "rule_Matrix_Permute"
     theRule _ = na "rule_Matrix_Permute"
 
 
@@ -116,30 +119,38 @@ rule_Set_Permute = "set-permute" `namedRule` theRule where
       (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
          Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
          _ -> na "rule_Comprehension"
-      (TypeSet _) <- typeOf y
-      (TypePermutation _) <- typeOf perm
-
-      ds <- domainOf y
-      return
-          ( "Horizontal rule for permute set"
-          , do
-            (dPat, d) <- quantifiedVar
-            (pyName, py) <- auxiliaryVar
-            return $ WithLocals
-                   (Comprehension body $ gocBefore
-                                     ++ [Generator (GenInExpr pat [essence| &py |])]
-                                     ++ gocAfter)
-                   (AuxiliaryVars
-                     [ Declaration (FindOrGiven LocalFind pyName ds)
-                     , SuchThat
-                       [ [essence|
-                               |&y| = |&py|
-                            /\ forAll &dPat in &y .
-                                 permute(&perm, &d) in &py
-                         |]
-                       ]
-                     ]
-                   )
-          )
+      ts@(TypeSet _) <- typeOf y
+      (TypePermutation inn) <- typeOf perm
+      if not $ typesUnify [ts, inn]
+         then do
+           ds <- domainOf y
+           return
+               ( "Horizontal rule for permute set"
+               , do
+                 (dPat, d) <- quantifiedVar
+                 (pyName, py) <- auxiliaryVar
+                 return $ WithLocals
+                        (Comprehension body $ gocBefore
+                                          ++ [Generator (GenInExpr pat [essence| &py |])]
+                                          ++ gocAfter)
+                        (AuxiliaryVars
+                          [ Declaration (FindOrGiven LocalFind pyName ds)
+                          , SuchThat
+                            [ [essence|
+                                    |&y| = |&py|
+                                 /\ forAll &dPat in &y .
+                                      permute(&perm, &d) in &py
+                              |]
+                            ]
+                          ]
+                        )
+               )
+         else na "rule_Set_Permute"
     theRule _ = na "rule_Set_Permute"
 
+
+--rule_Function_Permute :: Rule
+--rule_Relation_Permute :: Rule
+--rule_Partition_Permute :: Rule
+--rule_MSet_Permute :: Rule
+--rule_Sequence_Permute :: Rule
