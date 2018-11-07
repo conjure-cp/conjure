@@ -8,7 +8,7 @@ import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Parser
-import Conjure.Language.Lenses as X ( fixRelationProj ) -- reexporting because it is needed by the QQ
+import Conjure.Language.Lenses as X ( fixTHParsing ) -- reexporting because it is needed by the QQ
 
 
 -- megaparsec
@@ -29,7 +29,7 @@ essenceStmts = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseTopLevels) str
@@ -44,7 +44,7 @@ essence = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseExpr) str
@@ -59,7 +59,7 @@ essenceDomain = QuasiQuoter
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str
         let e' = dataToExpQ (const Nothing `extQ` expE `extQ` expD `extQ` expAP `extQ` expName) e
-        appE [| $(varE (mkName "fixRelationProj")) |] e'
+        appE [| $(varE (mkName "fixTHParsing")) |] e'
     , quotePat  = \ str -> do
         l <- locationTH
         e <- parseIO (setPosition l *> parseDomain) str

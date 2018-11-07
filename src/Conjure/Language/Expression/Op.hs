@@ -24,7 +24,7 @@ mkBinOp op a b =
         Just l  ->
             let
                 f = case l of
-                    L_Plus        -> \ x y -> inject $ MkOpSum         $ OpSum     $ fromList [x,y]
+                    L_Plus        -> \ x y -> inject $ MkOpSum         $ OpSum       $ fromList [x,y]
                     L_Minus       -> \ x y -> inject $ MkOpMinus       $ OpMinus       x y
                     L_Times       -> \ x y -> inject $ MkOpProduct     $ OpProduct $ fromList [x,y]
                     L_Div         -> \ x y -> inject $ MkOpDiv         $ OpDiv         x y

@@ -22,13 +22,17 @@ instance FromJSON  x => FromJSON  (OpProduct x) where parseJSON = genericParseJS
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
-        case ty of
-            TypeList TypeAny -> return TypeInt
-            TypeList TypeInt -> return TypeInt
-            TypeMatrix _ TypeAny -> return TypeInt
-            TypeMatrix _ TypeInt -> return TypeInt
-            TypeSet TypeInt -> return TypeInt
-            TypeMSet TypeInt -> return TypeInt
+        innerTy <- case ty of
+            TypeList t -> return t
+            TypeMatrix _ t -> return t
+            TypeSet t -> return t
+            TypeMSet t -> return t
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "The argument has type:" <+> pretty ty
+                                       ]
+        case innerTy of
+            TypeInt NoTag -> return (TypeInt AnyTag)
+            TypeInt AnyTag -> return (TypeInt AnyTag)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -37,11 +41,13 @@ instance BinaryOperator (OpProduct x) where
     opLexeme _ = L_Times
 
 instance EvaluateOp OpProduct where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
-        , any isUndef xs                      = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt . product <$> intsOut "OpProduct" x
+        , any isUndef xs =
+            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

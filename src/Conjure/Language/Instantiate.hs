@@ -15,6 +15,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Expression.Op
 import Conjure.Language.Domain
 import Conjure.Language.Constant
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain, enumerateInConstant )
@@ -128,7 +129,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 ty
         else
             return $ ConstantAbstract $ AbsLitMatrix
-                (DomainInt [RangeBounded 1 (fromInt (genericLength constants))])
+                (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength constants))])
                 constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
@@ -230,8 +231,8 @@ instantiateD (DomainIntE x) = do
                 (_, Just (_, xs), _) -> xs
                 (_, _, Just xs) -> xs
                 _ -> []
-    return (DomainInt (map RangeSingle vals))
-instantiateD (DomainInt ranges) = DomainInt <$> mapM instantiateR ranges
+    return (DomainInt NoTag (map RangeSingle vals))
+instantiateD (DomainInt t ranges) = DomainInt t <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
     case lookup nm st of
@@ -245,9 +246,12 @@ instantiateD (DomainEnum nm rs0 _) = do
                 |> fmap4 e2c'
     st <- gets id
     mp <- forM (universeBi rs :: [Name]) $ \ n -> case lookup n st of
-            Just (Constant (ConstantInt i)) -> return (n, i)
+            Just (Constant (ConstantInt _ i)) -> return (n, i)
             Nothing -> fail $ "No value for member of enum domain:" <+> pretty n
-            Just _  -> fail $ "Incompatible value for member of enum domain:" <+> pretty n
+            Just c  -> fail $ vcat [ "Incompatible value for member of enum domain:" <+> pretty nm
+                                   , "    Looking up for member:" <+> pretty n
+                                   , "    Expected an integer, but got:" <+> pretty c
+                                   ]
     return (DomainEnum nm (rs :: Maybe [Range Constant]) (Just mp))
 instantiateD (DomainUnnamed nm s) = DomainUnnamed nm <$> instantiateE s
 instantiateD (DomainTuple inners) = DomainTuple <$> mapM instantiateD inners
