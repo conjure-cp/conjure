@@ -79,7 +79,7 @@ before_install:
   - export PATH=${BIN_DIR}:/opt/ghc/bin:${HOME}/.cabal/bin:${PATH}
   - echo $PATH
   - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
-  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
+  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat -sat-family lingeling" ; fi
   - if [ "${TRAVIS_OS_NAME}" == "osx" ];   then export COMPILER_C=gcc     ; export COMPILER_CPP=g++     ; fi
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export COMPILER_C=gcc-4.9 ; export COMPILER_CPP=g++-4.9 ; fi
 
