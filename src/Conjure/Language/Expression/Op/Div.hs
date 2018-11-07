@@ -22,18 +22,13 @@ instance BinaryOperator (OpDiv x) where
     opLexeme _ = L_Div
 
 instance (TypeOf x, Pretty x) => TypeOf (OpDiv x) where
-    typeOf p@(OpDiv a b) = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
-        _ -> raiseTypeError p
+    typeOf p@(OpDiv a b) = intToIntToInt p a b
 
 instance EvaluateOp OpDiv where
     evaluateOp p | any isUndef (childrenBi p) =
         return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpDiv x y)
-        | y /= 0    = ConstantInt AnyTag <$> (div <$> intOut "div x" x <*> intOut "div y" y)
+        | y /= 0    = ConstantInt NoTag <$> (div <$> intOut "div x" x <*> intOut "div y" y)
         | otherwise = return $ mkUndef (TypeInt AnyTag) $ "division by zero:" <+> pretty p
 
 instance SimplifyOp OpDiv x where

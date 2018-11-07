@@ -22,12 +22,7 @@ instance BinaryOperator (OpMod x) where
     opLexeme _ = L_Mod
 
 instance (TypeOf x, Pretty x) => TypeOf (OpMod x) where
-    typeOf p@(OpMod a b) = do
-      ta <- typeOf a
-      tb <- typeOf b
-      case (ta, tb) of
-        (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
-        _ -> raiseTypeError p
+    typeOf p@(OpMod a b) = intToIntToInt p a b
 
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (childrenBi p) =

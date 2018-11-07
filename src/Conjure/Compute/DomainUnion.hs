@@ -44,8 +44,9 @@ instance
     domainUnion DomainAny{} d = return d
     domainUnion d DomainAny{} = return d
     domainUnion DomainBool DomainBool = return DomainBool
-    domainUnion (DomainInt t1 r1) (DomainInt t2 r2) | t1 == t2
-          = return $ DomainInt t1 (r1 `L.union` r2)
+    domainUnion (DomainInt t1 r1) (DomainInt t2 r2) = do
+        let t = if t1 == AnyTag then t2 else t1
+        return $ DomainInt t (r1 `L.union` r2)
     domainUnion (DomainTuple []) d@DomainTuple{} = return d
     domainUnion d@DomainTuple{} (DomainTuple []) = return d
     domainUnion (DomainTuple xs) (DomainTuple ys)

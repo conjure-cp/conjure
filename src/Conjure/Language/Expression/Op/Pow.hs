@@ -22,12 +22,7 @@ instance BinaryOperator (OpPow x) where
     opLexeme _ = L_Pow
 
 instance (TypeOf x, Pretty x) => TypeOf (OpPow x) where
-  typeOf p@(OpPow a b) = do
-    ta <- typeOf a
-    tb <- typeOf b
-    case (ta, tb) of
-      (TypeInt NoTag, TypeInt NoTag) -> intToIntToInt p a b
-      _ -> raiseTypeError p
+  typeOf p@(OpPow a b) = intToIntToInt p a b
 
 instance EvaluateOp OpPow where
     evaluateOp p | any isUndef (childrenBi p) =

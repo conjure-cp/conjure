@@ -41,6 +41,7 @@ instance ( TypeOf x, Pretty x
                                        ]
         case tyInner of
             TypeInt NoTag -> return ()
+            TypeInt AnyTag -> return ()
             TypeInt (TagEnum _) -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside min:" <+> pretty ty
@@ -69,12 +70,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -84,12 +82,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -99,12 +94,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 

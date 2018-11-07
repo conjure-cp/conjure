@@ -98,7 +98,9 @@ intToIntToInt p a b = do
     tyb <- typeOf b
     case (tya, tyb) of
         (TypeInt aTag, TypeInt bTag)
-            | aTag == bTag -> return (TypeInt aTag)
+            | aTag == AnyTag -> return (TypeInt bTag)
+            | bTag == AnyTag -> return (TypeInt aTag)
+            | aTag == bTag   -> return (TypeInt aTag)
             | otherwise    ->  fail $ vcat
                 [ "When type checking:" <+> pretty p
                 , "Arguments have different tags."

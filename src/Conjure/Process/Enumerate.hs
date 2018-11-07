@@ -11,6 +11,7 @@ import Conjure.UserError
 import Conjure.Language.AdHoc
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
+import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Definition
@@ -193,8 +194,9 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
 
 enumerateRange :: MonadFail m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]
-enumerateRange (RangeBounded (ConstantInt tx x) (ConstantInt ty y)) | tx == ty
-  = return $ ConstantInt tx <$> [x..y]
+enumerateRange (RangeBounded (ConstantInt tx x) (ConstantInt ty y)) = do
+    let t = if tx == AnyTag then ty else tx
+    return $ ConstantInt t <$> [x..y]
 enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
 enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
 enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"

@@ -72,9 +72,9 @@ instance Pretty Type where
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
 
-data IntTag = NoTag
-            | TagEnum Text
-            | TagUnnamed Text
+data IntTag = NoTag                     -- was an integer in the input
+            | TagEnum Text              -- was an enum in the input
+            | TagUnnamed Text           -- was an unnamed in the input
             | AnyTag                    -- only internally generated, unifies with any tag
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
