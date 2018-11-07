@@ -85,8 +85,7 @@ instance EvaluateOp OpIndexing where
                            TypeList tyTo     -> return tyTo
                            _ -> fail "evaluateOp{OpIndexing}"
         return $ mkUndef tyTo $ "Has undefined children (index):" <+> pretty p
-    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt tagd index, vals)) (ConstantInt tagc x))
-        | tagd == tagc = do
+    evaluateOp (OpIndexing m@(viewConstantMatrix -> Just (DomainInt _ index, vals)) (ConstantInt _ x)) = do
             ty   <- typeOf m
             tyTo <- case ty of TypeMatrix _ tyTo -> return tyTo
                                TypeList tyTo     -> return tyTo

@@ -18,8 +18,14 @@ instance Hashable  x => Hashable  (OpFactorial x)
 instance ToJSON    x => ToJSON    (OpFactorial x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpFactorial x) where
-    typeOf (OpFactorial a) = do TypeInt NoTag <- typeOf a ; return (TypeInt NoTag)
+instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
+    typeOf p@(OpFactorial a) = do
+        TypeInt t <- typeOf a
+        case t of
+            NoTag -> return ()
+            AnyTag -> return ()
+            _ -> raiseTypeError p
+        return (TypeInt AnyTag)
 
 instance EvaluateOp OpFactorial where
     evaluateOp p | any isUndef (childrenBi p) =
