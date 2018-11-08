@@ -11,6 +11,7 @@ import Conjure.UserError
 import Conjure.Language.AdHoc
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
+import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Definition
@@ -90,18 +91,18 @@ enumerateDomain d | not (null [ () | ConstantUndefined{} <- universeBi d ]) =
                ]
 
 enumerateDomain DomainBool = return [ConstantBool False, ConstantBool True]
-enumerateDomain (DomainInt []) = fail "enumerateDomain: infinite domain"
-enumerateDomain (DomainInt rs) = concatMapM enumerateRange rs
-enumerateDomain (DomainUnnamed _ (ConstantInt n)) = return (map ConstantInt [1..n])
+enumerateDomain (DomainInt _ []) = fail "enumerateDomain: infinite domain"
+enumerateDomain (DomainInt _ rs) = concatMapM enumerateRange rs
+enumerateDomain (DomainUnnamed _ (ConstantInt t n)) = return (map (ConstantInt t) [1..n])
 enumerateDomain (DomainEnum _dName (Just rs) _mp) = concatMapM enumerateRange rs
 enumerateDomain (DomainTuple ds) = do
     inners <- mapM enumerateDomain ds
     return $ map (ConstantAbstract . AbsLitTuple) (sequence inners)
-enumerateDomain (DomainMatrix (DomainInt indexDom) innerDom) = do
+enumerateDomain (DomainMatrix (DomainInt t indexDom) innerDom) = do
     inners <- enumerateDomain innerDom
     indexInts <- rangesInts indexDom
     return
-        [ ConstantAbstract (AbsLitMatrix (DomainInt indexDom) vals)
+        [ ConstantAbstract (AbsLitMatrix (DomainInt t indexDom) vals)
         | vals <- replicateM (length indexInts) inners
         ]
 
@@ -196,7 +197,9 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
 
 enumerateRange :: MonadFail m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]
-enumerateRange (RangeBounded (ConstantInt x) (ConstantInt y)) = return $ map ConstantInt [x..y]
+enumerateRange (RangeBounded (ConstantInt tx x) (ConstantInt ty y)) = do
+    let t = if tx == AnyTag then ty else tx
+    return $ ConstantInt t <$> [x..y]
 enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
 enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
 enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"

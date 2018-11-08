@@ -43,7 +43,7 @@ setOccurrence = Representation chck downD structuralCons downC up
 
         downC :: TypeOf_DownC m
         downC ( name
-              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt intRanges))
+              , domain@(DomainSet Set_Occurrence _attrs innerDomain@(DomainInt t intRanges))
               , ConstantAbstract (AbsLitSet constants)
               ) = do
                 innerDomainVals <- valuesInIntDomain intRanges
@@ -53,21 +53,21 @@ setOccurrence = Representation chck downD structuralCons downC up
                       , ConstantAbstract $ AbsLitMatrix (forgetRepr innerDomain)
                           [ ConstantBool isIn
                           | v <- innerDomainVals
-                          , let isIn = ConstantInt v `elem` constants
+                          , let isIn = ConstantInt t v `elem` constants
                           ]
                       )
                     ]
         downC _ = na "{downC} Occurrence"
 
         up :: TypeOf_Up m
-        up ctxt (name, domain@(DomainSet _ _ (DomainInt intRanges)))=
+        up ctxt (name, domain@(DomainSet _ _ (DomainInt t intRanges)))=
             case lookup (outName domain name) ctxt of
                 Just constantMatrix ->
                     case viewConstantMatrix constantMatrix of
                         Just (_, vals) -> do
                             innerDomainVals <- valuesInIntDomain intRanges
                             return (name, ConstantAbstract $ AbsLitSet
-                                            [ ConstantInt v
+                                            [ ConstantInt t v
                                             | (v,b) <- zip innerDomainVals vals
                                             , viewConstantBool b == Just True
                                             ] )

@@ -2,6 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
+    , IntTag(..), reTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -22,7 +23,7 @@ import Conjure.Language.Pretty
 data Type
     = TypeAny
     | TypeBool
-    | TypeInt
+    | TypeInt IntTag
     | TypeEnum Name
     | TypeUnnamed Name
     | TypeTuple [Type]
@@ -46,7 +47,7 @@ instance FromJSON  Type where parseJSON = genericParseJSON jsonOptions
 instance Pretty Type where
     pretty TypeAny = "?"
     pretty TypeBool = "bool"
-    pretty TypeInt = "int"
+    pretty TypeInt{} = "int"
     pretty (TypeEnum nm ) = pretty nm
     pretty (TypeUnnamed nm) = pretty nm
     pretty (TypeTuple xs) = (if length xs <= 1 then "tuple" else prEmpty)
@@ -70,15 +71,28 @@ instance Pretty Type where
     pretty (TypePartition x) = "partition from" <+> pretty x
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
+
+data IntTag = NoTag                     -- was an integer in the input
+            | TagEnum Text              -- was an enum in the input
+            | TagUnnamed Text           -- was an unnamed in the input
+            | AnyTag                    -- only internally generated, unifies with any tag
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize IntTag
+instance Hashable  IntTag
+instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
+instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
+
+reTag :: Data a => IntTag -> a -> a
+reTag t = transformBi (const t)
+
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-typeUnify TypeInt TypeInt = True
-typeUnify TypeInt TypeEnum{} = True
-typeUnify TypeEnum{} TypeInt = True
-typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
+typeUnify (TypeInt t1) (TypeInt t2) = t1 == t2 || t1 == AnyTag || t2 == AnyTag
+typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
 typeUnify TypeTuple{} (TypeTuple [TypeAny]) = True
@@ -107,7 +121,7 @@ typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
-typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- also hacks to make sameToSameToBool work
+typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- hack to make sameToSameToBool work
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
@@ -117,7 +131,7 @@ typeUnify _ _ = False
 typesUnify :: [Type] -> Bool
 typesUnify ts = and [ typeUnify i j | i <- ts, j <- ts ]
 
--- | Given a list of types return "the most defined" one in this list.
+-- | Given a list of types, return "the most defined" one in this list.
 --   This is to get rid of TypeAny's if there are any.
 --   Precondition: `typesUnify`
 mostDefined :: [Type] -> Type
@@ -127,6 +141,8 @@ mostDefined = foldr f TypeAny
         f TypeAny x = x
         f x TypeAny = x
         f _ x@TypeBool{} = x
+        f (TypeInt AnyTag) _ = TypeInt AnyTag       -- AnyTag is infectious
+        f _ (TypeInt AnyTag) = TypeInt AnyTag       -- AnyTag is infectious
         f _ x@TypeInt{} = x
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x
@@ -176,7 +192,9 @@ homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
         else fail $ vcat [ "Not uniformly typed:" <+> msg
+--                         , "Involved types are:" <+> vcat (map (\tx -> pretty tx <> " " <> stringToDoc (show tx)) xs)
                          , "Involved types are:" <+> vcat (map pretty xs)
+
                          ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
@@ -185,7 +203,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
-innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt,t])
+innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt NoTag,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))

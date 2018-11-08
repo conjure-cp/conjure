@@ -253,8 +253,8 @@ remaining config modelZipper minfo = do
                                 [ "Rule application changes type:" <+> pretty ruleName
                                 , "Before:" <+> pretty (hole focus)
                                 , "After :" <+> pretty ruleResultExpr
-                                , "Type before:" <+> pretty tyBefore
-                                , "Type after :" <+> pretty tyAfter
+                                , "Type before:" <+> pretty (show tyBefore)
+                                , "Type after :" <+> pretty (show tyAfter)
                                 ]
                 (Left msg, _) -> bug $ vcat
                                 [ "Type error before rule application:" <+> pretty ruleName
@@ -611,7 +611,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix TypeInt ty
+        f (TypeList ty) = TypeMatrix (TypeInt NoTag) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -653,6 +653,39 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
+dropTagForSR :: MonadFail m => Model -> m Model
+dropTagForSR m = do
+    let
+        replacePredSucc [essence| pred(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| false |]
+                                -- since True becomes False
+                                --       False becomes out-of-bounds, hence False
+                TypeInt{}  -> do
+                    let xNoTag = reTag NoTag x
+                    return [essence| &xNoTag - 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc [essence| succ(&x) |] = do
+            ty <- typeOf x
+            case ty of
+                TypeBool{} -> return [essence| !&x |]
+                                -- since False becomes True
+                                --       True becomes out-of-bounds, hence False
+                                -- "succ" is exactly "negate" on bools
+                TypeInt{}  -> do
+                    let xNoTag = reTag NoTag x
+                    return [essence| &xNoTag + 1 |]
+                _          -> bug "predSucc"
+        replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
+        replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
+        replacePredSucc x = return x
+
+    st <- transformBiM replacePredSucc (mStatements m)
+    return m { mStatements = st }
+    where
+
+
 updateDeclarations :: forall m . (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
 updateDeclarations model = do
     let
@@ -666,7 +699,7 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt NoTag [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
@@ -1109,6 +1142,7 @@ prologue config model = do
 epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m) => Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
+    >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
     >>= updateDeclarations            >>= logDebugIdModel "[updateDeclarations]"
     >>= convertSNSNeighbourhood       >>= logDebugIdModel "[convertSNSNeighbourhood]"
     >>= updateDeclarationsInsideFrameUpdate
@@ -1523,9 +1557,6 @@ otherRules =
         , rule_DomainCardinality
         , rule_DomainMinMax
 
-        , rule_Pred
-        , rule_Succ
-
         , rule_ComplexAbsPat
 
         , rule_AttributeToConstraint
@@ -1534,8 +1565,6 @@ otherRules =
         , rule_QuantifierShift2
         , rule_QuantifierShift3
 
-        , rule_DotLt_IntLike
-        , rule_DotLeq_IntLike
         ]
 
     ,   [ rule_Comprehension_Simplify
@@ -1937,7 +1966,7 @@ rule_Decompose_AllDiff = "decompose-allDiff" `namedRule` theRule where
         ty <- typeOf m
         case ty of
             TypeMatrix _ TypeBool -> na "allDiff can stay"
-            TypeMatrix _ TypeInt  -> na "allDiff can stay"
+            TypeMatrix _ (TypeInt _)  -> na "allDiff can stay"
             TypeMatrix _ _        -> return ()
             _                     -> na "allDiff on something other than a matrix."
         index:_ <- indexDomainsOf m
@@ -1969,7 +1998,7 @@ rule_DomainCardinality = "domain-cardinality" `namedRule` theRule where
         return
             ( "Cardinality of a domain"
             , case d of
-                DomainInt [RangeBounded 1 u] -> return u
+                DomainInt _ [RangeBounded 1 u] -> return u
                 _ -> do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum([ 1 | &iPat : &d ]) |]
@@ -1996,33 +2025,6 @@ rule_DomainMinMax = "domain-MinMax" `namedRule` theRule where
     getDomain (Domain d) = return d
     getDomain (Reference _ (Just (Alias (Domain d)))) = getDomain (Domain d)
     getDomain _ = na "rule_DomainMinMax.getDomain"
-
-
-rule_Pred :: Rule
-rule_Pred = "pred" `namedRule` theRule where
-    theRule [essence| pred(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Predecessor of boolean", return [essence| false |] )
-                                                                -- since True becomes False
-                                                                --       False becomes out-of-bounds, hence False
-            TypeInt{}  -> return ( "Predecessor of integer", return [essence| &x - 1 |] )
-            _          -> na "rule_Pred"
-    theRule _ = na "rule_Pred"
-
-
-rule_Succ :: Rule
-rule_Succ = "succ" `namedRule` theRule where
-    theRule [essence| succ(&x) |] = do
-        ty  <- typeOf x
-        case ty of
-            TypeBool{} -> return ( "Succecessor of boolean", return [essence| !&x |] )
-                                                                -- since False becomes True
-                                                                --       True becomes out-of-bounds, hence False
-                                                                -- "succ" is exactly "negate" on bools
-            TypeInt{}  -> return ( "Succecessor of integer", return [essence| &x + 1 |] )
-            _          -> na "rule_Succ"
-    theRule _ = na "rule_Succ"
 
 
 rule_ComplexAbsPat :: Rule
@@ -2083,6 +2085,7 @@ rule_InlineConditions = Rule "inline-conditions" theRule where
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
         (nameQ, opSkip) <- queryQ z
         let bodySkipped = opSkip theGuard body
@@ -2132,6 +2135,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
                 ]
         theGuard <- case toInline of
             []  -> na "No condition to inline."
+            [x] -> return x
             xs  -> return $ make opAnd $ fromList xs
 
         domBody <- domainOf body
@@ -2140,7 +2144,7 @@ rule_InlineConditions_AllDiff = "inline-conditions-allDiff" `namedRule` theRule 
             collectLowerBounds (RangeBounded x _) = return x
             collectLowerBounds _ = userErr1 ("Unexpected infinite domain:" <+> pretty domBody)
 
-            collectLowerBoundsD (DomainInt rs) = fromList <$> mapM collectLowerBounds rs
+            collectLowerBoundsD (DomainInt _ rs) = fromList <$> mapM collectLowerBounds rs
             collectLowerBoundsD (DomainIntE x) = return x
             collectLowerBoundsD _  = userErr1 ("Expected an integer domain, but got:" <+> pretty domBody)
 
@@ -2203,38 +2207,6 @@ rule_InlineConditions_MaxMin = "aux-for-MaxMin" `namedRule` theRule where
                                 ]
                             ]
                         ])
-            )
-
-
-rule_DotLt_IntLike :: Rule
-rule_DotLt_IntLike = "intLike-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLt p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLt_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLt a b)
-            , return $ make opLt a b
-            )
-
-
-rule_DotLeq_IntLike :: Rule
-rule_DotLeq_IntLike = "intLike-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b) <- match opDotLeq p
-        tya   <- typeOf a
-        tyb   <- typeOf b
-        case mostDefined [tya, tyb] of
-            TypeBool{} -> return ()
-            TypeInt{}  -> return ()
-            _ -> na "rule_DotLeq_IntLike"
-        return
-            ( "Horizontal rule for int-like .<" <+> pretty (make opLeq a b)
-            , return $ make opLeq a b
             )
 
 

@@ -13,7 +13,7 @@ import Conjure.Language.Expression.Op.FrameUpdate
 import Conjure.Language.Domain
 import Conjure.Language.Parser
 import Conjure.Language.Pretty
-import Conjure.Language.Lenses ( fixRelationProj )
+import Conjure.Language.Lenses ( fixTHParsing ) -- reexporting because it is needed by the QQ
 
 
 -- megaparsec
@@ -122,7 +122,7 @@ toPat x = Just (varP (mkName x))
 
 
 fixAfterParsing :: (Data a, Show a) => a -> a
-fixAfterParsing = fixFrameUpdate . fixRelationProj
+fixAfterParsing = fixFrameUpdate . fixTHParsing
 
 fixFrameUpdate :: (Data a, Show a) => a -> a
 fixFrameUpdate = transformBi f

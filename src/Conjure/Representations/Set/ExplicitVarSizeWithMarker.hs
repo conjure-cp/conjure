@@ -114,7 +114,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -126,7 +126,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt (genericLength constants)
+                  , ConstantInt NoTag (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -140,7 +140,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt card ->
+                        ConstantInt _ card ->
                             case (viewConstantMatrix constantMatrix, constantMatrix) of
                                 (Just (_, vals), _) ->
                                     return (name, ConstantAbstract (AbsLitSet (genericTake card vals)))

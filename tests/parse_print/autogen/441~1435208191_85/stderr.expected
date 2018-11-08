@@ -3,7 +3,7 @@ Error:
         together({false, true, false}, partition({false, true, true, true}) - (partition() : `partition from bool`))
     Error:
         When type checking: partition({false, true, true, true}) - (partition() : `partition from bool`)
-        Arguments expected to be one of these types: int, set of ?, mset of ?, function ? --> ?, relation of (?)
+        Arguments have unsupported types.
         lhs        : partition({false, true, true, true})
         type of lhs: partition from bool
         rhs        : (partition() : `partition from bool`)

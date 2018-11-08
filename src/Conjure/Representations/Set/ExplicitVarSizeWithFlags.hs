@@ -119,7 +119,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize

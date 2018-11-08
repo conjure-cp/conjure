@@ -23,7 +23,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiffExcept x) where
         tyX <- typeOf x
         tyN <- typeOf n
         case tyN of
-            TypeInt -> return ()
+            TypeInt NoTag -> return ()
+            TypeInt AnyTag -> return ()
+            TypeInt (TagEnum _) -> return ()
             _ -> raiseTypeError p
         case tyX of
             TypeList{} -> return TypeBool
@@ -31,8 +33,9 @@ instance (TypeOf x, Pretty x) => TypeOf (OpAllDiffExcept x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpAllDiffExcept where
-    evaluateOp (OpAllDiffExcept (viewConstantMatrix -> Just (_, vals)) (viewConstantInt -> Just n)) = do
-        let vals' = filter (ConstantInt n/=) vals
+    evaluateOp (OpAllDiffExcept (viewConstantMatrix -> Just (_, vals)) i@(viewConstantInt -> Just n)) = do
+        TypeInt t <- typeOf i
+        let vals' = filter (ConstantInt t n/=) vals
         return $ ConstantBool $ length vals' == length (sortNub vals')
     evaluateOp op = na $ "evaluateOp{OpAllDiffExcept}:" <++> pretty (show op)
 
