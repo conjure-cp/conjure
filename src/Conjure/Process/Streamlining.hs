@@ -119,7 +119,7 @@ streamlinersForSingleVariable x = concatMapM ($ x)
 intOdd :: (MonadFail m, NameGen m) => StreamlinerGen m
 intOdd x = do
     ty <- typeOf x
-    if typeUnify ty TypeInt
+    if typeUnify ty (TypeInt AnyTag)
         then mkStreamliner "IntOddEven" [essence| &x % 2 = 1 |]
         else noStreamliner
 
@@ -127,7 +127,7 @@ intOdd x = do
 intEven :: MonadFail m => StreamlinerGen m
 intEven x = do
     ty <- typeOf x
-    if typeUnify ty TypeInt
+    if typeUnify ty (TypeInt AnyTag)
         then mkStreamliner "IntOddEven" [essence| &x % 2 = 0 |]
         else noStreamliner
 
@@ -137,9 +137,9 @@ intLowerHalf x = do
     ty <- typeOf x
     dom <- domainOf x
     case dom of
-        DomainInt [RangeBounded _lower upper] -> do
+        DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
-            if typeUnify ty TypeInt
+            if typeUnify ty (TypeInt AnyTag)
                 then mkStreamliner "IntLowHigh" [essence| &x < 1 + (&upper -1) /2 |]
                 else noStreamliner
         _ -> noStreamliner
@@ -150,9 +150,9 @@ intUpperHalf x = do
     ty <- typeOf x
     dom <- domainOf x
     case dom of
-        DomainInt [RangeBounded _lower upper] -> do
+        DomainInt _ [RangeBounded _lower upper] -> do
             -- traceM $ show $ "DomainInt " <+> pretty (lower, upper)
-            if typeUnify ty TypeInt
+            if typeUnify ty (TypeInt AnyTag)
                 then mkStreamliner "IntLowHigh" [essence| &x > 1 + (&upper -1) /2 |]
                 else noStreamliner
         _ -> noStreamliner
