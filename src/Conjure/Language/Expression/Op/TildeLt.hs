@@ -22,7 +22,7 @@ instance BinaryOperator (OpTildeLt x) where
     opLexeme _ = L_TildeLt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpTildeLt x) where
-    typeOf p@(OpTildeLt a b) = sameToSameToBool p a b []
+    typeOf p@(OpTildeLt a b) = sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpTildeLt where
     evaluateOp (OpTildeLt x y) = return $ ConstantBool $ tilLt x y
@@ -33,7 +33,9 @@ instance EvaluateOp OpTildeLt where
             tupleE (i,j) = ConstantAbstract $ AbsLitTuple [i,j]
 
             tilLt (ConstantBool a) (ConstantBool b) = a < b
-            tilLt (ConstantInt  a) (ConstantInt  b) = a < b
+            tilLt (ConstantInt NoTag a) (ConstantInt NoTag b) = a < b
+            tilLt (ConstantInt (TagEnum an) a) (ConstantInt (TagEnum bn) b)
+                  | an == bn = a < b
             tilLt (viewConstantTuple -> Just [])
                   (viewConstantTuple -> Just []) = False
             tilLt (viewConstantTuple -> Just (a:as))

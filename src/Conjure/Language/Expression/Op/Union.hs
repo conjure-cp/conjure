@@ -23,11 +23,12 @@ instance BinaryOperator (OpUnion x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpUnion x) where
     typeOf p@(OpUnion a b) = sameToSameToSame p a b
-                                [ TypeSet TypeAny
-                                , TypeMSet TypeAny
-                                , TypeFunction TypeAny TypeAny
-                                , TypeRelation [TypeAny]
-                                ]
+        [ TypeSet TypeAny
+        , TypeMSet TypeAny
+        , TypeFunction TypeAny TypeAny
+        , TypeRelation [TypeAny]
+        ]
+        (const True)
 
 instance EvaluateOp OpUnion where
     evaluateOp p | any isUndef (childrenBi p) = do

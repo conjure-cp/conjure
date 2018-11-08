@@ -1146,9 +1146,10 @@ constantInt
        , Expression -> m Integer
        )
 constantInt _ =
-    ( Constant . ConstantInt
+    ( Constant . ConstantInt NoTag
     , \ p -> case p of
-            (Constant (ConstantInt i)) -> return i
+            (Constant (ConstantInt NoTag i)) -> return i
+            (Constant (ConstantInt AnyTag i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 
@@ -1445,6 +1446,23 @@ opLex _ =
     )
 
 
+fixTHParsing :: Data a => a -> a
+fixTHParsing = transformBi f
+    where
+        f :: Expression -> Expression
+        -- This is for TH parsing.
+        -- Internally the integers we produce will have AnyTag
+        -- so they type-unify with a wide range of int-like types
+        f (Constant (ConstantInt NoTag c)) = Constant (ConstantInt AnyTag c)
+        f p =
+            case match opRelationProj p of
+                Just (func, [Just arg]) ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func arg
+                        Just TypeSequence{} -> make opImage func arg
+                        _                   -> p
+                _ -> p
+
 fixRelationProj :: Data a => a -> a
 fixRelationProj = transformBi f
     where
@@ -1460,9 +1478,9 @@ fixRelationProj = transformBi f
 
 
 maxOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-maxOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.maxOfDomain []"
-maxOfDomain (DomainInt [r]) = maxOfRange r
-maxOfDomain (DomainInt rs ) = do
+maxOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.maxOfDomain []"
+maxOfDomain (DomainInt _ [r]) = maxOfRange r
+maxOfDomain (DomainInt _ rs ) = do
     xs <- mapM maxOfRange rs
     return (make opMax (fromList xs))
 maxOfDomain d = fail ("rule_DomainMinMax.maxOfDomain" <+> pretty d)
@@ -1473,9 +1491,9 @@ maxOfRange (RangeBounded _ x) = return x
 maxOfRange r = fail ("rule_DomainMinMax.maxOfRange" <+> pretty r)
 
 minOfDomain :: (MonadFail m, Pretty r) => Domain r Expression -> m Expression
-minOfDomain (DomainInt [] ) = fail "rule_DomainMinMax.minOfDomain []"
-minOfDomain (DomainInt [r]) = minOfRange r
-minOfDomain (DomainInt rs ) = do
+minOfDomain (DomainInt _ [] ) = fail "rule_DomainMinMax.minOfDomain []"
+minOfDomain (DomainInt _ [r]) = minOfRange r
+minOfDomain (DomainInt _ rs ) = do
     xs <- mapM minOfRange rs
     return (make opMin (fromList xs))
 minOfDomain d = fail ("rule_DomainMinMax.minOfDomain" <+> pretty d)

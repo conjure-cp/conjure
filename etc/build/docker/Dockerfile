@@ -74,8 +74,9 @@ ENV PATH        /root/.cabal/bin:/root/.local/bin:/opt/cabal/2.2/bin:/opt/ghc/8.
 ENV BIN_DIR     /root/.local/bin
 
 RUN git clone https://github.com/conjure-cp/conjure.git
-WORKDIR conjure
-RUN git checkout f98e092077ab112fe58afd7a901d8c3fb848eaaf
+WORKDIR $WORK/conjure
+RUN git pull
+RUN git checkout 85af98abff5da363329853c27fd5f310c41d65e1
 
 RUN make
 RUN make solvers
@@ -102,8 +103,14 @@ RUN apt-get purge -y --auto-remove \
 
 WORKDIR $WORK
 
-RUN rm -f pubring.kbx* \
- && rm -rf crls.d private-keys-v1.d
+RUN rm -f pubring.kbx* trustdb.gpg /root/.wget-hsts \
+ && rm -rf crls.d private-keys-v1.d \
+ && rm -rf conjure \
+# remove stack
+ && rm -rf /root/.stack \
+ && rm -rf /usr/local/bin/*
+
+ENV PATH        /root/.local/bin:$PATH
 
 # do a test-run of the pipeline, unless command is specified
 COPY sudoku.essence sudoku.param $WORK/
