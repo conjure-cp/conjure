@@ -361,7 +361,8 @@ mSetOrSetRemove _ _ _ = return []
 
 
 isPrimitive :: Domain () Expression -> Bool
-isPrimitive (DomainInt _) = True
+isPrimitive DomainInt{} = True
+isPrimitive DomainIntE{} = True
 isPrimitive DomainBool = True
 isPrimitive _ = False
 
@@ -1122,7 +1123,7 @@ sequenceCrossOverAny _ = return []
 
 
 functionLessInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionLessInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+functionLessInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@DomainInt{} _) = do
     let generatorName = "functionLessInjective"
     let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
                 Left err -> bug err
@@ -1162,7 +1163,7 @@ functionLessInjective _ _ _ = return []
 
 
 functionMoreInjective :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionMoreInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+functionMoreInjective theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Total JectivityAttr_None) functionFromDomain@DomainInt{} _) = do
     let generatorName = "functionMoreInjective"
     let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
                 Left err -> bug err
@@ -1202,7 +1203,7 @@ functionMoreInjective _ _ _ = return []
 
 
 functionMoreDefined :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionMoreDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+functionMoreDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@DomainInt{} _) = do
     let generatorName = "functionMoreDefined"
     let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
                 Left err -> bug err
@@ -1225,7 +1226,7 @@ functionMoreDefined _ _ _ = return []
 
 
 functionLessDefined :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
-functionLessDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@(DomainInt _) _) = do
+functionLessDefined theIncumbentVar theVar (DomainFunction _ (FunctionAttr _ PartialityAttr_Partial JectivityAttr_None) functionFromDomain@DomainInt{} _) = do
     let generatorName = "functionLessDefined"
     let calculatedMaxNhSize = case domainSizeOf functionFromDomain of
                 Left err -> bug err

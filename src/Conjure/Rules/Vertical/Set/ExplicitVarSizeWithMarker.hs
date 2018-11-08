@@ -130,8 +130,8 @@ rule_frameUpdate_propagator = "set-frameUpdate{ExplicitVarSizeWithMarker}" `name
                     frameUpdateOut :: Expression
                     frameUpdateOut = [essence| frameUpdate(&sourceValues, &targetValues, &sourceFocusVars, &targetFocusVars) |]
 
-                    nbSources = Constant $ ConstantInt $ genericLength sourceFocus
-                    nbTargets = Constant $ ConstantInt $ genericLength targetFocus
+                    nbSources = fromInt $ genericLength sourceFocus
+                    nbTargets = fromInt $ genericLength targetFocus
                     impliedSize =
                         [essence| |&target| = |&source| + (&nbTargets - &nbSources) |]
 
@@ -201,8 +201,8 @@ rule_frameUpdate_decomposition = "set-frameUpdate{ExplicitVarSizeWithMarker}" `n
 
                 (kPat, k) <- quantifiedVar
 
-                let nbOlds = Constant $ ConstantInt $ genericLength oldFocus
-                let nbNews = Constant $ ConstantInt $ genericLength newFocus
+                let nbOlds = fromInt $ genericLength oldFocus
+                let nbNews = fromInt $ genericLength newFocus
 
                 -- keep everything out of focus unchanged
                 let freezeFrameCons =

@@ -11,11 +11,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Type
 import Conjure.Language.TypeOf
--- import Conjure.Language.Pretty
 
 
 resolveNamesMulti :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => [Model] -> m [Model]

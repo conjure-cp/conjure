@@ -300,8 +300,8 @@ rule_frameUpdate_decomposition = "set-frameUpdate{Explicit}" `namedRule` theRule
                                                 + catchUndef(&contiguousCounts[(&offsets[&k-1] - toInt(&k_is_b)) + &k], 0)
                             |]
 
-                let nbOlds = Constant $ ConstantInt $ genericLength oldFocus
-                let nbNews = Constant $ ConstantInt $ genericLength newFocus
+                let nbOlds = fromInt $ genericLength oldFocus
+                let nbNews = fromInt $ genericLength newFocus
 
                 -- keep everything out of focus unchanged
                 let freezeFrameCons =
@@ -339,14 +339,14 @@ rule_frameUpdate_decomposition = "set-frameUpdate{Explicit}" `namedRule` theRule
                             ] ++
                             [ Declaration (FindOrGiven LocalFind contiguousCountsPat
                                     (DomainMatrix oldIndex
-                                        (DomainInt [RangeBounded
-                                                        (Constant $ ConstantInt 0)
-                                                        (Constant $ ConstantInt $ genericLength focusNames_a)])))
+                                        (DomainInt AnyTag [RangeBounded
+                                                        0
+                                                        (fromInt $ genericLength focusNames_a)])))
                             , Declaration (FindOrGiven LocalFind offsetsPat
                                     (DomainMatrix oldIndex
-                                        (DomainInt [RangeBounded
-                                                        (Constant $ ConstantInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
-                                                        (Constant $ ConstantInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
+                                        (DomainInt AnyTag [RangeBounded
+                                                        (fromInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
+                                                        (fromInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
                             ] ++
                             [ SuchThat
                                 [ make opAllDiff (fromList [auxVar | (_,_,auxVar,_) <- focusNames_a])
