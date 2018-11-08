@@ -1,13 +1,14 @@
 module Conjure.UI.ValidateSolution ( validateSolution ) where
 
 -- conjure
+import Conjure.Bug
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( mostDefined )
+import Conjure.Language.Type 
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
@@ -82,11 +83,11 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 , "Statement:" <+> pretty st
                 ]
         Declaration (Letting nm val) -> modify ((nm, val) :)
-        Declaration (GivenDomainDefnEnum nm) ->
+        Declaration (GivenDomainDefnEnum nm@(Name nmText)) ->
             case [ val | Declaration (LettingDomainDefnEnum nm2 val) <- mStatements essenceParam, nm == nm2 ] of
                 [val] -> do
-                    let domain = mkDomainIntB 1 (fromInt (genericLength val))
-                    let values = [ (n, Constant (ConstantInt i))
+                    let domain = mkDomainIntBTagged (TagEnum nmText) 1 (fromInt (genericLength val))
+                    let values = [ (n, Constant (ConstantInt (TagEnum nmText) i))
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
@@ -95,17 +96,21 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 vals  -> userErr1 $ vcat [ "Multiple values for enum domain" <+> pretty nm <+> "in the parameter file."
                                          , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
                                          ]
-        Declaration (LettingDomainDefnEnum nm val) -> do
-                    let domain = mkDomainIntB 1 (fromInt (genericLength val))
-                    let values = [ (n, Constant (ConstantInt i))
+        Declaration GivenDomainDefnEnum{} ->
+            bug "validateSolution GivenDomainDefnEnum, some other type of Name"
+        Declaration (LettingDomainDefnEnum nm@(Name nmText) val) -> do
+                    let domain = mkDomainIntBTagged (TagEnum nmText) 1 (fromInt (genericLength val))
+                    let values = [ (n, Constant (ConstantInt (TagEnum nmText) i))
                                  | (n, i) <- zip val allNats
                                  ]
                     modify (((nm, Domain domain) : values) ++)
-        Declaration (LettingDomainDefnUnnamed nm _) ->
+        Declaration (LettingDomainDefnEnum{}) ->
+            bug "validateSolution LettingDomainDefnEnum, some other type of Name"
+        Declaration (LettingDomainDefnUnnamed nm@(Name nmText) _) ->
             case [ nms | Declaration (LettingDomainDefnEnum nm2 nms) <- mStatements essenceSolution , nm == nm2 ] of
                 [nms] -> do
-                    let domain = mkDomainIntB 1 (fromInt (genericLength nms))
-                    let values = [ (n, Constant (ConstantInt i))
+                    let domain = mkDomainIntBTagged (TagUnnamed nmText) 1 (fromInt (genericLength nms))
+                    let values = [ (n, Constant (ConstantInt (TagUnnamed nmText) i))
                                  | (i,n) <- zip allNats nms
                                  ]
                     modify (((nm, Domain domain) : values) ++)
@@ -114,6 +119,8 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                 vals  -> userErr1 $ vcat [ "Multiple values for unnamed domain" <+> pretty nm <+> "in the solution file."
                                          , "Values:" <++> vcat (map (prettyList prBraces ",") vals)
                                          ]
+        Declaration (LettingDomainDefnUnnamed{}) ->
+            bug "validateSolution LettingDomainDefnUnnamed, some other type of Name"
         SearchOrder{} -> return ()
         SearchHeuristic{} -> return ()
         Where xs -> do

@@ -192,7 +192,7 @@ typeCheckModel model1 = do
         domainIntERecover d@(DomainIntE x) = do
             ty <- typeOf x
             return $ case ty of
-                TypeInt -> DomainInt [RangeSingle x]
+                TypeInt t -> DomainInt t [RangeSingle x]
                 _       -> d
         domainIntERecover d = return d
     statements4 <- transformBiM domainIntERecover statements3

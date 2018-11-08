@@ -22,7 +22,7 @@ instance BinaryOperator (OpDotLt x) where
     opLexeme _ = L_DotLt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpDotLt x) where
-    typeOf p@(OpDotLt a b) = sameToSameToBool p a b []
+    typeOf p@(OpDotLt a b) = sameToSameToBool p a b [] (const True)
 
 instance EvaluateOp OpDotLt where
     evaluateOp (OpDotLt x y) = return $ ConstantBool $ x < y

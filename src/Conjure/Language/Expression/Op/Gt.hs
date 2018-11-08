@@ -22,8 +22,12 @@ instance BinaryOperator (OpGt x) where
     opLexeme _ = L_Gt
 
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
-    typeOf p@(OpGt a b) = sameToSameToBool p a b
-                                [TypeBool, TypeInt, TypeEnum "?"]
+    typeOf p@(OpGt a b) = sameToSameToBool p a b [] $ \case
+        TypeBool -> True
+        TypeInt NoTag -> True
+        TypeInt AnyTag -> True
+        TypeInt TagEnum{} -> True
+        _ -> False
 
 instance EvaluateOp OpGt where
     evaluateOp (OpGt x y) = return $ ConstantBool $ x > y

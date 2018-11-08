@@ -12,7 +12,7 @@ import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( Type(..), typeUnify )
+import Conjure.Language.Type ( Type(..))
 import Conjure.Language.TypeOf ( typeOf )
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
@@ -79,8 +79,8 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
 
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
-                    if innerType `typeUnify` TypeInt
-                        then do
+                    case innerType of
+                      TypeInt _ ->  do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- for list
@@ -90,7 +90,8 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                             , &jPat <- &i
                                             ])
                                         |]
-                        else do
+
+                      _ -> do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- for list

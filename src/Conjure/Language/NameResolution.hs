@@ -12,6 +12,7 @@ import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 
@@ -100,11 +101,12 @@ resolveStatement st =
                     x' <- resolveX x
                     modify ((nm, Alias (Domain (DomainUnnamed nm x'))) :)
                     return (Declaration (LettingDomainDefnUnnamed nm x'))
-                LettingDomainDefnEnum _ nms -> do
-                    modify ( [ (nm, Alias (Constant (ConstantInt i)))
+                LettingDomainDefnEnum (Name ename) nms -> do
+                    modify ( [ (nm, Alias (Constant (ConstantInt (TagEnum ename) i)))
                              | (nm, i) <- zip nms [1..]
                              ] ++)
                     return st
+                LettingDomainDefnEnum{} -> bug "resolveStatement, Name"
                 GivenDomainDefnEnum{}       -> return st             -- ignoring
         SearchOrder xs -> SearchOrder <$> mapM resolveSearchOrder xs
         SearchHeuristic nm -> do

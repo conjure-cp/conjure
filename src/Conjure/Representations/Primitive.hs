@@ -15,7 +15,7 @@ primitive = Representation
         case domain of
             DomainBool -> [DomainBool]
             DomainIntE x -> [DomainIntE x]
-            DomainInt rs -> [DomainInt rs]
+            DomainInt t rs -> [DomainInt t rs]
             _ -> []
     , rDownD      = const $ return Nothing
     , rStructural = \ _ _ _ -> return (\ _ -> return [] )

@@ -90,7 +90,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     unnamedsAsEnumDomains <- forM unnameds $ \ (n, s') -> do
         s <- instantiateExpression eprimeLettings s'
         case s of
-            ConstantInt size -> return $
+            ConstantInt _ size -> return $
                 let nms = [ mconcat [n, "_", Name (T.pack (show i))]
                           | i <- [1 .. size]
                           ]

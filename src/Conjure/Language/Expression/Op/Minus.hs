@@ -23,18 +23,23 @@ instance BinaryOperator (OpMinus x) where
 
 instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
     typeOf p@(OpMinus a b) = sameToSameToSame p a b
-                                [ TypeInt
-                                , TypeSet TypeAny
-                                , TypeMSet TypeAny
-                                , TypeFunction TypeAny TypeAny
-                                , TypeRelation [TypeAny]
-                                ]
+        [ TypeSet TypeAny
+        , TypeMSet TypeAny
+        , TypeFunction TypeAny TypeAny
+        , TypeRelation [TypeAny]
+        ]
+        (\case
+            TypeInt NoTag -> True
+            TypeInt AnyTag -> True
+            TypeInt TagEnum{} -> True
+            _ -> False)
 
 instance EvaluateOp OpMinus where
     evaluateOp p | any isUndef (childrenBi p) = do
         ty <- typeOf p
         return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMinus (ConstantInt a) (ConstantInt b)) = return $ ConstantInt (a - b)
+    evaluateOp (OpMinus (ConstantInt _ a) (ConstantInt _ b))
+      = return $ ConstantInt AnyTag (a - b)
     evaluateOp (OpMinus (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         let outs =
                 [ a

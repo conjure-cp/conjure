@@ -41,7 +41,7 @@ sanityChecks model = do
         -- check for binary relation attrobutes
         checkDomain :: MonadWriter [Doc] m => Bool -> Maybe Statement -> Domain () Expression -> m ()
         checkDomain checkForInfinity mstmt domain = case domain of
-            DomainInt rs | checkForInfinity && isInfinite rs -> recordErr
+            DomainInt _ rs | checkForInfinity && isInfinite rs -> recordErr
                         [ "Infinite integer domain."
                         , "Context:" <++> maybe (pretty domain) pretty mstmt
                         ]
