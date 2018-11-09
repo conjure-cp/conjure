@@ -34,9 +34,9 @@ class Variable {
 
     public getPrettyRange() {
 
-        let t : string = "UNKNOWN";
+        let t: string = "UNKNOWN";
 
-        if (this.type === Type.Int){
+        if (this.type === Type.Int) {
             t = "int";
         }
 
@@ -441,7 +441,20 @@ export default class Parser {
     }
 
     public parseJson() {
+
+        const Stopwatch = require("node-stopwatch").Stopwatch;
+
+        var stopwatch = Stopwatch.create();
+        stopwatch.start();
+
         let obj = JSON.parse(this.jsonFile.toString());
+
+        stopwatch.stop();
+
+        console.log("JSON.PARSE: " + stopwatch.elapsedMilliseconds);
+
+        stopwatch.reset();
+        stopwatch.restart();
 
         obj = rename(obj, (key: any) => {
             if (key === 'Node') { return 'name'; }
@@ -451,8 +464,11 @@ export default class Parser {
         let treeviewDomainMap = {};
         let normalDomainMap = {};
         this.parseTree(obj, treeviewDomainMap, normalDomainMap);
-        console.log(treeviewDomainMap);
+        // console.log(treeviewDomainMap);
         // console.log(normalDomainMap);
+
+        stopwatch.stop();
+        console.log("OTHER: " + stopwatch.elapsedMilliseconds);
 
         return {
             "tree": obj,

@@ -1,7 +1,7 @@
 'use strict';
-import fs = require('fs');
+// import fs = require('fs');
 import * as path from 'path';
-var glob = require('glob');
+// var glob = require('glob');
 
 // Case insensitive
 
@@ -11,7 +11,7 @@ var glob = require('glob');
 
 const { spawn } = require('child_process');
 import * as vscode from 'vscode';
-import { fstat } from 'fs';
+// import { fstat } from 'fs';
 
 const ESSENCE = "essence";
 
@@ -169,7 +169,7 @@ export default class ConjureHelper {
             return;
         }
 
-        let dir = path.dirname(doc.uri.path);
+        // let dir = path.dirname(doc.uri.path);
 
         // let args = ['solve', '--channelling=no', '--responses=1', '--copy-solutions=0',
         //     '-o ' + dir, doc.uri.path, '--solver-options',

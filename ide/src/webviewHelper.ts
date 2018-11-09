@@ -60,36 +60,39 @@ export default class WebviewHelper {
 
         // let testDir = "/home/tom/Downloads";
 
-        let eprime = (fs.readFileSync(testDir + "/conjure-output/model000001.eprime", 'utf8'));
-        let minion = (fs.readFileSync(testDir + "/conjure-output/model000001.eprime-minion", 'utf8'));
-        let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+        if (testDir) {
 
-        let parser = new Parser(json, eprime, minion);
-        let contents = parser.parseJson();
-        // return;
+            let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
+            let minion = (fs.readFileSync(testDir + "/model000001-" + path.basename(testDir).split("~")[1] + ".eprime-minion", 'utf8'));
+            let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+
+            let parser = new Parser(json, eprime, minion);
+            let contents = parser.parseJson();
+            // return;
+
+            // Get path to resource on disk
+
+            // let contents = await this.getFile();
+
+            const panel = vscode.window.createWebviewPanel(
+                'treeVis', // Identifies the type of the webview. Used internally
+                "Tree Visualiser", // Title of the panel displayed to the user
+                vscode.ViewColumn.One, // Editor column to show the new webview panel in.
+                { "enableScripts": true } // Webview options. More on these later.
+            );
+
+            panel.webview.html = WebviewHelper.getWebContent();
 
 
-        // Get path to resource on disk
+            panel.webview.onDidReceiveMessage(message => {
+                switch (message.command) {
+                    case 'ready':
+                        vscode.window.showErrorMessage(message.text);
+                        panel.webview.postMessage(contents);
+                }
+            }, undefined, context.subscriptions);
 
-        // let contents = await this.getFile();
-
-        const panel = vscode.window.createWebviewPanel(
-            'treeVis', // Identifies the type of the webview. Used internally
-            "Tree Visualiser", // Title of the panel displayed to the user
-            vscode.ViewColumn.One, // Editor column to show the new webview panel in.
-            { "enableScripts": true } // Webview options. More on these later.
-        );
-
-        panel.webview.html = WebviewHelper.getWebContent();
-
-
-        panel.webview.onDidReceiveMessage(message => {
-            switch (message.command) {
-                case 'ready':
-                    vscode.window.showErrorMessage(message.text);
-                    panel.webview.postMessage(contents);
-            }
-        }, undefined, context.subscriptions);
+        }
 
 
         //     panel.webview.postMessage({ message: contents });
@@ -111,8 +114,8 @@ export default class WebviewHelper {
         const cssUri = css.with({ scheme: 'vscode-resource' });
         const scriptPath = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'out/', 'bundle.js'));
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
-        const explorer = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/scripts', 'explorer.js'));
-        const explorerUri = explorer.with({ scheme: 'vscode-resource' });
+        // const explorer = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/scripts', 'explorer.js'));
+        // const explorerUri = explorer.with({ scheme: 'vscode-resource' });
         const treeView = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'node_modules/bootstrap-treeview/dist', 'bootstrap-treeview.min.js'));
         const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
 
@@ -123,7 +126,7 @@ export default class WebviewHelper {
         const jspanelJS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
         const jquery = "http://code.jquery.com/jquery-2.1.3.min.js";
-        const mouseTrap ="https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
+        const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
 
 
 
