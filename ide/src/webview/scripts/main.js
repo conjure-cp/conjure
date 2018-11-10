@@ -7,10 +7,12 @@ let colours = require('./util/colours.js');
 
     vscode.postMessage({
         command: 'ready',
-
     })
 
     window.addEventListener('message', event => {
+
+        $("#tree").empty();
+        $("#controls").empty();
 
         const root = event.data.tree; // The JSON data our extension sent
         const treeviewDomainMap = event.data.treeviewDomainMap; // The JSON data our extension sent
@@ -29,6 +31,11 @@ let colours = require('./util/colours.js');
         Mousetrap.bind('r', goRight, 'keydown')
         Mousetrap.bind('l', goLeft, 'keydown')
         Mousetrap.bind('u', goUp, 'keydown')
+        Mousetrap.bind('t', () => { nodeToggle(nodeMap[selectedNode]) }, 'keydown')
+        Mousetrap.bind('e', expander)
+        Mousetrap.bind('c', collapser)
+        Mousetrap.bind('r', () => {vscode.postMessage({command: 'ready',})})
+
 
         function goUp() {
 
@@ -71,26 +78,43 @@ let colours = require('./util/colours.js');
             }
         }
 
-        function next() {
-            selectedNode = (selectedNode + 1) % (Object.keys(treeviewDomainMap).length + 1);
-            if (selectedNode == 0) {
-                selectedNode++;
+        function validDest(minionID) {
+            // console.log(d3.select("#node" + minionID));
+            if (d3.select("#node" + minionID)[0][0]) {
+                if (minionID > 0) {
+                    return true;
+                }
             }
-            selectNode(selectedNode);
-            focusNode(nodeMap[selectedNode]);
+            return false;
+        }
+
+        function next() {
+            let temp = (selectedNode + 1) % (Object.keys(treeviewDomainMap).length + 1);
+            if (validDest(temp)) {
+                selectedNode = temp;
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
+            }
+            else {
+                if (nodeMap[selectedNode]._children) {
+                    nodeMap[selectedNode].children = nodeMap[selectedNode]._children;
+                    nodeMap[selectedNode]._children = null;
+                    update(nodeMap[selectedNode]);
+                    next();
+                }
+            }
         }
 
         function previous() {
-            selectedNode = (selectedNode - 1) % (Object.keys(treeviewDomainMap).length + 1);
-            if (selectedNode == 0) {
-                selectedNode = Object.keys(treeviewDomainMap).length;
+            let temp = (selectedNode - 1) % (Object.keys(treeviewDomainMap).length + 1);
+            if (validDest(temp)) {
+                selectedNode = temp;
+                selectNode(selectedNode);
+                focusNode(nodeMap[selectedNode]);
             }
-            selectNode(selectedNode);
-            focusNode(nodeMap[selectedNode]);
         }
 
         // Add controls
-
 
         d3.select("#controls")
             .append("input")
@@ -315,6 +339,8 @@ let colours = require('./util/colours.js');
                         let o = { x: source.x0, y: source.y0 };
                         return diagonal({ source: o, target: o });
                     }
+                    let o = { x: source.x, y: source.y };
+                    return diagonal({ source: o, target: o });
                 })
             // Transition links to their new position.
             link.transition()
@@ -532,17 +558,16 @@ let colours = require('./util/colours.js');
             walkTree(root, true);
             update(root);
             focusNode(root);
+            selectNode(root.minionID);
         }
 
         function expander() {
             walkTree(root, false);
             update(root);
-            focusNode(root);
         }
 
         update(root);
-        // selectNode(root.minionID);
-        selectNode(1);
-        focusNode(nodeMap[1]);
+        selectNode(root.minionID);
+        focusNode(nodeMap[root.minionID]);
     });
 }())

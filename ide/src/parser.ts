@@ -52,64 +52,58 @@ class Expression extends Variable {
     }
 }
 
-class SetVar extends Variable {
 
-    public table: any | undefined;
-    private excluded: number[] = [];
-    private included: number[] = [];
-
-
-    // constructor(name : string, range : string, type : string, size : number){
-    constructor(v: Variable) {
-        super(v.name, v.range, v.type);
-        this.table = {};
-    }
-
-    private getProperties() {
-
-        this.excluded = [];
-        this.included = [];
-
-        for (const key in this.table) {
-            switch (this.table[key]) {
-                case Status.Excluded:
-                    this.excluded.push(Number(key));
-                    break;
-                case Status.Included:
-                    this.included.push(Number(key));
-                    break;
-                default:
-                    break;
-            }
-        }
-    }
-
+abstract class SetVar extends Variable {
+    public max: number = -1;
+    public min: number = -1;
+    protected excluded: number[] = [];
+    protected included: number[] = [];
+    public abstract getType(): String;
     public getIncluded() {
-        this.getProperties();
         return "int(" + this.included + ")";
     }
 
     public getExcluded() {
-        this.getProperties();
         return "int(" + this.excluded + ")";
     }
-
-    public getCardinality(): any {
-        this.getProperties();
-        let maxLength = (Object.keys(this.table).length - this.excluded.length);
+    public getCardinality() {
+        let maxLength = this.max - this.excluded.length;
+        let min = this.min + this.included.length;
         if (maxLength !== this.included.length) {
-            return "int(" + this.included.length + ".." + maxLength + ")";
+            return "int(" + min + ".." + maxLength + ")";
         }
         else {
             return "int(" + maxLength + ")";
         }
     }
+    public include(n: number) {
+        this.included.push(n);
+    }
+
+    public exclude(n: number) {
+        this.excluded.push(n);
+    }
 }
 
-enum Status {
-    Included,
-    Excluded,
-    Unknown
+class DummySet extends SetVar {
+
+    constructor(v: Variable) {
+        super(v.name, v.range, v.type);
+    }
+    public getType() {
+        return "ExplicitVarSizeWithDummy";
+    }
+}
+
+class OccurenceSet extends SetVar {
+
+    constructor(v: Variable) {
+        super(v.name, v.range, v.type);
+    }
+
+    public getType() {
+        return "Occurence";
+    }
 }
 
 enum Type {
@@ -120,7 +114,7 @@ enum Type {
 
 export default class Parser {
 
-    // public parseJson(jsonFile: string, esenceFile: string, eprimeFile: string, minionFile: string, ) {
+    public setSeen: Type | undefined;
     public auxMap: any;
     public jsonFile: string;
     public essenceFile: string | undefined;
@@ -198,7 +192,7 @@ export default class Parser {
             if (element instanceof SetVar) {
                 let set = <SetVar>element;
                 obj.text = set.name;
-                obj.nodes.push({ "text": "Type", "nodes": [{ "text": set.type }] });
+                obj.nodes.push({ "text": "Type", "nodes": [{ "text": set.getType() }] });
                 obj.nodes.push({ "text": "Cardinality", "nodes": [{ "text": set.getCardinality() }] });
                 obj.nodes.push({ "text": "Excluded", "nodes": [{ "text": set.getExcluded() }] });
                 obj.nodes.push({ "text": "Included", "nodes": [{ "text": set.getIncluded() }] });
@@ -279,20 +273,41 @@ export default class Parser {
                 variable.type = Type.Int;
             }
             if (varObj[1].DomainSet) {
-                variable = new SetVar(variable);
                 let array = varObj[1].DomainSet;
+                let d = array[2].DomainInt;
+                let r = d[0];
+                let b = r.RangeBounded;
+                let lower = b[0];
+                let upper = b[1];
+                let min = lower.Constant.ConstantInt;
+                let max = upper.Constant.ConstantInt;
+
+                let set = undefined;
+
                 if (array[0].Set_Occurrence) {
-                    variable.type = Type.Occurrence;
+                    set = new OccurenceSet(variable);
+                    this.setSeen = Type.Occurrence;
                 }
+
                 if (array[0].Set_ExplicitVarSizeWithDummy) {
-                    variable.type = Type.ExplicitVarSizeWithDummy;
+                    set = new DummySet(variable);
+                    this.setSeen = Type.ExplicitVarSizeWithDummy;
+                }
+
+                if (set) {
+                    set.min = min;
+                    set.max = max;
+                    variable = set;
+                }
+                else {
+                    throw new Error("Unsupported Set!");
                 }
             }
 
             map[variable.name] = variable;
         }
 
-        // console.log(map);
+        console.log(map);
         return map;
     }
 
@@ -342,8 +357,10 @@ export default class Parser {
             }
 
             if (this.jsonAux.test(key)) {
-                variable.name = math.simplify(this.parseAuxOccurence(key)).toString();
-                map[variable.name] = new Expression(variable);
+                if (this.setSeen !== Type.ExplicitVarSizeWithDummy) {
+                    variable.name = math.simplify(this.parseAuxOccurence(key)).toString();
+                    map[variable.name] = new Expression(variable);
+                }
             }
             else {
                 variable.name = key;
@@ -354,27 +371,42 @@ export default class Parser {
 
                     let setName = split[0];
 
-                    if (setName in map) {
-                        let set = <SetVar>map[setName];
-                        let number = split[split.length - 1];
+                    if (variable.range) {
+                        let splits = variable.range.split("..");
 
-                        if (variable.range) {
+                        if (setName in map) {
 
-                            let splits = variable.range.split("..");
-
-                            if (splits.length === 1) {
-                                // console.log(variable.range);
-                                if (variable.range === "(0)") {
-                                    set.table[number] = Status.Excluded;
-                                }
-                                else {
-                                    set.table[number] = Status.Included;
+                            if (map[setName] instanceof DummySet) {
+                                let set = <DummySet>map[setName];
+                                if (splits.length === 1) {
+                                    let discretePossibilities = variable.range.split(",");
+                                    if (discretePossibilities.length === 1) {
+                                        let num = Number(discretePossibilities[0].substring(1, discretePossibilities[0].length - 1));
+                                        if (num === set.max + 1) {
+                                            set.exclude(Number(split[split.length - 1]));
+                                        }
+                                        else {
+                                            set.include(num);
+                                        }
+                                    }
                                 }
                             }
-                            else {
-                                set.table[number] = Status.Unknown;
+
+                            if (map[setName] instanceof OccurenceSet) {
+
+                                let set = <OccurenceSet>map[setName];
+                                let number = Number(split[split.length - 1]);
+
+                                if (splits.length === 1) {
+                                    if (variable.range === "(0)") {
+                                        set.exclude(number);
+                                    }
+                                    else {
+                                        set.include(number);
+                                    }
+                                }
+                                // map[setName] = set;
                             }
-                            map[setName] = set;
                         }
                     }
                 }
@@ -396,7 +428,6 @@ export default class Parser {
         }
 
         let domainArray: Domain[] = [];
-        let dict: any = {};
         let sorted = Object.keys(obj).sort();
 
         for (let i = 0; i < sorted.length; i++) {
@@ -411,39 +442,11 @@ export default class Parser {
                 }
             }
 
-            let intermediate: string = key;
-            let jsonAux = new RegExp('aux[0-9]+');
-
-            if (jsonAux.test(key)) {
-                let minoinAux = new RegExp(key + ' #(.*)');
-                let match = minoinAux.exec(this.minionFile);
-                if (match) {
-                    intermediate = match[1];
-                    let newMatches = jsonAux.exec(intermediate);
-                    if (newMatches) {
-                        for (let i = 0; i < newMatches.length; i++) {
-                            if (newMatches[i] in dict) {
-                                intermediate = intermediate.replace(newMatches[i], dict[newMatches[i]]);
-                            }
-                        }
-                    }
-                    else {
-                        dict[key] = intermediate;
-                    }
-                }
-                entry.name = math.simplify(intermediate).toString();
-                console.log(entry.name);
-            }
-            else {
-                entry.name = key;
-            }
-
+            entry.name = key;
             entry.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
             domainArray.push(entry);
         }
 
-
-        // console.log(domainArray);
         return domainArray;
     }
 
@@ -483,7 +486,6 @@ export default class Parser {
 
         if (obj.right && !empty(obj.right)) {
             obj.children.push(obj.right);
-
         }
 
         delete obj.right;
