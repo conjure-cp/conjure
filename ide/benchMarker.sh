@@ -5,9 +5,9 @@ for d in ~/EssenceCatalog/problems/*; do
 
         for tree in $trees; do
 
-            t=$( { /usr/bin/time -f "%U" node ~/conjure/ide/out/benchmarker.js $tree; } 2>&1 )
+            t=$( { /usr/bin/time -f "%U" node ~/conjure/ide/src/benchmarker.js $tree; } 2>&1 )
             s=$(stat --printf="%s" $tree)
-            
+
             echo $s,$t
         done
 
