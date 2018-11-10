@@ -2,7 +2,7 @@ var browserify = require('browserify');
 var gulp = require('gulp');
 var source = require('vinyl-source-stream');
 
-let mainPath ='./src/webview/scripts/test.js';
+let mainPath ='./src/webview/scripts/main.js';
 
 gulp.task('browserify', function() {
     return browserify(mainPath, {"debug": true})

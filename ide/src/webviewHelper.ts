@@ -56,14 +56,20 @@ export default class WebviewHelper {
         WebviewHelper.context = context;
 
 
-        let testDir = await this.getFolder();
+        // let testDir = await this.getFolder();
 
-        // let testDir = "/home/tom/Downloads";
+        let testDir = "/home/tom/Documents/sh/essence/conjure-output";
 
         if (testDir) {
 
+            let paramPart = "";
+            let splitted = path.basename(testDir).split("~");
+            if (splitted.length > 1){
+                paramPart = "-" + splitted[1];
+            }
+
             let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-            let minion = (fs.readFileSync(testDir + "/model000001-" + path.basename(testDir).split("~")[1] + ".eprime-minion", 'utf8'));
+            let minion = (fs.readFileSync(testDir + "/model000001" +  paramPart + ".eprime-minion", 'utf8'));
             let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
 
             let parser = new Parser(json, eprime, minion);

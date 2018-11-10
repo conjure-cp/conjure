@@ -7,6 +7,7 @@ let colours = require('./util/colours.js');
 
     vscode.postMessage({
         command: 'ready',
+
     })
 
     window.addEventListener('message', event => {
@@ -14,6 +15,7 @@ let colours = require('./util/colours.js');
         const root = event.data.tree; // The JSON data our extension sent
         const treeviewDomainMap = event.data.treeviewDomainMap; // The JSON data our extension sent
         const normalDomainMap = event.data.normalDomainMap; // The JSON data our extension sent
+        const simpleDomainMap = event.data.simpleDomainMap; // The JSON data our extension sent
 
         let parentMap = {};
         let nodeMap = {};
@@ -88,6 +90,8 @@ let colours = require('./util/colours.js');
         }
 
         // Add controls
+
+
         d3.select("#controls")
             .append("input")
             .attr("type", "button")
@@ -133,6 +137,21 @@ let colours = require('./util/colours.js');
                 nodeToggle(nodeMap[selectedNode]);
             });
 
+        d3.select("#controls")
+            .append('label')
+            .text("Pretty")
+            .append("input")
+            .attr("checked", true)
+            .attr("type", "checkbox")
+            .attr("id", "check")
+            .on("change", () => {
+                console.log("Changed!")
+                showDomains(selectedNode)
+            })
+        // .attr("onClick", () => {
+        //     console.log("hello");
+        //     showDomains(selectedNode)
+        // });
 
         // set the dimensions and margins of the diagram
         let viewerWidth = $(document).width();
@@ -260,7 +279,6 @@ let colours = require('./util/colours.js');
             nodeUpdate.select("text")
                 .style("fill-opacity", 1);
 
-
             // Transition exiting nodes to the parent's new position.
             let nodeExit = node.exit().transition()
                 .duration(duration)
@@ -320,101 +338,141 @@ let colours = require('./util/colours.js');
 
         function showDomains(minionID) {
 
-            let setAttributeList = ["Cardinality", "Excluded", "Included"];
+            let checked = (document.getElementById('check').checked);
+            panel.setHeaderTitle("Status at Node: " + minionID);
 
-            function unselectAll() {
-                let selected = treeView.treeview('getSelected');
-                selected.forEach(element => {
-                    treeView.treeview('unselectNode', [element, { silent: true }]);
-                });
-            }
+            if (checked) {
 
-            function selectVariable(diff, m) {
+                let setAttributeList = ["Cardinality", "Excluded", "Included"];
 
-                if (setAttributeList.includes(m.text)) {
-                    treeView.treeview('selectNode', [m.nodeId, { silent: true }]);
+                function unselectAll() {
+                    let selected = treeView.treeview('getSelected');
+                    selected.forEach(element => {
+                        treeView.treeview('unselectNode', [element, { silent: true }]);
+                    });
                 }
 
-                if (m.text in normalDomainMap[minionID]) {
+                function selectVariable(diff, m) {
 
-                    let variable = normalDomainMap[minionID][m.text];
-
-                    if (!("table" in variable)) {
+                    if (setAttributeList.includes(m.text)) {
                         treeView.treeview('selectNode', [m.nodeId, { silent: true }]);
                     }
-                }
 
-                if (!(typeof diff === 'string')) {
+                    if (m.text in normalDomainMap[minionID]) {
 
-                    for (const key in diff) {
-                        if (key != "_t") {
-                            selectVariable(diff[key], m[key]);
+                        let variable = normalDomainMap[minionID][m.text];
+
+                        if (!("table" in variable)) {
+                            treeView.treeview('selectNode', [m.nodeId, { silent: true }]);
+                        }
+                    }
+
+                    if (!(typeof diff === 'string')) {
+
+                        for (const key in diff) {
+                            if (key != "_t") {
+                                selectVariable(diff[key], m[key]);
+                            }
                         }
                     }
                 }
-            }
 
-            function selectChanged() {
+                function selectChanged() {
 
-                unselectAll();
+                    unselectAll();
 
-                if (minionID != 1) {
+                    if (minionID != 1) {
 
-                    let delta = jsondiffpatch.diff(treeviewDomainMap[minionID - 1], treeviewDomainMap[minionID]);
+                        let delta = jsondiffpatch.diff(treeviewDomainMap[minionID - 1], treeviewDomainMap[minionID]);
 
-                    if (delta) {
-                        selectVariable(delta, allTreeViewNodes);
+                        if (delta) {
+                            selectVariable(delta, allTreeViewNodes);
+                        }
                     }
                 }
+
+                let expandedNodes;
+                let treeView = $('#pane');
+
+
+                if (!init) {
+                    expandedNodes = treeView.treeview('getExpanded');
+                }
+
+                $("#pane").empty();
+
+                $('#pane').treeview({
+                    expandIcon: "glyphicon glyphicon-triangle-right",
+                    collapseIcon: "glyphicon glyphicon-triangle-bottom",
+                    color: "white",
+                    backColor: colours.bgColour,
+                    onhoverColor: "purple",
+                    borderColor: colours.bgColour,
+                    showBorder: false,
+                    showTags: true,
+                    highlightSelected: true,
+                    multiSelect: true,
+                    selectedColor: "black",
+                    selectedBackColor: "coral",
+                    data: treeviewDomainMap[minionID],
+                    onNodeSelected: function (event, node) {
+                        treeView.treeview('unselectNode', [node.nodeId, { silent: true }]);
+                        selectChanged();
+                        // console.log(node);
+                    },
+                    // onSearchComplete: (event, node) => {
+                    //     // console.log(node);
+                    // }
+                });
+
+                if (init) {
+                    treeView.treeview('expandAll', { levels: 10000000001, silent: true });
+                    expandedNodes = treeView.treeview('getExpanded');
+                    allTreeViewNodes = expandedNodes;
+                    init = false;
+                }
+
+                expandedNodes.forEach(element => {
+                    $('#pane').treeview('expandNode', [element.nodeId, { levels: 1, silent: true }]);
+                })
+
+                selectChanged();
             }
+            else {
+                function tabulate(data, columns) {
+                    var table = d3.select('#pane').append('table')
+                    var thead = table.append('thead')
+                    var tbody = table.append('tbody');
 
-            let expandedNodes;
-            let treeView = $('#pane');
+                    // append the header row
+                    thead.append('tr')
+                        .selectAll('th')
+                        .data(columns).enter()
+                        .append('th')
+                        .text(function (column) { return column; });
 
-            panel.setHeaderTitle("Status at Node: " + minionID);
+                    // create a row for each object in the data
+                    var rows = tbody.selectAll('tr')
+                        .data(data)
+                        .enter()
+                        .append('tr');
 
-            if (!init) {
-                expandedNodes = treeView.treeview('getExpanded');
+                    // create a cell in each row for each column
+                    var cells = rows.selectAll('td')
+                        .data((row) => {
+                            return columns.map((column) => {
+                                return { column: column, value: row[column] };
+                            });
+                        })
+                        .enter()
+                        .append('td')
+                        .text((d) => { return d.value; });
+
+                    return table;
+                }
+                $("#pane").empty();
+                tabulate(simpleDomainMap[minionID], ['name', 'range']);
             }
-
-            $("#pane").empty();
-
-            $('#pane').treeview({
-                expandIcon: "glyphicon glyphicon-triangle-right",
-                collapseIcon: "glyphicon glyphicon-triangle-bottom",
-                color: "white",
-                backColor: colours.bgColour,
-                onhoverColor: "purple",
-                borderColor: colours.bgColour,
-                showBorder: false,
-                showTags: true,
-                highlightSelected: true,
-                multiSelect: true,
-                selectedColor: "black",
-                selectedBackColor: "coral",
-                data: treeviewDomainMap[minionID],
-                onNodeSelected: function (event, node) {
-                    treeView.treeview('unselectNode', [node.nodeId, { silent: true }]);
-                    selectChanged();
-                    // console.log(node);
-                },
-                // onSearchComplete: (event, node) => {
-                //     // console.log(node);
-                // }
-            });
-
-            if (init) {
-                treeView.treeview('expandAll', { levels: 10000000001, silent: true });
-                expandedNodes = treeView.treeview('getExpanded');
-                allTreeViewNodes = expandedNodes;
-                init = false;
-            }
-
-            expandedNodes.forEach(element => {
-                $('#pane').treeview('expandNode', [element.nodeId, { levels: 1, silent: true }]);
-            })
-
-            selectChanged();
         }
 
         function selectNode(minionID) {

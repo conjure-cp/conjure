@@ -13,5 +13,6 @@ module.exports = jsPanel.create({
             return $(document).height() * 0.9;
         }
     },
-    content: '<div id="pane"> </div>'
+    content: `
+    <div id="pane"> </div>`
 });

@@ -388,12 +388,72 @@ export default class Parser {
         return map;
     }
 
-    public parseTree(obj: any, treeviewDomainMap: any, normalDomainMap: any) {
+    public parseDomainsSimple(obj: any) {
+
+        interface Domain {
+            name: string;
+            range: string;
+        }
+
+        let domainArray: Domain[] = [];
+        let dict: any = {};
+        let sorted = Object.keys(obj).sort();
+
+        for (let i = 0; i < sorted.length; i++) {
+
+            let entry: Domain = { "name": "", "range": "" };
+
+            let key = sorted[i];
+
+            for (let i = 0; i < obj[key].length; i++) {
+                if (!(obj[key][i][0] === obj[key][i][1])) {
+                    obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
+                }
+            }
+
+            let intermediate: string = key;
+            let jsonAux = new RegExp('aux[0-9]+');
+
+            if (jsonAux.test(key)) {
+                let minoinAux = new RegExp(key + ' #(.*)');
+                let match = minoinAux.exec(this.minionFile);
+                if (match) {
+                    intermediate = match[1];
+                    let newMatches = jsonAux.exec(intermediate);
+                    if (newMatches) {
+                        for (let i = 0; i < newMatches.length; i++) {
+                            if (newMatches[i] in dict) {
+                                intermediate = intermediate.replace(newMatches[i], dict[newMatches[i]]);
+                            }
+                        }
+                    }
+                    else {
+                        dict[key] = intermediate;
+                    }
+                }
+                entry.name = math.simplify(intermediate).toString();
+                console.log(entry.name);
+            }
+            else {
+                entry.name = key;
+            }
+
+            entry.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
+            domainArray.push(entry);
+        }
+
+
+        // console.log(domainArray);
+        return domainArray;
+    }
+
+    public parseTree(obj: any, treeviewDomainMap: any, normalDomainMap: any, simpleDomainMap: any) {
 
         obj["minionID"] = Number(obj["name"]);
         let domains = this.parseDomains(obj["Domains"]);
-        // console.log(domains);
         normalDomainMap[obj["minionID"]] = domains;
+        let simpleDomains = this.parseDomainsSimple(obj["Domains"]);
+        simpleDomainMap[obj["minionID"]] = simpleDomains;
         delete obj.Domains;
         let treeViewDomains = this.domainsToHierachy(Object.values(domains));
         treeviewDomainMap[obj["minionID"]] = treeViewDomains;
@@ -435,7 +495,7 @@ export default class Parser {
 
         else {
             obj.children.forEach((element: any) => {
-                this.parseTree(element, treeviewDomainMap, normalDomainMap);
+                this.parseTree(element, treeviewDomainMap, normalDomainMap, simpleDomainMap);
             });
         }
     }
@@ -463,17 +523,23 @@ export default class Parser {
 
         let treeviewDomainMap = {};
         let normalDomainMap = {};
-        this.parseTree(obj, treeviewDomainMap, normalDomainMap);
+        let simpleDomainMap = {};
+        this.parseTree(obj, treeviewDomainMap, normalDomainMap, simpleDomainMap);
         // console.log(treeviewDomainMap);
         // console.log(normalDomainMap);
 
         stopwatch.stop();
         console.log("OTHER: " + stopwatch.elapsedMilliseconds);
 
-        return {
+        let result = {
             "tree": obj,
             "treeviewDomainMap": treeviewDomainMap,
-            "normalDomainMap": normalDomainMap
+            "normalDomainMap": normalDomainMap,
+            "simpleDomainMap": simpleDomainMap
         };
+
+        console.log(result);
+
+        return result;
     }
 }
