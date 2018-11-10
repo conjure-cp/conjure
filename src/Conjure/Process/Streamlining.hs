@@ -25,9 +25,9 @@ streamliningToStdout model = do
 
     liftIO $ print $ prettyList prBraces ","
         [ (showStr $ show i) <> ":" <+> prBraces (vcat
-            [ showStr "onVariable:" <+> showStr (show (pretty nm))
-            , showStr "groups:"     <+> prettyList prBrackets "," (map showStr groups)
-            , showStr "constraint:" <+> (showStr $ map whitespace $ show $ pretty cons)
+            [ showStr "onVariable" <> ":" <+> showStr (show (pretty nm)) <> ","
+            , showStr "groups"     <> ":" <+> prettyList prBrackets "," (map showStr groups) <> ","
+            , showStr "constraint" <> ":" <+> (showStr $ map whitespace $ show $ pretty cons)
             ])
         | (i, (nm, (cons, groups))) <- zip allNats streamliners
         ]
