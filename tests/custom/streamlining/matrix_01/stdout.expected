@@ -1,48 +1,48 @@
-{"1": {"onVariable:" "a"
-       "groups:" ["IntOddEven"]
-       "constraint:" "and([a[q1] % 2 = 1 | q1 : int(1..3)])"},
- "2": {"onVariable:" "a"
-       "groups:" ["IntOddEven"]
-       "constraint:" "and([a[q1] % 2 = 0 | q1 : int(1..3)])"},
- "3": {"onVariable:" "a"
-       "groups:" ["IntLowHigh"]
-       "constraint:" "and([a[q1] < 1 + (10 - 1) / 2 | q1 : int(1..3)])"},
- "4": {"onVariable:" "a"
-       "groups:" ["IntLowHigh"]
-       "constraint:" "and([a[q1] > 1 + (10 - 1) / 2 | q1 : int(1..3)])"},
- "5": {"onVariable:" "a"
-       "groups:" ["IntOddEven"]
-       "constraint:" "|`int(1..3)`| / 2 = sum([toInt(a[q2] % 2 = 1) | q2 : int(1..3)])"},
- "6": {"onVariable:" "a"
-       "groups:" ["IntOddEven"]
-       "constraint:" "|`int(1..3)`| / 2 = sum([toInt(a[q2] % 2 = 0) | q2 : int(1..3)])"},
- "7": {"onVariable:" "a"
-       "groups:" ["IntLowHigh"]
-       "constraint:" "|`int(1..3)`| / 2 = sum([toInt(a[q2] < 1 + (10 - 1) / 2) | q2 : int(1..3)])"},
- "8": {"onVariable:" "a"
-       "groups:" ["IntLowHigh"]
-       "constraint:" "|`int(1..3)`| / 2 = sum([toInt(a[q2] > 1 + (10 - 1) / 2) | q2 : int(1..3)])"},
- "9": {"onVariable:" "a"
-       "groups:" ["IntOddEven"]
-       "constraint:" "1 >= sum([toInt(a[q3] % 2 = 1) | q3 : int(1..3)])"},
- "10": {"onVariable:" "a"
-        "groups:" ["IntOddEven"]
-        "constraint:" "1 >= sum([toInt(a[q3] % 2 = 0) | q3 : int(1..3)])"},
- "11": {"onVariable:" "a"
-        "groups:" ["IntLowHigh"]
-        "constraint:" "1 >= sum([toInt(a[q3] < 1 + (10 - 1) / 2) | q3 : int(1..3)])"},
- "12": {"onVariable:" "a"
-        "groups:" ["IntLowHigh"]
-        "constraint:" "1 >= sum([toInt(a[q3] > 1 + (10 - 1) / 2) | q3 : int(1..3)])"},
- "13": {"onVariable:" "a"
-        "groups:" ["IntOddEven"]
-        "constraint:" "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] % 2 = 1) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] % 2 = 1) | q4 : int(1..3)])"},
- "14": {"onVariable:" "a"
-        "groups:" ["IntOddEven"]
-        "constraint:" "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] % 2 = 0) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] % 2 = 0) | q4 : int(1..3)])"},
- "15": {"onVariable:" "a"
-        "groups:" ["IntLowHigh"]
-        "constraint:" "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] < 1 + (10 - 1) / 2) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] < 1 + (10 - 1) / 2) | q4 : int(1..3)])"},
- "16": {"onVariable:" "a"
-        "groups:" ["IntLowHigh"]
-        "constraint:" "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] > 1 + (10 - 1) / 2) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] > 1 + (10 - 1) / 2) | q4 : int(1..3)])"}}
+{"1": {"onVariable": "a",
+       "groups": ["IntOddEven"],
+       "constraint": "and([a[q1] % 2 = 1 | q1 : int(1..3)])"},
+ "2": {"onVariable": "a",
+       "groups": ["IntOddEven"],
+       "constraint": "and([a[q1] % 2 = 0 | q1 : int(1..3)])"},
+ "3": {"onVariable": "a",
+       "groups": ["IntLowHigh"],
+       "constraint": "and([a[q1] < 1 + (10 - 1) / 2 | q1 : int(1..3)])"},
+ "4": {"onVariable": "a",
+       "groups": ["IntLowHigh"],
+       "constraint": "and([a[q1] > 1 + (10 - 1) / 2 | q1 : int(1..3)])"},
+ "5": {"onVariable": "a",
+       "groups": ["IntOddEven"],
+       "constraint": "|`int(1..3)`| / 2 = sum([toInt(a[q2] % 2 = 1) | q2 : int(1..3)])"},
+ "6": {"onVariable": "a",
+       "groups": ["IntOddEven"],
+       "constraint": "|`int(1..3)`| / 2 = sum([toInt(a[q2] % 2 = 0) | q2 : int(1..3)])"},
+ "7": {"onVariable": "a",
+       "groups": ["IntLowHigh"],
+       "constraint": "|`int(1..3)`| / 2 = sum([toInt(a[q2] < 1 + (10 - 1) / 2) | q2 : int(1..3)])"},
+ "8": {"onVariable": "a",
+       "groups": ["IntLowHigh"],
+       "constraint": "|`int(1..3)`| / 2 = sum([toInt(a[q2] > 1 + (10 - 1) / 2) | q2 : int(1..3)])"},
+ "9": {"onVariable": "a",
+       "groups": ["IntOddEven"],
+       "constraint": "1 >= sum([toInt(a[q3] % 2 = 1) | q3 : int(1..3)])"},
+ "10": {"onVariable": "a",
+        "groups": ["IntOddEven"],
+        "constraint": "1 >= sum([toInt(a[q3] % 2 = 0) | q3 : int(1..3)])"},
+ "11": {"onVariable": "a",
+        "groups": ["IntLowHigh"],
+        "constraint": "1 >= sum([toInt(a[q3] < 1 + (10 - 1) / 2) | q3 : int(1..3)])"},
+ "12": {"onVariable": "a",
+        "groups": ["IntLowHigh"],
+        "constraint": "1 >= sum([toInt(a[q3] > 1 + (10 - 1) / 2) | q3 : int(1..3)])"},
+ "13": {"onVariable": "a",
+        "groups": ["IntOddEven"],
+        "constraint": "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] % 2 = 1) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] % 2 = 1) | q4 : int(1..3)])"},
+ "14": {"onVariable": "a",
+        "groups": ["IntOddEven"],
+        "constraint": "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] % 2 = 0) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] % 2 = 0) | q4 : int(1..3)])"},
+ "15": {"onVariable": "a",
+        "groups": ["IntLowHigh"],
+        "constraint": "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] < 1 + (10 - 1) / 2) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] < 1 + (10 - 1) / 2) | q4 : int(1..3)])"},
+ "16": {"onVariable": "a",
+        "groups": ["IntLowHigh"],
+        "constraint": "|`int(1..3)`| / 2 + 1 >= sum([toInt(a[q4] > 1 + (10 - 1) / 2) | q4 : int(1..3)]) /\\ |`int(1..3)`| / 2 - 1 <= sum([toInt(a[q4] > 1 + (10 - 1) / 2) | q4 : int(1..3)])"}}
