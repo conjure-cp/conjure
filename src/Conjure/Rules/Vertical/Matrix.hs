@@ -500,10 +500,10 @@ rule_Concatenate_Singleton = "matrix-concatenate-singleton" `namedRule` theRule 
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)            <- match opIndexing p
+        (matrix, indexer)              <- match opIndexing p
         (_, DomainInt _ ranges, elems) <- match matrixLiteral matrix
-        indexInts                    <- rangesInts ranges
-        indexerInt                   <- intOut "rule_MatrixIndexing" indexer
+        indexInts                      <- rangesInts ranges
+        indexerInt                     <- intOut "rule_MatrixIndexing" indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of

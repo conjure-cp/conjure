@@ -26,9 +26,12 @@ instance ( TypeOf x, Pretty x
         ty <- typeOf dom
         case ty of
             TypeInt NoTag -> return ty
+            TypeInt AnyTag -> return ty
             TypeInt (TagEnum _) -> return ty
             TypeEnum{} -> return ty
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside min:" <+> pretty ty
+                                       ]
     typeOf p@(OpMin x) = do
         ty <- typeOf x
         tyInner <- case ty of
@@ -41,6 +44,7 @@ instance ( TypeOf x, Pretty x
                                        ]
         case tyInner of
             TypeInt NoTag -> return ()
+            TypeInt AnyTag -> return ()
             TypeInt (TagEnum _) -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside min:" <+> pretty ty
@@ -49,18 +53,17 @@ instance ( TypeOf x, Pretty x
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p@(OpMin x)
+        | Just xs <- listOut x
+        , any isUndef xs =
+            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
-    evaluateOp (OpMin (DomainInConstant (DomainInt NoTag rs))) = do
+    evaluateOp (OpMin (DomainInConstant (DomainInt t rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef (TypeInt NoTag) "Empty collection in min"
-            else ConstantInt NoTag (minimum is)
-    evaluateOp (OpMin (DomainInConstant (DomainInt (TagEnum t) rs))) = do
-        is <- rangesInts rs
-        return $ if null is
-            then mkUndef (TypeInt (TagEnum t)) "Empty collection in min"
-            else ConstantInt (TagEnum t) (minimum is)
+            then mkUndef (TypeInt AnyTag) "Empty collection in min"
+            else ConstantInt t (minimum is)
     evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
         case xs of
             [] -> do
@@ -69,12 +72,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -84,12 +84,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp (OpMin coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -99,12 +96,9 @@ instance EvaluateOp OpMin where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt NoTag (minimum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMin 1") xs
-                        return $ ConstantInt (TagEnum t) (minimum is)
+                        return $ ConstantInt t (minimum is)
                     _ -> na "evaluateOp{OpMin}"
     evaluateOp op = na $ "evaluateOp{OpMin}" <+> pretty (show op)
 

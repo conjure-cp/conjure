@@ -901,7 +901,7 @@ instance Pretty a => Pretty (Range a) where
     pretty (RangeSingle x) = pretty x
     pretty (RangeLowerBounded x) = pretty x <> ".."
     pretty (RangeUpperBounded x) = ".." <> pretty x
-    pretty (RangeBounded x y) | show x == show y = pretty x
+    pretty (RangeBounded x y) | show (pretty x) == show (pretty y) = pretty x
     pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
 instance Pretty HasRepresentation where

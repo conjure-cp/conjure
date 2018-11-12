@@ -2,7 +2,7 @@
 
 module Conjure.Language.Type
     ( Type(..)
-    , IntTag(..), dropTag, addTag, containsTag
+    , IntTag(..), reTag
     , typeUnify
     , typesUnify
     , mostDefined
@@ -75,9 +75,10 @@ instance Pretty Type where
     pretty (TypePermutation x) = "permutation of" <+> pretty x
 
 
-data IntTag = NoTag
-            | TagEnum Text
-            | TagUnnamed Text
+data IntTag = NoTag                     -- was an integer in the input
+            | TagEnum Text              -- was an enum in the input
+            | TagUnnamed Text           -- was an unnamed in the input
+            | AnyTag                    -- only internally generated, unifies with any tag
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize IntTag
@@ -85,22 +86,16 @@ instance Hashable  IntTag
 instance ToJSON    IntTag where toJSON = genericToJSON jsonOptions
 instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
 
-dropTag :: Data a => a -> a
-dropTag = transformBi (const NoTag)
-
-addTag :: Data a => IntTag -> a -> a
-addTag t = transformBi (const t)
-
-containsTag :: (MonadFail m, Data a) => a -> m IntTag
-containsTag dat = return $ head $ universeBi dat 
+reTag :: Data a => IntTag -> a -> a
+reTag t = transformBi (const t)
 
 -- | Check whether two types unify or not.
 typeUnify :: Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-typeUnify (TypeInt t1) (TypeInt t2) = t1 == t2
-typeUnify (TypeEnum a) (TypeEnum b) = a == b || a == "?" || b == "?"    -- the "?" is a hack so sameToSameToBool works
+typeUnify (TypeInt t1) (TypeInt t2) = t1 == t2 || t1 == AnyTag || t2 == AnyTag
+typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
 typeUnify TypeTuple{} (TypeTuple [TypeAny]) = True
@@ -129,7 +124,7 @@ typeUnify (TypeSet a) (TypeSet b) = typeUnify a b
 typeUnify (TypeMSet a) (TypeMSet b) = typeUnify a b
 typeUnify (TypeFunction a1 a2) (TypeFunction b1 b2) = and (zipWith typeUnify [a1,a2] [b1,b2])
 typeUnify (TypeSequence a) (TypeSequence b) = typeUnify a b
-typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- also hacks to make sameToSameToBool work
+typeUnify (TypeRelation [TypeAny]) TypeRelation{} = True                -- hack to make sameToSameToBool work
 typeUnify TypeRelation{} (TypeRelation [TypeAny]) = True
 typeUnify (TypeRelation as) (TypeRelation bs) = (length as == length bs) && and (zipWith typeUnify as bs)
 typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
@@ -140,7 +135,7 @@ typeUnify _ _ = False
 typesUnify :: [Type] -> Bool
 typesUnify ts = and [ typeUnify i j | i <- ts, j <- ts ]
 
--- | Given a list of types return "the most defined" one in this list.
+-- | Given a list of types, return "the most defined" one in this list.
 --   This is to get rid of TypeAny's if there are any.
 --   Precondition: `typesUnify`
 mostDefined :: [Type] -> Type
@@ -150,6 +145,8 @@ mostDefined = foldr f TypeAny
         f TypeAny x = x
         f x TypeAny = x
         f _ x@TypeBool{} = x
+        f (TypeInt AnyTag) _ = TypeInt AnyTag       -- AnyTag is infectious
+        f _ (TypeInt AnyTag) = TypeInt AnyTag       -- AnyTag is infectious
         f _ x@TypeInt{} = x
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x

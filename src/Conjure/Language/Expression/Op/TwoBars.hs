@@ -25,6 +25,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
         ty <- typeOf a
         case ty of
             TypeInt NoTag   -> return ()
+            TypeInt AnyTag  -> return ()
             TypeList{}      -> return ()
             TypeSet{}       -> return ()
             TypeMSet{}      -> return ()
@@ -42,7 +43,7 @@ instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
         case x of
             -- absolute value
-            ConstantInt NoTag y                     -> return $ ConstantInt NoTag $ abs y
+            ConstantInt _ y                         -> return $ ConstantInt NoTag $ abs y
 
             -- cardinality of a constant
             (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt NoTag $ genericLength                    xs

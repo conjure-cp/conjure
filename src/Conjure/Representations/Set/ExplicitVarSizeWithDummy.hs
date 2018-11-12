@@ -6,7 +6,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithDummy ( setExplicitVarSize
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
-import Conjure.Language.TypeOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Representations.Internal
@@ -33,10 +32,8 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             _ -> domainSizeOf innerDomain
 
         calcDummyDomain :: Pretty r => Domain r Expression -> Domain r Expression
-        calcDummyDomain (DomainInt t [RangeBounded lb ub]) = 
-                let ut = addTag t ub
-                    u1 = addTag t [essence| 1 |]
-                 in DomainInt t $ addTag t [RangeBounded lb [essence| &ut +forced &u1 |]]
+        calcDummyDomain (DomainInt t [RangeBounded lb ub]) =
+                DomainInt t [RangeBounded lb [essence| &ub + 1 |]]
         calcDummyDomain dom@(DomainInt t ranges) =
             let dummyElem = calcDummyElem dom
             in  DomainInt t (ranges ++ [RangeSingle dummyElem])
@@ -45,8 +42,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
         calcDummyElem dom =
             let theMax = bugFail "calcDummyElem: maxOfDomain" (maxOfDomain dom)
-                tag    = bugFail "calcDummyElem: containsTag" (containsTag =<< typeOf dom) 
-            in  addTag tag [essence| &theMax +forced 1 |]
+            in  [essence| &theMax + 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
         calcDummyElemC (DomainInt _ []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
@@ -63,7 +59,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain@DomainInt{})) = do
             let domainWithDummy = calcDummyDomain innerDomain
-            maxSize <- dropTag <$> getMaxSize attrs innerDomain
+            maxSize <- getMaxSize attrs innerDomain
             return $ Just
                 [ ( outName domain name
                   , DomainMatrix
@@ -74,7 +70,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain) = do
-            maxSize <- dropTag <$> getMaxSize attrs innerDomain
+            maxSize <- getMaxSize attrs innerDomain
             let
                 dummyElem = calcDummyElem innerDomain
 
@@ -127,7 +123,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
               , domain@(DomainSet Set_ExplicitVarSizeWithDummy (SetAttr attrs) innerDomain)
               , ConstantAbstract (AbsLitSet constants)
               ) = do
-            maxSize <- dropTag <$> getMaxSize attrs innerDomain
+            maxSize <- getMaxSize attrs innerDomain
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of

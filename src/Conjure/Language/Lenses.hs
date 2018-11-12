@@ -1169,6 +1169,7 @@ constantInt _ =
     ( Constant . ConstantInt NoTag
     , \ p -> case p of
             (Constant (ConstantInt NoTag i)) -> return i
+            (Constant (ConstantInt AnyTag i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 
@@ -1491,6 +1492,23 @@ opLex _ =
         _ -> na ("Lenses.opLex:" <++> pretty p)
     )
 
+
+fixTHParsing :: Data a => a -> a
+fixTHParsing = transformBi f
+    where
+        f :: Expression -> Expression
+        -- This is for TH parsing.
+        -- Internally the integers we produce will have AnyTag
+        -- so they type-unify with a wide range of int-like types
+        f (Constant (ConstantInt NoTag c)) = Constant (ConstantInt AnyTag c)
+        f p =
+            case match opRelationProj p of
+                Just (func, [Just arg]) ->
+                    case typeOf func of
+                        Just TypeFunction{} -> make opImage func arg
+                        Just TypeSequence{} -> make opImage func arg
+                        _                   -> p
+                _ -> p
 
 fixRelationProj :: Data a => a -> a
 fixRelationProj = transformBi f

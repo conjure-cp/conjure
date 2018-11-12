@@ -98,7 +98,9 @@ intToIntToInt p a b = do
     tyb <- typeOf b
     case (tya, tyb) of
         (TypeInt aTag, TypeInt bTag)
-            | aTag == bTag -> return (TypeInt aTag)
+            | aTag == AnyTag -> return (TypeInt bTag)
+            | bTag == AnyTag -> return (TypeInt aTag)
+            | aTag == bTag   -> return (TypeInt aTag)
             | otherwise    ->  fail $ vcat
                 [ "When type checking:" <+> pretty p
                 , "Arguments have different tags."
@@ -128,12 +130,17 @@ boolToBoolToBool p a b = do
             ]
 
 
-sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> m Type
-sameToSameToBool p a b tys = do
+-- if acceptableTypes is null, use checkType
+-- if acceptableTypes is not null, either one of these is true or checkType
+sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
+sameToSameToBool p a b acceptableTypes checkType = do
     tyA <- typeOf a
     tyB <- typeOf b
     let tyAB = mostDefined [tyA,tyB]
-    case (tyA `typeUnify` tyB, null tys || any (typeUnify tyAB) tys) of
+    let allowed = if null acceptableTypes
+                    then checkType tyAB
+                    else checkType tyAB || any (typeUnify tyAB) acceptableTypes
+    case (tyA `typeUnify` tyB, allowed) of
         (True, True) -> return TypeBool
         (False, _) -> fail $ vcat
             [ "When type checking:" <+> pretty p
@@ -145,19 +152,23 @@ sameToSameToBool p a b tys = do
             ]
         (_, False) -> fail $ vcat
             [ "When type checking:" <+> pretty p
-            , "Arguments expected to be one of these types:" <+> prettyList id "," tys
+            , "Arguments have unsupported types."
             , "lhs        :" <+> pretty a
             , "type of lhs:" <+> pretty tyA
             , "rhs        :" <+> pretty b
             , "type of rhs:" <+> pretty tyB
             ]
 
-sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> m Type
-sameToSameToSame p a b tys = do
+-- See sameToSameToBool
+sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
+sameToSameToSame p a b acceptableTypes checkType = do
     tyA <- typeOf a
     tyB <- typeOf b
     let tyAB = mostDefined [tyA,tyB]
-    case (tyA `typeUnify` tyB, null tys || any (typeUnify tyAB) tys) of
+    let allowed = if null acceptableTypes
+                    then checkType tyAB
+                    else checkType tyAB || any (typeUnify tyAB) acceptableTypes
+    case (tyA `typeUnify` tyB, allowed) of
         (True, True) -> return tyAB
         (False, _) -> fail $ vcat
             [ "When type checking:" <+> pretty p
@@ -169,12 +180,13 @@ sameToSameToSame p a b tys = do
             ]
         (_, False) -> fail $ vcat
             [ "When type checking:" <+> pretty p
-            , "Arguments expected to be one of these types:" <+> prettyList id "," tys
+            , "Arguments have unsupported types."
             , "lhs        :" <+> pretty a
             , "type of lhs:" <+> pretty tyA
             , "rhs        :" <+> pretty b
             , "type of rhs:" <+> pretty tyB
             ]
+
 
 data Fixity = FNone | FLeft | FRight
     deriving Show
@@ -184,7 +196,6 @@ data EssenceOperatorParsingDescr = Binary Lexeme Fixity | UnaryPrefix Lexeme
 operators :: [(EssenceOperatorParsingDescr, Int)]
 operators =
     [ ( Binary L_Plus         FLeft   ,  600 )
-    , ( Binary L_PlusForced   FLeft   ,  600 )
     , ( Binary L_Minus        FLeft   ,  600 )
     , ( Binary L_Times        FLeft   ,  700 )
     , ( Binary L_Div          FLeft   ,  700 )

@@ -26,9 +26,12 @@ instance ( TypeOf x, Pretty x
         ty <- typeOf dom
         case ty of
             TypeInt NoTag -> return ty
+            TypeInt AnyTag -> return ty
             TypeInt (TagEnum _) -> return ty
             TypeEnum{} -> return ty
-            _ -> raiseTypeError p
+            _ -> raiseTypeError $ vcat [ pretty p
+                                       , "Unexpected type inside min:" <+> pretty ty
+                                       ]
     typeOf p@(OpMax x) = do
         ty <- typeOf x
         tyInner <- case ty of
@@ -41,6 +44,7 @@ instance ( TypeOf x, Pretty x
                                        ]
         case tyInner of
             TypeInt NoTag -> return ()
+            TypeInt AnyTag -> return ()
             TypeInt (TagEnum _) -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside max:" <+> pretty ty
@@ -48,18 +52,18 @@ instance ( TypeOf x, Pretty x
         return tyInner
 
 instance EvaluateOp OpMax where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+    evaluateOp p@(OpMax x)
+        | Just xs <- listOut x
+        , any isUndef xs =
+            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMax (DomainInConstant DomainBool)) = return (ConstantBool True)
-    evaluateOp (OpMax (DomainInConstant (DomainInt NoTag rs))) = do
+    evaluateOp (OpMax (DomainInConstant (DomainInt t rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef (TypeInt NoTag) "Empty collection in max"
-            else ConstantInt NoTag (maximum is)
-    evaluateOp (OpMax (DomainInConstant (DomainInt (TagEnum t) rs))) = do
-        is <- rangesInts rs
-        return $ if null is
-            then mkUndef (TypeInt (TagEnum t)) "Empty collection in max"
-            else ConstantInt (TagEnum t) (maximum is)
+            then mkUndef (TypeInt AnyTag) "Empty collection in max"
+            else ConstantInt t (maximum is)
     evaluateOp (OpMax coll@(viewConstantMatrix -> Just (_, xs))) =
         case xs of
             [] -> do
@@ -68,12 +72,9 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt NoTag (maximum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (TagEnum t) (maximum is)
+                        return $ ConstantInt t (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantSet -> Just xs)) = do
         case xs of
@@ -83,12 +84,9 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt NoTag (maximum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (TagEnum t) (maximum is)
+                        return $ ConstantInt t (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp (OpMax coll@(viewConstantMSet -> Just xs)) = do
         case xs of
@@ -98,12 +96,9 @@ instance EvaluateOp OpMax where
             (x:_) -> do
                 tyInner <- typeOf x
                 case tyInner of
-                    TypeInt NoTag -> do
+                    TypeInt t -> do
                         is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt NoTag (maximum is)
-                    TypeInt (TagEnum t) -> do
-                        is <- concatMapM (intsOut "OpMax 1") xs
-                        return $ ConstantInt (TagEnum t) (maximum is)
+                        return $ ConstantInt t (maximum is)
                     _ -> na "evaluateOp{OpMax}"
     evaluateOp _ = na "evaluateOp{OpMax}"
 
