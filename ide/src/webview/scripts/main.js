@@ -34,7 +34,7 @@ let colours = require('./util/colours.js');
         Mousetrap.bind('t', () => { nodeToggle(nodeMap[selectedNode]) }, 'keydown')
         Mousetrap.bind('e', expander)
         Mousetrap.bind('c', collapser)
-        Mousetrap.bind('r', () => {vscode.postMessage({command: 'ready',})})
+        Mousetrap.bind('r', () => { vscode.postMessage({ command: 'ready', }) })
 
 
         function goUp() {
@@ -169,7 +169,7 @@ let colours = require('./util/colours.js');
             .attr("type", "checkbox")
             .attr("id", "check")
             .on("change", () => {
-                console.log("Changed!")
+                // console.log("Changed!")
                 showDomains(selectedNode)
             })
         // .attr("onClick", () => {
@@ -465,39 +465,19 @@ let colours = require('./util/colours.js');
                 selectChanged();
             }
             else {
-                function tabulate(data, columns) {
-                    var table = d3.select('#pane').append('table')
-                    var thead = table.append('thead')
-                    var tbody = table.append('tbody');
-
-                    // append the header row
-                    thead.append('tr')
-                        .selectAll('th')
-                        .data(columns).enter()
-                        .append('th')
-                        .text(function (column) { return column; });
-
-                    // create a row for each object in the data
-                    var rows = tbody.selectAll('tr')
-                        .data(data)
-                        .enter()
-                        .append('tr');
-
-                    // create a cell in each row for each column
-                    var cells = rows.selectAll('td')
-                        .data((row) => {
-                            return columns.map((column) => {
-                                return { column: column, value: row[column] };
-                            });
-                        })
-                        .enter()
-                        .append('td')
-                        .text((d) => { return d.value; });
-
-                    return table;
-                }
                 $("#pane").empty();
                 tabulate(simpleDomainMap[minionID], ['name', 'range']);
+
+                if (minionID != 1) {
+                    let delta = jsondiffpatch.diff(simpleDomainMap[minionID - 1], simpleDomainMap[minionID]);
+                    for (const key in delta) {
+                        if (key != "_t") {
+                            let changedVar = simpleDomainMap[minionID][Number(key)];
+                            $("#row" + key).toggleClass("changed");
+                        }
+                    }
+                }
+
             }
         }
 
@@ -571,3 +551,36 @@ let colours = require('./util/colours.js');
         focusNode(nodeMap[root.minionID]);
     });
 }())
+
+function tabulate(data, columns) {
+    var table = d3.select('#pane').append('table')
+    var thead = table.append('thead')
+    var tbody = table.append('tbody');
+
+    // append the header row
+    thead.append('tr')
+        .selectAll('th')
+        .data(columns).enter()
+        .append('th')
+        .text(function (column) { return column; });
+
+    // create a row for each object in the data
+    var rows = tbody.selectAll('tr')
+        .data(data)
+        .enter()
+        .append('tr')
+        .attr("id", (d, i) => { return "row" + i })
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll('td')
+        .data((row) => {
+            return columns.map((column) => {
+                return { column: column, value: row[column] };
+            });
+        })
+        .enter()
+        .append('td')
+        .text((d) => { return d.value; });
+
+    return table;
+}

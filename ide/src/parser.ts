@@ -8,40 +8,19 @@ let empty = require('is-empty');
 
 class TreeNode {
 
-    public size: number;
     public children: TreeNode[] = [];
 
     constructor(public name: string) {
-        this.size = 6000;
     }
 }
 
 class Variable {
-    public name: string;
-    public range: string | undefined;
-    public type: Type | undefined;
-
-    constructor(name?: string, range?: string, type?: Type) {
-        if (name) {
-            this.name = name;
-        }
-        else {
-            this.name = "name not set yet";
-        }
-        this.range = range;
-        this.type = type;
-    }
+    constructor(public name?: string, public range?: string, public type?: Type) {}
 
     public getPrettyRange() {
 
-        let t: string = "UNKNOWN";
-
-        if (this.type === Type.Int) {
-            t = "int";
-        }
-
         if (this.range) {
-            return t + this.range;
+            return "int(" + this.range + ")";
         }
     }
 }
@@ -80,18 +59,23 @@ abstract class SetVar extends Variable {
         this.included.push(n);
     }
 
-    public exclude(n: number) {
-        this.excluded.push(n);
-    }
 }
 
 class DummySet extends SetVar {
 
-    constructor(v: Variable) {
+    public dummy : number;
+
+    constructor(v: Variable, max: number) {
         super(v.name, v.range, v.type);
+        this.max = max;
+        this.dummy = this.max + 1;
     }
     public getType() {
         return "ExplicitVarSizeWithDummy";
+    }
+
+    public decrementMax(){
+        this.max--;
     }
 }
 
@@ -103,6 +87,10 @@ class OccurenceSet extends SetVar {
 
     public getType() {
         return "Occurence";
+    }
+
+    public exclude(n: number) {
+        this.excluded.push(n);
     }
 }
 
@@ -194,8 +182,8 @@ export default class Parser {
                 obj.text = set.name;
                 obj.nodes.push({ "text": "Type", "nodes": [{ "text": set.getType() }] });
                 obj.nodes.push({ "text": "Cardinality", "nodes": [{ "text": set.getCardinality() }] });
-                obj.nodes.push({ "text": "Excluded", "nodes": [{ "text": set.getExcluded() }] });
                 obj.nodes.push({ "text": "Included", "nodes": [{ "text": set.getIncluded() }] });
+                obj.nodes.push({ "text": "Excluded", "nodes": [{ "text": set.getExcluded() }] });
                 setList.push(obj);
             }
             else {
@@ -286,28 +274,21 @@ export default class Parser {
 
                 if (array[0].Set_Occurrence) {
                     set = new OccurenceSet(variable);
-                    this.setSeen = Type.Occurrence;
                 }
 
                 if (array[0].Set_ExplicitVarSizeWithDummy) {
-                    set = new DummySet(variable);
-                    this.setSeen = Type.ExplicitVarSizeWithDummy;
+                    set = new DummySet(variable, max);
                 }
 
-                if (set) {
-                    set.min = min;
-                    set.max = max;
-                    variable = set;
-                }
-                else {
-                    throw new Error("Unsupported Set!");
-                }
+                set!.min = min;
+                set!.max = max;
+                variable = set!;
             }
 
-            map[variable.name] = variable;
+            map[variable.name!] = variable;
         }
 
-        console.log(map);
+        // console.log(map);
         return map;
     }
 
@@ -336,134 +317,166 @@ export default class Parser {
     public parseAuxDummy(key: string) {
     }
 
-    public parseDomains(obj: any) {
+    public parseDomains(obj: any, simpleDomains: Variable[]) {
 
         let map = this.parseEprime();
 
-        let sorted = Object.keys(obj).sort();
+        // let sorted = Object.keys(obj).sort();
+        // let simpleVars = this.parseDomainsSimple(obj);
 
-        for (let i = 0; i < sorted.length; i++) {
+        for (let i = 0; i < simpleDomains.length; i++) {
 
-            let key = sorted[i];
-            let variable = new Variable();
+            let variable = simpleDomains[i];
 
-            for (let i = 0; i < obj[key].length; i++) {
-                if (!(obj[key][i][0] === obj[key][i][1])) {
-                    variable.range = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
-                }
-                else {
-                    variable.range = "(" + Array.from(new Set(Parser.flattenArray(obj[key]))).toString() + ")";
-                }
-            }
+            let split = variable.name!.split("_");
 
-            if (this.jsonAux.test(key)) {
-                if (this.setSeen !== Type.ExplicitVarSizeWithDummy) {
-                    variable.name = math.simplify(this.parseAuxOccurence(key)).toString();
-                    map[variable.name] = new Expression(variable);
-                }
-            }
-            else {
-                variable.name = key;
+            if (split.length > 1) {
 
-                let split = variable.name.split("_");
+                let setName = split[0];
 
-                if (split.length > 1) {
+                let splits = variable.range!.split("..");
 
-                    let setName = split[0];
+                // Parse sets
+                if (setName in map) {
 
-                    if (variable.range) {
-                        let splits = variable.range.split("..");
-
-                        if (setName in map) {
-
-                            if (map[setName] instanceof DummySet) {
-                                let set = <DummySet>map[setName];
-                                if (splits.length === 1) {
-                                    let discretePossibilities = variable.range.split(",");
-                                    if (discretePossibilities.length === 1) {
-                                        let num = Number(discretePossibilities[0].substring(1, discretePossibilities[0].length - 1));
-                                        if (num === set.max + 1) {
-                                            set.exclude(Number(split[split.length - 1]));
-                                        }
-                                        else {
-                                            set.include(num);
-                                        }
-                                    }
+                    if (map[setName] instanceof DummySet) {
+                        let set = <DummySet>map[setName];
+                        if (splits.length === 1) {
+                            let discretePossibilities = variable.range!.split(",");
+                            if (discretePossibilities.length === 1) {
+                                let num = Number(discretePossibilities[0]);
+                                if (num !== set.dummy) {
+                                    set.include(num);
+                                }
+                                else{
+                                    set.decrementMax();
                                 }
                             }
+                        }
+                    }
 
-                            if (map[setName] instanceof OccurenceSet) {
+                    if (map[setName] instanceof OccurenceSet) {
 
-                                let set = <OccurenceSet>map[setName];
-                                let number = Number(split[split.length - 1]);
+                        let set = <OccurenceSet>map[setName];
+                        let number = Number(split[split.length - 1]);
 
-                                if (splits.length === 1) {
-                                    if (variable.range === "(0)") {
-                                        set.exclude(number);
-                                    }
-                                    else {
-                                        set.include(number);
-                                    }
-                                }
-                                // map[setName] = set;
+                        if (splits.length === 1) {
+                            if (variable.range === "0") {
+                                set.exclude(number);
+                            }
+                            else {
+                                set.include(number);
                             }
                         }
                     }
                 }
                 else {
-                    variable.type = map[variable.name].type;
-                    map[variable.name] = variable;
+                    // Add generated variables
+                    map[variable.name!] = variable;
                 }
             }
-
+            else {
+                // Add ints
+                map[variable.name!] = variable;
+            }
         }
+
         return map;
     }
 
     public parseDomainsSimple(obj: any) {
 
-        interface Domain {
-            name: string;
-            range: string;
-        }
+        let varArray: Variable[] = [];
 
-        let domainArray: Domain[] = [];
-        let sorted = Object.keys(obj).sort();
+        // Sort the json array so that the aux variables are in order
+
+        let sorted = Object.keys(obj).map((name) => {
+            if (this.jsonAux.test(name)) {
+                return name.replace("aux", "");
+            }
+            return name;
+
+        }).sort((a, b) => {
+
+            if (!isNaN(Number(a)) && !isNaN(Number(b))) {
+                return Number(a) - Number(b);
+            }
+            if (!isNaN(Number(a))) {
+                return 1;
+            }
+            if (!isNaN(Number(b))) {
+                return -1;
+            }
+
+            return 0;
+
+        }).map((name) => {
+            if (!isNaN(Number(name))) {
+                return "aux" + name;
+            }
+            return name;
+        });
 
         for (let i = 0; i < sorted.length; i++) {
 
-            let entry: Domain = { "name": "", "range": "" };
+            let variable = new Variable();
 
             let key = sorted[i];
 
             for (let i = 0; i < obj[key].length; i++) {
                 if (!(obj[key][i][0] === obj[key][i][1])) {
-                    obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
+                    if (obj[key].length > 1) {
+                        obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
+
+                    }
+                    else {
+                        obj[key][i] = obj[key][i][0] + ".." + obj[key][i][1];
+                    }
                 }
             }
 
-            entry.name = key;
-            entry.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
-            domainArray.push(entry);
+            if (this.jsonAux.test(key)) {
+                variable = new Expression(variable);
+                variable.name = (this.parseAuxOccurence(key));
+            }
+            else {
+                variable.name = key;
+            }
+
+            variable.range = Array.from(new Set(Parser.flattenArray(obj[key]))).toString();
+            varArray.push(variable);
         }
 
-        return domainArray;
+        return varArray;
     }
 
     public parseTree(obj: any, treeviewDomainMap: any, normalDomainMap: any, simpleDomainMap: any) {
 
         obj["minionID"] = Number(obj["name"]);
-        let domains = this.parseDomains(obj["Domains"]);
-        normalDomainMap[obj["minionID"]] = domains;
+
         let simpleDomains = this.parseDomainsSimple(obj["Domains"]);
-        simpleDomainMap[obj["minionID"]] = simpleDomains;
+
+        let domains = this.parseDomains(obj["Domains"], simpleDomains);
+        normalDomainMap[obj["minionID"]] = domains;
+
+        let formatted = simpleDomains.map((d) => {
+            let n = JSON.parse(JSON.stringify(d));
+            n.range = "(" + n.range + ")";
+            return n;
+        });
+
+        simpleDomainMap[obj["minionID"]] = formatted;
+
         delete obj.Domains;
+
         let treeViewDomains = this.domainsToHierachy(Object.values(domains));
         treeviewDomainMap[obj["minionID"]] = treeViewDomains;
 
         let splitted = obj['branchVar'].split("_");
         if (splitted.length > 1) {
-            if (splitted[0] in domains) {
+            let set = domains[splitted[0]];
+
+            if (set instanceof OccurenceSet) {
                 let num = Number(splitted[splitted.length - 1]);
                 if (obj['branchVal'] === 1) {
                     obj["name"] = "Include " + num + " in " + splitted[0];
@@ -471,6 +484,11 @@ export default class Parser {
                 else {
                     obj["name"] = "Exclude " + num + " from " + splitted[0];
                 }
+            }
+
+            if (set instanceof DummySet) {
+                let num = Number(splitted[splitted.length - 1]);
+                obj["name"] = "Include " + num + " in " + splitted[0];
             }
         }
         else {
@@ -504,19 +522,19 @@ export default class Parser {
 
     public parseJson() {
 
-        const Stopwatch = require("node-stopwatch").Stopwatch;
+        // const Stopwatch = require("node-stopwatch").Stopwatch;
 
-        var stopwatch = Stopwatch.create();
-        stopwatch.start();
+        // var stopwatch = Stopwatch.create();
+        // stopwatch.start();
 
         let obj = JSON.parse(this.jsonFile.toString());
 
-        stopwatch.stop();
+        // stopwatch.stop();
 
-        console.log("JSON.PARSE: " + stopwatch.elapsedMilliseconds);
+        // console.log("JSON.PARSE: " + stopwatch.elapsedMilliseconds);
 
-        stopwatch.reset();
-        stopwatch.restart();
+        // stopwatch.reset();
+        // stopwatch.restart();
 
         obj = rename(obj, (key: any) => {
             if (key === 'Node') { return 'name'; }
@@ -530,8 +548,8 @@ export default class Parser {
         // console.log(treeviewDomainMap);
         // console.log(normalDomainMap);
 
-        stopwatch.stop();
-        console.log("OTHER: " + stopwatch.elapsedMilliseconds);
+        // stopwatch.stop();
+        // console.log("OTHER: " + stopwatch.elapsedMilliseconds);
 
         let result = {
             "tree": obj,
@@ -540,7 +558,7 @@ export default class Parser {
             "simpleDomainMap": simpleDomainMap
         };
 
-        console.log(result);
+        // console.log(result);
 
         return result;
     }
