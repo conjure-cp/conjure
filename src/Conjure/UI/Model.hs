@@ -716,7 +716,13 @@ updateDeclarations model = do
                     orders' <- forM orders $ \case
                         BranchingOn nm -> do
                             let domains = [ d | (n, d) <- representations, n == nm ]
-                            outNames <- concatMapM (onEachDomainSearch nm) domains
+                            -- last one is the representation of what's in true(?)
+                            -- put that first!
+                            let reorder xs =
+                                    case reverse xs of
+                                        [] -> []
+                                        (y:ys) -> y : reverse ys
+                            outNames <- concatMapM (onEachDomainSearch nm) (reorder domains)
                             return $ map BranchingOn $ nub outNames
                         Cut{} -> bug "updateDeclarations, Cut shouldn't be here"
                     return [ SearchOrder (concat orders') ]
