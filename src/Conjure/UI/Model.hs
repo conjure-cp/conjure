@@ -1077,17 +1077,7 @@ paramRules =
 
 verticalRules :: [Rule]
 verticalRules =
-    [ 
-      Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
-    , Vertical.Permutation.AsFunction.rule_Relation_Permute
-    , Vertical.Permutation.AsFunction.rule_Relation_Permute_Comprehension
-    , Vertical.Permutation.AsFunction.rule_Set_Permute
-    , Vertical.Permutation.AsFunction.rule_Tuple_Permute
-    , Vertical.Permutation.AsFunction.rule_Tuple_Permute_Comprehension
-    , Vertical.Permutation.AsFunction.rule_Matrix_Permute
-    , Vertical.Permutation.AsFunction.rule_Matrix_Permute_Comprehension
-
-    , Vertical.Tuple.rule_Tuple_Eq
+    [ Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
@@ -1191,6 +1181,18 @@ verticalRules =
 
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
+
+
+    , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
+    , Vertical.Permutation.AsFunction.rule_Relation_Permute
+    , Vertical.Permutation.AsFunction.rule_Relation_Permute_Comprehension
+    , Vertical.Permutation.AsFunction.rule_Set_Permute
+    , Vertical.Permutation.AsFunction.rule_Tuple_Permute
+    , Vertical.Permutation.AsFunction.rule_Tuple_Permute_Comprehension
+    , Vertical.Permutation.AsFunction.rule_Matrix_Permute
+    , Vertical.Permutation.AsFunction.rule_Matrix_Permute_Comprehension
+
+
 
 
     ]
