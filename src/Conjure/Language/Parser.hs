@@ -969,7 +969,11 @@ parseLiteral = label "value" $ msum
         pRelation = do
             lexeme L_relation
             xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
-            return (AbsLitRelation [is | AbsLitTuple is <- xs])
+            xsFiltered <- forM xs $ \case
+                -- Constant (ConstantAbstract (AbsLitTuple is)) -> ...
+                AbsLitTuple is -> return is
+                x -> fail ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
+            return (AbsLitRelation xsFiltered)
 
         pPartition = do
             lexeme L_partition
