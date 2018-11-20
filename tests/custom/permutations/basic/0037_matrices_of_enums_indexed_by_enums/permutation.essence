@@ -1,0 +1,12 @@
+letting e be new type enum {E1, E2, E3, E4}
+
+find s: permutation of e
+find x1 : matrix indexed by [e] of e
+find x2 : matrix indexed by [e] of e
+
+such that 
+    forAll i : e .
+      permute(s,i) != i
+  , permute(s, x1) = x2
+  , x1 != x2
+
