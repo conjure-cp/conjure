@@ -117,8 +117,6 @@ mkOp op xs =
             L_party        -> inject $ MkOpParty        $ OpParty        (arg xs 0 "party")
                                                                          (arg xs 1 "party")
             L_participants -> inject $ MkOpParticipants $ OpParticipants (arg xs 0 "participants")
-            L_image      -> inject $ MkOpPermute      $ OpPermute      (arg xs 0 "image")
-                                                                         (arg xs 1 "image")
             L_permutationTuples -> inject $ MkOpPermutationTuples $ OpPermutationTuples (arg xs 0 "permutationTuples")
             L_compose        -> inject $ MkOpCompose    $ OpCompose      (arg xs 0 "compose")
                                                                          (arg xs 1 "compose")
