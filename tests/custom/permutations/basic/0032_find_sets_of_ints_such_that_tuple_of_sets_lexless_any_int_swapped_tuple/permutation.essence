@@ -6,4 +6,4 @@ find y : set of int(1..n)
 
 such that
   forAll i, j : int(1..n) .
-    i != j -> (x,y) .<= permute(permutation((i,j)), (x,y))
+    i != j -> (x,y) .<= image(permutation((i,j)), (x,y))

@@ -28,8 +28,8 @@ rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction
 
 
 rule_Permute :: Rule
-rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
-  theRule [essence| permute(&p, &i) |] = do
+rule_Permute = "permutation-image{AsFunction}" `namedRule` theRule where
+  theRule [essence| image(&p, &i) |] = do
     TypePermutation inner <- typeOf p 
     typeI <- typeOf i
     if typeI `containsType` inner
@@ -51,10 +51,10 @@ rule_Permute = "permutation-permute{AsFunction}" `namedRule` theRule where
 
 
 rule_Permute_Comprehension :: Rule
-rule_Permute_Comprehension = "permutation-permute{AsFunction}" `namedRule` theRule where
+rule_Permute_Comprehension = "permutation-image{AsFunction}" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
     (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-      Generator (GenInExpr pat [essence| permute(&p, &i) |]) -> return (pat, p, i)
+      Generator (GenInExpr pat [essence| image(&p, &i) |]) -> return (pat, p, i)
       _ -> na "rule_Comprehension"
 
     TypePermutation inner <- typeOf p 
@@ -82,8 +82,8 @@ rule_Permute_Comprehension = "permutation-permute{AsFunction}" `namedRule` theRu
   theRule _ = na "rule_Permute"
 
 rule_Matrix_Permute :: Rule
-rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
-    theRule [essence| permute(&perm, &y) |]  = do
+rule_Matrix_Permute = "matrix-image" `namedRule` theRule where
+    theRule [essence| image(&perm, &y) |]  = do
       ty@(TypeMatrix _ _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
       if not $ typesUnify [ty, inn]
@@ -92,7 +92,7 @@ rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
           y' <- flattenIfNeeded y
           dm@(DomainMatrix dyindex _) <- domainOf y'
           return
-              ( "Horizontal rule for permute matrix"
+              ( "Horizontal rule for image matrix"
               , do
                 (dPat, d) <- quantifiedVar
                 (pyName, py) <- auxiliaryVar
@@ -103,7 +103,7 @@ rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
                          , SuchThat
                            [ [essence|
                                 forAll &dPat : &dyindex .
-                                  &py[permute(&perm,&d)] = permute(&perm,&y'[&d]) 
+                                  &py[image(&perm,&d)] = image(&perm,&y'[&d]) 
                              |]
                            ]
                          ]
@@ -113,10 +113,10 @@ rule_Matrix_Permute = "matrix-permute" `namedRule` theRule where
     theRule _ = na "rule_Matrix_Permute"
 
 rule_Matrix_Permute_Comprehension :: Rule
-rule_Matrix_Permute_Comprehension = "matrix-permute-comprehension" `namedRule` theRule where
+rule_Matrix_Permute_Comprehension = "matrix-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
       (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-         Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
+         Generator (GenInExpr pat [essence| image(&perm, &y) |]) -> return (pat, perm, y)
          _ -> na "rule_Matrix_Permute"
       ty@(TypeMatrix _ _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
@@ -126,7 +126,7 @@ rule_Matrix_Permute_Comprehension = "matrix-permute-comprehension" `namedRule` t
           y' <- flattenIfNeeded y
           dm@(DomainMatrix dyindex _) <- domainOf y'
           return
-              ( "Horizontal rule for permute matrix in comprehension"
+              ( "Horizontal rule for image matrix in comprehension"
               , do
                 (dPat, d) <- quantifiedVar
                 (pyName, py) <- auxiliaryVar
@@ -139,7 +139,7 @@ rule_Matrix_Permute_Comprehension = "matrix-permute-comprehension" `namedRule` t
                          , SuchThat
                            [ [essence|
                                 forAll &dPat : &dyindex .
-                                  &py[permute(&perm,&d)] = permute(&perm,&y'[&d]) 
+                                  &py[image(&perm,&d)] = image(&perm,&y'[&d]) 
                              |]
                            ]
                          ]
@@ -149,10 +149,10 @@ rule_Matrix_Permute_Comprehension = "matrix-permute-comprehension" `namedRule` t
     theRule _ = na "rule_Matrix_Permute_Comprehension"
 
 rule_Set_Permute :: Rule
-rule_Set_Permute = "set-permute" `namedRule` theRule where
+rule_Set_Permute = "set-image" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
       (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-         Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
+         Generator (GenInExpr pat [essence| image(&perm, &y) |]) -> return (pat, perm, y)
          _ -> na "rule_Set_Permute"
       ts@(TypeSet _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
@@ -160,7 +160,7 @@ rule_Set_Permute = "set-permute" `namedRule` theRule where
          then do
            ds <- domainOf y
            return
-               ( "Horizontal rule for permute set"
+               ( "Horizontal rule for image set"
                , do
                  (dPat, d) <- quantifiedVar
                  (pyName, py) <- auxiliaryVar
@@ -174,7 +174,7 @@ rule_Set_Permute = "set-permute" `namedRule` theRule where
                             [ [essence|
                                     |&y| = |&py|
                                  /\ forAll &dPat in &y .
-                                      permute(&perm, &d) in &py
+                                      image(&perm, &d) in &py
                               |]
                             ]
                           ]
@@ -185,8 +185,8 @@ rule_Set_Permute = "set-permute" `namedRule` theRule where
 
 
 rule_Relation_Permute :: Rule
-rule_Relation_Permute = "relation-permute" `namedRule` theRule where
-    theRule [essence| permute(&perm, &y) |]  = do
+rule_Relation_Permute = "relation-image" `namedRule` theRule where
+    theRule [essence| image(&perm, &y) |]  = do
       case y of WithLocals{} -> na "bubble-delay" ; _ -> return () 
       ts@(TypeRelation _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
@@ -194,7 +194,7 @@ rule_Relation_Permute = "relation-permute" `namedRule` theRule where
          then do
            ds <- domainOf y
            return
-               ( "Horizontal rule for permute relation in comprehension"
+               ( "Horizontal rule for image relation in comprehension"
                , do
                  (dPat, d) <- quantifiedVar
                  (pyName, py) <- auxiliaryVar
@@ -205,7 +205,7 @@ rule_Relation_Permute = "relation-permute" `namedRule` theRule where
                           , SuchThat
                             [ [essence|
                                     |&y| = |&py|
-                                 /\ and([permute(&perm, &d) in &py | &dPat <- &y])
+                                 /\ and([image(&perm, &d) in &py | &dPat <- &y])
 
                               |]
                             ]
@@ -216,10 +216,10 @@ rule_Relation_Permute = "relation-permute" `namedRule` theRule where
     theRule _ = na "rule_Relation_Permute"
 
 rule_Relation_Permute_Comprehension :: Rule
-rule_Relation_Permute_Comprehension = "relation-permute-comprehension" `namedRule` theRule where
+rule_Relation_Permute_Comprehension = "relation-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
       (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-         Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
+         Generator (GenInExpr pat [essence| image(&perm, &y) |]) -> return (pat, perm, y)
          _ -> na "rule_Relation_Permute_Comprehension"
       case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
       ts@(TypeRelation _) <- typeOf y
@@ -228,7 +228,7 @@ rule_Relation_Permute_Comprehension = "relation-permute-comprehension" `namedRul
          then do
            ds <- domainOf y
            return
-               ( "Horizontal rule for permute relation in comprehension"
+               ( "Horizontal rule for image relation in comprehension"
                , do
                  (dPat, d) <- quantifiedVar
                  (pyName, py) <- auxiliaryVar
@@ -241,7 +241,7 @@ rule_Relation_Permute_Comprehension = "relation-permute-comprehension" `namedRul
                           , SuchThat
                             [ [essence|
                                     |&y| = |&py|
-                                 /\ and([permute(&perm, &d) in &py | &dPat <- &y])
+                                 /\ and([image(&perm, &d) in &py | &dPat <- &y])
                               |]
                             ]
                           ]
@@ -252,8 +252,8 @@ rule_Relation_Permute_Comprehension = "relation-permute-comprehension" `namedRul
 
 
 rule_Tuple_Permute :: Rule
-rule_Tuple_Permute = "tuple-permute" `namedRule` theRule where
-    theRule [essence| permute(&perm, &y) |]  = do
+rule_Tuple_Permute = "tuple-image" `namedRule` theRule where
+    theRule [essence| image(&perm, &y) |]  = do
       case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
       ty' <- typeOf y
 --      traceM $ "rule_Tuple_Permute: " ++ show ty'
@@ -264,7 +264,7 @@ rule_Tuple_Permute = "tuple-permute" `namedRule` theRule where
 --          traceM $ "rule_Tuple_Permute: applying" 
           dm <- domainOf y
           return
-              ( "Horizontal rule for permute tuple in comprehension"
+              ( "Horizontal rule for image tuple in comprehension"
               , do
                 (pyName, py) <- auxiliaryVar
                 return $ WithLocals
@@ -272,7 +272,7 @@ rule_Tuple_Permute = "tuple-permute" `namedRule` theRule where
                        (AuxiliaryVars $ 
                          [ Declaration (FindOrGiven LocalFind pyName dm)]
                          ++ ((\x -> let d = Constant $ ConstantInt NoTag x
-                                       in SuchThat [[essence|  &py[&d] = permute(&perm,&y[&d]) |] ])
+                                       in SuchThat [[essence|  &py[&d] = image(&perm,&y[&d]) |] ])
                                        <$> [1..(genericLength it)])
 
                         
@@ -282,10 +282,10 @@ rule_Tuple_Permute = "tuple-permute" `namedRule` theRule where
     theRule _ = na "rule_Tuple_Permute"
 
 rule_Tuple_Permute_Comprehension :: Rule
-rule_Tuple_Permute_Comprehension = "tuple-permute-comprehension" `namedRule` theRule where
+rule_Tuple_Permute_Comprehension = "tuple-image-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
       (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-         Generator (GenInExpr pat [essence| permute(&perm, &y) |]) -> return (pat, perm, y)
+         Generator (GenInExpr pat [essence| image(&perm, &y) |]) -> return (pat, perm, y)
          _ -> na "rule_Tuple_Permute"
       case y of WithLocals{} -> na "bubble-delay" ; _ -> return ()
       ty' <- typeOf y
@@ -297,7 +297,7 @@ rule_Tuple_Permute_Comprehension = "tuple-permute-comprehension" `namedRule` the
 --          traceM $ "rule_Tuple_Permute_Comprehension: applying" 
           dm <- domainOf y
           return
-              ( "Horizontal rule for permute tuple in comprehension"
+              ( "Horizontal rule for image tuple in comprehension"
               , do
                 (pyName, py) <- auxiliaryVar
                 return $ WithLocals
@@ -307,7 +307,7 @@ rule_Tuple_Permute_Comprehension = "tuple-permute-comprehension" `namedRule` the
                        (AuxiliaryVars $ 
                          [ Declaration (FindOrGiven LocalFind pyName dm)]
                          ++ ((\x -> let d = Constant $ ConstantInt NoTag x
-                                       in SuchThat [[essence|  &py[&d] = permute(&perm,&y[&d]) |] ])
+                                       in SuchThat [[essence|  &py[&d] = image(&perm,&y[&d]) |] ])
                                        <$> [1..(genericLength it)])
                        )
               )

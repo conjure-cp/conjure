@@ -6,6 +6,6 @@ find x2 : matrix indexed by [e] of (e,e)
 
 such that 
     forAll i : e .
-      permute(s,i) != i
-  , permute(s, x1) = x2
+      image(s,i) != i
+  , image(s, x1) = x2
   , x1 != x2

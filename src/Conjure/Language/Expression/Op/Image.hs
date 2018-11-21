@@ -4,10 +4,13 @@ module Conjure.Language.Expression.Op.Image where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Bug
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
+
+import Data.List (cycle)
 
 
 data OpImage x = OpImage x x
@@ -21,19 +24,20 @@ instance FromJSON  x => FromJSON  (OpImage x) where parseJSON = genericParseJSON
 instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
     typeOf p@(OpImage f x) = do
         tyF <- typeOf f
+        tyX <- typeOf x
         (from, to) <- case tyF of
             TypeFunction from to -> return (from, to)
             TypeSequence      to -> return (TypeInt NoTag, to)
+            TypePermutation _    -> return (tyX, tyX)
             _ -> raiseTypeError $ "(function application)" <+> pretty p
-        xTy <- typeOf x
-        if typesUnify [xTy, from]
+        if typesUnify [tyX, from]
             then return to
             else raiseTypeError $ vcat
                 [ pretty p
                 , "function     :" <+> pretty f
                 , "function type:" <+> pretty (TypeFunction from to)
                 , "argument     :" <+> pretty x
-                , "argument type:" <+> pretty xTy
+                , "argument type:" <+> pretty tyX
                 ]
 
 instance EvaluateOp OpImage where
@@ -67,6 +71,14 @@ instance EvaluateOp OpImage where
                     [ "Sequence is multiply defined at this point:" <+> pretty a
                     , "Sequence value:" <+> pretty f
                     ]
+    evaluateOp op@(OpImage (viewConstantPermutation -> Just xss) i) = do
+        case filter (i `elem`) xss  of
+          [] -> return i
+          [h] -> do
+            case length $ filter (== i) h of
+              1 -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle h
+              _ -> bug "evaluateOp{OpImage} element in cycle of permutationmore than once"
+          _ -> bug "evaluateOp{OpPermute} element in more than one cycle of permutation"
     evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
 
 instance SimplifyOp OpImage x where

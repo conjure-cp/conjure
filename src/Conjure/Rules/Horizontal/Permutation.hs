@@ -3,9 +3,9 @@ module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.List (cycle)
 
-rule_Apply :: Rule
-rule_Apply = "permutation-apply{rule_Apply}" `namedRule` theRule where
-  theRule [essence| permute(apply(&g, &h),&i) |] = do
+rule_Compose :: Rule
+rule_Compose = "permutation-compose{rule_Compose}" `namedRule` theRule where
+  theRule [essence| image(compose(&g, &h),&i) |] = do
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
     typeI <- typeOf i
@@ -13,16 +13,16 @@ rule_Apply = "permutation-apply{rule_Apply}" `namedRule` theRule where
        then return
             ( "Horizontal rule for permutation composition/application"
             , do
-              return [essence| permute(&g, permute(&h,&i)) |]
+              return [essence| image(&g, image(&h,&i)) |]
             )
-       else na "rule_Apply"
-  theRule _ = na "rule_Apply"
+       else na "rule_Compose"
+  theRule _ = na "rule_Compose"
 
 
 
 rule_Permute_Literal :: Rule
-rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` theRule where
-  theRule [essence| permute(&p, &i) |] = do
+rule_Permute_Literal = "permutation-image-literal{AsFunction}" `namedRule` theRule where
+  theRule [essence| image(&p, &i) |] = do
     (TypePermutation inner, elems) <- match permutationLiteral p 
     case i of WithLocals{} -> na "bubble-delay" ; _ -> return ()
     typeI <- typeOf i
@@ -41,7 +41,7 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
                                    | (a,b) <- permTups 
                                    ]
                return
-                  ( "Horizontal rule for permutation literal application to a single value (permute), AsFunction representation"
+                  ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                   , do
                     (hName, h) <- auxiliaryVar
                     (fPat, f)  <- quantifiedVar
@@ -71,10 +71,10 @@ rule_Permute_Literal = "permutation-permute-literal{AsFunction}" `namedRule` the
 
 
 rule_Permute_Literal_Comprehension :: Rule
-rule_Permute_Literal_Comprehension = "permutation-permute-literal-comprehension{AsFunction}" `namedRule` theRule where
+rule_Permute_Literal_Comprehension = "permutation-image-literal-comprehension{AsFunction}" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
     (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-      Generator (GenInExpr pat [essence| permute(&p, &i) |]) -> return (pat, p, i)
+      Generator (GenInExpr pat [essence| image(&p, &i) |]) -> return (pat, p, i)
       _ -> na "rule_Comprehension"
     case i of WithLocals{} -> na "bubble-delay" ; _ -> return ()
     (TypePermutation inner, elems) <- match permutationLiteral p 
@@ -93,7 +93,7 @@ rule_Permute_Literal_Comprehension = "permutation-permute-literal-comprehension{
                                    | (a,b) <- permTups 
                                    ]
                return
-                  ( "Horizontal rule for permutation literal application to a single value (permute), AsFunction representation"
+                  ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                   , do
                     (hName, h) <- auxiliaryVar
                     (fPat, f)  <- quantifiedVar

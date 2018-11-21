@@ -1,6 +1,6 @@
 {-# LANGUAGE DeriveGeneric, DeriveDataTypeable, DeriveFunctor, DeriveTraversable, DeriveFoldable, ViewPatterns #-}
 
-module Conjure.Language.Expression.Op.Apply where
+module Conjure.Language.Expression.Op.Compose where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
@@ -12,16 +12,16 @@ import qualified Data.Vector as V               -- vector
 
 import Data.List (cycle)
 
-data OpApply x = OpApply x x
+data OpCompose x = OpCompose x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
 
-instance Serialize x => Serialize (OpApply x)
-instance Hashable  x => Hashable  (OpApply x)
-instance ToJSON    x => ToJSON    (OpApply x) where toJSON = genericToJSON jsonOptions
-instance FromJSON  x => FromJSON  (OpApply x) where parseJSON = genericParseJSON jsonOptions
+instance Serialize x => Serialize (OpCompose x)
+instance Hashable  x => Hashable  (OpCompose x)
+instance ToJSON    x => ToJSON    (OpCompose x) where toJSON = genericToJSON jsonOptions
+instance FromJSON  x => FromJSON  (OpCompose x) where parseJSON = genericParseJSON jsonOptions
 
-instance (TypeOf x, Pretty x) => TypeOf (OpApply x) where
-    typeOf inp@(OpApply p q) = do
+instance (TypeOf x, Pretty x) => TypeOf (OpCompose x) where
+    typeOf inp@(OpCompose p q) = do
         pTy <- typeOf p
         qTy <- typeOf q
         case (pTy, qTy) of
@@ -31,8 +31,8 @@ instance (TypeOf x, Pretty x) => TypeOf (OpApply x) where
                     else raiseTypeError inp
           _ -> raiseTypeError inp
 
-instance EvaluateOp OpApply where
-    evaluateOp op@(OpApply g@(viewConstantPermutation -> Just gss)
+instance EvaluateOp OpCompose where
+    evaluateOp op@(OpCompose g@(viewConstantPermutation -> Just gss)
                            h@(viewConstantPermutation -> Just hss)) = do
         gt <- typeOf g
         ht <- typeOf h
@@ -41,21 +41,21 @@ instance EvaluateOp OpApply where
             let appI xss i = case filter (i `elem`) xss  of
                                [] -> return i
                                [k] -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle k
-                               _ -> bug "evaluateOp{OpApply} element should only be in one cycle of permutation"
+                               _ -> bug "evaluateOp{OpCompose} element should only be in one cycle of permutation"
             in ConstantAbstract . AbsLitPermutation <$> (mapM (mapM (appI gss)) hss)
-          _ -> na $ "evaluateOp{OpApply} only defined for Ints right now:" <++> pretty (show op)
-    evaluateOp op = na $ "evaluateOp{OpApply}:" <++> pretty (show op)
+          _ -> na $ "evaluateOp{OpCompose} only defined for Ints right now:" <++> pretty (show op)
+    evaluateOp op = na $ "evaluateOp{OpCompose}:" <++> pretty (show op)
 
-instance SimplifyOp OpApply x where
-    simplifyOp _ = na "simplifyOp{OpApply}"
+instance SimplifyOp OpCompose x where
+    simplifyOp _ = na "simplifyOp{OpCompose}"
 
-instance Pretty x => Pretty (OpApply x) where
-    prettyPrec _ (OpApply a i) = "apply" <> prettyList prParens "," [a,i]
+instance Pretty x => Pretty (OpCompose x) where
+    prettyPrec _ (OpCompose a i) = "compose" <> prettyList prParens "," [a,i]
 
 
-instance VarSymBreakingDescription x => VarSymBreakingDescription (OpApply x) where
-    varSymBreakingDescription (OpApply a i) = JSON.Object $ M.fromList
-        [ ("type", JSON.String "OpApply")
+instance VarSymBreakingDescription x => VarSymBreakingDescription (OpCompose x) where
+    varSymBreakingDescription (OpCompose a i) = JSON.Object $ M.fromList
+        [ ("type", JSON.String "OpCompose")
         , ("children", JSON.Array $ V.fromList
             [ varSymBreakingDescription a
             , varSymBreakingDescription i

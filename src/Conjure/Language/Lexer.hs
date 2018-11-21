@@ -118,9 +118,8 @@ data Lexeme
 
     -- type: permutation
     | L_permutation
-    | L_permute
     | L_permutationTuples
-    | L_apply
+    | L_compose
 
     -- operators, page 21 of the holy paper
     | L_union
@@ -363,8 +362,7 @@ lexemes = sortBy (flip (comparing (T.length . fst))) $ map swap
 
     , ( L_permutation, "permutation" )
     , ( L_permutationTuples, "permutationTuples" )
-    , ( L_permute, "permute")
-    , ( L_apply, "apply")
+    , ( L_compose, "compose")
     -- , ( L_regular, "regular" )
     -- , ( L_partSize, "partSize" )
     -- , ( L_minPartSize, "minPartSize" )

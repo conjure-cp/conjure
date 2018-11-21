@@ -43,7 +43,7 @@ instance SimplifyOp OpPermute x where
     simplifyOp _ = na "simplifyOp{OpPermute}"
 
 instance Pretty x => Pretty (OpPermute x) where
-    prettyPrec _ (OpPermute a i) = "permute" <> prettyList prParens "," [a,i]
+    prettyPrec _ (OpPermute a i) = "image" <> prettyList prParens "," [a,i]
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpPermute x) where
     varSymBreakingDescription (OpPermute a i) = JSON.Object $ M.fromList

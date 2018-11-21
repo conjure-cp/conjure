@@ -8,4 +8,4 @@ find y : matrix indexed by [int(1..n)] of MYTYPE
 
 such that
   forAll i, j : int(1..n) .
-    i != j -> tuple(x,y) .<= permute(permutation((i,j)),tuple(x,y))
+    i != j -> tuple(x,y) .<= image(permutation((i,j)),tuple(x,y))

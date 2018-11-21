@@ -1323,7 +1323,7 @@ horizontalRules =
 
     , Horizontal.Permutation.rule_Permute_Literal
     , Horizontal.Permutation.rule_Permute_Literal_Comprehension
-    , Horizontal.Permutation.rule_Apply
+    , Horizontal.Permutation.rule_Compose
 
 
 
