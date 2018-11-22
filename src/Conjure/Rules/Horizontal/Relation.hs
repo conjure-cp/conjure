@@ -115,6 +115,8 @@ rule_Eq = "relation-eq" `namedRule` theRule where
                          (forAll &iPat in &x . &i in &y)
                          /\
                          (forAll &iPat in &y . &i in &x)
+                         /\
+                         (|&x| = |&y|)
                      |]
             )
 
