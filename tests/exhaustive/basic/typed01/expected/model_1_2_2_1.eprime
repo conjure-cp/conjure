@@ -4,7 +4,7 @@ find x_Occurrence: matrix indexed by [int(1)] of bool
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1)] of int(1, 2)
 find y_Occurrence: matrix indexed by [int(1)] of bool
-branching on [x_Occurrence, x_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithDummy, y_Occurrence]
+branching on [x_ExplicitVarSizeWithDummy, x_Occurrence, y_Occurrence, y_ExplicitVarSizeWithDummy]
 such that
     x_Occurrence[1] /\ (y_ExplicitVarSizeWithDummy[1] != 2 /\ y_ExplicitVarSizeWithDummy[1] = 1) -> false,
     x_ExplicitVarSizeWithDummy[1] != 2 -> x_Occurrence[x_ExplicitVarSizeWithDummy[1]],
