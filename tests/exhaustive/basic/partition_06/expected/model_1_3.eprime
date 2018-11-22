@@ -8,11 +8,11 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..4), int(1..4)] of int(1..4)
 branching on
-    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
-     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence,
-     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
      x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
-     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 such that
     and([q47 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q47, q48]) | q48 : int(1..4)]) = 2
