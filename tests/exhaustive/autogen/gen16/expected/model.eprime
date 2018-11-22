@@ -3,13 +3,19 @@ language ESSENCE' 1.0
 find x_ExplicitR15_RelationAsMatrix: matrix indexed by [int(1..2), int(1..2), int(3)] of bool
 branching on [x_ExplicitR15_RelationAsMatrix]
 such that
-    and([and([x_ExplicitR15_RelationAsMatrix[q6, q10_1, 3] -> false | q10_1 : int(1..2)]) \/
-         or([x_ExplicitR15_RelationAsMatrix[q6, q18_1, 3] /\ q18_1 = 2 | q18_1 : int(1..2)]) /\
-         and([x_ExplicitR15_RelationAsMatrix[q6, q13_1, 3] -> 2 = q13_1 | q13_1 : int(1..2)])
+    and([and([x_ExplicitR15_RelationAsMatrix[q6, q10_1, 3] -> false | q10_1 : int(1..2)]) /\
+         0 = sum([toInt(x_ExplicitR15_RelationAsMatrix[q6, q13_1, 3]) | q13_1 : int(1..2)])
+         \/
+         or([x_ExplicitR15_RelationAsMatrix[q6, q22_1, 3] /\ q22_1 = 2 | q22_1 : int(1..2)]) /\
+         and([x_ExplicitR15_RelationAsMatrix[q6, q17_1, 3] -> 2 = q17_1 | q17_1 : int(1..2)])
+         /\ 1 = sum([toInt(x_ExplicitR15_RelationAsMatrix[q6, q16_1, 3]) | q16_1 : int(1..2)])
              | q6 : int(1..2)]),
-    or([and([x_ExplicitR15_RelationAsMatrix[q22, q24_1, 3] -> false | q24_1 : int(1..2)]) | q22 : int(1..2)]),
-    or([and([x_ExplicitR15_RelationAsMatrix[q27, q29_1, 3] -> 2 = q29_1 | q29_1 : int(1..2)]) /\
-        or([x_ExplicitR15_RelationAsMatrix[q27, q34_1, 3] /\ q34_1 = 2 | q34_1 : int(1..2)])
-            | q27 : int(1..2)]),
+    or([and([x_ExplicitR15_RelationAsMatrix[q26, q28_1, 3] -> false | q28_1 : int(1..2)]) /\
+        sum([toInt(x_ExplicitR15_RelationAsMatrix[q26, q31_1, 3]) | q31_1 : int(1..2)]) = 0
+            | q26 : int(1..2)]),
+    or([and([x_ExplicitR15_RelationAsMatrix[q33, q37_1, 3] -> 2 = q37_1 | q37_1 : int(1..2)]) /\
+        or([x_ExplicitR15_RelationAsMatrix[q33, q42_1, 3] /\ q42_1 = 2 | q42_1 : int(1..2)])
+        /\ sum([toInt(x_ExplicitR15_RelationAsMatrix[q33, q36_1, 3]) | q36_1 : int(1..2)]) = 1
+            | q33 : int(1..2)]),
     flatten(x_ExplicitR15_RelationAsMatrix[1, .., ..]) <lex flatten(x_ExplicitR15_RelationAsMatrix[2, .., ..])
 
