@@ -6,9 +6,9 @@ find x_ExplicitR4_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2),
 find x_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)] of int(0..3)
 find x_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 branching on
-    [x_ExplicitR6_ExplicitVarSizeWithDummy, x_ExplicitR4_ExplicitVarSizeWithFlags_Flags,
-     x_ExplicitR4_ExplicitVarSizeWithFlags_Values, x_ExplicitR5_ExplicitVarSizeWithMarker_Marker,
-     x_ExplicitR5_ExplicitVarSizeWithMarker_Values]
+    [x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values,
+     x_ExplicitR6_ExplicitVarSizeWithDummy, x_ExplicitR4_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitR4_ExplicitVarSizeWithFlags_Values]
 such that
     x_ExplicitR6_ExplicitVarSizeWithDummy[1, ..] <lex x_ExplicitR6_ExplicitVarSizeWithDummy[2, ..],
     and([and([x_ExplicitR6_ExplicitVarSizeWithDummy[q2, q3] < x_ExplicitR6_ExplicitVarSizeWithDummy[q2, q3 + 1] \/

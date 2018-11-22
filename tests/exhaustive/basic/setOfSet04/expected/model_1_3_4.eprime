@@ -6,9 +6,8 @@ find x_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2)
 find x_ExplicitR4_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2), int(1..3)] of bool
 find x_ExplicitR4_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 branching on
-    [x_ExplicitR2_Occurrence, x_ExplicitR5_ExplicitVarSizeWithMarker_Marker,
-     x_ExplicitR5_ExplicitVarSizeWithMarker_Values, x_ExplicitR4_ExplicitVarSizeWithFlags_Flags,
-     x_ExplicitR4_ExplicitVarSizeWithFlags_Values]
+    [x_ExplicitR4_ExplicitVarSizeWithFlags_Flags, x_ExplicitR4_ExplicitVarSizeWithFlags_Values, x_ExplicitR2_Occurrence,
+     x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values]
 such that
     x_ExplicitR2_Occurrence[1, ..] <lex x_ExplicitR2_Occurrence[2, ..],
     and([sum([toInt(x_ExplicitR2_Occurrence[q2, q3]) | q3 : int(1..2)]) <= 3 | q2 : int(1..2)]),

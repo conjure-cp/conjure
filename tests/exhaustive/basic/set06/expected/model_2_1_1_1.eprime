@@ -2,7 +2,7 @@ language ESSENCE' 1.0
 
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find x_Occurrence: matrix indexed by [int(1..4)] of bool
-branching on [x_ExplicitVarSizeWithDummy, x_Occurrence]
+branching on [x_Occurrence, x_ExplicitVarSizeWithDummy]
 such that
     or([x_ExplicitVarSizeWithDummy[q12] != 5 /\ x_ExplicitVarSizeWithDummy[q12] = 1 | q12 : int(1..4)]),
     x_Occurrence[2],
