@@ -79,17 +79,17 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) TestDirFiles{..} =
                     readIfExists :: FilePath -> IO String
                     readIfExists f = fromMaybe "" <$> readFileIfExists f
 
-                step "Checking stdout"
-                stdoutG <- readIfExists (tBaseDir </> "stdout")
-                stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
-                unless (stdoutE == stdoutG) $
-                    assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
-                                                        , "was expecting:    " <++> pretty stdoutE ]
                 step "Checking stderr"
                 stderrG <- readIfExists (tBaseDir </> "stderr")
                 stderrE <- readIfExists (tBaseDir </> "stderr.expected")
                 unless (stderrE == stderrG) $
                     assertFailure $ renderNormal $ vcat [ "unexpected stderr:" <++> pretty stderrG
                                                         , "was expecting:    " <++> pretty stderrE ]
+                step "Checking stdout"
+                stdoutG <- readIfExists (tBaseDir </> "stdout")
+                stdoutE <- readIfExists (tBaseDir </> "stdout.expected")
+                unless (stdoutE == stdoutG) $
+                    assertFailure $ renderNormal $ vcat [ "unexpected stdout:" <++> pretty stdoutG
+                                                        , "was expecting:    " <++> pretty stdoutE ]
             else []
 
