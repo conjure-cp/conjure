@@ -8,8 +8,8 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..1 + (b - a))] 
 find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + (b - a))
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
 branching on
-    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
-     x_ExplicitVarSizeWithMarker_Values]
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitVarSizeWithFlags_Values]
 such that
     and([and([or([x_ExplicitVarSizeWithFlags_Flags[q24] /\
                   x_ExplicitVarSizeWithFlags_Values[q24] = t_ExplicitVarSizeWithDummy[q22]
