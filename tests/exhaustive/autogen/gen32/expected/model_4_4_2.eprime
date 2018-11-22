@@ -4,7 +4,7 @@ letting let1 be -4
 find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
 find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
-branching on [var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values, var2_ExplicitVarSizeWithDummy]
+branching on [var2_ExplicitVarSizeWithDummy, var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values]
 such that
     or([var2_ExplicitVarSizeWithFlags_Flags[q19] /\
         !or([var2_ExplicitVarSizeWithFlags_Flags[q21] /\
