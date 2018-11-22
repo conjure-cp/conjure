@@ -8,7 +8,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find conjure_aux3: int(1..2)
 find conjure_aux1: matrix indexed by [int(1..2)] of int(1..2)
 find conjure_aux2: matrix indexed by [int(1..2)] of int(1..2)
-branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Explicit, s_Occurrence]
+branching on [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Occurrence, s_Explicit]
 such that
     f_Function1DPartial_Flags[s_Explicit[1]],
     and([s_Occurrence[q14] -> q14 >= conjure_aux3 | q14 : int(1..2)]),
