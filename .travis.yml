@@ -105,7 +105,7 @@ install:
 
   # Minion
   - (minion | grep 'Minion Version 1.8') || etc/build/install-minion.sh
-  - minion help | head -n2                   # print version
+  - minion | head -n2                        # print version
 
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 
