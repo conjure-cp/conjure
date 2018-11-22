@@ -1057,6 +1057,9 @@ allRules config =
       , rule_ChooseReprForLocals        config
       ]
     , bubbleUpRules
+    , [ rule_Eq
+      , rule_Neq
+      ]
     , verticalRules
     , horizontalRules
     ] ++ otherRules
@@ -1694,6 +1697,40 @@ rule_GeneratorsFirst = "generators-first" `namedRule` theRule where
             , return $ transformBi f $ Comprehension body rest
             )
     theRule _ = na "rule_GeneratorsFirst"
+
+
+rule_Eq :: Rule
+rule_Eq = "identical-domain-eq" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opEq p
+        domX  <- domainOf x
+        domY  <- domainOf y
+        unless (domX == domY) $ na "rule_Eq domains not identical"
+        sameRepresentationTree x y
+        xs <- downX1 x
+        ys <- downX1 y
+        unless (length xs == length ys) $ na "rule_Eq"
+        return
+            ( "Horizontal rule for identical-domain equality"
+            , return $ make opAnd $ fromList $ zipWith (\ i j -> [essence| &i = &j |] ) xs ys
+            )
+
+
+rule_Neq :: Rule
+rule_Neq = "identical-domain-neq" `namedRule` theRule where
+    theRule p = do
+        (x,y) <- match opNeq p
+        domX  <- domainOf x
+        domY  <- domainOf y
+        unless (domX == domY) $ na "rule_Neq domains not identical"
+        sameRepresentationTree x y
+        xs <- downX1 x
+        ys <- downX1 y
+        unless (length xs == length ys) $ na "rule_Neq"
+        return
+            ( "Horizontal rule for identical-domain equality"
+            , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
+            )
 
 
 rule_ReducerToComprehension :: Rule

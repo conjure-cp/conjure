@@ -141,7 +141,7 @@ rule_DotLt = "function-DotLt" `namedRule` theRule where
         (a,b)          <- match opDotLt p
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
-        sameRepresentation a b
+        sameRepresentationTree a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
@@ -156,7 +156,7 @@ rule_DotLeq = "function-DotLeq" `namedRule` theRule where
         (a,b)          <- match opDotLeq p
         TypeFunction{} <- typeOf a
         TypeFunction{} <- typeOf b
-        sameRepresentation a b
+        sameRepresentationTree a b
         ma <- tupleLitIfNeeded <$> downX1 a
         mb <- tupleLitIfNeeded <$> downX1 b
         return
