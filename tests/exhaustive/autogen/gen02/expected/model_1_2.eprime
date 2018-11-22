@@ -11,10 +11,10 @@ find var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags:
 find var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values:
         matrix indexed by [int(1..4), int(1..2)] of bool
 branching on
-    [var2_ExplicitVarSizeWithMarkerR5_Marker, var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
-     var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values, var2_ExplicitVarSizeWithMarkerR4_Marker,
-     var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags,
-     var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values]
+    [var2_ExplicitVarSizeWithMarkerR4_Marker, var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags,
+     var2_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values, var2_ExplicitVarSizeWithMarkerR5_Marker,
+     var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
+     var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
 such that
     or([q45 <= var2_ExplicitVarSizeWithMarkerR5_Marker /\
         sum([toInt(q46 <= var2_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q45])
