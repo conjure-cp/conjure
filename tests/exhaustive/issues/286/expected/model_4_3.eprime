@@ -11,10 +11,11 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMark
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values:
         matrix indexed by [int(1..b), int(1..b)] of int(1..b)
 branching on
-    [p_PartitionOccurrence_NumParts, p_PartitionOccurrence_WhichPart, p_PartitionOccurrence_PartSizes,
-     p_PartitionOccurrence_FirstIndex, p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker,
      p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker,
-     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values]
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Values,
+     p_PartitionOccurrence_NumParts, p_PartitionOccurrence_WhichPart, p_PartitionOccurrence_PartSizes,
+     p_PartitionOccurrence_FirstIndex]
 such that
     sum([toInt(q55 <= p_PartitionOccurrence_NumParts) | q55 : int(1..b)]) <=
     sum([1   | q57_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),

@@ -9,9 +9,9 @@ find p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..b)
 find p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..b), int(1..b)] of int(1..b + 1)
 branching on
-    [p_PartitionOccurrence_NumParts, p_PartitionOccurrence_WhichPart, p_PartitionOccurrence_PartSizes,
-     p_PartitionOccurrence_FirstIndex, p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
-     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
+    [p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy, p_PartitionOccurrence_NumParts,
+     p_PartitionOccurrence_WhichPart, p_PartitionOccurrence_PartSizes, p_PartitionOccurrence_FirstIndex]
 such that
     sum([toInt(q60 <= p_PartitionOccurrence_NumParts) | q60 : int(1..b)]) <=
     sum([1   | q62_ExplicitVarSizeWithDummy : matrix indexed by [int(1..b)] of int(1..b + 1),

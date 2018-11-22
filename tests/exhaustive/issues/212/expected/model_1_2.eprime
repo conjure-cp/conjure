@@ -6,7 +6,7 @@ given fin2: int
 given b_Explicit: matrix indexed by [int(1..fin2)] of int(0..5)
 find x_Occurrence: matrix indexed by [int(0..5)] of bool
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..6)] of int(0..6)
-branching on [x_Occurrence, x_ExplicitVarSizeWithDummy]
+branching on [x_ExplicitVarSizeWithDummy, x_Occurrence]
 such that
     and([x_Occurrence[q11] ->
          or([a_Explicit[q13] = q11 | q13 : int(1..fin1), or([b_Explicit[q15] = a_Explicit[q13] | q15 : int(1..fin2)])])
