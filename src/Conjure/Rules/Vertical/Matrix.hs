@@ -4,7 +4,7 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 
 rule_Comprehension_Literal :: Rule
@@ -425,38 +425,6 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
         return
             ( "Horizontal rule for matrix <=, decomposing"
             , return $ decomposeLexLeq p xs ys
-            )
-
-
-rule_Matrix_DotLt_Decompose :: Rule
-rule_Matrix_DotLt_Decompose = "matrix-DotLt-tuple" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opDotLt p
-        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs              <- downX1 x
-        ys              <- downX1 y
-        return
-            ( "Horizontal rule for matrix .<, decomposing"
-            , return $ decomposeLexDotLt p xs ys
-            )
-
-
-rule_Matrix_DotLeq_Decompose :: Rule
-rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opDotLeq p
-        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs              <- downX1 x
-        ys              <- downX1 y
-        return
-            ( "Horizontal rule for matrix .<=, decomposing"
-            , return $ decomposeLexDotLeq p xs ys
             )
 
 

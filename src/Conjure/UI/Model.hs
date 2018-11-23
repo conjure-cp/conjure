@@ -1123,8 +1123,6 @@ verticalRules =
     , Vertical.Matrix.rule_Matrix_Leq_Decompose
     , Vertical.Matrix.rule_Matrix_Lt_Primitive
     , Vertical.Matrix.rule_Matrix_Lt_Decompose
-    , Vertical.Matrix.rule_Matrix_DotLeq_Decompose
-    , Vertical.Matrix.rule_Matrix_DotLt_Decompose
     , Vertical.Matrix.rule_IndexingIdentical
 
     , Vertical.Set.Explicit.rule_Min
