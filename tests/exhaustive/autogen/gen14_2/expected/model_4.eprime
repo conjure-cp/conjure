@@ -8,28 +8,10 @@ branching on
     [var1_PartitionOccurrence_NumParts, var1_PartitionOccurrence_WhichPart, var1_PartitionOccurrence_PartSizes,
      var1_PartitionOccurrence_FirstIndex]
 such that
-    and([q12 <= var1_PartitionOccurrence_NumParts ->
-         or([q15 <= var1_PartitionOccurrence_NumParts /\
-             (and([var1_PartitionOccurrence_WhichPart[q18] = q15 ->
-                   or([var1_PartitionOccurrence_WhichPart[q20] = q12 /\ q20 = q18 | q20 : int(1..2)])
-                       | q18 : int(1..2)])
-              /\
-              and([var1_PartitionOccurrence_WhichPart[q22] = q12 ->
-                   or([var1_PartitionOccurrence_WhichPart[q24] = q15 /\ q24 = q22 | q24 : int(1..2)])
-                       | q22 : int(1..2)]))
-                 | q15 : int(1..2)])
-             | q12 : int(1..2)]),
-    and([q26 <= var1_PartitionOccurrence_NumParts ->
-         or([q29 <= var1_PartitionOccurrence_NumParts /\
-             (and([var1_PartitionOccurrence_WhichPart[q32] = q29 ->
-                   or([var1_PartitionOccurrence_WhichPart[q34] = q26 /\ q34 = q32 | q34 : int(1..2)])
-                       | q32 : int(1..2)])
-              /\
-              and([var1_PartitionOccurrence_WhichPart[q36] = q26 ->
-                   or([var1_PartitionOccurrence_WhichPart[q38] = q29 /\ q38 = q36 | q38 : int(1..2)])
-                       | q36 : int(1..2)]))
-                 | q29 : int(1..2)])
-             | q26 : int(1..2)]),
+    var1_PartitionOccurrence_NumParts = var1_PartitionOccurrence_NumParts,
+    and([var1_PartitionOccurrence_WhichPart[q11] = var1_PartitionOccurrence_WhichPart[q11] | q11 : int(1..2)]),
+    and([var1_PartitionOccurrence_PartSizes[q13] = var1_PartitionOccurrence_PartSizes[q13] | q13 : int(1..2)]),
+    and([var1_PartitionOccurrence_FirstIndex[q15] = var1_PartitionOccurrence_FirstIndex[q15] | q15 : int(1..2)]),
     and([q1 <= var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] <= 2 | q1 : int(1..2)]),
     and([q1 > var1_PartitionOccurrence_NumParts -> var1_PartitionOccurrence_PartSizes[q1] = 0 | q1 : int(1..2)]),
     var1_PartitionOccurrence_NumParts <= 2,

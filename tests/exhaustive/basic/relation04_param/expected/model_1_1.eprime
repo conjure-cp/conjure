@@ -59,13 +59,9 @@ such that
          (r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1, ..] <lex
           r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1 + 1, ..]
           \/
-          and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1, q5] ->
+          and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1, q5] =
                r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1 + 1, q5]
                    | q5 : int(2..3)])
-          /\
-          and([r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1 + 1, q6] ->
-               r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_2_Occurrence[q1, q6]
-                   | q6 : int(2..3)])
           /\
           r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q1] <
           r_RelationAsSetR2_ExplicitVarSizeWithMarkerR2_Values_3[q1 + 1])

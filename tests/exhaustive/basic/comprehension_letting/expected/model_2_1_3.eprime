@@ -65,10 +65,10 @@ such that
     and([s_ExplicitVarSizeWithDummy[q1] < s_ExplicitVarSizeWithDummy[q1 + 1] \/ s_ExplicitVarSizeWithDummy[q1] = 5
              | q1 : int(1..3)]),
     and([s_ExplicitVarSizeWithDummy[q2] = 5 -> s_ExplicitVarSizeWithDummy[q2 + 1] = 5 | q2 : int(1..3)]),
-    and([s_Occurrence[q26] ->
-         or([s_ExplicitVarSizeWithDummy[q28] != 5 /\ s_ExplicitVarSizeWithDummy[q28] = q26 | q28 : int(1..4)])
-             | q26 : int(1..4)]),
-    and([s_ExplicitVarSizeWithDummy[q30] != 5 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q30]] | q30 : int(1..4)]),
+    and([s_Occurrence[q44] ->
+         or([s_ExplicitVarSizeWithDummy[q46] != 5 /\ s_ExplicitVarSizeWithDummy[q46] = q44 | q46 : int(1..4)])
+             | q44 : int(1..4)]),
+    and([s_ExplicitVarSizeWithDummy[q48] != 5 -> s_Occurrence[s_ExplicitVarSizeWithDummy[q48]] | q48 : int(1..4)]),
     and([q6 + 1 <= s_ExplicitVarSizeWithMarker_Marker ->
          s_ExplicitVarSizeWithMarker_Values[q6] < s_ExplicitVarSizeWithMarker_Values[q6 + 1]
              | q6 : int(1..3)]),

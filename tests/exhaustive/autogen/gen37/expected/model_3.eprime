@@ -15,26 +15,20 @@ such that
     var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, ..] <lex
     var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, ..]
     \/
-    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, q14] =
-         var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, q14]
-             | q14 : int(1..2)])
+    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, q20] =
+         var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, q20]
+             | q20 : int(1..2)])
     /\
     var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[1, ..] <lex
     var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[2, ..]
     \/
-    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, q17] ->
-         or([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, q19] /\
-             var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[2, q19] =
-             var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[1, q17]
-                 | q19 : int(1..2)])
-             | q17 : int(1..2)])
+    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, q14] =
+         var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, q14]
+             | q14 : int(1..2)])
     /\
-    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[2, q21] ->
-         or([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Flags[1, q23] /\
-             var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[1, q23] =
-             var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[2, q21]
-                 | q23 : int(1..2)])
-             | q21 : int(1..2)])
+    and([var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[1, q16] =
+         var1_RelationAsSetR4R7_ExplicitR4R7_1_ExplicitVarSizeWithFlags_Values[2, q16]
+             | q16 : int(1..2)])
     /\
     (var1_RelationAsSetR4R7_ExplicitR4R7_2_ExplicitWithFlags_Flags[1, ..] <lex
      var1_RelationAsSetR4R7_ExplicitR4R7_2_ExplicitWithFlags_Flags[2, ..]
