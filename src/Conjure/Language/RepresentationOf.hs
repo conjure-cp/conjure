@@ -30,13 +30,7 @@ sameRepresentation x y =
 
 sameRepresentationTree :: (RepresentationOf a, MonadFail m) => a -> a -> m ()
 sameRepresentationTree x y = do
-    let fails = fail "doesn't seem to have a representation"
     xTree <- representationTreeOf x
     yTree <- representationTreeOf y
-    case (rootLabel xTree, rootLabel yTree) of
-        (Nothing, _)               -> fails
-        (_, Nothing)               -> fails
-        (Just NoRepresentation, _) -> fails
-        (_, Just NoRepresentation) -> fails
-        (Just{}, Just{}) | xTree == yTree -> return ()
-                         | otherwise -> fails
+    unless (xTree == yTree) $
+        fail "doesn't seem to have the same representation tree"
