@@ -1693,11 +1693,13 @@ rule_Eq = "identical-domain-eq" `namedRule` theRule where
         domY  <- domainOf y
         unless (domX == domY) $ na "rule_Eq domains not identical"
         sameRepresentationTree x y
-        xs <- downX1 x
-        ys <- downX1 y
+        xs <- downX x
+        ys <- downX y
         unless (length xs == length ys) $ na "rule_Eq"
+        when (xs == [x]) $ na "rule_Eq"
+        when (ys == [y]) $ na "rule_Eq"
         return
-            ( "Horizontal rule for identical-domain equality"
+            ( "Generic vertical rule for identical-domain equality"
             , return $ make opAnd $ fromList $ zipWith (\ i j -> [essence| &i = &j |] ) xs ys
             )
 
@@ -1710,11 +1712,13 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
         domY  <- domainOf y
         unless (domX == domY) $ na "rule_Neq domains not identical"
         sameRepresentationTree x y
-        xs <- downX1 x
-        ys <- downX1 y
+        xs <- downX x
+        ys <- downX y
         unless (length xs == length ys) $ na "rule_Neq"
+        when (xs == [x]) $ na "rule_Neq"
+        when (ys == [y]) $ na "rule_Neq"
         return
-            ( "Horizontal rule for identical-domain equality"
+            ( "Generic vertical rule for identical-domain equality"
             , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
             )
 
