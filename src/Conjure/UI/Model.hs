@@ -46,7 +46,7 @@ import Conjure.UI.IO ( writeModel )
 import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
-    ( downX1, downD, reprOptions, getStructurals
+    ( downX, downX1, downD, reprOptions, getStructurals
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     )
 
@@ -1087,8 +1087,6 @@ verticalRules =
     , Vertical.Tuple.rule_Tuple_Neq
     , Vertical.Tuple.rule_Tuple_Leq
     , Vertical.Tuple.rule_Tuple_Lt
-    , Vertical.Tuple.rule_Tuple_DotLeq
-    , Vertical.Tuple.rule_Tuple_DotLt
     , Vertical.Tuple.rule_Tuple_TildeLeq
     , Vertical.Tuple.rule_Tuple_TildeLt
     , Vertical.Tuple.rule_Tuple_Index
@@ -1195,8 +1193,6 @@ horizontalRules =
     [ Horizontal.Set.rule_Comprehension_Literal
     , Horizontal.Set.rule_Eq
     , Horizontal.Set.rule_Neq
-    , Horizontal.Set.rule_DotLeq
-    , Horizontal.Set.rule_DotLt
     , Horizontal.Set.rule_Subset
     , Horizontal.Set.rule_SubsetEq
     , Horizontal.Set.rule_Supset
@@ -1215,8 +1211,6 @@ horizontalRules =
     , Horizontal.MSet.rule_Comprehension_ToSet_Literal
     , Horizontal.MSet.rule_Eq
     , Horizontal.MSet.rule_Neq
-    , Horizontal.MSet.rule_DotLeq
-    , Horizontal.MSet.rule_DotLt
     , Horizontal.MSet.rule_Subset
     , Horizontal.MSet.rule_SubsetEq
     , Horizontal.MSet.rule_Supset
@@ -1240,8 +1234,6 @@ horizontalRules =
     , Horizontal.Function.rule_Comprehension_ImageSet
     , Horizontal.Function.rule_Eq
     , Horizontal.Function.rule_Neq
-    , Horizontal.Function.rule_DotLeq
-    , Horizontal.Function.rule_DotLt
     , Horizontal.Function.rule_Subset
     , Horizontal.Function.rule_SubsetEq
     , Horizontal.Function.rule_Supset
@@ -1270,8 +1262,6 @@ horizontalRules =
     , Horizontal.Sequence.rule_Eq
     , Horizontal.Sequence.rule_Eq_Comprehension
     , Horizontal.Sequence.rule_Neq
-    , Horizontal.Sequence.rule_DotLeq
-    , Horizontal.Sequence.rule_DotLt
     , Horizontal.Sequence.rule_Subset
     , Horizontal.Sequence.rule_SubsetEq
     , Horizontal.Sequence.rule_Supset
@@ -1293,8 +1283,6 @@ horizontalRules =
     , Horizontal.Relation.rule_In
     , Horizontal.Relation.rule_Eq
     , Horizontal.Relation.rule_Neq
-    , Horizontal.Relation.rule_DotLeq
-    , Horizontal.Relation.rule_DotLt
     , Horizontal.Relation.rule_Subset
     , Horizontal.Relation.rule_SubsetEq
     , Horizontal.Relation.rule_Supset
@@ -1304,8 +1292,6 @@ horizontalRules =
     , Horizontal.Partition.rule_Comprehension_Literal
     , Horizontal.Partition.rule_Eq
     , Horizontal.Partition.rule_Neq
-    , Horizontal.Partition.rule_DotLeq
-    , Horizontal.Partition.rule_DotLt
     , Horizontal.Partition.rule_Together
     , Horizontal.Partition.rule_Apart
     , Horizontal.Partition.rule_Party
@@ -1385,6 +1371,8 @@ delayedRules =
         , Vertical.Matrix.rule_MatrixIndexing
         ]
     ,   [ rule_ReducerToComprehension
+        ]
+    ,   [ rule_DotLtLeq
         ]
     ]
 
@@ -1730,6 +1718,71 @@ rule_Neq = "identical-domain-neq" `namedRule` theRule where
         return
             ( "Horizontal rule for identical-domain equality"
             , return $ make opOr $ fromList $ zipWith (\ i j -> [essence| &i != &j |] ) xs ys
+            )
+
+
+rule_DotLtLeq :: Rule
+rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
+    theRule p = do
+        (a,b,mk) <- case p of
+                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
+                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
+                    _ -> na "rule_DotLtLeq"
+        aType <- typeOf a
+        case aType of
+            TypeTuple{}     -> return ()
+            TypeMatrix{}    -> return ()
+            TypeSet{}       -> return ()
+            TypeMSet{}      -> return ()
+            TypeFunction{}  -> return ()
+            TypeSequence{}  -> return ()
+            TypeRelation{}  -> return ()
+            TypePartition{} -> return ()
+            _ -> na "rule_DotLtLeq"
+        -- sameRepresentationTree a b
+        let
+            nestingLevel (TypeMatrix _ t) = 1 + nestingLevel t
+            nestingLevel (TypeList     t) = 1 + nestingLevel t
+            nestingLevel _ = 0 :: Int
+
+            innerMostTy (TypeMatrix _ t) = innerMostTy t
+            innerMostTy (TypeList     t) = innerMostTy t
+            innerMostTy t = t
+
+            matrixForAll [] x = return (x, [])
+            matrixForAll (dom:doms) x = do
+                (iPat, i) <- quantifiedVar
+                (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
+                let gen = Generator (GenDomainNoRepr iPat dom)
+                return (xIndexed, gen : gens)
+            
+            mk1D x = do
+                ty <- typeOf x
+                case nestingLevel ty of
+                    0 -> case ty of
+                            TypeBool  -> return [essence| [toInt(&x)] |]
+                            TypeInt{} -> return [essence| [&x] |]
+                            _         -> bug ("What type? [0]" <+> pretty ty)
+                    nl -> do
+                        xInt <- case innerMostTy ty of
+                            TypeBool -> do
+                                doms <- indexDomainsOf x
+                                (xIndexed, gens) <- matrixForAll doms x
+                                return $ Comprehension [essence| toInt(&xIndexed) |] gens
+                            TypeInt{} -> return x
+                            _ -> bug ("What type? [1]" <+> pretty ty)
+                        if nl == 1
+                            then return xInt
+                            else return [essence| flatten(&xInt) |]
+
+            wrap [x] = x
+            wrap xs = make opFlatten (fromList xs)
+
+        ma <- downX a >>= mapM mk1D >>= return . wrap
+        mb <- downX b >>= mapM mk1D >>= return . wrap
+        return
+            ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
+            , return $ mk ma mb
             )
 
 

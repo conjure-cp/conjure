@@ -1,7 +1,9 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Rules.Vertical.Record where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 -- containers
 import qualified Data.Map.Strict as M ( fromList, (!) )
@@ -78,9 +80,11 @@ rule_Record_DotLt = "record-DotLt" `namedRule` theRule where
         TypeRecord yFields <- typeOf y
         xs                 <- downX1 x
         ys                 <- sortByFields xFields yFields <$> downX1 y
+        let xsTuple = tupleLitIfNeeded xs
+        let ysTuple = tupleLitIfNeeded ys
         return
-            ( "Horizontal rule for record <"
-            , return $ decomposeLexDotLt p xs ys
+            ( "Horizontal rule for record .<"
+            , return [essence| &xsTuple .< &ysTuple |]
             )
 
 
@@ -92,9 +96,11 @@ rule_Record_DotLeq = "record-DotLeq" `namedRule` theRule where
         TypeRecord yFields <- typeOf y
         xs                 <- downX1 x
         ys                 <- sortByFields xFields yFields <$> downX1 y
+        let xsTuple = tupleLitIfNeeded xs
+        let ysTuple = tupleLitIfNeeded ys
         return
-            ( "Horizontal rule for record <="
-            , return $ decomposeLexDotLeq p xs ys
+            ( "Horizontal rule for record .<="
+            , return [essence| &xsTuple .<= &ysTuple |]
             )
 
 

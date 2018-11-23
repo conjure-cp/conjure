@@ -135,36 +135,6 @@ rule_SupsetEq = "function-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_DotLt :: Rule
-rule_DotLt = "function-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLt p
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
-        sameRepresentationTree a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for function .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "function-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLeq p
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
-        sameRepresentationTree a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for function .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
-
-
 rule_Inverse :: Rule
 rule_Inverse = "function-inverse" `namedRule` theRule where
     theRule [essence| inverse(&a, &b) |] = do
