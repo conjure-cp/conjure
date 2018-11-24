@@ -3,6 +3,7 @@ language ESSENCE' 1.0
 find x_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..4)] of bool
 branching on [x_ExplicitR2_Occurrence]
 such that
-    x_ExplicitR2_Occurrence[1, ..] <lex x_ExplicitR2_Occurrence[2, ..],
+    [toInt(x_ExplicitR2_Occurrence[1, q4]) | q4 : int(1..4)] <lex
+    [toInt(x_ExplicitR2_Occurrence[2, q5]) | q5 : int(1..4)],
     and([3 = sum([toInt(x_ExplicitR2_Occurrence[q2, q3]) | q3 : int(1..4)]) | q2 : int(1..2)])
 

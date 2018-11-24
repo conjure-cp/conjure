@@ -16,36 +16,25 @@ branching on
      var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex]
 such that
     var6_ExplicitVarSizeWithFlagsR18_Flags[2] ->
-    var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[1] <
-    var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[2]
-    \/
-    var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[1] =
-    var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[2]
-    /\
-    (var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[1, ..] <lex
-     var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[2, ..]
-     \/
-     and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[1, q16] =
-          var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[2, q16]
-              | q16 : int(2, 5)])
-     /\
-     (var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[1, ..] <lex
-      var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[2, ..]
-      \/
-      and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[1, q18] =
-           var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[2, q18]
-               | q18 : int(1..2)])
-      /\
-      var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[1, ..] <lex
-      var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[2, ..])),
+    flatten([[var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[1]; int(1)],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[1, ..],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[1, ..],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[1, ..];
+                 int(1..4)])
+    <lex
+    flatten([[var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[2]; int(1)],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[2, ..],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[2, ..],
+             var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[2, ..];
+                 int(1..4)]),
     and([var6_ExplicitVarSizeWithFlagsR18_Flags[q2] = false ->
          and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_NumParts[q2] = 1,
-              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[q2, q20] = 1
-                       | q20 : int(2, 5)]),
-              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[q2, q21] = 0
-                       | q21 : int(1..2)]),
-              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[q2, q22] = 2
-                       | q22 : int(1..2)]);
+              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_WhichPart[q2, q16] = 1
+                       | q16 : int(2, 5)]),
+              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_PartSizes[q2, q17] = 0
+                       | q17 : int(1..2)]),
+              and([var6_ExplicitVarSizeWithFlagsR18_Values_PartitionOccurrence_FirstIndex[q2, q18] = 2
+                       | q18 : int(1..2)]);
                   int(1..4)])
              | q2 : int(1..2)]),
     var6_ExplicitVarSizeWithFlagsR18_Flags[2] -> var6_ExplicitVarSizeWithFlagsR18_Flags[1],

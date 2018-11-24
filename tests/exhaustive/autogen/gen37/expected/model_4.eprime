@@ -13,32 +13,17 @@ branching on
      var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag,
      var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Values]
 such that
-    var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, ..] <lex
-    var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, ..]
-    \/
-    and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, q17] =
-         var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q17]
-             | q17 : int(1..2)])
-    /\
-    var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, ..] <lex
-    var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, ..]
-    \/
-    and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, q13] =
-         var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q13]
-             | q13 : int(1..2)])
-    /\
-    and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, q15] =
-         var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, q15]
-             | q15 : int(1..2)])
-    /\
-    (var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[1] <
-     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[2]
-     \/
-     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[1] =
-     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[2]
-     /\
-     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Values[1, ..] <lex
-     var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Values[2, ..]),
+    flatten([[toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[1, q13]) | q13 : int(1..2)],
+             [toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[1, q14]) | q14 : int(1..2)],
+             [var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[1]; int(1)],
+             ([] : `matrix indexed by [int()] of int`);
+                 int(1..4)])
+    <lex
+    flatten([[toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[2, q16]) | q16 : int(1..2)],
+             [toInt(var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[2, q17]) | q17 : int(1..2)],
+             [var1_RelationAsSetR4R8_ExplicitR4R8_2_ExplicitWithRepetition_Flag[2]; int(1)],
+             ([] : `matrix indexed by [int()] of int`);
+                 int(1..4)]),
     and([var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Flags[q2, 2] ->
          var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 1] <
          var1_RelationAsSetR4R8_ExplicitR4R8_1_ExplicitVarSizeWithFlags_Values[q2, 2]

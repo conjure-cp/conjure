@@ -14,23 +14,21 @@ branching on
      var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix]
 such that
     and([q1 + 1 <= var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Marker ->
-         var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Flags
-             [q1, ..]
+         flatten([var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Flags
+                      [q1, ..],
+                  ([] : `matrix indexed by [int()] of int`),
+                  [toInt(var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix
+                             [q1, q15, q16])
+                       | q15 : bool, q16 : bool];
+                      int(1..3)])
          <lex
-         var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Flags
-             [q1 + 1, ..]
-         \/
-         var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Values
-             [q1, ..]
-         <lex
-         var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Values
-             [q1 + 1, ..]
-         \/
-         flatten(var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix
-                     [q1, .., ..])
-         <lex
-         flatten(var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix
-                     [q1 + 1, .., ..])
+         flatten([var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_1_ExplicitWithFlags_Flags
+                      [q1 + 1, ..],
+                  ([] : `matrix indexed by [int()] of int`),
+                  [toInt(var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix
+                             [q1 + 1, q18, q19])
+                       | q18 : bool, q19 : bool];
+                      int(1..3)])
              | q1 : int(1..2)]),
     and([q2 > var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Marker ->
          and([and([var2_FunctionAsRelationR7R15_RelationAsSetR7R15_ExplicitVarSizeWithMarkerR7R15_Values_2_RelationAsMatrix

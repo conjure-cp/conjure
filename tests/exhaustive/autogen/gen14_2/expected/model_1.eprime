@@ -7,32 +7,32 @@ branching on
      var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence]
 such that
     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker = var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker,
-    and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q12, q14] =
-              var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q12, q14]
-                  | q14 : int(1..2)])
-             | q12 : int(1..2)]),
-    alldifferent_except([toInt(q16 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q16, q2])
+    and([and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q14, q16] =
+              var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q14, q16]
+                  | q16 : int(1..2)])
+             | q14 : int(1..2)]),
+    alldifferent_except([toInt(q18 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                               var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q18, q2])
                          * catchUndef(q2, 0)
-                             | q16 : int(1..2), q2 : int(1..2)],
+                             | q18 : int(1..2), q2 : int(1..2)],
                         0),
-    and([q17 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q17, q18]) | q18 : int(1..2)]) >=
-         1   | q17 : int(1..2)]),
+    and([q19 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q19, q20]) | q20 : int(1..2)]) >=
+         1   | q19 : int(1..2)]),
     2 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-    var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[1, ..] <lex
-    var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[2, ..],
+    [toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[1, q9]) | q9 : int(1..2)] <lex
+    [toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[2, q10]) | q10 : int(1..2)],
     and([q5 > var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9] = false | q9 : int(1..2)])
+         and([var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q11] = false | q11 : int(1..2)])
              | q5 : int(1..2)]),
     var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= 2,
     and([q6 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q6, q7]) | q7 : int(1..2)]) <= 2
              | q6 : int(1..2)]),
     2 =
-    sum([toInt(q10 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
-         catchUndef(sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q10, q11])
-                             | q11 : int(1..2)]),
+    sum([toInt(q12 <= var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker) *
+         catchUndef(sum([toInt(var1_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q12, q13])
+                             | q13 : int(1..2)]),
                     0)
-             | q10 : int(1..2)])
+             | q12 : int(1..2)])
 
