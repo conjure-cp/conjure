@@ -1,3 +1,5 @@
+{-# LANGUAGE QuasiQuotes #-}
+
 module Conjure.Rules.Vertical.Relation.RelationAsSet where
 
 import Conjure.Rules.Import
@@ -21,3 +23,15 @@ rule_Comprehension = "relation-map_in_expr{RelationAsSet}" `namedRule` theRule w
                     ++ gocAfter
             )
     theRule _ = na "rule_Comprehension"
+
+rule_Card :: Rule
+rule_Card = "relation-card{RelationAsSet}" `namedRule` theRule where
+    theRule p = do
+        rel              <- match opTwoBars p
+        TypeRelation{}   <- typeOf rel
+        Relation_AsSet{} <- representationOf rel
+        [set]            <- downX1 rel
+        return
+            ( "Vertical rule for set cardinality, ExplicitVarSizeWithMarker representation."
+            , return [essence| |&set| |]
+            )

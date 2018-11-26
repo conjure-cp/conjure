@@ -4,7 +4,7 @@ find a_Explicit: matrix indexed by [int(1)] of int(1..3)
 find a_Occurrence: matrix indexed by [int(1..3)] of bool
 find b_Occurrence: matrix indexed by [int(1..3)] of bool
 find b_Explicit: matrix indexed by [int(1)] of int(1..3)
-branching on [a_Explicit, a_Occurrence, b_Occurrence, b_Explicit]
+branching on [a_Occurrence, a_Explicit, b_Explicit, b_Occurrence]
 such that
     a_Explicit[1] % 2 = 0,
     and([b_Occurrence[i] -> i % 2 = 0 | i : int(1..3)]),

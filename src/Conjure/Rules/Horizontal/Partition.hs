@@ -61,36 +61,6 @@ rule_Neq = "partition-neq" `namedRule` theRule where
     theRule _ = na "rule_Neq"
 
 
-rule_DotLt :: Rule
-rule_DotLt = "partition-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)           <- match opDotLt p
-        TypePartition{} <- typeOf a
-        TypePartition{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for partition .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "partition-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)           <- match opDotLeq p
-        TypePartition{} <- typeOf a
-        TypePartition{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for partition .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
-
-
 rule_Together :: Rule
 rule_Together = "partition-together" `namedRule` theRule where
     theRule [essence| together(&x,&p) |] = do

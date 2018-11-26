@@ -5,6 +5,7 @@ module Conjure.Representations
     , reprOptions, getStructurals
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     , downX1
+    , downX
     ) where
 
 -- conjure
@@ -30,6 +31,17 @@ downX1 (Comprehension body stmts) = do
     return [Comprehension x stmts | x <- xs]
 downX1 x@WithLocals{} = fail ("downX1:" <++> pretty (show x))
 downX1 x = bug ("downX1:" <++> pretty (show x))
+
+
+-- | Refine (down) an expression (X), all the way.
+downX :: (NameGen m, EnumerateDomain m) => Expression -> m [Expression]
+downX x = do
+    res <- runMaybeT $ downX1 x
+    case res of
+        Nothing -> return [x]
+        Just [] -> return [x]
+        Just xs -> concatMapM downX xs
+
 
 onConstant :: (MonadFail m, NameGen m, EnumerateDomain m) => Constant -> m [Expression]
 onConstant (ConstantAbstract (AbsLitTuple xs)) = return (map Constant xs)

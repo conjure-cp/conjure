@@ -12,7 +12,7 @@ wget --no-check-certificate -c http://www.labri.fr/perso/lsimon/downloads/softwa
 tar zxf glucose-syrup-4.1.tgz
 cd glucose-syrup-4.1/
 cd parallel
-make r
+make -j r
 cp glucose-syrup_release ${BIN_DIR}/glucose-syrup
 echo "glucose executable is at ${BIN_DIR}/glucose-syrup"
 ls -l ${BIN_DIR}/glucose-syrup

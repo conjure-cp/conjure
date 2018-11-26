@@ -5,8 +5,8 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..7)] of int(1.
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..7)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..7)] of int(1..7)
 branching on
-    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
-     x_ExplicitVarSizeWithFlags_Values]
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithMarker_Values]
 such that
     and([q17 <= x_ExplicitVarSizeWithMarker_Marker /\ q18 <= x_ExplicitVarSizeWithMarker_Marker ->
          |x_ExplicitVarSizeWithMarker_Values[q17] - x_ExplicitVarSizeWithMarker_Values[q18]| >= 3

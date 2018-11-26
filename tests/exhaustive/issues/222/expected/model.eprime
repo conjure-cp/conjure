@@ -6,5 +6,6 @@ branching on [s_Explicit_1, s_Explicit_2]
 such that
     and([s_Explicit_1[q3] = s_Explicit_1[q4] \/ s_Explicit_2[q3] = s_Explicit_2[q4]
              | q3 : int(1..2), q4 : int(1..2), q4 > q3]),
-    s_Explicit_1[1] < s_Explicit_1[2] \/ s_Explicit_1[1] = s_Explicit_1[2] /\ s_Explicit_2[1] < s_Explicit_2[2]
+    flatten([[s_Explicit_1[1]; int(1)], [s_Explicit_2[1]; int(1)]; int(1..2)]) <lex
+    flatten([[s_Explicit_1[2]; int(1)], [s_Explicit_2[2]; int(1)]; int(1..2)])
 

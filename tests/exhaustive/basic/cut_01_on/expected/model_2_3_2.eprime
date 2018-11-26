@@ -6,7 +6,7 @@ find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..3)] of int(1.
 find cut1: bool
 find cut2: bool
 branching on
-    [cut1, cut2, x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
+    [cut1, cut2, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithDummy]
 such that
     !cut1 <->
     or([x_ExplicitVarSizeWithDummy[q19] != 4 /\ x_ExplicitVarSizeWithDummy[q19] = 1 | q19 : int(1..3)]) /\

@@ -12,17 +12,15 @@ branching on
      var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit]
 such that
     var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[2] ->
-    var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1] <
-    var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[2]
-    \/
-    var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1] =
-    var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[2]
-    /\
-    flatten(var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                [1, .., ..])
+    flatten([[var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[1]; int(1)],
+             flatten(var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
+                         [1, .., ..]);
+                 int(1..2)])
     <lex
-    flatten(var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
-                [2, .., ..]),
+    flatten([[var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[2]; int(1)],
+             flatten(var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Values_Explicit
+                         [2, .., ..]);
+                 int(1..2)]),
     and([var6_ExplicitVarSizeWithFlagsR17R5R3_Flags[q2] = false ->
          var6_ExplicitVarSizeWithFlagsR17R5R3_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR3_Marker[q2] = 0
              | q2 : int(1..2)]),

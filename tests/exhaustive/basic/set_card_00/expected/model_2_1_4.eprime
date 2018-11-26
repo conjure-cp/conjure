@@ -5,7 +5,7 @@ find s_Occurrence: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
 branching on
-    [s_ExplicitVarSizeWithDummy, s_Occurrence, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
+    [s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_ExplicitVarSizeWithDummy, s_Occurrence]
 such that
     s_Occurrence[sum([toInt(s_ExplicitVarSizeWithDummy[q25] != 3) | q25 : int(1..2)])],
     s_ExplicitVarSizeWithDummy[1] < s_ExplicitVarSizeWithDummy[2] \/ s_ExplicitVarSizeWithDummy[1] = 3,

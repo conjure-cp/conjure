@@ -12,37 +12,17 @@ branching on
      var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag,
      var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Values]
 such that
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1] <
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2]
-    \/
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1] =
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2]
-    /\
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, ..] <lex
-    var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, ..]
-    \/
-    and([q12 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1] ->
-         or([q14 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2] /\
-             var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q14] =
-             var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q12]
-                 | q14 : int(1..2)])
-             | q12 : int(1..2)])
-    /\
-    and([q16 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2] ->
-         or([q18 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1] /\
-             var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q18] =
-             var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q16]
-                 | q18 : int(1..2)])
-             | q16 : int(1..2)])
-    /\
-    (var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[1] <
-     var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[2]
-     \/
-     var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[1] =
-     var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[2]
-     /\
-     var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Values[1, ..] <lex
-     var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Values[2, ..]),
+    flatten([[var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
+             [toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[1, q11]) | q11 : int(1..2)],
+             [var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[1]; int(1)],
+             ([] : `matrix indexed by [int()] of int`);
+                 int(1..4)])
+    <lex
+    flatten([[var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
+             [toInt(var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[2, q13]) | q13 : int(1..2)],
+             [var1_RelationAsSetR5R8_ExplicitR5R8_2_ExplicitWithRepetition_Flag[2]; int(1)],
+             ([] : `matrix indexed by [int()] of int`);
+                 int(1..4)]),
     and([2 <= var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Marker[q2] ->
          var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 1] <
          var1_RelationAsSetR5R8_ExplicitR5R8_1_ExplicitVarSizeWithMarker_Values[q2, 2]

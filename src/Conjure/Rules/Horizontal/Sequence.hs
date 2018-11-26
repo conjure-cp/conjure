@@ -217,36 +217,6 @@ rule_SupsetEq = "sequence-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_DotLt :: Rule
-rule_DotLt = "sequence-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLt p
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for sequence .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "sequence-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLeq p
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for sequence .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
-
-
 rule_Comprehension_PreImage :: Rule
 rule_Comprehension_PreImage = "sequence-preImage" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do

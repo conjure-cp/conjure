@@ -9,7 +9,10 @@ module Conjure.Rules.Definition
     , Config(..)
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
-    , isAtomic, representationOf, hasRepresentation, matchFirst
+    , isAtomic
+    , representationOf, hasRepresentation
+    , sameRepresentation, sameRepresentationTree
+    , matchFirst
     ) where
 
 import Conjure.Prelude

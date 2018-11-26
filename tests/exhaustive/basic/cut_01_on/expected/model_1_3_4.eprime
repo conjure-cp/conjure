@@ -8,8 +8,8 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..3)] of int(1..
 find cut1: bool
 find cut2: bool
 branching on
-    [cut1, cut2, x_Occurrence, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values,
-     x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
+    [cut1, cut2, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence,
+     x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
     !cut1 <-> x_Occurrence[1] /\ x_Occurrence[2],
     !cut2 <->

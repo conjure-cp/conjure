@@ -10,9 +10,12 @@ such that
          x_ExplicitVarSizeWithFlags_Values_1[q7] = x_ExplicitVarSizeWithFlags_Values_2[q7]
              | q7 : int(1..16)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values_1[q1] < x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] \/
-         x_ExplicitVarSizeWithFlags_Values_1[q1] = x_ExplicitVarSizeWithFlags_Values_1[q1 + 1] /\
-         x_ExplicitVarSizeWithFlags_Values_2[q1] < x_ExplicitVarSizeWithFlags_Values_2[q1 + 1]
+         flatten([[x_ExplicitVarSizeWithFlags_Values_1[q1]; int(1)], [x_ExplicitVarSizeWithFlags_Values_2[q1]; int(1)];
+                      int(1..2)])
+         <lex
+         flatten([[x_ExplicitVarSizeWithFlags_Values_1[q1 + 1]; int(1)],
+                  [x_ExplicitVarSizeWithFlags_Values_2[q1 + 1]; int(1)];
+                      int(1..2)])
              | q1 : int(1..15)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2] = false ->
          x_ExplicitVarSizeWithFlags_Values_1[q2] = 1 /\ x_ExplicitVarSizeWithFlags_Values_2[q2] = 3

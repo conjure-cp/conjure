@@ -112,50 +112,6 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_DotLt :: Rule
-rule_DotLt = "set-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)     <- match opDotLt p
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for set .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "set-DotLeq" `namedRule` theRule where
-  --This works but not for occurrence rep
-    theRule [essence| &a .<= image(&perm, &b) |] = do
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
-        TypePermutation{} <- typeOf perm
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for set .<="
-                <+> pretty ([essence| &ma .<= image(&perm, &mb) |])
-
-            , return $ [essence| &ma .<= image(&perm, &mb) |]
-            )
-    theRule p = do
-        (a,b)     <- match opDotLeq p
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for set .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
-
-
 rule_Intersect :: Rule
 rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do

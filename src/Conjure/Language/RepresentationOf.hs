@@ -27,3 +27,10 @@ sameRepresentation x y =
     case (representationOf x, representationOf y) of
         (Just rx, Just ry) | rx == ry -> return ()
         _ -> fail "doesn't seem to have the same representation"
+
+sameRepresentationTree :: (RepresentationOf a, MonadFail m) => a -> a -> m ()
+sameRepresentationTree x y = do
+    xTree <- representationTreeOf x
+    yTree <- representationTreeOf y
+    unless (xTree == yTree) $
+        fail "doesn't seem to have the same representation tree"
