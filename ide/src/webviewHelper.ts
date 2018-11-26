@@ -50,15 +50,16 @@ export default class WebviewHelper {
         }
     }
 
+    public static  async activate(context: vscode.ExtensionContext) {
 
-    public static activate(context: vscode.ExtensionContext) {
+    // public static activate(context: vscode.ExtensionContext) {
 
         WebviewHelper.context = context;
 
 
-        // let testDir = await this.getFolder();
+        let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/Documents/sh/essence/conjure-output";
+        // let testDir = "/home/tom/Documents/sh/essence/conjure-output";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
 
         if (testDir) {

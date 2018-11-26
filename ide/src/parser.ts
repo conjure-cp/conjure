@@ -1,5 +1,5 @@
 import fs = require('fs');
-import * as math from 'mathjs';
+// import * as math from 'mathjs';
 let rename = require('deep-rename-keys');
 let empty = require('is-empty');
 // let jsondiffpatch = require('jsondiffpatch').create();
@@ -488,7 +488,15 @@ export default class Parser {
 
             if (set instanceof DummySet) {
                 let num = Number(splitted[splitted.length - 1]);
-                obj["name"] = "Include " + num + " in " + splitted[0];
+                if (obj['branchVal'] === num) {
+                    obj["name"] = "Include " + num + " in " + splitted[0];
+                }
+                else if (obj['branchVal'] === set.dummy){
+                    obj["name"] = "Exclude " + num + " in " + splitted[0];
+                }
+                else{
+                    obj["name"] = obj["branchVar"] + " = " + obj['branchVal'];
+                }
             }
         }
         else {

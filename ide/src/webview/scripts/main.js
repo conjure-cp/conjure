@@ -1,3 +1,4 @@
+/*jshint esversion: 6 */
 let panel = require('./util/panel.js');
 let colours = require('./util/colours.js');
 
@@ -7,7 +8,7 @@ let colours = require('./util/colours.js');
 
     vscode.postMessage({
         command: 'ready',
-    })
+    });
 
     window.addEventListener('message', event => {
 
@@ -26,15 +27,15 @@ let colours = require('./util/colours.js');
         let init = true;
         let allTreeViewNodes;
 
-        Mousetrap.bind('n', next, 'keydown')
-        Mousetrap.bind('p', previous, 'keydown')
-        Mousetrap.bind('r', goRight, 'keydown')
-        Mousetrap.bind('l', goLeft, 'keydown')
-        Mousetrap.bind('u', goUp, 'keydown')
-        Mousetrap.bind('t', () => { nodeToggle(nodeMap[selectedNode]) }, 'keydown')
-        Mousetrap.bind('e', expander)
-        Mousetrap.bind('c', collapser)
-        Mousetrap.bind('r', () => { vscode.postMessage({ command: 'ready', }) })
+        Mousetrap.bind('n', next, 'keydown');
+        Mousetrap.bind('p', previous, 'keydown');
+        Mousetrap.bind('r', goRight, 'keydown');
+        Mousetrap.bind('l', goLeft, 'keydown');
+        Mousetrap.bind('u', goUp, 'keydown');
+        Mousetrap.bind('t', () => { nodeToggle(nodeMap[selectedNode]) }, 'keydown');
+        Mousetrap.bind('e', expander);
+        Mousetrap.bind('c', collapser);
+        Mousetrap.bind('r', () => { vscode.postMessage({ command: 'ready', }) });
 
 
         function goUp() {
