@@ -293,8 +293,8 @@ export default class Parser {
     }
 
     public parseAuxOccurence(key: string) {
-        let minoinAux = new RegExp(key + ' #(.*)');
-        let match = minoinAux.exec(this.minionFile);
+        let minionAux = new RegExp(key + ' #(.*)');
+        let match = minionAux.exec(this.minionFile);
         let intermediate: string = key;
         if (match) {
             intermediate = match[1];
@@ -309,6 +309,14 @@ export default class Parser {
             else {
                 this.auxMap[key] = intermediate;
             }
+        }
+
+        let cseRegex = new RegExp("\\(?Active-CSE: \\d* occurrences of this expression or equivalent: (.*)");
+
+        match = cseRegex.exec(intermediate);
+
+        if (match){
+            return match[match.length -1];
         }
 
         return intermediate;
@@ -425,17 +433,12 @@ export default class Parser {
 
             for (let i = 0; i < obj[key].length; i++) {
                 if (!(obj[key][i][0] === obj[key][i][1])) {
-                    if (obj[key].length > 1) {
-                        obj[key][i] = "(" + obj[key][i][0] + ".." + obj[key][i][1] + ")";
-
-                    }
-                    else {
-                        obj[key][i] = obj[key][i][0] + ".." + obj[key][i][1];
-                    }
+                    obj[key][i] = obj[key][i][0] + ".." + obj[key][i][1];
                 }
             }
 
             if (this.jsonAux.test(key)) {
+
                 variable = new Expression(variable);
                 variable.name = (this.parseAuxOccurence(key));
             }
