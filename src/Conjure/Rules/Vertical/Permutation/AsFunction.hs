@@ -5,6 +5,45 @@ module Conjure.Rules.Vertical.Permutation.AsFunction where
 import Conjure.Rules.Import
 import Conjure.Rules.Vertical.Matrix (flattenIfNeeded)
 
+rule_Permutation_Equality :: Rule
+rule_Permutation_Equality = "permutation-equality{AsFunction}" `namedRule` theRule where
+    theRule [essence| &p1 = &p2|] = do
+        TypePermutation{}                 <- typeOf p1
+        Permutation_AsFunction <- representationOf p1
+        TypePermutation{}                 <- typeOf p2
+        Permutation_AsFunction <- representationOf p2
+        [f1] <- downX1 p2
+        [f2] <- downX1 p2
+        return
+            ( "Vertical rule for permutation-equality, AsFunction representation"
+            , return [essence| &f1 = &f2 |]
+            )
+    theRule _ = na "rule_Permutation_Equality"
+
+
+rule_Permutation_Equality_Comprehension :: Rule
+rule_Permutation_Equality_Comprehension = "permutation-equality-comprehension{AsFunction}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) =  do
+        (gocBefore, (pat, p1, p2), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat [essence| &p1 = &p2|]  ) -> return (pat, p1, p2)
+            _ -> na "rule_Comprehension"
+        TypePermutation{}                 <- typeOf p1
+        Permutation_AsFunction <- representationOf p1
+        TypePermutation{}                 <- typeOf p2
+        Permutation_AsFunction <- representationOf p2
+        [f1] <- downX1 p2
+        [f2] <- downX1 p2
+        return
+            ( "Vertical rule for permutation-equality-comprehension, AsFunction representation"
+            , do
+                return $ Comprehension body 
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr pat [essence| &f1 = &f2 |])
+                           ]
+                        ++ gocAfter 
+            )
+    theRule _ = na "rule_Permutation_Equality_Comprehension"
+
 rule_Permute_Comprehension_Tuples :: Rule
 rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) =  do

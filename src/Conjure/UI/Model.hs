@@ -1187,7 +1187,8 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
-
+    , Vertical.Permutation.AsFunction.rule_Permutation_Equality
+    , Vertical.Permutation.AsFunction.rule_Permutation_Equality_Comprehension
     , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
     , Vertical.Permutation.AsFunction.rule_Relation_Permute
     , Vertical.Permutation.AsFunction.rule_Relation_Permute_Comprehension
