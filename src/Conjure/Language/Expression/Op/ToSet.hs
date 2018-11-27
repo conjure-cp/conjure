@@ -9,6 +9,8 @@ import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
+import Data.Permutation
+
 
 data OpToSet x = OpToSet
                     Bool       -- True means we can assume there won't be any duplicates
@@ -45,6 +47,10 @@ instance EvaluateOp OpToSet where
         return $ ConstantAbstract $ AbsLitSet $ sortNub [ConstantAbstract $ AbsLitTuple [a,b] | (a,b) <- xs]
     evaluateOp (OpToSet _ (viewConstantRelation -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet $ sortNub $ map (ConstantAbstract . AbsLitTuple) xs
+    evaluateOp (OpToSet _ (viewConstantPermutation -> Just xs)) =
+        case toFunction <$> fromCycles xs of
+           Left (PermutationError e) -> na $ "evaluateOp{OpToSet}:" <++> pretty e 
+           Right fn -> return $ ConstantAbstract $ AbsLitSet $ (ConstantAbstract . AbsLitTuple) <$> ((\x -> [x, fn x]) <$> join xs)
     evaluateOp op = na $ "evaluateOp{OpToSet}:" <++> pretty (show op)
 
 instance SimplifyOp OpToSet x where

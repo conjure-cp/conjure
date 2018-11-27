@@ -280,25 +280,6 @@ opToSet _ =
     )
 
 
-opPermutationTuples
-    :: ( Op x :< x
-       , Pretty x
-       , MonadFail m
-       )
-    => Proxy (m :: * -> *)
-    -> ( x -> x
-       , x -> m x
-       )
-opPermutationTuples _ =
-    ( inject . MkOpPermutationTuples . OpPermutationTuples 
-    , \ p -> do
-            op <- project p
-            case op of
-                MkOpPermutationTuples (OpPermutationTuples x) -> return x
-                _ -> na ("Lenses.opPermutationTuples:" <++> pretty p)
-    )
-
-
 
 opToSetWithFlag
     :: ( Op x :< x

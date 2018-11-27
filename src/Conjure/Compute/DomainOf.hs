@@ -119,7 +119,6 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     domainOf (MkOpParticipants x) = domainOf x
     domainOf (MkOpParts x) = domainOf x
     domainOf (MkOpParty x) = domainOf x
-    domainOf (MkOpPermutationTuples x) = domainOf x
     domainOf (MkOpPow x) = domainOf x
     domainOf (MkOpPowerSet x) = domainOf x
     domainOf (MkOpPred x) = domainOf x
@@ -192,7 +191,6 @@ instance (DomainOf x, TypeOf x, Pretty x, ExpressionLike x, Domain () x :< x, Do
     indexDomainsOf (MkOpParticipants x) = indexDomainsOf x
     indexDomainsOf (MkOpParts x) = indexDomainsOf x
     indexDomainsOf (MkOpParty x) = indexDomainsOf x
-    indexDomainsOf (MkOpPermutationTuples x) = indexDomainsOf x
     indexDomainsOf (MkOpPow x) = indexDomainsOf x
     indexDomainsOf (MkOpPowerSet x) = indexDomainsOf x
     indexDomainsOf (MkOpPred x) = indexDomainsOf x
@@ -506,10 +504,6 @@ instance DomainOf x => DomainOf (OpParts x) where
 
 instance (Pretty x, TypeOf x) => DomainOf (OpParty x) where
     domainOf op = mkDomainAny ("OpParty:" <++> pretty op) <$> typeOf op
-
-instance (Pretty x, TypeOf x) => DomainOf (OpPermutationTuples x) where
-    domainOf op = mkDomainAny ("OpPermutationTuples:" <++> pretty op) <$> typeOf op
-
 
 
 instance (Pretty x, TypeOf x) => DomainOf (OpCompose x) where

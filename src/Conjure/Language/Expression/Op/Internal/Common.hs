@@ -268,7 +268,6 @@ functionals =
     , L_participants
     , L_parts
     , L_image
-    , L_permutationTuples
     , L_freq
     , L_toInt
     , L_flatten
