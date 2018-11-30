@@ -24,6 +24,7 @@ import Conjure.Representations.Set.Explicit
 import Conjure.Representations.Set.ExplicitVarSizeWithDummy
 import Conjure.Representations.Set.ExplicitVarSizeWithMarker
 import Conjure.Representations.Set.ExplicitVarSizeWithFlags
+import Conjure.Representations.MSet.Occurrence
 import Conjure.Representations.MSet.ExplicitWithFlags
 import Conjure.Representations.MSet.ExplicitWithRepetition
 import Conjure.Representations.Function.Function1D
@@ -155,6 +156,7 @@ dispatch domain = do
             Set_ExplicitVarSizeWithFlags      -> setExplicitVarSizeWithFlags
             _ -> nope
         DomainMSet r _ _ -> case r of
+            MSet_Occurrence                   -> msetOccurrence
             MSet_ExplicitWithFlags            -> msetExplicitWithFlags
             MSet_ExplicitWithRepetition       -> msetExplicitWithRepetition
             _ -> nope
@@ -195,7 +197,7 @@ reprsStandardOrderNoLevels = return $ concat
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition
+      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -218,7 +220,7 @@ reprsStandardOrder =
     [ [ primitive, tuple, record, variant, matrix downD1 downC1 up1
       , setOccurrence, setExplicit, setExplicitVarSizeWithDummy
       , setExplicitVarSizeWithMarker, setExplicitVarSizeWithFlags
-      , msetExplicitWithFlags, msetExplicitWithRepetition
+      , msetExplicitWithFlags, msetExplicitWithRepetition, msetOccurrence
       , function1D, function1DPartial, functionND, functionNDPartial
       , sequenceExplicitBounded
       , relationAsMatrix
@@ -241,7 +243,8 @@ reprsSparseOrder = map return
     , setExplicit, setExplicitVarSizeWithDummy, setExplicitVarSizeWithMarker
     , setOccurrence, setExplicitVarSizeWithFlags              -- redundant
 
-    , msetExplicitWithFlags, msetExplicitWithRepetition
+    , msetExplicitWithFlags
+    , msetExplicitWithRepetition, msetOccurrence              -- redundant
 
     , function1D, functionND
     , functionAsRelation dispatch (reprOptions reprsSparseOrder)

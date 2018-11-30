@@ -255,15 +255,15 @@ parseDomainWithRepr = pDomainAtom
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ braces parseReprInner
-                         , return NoRepresentation
-                         ]
+        parseRepr l = msum [ braces (parseReprInner l)
+                           , return NoRepresentation
+                           ]
 
-        parseReprInner = do
+        parseReprInner l = do
             pos    <- getPosition
             nm     <- identifierText
-            inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
-            case textToRepresentation nm inners of
+            inners <- fromMaybe [] <$> optional (brackets (commaSeparated (parseReprInner l)))
+            case textToRepresentation l nm inners of
                 Nothing -> do
                     setPosition pos
                     fail ("Not a valid representation:" <+> pretty nm)
@@ -337,41 +337,41 @@ parseDomainWithRepr = pDomainAtom
 
         pSet = do
             lexeme L_set
-            r <- parseRepr
+            r <- parseRepr L_set
             x <- parseSetAttr
             y <- lexeme L_of >> parseDomainWithRepr
             return $ DomainSet r x y
 
         pMSet = do
             lexeme L_mset
-            r <- parseRepr
+            r <- parseRepr L_mset
             x <- parseMSetAttr
             y <- lexeme L_of >> parseDomainWithRepr
             return $ DomainMSet r x y
 
         pFunction' = do
             lexeme L_function
-            r <- parseRepr
+            r <- parseRepr L_function
             (y,z) <- arrowedPair parseDomainWithRepr
             return $ DomainFunction r def y z
 
         pFunction = do
             lexeme L_function
-            r <- parseRepr
+            r <- parseRepr L_function
             x <- parseFunctionAttr
             (y,z) <- arrowedPair parseDomainWithRepr
             return $ DomainFunction r x y z
 
         pSequence = do
             lexeme L_sequence
-            r <- parseRepr
+            r <- parseRepr L_sequence
             x <- parseSequenceAttr
             y <- lexeme L_of >> parseDomainWithRepr
             return $ DomainSequence r x y
 
         pRelation = do
             lexeme L_relation
-            r  <- parseRepr
+            r  <- parseRepr L_relation
             pos <- getPosition
             x  <- parseRelationAttr
             lexeme L_of
@@ -385,7 +385,7 @@ parseDomainWithRepr = pDomainAtom
 
         pPartition = do
             lexeme L_partition
-            r <- parseRepr
+            r <- parseRepr L_partition
             x <- parsePartitionAttr
             lexeme L_from
             y <- parseDomainWithRepr

@@ -31,6 +31,7 @@ module Conjure.Language.Domain
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
+import Conjure.Language.Lexer ( Lexeme(L_set, L_mset) )
 import Conjure.Language.Name
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
@@ -758,6 +759,7 @@ data HasRepresentation
     | Set_ExplicitVarSizeWithMarker
     | Set_ExplicitVarSizeWithDummy
 
+    | MSet_Occurrence
     | MSet_ExplicitWithFlags
     | MSet_ExplicitWithRepetition
 
@@ -880,25 +882,26 @@ instance Pretty HasRepresentation where
     pretty NoRepresentation = "∅"
     pretty r = pretty (representationToFullText r)
 
-textToRepresentation :: Text -> [HasRepresentation] -> Maybe HasRepresentation
-textToRepresentation t []             | t == "Occurrence"                 = return Set_Occurrence
-textToRepresentation t []             | t == "Explicit"                   = return Set_Explicit
-textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
-textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
-textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
-textToRepresentation t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
-textToRepresentation t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
-textToRepresentation t []             | t == "Function1D"                 = return Function_1D
-textToRepresentation t []             | t == "Function1DPartial"          = return Function_1DPartial
-textToRepresentation t []             | t == "FunctionND"                 = return Function_ND
-textToRepresentation t []             | t == "FunctionNDPartial"          = return Function_NDPartial
-textToRepresentation t [repr]         | t == "FunctionAsRelation"         = return (Function_AsRelation repr)
-textToRepresentation t []             | t == "ExplicitBounded"            = return Sequence_ExplicitBounded
-textToRepresentation t []             | t == "RelationAsMatrix"           = return Relation_AsMatrix
-textToRepresentation t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
-textToRepresentation t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
-textToRepresentation t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
-textToRepresentation t _ = bug ("textToRepresentation:" <+> pretty t)
+textToRepresentation :: Lexeme -> Text -> [HasRepresentation] -> Maybe HasRepresentation
+textToRepresentation L_set  t []             | t == "Occurrence"                 = return Set_Occurrence
+textToRepresentation _      t []             | t == "Explicit"                   = return Set_Explicit
+textToRepresentation _      t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
+textToRepresentation _      t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
+textToRepresentation _      t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
+textToRepresentation L_mset t []             | t == "ExplicitWithFlags"          = return MSet_Occurrence
+textToRepresentation _      t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
+textToRepresentation _      t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
+textToRepresentation _      t []             | t == "Function1D"                 = return Function_1D
+textToRepresentation _      t []             | t == "Function1DPartial"          = return Function_1DPartial
+textToRepresentation _      t []             | t == "FunctionND"                 = return Function_ND
+textToRepresentation _      t []             | t == "FunctionNDPartial"          = return Function_NDPartial
+textToRepresentation _      t [repr]         | t == "FunctionAsRelation"         = return (Function_AsRelation repr)
+textToRepresentation _      t []             | t == "ExplicitBounded"            = return Sequence_ExplicitBounded
+textToRepresentation _      t []             | t == "RelationAsMatrix"           = return Relation_AsMatrix
+textToRepresentation _      t [repr]         | t == "RelationAsSet"              = return (Relation_AsSet repr)
+textToRepresentation _      t [repr1, repr2] | t == "PartitionAsSet"             = return (Partition_AsSet repr1 repr2)
+textToRepresentation _      t []             | t == "PartitionOccurrence"        = return Partition_Occurrence
+textToRepresentation _      t _ = bug ("textToRepresentation:" <+> pretty t)
 
 representationToShortText :: HasRepresentation -> Text
 representationToShortText Set_Occurrence                 = "Occurrence"
@@ -906,6 +909,7 @@ representationToShortText Set_Explicit                   = "Explicit"
 representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
 representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
+representationToShortText MSet_Occurrence                = "Occurrence"
 representationToShortText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
 representationToShortText MSet_ExplicitWithRepetition    = "ExplicitWithRepetition"
 representationToShortText Function_1D                    = "Function1D"
