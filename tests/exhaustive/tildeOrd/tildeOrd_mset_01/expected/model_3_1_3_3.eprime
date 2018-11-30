@@ -1,0 +1,76 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
+find b_ExplicitWithFlags_Flags: matrix indexed by [int(1..3)] of int(0..3)
+find b_ExplicitWithFlags_Values: matrix indexed by [int(1..3)] of int(1..2)
+find b_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
+branching on [a_Occurrence, b_Occurrence, b_ExplicitWithFlags_Flags, b_ExplicitWithFlags_Values]
+such that
+    or([a_Occurrence[q24] > 0 /\
+        (a_Occurrence[q24] <
+         sum([toInt(b_ExplicitWithFlags_Values[q16] = q24) * catchUndef(b_ExplicitWithFlags_Flags[q16], 0)
+                  | q16 : int(1..3)])
+         /\
+         (and([a_Occurrence[q20] > 0 ->
+               a_Occurrence[q20] =
+               sum([toInt(b_ExplicitWithFlags_Values[q17] = q20) * catchUndef(b_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..3)])
+                   | q20 : int(1..2), q20 < q24])
+          /\
+          and([and([b_ExplicitWithFlags_Flags[q21] > 0,
+                    !or([a_Occurrence[q19] > 0 /\ q19 = b_ExplicitWithFlags_Values[q21] | q19 : int(1..2)]),
+                    b_ExplicitWithFlags_Values[q21] < q24;
+                        int(1..3)])
+               ->
+               a_Occurrence[b_ExplicitWithFlags_Values[q21]] =
+               sum([toInt(b_ExplicitWithFlags_Values[q17] = b_ExplicitWithFlags_Values[q21]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..3)])
+                   | q21 : int(1..3)])))
+            | q24 : int(1..2)])
+    \/
+    or([b_ExplicitWithFlags_Flags[q25] > 0 /\
+        !or([a_Occurrence[q23] > 0 /\ q23 = b_ExplicitWithFlags_Values[q25] | q23 : int(1..2)])
+        /\
+        (a_Occurrence[b_ExplicitWithFlags_Values[q25]] <
+         sum([toInt(b_ExplicitWithFlags_Values[q16] = b_ExplicitWithFlags_Values[q25]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q16], 0)
+                  | q16 : int(1..3)])
+         /\
+         (and([q20 < b_ExplicitWithFlags_Values[q25] ->
+               (a_Occurrence[q20] > 0 ->
+                a_Occurrence[q20] =
+                sum([toInt(b_ExplicitWithFlags_Values[q17] = q20) * catchUndef(b_ExplicitWithFlags_Flags[q17], 0)
+                         | q17 : int(1..3)]))
+                   | q20 : int(1..2)])
+          /\
+          and([and([b_ExplicitWithFlags_Flags[q21] > 0,
+                    !or([a_Occurrence[q19] > 0 /\ q19 = b_ExplicitWithFlags_Values[q21] | q19 : int(1..2)]),
+                    b_ExplicitWithFlags_Values[q21] < b_ExplicitWithFlags_Values[q25];
+                        int(1..3)])
+               ->
+               a_Occurrence[b_ExplicitWithFlags_Values[q21]] =
+               sum([toInt(b_ExplicitWithFlags_Values[q17] = b_ExplicitWithFlags_Values[q21]) *
+                    catchUndef(b_ExplicitWithFlags_Flags[q17], 0)
+                        | q17 : int(1..3)])
+                   | q21 : int(1..3)])))
+            | q25 : int(1..3)]),
+    3 = sum([a_Occurrence[q1] | q1 : int(1..2)]),
+    and([b_ExplicitWithFlags_Flags[q2 + 1] > 0 -> b_ExplicitWithFlags_Values[q2] < b_ExplicitWithFlags_Values[q2 + 1]
+             | q2 : int(1..2)]),
+    and([b_ExplicitWithFlags_Flags[q3] = 0 -> b_ExplicitWithFlags_Values[q3] = 1 | q3 : int(1..3)]),
+    and([b_ExplicitWithFlags_Flags[q4 + 1] > 0 -> b_ExplicitWithFlags_Flags[q4] > 0 | q4 : int(1..2)]),
+    3 = sum([b_ExplicitWithFlags_Flags[q6] | q6 : int(1..3)]),
+    3 = sum([b_Occurrence[q8] | q8 : int(1..2)]),
+    and([b_Occurrence[q10] > 0 ->
+         b_Occurrence[q10] =
+         sum([toInt(b_ExplicitWithFlags_Values[q11] = q10) * catchUndef(b_ExplicitWithFlags_Flags[q11], 0)
+                  | q11 : int(1..3)])
+             | q10 : int(1..2)]),
+    and([b_ExplicitWithFlags_Flags[q12] > 0 ->
+         b_Occurrence[b_ExplicitWithFlags_Values[q12]] =
+         sum([toInt(b_ExplicitWithFlags_Values[q13] = b_ExplicitWithFlags_Values[q12]) *
+              catchUndef(b_ExplicitWithFlags_Flags[q13], 0)
+                  | q13 : int(1..3)])
+             | q12 : int(1..3)])
+

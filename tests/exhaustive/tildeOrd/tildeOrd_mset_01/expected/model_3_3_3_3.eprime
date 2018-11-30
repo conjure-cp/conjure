@@ -1,0 +1,24 @@
+language ESSENCE' 1.0
+
+find a_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
+find b_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
+branching on [a_Occurrence, b_Occurrence]
+such that
+    or([a_Occurrence[q11] > 0 /\
+        (a_Occurrence[q11] < b_Occurrence[q11] /\
+         (and([a_Occurrence[q7] > 0 -> a_Occurrence[q7] = b_Occurrence[q7] | q7 : int(1..2), q7 < q11]) /\
+          and([b_Occurrence[q8] > 0 /\ !or([a_Occurrence[q6] > 0 /\ q6 = q8 | q6 : int(1..2)]) ->
+               a_Occurrence[q8] = b_Occurrence[q8]
+                   | q8 : int(1..2), q8 < q11])))
+            | q11 : int(1..2)])
+    \/
+    or([b_Occurrence[q12] > 0 /\ !or([a_Occurrence[q10] > 0 /\ q10 = q12 | q10 : int(1..2)]) /\
+        (a_Occurrence[q12] < b_Occurrence[q12] /\
+         (and([a_Occurrence[q7] > 0 -> a_Occurrence[q7] = b_Occurrence[q7] | q7 : int(1..2), q7 < q12]) /\
+          and([b_Occurrence[q8] > 0 /\ !or([a_Occurrence[q6] > 0 /\ q6 = q8 | q6 : int(1..2)]) ->
+               a_Occurrence[q8] = b_Occurrence[q8]
+                   | q8 : int(1..2), q8 < q12])))
+            | q12 : int(1..2)]),
+    3 = sum([a_Occurrence[q1] | q1 : int(1..2)]),
+    3 = sum([b_Occurrence[q2] | q2 : int(1..2)])
+
