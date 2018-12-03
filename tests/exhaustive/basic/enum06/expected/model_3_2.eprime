@@ -1,12 +1,12 @@
 language ESSENCE' 1.0
 
-find x_Occurrence: matrix indexed by [int(1..2)] of int(0..4)
+find x_MOccurrence: matrix indexed by [int(1..2)] of int(0..4)
 find x_ExplicitWithRepetition_Flag: int(0..4)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..4)] of int(1..2)
-branching on [x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values, x_Occurrence]
+branching on [x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values, x_MOccurrence]
 such that
-    or([x_Occurrence[q15] > 0 /\ q15 = 1 | q15 : int(1..2)]),
-    sum([x_Occurrence[q1] | q1 : int(1..2)]) <= 4,
+    or([x_MOccurrence[q15] > 0 /\ q15 = 1 | q15 : int(1..2)]),
+    sum([x_MOccurrence[q1] | q1 : int(1..2)]) <= 4,
     and([q2 + 1 <= x_ExplicitWithRepetition_Flag ->
          x_ExplicitWithRepetition_Values[q2] <= x_ExplicitWithRepetition_Values[q2 + 1]
              | q2 : int(1..3)]),
@@ -16,12 +16,12 @@ such that
          sum([toInt(q10 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q10] = x_ExplicitWithRepetition_Values[q8]), 0)
                   | q10 : int(1..4)])
-         = x_Occurrence[x_ExplicitWithRepetition_Values[q8]]
+         = x_MOccurrence[x_ExplicitWithRepetition_Values[q8]]
              | q8 : int(1..4)]),
-    and([x_Occurrence[q11] > 0 ->
+    and([x_MOccurrence[q11] > 0 ->
          sum([toInt(q13 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q13] = q11), 0)
                   | q13 : int(1..4)])
-         = x_Occurrence[q11]
+         = x_MOccurrence[q11]
              | q11 : int(1..2)])
 

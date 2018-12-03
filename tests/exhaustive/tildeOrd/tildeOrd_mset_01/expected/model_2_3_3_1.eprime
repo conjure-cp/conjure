@@ -2,49 +2,52 @@ language ESSENCE' 1.0
 
 find a_ExplicitWithRepetition_Flag: int(3)
 find a_ExplicitWithRepetition_Values: matrix indexed by [int(1..3)] of int(1..2)
-find a_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
-find b_Occurrence: matrix indexed by [int(1..2)] of int(0..3)
+find a_MOccurrence: matrix indexed by [int(1..2)] of int(0..3)
+find b_MOccurrence: matrix indexed by [int(1..2)] of int(0..3)
 find b_ExplicitWithFlags_Flags: matrix indexed by [int(1..3)] of int(0..3)
 find b_ExplicitWithFlags_Values: matrix indexed by [int(1..3)] of int(1..2)
 branching on
-    [a_Occurrence, a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, b_ExplicitWithFlags_Flags,
-     b_ExplicitWithFlags_Values, b_Occurrence]
+    [a_MOccurrence, a_ExplicitWithRepetition_Flag, a_ExplicitWithRepetition_Values, b_ExplicitWithFlags_Flags,
+     b_ExplicitWithFlags_Values, b_MOccurrence]
 such that
     or([sum([toInt(a_ExplicitWithRepetition_Values[q35] = a_ExplicitWithRepetition_Values[q36])
                  | q35 : int(1..3), q35 <= 3])
-        < b_Occurrence[a_ExplicitWithRepetition_Values[q36]]
+        < b_MOccurrence[a_ExplicitWithRepetition_Values[q36]]
         /\
         (and([a_ExplicitWithRepetition_Values[q30] < a_ExplicitWithRepetition_Values[q36] ->
               sum([toInt(a_ExplicitWithRepetition_Values[q29] = a_ExplicitWithRepetition_Values[q30])
                        | q29 : int(1..3), q29 <= 3])
-              = b_Occurrence[a_ExplicitWithRepetition_Values[q30]]
+              = b_MOccurrence[a_ExplicitWithRepetition_Values[q30]]
                   | q30 : int(1..3), q30 <= 3])
          /\
          and([q33 < a_ExplicitWithRepetition_Values[q36] ->
-              (b_Occurrence[q33] > 0 /\ !or([a_ExplicitWithRepetition_Values[q32] = q33 | q32 : int(1..3), q32 <= 3]) ->
-               sum([toInt(a_ExplicitWithRepetition_Values[q29] = q33) | q29 : int(1..3), q29 <= 3]) = b_Occurrence[q33])
+              (b_MOccurrence[q33] > 0 /\ !or([a_ExplicitWithRepetition_Values[q32] = q33 | q32 : int(1..3), q32 <= 3])
+               ->
+               sum([toInt(a_ExplicitWithRepetition_Values[q29] = q33) | q29 : int(1..3), q29 <= 3]) =
+               b_MOccurrence[q33])
                   | q33 : int(1..2)]))
             | q36 : int(1..3), q36 <= 3])
     \/
-    or([b_Occurrence[q39] > 0 /\ !or([a_ExplicitWithRepetition_Values[q38] = q39 | q38 : int(1..3), q38 <= 3]) /\
-        (sum([toInt(a_ExplicitWithRepetition_Values[q35] = q39) | q35 : int(1..3), q35 <= 3]) < b_Occurrence[q39] /\
+    or([b_MOccurrence[q39] > 0 /\ !or([a_ExplicitWithRepetition_Values[q38] = q39 | q38 : int(1..3), q38 <= 3]) /\
+        (sum([toInt(a_ExplicitWithRepetition_Values[q35] = q39) | q35 : int(1..3), q35 <= 3]) < b_MOccurrence[q39] /\
          (and([a_ExplicitWithRepetition_Values[q30] < q39 ->
                sum([toInt(a_ExplicitWithRepetition_Values[q29] = a_ExplicitWithRepetition_Values[q30])
                         | q29 : int(1..3), q29 <= 3])
-               = b_Occurrence[a_ExplicitWithRepetition_Values[q30]]
+               = b_MOccurrence[a_ExplicitWithRepetition_Values[q30]]
                    | q30 : int(1..3), q30 <= 3])
           /\
-          and([b_Occurrence[q33] > 0 /\ !or([a_ExplicitWithRepetition_Values[q32] = q33 | q32 : int(1..3), q32 <= 3]) ->
-               sum([toInt(a_ExplicitWithRepetition_Values[q29] = q33) | q29 : int(1..3), q29 <= 3]) = b_Occurrence[q33]
+          and([b_MOccurrence[q33] > 0 /\ !or([a_ExplicitWithRepetition_Values[q32] = q33 | q32 : int(1..3), q32 <= 3])
+               ->
+               sum([toInt(a_ExplicitWithRepetition_Values[q29] = q33) | q29 : int(1..3), q29 <= 3]) = b_MOccurrence[q33]
                    | q33 : int(1..2), q33 < q39])))
             | q39 : int(1..2)]),
     and([a_ExplicitWithRepetition_Values[q1] <= a_ExplicitWithRepetition_Values[q1 + 1] | q1 : int(1..2), q1 + 1 <= 3]),
-    3 = sum([b_Occurrence[q6] | q6 : int(1..2)]),
-    3 = sum([a_Occurrence[q7] | q7 : int(1..2)]),
-    and([a_Occurrence[q20] > 0 ->
-         a_Occurrence[q20] = sum([toInt(a_ExplicitWithRepetition_Values[q22] = q20) | q22 : int(1..3), q22 <= 3])
+    3 = sum([b_MOccurrence[q6] | q6 : int(1..2)]),
+    3 = sum([a_MOccurrence[q7] | q7 : int(1..2)]),
+    and([a_MOccurrence[q20] > 0 ->
+         a_MOccurrence[q20] = sum([toInt(a_ExplicitWithRepetition_Values[q22] = q20) | q22 : int(1..3), q22 <= 3])
              | q20 : int(1..2)]),
-    and([a_Occurrence[a_ExplicitWithRepetition_Values[q23]] =
+    and([a_MOccurrence[a_ExplicitWithRepetition_Values[q23]] =
          sum([toInt(a_ExplicitWithRepetition_Values[q25] = a_ExplicitWithRepetition_Values[q23])
                   | q25 : int(1..3), q25 <= 3])
              | q23 : int(1..3), q23 <= 3]),
@@ -57,11 +60,11 @@ such that
          sum([toInt(b_ExplicitWithFlags_Values[q16] = b_ExplicitWithFlags_Values[q15]) *
               catchUndef(b_ExplicitWithFlags_Flags[q16], 0)
                   | q16 : int(1..3)])
-         = b_Occurrence[b_ExplicitWithFlags_Values[q15]]
+         = b_MOccurrence[b_ExplicitWithFlags_Values[q15]]
              | q15 : int(1..3)]),
-    and([b_Occurrence[q17] > 0 ->
+    and([b_MOccurrence[q17] > 0 ->
          sum([toInt(b_ExplicitWithFlags_Values[q18] = q17) * catchUndef(b_ExplicitWithFlags_Flags[q18], 0)
                   | q18 : int(1..3)])
-         = b_Occurrence[q17]
+         = b_MOccurrence[q17]
              | q17 : int(1..2)])
 

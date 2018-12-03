@@ -5,8 +5,8 @@ given g_ExplicitWithFlags_Flags: matrix indexed by [int(1..fin1)] of int(0..2)
 given g_ExplicitWithFlags_Values: matrix indexed by [int(1..fin1)] of int(1..2)
 find x_ExplicitWithRepetition_Flag: int(0..4)
 find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..4)] of int(1..2)
-find x_Occurrence: matrix indexed by [int(1..2)] of int(0..2)
-branching on [x_Occurrence, x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values]
+find x_MOccurrence: matrix indexed by [int(1..2)] of int(0..2)
+branching on [x_MOccurrence, x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values]
 such that
     and([sum([g_ExplicitWithFlags_Flags[q18]
                   | q18 : int(1..fin1), g_ExplicitWithFlags_Values[q18] = g_ExplicitWithFlags_Values[q17]])
@@ -35,15 +35,15 @@ such that
          <= 2
              | q4 : int(1..4)]),
     x_ExplicitWithRepetition_Flag <= 4,
-    sum([x_Occurrence[q8] | q8 : int(1..2)]) <= 4,
-    and([x_Occurrence[q10] > 0 ->
-         x_Occurrence[q10] =
+    sum([x_MOccurrence[q8] | q8 : int(1..2)]) <= 4,
+    and([x_MOccurrence[q10] > 0 ->
+         x_MOccurrence[q10] =
          sum([toInt(q12 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q12] = q10), 0)
                   | q12 : int(1..4)])
              | q10 : int(1..2)]),
     and([q13 <= x_ExplicitWithRepetition_Flag ->
-         x_Occurrence[x_ExplicitWithRepetition_Values[q13]] =
+         x_MOccurrence[x_ExplicitWithRepetition_Values[q13]] =
          sum([toInt(q15 <= x_ExplicitWithRepetition_Flag) *
               catchUndef(toInt(x_ExplicitWithRepetition_Values[q15] = x_ExplicitWithRepetition_Values[q13]), 0)
                   | q15 : int(1..4)])

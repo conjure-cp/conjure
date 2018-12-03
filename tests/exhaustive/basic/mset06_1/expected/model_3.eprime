@@ -1,6 +1,6 @@
 language ESSENCE' 1.0
 
-find x_Occurrence: matrix indexed by [int(1..2)] of int(0..2)
-branching on [x_Occurrence]
-such that and([x_Occurrence[q1] = 0 \/ x_Occurrence[q1] >= 1 | q1 : int(1..2)])
+find x_MOccurrence: matrix indexed by [int(1..2)] of int(0..2)
+branching on [x_MOccurrence]
+such that and([x_MOccurrence[q1] = 0 \/ x_MOccurrence[q1] >= 1 | q1 : int(1..2)])
 

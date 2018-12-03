@@ -3,16 +3,16 @@ language ESSENCE' 1.0
 given fin1: int
 given g_ExplicitWithFlags_Flags: matrix indexed by [int(1..fin1)] of int(0..2)
 given g_ExplicitWithFlags_Values: matrix indexed by [int(1..fin1)] of int(1..2)
-find x_Occurrence: matrix indexed by [int(1..2)] of int(0..2)
-branching on [x_Occurrence]
+find x_MOccurrence: matrix indexed by [int(1..2)] of int(0..2)
+branching on [x_MOccurrence]
 such that
     and([sum([g_ExplicitWithFlags_Flags[q4]
                   | q4 : int(1..fin1), g_ExplicitWithFlags_Values[q4] = g_ExplicitWithFlags_Values[q3]])
-         = x_Occurrence[g_ExplicitWithFlags_Values[q3]]
+         = x_MOccurrence[g_ExplicitWithFlags_Values[q3]]
              | q3 : int(1..fin1), g_ExplicitWithFlags_Flags[q3] > 0]),
-    and([x_Occurrence[q5] > 0 ->
+    and([x_MOccurrence[q5] > 0 ->
          sum([g_ExplicitWithFlags_Flags[q6] | q6 : int(1..fin1), g_ExplicitWithFlags_Values[q6] = q5]) =
-         x_Occurrence[q5]
+         x_MOccurrence[q5]
              | q5 : int(1..2)]),
-    sum([x_Occurrence[q1] | q1 : int(1..2)]) <= 4
+    sum([x_MOccurrence[q1] | q1 : int(1..2)]) <= 4
 
