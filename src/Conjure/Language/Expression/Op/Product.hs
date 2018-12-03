@@ -59,7 +59,10 @@ instance (OpProduct x :< x) => SimplifyOp OpProduct x where
         | Just xs <- listOut x
         , let filtered = filter (/=1) xs
         , length filtered /= length xs      -- there were 1's
-        = return $ inject $ OpProduct $ fromList filtered
+        = case filtered of
+            []  -> return 1
+            [n] -> return n
+            _   -> return $ inject $ OpProduct $ fromList filtered
     simplifyOp _ = na "simplifyOp{OpProduct}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpProduct x) where
