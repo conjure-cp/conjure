@@ -1,6 +1,6 @@
 {-# LANGUAGE QuasiQuotes #-}
 
-module Conjure.Rules.Vertical.Permutation.AsFunction where
+module Conjure.Rules.Vertical.Permutation where
 
 import Conjure.Rules.Import
 import Conjure.Rules.Vertical.Matrix (flattenIfNeeded)

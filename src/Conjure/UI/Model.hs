@@ -86,7 +86,7 @@ import qualified Conjure.Rules.Horizontal.Partition as Horizontal.Partition
 import qualified Conjure.Rules.Vertical.Partition.PartitionAsSet as Vertical.Partition.PartitionAsSet
 import qualified Conjure.Rules.Vertical.Partition.Occurrence as Vertical.Partition.Occurrence
 
-import qualified Conjure.Rules.Vertical.Permutation.AsFunction as Vertical.Permutation.AsFunction 
+import qualified Conjure.Rules.Vertical.Permutation as Vertical.Permutation
 import qualified Conjure.Rules.Horizontal.Permutation as Horizontal.Permutation
 
 import qualified Conjure.Rules.BubbleUp as BubbleUp
@@ -1187,16 +1187,16 @@ verticalRules =
     , Vertical.Partition.PartitionAsSet.rule_Comprehension
     , Vertical.Partition.Occurrence.rule_Comprehension
 
-    , Vertical.Permutation.AsFunction.rule_Permutation_Equality
-    , Vertical.Permutation.AsFunction.rule_Permutation_Equality_Comprehension
-    , Vertical.Permutation.AsFunction.rule_Permute_Comprehension_Tuples
-    , Vertical.Permutation.AsFunction.rule_Relation_Permute
-    , Vertical.Permutation.AsFunction.rule_Relation_Permute_Comprehension
-    , Vertical.Permutation.AsFunction.rule_Set_Permute
-    , Vertical.Permutation.AsFunction.rule_Tuple_Permute
-    , Vertical.Permutation.AsFunction.rule_Tuple_Permute_Comprehension
-    , Vertical.Permutation.AsFunction.rule_Matrix_Permute
-    , Vertical.Permutation.AsFunction.rule_Matrix_Permute_Comprehension
+    , Vertical.Permutation.rule_Permutation_Equality
+    , Vertical.Permutation.rule_Permutation_Equality_Comprehension
+    , Vertical.Permutation.rule_Permute_Comprehension_Tuples
+    , Vertical.Permutation.rule_Relation_Permute
+    , Vertical.Permutation.rule_Relation_Permute_Comprehension
+    , Vertical.Permutation.rule_Set_Permute
+    , Vertical.Permutation.rule_Tuple_Permute
+    , Vertical.Permutation.rule_Tuple_Permute_Comprehension
+    , Vertical.Permutation.rule_Matrix_Permute
+    , Vertical.Permutation.rule_Matrix_Permute_Comprehension
 
 
 
@@ -1394,8 +1394,8 @@ delayedRules =
 
 --        , Horizontal.Permutation.rule_Permute_Literal
 --        , Horizontal.Permutation.rule_Permute_Literal_Comprehension
-        , Vertical.Permutation.AsFunction.rule_Permute
-        , Vertical.Permutation.AsFunction.rule_Permute_Comprehension
+        , Vertical.Permutation.rule_Permute
+        , Vertical.Permutation.rule_Permute_Comprehension
         ]
     ,   [ rule_ReducerToComprehension
         ]
