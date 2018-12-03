@@ -19,6 +19,25 @@ rule_Compose = "permutation-compose{rule_Compose}" `namedRule` theRule where
   theRule _ = na "rule_Compose"
 
 
+rule_Permutation_Inverse :: Rule
+rule_Permutation_Inverse = "permutation-inverse{AsFunction}" `namedRule` theRule where
+    theRule [essence| inverse(&p1, &p2)|] = do
+        case p1 of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        case p2 of WithLocals{} -> na "bubble-delay" ; _ -> return ()
+        TypePermutation{}                 <- typeOf p1
+        TypePermutation{}                 <- typeOf p2
+        return
+            ( "Vertical rule for permutation-inverse, AsFunction representation"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence|
+                        (forAll &iPat in &p1 . image(&p2,&i[2]) = &i[1])
+                            /\
+                        (forAll &iPat in &p2 . image(&p1,&i[2]) = &i[1])
+                      |] 
+            )
+    theRule _ = na "rule_Permutation_Equality"
+
 
 rule_Permute_Literal :: Rule
 rule_Permute_Literal = "permutation-image-literal{AsFunction}" `namedRule` theRule where

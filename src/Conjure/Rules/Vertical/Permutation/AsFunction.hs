@@ -5,6 +5,48 @@ module Conjure.Rules.Vertical.Permutation.AsFunction where
 import Conjure.Rules.Import
 import Conjure.Rules.Vertical.Matrix (flattenIfNeeded)
 
+
+rule_Permutation_Inverse :: Rule
+rule_Permutation_Inverse = "permutation-inverse{AsFunction}" `namedRule` theRule where
+    theRule [essence| inverse(&p1, &p2)|] = do
+        TypePermutation{}                 <- typeOf p1
+        Permutation_AsFunction <- representationOf p1
+        TypePermutation{}                 <- typeOf p2
+        Permutation_AsFunction <- representationOf p2
+        [f1] <- downX1 p2
+        [f2] <- downX1 p2
+        return
+            ( "Vertical rule for permutation-inverse, AsFunction representation"
+            , return [essence| inverse(&f1, &f2) |]
+            )
+    theRule _ = na "rule_Permutation_Equality"
+
+
+rule_Permutation_Inverse_Comprehension :: Rule
+rule_Permutation_Inverse_Comprehension = "permutation-inverse-comprehension{AsFunction}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) =  do
+        (gocBefore, (pat, p1, p2), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat [essence| inverse(&p1, &p2)|]  ) -> return (pat, p1, p2)
+            _ -> na "rule_Inverse_Comprehension"
+        TypePermutation{}                 <- typeOf p1
+        Permutation_AsFunction <- representationOf p1
+        TypePermutation{}                 <- typeOf p2
+        Permutation_AsFunction <- representationOf p2
+        [f1] <- downX1 p2
+        [f2] <- downX1 p2
+        return
+            ( "Vertical rule for permutation-inverse-comprehension, AsFunction representation"
+            , do
+                return $ Comprehension body 
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr pat [essence| inverse(&f1, &f2) |])
+                           ]
+                        ++ gocAfter 
+            )
+    theRule _ = na "rule_Permutation_Inverse_Comprehension"
+
+
+
 rule_Permutation_Equality :: Rule
 rule_Permutation_Equality = "permutation-equality{AsFunction}" `namedRule` theRule where
     theRule [essence| &p1 = &p2|] = do

@@ -366,7 +366,7 @@ strategyToDriver config questions = do
             , let doc =
                     vcat $ ("Question" <+> pretty n <> ":" <+> pretty (qHole q))
                          : [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
-                           | (i,c) <- zip allNats (qAscendants q)
+                           | (i,c) <- zip allNats (qAscendants q), i < 2
                            ]
             ]
     pickedQs <- executeStrategy optionsQ (strategyQ config)
@@ -1314,7 +1314,7 @@ horizontalRules =
     , Horizontal.Partition.rule_Card
     , Horizontal.Partition.rule_In
 
-
+    , Horizontal.Permutation.rule_Permutation_Inverse 
     , Horizontal.Permutation.rule_Permute_Literal
     , Horizontal.Permutation.rule_Permute_Literal_Comprehension
     , Horizontal.Permutation.rule_Compose
