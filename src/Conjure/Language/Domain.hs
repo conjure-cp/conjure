@@ -31,7 +31,6 @@ module Conjure.Language.Domain
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Lexer ( Lexeme(L_set, L_mset) )
 import Conjure.Language.Name
 import Conjure.Language.Type
 import Conjure.Language.TypeOf
