@@ -54,7 +54,10 @@ instance (OpSum x :< x) => SimplifyOp OpSum x where
         | Just xs <- listOut x
         , let filtered = filter (/=0) xs
         , length filtered /= length xs      -- there were 0's
-        = return $ inject $ OpSum $ fromList filtered
+        = case filtered of
+            []  -> return 0
+            [n] -> return n
+            _   -> return $ inject $ OpSum $ fromList filtered
     simplifyOp _ = na "simplifyOp{OpSum}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpSum x) where
