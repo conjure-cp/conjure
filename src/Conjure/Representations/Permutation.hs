@@ -3,7 +3,7 @@
 {-# LANGUAGE ViewPatterns    #-}
 {-# LANGUAGE Rank2Types      #-}
 
-module Conjure.Representations.Permutation.AsFunction ( permutationAsFunction ) where
+module Conjure.Representations.Permutation ( permutationAsFunction ) where
 
 -- conjure
 import Conjure.Prelude

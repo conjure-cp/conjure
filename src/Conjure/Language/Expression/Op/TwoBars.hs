@@ -24,19 +24,20 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
     typeOf p@(OpTwoBars a) = do
         ty <- typeOf a
         case ty of
-            TypeInt NoTag   -> return ()
-            TypeInt AnyTag  -> return ()
-            TypeList{}      -> return ()
-            TypeSet{}       -> return ()
-            TypeMSet{}      -> return ()
-            TypeFunction{}  -> return ()
-            TypeSequence{}  -> return ()
-            TypeRelation{}  -> return ()
-            TypePartition{} -> return ()
-            _               -> raiseTypeError $ vcat [ pretty p
-                                                     , "Expected an integer or a collection."
-                                                     , "But got:" <+> pretty ty
-                                                     ]
+            TypeInt NoTag     -> return ()
+            TypeInt AnyTag    -> return ()
+            TypeList{}        -> return ()
+            TypeSet{}         -> return ()
+            TypeMSet{}        -> return ()
+            TypeFunction{}    -> return ()
+            TypeSequence{}    -> return ()
+            TypeRelation{}    -> return ()
+            TypePartition{}   -> return ()
+            TypePermutation{} -> return ()
+            _                 -> raiseTypeError $ vcat [ pretty p
+                                                       , "Expected an integer or a collection."
+                                                       , "But got:" <+> pretty ty
+                                                       ]
         return $ TypeInt NoTag
 
 instance EvaluateOp OpTwoBars where

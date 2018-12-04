@@ -144,6 +144,7 @@ instance (TypeOf a, Pretty a) => TypeOf (AbstractLiteral a) where
 
     typeOf   (AbsLitPartition   [] ) = return (TypePartition TypeAny)
     typeOf p@(AbsLitPartition   xss) = TypePartition <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
+    typeOf   (AbsLitPermutation [] ) = return (TypePermutation TypeAny)
     typeOf p@(AbsLitPermutation xss) = TypePermutation <$> (homoType (pretty p) =<< mapM typeOf (concat xss))
 
 

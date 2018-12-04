@@ -293,6 +293,8 @@ instance DomainOf (AbstractLiteral Expression) where
         where attr = PartitionAttr (SizeAttr_MaxSize (fromInt $ genericLength xss))
                                    (SizeAttr_MaxSize (fromInt $ maximum [genericLength xs | xs <- xss]))
                                    False
+    domainOf (AbsLitPermutation [] ) = return $ DomainPermutation def attr (DomainAny "domainOf-AbsLitPermutation-[]" TypeAny)
+        where attr = PermutationAttr (SizeAttr_Size 0)
     domainOf (AbsLitPermutation xss) = DomainPermutation def def <$> (domainUnions =<< mapM domainOf (concat xss))
     indexDomainsOf (AbsLitMatrix ind inn) = (ind :) <$> (mapM domainUnions =<< mapM indexDomainsOf inn)
     indexDomainsOf _ = return []

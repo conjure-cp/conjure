@@ -36,7 +36,7 @@ import Conjure.Representations.Relation.RelationAsMatrix
 import Conjure.Representations.Relation.RelationAsSet
 import Conjure.Representations.Partition.Occurrence
 import Conjure.Representations.Partition.PartitionAsSet
-import Conjure.Representations.Permutation.AsFunction
+import Conjure.Representations.Permutation
 
 
 -- | Refine (down) a domain, outputting refinement expressions (X) one level (1).
