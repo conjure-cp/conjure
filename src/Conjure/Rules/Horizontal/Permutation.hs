@@ -2,7 +2,8 @@
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.List (cycle)
-import Data.Permutation (size, fromCycles)
+import Data.Permutation (size, fromCycles, toFunction)
+import Conjure.Process.Enumerate ( enumerateDomain )
 
 
 rule_Cardinality_Literal :: Rule
@@ -18,6 +19,49 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
         , do
            return [essence| &i |]
         )
+
+rule_Equality :: Rule
+rule_Equality = "permutation-equality" `namedRule` theRule where
+  theRule e = do
+    (p,q)  <- match opEq e
+    TypePermutation{} <- typeOf p
+    TypePermutation{} <- typeOf q
+    return ( "Horizontal rule for permutation equality"
+           , do
+              (rPat, r) <- quantifiedVar
+              (lPat, l) <- quantifiedVar
+              return [essence| and([ image(&p,&l) = &r | (&lPat,&rPat) <- &q]) |]
+           )
+
+
+rule_Permute_Comprehension_Tuples_Literal :: Rule
+rule_Permute_Comprehension_Tuples_Literal = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) =  do
+        (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
+            _ -> na "rule_Comprehension_Tuples_Literal"
+        (TypePermutation inner, elems) <- match permutationLiteral perm 
+        DomainPermutation _ _ innerD <- domainOf perm 
+        let f' = toFunction <$> fromCycles elems 
+        case f' of
+          Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+          Right f -> do 
+            let outLiteral = make matrixLiteral
+                    (TypeMatrix (TypeInt AnyTag) (TypeTuple [inner,inner])) innerD  
+                                   [ AbstractLiteral (AbsLitTuple [de
+                                                                  ,f de])
+                                   | de <- join elems 
+                                   ]
+            return
+              ( "Vertical rule for permutation-comprehension-tuples-literal"
+              , do
+                  return $ Comprehension body 
+                          $  gocBefore
+                          ++ [ Generator (GenInExpr pat [essence| &outLiteral|])
+                             ]
+                          ++ gocAfter 
+              )
+    theRule _ = na "rule_Comprehension_Tuples_Literal"
 
 --
 --

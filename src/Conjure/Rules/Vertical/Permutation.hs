@@ -21,6 +21,33 @@ rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
                         sum([ toInt(&i != image(&fun, &i)) | &iPat : &innerDom ])
                      |]
             )
+
+
+rule_Permute_Comprehension_Tuples :: Rule
+rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) =  do
+        (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
+            _ -> na "rule_Comprehension"
+        TypePermutation{}                 <- typeOf perm
+        Permutation_AsFunction <- representationOf perm
+        [f] <- downX1 perm
+        return
+            ( "Vertical rule for permutation-comprehension-tuples, AsFunction representation"
+            , do
+                (lPat, l) <- quantifiedVar
+                (rPat, r) <- quantifiedVar
+                return $ Comprehension body 
+                        $  gocBefore
+                        ++ [ Generator (GenInExpr pat [essence| [(&l,&r) 
+                                                                | (&lPat, &rPat) <- &f
+                                                                , &l != &r] |])
+                           ]
+                        ++ gocAfter 
+            )
+    theRule _ = na "rule_Comprehension"
+
+
 --
 --
 --rule_Permutation_Inverse :: Rule
@@ -102,27 +129,7 @@ rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
 --                        ++ gocAfter 
 --            )
 --    theRule _ = na "rule_Permutation_Equality_Comprehension"
---
---rule_Permute_Comprehension_Tuples :: Rule
---rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
---    theRule (Comprehension body gensOrConds) =  do
---        (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---            Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
---            _ -> na "rule_Comprehension"
---        TypePermutation{}                 <- typeOf perm
---        Permutation_AsFunction <- representationOf perm
---        [f] <- downX1 perm
---        return
---            ( "Vertical rule for permutation-comprehension-tuples, AsFunction representation"
---            , do
---                return $ Comprehension body 
---                        $  gocBefore
---                        ++ [ Generator (GenInExpr pat [essence| &f|])
---                           ]
---                        ++ gocAfter 
---            )
---    theRule _ = na "rule_Comprehension"
---
+
 --
 --
 --rule_Permute :: Rule

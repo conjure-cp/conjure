@@ -1188,9 +1188,9 @@ verticalRules =
     , Vertical.Partition.Occurrence.rule_Comprehension
 
     , Vertical.Permutation.rule_Cardinality
+    , Vertical.Permutation.rule_Permute_Comprehension_Tuples
 --    , Vertical.Permutation.rule_Permutation_Equality
 --    , Vertical.Permutation.rule_Permutation_Equality_Comprehension
---    , Vertical.Permutation.rule_Permute_Comprehension_Tuples
 --    , Vertical.Permutation.rule_Relation_Permute
 --    , Vertical.Permutation.rule_Relation_Permute_Comprehension
 --    , Vertical.Permutation.rule_Set_Permute
@@ -1316,6 +1316,8 @@ horizontalRules =
     , Horizontal.Partition.rule_In
 
     , Horizontal.Permutation.rule_Cardinality_Literal
+    , Horizontal.Permutation.rule_Equality
+    , Horizontal.Permutation.rule_Permute_Comprehension_Tuples_Literal
 --    , Horizontal.Permutation.rule_Permutation_Inverse 
 --    , Horizontal.Permutation.rule_Permute_Literal
 --    , Horizontal.Permutation.rule_Permute_Literal_Comprehension
