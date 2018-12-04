@@ -8,19 +8,19 @@ Tests permutation behaviour that should work with no rewrite rules.
 - permutations must parse correctly in model and parameter files
 - the size attribute must constrain the size of the permutation
 - enumeration tests for finding permutations
-- TODO add tests for enums, unameds
+- TODO add tests for enums, unnameds
 
 ## 02 cardinality 
 Test that we can get the number of permuted elements by |p|
 - basic cardinality for find, letting, given
-- TODO add tests for enums, unameds
+- TODO add tests for enums, unnameds
 
 ## 03 generators
 Tests permutations in generator of a comprehension 
-- TODO add tests for enums, unameds
+- TODO add tests for enums, unnameds
 
 ## 04 image of value of inner type under permutation
-
+- TODO add tests for enums & unnameds
 
 ## 05 equality
 Tests equality on permutations 
