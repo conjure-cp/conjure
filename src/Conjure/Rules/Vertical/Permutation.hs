@@ -48,6 +48,33 @@ rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction
     theRule _ = na "rule_Comprehension"
 
 
+rule_Image :: Rule
+rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
+  theRule [essence| image(&p, &i) |] = do
+    TypePermutation inner <- typeOf p 
+    case match permutationLiteral p of
+      Nothing -> do
+        typeI <- typeOf i
+        if typeI `containsType` inner
+          then do
+            [f] <- downX1 p
+            if typesUnify [inner, typeI]
+              then return
+                     ( "Vertical rule for permutation application to a single value" 
+                     , do
+                       return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                     )
+              else na "rule_Image"
+          else return
+                 ( "Vertical rule for permutation application to a type the permutation doesn't care about"
+                 , do
+                   return [essence| &i |]
+                 )
+      _ -> na "rule_Image"
+  theRule _ = na "rule_Image"
+
+
+
 --
 --
 --rule_Permutation_Inverse :: Rule
@@ -130,30 +157,6 @@ rule_Permute_Comprehension_Tuples = "permutation-comprehension-tuples{AsFunction
 --            )
 --    theRule _ = na "rule_Permutation_Equality_Comprehension"
 
---
---
---rule_Permute :: Rule
---rule_Permute = "permutation-image{AsFunction}" `namedRule` theRule where
---  theRule [essence| image(&p, &i) |] = do
---    TypePermutation inner <- typeOf p 
---    typeI <- typeOf i
---    if typeI `containsType` inner
---      then do
---        [f] <- downX1 p
---        if typesUnify [inner, typeI]
---          then return
---                 ( "Vertical rule for permutation application to a single value" 
---                 , do
---                   return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
---                 )
---          else na "rule_Permute" --If we hit this then we should hit a refinement error
---      else return
---             ( "Vertical rule for permutation application to a type the permutation doesn't care about"
---             , do
---               return [essence| &i |]
---             )
---  theRule _ = na "rule_Permute"
---
 --
 --rule_Permute_Comprehension :: Rule
 --rule_Permute_Comprehension = "permutation-image{AsFunction}" `namedRule` theRule where
