@@ -1,7 +1,0 @@
-
-
-find m : matrix indexed by [int(1..9)] of int(0..1)
-
-such that
-  forAll i, j : int(1..9) .
-    i != j -> m <=lex [m[image(permutation((i,j)),k)] | k : int(1..9)]

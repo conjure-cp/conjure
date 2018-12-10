@@ -37,7 +37,6 @@ instance EvaluateOp OpSucc where
     evaluateOp (OpSucc (ConstantInt (TagEnum t) x))
         = return (ConstantInt (TagEnum t) (succ x))
     evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
-    evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
 
 instance SimplifyOp OpSucc x where
     simplifyOp _ = na "simplifyOp{OpSucc}"
