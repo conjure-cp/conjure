@@ -28,3 +28,7 @@ Tests equality on permutations
 - tests [|p| = i | p <- sp] where sp is a set of permutations
 
 ## 06 inverse
+Testing inverse in minimal contexts
+
+## 07 Compose
+Testing composition in minimal contexts

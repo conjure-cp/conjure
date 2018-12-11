@@ -1211,10 +1211,9 @@ horizontalRules =
     , Horizontal.Permutation.rule_Image_Literal
     , Horizontal.Permutation.rule_In
     , Horizontal.Permutation.rule_Permutation_Inverse 
+    , Horizontal.Permutation.rule_Compose
 --    , Horizontal.Permutation.rule_Image_Literal_Comprehension
 
-
---    , Horizontal.Permutation.rule_Compose
 
 
     , Horizontal.Set.rule_Comprehension_Literal

@@ -150,6 +150,23 @@ rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
             )
     theRule _ = na "rule_Permutation_Inverse"
 
+rule_Compose :: Rule
+rule_Compose = "permutation-compose" `namedRule` theRule where
+  theRule [essence| image(compose(&g, &h),&i) |] = do
+    TypePermutation innerG <- typeOf g
+    TypePermutation innerH <- typeOf g
+    typeI <- typeOf i
+    if typesUnify [innerG, innerH, typeI]
+       then return
+            ( "Horizontal rule for permutation composition"
+            , do
+              return [essence| image(&g, image(&h,&i)) |]
+            )
+       else na "rule_Compose"
+  theRule _ = na "rule_Compose"
+
+
+
 
 
 
@@ -209,24 +226,5 @@ rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
 --                                     ++ gocAfter)
 --             )
 --  theRule _ = na "rule_Image_Literal"
---
-
---
---
---rule_Compose :: Rule
---rule_Compose = "permutation-compose{rule_Compose}" `namedRule` theRule where
---  theRule [essence| image(compose(&g, &h),&i) |] = do
---    TypePermutation innerG <- typeOf g
---    TypePermutation innerH <- typeOf g
---    typeI <- typeOf i
---    if typesUnify [innerG, innerH, typeI]
---       then return
---            ( "Horizontal rule for permutation composition/application"
---            , do
---              return [essence| image(&g, image(&h,&i)) |]
---            )
---       else na "rule_Compose"
---  theRule _ = na "rule_Compose"
---
 --
 
