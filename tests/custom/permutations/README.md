@@ -26,3 +26,5 @@ Tests permutations in generator of a comprehension
 Tests equality on permutations 
 - basic equality for find, letting, given
 - tests [|p| = i | p <- sp] where sp is a set of permutations
+
+## 06 inverse
