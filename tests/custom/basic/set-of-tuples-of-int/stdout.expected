@@ -1,37 +1,9 @@
-Generating models for seqseq.essence
+Generating models for set-of-tuples.essence
 Generated models: model000001.eprime
 Saved under: conjure-output
-Savile Row: model000001.eprime seqseq.param
-Validating solution: seqseq.param conjure-output/model000001-seqseq-solution000001.solution
-Copying solution to: seqseq-seqseq.solution
-File: conjure-output/model000001.eprime
-language ESSENCE' 1.0
-
-given fin1: int
-given fin2: int
-given fin3: int
-given fin4: int
-given stacks_ExplicitBoundedR15_Length: int(fin1)
-given stacks_ExplicitBoundedR15_Values_ExplicitBounded_Length:
-        matrix indexed by [int(1..fin1)] of int(0..fin2)
-given stacks_ExplicitBoundedR15_Values_ExplicitBounded_Values:
-        matrix indexed by [int(1..fin1), int(1..fin2)] of int(fin3..fin4)
-find x: int(0..10000)
-branching on [x]
-such that
-    x =
-    sum([sum([stacks_ExplicitBoundedR15_Values_ExplicitBounded_Values[q2, q4]
-                  | q4 : int(1..fin2),
-                    q4 <=
-                    stacks_ExplicitBoundedR15_Values_ExplicitBounded_Length
-                        [q2]])
-             | q2 : int(1..fin1), q2 <= fin1])
-
---------------------
-
-File: conjure-output/model000001-seqseq-solution000001.solution
+Savile Row: model000001.eprime
+Validating solution: conjure-output/model000001-solution000001.solution
+Copying solution to: set-of-tuples.solution
 language Essence 1.3
 
-letting x be 1106
---------------------
-
+letting s be {}
