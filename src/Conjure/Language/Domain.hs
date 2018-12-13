@@ -782,6 +782,7 @@ data HasRepresentation
     | Set_ExplicitVarSizeWithMarker
     | Set_ExplicitVarSizeWithDummy
 
+    | MSet_Occurrence
     | MSet_ExplicitWithFlags
     | MSet_ExplicitWithRepetition
 
@@ -914,6 +915,7 @@ textToRepresentation t []             | t == "Explicit"                   = retu
 textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
 textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
 textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
+textToRepresentation t []             | t == "MOccurrence"                = return MSet_Occurrence
 textToRepresentation t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
 textToRepresentation t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
 textToRepresentation t []             | t == "Function1D"                 = return Function_1D
@@ -935,6 +937,7 @@ representationToShortText Set_Explicit                   = "Explicit"
 representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
 representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
+representationToShortText MSet_Occurrence                = "MOccurrence"
 representationToShortText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
 representationToShortText MSet_ExplicitWithRepetition    = "ExplicitWithRepetition"
 representationToShortText Function_1D                    = "Function1D"
