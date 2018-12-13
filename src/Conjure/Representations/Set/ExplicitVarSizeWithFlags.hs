@@ -29,7 +29,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag AnyTag <$> domainSizeOf innerDomain
 
 
         downD :: TypeOf_DownD m
