@@ -242,20 +242,16 @@ parseDomainWithRepr = pDomainAtom
             x <- parsePartitionAttr
             lexeme L_from
             y <- parseDomainWithRepr
-<<<<<<< HEAD
-            return $ DomainPartition r x y
+            return $ DomainPartition NoRepresentation x y
         pPermutation = do
             lexeme L_permutation
-            r <- parseRepr
+--            r <- parseRepr
             x <- parsePermutationAttr
             lexeme L_of -- $ trace (textToString $ representationToShortText r) L_of
             y <- parseDomainWithRepr
-            return $ DomainPermutation r x y
-||||||| merged common ancestors
-            return $ DomainPartition r x y
-=======
-            return $ DomainPartition NoRepresentation x y
->>>>>>> set-of-tuple-of-enum-bug
+            return $ DomainPermutation NoRepresentation x y
+
+
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do

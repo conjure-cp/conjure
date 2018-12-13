@@ -167,7 +167,11 @@ rule_Compose = "permutation-compose" `namedRule` theRule where
 
 
 
-
+--TODO image over Essence Types
+--
+--e.g.
+  --
+  --  [essence| [ - | t <- image(p, rel)] |] refines to [essence| [ - | t' <- rel, let t = image(p, t') ] |]
 
 
 --
