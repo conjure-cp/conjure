@@ -1212,10 +1212,12 @@ horizontalRules =
     [ Horizontal.Permutation.rule_Cardinality_Literal
     , Horizontal.Permutation.rule_Equality
     , Horizontal.Permutation.rule_Permute_Comprehension_Tuples_Literal
+    , Horizontal.Permutation.rule_Compose_Image
+--    , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal
     , Horizontal.Permutation.rule_In
     , Horizontal.Permutation.rule_Permutation_Inverse 
-    , Horizontal.Permutation.rule_Compose
+    , Horizontal.Permutation.rule_Image_Comprehendable
 --    , Horizontal.Permutation.rule_Image_Literal_Comprehension
 
 

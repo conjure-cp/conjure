@@ -55,21 +55,19 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
     case match permutationLiteral p of
       Nothing -> do
         typeI <- typeOf i
-        if typeI `containsType` inner
+        if typesUnify [inner, typeI] 
           then do
             [f] <- downX1 p
-            if typesUnify [inner, typeI]
-              then return
-                     ( "Vertical rule for permutation application to a single value" 
-                     , do
-                       return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
-                     )
-              else na "rule_Image"
-          else return
-                 ( "Vertical rule for permutation application to a type the permutation doesn't care about"
-                 , do
-                   return [essence| &i |]
-                 )
+            return ( "Vertical rule for permutation application to a single value" 
+                   , do
+                     return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
+                   )
+          else if typeI `containsType` inner
+                 then na "rule_Image"
+                 else return ( "Vertical rule for permutation application to a type the permutation doesn't care about"
+                             , do
+                               return [essence| &i |]
+                             )
       _ -> na "rule_Image"
   theRule _ = na "rule_Image"
 

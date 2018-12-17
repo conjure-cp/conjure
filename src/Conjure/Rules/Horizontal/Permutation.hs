@@ -63,54 +63,78 @@ rule_Permute_Comprehension_Tuples_Literal = "permutation-comprehension-tuples{As
               )
     theRule _ = na "rule_Comprehension_Tuples_Literal"
 
+--rule_Image_Literal' :: Rule
+--rule_Image_Literal' = "permutation-image-literal" `namedRule` theRule where
+--  theRule [essence| image(&p, &i) |] = do
+--    (TypePermutation inner, elems) <- match permutationLiteral p  
+--    DomainPermutation _ _ innerP <- domainOf p
+--    let f' = toFunction <$> fromCycles elems 
+--    case f' of
+--      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
+--      Right f -> do 
+--        let outLiteral = make matrixLiteral
+--                (TypeMatrix (TypeInt AnyTag) (TypeTuple [inner,inner])) innerP  
+--                               [ AbstractLiteral (AbsLitTuple [de
+--                                                              ,f de])
+--                               | de <- join elems 
+--                               ]
+--        typeI <- typeOf i
+--        if typesUnify [inner, typeI] 
+--          then do       
+--            innerD <- domainOf i
+--            return
+--               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
+--               , do
+--                 (hName, h) <- auxiliaryVar
+--                 (fPat, f)  <- quantifiedVar
+--                 (tPat, t)  <- quantifiedVar
+--                 (gPat, g)  <- quantifiedVar
+--                 (ePat, _)  <- quantifiedVar
+--                 return $ WithLocals 
+--                            [essence| &h |]
+--                           (AuxiliaryVars 
+--                             [ Declaration (FindOrGiven LocalFind hName innerD)
+--                             , SuchThat
+--                                 [ [essence| 
+--                                       (forAll (&fPat, &tPat) in &outLiteral . &f = &i <-> &h = &t)
+--                                    /\ (!(exists (&gPat, &ePat) in &outLiteral . &g = &h) <-> &h = &i)
+--                                   |]
+--                                 ]
+--                             ]
+--                           )
+--               )
+--          else if typeI `containsType` inner
+--                 then na "rule_Image_Literal"
+--                 else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
+--                             , do
+--                               return [essence| &i |]
+--                             )
+--  theRule _ = na "rule_Image_Literal"
+
+
 rule_Image_Literal :: Rule
 rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
   theRule [essence| image(&p, &i) |] = do
-    (TypePermutation inner, elems) <- match permutationLiteral p  
-    DomainPermutation _ _ innerP <- domainOf p
+    (TypePermutation inner, elems) <- match permutationLiteral p
     let f' = toFunction <$> fromCycles elems 
     case f' of
       Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right f -> do 
-        let outLiteral = make matrixLiteral
-                (TypeMatrix (TypeInt AnyTag) (TypeTuple [inner,inner])) innerP  
-                               [ AbstractLiteral (AbsLitTuple [de
-                                                              ,f de])
-                               | de <- join elems 
-                               ]
         typeI <- typeOf i
-        if typeI `containsType` inner
+        if typesUnify [inner, typeI] 
           then do
-            if typesUnify [inner, typeI]
-               then do        
-                   innerD <- domainOf i
-                   return
-                      ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
-                      , do
-                        (hName, h) <- auxiliaryVar
-                        (fPat, f)  <- quantifiedVar
-                        (tPat, t)  <- quantifiedVar
-                        (gPat, g)  <- quantifiedVar
-                        (ePat, _)  <- quantifiedVar
-                        return $ WithLocals 
-                                   [essence| &h |]
-                                  (AuxiliaryVars 
-                                    [ Declaration (FindOrGiven LocalFind hName innerD)
-                                    , SuchThat
-                                        [ [essence| 
-                                              (forAll (&fPat, &tPat) in &outLiteral . &f = &i <-> &h = &t)
-                                           /\ (!(exists (&gPat, &ePat) in &outLiteral . &g = &h) <-> &h = &i)
-                                          |]
-                                        ]
-                                    ]
-                                  )
-                      )
-               else na "rule_Permute_Literal"
-          else return
-                 ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
-                 , do
-                   return [essence| &i |]
-                 )
+            let outLiteral = make functionLiteral (TypeFunction inner inner) [ (de,f de) | de <- join elems ]
+            return
+               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
+               , do
+                     return $ reTag AnyTag [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |]
+               )
+          else if typeI `containsType` inner
+                 then na "rule_Image_Literal"
+                 else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
+                             , do
+                               return [essence| &i |]
+                             )
   theRule _ = na "rule_Image_Literal"
 
 
@@ -150,28 +174,80 @@ rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
             )
     theRule _ = na "rule_Permutation_Inverse"
 
-rule_Compose :: Rule
-rule_Compose = "permutation-compose" `namedRule` theRule where
+rule_Compose_Image :: Rule
+rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule [essence| image(compose(&g, &h),&i) |] = do
+    case match permutationLiteral h of
+      Nothing -> return ()
+      Just _ -> na "rule_Compose_Image" 
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
     typeI <- typeOf i
     if typesUnify [innerG, innerH, typeI]
        then return
-            ( "Horizontal rule for permutation composition"
+            ( "Horizontal rule for image of permutation composition"
             , do
               return [essence| image(&g, image(&h,&i)) |]
             )
-       else na "rule_Compose"
-  theRule _ = na "rule_Compose"
+       else na "rule_Compose_Image"
+  theRule _ = na "rule_Compose_Image"
 
+--rule_Compose :: Rule
+--rule_Compose = "permutation-compose" `namedRule` theRule where
+--  theRule [essence| compose(&g,&h) |] = do
+--    TypePermutation innerG <- typeOf g
+--    TypePermutation innerH <- typeOf h 
+--    (DomainPermutation _ _ dg) <- domainOf g
+--    (DomainPermutation _ _ dh) <- domainOf h
+--    if typesUnify [innerG, innerH]
+--      then do
+--        du <- domainUnion dg dh
+--        return ( "Horizontal rule for permutation composition"
+--               , do
+--                 
+--                 (lPat, l)  <- quantifiedVar
+--                 (rPat, r)  <- quantifiedVar
+--                 (pName, p) <- auxiliaryVar
+--                 return $ WithLocals
+--                            [essence| &p |]
+--                        ( AuxiliaryVars
+--                           [ Declaration (FindOrGiven LocalFind pName du)
+--                           , SuchThat
+--                               [ [essence|
+--     and([image(&p,&l[1]) = image(&g, image(&h,&l[1])) | &lPat <- &g]) 
+--  /\ and([image(&p,&r[1]) = image(&g, image(&h,&r[1])) | &rPat <- &h])
+--                                 |]
+--                               ]
+--                           ]
+--                        )
+--               )
+--      else na "rule_Compose"
+--  theRule _ = na "rule_Compose"
 
+rule_Image_Comprehendable :: Rule
+rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) [essence| image(&perm, &y) |]) -> return (pat, perm, y)
+         _ -> na "rule_Image_Comprehendable"
+    ty <- typeOf y
+    (TypePermutation inn) <- typeOf perm
+    if (not $ typesUnify [ty, inn]) && (ty `containsTypeComprehendable` inn)
+       then do
+         return
+             ( "Horizontal rule for image of comprehendable under permutation"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| &y |])]
+                 ++ ((ComprehensionLetting pat [essence| image(&perm, &d) |] ):gocAfter)
+                      )
+                      
+             )
+       else na "rule_Image_Comprehendable"
+  theRule _ = na "rule_Image_Comprehendable"
 
---TODO image over Essence Types
---
---e.g.
-  --
-  --  [essence| [ - | t <- image(p, rel)] |] refines to [essence| [ - | t' <- rel, let t = image(p, t') ] |]
 
 
 --

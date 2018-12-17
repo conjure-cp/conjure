@@ -11,6 +11,8 @@ module Conjure.Language.Type
     , innerTypeOf
     , isPrimitiveType
     , typeCanIndexMatrix
+    , containsTypeComprehendable
+    , containsTypeIncomprehendable
     , containsType
     ) where
 
@@ -227,10 +229,31 @@ typeCanIndexMatrix TypeEnum{} = True
 typeCanIndexMatrix _          = False
 
 
-containsType :: Type -> Type -> Bool 
-containsType container containee =
+-- | Types must not unify && type can be a generator in a comprehension 
+containsTypeComprehendable :: Type -> Type -> Bool 
+containsTypeComprehendable container containee =
   if typesUnify [container, containee]
-    then True
+    then False 
     else case innerTypeOf container of
            Nothing -> False
-           Just so -> containsType so containee 
+           Just so -> unifiesOrContains so containee 
+
+-- | Types do not unify && type cannot be a generator in a comprehension
+containsTypeIncomprehendable :: Type -> Type -> Bool
+containsTypeIncomprehendable (TypeTuple ts) t =
+  any id ((\x -> unifiesOrContains x t) <$> ts)
+containsTypeIncomprehendable (TypeRecord ts) t =
+  any id ((\x -> unifiesOrContains (snd x) t) <$> ts)
+containsTypeIncomprehendable (TypeVariant ts) t =  
+  any id ((\x -> unifiesOrContains (snd x) t) <$> ts)
+containsTypeIncomprehendable _ _ = False
+
+
+containsType :: Type -> Type -> Bool
+containsType container containee =
+     (containsTypeComprehendable container containee)
+  || (containsTypeIncomprehendable container containee)
+
+unifiesOrContains :: Type -> Type -> Bool
+unifiesOrContains container containee =
+  typesUnify [container, containee] || containsType container containee
