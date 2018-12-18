@@ -1,2 +1,1 @@
-stack install
-stack test --test-arguments "-p custom.permutations.02_cardinality"
+stack build --copy-bins --test --test-arguments "-p custom.permutations.02_cardinality"

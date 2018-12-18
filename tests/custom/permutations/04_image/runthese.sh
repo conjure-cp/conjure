@@ -1,2 +1,1 @@
-stack install
-stack test --test-arguments "-p custom.permutations.04_image"
+stack build --copy-bins --test --test-arguments "-p custom.permutations.04_image"

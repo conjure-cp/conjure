@@ -5,5 +5,5 @@ find i : n
 
 such that 
   i = image(compose(p,q),i) 
-  /\ |p| = 4
-  /\ |q| = 3
+  /\ sum([toInt(l != r) | (l,r) <- p]) = 4
+  /\ sum([toInt(l != r) | (l,r) <- q]) = 3

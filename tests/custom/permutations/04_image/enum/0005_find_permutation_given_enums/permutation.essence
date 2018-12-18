@@ -7,7 +7,7 @@ find p : permutation of n
 given j : n 
 
 such that
-  j = image(p, i) /\ |p| = 3 
+  j = image(p, i) /\ sum([toInt(l!=r)|(l,r)<-p]) = 3 
 
 
 
