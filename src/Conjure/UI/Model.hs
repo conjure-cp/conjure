@@ -1090,6 +1090,7 @@ verticalRules =
     [ Vertical.Permutation.rule_Image
 --        , Vertical.Permutation.rule_Permute_Comprehension
     , Vertical.Permutation.rule_Cardinality
+    , Vertical.Permutation.rule_Defined
     , Vertical.Permutation.rule_Permute_Comprehension_Tuples
 --    , Vertical.Permutation.rule_Permutation_Equality
 --    , Vertical.Permutation.rule_Permutation_Equality_Comprehension

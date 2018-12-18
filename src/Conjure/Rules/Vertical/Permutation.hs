@@ -17,10 +17,23 @@ rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
             ( "Vertical rule for permutation cardinality, AsFunction representation."
             , do
                (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDom)
-               return [essence| 
-                        sum([ toInt(&i != image(&fun, &i)) | &iPat : &innerDom ])
-                     |]
+               return $ reTag AnyTag $ [essence| |&fun| |]
             )
+
+rule_Defined :: Rule
+rule_Defined = "permutation-defined" `namedRule` theRule where
+  theRule p = do
+        p                              <- match opDefined p
+        TypePermutation{}              <- typeOf p
+        Permutation_AsFunction         <- representationOf p
+        DomainPermutation _ _ innerDom <- domainOf p
+        [fun]                          <- downX1 p
+        return
+            ( "Vertical rule for permutation defined, AsFunction representation."
+            , do
+               return [essence| defined(&fun) |]
+            )
+
 
 
 rule_Permute_Comprehension_Tuples :: Rule

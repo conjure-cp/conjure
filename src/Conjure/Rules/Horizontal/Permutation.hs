@@ -225,6 +225,10 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
        else na "rule_Compose_Image"
   theRule _ = na "rule_Compose_Image"
 
+
+-- This isn't great but handles the literal case rule_Compose_Image fails on
+-- TODO would be nice to be able to compose permutations without having to
+-- introduce auxiliary variables - this is a slow way to go
 rule_Compose :: Rule
 rule_Compose = "permutation-compose" `namedRule` theRule where
   theRule [essence| compose(&g,&h) |] = do
@@ -239,16 +243,15 @@ rule_Compose = "permutation-compose" `namedRule` theRule where
                , do
                  
                  (lPat, l)  <- quantifiedVar
-                 (rPat, r)  <- quantifiedVar
                  (pName, p) <- auxiliaryVar
                  return $ WithLocals
                             [essence| &p |]
                         ( AuxiliaryVars
-                           [ Declaration (FindOrGiven LocalFind pName du)
+                           [ reTag AnyTag (Declaration (FindOrGiven LocalFind pName du))
                            , SuchThat
---TODO this rule is not correct as it is not restrictive enough
---rewrite with defined to constrain size of found permutation
-                               [ [essence| and([image(&p,&l[1]) = image(&g, image(&h,&l[1])) | &lPat <- &g]) /\ and([image(&p,&r[1]) = image(&g, image(&h,&r[1])) | &rPat <- &h])
+                               [ [essence| 
+                                    forAll &lPat in (defined(&g) union defined(&h)) .
+                                      image(&p,&l) = image(&g,image(&h,&l))
                                  |]
                                ]
                            ]
