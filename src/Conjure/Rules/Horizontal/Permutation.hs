@@ -2,6 +2,7 @@
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.Permutation (size, fromCycles, toFunction)
+import Conjure.Bug
 
 
 rule_Cardinality_Literal :: Rule
@@ -246,7 +247,8 @@ rule_Compose = "permutation-compose" `namedRule` theRule where
                  (pName, p) <- auxiliaryVar
                  return $ WithLocals
                             [essence| &p |]
-                        ( AuxiliaryVars
+                        ( AuxiliaryVars --TODO this reTag seems dangerous
+                                        -- does it break image of nested type object?
                            [ reTag AnyTag (Declaration (FindOrGiven LocalFind pName du))
                            , SuchThat
                                [ [essence| 
@@ -263,12 +265,13 @@ rule_Compose = "permutation-compose" `namedRule` theRule where
 rule_Image_Comprehendable :: Rule
 rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
-         Generator (GenInExpr (Single pat) [essence| image(&perm, &y) |]) -> return (pat, perm, y)
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
          _ -> na "rule_Image_Comprehendable"
+    (perm, y) <- match opImage x 
     ty <- typeOf y
     (TypePermutation inn) <- typeOf perm
-    if (not $ typesUnify [ty, inn]) && (ty `containsTypeComprehendable` inn)
+    if ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of comprehendable under permutation"
@@ -285,62 +288,28 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
   theRule _ = na "rule_Image_Comprehendable"
 
 
+rule_Image_Incomprehendable :: Rule
+rule_Image_Incomprehendable = "comprehendable-image" `namedRule` theRule where
+  theRule [essence| image(&p, &i) |] = do 
+    (TypePermutation inn) <- typeOf p
+    ti <- typeOf i
+    if ti `containsTypeIncomprehendable` inn
+       then case ti of
+         (TypeTuple tint) -> do
+           let tupleIndexImage indx = let indexexpr = Constant (ConstantInt AnyTag indx)
+                                      in [essence| image(&p, &i[&indexexpr]) |]
+               tupleExpression = AbstractLiteral $ AbsLitTuple
+                               $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
+           return
+               ( "Horizontal rule for image of incomprehendable under permutation"
+               , return tupleExpression 
+               )
+         (TypeRecord _) ->
+           bug "rule_Image_Incomprehendable not implemented for Record"
+         (TypeVariant _) ->
+           bug "rule_Image_Incomprehendable not implemented for Variant" 
+         _ -> bug "rule_Image_Incomprehendable this is a bug"
+       else na "rule_Image_Comprehendable"
+  theRule _ = na "rule_Image_Comprehendable"
 
---
---rule_Image_Literal_Comprehension :: Rule
---rule_Image_Literal_Comprehension = "permutation-image-literal-comprehension{AsFunction}" `namedRule` theRule where
---  theRule (Comprehension body gensOrConds) = do
---    (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
---      Generator (GenInExpr pat [essence| image(&p, &i) |]) -> return (pat, p, i)
---      _ -> na "rule_Comprehension"
---    case i of WithLocals{} -> na "bubble-delay" ; _ -> return ()
---    (TypePermutation inner, elems) <- match permutationLiteral p 
---    typeI <- typeOf i
---    if typeI `containsType` inner
---      then do
---        if typesUnify [inner, typeI]
---           then do        
---               innerD <- domainOf i
---               let prmTup pt = take (length pt) $ zip (cycle pt) (drop 1 $ cycle pt)
---                   permTups = join $ prmTup <$> elems 
---               let outLiteral = make matrixLiteral
---                                   (TypeMatrix (TypeInt NoTag) (TypeTuple [inner,inner]))
---                                   (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength permTups))])
---                                   [ AbstractLiteral (AbsLitTuple [a,b])
---                                   | (a,b) <- permTups 
---                                   ]
---               return
---                  ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
---                  , do
---                    (hName, h) <- auxiliaryVar
---                    (fPat, f)  <- quantifiedVar
---                    (tPat, t)  <- quantifiedVar
---                    (gPat, g)  <- quantifiedVar
---                    (ePat, _)  <- quantifiedVar
---                    return $ WithLocals 
---                              (Comprehension body $ gocBefore
---                                                ++ [Generator (GenInExpr pat
---                                                                [essence| &h |])]
---                                                ++ gocAfter)
---                              (AuxiliaryVars 
---                                [ Declaration (FindOrGiven LocalFind hName innerD)
---                                , SuchThat
---                                    [ [essence| 
---                                          (forAll (&fPat, &tPat) in &outLiteral . &f = &i <-> &h = &t)
---                                       /\ (!(exists (&gPat, &ePat) in &outLiteral . &g = &h) <-> &h = &i)
---                                      |]
---                                    ]
---                                ]
---                              )
---                  )
---           else na "rule_Image_Literal"
---      else return
---             ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
---             , return 
---                   (Comprehension body $ gocBefore
---                                     ++ [Generator (GenInExpr pat [essence| &i |])]
---                                     ++ gocAfter)
---             )
---  theRule _ = na "rule_Image_Literal"
---
 

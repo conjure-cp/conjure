@@ -240,12 +240,12 @@ containsTypeComprehendable container containee =
 
 -- | Types do not unify && type cannot be a generator in a comprehension
 containsTypeIncomprehendable :: Type -> Type -> Bool
-containsTypeIncomprehendable (TypeTuple ts) t =
-  any id ((\x -> unifiesOrContains x t) <$> ts)
-containsTypeIncomprehendable (TypeRecord ts) t =
-  any id ((\x -> unifiesOrContains (snd x) t) <$> ts)
-containsTypeIncomprehendable (TypeVariant ts) t =  
-  any id ((\x -> unifiesOrContains (snd x) t) <$> ts)
+containsTypeIncomprehendable ot@(TypeTuple ts) t =
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains x t) <$> ts))
+containsTypeIncomprehendable ot@(TypeRecord ts) t =
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
+containsTypeIncomprehendable ot@(TypeVariant ts) t =  
+  (not $ typesUnify [ot, t]) && (any id ((\x -> unifiesOrContains (snd x) t) <$> ts))
 containsTypeIncomprehendable _ _ = False
 
 

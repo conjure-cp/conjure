@@ -1221,6 +1221,7 @@ horizontalRules =
     , Horizontal.Permutation.rule_In
     , Horizontal.Permutation.rule_Permutation_Inverse 
     , Horizontal.Permutation.rule_Image_Comprehendable
+    , Horizontal.Permutation.rule_Image_Incomprehendable
 --    , Horizontal.Permutation.rule_Image_Literal_Comprehension
 
 
