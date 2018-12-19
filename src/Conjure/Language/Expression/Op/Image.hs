@@ -71,14 +71,20 @@ instance EvaluateOp OpImage where
                     [ "Sequence is multiply defined at this point:" <+> pretty a
                     , "Sequence value:" <+> pretty f
                     ]
-    evaluateOp op@(OpImage (viewConstantPermutation -> Just xss) i) = do
-        case filter (i `elem`) xss  of
-          [] -> return i
-          [h] -> do
-            case length $ filter (== i) h of
-              1 -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle h
-              _ -> bug "evaluateOp{OpImage} element in cycle of permutationmore than once"
-          _ -> bug "evaluateOp{OpPermute} element in more than one cycle of permutation"
+    evaluateOp op@(OpImage p@(viewConstantPermutation -> Just xss) i) = do
+      (TypePermutation ip) <- typeOf p
+      ti <- typeOf i
+      if typesUnify [ti, ip]
+         then case filter (i `elem`) xss  of
+                [] -> return i 
+                [h] -> do
+                  case length $ filter (== i) h of
+                    1 -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle h
+                    _ -> bug "evaluateOp{OpImage} element in cycle of permutationmore than once"
+                _ -> bug "evaluateOp{OpPermute} element in more than one cycle of permutation"
+         else if ti `containsType` ip
+                 then na "refinement required to evaluate image of permutation"
+                 else return i
     evaluateOp op = na $ "evaluateOp{OpImage}:" <++> pretty (show op)
 
 instance SimplifyOp OpImage x where

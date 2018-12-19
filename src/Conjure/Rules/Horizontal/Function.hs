@@ -567,7 +567,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             ( "Function image, int."
             , do
                 (iPat, i) <- quantifiedVar
-                let val = make opSum $ Comprehension [essence| &i[2] |]
+                let val = make opSum $ reTag AnyTag $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]

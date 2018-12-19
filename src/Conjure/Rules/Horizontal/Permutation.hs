@@ -128,7 +128,7 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
             return
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
-                     return $ reTag AnyTag [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |]
+                     return [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |]
                )
           else if typeI `containsType` inner
                  then na "rule_Image_Literal"
@@ -157,7 +157,7 @@ rule_Image_Literal_Comprehension = "permutation-image-literal-comprehension" `na
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
                      return $ Comprehension body $ gocBefore
-                                ++ [ Generator (GenInExpr pat (reTag AnyTag [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |]))
+                                ++ [ Generator (GenInExpr pat [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |])
                                    ] ++ gocAfter
                )
           else if typeI `containsType` inner
@@ -247,9 +247,8 @@ rule_Compose = "permutation-compose" `namedRule` theRule where
                  (pName, p) <- auxiliaryVar
                  return $ WithLocals
                             [essence| &p |]
-                        ( AuxiliaryVars --TODO this reTag seems dangerous
-                                        -- does it break image of nested type object?
-                           [ reTag AnyTag (Declaration (FindOrGiven LocalFind pName du))
+                        ( AuxiliaryVars
+                           [ (Declaration (FindOrGiven LocalFind pName du))
                            , SuchThat
                                [ [essence| 
                                     forAll &lPat in (defined(&g) union defined(&h)) .
