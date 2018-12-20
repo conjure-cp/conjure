@@ -1088,19 +1088,9 @@ paramRules =
 verticalRules :: [Rule]
 verticalRules =
     [ Vertical.Permutation.rule_Image
---        , Vertical.Permutation.rule_Permute_Comprehension
     , Vertical.Permutation.rule_Cardinality
     , Vertical.Permutation.rule_Defined
-    , Vertical.Permutation.rule_Permute_Comprehension_Tuples
---    , Vertical.Permutation.rule_Permutation_Equality
---    , Vertical.Permutation.rule_Permutation_Equality_Comprehension
---    , Vertical.Permutation.rule_Relation_Permute
---    , Vertical.Permutation.rule_Relation_Permute_Comprehension
---    , Vertical.Permutation.rule_Set_Permute
---    , Vertical.Permutation.rule_Tuple_Permute
---    , Vertical.Permutation.rule_Tuple_Permute_Comprehension
---    , Vertical.Permutation.rule_Matrix_Permute
---    , Vertical.Permutation.rule_Matrix_Permute_Comprehension
+    , Vertical.Permutation.rule_Comprehension
 
     , Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
@@ -1212,17 +1202,16 @@ horizontalRules :: [Rule]
 horizontalRules =
     [ Horizontal.Permutation.rule_Cardinality_Literal
     , Horizontal.Permutation.rule_Equality
-    , Horizontal.Permutation.rule_Permute_Comprehension_Tuples_Literal
+    , Horizontal.Permutation.rule_Comprehension
     , Horizontal.Permutation.rule_Compose_Image
     , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal
---    , Horizontal.Permutation.rule_Image_Literal_Comprehension
---    , Horizontal.Permutation.rule_Image_Literal_Find
+    , Horizontal.Permutation.rule_Image_Sequence
+    , Horizontal.Permutation.rule_Image_Sequence_Defined
     , Horizontal.Permutation.rule_In
     , Horizontal.Permutation.rule_Permutation_Inverse 
     , Horizontal.Permutation.rule_Image_Comprehendable
     , Horizontal.Permutation.rule_Image_Incomprehendable
---    , Horizontal.Permutation.rule_Image_Literal_Comprehension
 
 
 

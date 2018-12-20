@@ -2,7 +2,6 @@
 module Conjure.Rules.Horizontal.Permutation where
 import Conjure.Rules.Import
 import Data.Permutation (size, fromCycles, toFunction)
-import Conjure.Bug
 
 
 rule_Cardinality_Literal :: Rule
@@ -35,12 +34,12 @@ rule_Equality = "permutation-equality" `namedRule` theRule where
            )
 
 
-rule_Permute_Comprehension_Tuples_Literal :: Rule
-rule_Permute_Comprehension_Tuples_Literal = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
+rule_Comprehension :: Rule
+rule_Comprehension = "permutation-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) =  do
         (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
             Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
-            _ -> na "rule_Comprehension_Tuples_Literal"
+            _ -> na "rule_Comprehension"
         (TypePermutation inner, elems) <- match permutationLiteral perm 
         DomainPermutation _ _ innerD <- domainOf perm 
         let f' = toFunction <$> fromCycles elems 
@@ -54,7 +53,7 @@ rule_Permute_Comprehension_Tuples_Literal = "permutation-comprehension-tuples{As
                                    | de <- join elems 
                                    ]
             return
-              ( "Vertical rule for permutation-comprehension-tuples-literal"
+              ( "Vertical rule for permutation-comprehension"
               , do
                   return $ Comprehension body 
                           $  gocBefore
@@ -62,56 +61,7 @@ rule_Permute_Comprehension_Tuples_Literal = "permutation-comprehension-tuples{As
                              ]
                           ++ gocAfter 
               )
-    theRule _ = na "rule_Comprehension_Tuples_Literal"
-
-rule_Image_Literal_Find :: Rule
-rule_Image_Literal_Find = "permutation-image-literal" `namedRule` theRule where
-  theRule [essence| image(&p, &i) |] = do
-    (TypePermutation inner, elems) <- match permutationLiteral p  
-    DomainPermutation _ _ innerP <- domainOf p
-    let f' = toFunction <$> fromCycles elems 
-    case f' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
-      Right f -> do 
-        let outLiteral = make matrixLiteral
-                (TypeMatrix (TypeInt AnyTag) (TypeTuple [inner,inner])) innerP  
-                               [ AbstractLiteral (AbsLitTuple [de
-                                                              ,f de])
-                               | de <- join elems 
-                               ]
-        typeI <- typeOf i
-        if typesUnify [inner, typeI] 
-          then do       
-            innerD <- domainOf i
-            return
-               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
-               , do
-                 (hName, h) <- auxiliaryVar
-                 (fPat, f)  <- quantifiedVar
-                 (tPat, t)  <- quantifiedVar
-                 (gPat, g)  <- quantifiedVar
-                 (ePat, _)  <- quantifiedVar
-                 return $ WithLocals 
-                            [essence| &h |]
-                           (AuxiliaryVars 
-                             [ Declaration (FindOrGiven LocalFind hName innerD)
-                             , SuchThat
-                                 [ [essence| 
-                                       (forAll (&fPat, &tPat) in &outLiteral . &f = &i <-> &h = &t)
-                                    /\ (!(exists (&gPat, &ePat) in &outLiteral . &g = &h) <-> &h = &i)
-                                   |]
-                                 ]
-                             ]
-                           )
-               )
-          else if typeI `containsType` inner
-                 then na "rule_Image_Literal"
-                 else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
-                             , do
-                               return [essence| &i |]
-                             )
-  theRule _ = na "rule_Image_Literal"
-
+    theRule _ = na "rule_Comprehension"
 
 rule_Image_Literal :: Rule
 rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
@@ -137,39 +87,6 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
                                return [essence| &i |]
                              )
   theRule _ = na "rule_Image_Literal"
-
-rule_Image_Literal_Comprehension :: Rule
-rule_Image_Literal_Comprehension = "permutation-image-literal-comprehension" `namedRule` theRule where
-  theRule (Comprehension body gensOrConds) = do
-    (gocBefore, (pat, p, i), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-        Generator (GenInExpr pat [essence| image(&p, &i) |]) -> return (pat, p, i)
-        _ -> na "rule_Image_Literal_Comprehension"
-    (TypePermutation inner, elems) <- match permutationLiteral p
-    let f' = toFunction <$> fromCycles elems 
-    case f' of
-      Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
-      Right f -> do 
-        typeI <- typeOf i
-        if typesUnify [inner, typeI] 
-          then do
-            let outLiteral = make functionLiteral (TypeFunction inner inner) [ (de,f de) | de <- join elems ]
-            return
-               ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
-               , do
-                     return $ Comprehension body $ gocBefore
-                                ++ [ Generator (GenInExpr pat [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |])
-                                   ] ++ gocAfter
-               )
-          else if typeI `containsType` inner
-                 then na "rule_Image_Literal_Comprehension"
-                 else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
-                             , do
-                               return $ Comprehension body $ gocBefore
-                                     ++ [ Generator (GenInExpr pat [essence| &i |]) ]
-                                     ++ gocAfter
-                             )
-  theRule _ = na "rule_Image_Literal_Comprehension"
-
 
 
 rule_In :: Rule
@@ -212,7 +129,7 @@ rule_Compose_Image :: Rule
 rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule [essence| image(compose(&g, &h),&i) |] = do
     case match permutationLiteral h of
-      Nothing -> return () -- This rule + rule_Image_Literal makes SR explode
+      Nothing -> return () --SR error when h is literal, fall back to rule_Compose 
       Just _ -> na "rule_Compose_Image" 
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
@@ -227,9 +144,6 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule _ = na "rule_Compose_Image"
 
 
--- This isn't great but handles the literal case rule_Compose_Image fails on
--- TODO would be nice to be able to compose permutations without having to
--- introduce auxiliary variables - this is a slow way to go
 rule_Compose :: Rule
 rule_Compose = "permutation-compose" `namedRule` theRule where
   theRule [essence| compose(&g,&h) |] = do
@@ -269,6 +183,7 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
          _ -> na "rule_Image_Comprehendable"
     (perm, y) <- match opImage x 
     ty <- typeOf y
+    case ty of TypeSequence{} -> na "sequence is a special case" ; _ -> return ()
     (TypePermutation inn) <- typeOf perm
     if ty `containsTypeComprehendable` inn
        then do
@@ -285,6 +200,59 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
              )
        else na "rule_Image_Comprehendable"
   theRule _ = na "rule_Image_Comprehendable"
+
+rule_Image_Sequence :: Rule
+rule_Image_Sequence = "image-sequence" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Image_Sequence"
+    (perm, y) <- match opImage x 
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences" 
+    (TypePermutation inn) <- typeOf perm
+    if ty `containsTypeComprehendable` inn
+       then do
+         return
+             ( "Horizontal rule for image of sequence under permutation"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| &y |])]
+                 ++ ((ComprehensionLetting pat [essence| (&d[1],image(&perm, &d[2])) |] ):gocAfter)
+                      )
+                      
+             )
+       else na "rule_Image_Sequence"
+  theRule _ = na "rule_Image_Sequence"
+
+
+rule_Image_Sequence_Defined :: Rule
+rule_Image_Sequence_Defined = "image-sequence-defined" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr pat@Single{} expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Image_Sequence_Defined"
+    defi <- match opDefined x
+    (perm, y) <- match opImage defi 
+    ty <- typeOf y
+    case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences" 
+    (TypePermutation inn) <- typeOf perm
+    if ty `containsTypeComprehendable` inn
+       then do
+         return
+             ( "Horizontal rule for image of sequence defined under permutation"
+             , do
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr pat [essence| defined(&y) |])]
+                 ++ gocAfter 
+                      )
+             )
+       else na "rule_Image_Sequence_Defined"
+  theRule _ = na "rule_Image_Sequence_Defined"
+
 
 
 rule_Image_Incomprehendable :: Rule

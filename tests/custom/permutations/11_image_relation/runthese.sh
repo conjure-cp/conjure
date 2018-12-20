@@ -1,2 +1,1 @@
-stack install
-stack test --test-arguments "-p custom.permutations.11_image_relation"
+stack build --copy-bins --test --test-arguments "-p custom.permutations.11_image_relation"
