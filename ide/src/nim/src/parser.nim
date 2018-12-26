@@ -104,7 +104,7 @@ var db : DbConn
 proc init(dbPath: string, minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
-    db = open(dbPath, nil, nil, nil)
+    db = open(dbPath, "", "", "")
 
 proc getPrettyDomainsOfNode(nodeId: int) : seq[Variable] =
     # echo auxLookup
@@ -142,9 +142,6 @@ proc getPrettyDomainsOfNode(nodeId: int) : seq[Variable] =
                 else:
                     dummySet.cardinality.dec()
 
-    # for d in domains:
-    #     echo d
-
     return domains
 
 
@@ -152,7 +149,7 @@ type TreeViewNode* = ref object of RootObj
   text: string
   nodes: seq[TreeViewNode]
 
-proc domainsToJson(domains: seq[Variable]) =
+proc domainsToJson(domains: seq[Variable]): string =
 
     let root = TreeViewNode(text: "Items")
     let variables = TreeViewNode(text: "Variables")
@@ -185,19 +182,9 @@ proc domainsToJson(domains: seq[Variable]) =
         else:
             variables.nodes.add(TreeViewNode(text: d.name, nodes: @[TreeViewNode(text: d.range)]))
         
-    echo $(%root).pretty()
-        
-            
-
-
-    discard
-
-
-
-
-
-
-
+    let list = @[root]
+    let json = $(%list).pretty()
+    return json
 
 
 let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
@@ -206,4 +193,4 @@ let dbPath = "../test/testData/test.db"
 
 init(dbPath, minionFilePath, eprimeFilePath)
 # discard getPrettyDomainsOfNode(1)
-domainsToJson(getPrettyDomainsOfNode(1))
+echo domainsToJson(getPrettyDomainsOfNode(3))
