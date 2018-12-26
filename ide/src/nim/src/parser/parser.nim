@@ -1,23 +1,26 @@
 import re, strutils, os, tables, json, db_sqlite, parseutils
 # import "parseEprime.nim", "parseAux.nim"
 
-type Variable = ref object of RootObj
+type Variable* = ref object of RootObj
   name: string
   range: string
 
-type Expression = ref object of Variable
+type Expression* = ref object of Variable
 
-type Set = ref object of Variable
+type Set* = ref object of Variable
     lower: int
     upper: int
     included: seq[int]
     excluded: seq[int]
 
-type OccurrenceSet = ref object of Set
+type OccurrenceSet* = ref object of Set
 
-type DummySet = ref object of Set
+type DummySet* = ref object of Set
     dummyVal : int
     cardinality : int
+
+        
+
 
 proc getPrettyRange(lower: string, upper: string): string =
     if lower == upper:
@@ -32,7 +35,7 @@ proc `$`*(v:Variable): string =
     if v of DummySet:
         let s = cast[DummySet](v)
         return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded & " card " & $ s.cardinality
-    return "<Var> " & v.name & " " & v.range 
+    return "<Variable> " & v.name & " " & v.range 
 
 proc getCardinality(s: Set): string =
     if s of DummySet:
@@ -41,10 +44,7 @@ proc getCardinality(s: Set): string =
         return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
     return "ERROR"
 
-var eprimeLookup : Table[string, Variable]
-var auxLookup : Table[string, Expression]
-
-proc parseAux(minionFilePath: string): Table[string, Expression] =
+proc parseAux*(minionFilePath: string): Table[string, Expression] =
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
     let minionFile = readFile(minionFilePath)
@@ -66,7 +66,7 @@ proc parseAux(minionFilePath: string): Table[string, Expression] =
         # echo rhs
     return lookup
 
-proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
+proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
 
     var varLookup = initTable[string, Variable]()
     var clean = ""
@@ -97,12 +97,16 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
 
 
+var eprimeLookup : Table[string, Variable]
+var auxLookup : Table[string, Expression]
+var db : DbConn
 
-proc init*(minionFilePath: string, eprimeFilePath: string) =
+proc init(dbPath: string, minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
+    db = open(dbPath, "", "", "")
 
-proc getPrettyDomainsOfNode*(db: Dbconn, nodeId: string) : seq[Variable] =
+proc getPrettyDomainsOfNode(nodeId: int) : seq[Variable] =
     # echo auxLookup
     var domains : seq[Variable]
 
@@ -138,6 +142,9 @@ proc getPrettyDomainsOfNode*(db: Dbconn, nodeId: string) : seq[Variable] =
                 else:
                     dummySet.cardinality.dec()
 
+    # for d in domains:
+    #     echo d
+
     return domains
 
 
@@ -145,7 +152,7 @@ type TreeViewNode* = ref object of RootObj
   text: string
   nodes: seq[TreeViewNode]
 
-proc domainsToJson*(domains: seq[Variable]): string =
+proc domainsToJson(domains: seq[Variable]): string =
 
     let root = TreeViewNode(text: "Items")
     let variables = TreeViewNode(text: "Variables")
@@ -183,7 +190,10 @@ proc domainsToJson*(domains: seq[Variable]): string =
     return json
 
 
+let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
+let eprimeFilePath = "../test/testData/conjure-output/model000001.eprime"
+let dbPath = "../test/testData/test.db"
 
-# init(dbPath, minionFilePath, eprimeFilePath)
+init(dbPath, minionFilePath, eprimeFilePath)
 # discard getPrettyDomainsOfNode(1)
-# echo domainsToJson(getPrettyDomainsOfNode(3))
+echo domainsToJson(getPrettyDomainsOfNode(3))
