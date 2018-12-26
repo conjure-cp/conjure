@@ -122,7 +122,6 @@ proc getPrettyDomainsOfNode*(db: Dbconn, nodeId: string) : seq[Variable] =
             let splitted = domain[0].split("_")
             let setName = splitted[0]
             let lower = domain[1]
-            let upper = domain[2]
             let s = eprimeLookup[setName]
 
             if s of DummySet:

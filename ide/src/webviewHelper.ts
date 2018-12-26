@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import * as Parser from './parser';
 import fs = require('fs');
+const request = require('request');
 let createHTML = require('create-html');
 
 export default class WebviewHelper {
@@ -56,10 +57,12 @@ export default class WebviewHelper {
 
         WebviewHelper.context = context;
 
+        let serverURL = "http://0.0.0.0:5000";
+
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/Documents/sh/essence/conjure-output";
+        let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-output";
         // let testDir = "/home/tom/minion-private/build/conjure-output";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
 
@@ -67,12 +70,12 @@ export default class WebviewHelper {
 
             let paramPart = "";
             let splitted = path.basename(testDir).split("~");
-            if (splitted.length > 1){
+            if (splitted.length > 1) {
                 paramPart = "-" + splitted[1];
             }
 
             let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-            let minion = (fs.readFileSync(testDir + "/model000001" +  paramPart + ".eprime-minion", 'utf8'));
+            let minion = (fs.readFileSync(testDir + "/model000001" + paramPart + ".eprime-minion", 'utf8'));
             let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
 
             let parser = new Parser.JSONParser(json, eprime, minion);
@@ -98,6 +101,21 @@ export default class WebviewHelper {
                     case 'ready':
                         vscode.window.showErrorMessage(message.text);
                         panel.webview.postMessage(contents);
+                        break;
+                    case 'init':
+                        request(serverURL + '/init/' + testDir, { json: true }, (err: any, res: any, body: any) => {
+                            if (err) { return console.log(err); }
+                            console.log(res);
+                        });
+                        break;
+                    case 'next':
+                        console.log(message.id);
+                        request(serverURL + '/next/' + message.id, { json: true }, (err: any, res: any, body: any) => {
+                            if (err) { return console.log(err); }
+                            console.log(res);
+                        });
+                        break;
+
                 }
             }, undefined, context.subscriptions);
 
