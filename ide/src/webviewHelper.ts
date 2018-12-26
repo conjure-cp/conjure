@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import Parser from './parser';
+import * as Parser from './parser';
 import fs = require('fs');
 let createHTML = require('create-html');
 
@@ -42,13 +42,13 @@ export default class WebviewHelper {
     // }
 
 
-    private static async getFolder() {
-        let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
-        if (folder) {
-            console.log(folder[0].path);
-            return folder[0].path;
-        }
-    }
+    // private static async getFolder() {
+    //     let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
+    //     if (folder) {
+    //         console.log(folder[0].path);
+    //         return folder[0].path;
+    //     }
+    // }
 
     // public static  async activate(context: vscode.ExtensionContext) {
 
@@ -60,6 +60,7 @@ export default class WebviewHelper {
         // let testDir = await this.getFolder();
 
         let testDir = "/home/tom/Documents/sh/essence/conjure-output";
+        // let testDir = "/home/tom/minion-private/build/conjure-output";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
 
         if (testDir) {
@@ -74,7 +75,7 @@ export default class WebviewHelper {
             let minion = (fs.readFileSync(testDir + "/model000001" +  paramPart + ".eprime-minion", 'utf8'));
             let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
 
-            let parser = new Parser(json, eprime, minion);
+            let parser = new Parser.JSONParser(json, eprime, minion);
             let contents = parser.parseJson();
             // return;
 

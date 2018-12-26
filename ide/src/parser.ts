@@ -100,27 +100,28 @@ enum Type {
     ExplicitVarSizeWithDummy
 }
 
-export default class Parser {
+class Parser {
 
     public setSeen: Type | undefined;
     public auxMap: any;
-    public jsonFile: string;
+    // public jsonFile: string;
     public essenceFile: string | undefined;
     public eprimeFile: string;
     public minionFile: string;
     public jsonAux = new RegExp('aux[0-9]+');
 
-    constructor(jsonFile: string, eprimeFile: string, minionFile: string) {
-        this.jsonFile = jsonFile;
+    constructor(eprimeFile: string, minionFile: string) {
+    // constructor(jsonFile: string, eprimeFile: string, minionFile: string) {
+        // this.jsonFile = jsonFile;
         // this.essenceFile = essenceFile;
         this.eprimeFile = eprimeFile;
         this.minionFile = minionFile;
         this.auxMap = {};
     }
 
-    public static async parseDB(path: string): Promise<TreeNode> {
+    public async parseDB(path: string): Promise<TreeNode> {
+        
         const sqlite3 = require('sqlite3').verbose();
-
         let db = new sqlite3.Database(path, (err: any) => {
             if (err) {
                 console.error(err.message);
@@ -531,22 +532,20 @@ export default class Parser {
         }
     }
 
+}
+
+class JSONParser extends Parser{
+
+    public jsonFile: string;
+
+    constructor(jsonFile: string, eprimeFile: string, minionFile: string){
+        super(eprimeFile, minionFile);
+        this.jsonFile = jsonFile;
+    }
+
     public parseJson() {
 
-        // const Stopwatch = require("node-stopwatch").Stopwatch;
-
-        // var stopwatch = Stopwatch.create();
-        // stopwatch.start();
-
         let obj = JSON.parse(this.jsonFile.toString());
-
-        // stopwatch.stop();
-
-        // console.log("JSON.PARSE: " + stopwatch.elapsedMilliseconds);
-
-        // stopwatch.reset();
-        // stopwatch.restart();
-
         obj = rename(obj, (key: any) => {
             if (key === 'Node') { return 'name'; }
             return key;
@@ -556,11 +555,6 @@ export default class Parser {
         let normalDomainMap = {};
         let simpleDomainMap = {};
         this.parseTree(obj, treeviewDomainMap, normalDomainMap, simpleDomainMap);
-        // console.log(treeviewDomainMap);
-        // console.log(normalDomainMap);
-
-        // stopwatch.stop();
-        // console.log("OTHER: " + stopwatch.elapsedMilliseconds);
 
         let result = {
             "tree": obj,
@@ -569,8 +563,23 @@ export default class Parser {
             "simpleDomainMap": simpleDomainMap
         };
 
-        // console.log(result);
-
         return result;
     }
 }
+
+class DBParser extends Parser {
+
+    constructor(dbPath: string, eprimeFile: string, minionFile: string){
+        super(eprimeFile, minionFile);
+    }
+
+
+    
+
+}
+
+export{
+    Parser,
+    DBParser,
+    JSONParser,
+};
