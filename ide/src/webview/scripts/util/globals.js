@@ -3,6 +3,7 @@ exports.currentId = 1;
 exports.selectedId = 1;
 exports.id2Node = {};
 exports.id2Parent = {};
+exports.id2Children = {};
 exports.root = { id: 1 };
 
 exports.viewerWidth = $(document).width();
@@ -30,17 +31,18 @@ exports.diagonal = d3.svg.diagonal()
     });
 
 exports.toggleNode = (nodeId) => {
+
     if (exports.id2Node[nodeId]._children) {
 
         exports.id2Node[nodeId].children = exports.id2Node[nodeId]._children;
         exports.id2Node[nodeId]._children = null;
         exports.unsetHasOthers(nodeId);
+        // console.log("here")
     }
-    else {
+    else if (exports.id2Node[nodeId].children) {
         exports.id2Node[nodeId]._children = exports.id2Node[nodeId].children;
         exports.id2Node[nodeId].children = null;
         exports.setHasOthers(nodeId);
-        
     }
 }
 
@@ -74,18 +76,31 @@ exports.nextNode = () => {
     // console.log(exports.selectedId + 1);
     // console.log(exports.id2Node);
     // console.log(exports.id2Node[exports.selectedId+1]);
+
+
+    if (exports.id2Node[exports.selectedId]._children){
+        console.log("NOW")
+        exports.toggleNode(exports.selectedId);
+        return
+    }
+
+
     if (!exports.id2Node[exports.selectedId + 1]) {
         exports.loadNNodes();
     }
     else {
         exports.selectedId++;
         exports.selectNode(exports.selectedId);
+        // if (exports.id2Parent[exports.selectedId]._children){
+        //     exports.toggleNode(exports.id2Parent[exports.selectedId].id)
+
+        // }
     }
 }
 
 exports.previousNode = () => {
     if (exports.selectedId > 1) {
-        exports.selectedId = exports.id2Parent[exports.selectedId];
+        exports.selectedId = exports.id2Parent[exports.selectedId].id;
     }
     exports.selectNode(exports.selectedId);
 }
@@ -125,7 +140,7 @@ exports.addNode = (parentId) => {
 
     exports.id2Node[parentId].children.push(newNode);
     exports.id2Node[exports.currentId] = newNode;
-    exports.id2Parent[exports.currentId] = parentId;
+    exports.id2Parent[exports.currentId] = exports.id2Node[parentId];
 
 }
 

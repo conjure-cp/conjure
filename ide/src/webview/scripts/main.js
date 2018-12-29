@@ -60,6 +60,122 @@ import panel from "./util/panel"
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }
 
+    // function update(source) {
+    //     // Compute the new tree layout.
+    //     let nodes = globals.tree.nodes(globals.root).reverse(),
+    //         links = globals.tree.links(nodes);
+
+    //     // Normalize for fixed-depth.
+    //     nodes.forEach((d) => { d.y = d.depth * 100; });
+    //     // console.log(nodes);
+    //     // Declare the nodes…
+    //     let domNodes = svg.selectAll("g.node")
+    //             .data(nodes, (d) => { return d.id || (d.id = ++i); });
+    //     console.log(domNodes);
+    //         // .data(nodes);
+    //     // Enter the nodes.
+    //     let nodeEnter = domNodes.enter().append("g")
+    //         .attr("class", "node")
+    //         .attr("id", (d) => {return "node" + d.id})
+    //         .attr("transform", (d) => {
+    //             console.log("here");
+    //             // globals.id2Node[Number(d.minionID)] = d;
+    //             if (source.x0 && source.y0) {
+    //                 return "translate(" + source.x0 + "," + source.y0 + ")";
+    //             }
+    //         })
+    //         .on("click", (d) => {
+    //             globals.selectNode(d.id);
+    //         });
+    //     // .on("mouseover", showDomains);
+
+    //     nodeEnter.append("circle")
+    //         .transition()
+    //         .attr("r", 10)
+    //     // .call((d) => {globals.getChildren(d.id)})
+    //     // .attr("class", "hasOthers")
+    //     // .attr("stroke", (d) => { return d.children || d._children ? "steelblue" : "#00c13f"; })
+    //     // .style("fill", (d) => { return d.children || d._children ? "#6ac4a1" : "#f00"; });
+
+    //     nodeEnter.append("text")
+    //         .attr("y", (d) => {
+    //             if (d.children || d._children) {
+    //                 return 42;
+    //             }
+    //             return 20;
+    //         })
+    //         .attr("dy", ".35em")
+    //         .attr("text-anchor", "middle")
+    //         .text((d) => { return d.name; })
+    //         .style("fill-opacity", 1e-6);
+    //     // Transition nodes to their new position.
+    //     //horizontal tree
+    //     domNodes.transition()
+    //         .duration(globals.duration)
+    //         .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; });
+
+    //     // Transition exiting nodes to the parent's new position.
+    //     let nodeExit = domNodes.exit().transition()
+    //         .duration(globals.duration)
+    //         .attr("transform", (d) => { 
+    //             // console.log(source);
+    //             return "translate(" + source.x + "," + source.y + ")"; })
+    //         .remove();
+    //     nodeExit.select("circle")
+    //         .attr("r", 1e-6);
+    //     nodeExit.select("text")
+    //         .style("fill-opacity", 1e-6);
+    //     // Update the links…
+    //     // Declare the links…
+    //     let link = svg.selectAll("path.link")
+    //         .data(links, (d) => { return d.target.id; });
+    //     // Enter the links.
+    //     link.enter().insert("path", "g")
+    //         .attr("class", "link")
+    //         .attr("marker-end", (d) => {
+    //             // console.log(d);
+    //             if (d.source.children.length == 1) {
+    //                 return "url(#marker_straight)";
+    //             }
+
+    //             if (d.source.children[0] == d.target) {
+    //                 return "url(#marker_left)";
+    //             }
+
+    //             return "url(#marker_right)";
+
+    //         })
+    //         .attr("d", (d) => {
+
+    //             if (source.x0 && source.y0) {
+
+    //                 let o = { x: source.x0, y: source.y0 };
+    //                 return globals.diagonal({ source: o, target: o });
+    //             }
+    //             let o = { x: source.x, y: source.y };
+    //             return globals.diagonal({ source: o, target: o });
+    //         })
+    //     // Transition links to their new position.
+    //     link.transition()
+    //         .duration(globals.duration)
+    //         .attr("d", globals.diagonal);
+    //     // Transition exiting nodes to the parent's new position.
+    //     link.exit().transition()
+    //         .duration(globals.duration)
+    //         .attr("d", (d) => {
+    //             let o = { x: source.x, y: source.y };
+    //             return globals.diagonal({ source: o, target: o });
+    //         })
+    //         .remove();
+
+    //     // Stash the old positions for transition.
+    //     nodes.forEach((d) => {
+    //         d.x0 = d.x;
+    //         d.y0 = d.y;
+    //     });
+    // }
+
+
     function update(source) {
         // Compute the new tree layout.
         let nodes = globals.tree.nodes(globals.root).reverse(),
@@ -67,42 +183,34 @@ import panel from "./util/panel"
 
         // Normalize for fixed-depth.
         nodes.forEach((d) => { d.y = d.depth * 100; });
-        // console.log(nodes);
         // Declare the nodes…
-        let domNodes = svg.selectAll("g.node")
-                .data(nodes, (d) => { return d.id || (d.id = ++i); });
-        console.log(domNodes);
-            // .data(nodes);
+        let node = svg.selectAll("g.node")
+            .data(nodes, (d) => { return d.id || (d.id = ++i); });
         // Enter the nodes.
-        let nodeEnter = domNodes.enter().append("g")
+        let nodeEnter = node.enter().append("g")
             .attr("class", "node")
-            .attr("id", (d) => {return "node" + d.id})
+            .attr("id", (d) => {
+                return "node" + d.id;
+            })
             .attr("transform", (d) => {
-                console.log("here");
-                // globals.id2Node[Number(d.minionID)] = d;
-                if (source.x0 && source.y0) {
-                    return "translate(" + source.x0 + "," + source.y0 + ")";
+                let parent = globals.id2Parent[d.id]
+                if (parent) {
+                    return "translate(" + parent.x + "," + parent.y + ")";
                 }
             })
             .on("click", (d) => {
                 globals.selectNode(d.id);
-            });
+            })
         // .on("mouseover", showDomains);
 
         nodeEnter.append("circle")
             .transition()
             .attr("r", 10)
-        // .call((d) => {globals.getChildren(d.id)})
-        // .attr("class", "hasOthers")
-        // .attr("stroke", (d) => { return d.children || d._children ? "steelblue" : "#00c13f"; })
-        // .style("fill", (d) => { return d.children || d._children ? "#6ac4a1" : "#f00"; });
+
 
         nodeEnter.append("text")
             .attr("y", (d) => {
-                if (d.children || d._children) {
-                    return 42;
-                }
-                return 20;
+                return d.children || d._children ? -18 : 18;
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
@@ -110,16 +218,30 @@ import panel from "./util/panel"
             .style("fill-opacity", 1e-6);
         // Transition nodes to their new position.
         //horizontal tree
-        domNodes.transition()
+        let nodeUpdate = node.transition()
             .duration(globals.duration)
-            .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; });
+            .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; })
+
+        nodeUpdate.select("circle")
+            .attr("r", 10)
+            .attr("KIDS", (d) => {
+                console.log(d);
+                if (!d.children){
+                    // globals.getChildren(d.id);
+                }
+                 return d._children ? "YES" : "NO"; 
+                });
+
+        // .style("fill", (d) => { return d._children ? "#6ac4a1" : "#fff"; });
+        nodeUpdate.select("text")
+            .style("fill-opacity", 1);
+
+        // console.log(nodeUpdate.select("g"));
 
         // Transition exiting nodes to the parent's new position.
-        let nodeExit = domNodes.exit().transition()
+        let nodeExit = node.exit().transition()
             .duration(globals.duration)
-            .attr("transform", (d) => { 
-                // console.log(source);
-                return "translate(" + source.x + "," + source.y + ")"; })
+            .attr("transform", (d) => { return "translate(" + source.x + "," + source.y + ")"; })
             .remove();
         nodeExit.select("circle")
             .attr("r", 1e-6);
@@ -132,29 +254,10 @@ import panel from "./util/panel"
         // Enter the links.
         link.enter().insert("path", "g")
             .attr("class", "link")
-            .attr("marker-end", (d) => {
-                // console.log(d);
-                if (d.source.children.length == 1) {
-                    return "url(#marker_straight)";
-                }
-
-                if (d.source.children[0] == d.target) {
-                    return "url(#marker_left)";
-                }
-
-                return "url(#marker_right)";
-
-            })
             .attr("d", (d) => {
-
-                if (source.x0 && source.y0) {
-
-                    let o = { x: source.x0, y: source.y0 };
-                    return globals.diagonal({ source: o, target: o });
-                }
-                let o = { x: source.x, y: source.y };
+                let o = { x: d.source.x, y: d.source.y };
                 return globals.diagonal({ source: o, target: o });
-            })
+            });
         // Transition links to their new position.
         link.transition()
             .duration(globals.duration)
@@ -163,7 +266,7 @@ import panel from "./util/panel"
         link.exit().transition()
             .duration(globals.duration)
             .attr("d", (d) => {
-                let o = { x: source.x, y: source.y };
+                let o = { x: d.source.x, y: d.source.y };
                 return globals.diagonal({ source: o, target: o });
             })
             .remove();
@@ -173,15 +276,27 @@ import panel from "./util/panel"
             d.x0 = d.x;
             d.y0 = d.y;
         });
+
     }
+
 
 
     globals.setup(zoom);
     appendControls();
-    Mousetrap.bind('s', globals.nextNode, 'keydown');
+    Mousetrap.bind('s', () => {
+        globals.nextNode();
+        update(globals.selectNode);
+    }, 'keydown');
     Mousetrap.bind('w', globals.previousNode, 'keydown');
     Mousetrap.bind('d', globals.rightNode, 'keydown');
-    Mousetrap.bind('a', globals.nextNode, 'keydown');
+    Mousetrap.bind('a', () => {
+        if (globals.id2Node[globals.selectedId].children) {
+            if (globals.id2Node[globals.selectedId].children.length > 1) {
+                globals.nextNode();
+            }
+        }
+    }, 'keydown');
+
     Mousetrap.bind('t', () => {
         globals.toggleNode(globals.selectedId);
         update(globals.id2Node[globals.selectedId]);

@@ -11,7 +11,7 @@ export function appendControls() {
         .classed('form-control', true)
         .attr('type', 'text')
         .attr('name', 'textInput')
-        .attr('value', '5')
+        .attr('value', '1')
         .attr('id', 'stepSize')
 }
         // d3.select("#controls")
