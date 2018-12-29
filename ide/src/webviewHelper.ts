@@ -1,6 +1,6 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import * as Parser from './parser';
+// import * as Parser from './parser';
 import fs = require('fs');
 const request = require('request');
 let createHTML = require('create-html');
@@ -62,24 +62,25 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-output";
+        // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
+        let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "/home/tom/minion-private/build/conjure-output";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
 
         if (testDir) {
 
-            let paramPart = "";
-            let splitted = path.basename(testDir).split("~");
-            if (splitted.length > 1) {
-                paramPart = "-" + splitted[1];
-            }
+            // let paramPart = "";
+            // let splitted = path.basename(testDir).split("~");
+            // if (splitted.length > 1) {
+            //     paramPart = "-" + splitted[1];
+            // }
 
-            let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-            let minion = (fs.readFileSync(testDir + "/model000001" + paramPart + ".eprime-minion", 'utf8'));
-            let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+            // let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
+            // let minion = (fs.readFileSync(testDir + "/model000001" + paramPart + ".eprime-minion", 'utf8'));
+            // let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
 
-            let parser = new Parser.JSONParser(json, eprime, minion);
-            let contents = parser.parseJson();
+            // let parser = new Parser.JSONParser(json, eprime, minion);
+            // let contents = parser.parseJson();
             // return;
 
             // Get path to resource on disk
@@ -97,22 +98,35 @@ export default class WebviewHelper {
 
 
             panel.webview.onDidReceiveMessage(message => {
+
+                // console.log(message.command);
+
                 switch (message.command) {
-                    case 'ready':
-                        vscode.window.showErrorMessage(message.text);
-                        panel.webview.postMessage(contents);
-                        break;
+
+                    // case 'ready':
+                    //     vscode.window.showErrorMessage(message.text);
+                    //     panel.webview.postMessage(contents);
+                    //     break;
                     case 'init':
                         request(serverURL + '/init/' + testDir, { json: true }, (err: any, res: any, body: any) => {
                             if (err) { return console.log(err); }
                             console.log(res);
                         });
                         break;
-                    case 'next':
-                        console.log(message.id);
-                        request(serverURL + '/next/' + message.id, { json: true }, (err: any, res: any, body: any) => {
+                    case 'nParents':
+                        // console.log(message.id);
+                        request(serverURL + '/getNParents/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
                             if (err) { return console.log(err); }
                             console.log(res);
+                            panel.webview.postMessage({command:"nParents", data: res.body});
+                        });
+                        break;
+                    case 'children':
+                        // console.log(message.id);
+                        request(serverURL + '/getChildren/' + message.parentId, { json: true }, (err: any, res: any, body: any) => {
+                            if (err) { return console.log(err); }
+                            console.log(res);
+                            panel.webview.postMessage({command:"children", data: res.body});
                         });
                         break;
 
@@ -153,7 +167,8 @@ export default class WebviewHelper {
         const jspanelJS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
         const jquery = "http://code.jquery.com/jquery-2.1.3.min.js";
-        const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
+        // const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
+        const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js";
 
 
 

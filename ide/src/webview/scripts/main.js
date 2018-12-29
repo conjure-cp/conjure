@@ -1,32 +1,204 @@
+import Mousetrap from "./util/mousetrap"
+import { appendControls } from "./util/screen"
+import globals from "./util/globals"
 
 (function () {
-
-    const vscode = acquireVsCodeApi();
-
-    function init() {
-
-        vscode.postMessage({
-            command: 'init',
-        });
-    }
-
-    function getNext(current) {
-        vscode.postMessage({
-            command: 'next',
-            id: current,
-        });
-
-    }
 
     window.addEventListener('message', event => {
         const message = event.data
         switch (message.command) {
-                case 'next':
-                    break;
-            }
+            case 'nParents':
+                message.data.forEach((parentId) => {
+                    // globals.currentId++;
+                    globals.addNode(parentId);
+                });
+                message.data.forEach((parentId) => {
+                    globals.getChildren(parentId);
+                });
+
+                globals.getChildren(globals.currentId);
+                // console.log("Current " + globals.currentId);
+
+                // for (var i = globals.currentId - message.data.length; i < globals.currentId;  i++){
+                //     globals.getChildren(i);
+                // }
+                update(globals.nodeMap[globals.currentId]);
+                focusNode(globals.nodeMap[globals.currentId]);
+                globals.waiting = false;
+                break;
+
+            case 'children':
+
+                let loadedChildrenCount = 0;
+
+                if (globals.nodeMap[message.data.parentId].children) {
+                    loadedChildrenCount = globals.nodeMap[message.data.parentId].children.length;
+                }
+
+                let hasMore = message.data.children.length > loadedChildrenCount
+                // console.log(message.data.parentId)
+                // console.log(message.data.children)
+                // console.log(globals.nodeMap[message.data.parentId])
+                // console.log(hasMore);
+
+                if (hasMore) {
+                    globals.setHasMore(message.data.parentId);
+                }
+                else {
+                    globals.unsetHasMore(message.data.parentId);
+                }
+        }
     });
 
 
+    let zoom = d3.behavior.zoom()
+        .on("zoom", zoomed);
+
+    let svg = d3.select("#tree")
+        .append("svg")
+        .call(zoom)
+        .attr("width", globals.viewerWidth)
+        .attr("height", globals.viewerHeight)
+        .append("g")
+
+    function focusNode(node) {
+        // scale = 7;
+        let scale = zoom.scale();
+        let x = -node.x * scale;
+        let y = -node.y * scale;
+
+        x += globals.width / 3;
+        y += globals.height / 2;
+
+        d3.select('g').transition()
+            .duration(globals.duration)
+            .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
+        zoom.translate([x, y]);
+    }
+
+    function zoomed() {
+        svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
+    }
+
+    function update(source) {
+        // Compute the new tree layout.
+        let nodes = globals.tree.nodes(globals.root).reverse(),
+            links = globals.tree.links(nodes);
+
+        // Normalize for fixed-depth.
+        nodes.forEach((d) => { d.y = d.depth * 100; });
+        // Declare the nodes…
+        let node = svg.selectAll("g.node")
+            .data(nodes, (d) => { return d.id || (d.id = ++globals.i); });
+        // Enter the nodes.
+        let nodeEnter = node.enter().append("g")
+            .attr("class", "node")
+            .attr("id", (d) => {
+                return "node" + d.id;
+            })
+            .attr("transform", (d) => {
+                // globals.nodeMap[Number(d.minionID)] = d;
+                if (source.x0 && source.y0) {
+                    return "translate(" + source.x0 + "," + source.y0 + ")";
+                }
+            })
+            .on("click", (d) => {
+                // loadNNodes(d);
+            });
+        // .on("mouseover", showDomains);
+
+        nodeEnter.append("circle")
+            .transition()
+            .attr("r", 10)
+        // .call((d) => {globals.getChildren(d.id)})
+        // .attr("class", "hasOthers")
+        // .attr("stroke", (d) => { return d.children || d._children ? "steelblue" : "#00c13f"; })
+        // .style("fill", (d) => { return d.children || d._children ? "#6ac4a1" : "#f00"; });
+
+        nodeEnter.append("text")
+            .attr("y", (d) => {
+                if (d.children || d._children) {
+                    return 42;
+                }
+                return 20;
+            })
+            .attr("dy", ".35em")
+            .attr("text-anchor", "middle")
+            .text((d) => { return d.name; })
+            .style("fill-opacity", 1e-6);
+        // Transition nodes to their new position.
+        //horizontal tree
+        node.transition()
+            .duration(globals.duration)
+            .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; });
+
+        // Transition exiting nodes to the parent's new position.
+        let nodeExit = node.exit().transition()
+            .duration(globals.duration)
+            .attr("transform", (d) => { return "translate(" + source.x + "," + source.y + ")"; })
+            .remove();
+        nodeExit.select("circle")
+            .attr("r", 1e-6);
+        nodeExit.select("text")
+            .style("fill-opacity", 1e-6);
+        // Update the links…
+        // Declare the links…
+        let link = svg.selectAll("path.link")
+            .data(links, (d) => { return d.target.id; });
+        // Enter the links.
+        link.enter().insert("path", "g")
+            .attr("class", "link")
+            .attr("marker-end", (d) => {
+                // console.log(d);
+                if (d.source.children.length == 1) {
+                    return "url(#marker_straight)";
+                }
+
+                if (d.source.children[0] == d.target) {
+                    return "url(#marker_left)";
+                }
+
+                return "url(#marker_right)";
+
+            })
+            .attr("d", (d) => {
+
+                if (source.x0 && source.y0) {
+
+                    let o = { x: source.x0, y: source.y0 };
+                    return globals.diagonal({ source: o, target: o });
+                }
+                let o = { x: source.x, y: source.y };
+                return globals.diagonal({ source: o, target: o });
+            })
+        // Transition links to their new position.
+        link.transition()
+            .duration(globals.duration)
+            .attr("d", globals.diagonal);
+        // Transition exiting nodes to the parent's new position.
+        link.exit().transition()
+            .duration(globals.duration)
+            .attr("d", (d) => {
+                let o = { x: source.x, y: source.y };
+                return globals.diagonal({ source: o, target: o });
+            })
+            .remove();
+
+        // Stash the old positions for transition.
+        nodes.forEach((d) => {
+            d.x0 = d.x;
+            d.y0 = d.y;
+        });
+    }
+
+
+    appendControls();
+    Mousetrap.bind('n', globals.loadNNodes, 'keydown');
+
+    globals.nodeMap[1] = globals.root;
+    update(globals.root);
+    globals.getChildren(globals.root.id);
+    d3.select("h1").text(function (d) { return "HELLO"; });
     console.log("HELLO")
 })()
 
@@ -55,7 +227,7 @@
 //         const simpleDomainMap = event.data.simpleDomainMap; // The JSON data our extension sent
 
 //         let parentMap = {};
-//         let nodeMap = {};
+//         let globals.nodeMap = {};
 //         let selectedNode;
 //         let selectedCircle;
 //         let init = true;
@@ -66,7 +238,7 @@
 //         Mousetrap.bind('r', goRight, 'keydown');
 //         Mousetrap.bind('l', goLeft, 'keydown');
 //         Mousetrap.bind('u', goUp, 'keydown');
-//         Mousetrap.bind('t', () => { nodeToggle(nodeMap[selectedNode]) }, 'keydown');
+//         Mousetrap.bind('t', () => { nodeToggle(globals.nodeMap[selectedNode]) }, 'keydown');
 //         Mousetrap.bind('e', expander);
 //         Mousetrap.bind('c', collapser);
 //         Mousetrap.bind('r', () => { vscode.postMessage({ command: 'ready', }) });
@@ -80,10 +252,10 @@
 //                 nextNode = parentMap[selectedNode];
 //             }
 //             else {
-//                 for (const key in nodeMap) {
-//                     if (nodeMap[key].children) {
-//                         if (nodeMap[key].children.includes(nodeMap[selectedNode])) {
-//                             nextNode = nodeMap[key];
+//                 for (const key in globals.nodeMap) {
+//                     if (globals.nodeMap[key].children) {
+//                         if (globals.nodeMap[key].children.includes(globals.nodeMap[selectedNode])) {
+//                             nextNode = globals.nodeMap[key];
 //                             break;
 //                         }
 //                     }
@@ -94,22 +266,22 @@
 //             selectedNode = nextNode.minionID;
 
 //             selectNode(selectedNode);
-//             focusNode(nodeMap[selectedNode]);
+//             focusNode(globals.nodeMap[selectedNode]);
 //         }
 
 //         function goLeft() {
-//             if (nodeMap[selectedNode].children.length > 0) {
-//                 selectedNode = nodeMap[selectedNode].children[0].minionID;
+//             if (globals.nodeMap[selectedNode].children.length > 0) {
+//                 selectedNode = globals.nodeMap[selectedNode].children[0].minionID;
 //                 selectNode(selectedNode);
-//                 focusNode(nodeMap[selectedNode]);
+//                 focusNode(globals.nodeMap[selectedNode]);
 //             }
 //         }
 
 //         function goRight() {
-//             if (nodeMap[selectedNode].children.length == 2) {
-//                 selectedNode = nodeMap[selectedNode].children[1].minionID;
+//             if (globals.nodeMap[selectedNode].children.length == 2) {
+//                 selectedNode = globals.nodeMap[selectedNode].children[1].minionID;
 //                 selectNode(selectedNode);
-//                 focusNode(nodeMap[selectedNode]);
+//                 focusNode(globals.nodeMap[selectedNode]);
 //             }
 //         }
 
@@ -128,13 +300,13 @@
 //             if (validDest(temp)) {
 //                 selectedNode = temp;
 //                 selectNode(selectedNode);
-//                 focusNode(nodeMap[selectedNode]);
+//                 focusNode(globals.nodeMap[selectedNode]);
 //             }
 //             else {
-//                 if (nodeMap[selectedNode]._children) {
-//                     nodeMap[selectedNode].children = nodeMap[selectedNode]._children;
-//                     nodeMap[selectedNode]._children = null;
-//                     update(nodeMap[selectedNode]);
+//                 if (globals.nodeMap[selectedNode]._children) {
+//                     globals.nodeMap[selectedNode].children = globals.nodeMap[selectedNode]._children;
+//                     globals.nodeMap[selectedNode]._children = null;
+//                     update(globals.nodeMap[selectedNode]);
 //                     next();
 //                 }
 //             }
@@ -145,7 +317,7 @@
 //             if (validDest(temp)) {
 //                 selectedNode = temp;
 //                 selectNode(selectedNode);
-//                 focusNode(nodeMap[selectedNode]);
+//                 focusNode(globals.nodeMap[selectedNode]);
 //             }
 //         }
 
@@ -169,7 +341,7 @@
 //             .attr("value", "Find Root")
 //             .on("click", () => {
 //                 selectNode(root.minionID);
-//                 focusNode(nodeMap[root.minionID]);
+//                 focusNode(globals.nodeMap[root.minionID]);
 //             });
 
 //         d3.select("#controls")
@@ -193,7 +365,7 @@
 //             .attr("type", "button")
 //             .attr("value", "Toggle")
 //             .on("click", () => {
-//                 nodeToggle(nodeMap[selectedNode]);
+//                 nodeToggle(globals.nodeMap[selectedNode]);
 //             });
 
 //         d3.select("#controls")
@@ -300,7 +472,7 @@
 //                     return "node" + d.minionID;
 //                 })
 //                 .attr("transform", (d) => {
-//                     nodeMap[Number(d.minionID)] = d;
+//                     globals.nodeMap[Number(d.minionID)] = d;
 //                     if (source.x0 && source.y0) {
 //                         return "translate(" + source.x0 + "," + source.y0 + ")";
 //                     }
@@ -583,7 +755,7 @@
 
 //         update(root);
 //         selectNode(root.minionID);
-//         focusNode(nodeMap[root.minionID]);
+//         focusNode(globals.nodeMap[root.minionID]);
 //     });
 // }())
 

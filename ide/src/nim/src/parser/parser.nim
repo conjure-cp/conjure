@@ -19,9 +19,6 @@ type DummySet* = ref object of Set
     dummyVal : int
     cardinality : int
 
-        
-
-
 proc getPrettyRange(lower: string, upper: string): string =
     if lower == upper:
        return "(" & $lower & ")" 
@@ -77,20 +74,24 @@ proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
         clean &= line[1..^1]
     
     for key in parseJson(clean)["representations"].getElems():
-        let n = key[0]["Name"].getStr()
+        # echo key
+        try:
+            let n = key[0]["Name"].getStr()
 
-        if key[1].hasKey("DomainInt"):
-            varLookup[n] = Variable(name: n)
+            if key[1].hasKey("DomainInt"):
+                varLookup[n] = Variable(name: n)
 
-        if key[1].hasKey("DomainSet"):
-            
-            let array = key[1]["DomainSet"].getElems()
-            let bounds = array[^1]["DomainInt"].getElems()[0]["RangeBounded"]
-            let l = bounds[0]["Constant"]["ConstantInt"].getInt()
-            let u = bounds[1]["Constant"]["ConstantInt"].getInt()
+            if key[1].hasKey("DomainSet"):
+                
+                let array = key[1]["DomainSet"].getElems()
+                let bounds = array[^1]["DomainInt"].getElems()[0]["RangeBounded"]
+                let l = bounds[0]["Constant"]["ConstantInt"].getInt()
+                let u = bounds[1]["Constant"]["ConstantInt"].getInt()
 
-            if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-                varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1, cardinality: u + 1) 
+                if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
+                    varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1, cardinality: u + 1) 
+        except:
+            discard "Failed to parse Eprime"
 
     # echo varLookup
     return varLookup
@@ -99,14 +100,12 @@ proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
 
 var eprimeLookup : Table[string, Variable]
 var auxLookup : Table[string, Expression]
-var db : DbConn
 
-proc init(dbPath: string, minionFilePath: string, eprimeFilePath: string) =
+proc initParser(minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
-    db = open(dbPath, "", "", "")
 
-proc getPrettyDomainsOfNode(nodeId: int) : seq[Variable] =
+proc getPrettyDomainsOfNode(db: DbConn, nodeId: int) : seq[Variable] =
     # echo auxLookup
     var domains : seq[Variable]
 
@@ -190,10 +189,20 @@ proc domainsToJson(domains: seq[Variable]): string =
     return json
 
 
-let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
-let eprimeFilePath = "../test/testData/conjure-output/model000001.eprime"
-let dbPath = "../test/testData/test.db"
+# let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
+# let eprimeFilePath = "../test/testData/conjure-output/model000001.eprime"
+# let dbPath = "../test/testData/test.db"
 
-init(dbPath, minionFilePath, eprimeFilePath)
+# init(dbPath, minionFilePath, eprimeFilePath)
 # discard getPrettyDomainsOfNode(1)
-echo domainsToJson(getPrettyDomainsOfNode(3))
+# echo domainsToJson(getPrettyDomainsOfNode(3))
+
+when isMainModule:
+
+    let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
+
+    let minionFilePath = path & "/model000001-random01.eprime-minion"
+    let eprimeFilePath = path & "/model000001.eprime"
+    let dbPath = path & "/test.db"
+    # db = open(dbPath, "", "", "") 
+    initParser(minionFilePath, eprimeFilePath)

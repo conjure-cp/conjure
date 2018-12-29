@@ -20,9 +20,15 @@ td, th {
 
 .node circle {
     fill: #fff;
-    stroke: var(--vscode-editorSuggestWidget-highlightForeground);
+    stroke: var(--vscode-terminal-ansiBlue);
     stroke-width: 3px;
     transition: stroke 500ms;
+    transition: fill 500ms;
+}
+
+.hasOthers {
+    fill: var(--vscode-terminal-ansiGreen) !important;
+    transition: fill 500ms;
 }
 
 .selected {
