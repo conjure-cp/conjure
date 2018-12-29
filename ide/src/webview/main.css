@@ -22,18 +22,17 @@ td, th {
     fill: #fff;
     stroke: var(--vscode-terminal-ansiBlue);
     stroke-width: 3px;
-    transition: stroke 500ms;
-    transition: fill 500ms;
+    transition: stroke 500ms, fill 500ms;
 }
 
-.hasOthers {
-    fill: var(--vscode-terminal-ansiGreen) !important;
-    transition: fill 500ms;
+circle.hasOthers {
+    fill: var(--vscode-terminal-ansiGreen) ;
+    transition: stroke 500ms, fill 500ms;
 }
 
-.selected {
-    stroke: salmon !important;
-    transition: stroke 500ms;
+circle.selected {
+    stroke: salmon;
+    transition: stroke 500ms, fill 500ms;
 }
 
 .node text {

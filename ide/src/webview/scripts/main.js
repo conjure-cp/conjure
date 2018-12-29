@@ -1,6 +1,7 @@
 import Mousetrap from "./util/mousetrap"
 import { appendControls } from "./util/screen"
 import globals from "./util/globals"
+import panel from "./util/panel"
 
 (function () {
 
@@ -9,7 +10,6 @@ import globals from "./util/globals"
         switch (message.command) {
             case 'nParents':
                 message.data.forEach((parentId) => {
-                    // globals.currentId++;
                     globals.addNode(parentId);
                 });
                 message.data.forEach((parentId) => {
@@ -17,35 +17,30 @@ import globals from "./util/globals"
                 });
 
                 globals.getChildren(globals.currentId);
-                // console.log("Current " + globals.currentId);
 
-                // for (var i = globals.currentId - message.data.length; i < globals.currentId;  i++){
-                //     globals.getChildren(i);
-                // }
-                update(globals.nodeMap[globals.currentId]);
-                focusNode(globals.nodeMap[globals.currentId]);
+                update(globals.id2Node[globals.currentId]);
                 globals.waiting = false;
                 break;
 
             case 'children':
 
                 let loadedChildrenCount = 0;
+                // console.log(message.data.parentId)
+                // console.log(message.data.children)
+                // console.log(globals.id2Node[message.data.parentId])
 
-                if (globals.nodeMap[message.data.parentId].children) {
-                    loadedChildrenCount = globals.nodeMap[message.data.parentId].children.length;
+                if (globals.id2Node[message.data.parentId].children) {
+                    loadedChildrenCount = globals.id2Node[message.data.parentId].children.length;
                 }
 
                 let hasMore = message.data.children.length > loadedChildrenCount
-                // console.log(message.data.parentId)
-                // console.log(message.data.children)
-                // console.log(globals.nodeMap[message.data.parentId])
                 // console.log(hasMore);
 
                 if (hasMore) {
-                    globals.setHasMore(message.data.parentId);
+                    globals.setHasOthers(message.data.parentId);
                 }
                 else {
-                    globals.unsetHasMore(message.data.parentId);
+                    globals.unsetHasOthers(message.data.parentId);
                 }
         }
     });
@@ -61,21 +56,6 @@ import globals from "./util/globals"
         .attr("height", globals.viewerHeight)
         .append("g")
 
-    function focusNode(node) {
-        // scale = 7;
-        let scale = zoom.scale();
-        let x = -node.x * scale;
-        let y = -node.y * scale;
-
-        x += globals.width / 3;
-        y += globals.height / 2;
-
-        d3.select('g').transition()
-            .duration(globals.duration)
-            .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
-        zoom.translate([x, y]);
-    }
-
     function zoomed() {
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }
@@ -87,23 +67,25 @@ import globals from "./util/globals"
 
         // Normalize for fixed-depth.
         nodes.forEach((d) => { d.y = d.depth * 100; });
+        // console.log(nodes);
         // Declare the nodes…
-        let node = svg.selectAll("g.node")
-            .data(nodes, (d) => { return d.id || (d.id = ++globals.i); });
+        let domNodes = svg.selectAll("g.node")
+                .data(nodes, (d) => { return d.id || (d.id = ++i); });
+        console.log(domNodes);
+            // .data(nodes);
         // Enter the nodes.
-        let nodeEnter = node.enter().append("g")
+        let nodeEnter = domNodes.enter().append("g")
             .attr("class", "node")
-            .attr("id", (d) => {
-                return "node" + d.id;
-            })
+            .attr("id", (d) => {return "node" + d.id})
             .attr("transform", (d) => {
-                // globals.nodeMap[Number(d.minionID)] = d;
+                console.log("here");
+                // globals.id2Node[Number(d.minionID)] = d;
                 if (source.x0 && source.y0) {
                     return "translate(" + source.x0 + "," + source.y0 + ")";
                 }
             })
             .on("click", (d) => {
-                // loadNNodes(d);
+                globals.selectNode(d.id);
             });
         // .on("mouseover", showDomains);
 
@@ -128,14 +110,16 @@ import globals from "./util/globals"
             .style("fill-opacity", 1e-6);
         // Transition nodes to their new position.
         //horizontal tree
-        node.transition()
+        domNodes.transition()
             .duration(globals.duration)
             .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; });
 
         // Transition exiting nodes to the parent's new position.
-        let nodeExit = node.exit().transition()
+        let nodeExit = domNodes.exit().transition()
             .duration(globals.duration)
-            .attr("transform", (d) => { return "translate(" + source.x + "," + source.y + ")"; })
+            .attr("transform", (d) => { 
+                // console.log(source);
+                return "translate(" + source.x + "," + source.y + ")"; })
             .remove();
         nodeExit.select("circle")
             .attr("r", 1e-6);
@@ -192,11 +176,21 @@ import globals from "./util/globals"
     }
 
 
+    globals.setup(zoom);
     appendControls();
-    Mousetrap.bind('n', globals.loadNNodes, 'keydown');
+    Mousetrap.bind('s', globals.nextNode, 'keydown');
+    Mousetrap.bind('w', globals.previousNode, 'keydown');
+    Mousetrap.bind('d', globals.rightNode, 'keydown');
+    Mousetrap.bind('a', globals.nextNode, 'keydown');
+    Mousetrap.bind('t', () => {
+        globals.toggleNode(globals.selectedId);
+        update(globals.id2Node[globals.selectedId]);
+    }, 'keydown');
 
-    globals.nodeMap[1] = globals.root;
+    globals.id2Node[globals.root.id] = globals.root;
     update(globals.root);
+    globals.selectNode(globals.root.id);
+    globals.focusNode(globals.root);
     globals.getChildren(globals.root.id);
     d3.select("h1").text(function (d) { return "HELLO"; });
     console.log("HELLO")
@@ -227,7 +221,7 @@ import globals from "./util/globals"
 //         const simpleDomainMap = event.data.simpleDomainMap; // The JSON data our extension sent
 
 //         let parentMap = {};
-//         let globals.nodeMap = {};
+//         let globals.id2Node = {};
 //         let selectedNode;
 //         let selectedCircle;
 //         let init = true;
@@ -238,7 +232,7 @@ import globals from "./util/globals"
 //         Mousetrap.bind('r', goRight, 'keydown');
 //         Mousetrap.bind('l', goLeft, 'keydown');
 //         Mousetrap.bind('u', goUp, 'keydown');
-//         Mousetrap.bind('t', () => { nodeToggle(globals.nodeMap[selectedNode]) }, 'keydown');
+//         Mousetrap.bind('t', () => { nodeToggle(globals.id2Node[selectedNode]) }, 'keydown');
 //         Mousetrap.bind('e', expander);
 //         Mousetrap.bind('c', collapser);
 //         Mousetrap.bind('r', () => { vscode.postMessage({ command: 'ready', }) });
@@ -252,10 +246,10 @@ import globals from "./util/globals"
 //                 nextNode = parentMap[selectedNode];
 //             }
 //             else {
-//                 for (const key in globals.nodeMap) {
-//                     if (globals.nodeMap[key].children) {
-//                         if (globals.nodeMap[key].children.includes(globals.nodeMap[selectedNode])) {
-//                             nextNode = globals.nodeMap[key];
+//                 for (const key in globals.id2Node) {
+//                     if (globals.id2Node[key].children) {
+//                         if (globals.id2Node[key].children.includes(globals.id2Node[selectedNode])) {
+//                             nextNode = globals.id2Node[key];
 //                             break;
 //                         }
 //                     }
@@ -266,22 +260,22 @@ import globals from "./util/globals"
 //             selectedNode = nextNode.minionID;
 
 //             selectNode(selectedNode);
-//             focusNode(globals.nodeMap[selectedNode]);
+//             focusNode(globals.id2Node[selectedNode]);
 //         }
 
 //         function goLeft() {
-//             if (globals.nodeMap[selectedNode].children.length > 0) {
-//                 selectedNode = globals.nodeMap[selectedNode].children[0].minionID;
+//             if (globals.id2Node[selectedNode].children.length > 0) {
+//                 selectedNode = globals.id2Node[selectedNode].children[0].minionID;
 //                 selectNode(selectedNode);
-//                 focusNode(globals.nodeMap[selectedNode]);
+//                 focusNode(globals.id2Node[selectedNode]);
 //             }
 //         }
 
 //         function goRight() {
-//             if (globals.nodeMap[selectedNode].children.length == 2) {
-//                 selectedNode = globals.nodeMap[selectedNode].children[1].minionID;
+//             if (globals.id2Node[selectedNode].children.length == 2) {
+//                 selectedNode = globals.id2Node[selectedNode].children[1].minionID;
 //                 selectNode(selectedNode);
-//                 focusNode(globals.nodeMap[selectedNode]);
+//                 focusNode(globals.id2Node[selectedNode]);
 //             }
 //         }
 
@@ -300,13 +294,13 @@ import globals from "./util/globals"
 //             if (validDest(temp)) {
 //                 selectedNode = temp;
 //                 selectNode(selectedNode);
-//                 focusNode(globals.nodeMap[selectedNode]);
+//                 focusNode(globals.id2Node[selectedNode]);
 //             }
 //             else {
-//                 if (globals.nodeMap[selectedNode]._children) {
-//                     globals.nodeMap[selectedNode].children = globals.nodeMap[selectedNode]._children;
-//                     globals.nodeMap[selectedNode]._children = null;
-//                     update(globals.nodeMap[selectedNode]);
+//                 if (globals.id2Node[selectedNode]._children) {
+//                     globals.id2Node[selectedNode].children = globals.id2Node[selectedNode]._children;
+//                     globals.id2Node[selectedNode]._children = null;
+//                     update(globals.id2Node[selectedNode]);
 //                     next();
 //                 }
 //             }
@@ -317,7 +311,7 @@ import globals from "./util/globals"
 //             if (validDest(temp)) {
 //                 selectedNode = temp;
 //                 selectNode(selectedNode);
-//                 focusNode(globals.nodeMap[selectedNode]);
+//                 focusNode(globals.id2Node[selectedNode]);
 //             }
 //         }
 
@@ -341,7 +335,7 @@ import globals from "./util/globals"
 //             .attr("value", "Find Root")
 //             .on("click", () => {
 //                 selectNode(root.minionID);
-//                 focusNode(globals.nodeMap[root.minionID]);
+//                 focusNode(globals.id2Node[root.minionID]);
 //             });
 
 //         d3.select("#controls")
@@ -365,7 +359,7 @@ import globals from "./util/globals"
 //             .attr("type", "button")
 //             .attr("value", "Toggle")
 //             .on("click", () => {
-//                 nodeToggle(globals.nodeMap[selectedNode]);
+//                 nodeToggle(globals.id2Node[selectedNode]);
 //             });
 
 //         d3.select("#controls")
@@ -472,7 +466,7 @@ import globals from "./util/globals"
 //                     return "node" + d.minionID;
 //                 })
 //                 .attr("transform", (d) => {
-//                     globals.nodeMap[Number(d.minionID)] = d;
+//                     globals.id2Node[Number(d.minionID)] = d;
 //                     if (source.x0 && source.y0) {
 //                         return "translate(" + source.x0 + "," + source.y0 + ")";
 //                     }
@@ -755,7 +749,7 @@ import globals from "./util/globals"
 
 //         update(root);
 //         selectNode(root.minionID);
-//         focusNode(globals.nodeMap[root.minionID]);
+//         focusNode(globals.id2Node[root.minionID]);
 //     });
 // }())
 

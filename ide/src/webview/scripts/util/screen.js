@@ -11,7 +11,7 @@ export function appendControls() {
         .classed('form-control', true)
         .attr('type', 'text')
         .attr('name', 'textInput')
-        .attr('value', '1')
+        .attr('value', '5')
         .attr('id', 'stepSize')
 }
         // d3.select("#controls")
@@ -32,7 +32,7 @@ export function appendControls() {
 //             .attr("value", "Find Root")
 //             .on("click", () => {
 //                 selectNode(root.minionID);
-//                 focusNode(nodeMap[root.minionID]);
+//                 focusNode(id2Node[root.minionID]);
 //             });
 
 //         d3.select("#controls")
@@ -56,7 +56,7 @@ export function appendControls() {
 //             .attr("type", "button")
 //             .attr("value", "Toggle")
 //             .on("click", () => {
-//                 nodeToggle(nodeMap[selectedNode]);
+//                 nodeToggle(id2Node[selectedNode]);
 //             });
 
 //         d3.select("#controls")

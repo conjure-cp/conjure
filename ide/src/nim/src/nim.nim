@@ -5,8 +5,8 @@ import parser
 var db : DbConn
 
 type Response = ref object of RootObj
-  parentId: string
-  children: seq[string]
+  parentId: int
+  children: seq[int]
 
 proc init(dirPath: string) =
     # let minionFilePath = path & "/model000001.eprime-minion"
@@ -15,28 +15,31 @@ proc init(dirPath: string) =
     let dbPath = dirPath & "/test.db"
     db = open(dbPath, "", "", "") 
 
-proc getParent(childId: int): string =
-    let row = db.getRow(sql"select parentId from Node where nodeId = ?", childId)
-    echo row
-    return row[0]
 
 proc getNParents(amount, start: string): string =
 
-    var nodes : seq[string]
+    var nodes : seq[int]
+    var id : int
 
-    for nodeId in db.fastRows(sql"select parentId from Node where nodeId > ? limit ?", start, amount):
-        nodes.add(nodeId)
+    for row in db.fastRows(sql"select parentId from Node where nodeId > ? limit ?", start, amount):
+        discard parseInt(row[0], id)
+        nodes.add(id)
 
     return $(%nodes)
 
 proc getChildren(pId: string): string =
 
-    var kids : seq[string]
+    var kids : seq[int]
+    var childId : int
+    var parentId : int
 
-    for childId in db.fastRows(sql"select nodeId from Node where parentId = ?", pId):
+    discard parseInt(pId, parentId)
+
+    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", pId):
+        discard parseInt(row[0], childId)
         kids.add(childId)
 
-    return $(%Response(parentId: pid, children: kids))
+    return $(%Response(parentId: parentId, children: kids))
 
 
 routes:
@@ -48,11 +51,6 @@ routes:
 
     get "/domains/@nodeId":
         resp domainsToJson(getPrettyDomainsOfNode(db, @"nodeId"))
-
-    get "/getParent/@nodeId":
-        var nodeId : int
-        discard parseInt(@"nodeId", nodeId)
-        resp getParent(nodeId)
     
     get "/getNParents/@amount/@start":
         resp getNParents(@"amount", @"start") 
