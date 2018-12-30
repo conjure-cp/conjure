@@ -113,20 +113,28 @@ export default class WebviewHelper {
                             console.log(res);
                         });
                         break;
-                    case 'nParents':
+                    // case 'nParents':
+                    //     // console.log(message.id);
+                    //     request(serverURL + '/getNParents/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
+                    //         if (err) { return console.log(err); }
+                    //         console.log(res);
+                    //         panel.webview.postMessage({command:"nParents", data: res.body});
+                    //     });
+                    //     break;
+                    // case 'children':
+                    //     // console.log(message.id);
+                    //     request(serverURL + '/getChildren/' + message.parentId, { json: true }, (err: any, res: any, body: any) => {
+                    //         if (err) { return console.log(err); }
+                    //         console.log(res);
+                    //         panel.webview.postMessage({command:"children", data: res.body});
+                    //     });
+                    //     break;
+                    case 'nChildren':
                         // console.log(message.id);
-                        request(serverURL + '/getNParents/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
+                        request(serverURL + '/getNChildren/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
                             if (err) { return console.log(err); }
                             console.log(res);
-                            panel.webview.postMessage({command:"nParents", data: res.body});
-                        });
-                        break;
-                    case 'children':
-                        // console.log(message.id);
-                        request(serverURL + '/getChildren/' + message.parentId, { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"children", data: res.body});
+                            panel.webview.postMessage({command:"nChildren", data: res.body});
                         });
                         break;
 

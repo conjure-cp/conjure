@@ -4,9 +4,20 @@ import parser
 
 var db : DbConn
 
-type Response = ref object of RootObj
+type ParentChild = ref object of RootObj
   parentId: int
   children: seq[int]
+
+type Response = ref object of RootObj
+    nextNodes: seq[int]
+    parentChildren: seq[ParentChild]
+
+
+proc `$`(r: ParentChild): string =
+    return $r.parentId & " : " & $r.children
+
+proc `$`(r: Response): string =
+    return $r.nextNodes & " : " & $r.parentChildren
 
 proc init(dirPath: string) =
     # let minionFilePath = path & "/model000001.eprime-minion"
@@ -39,8 +50,48 @@ proc getChildren(pId: string): string =
         discard parseInt(row[0], childId)
         kids.add(childId)
 
-    return $(%Response(parentId: parentId, children: kids))
+    return $(%ParentChild(parentId: parentId, children: kids))
 
+proc getNChildren(amount, start: string): string =
+
+    var res : Response
+    var list :seq[ParentChild]
+    var nodes : seq[int]
+    var id, childId : int
+    var pId : int
+    var count : int
+
+    discard parseInt(start, pId)
+    # pId.inc()
+    discard parseInt(amount, count)
+    count.inc()
+
+    while count > 0:
+        # echo "PARENT " & $parentId 
+        var kids : seq[int]
+        for row in db.fastRows(sql"select nodeId from Node where parentId = ?", pId):
+            # echo row
+            discard parseInt(row[0], childId)
+            kids.add(childId)
+
+
+        list.add(ParentChild(parentId: pId, children: kids))
+
+        pId.inc()
+        count.dec()
+
+    
+    for row in db.fastRows(sql"select parentId from Node where nodeId > ? limit ?", start, amount):
+        discard parseInt(row[0], id)
+        nodes.add(id)
+    
+    res = Response(nextNodes: nodes, parentChildren: list)
+
+    # echo "Amount: " & amount & " start " & start
+    # echo res
+    return $(%res)
+
+    
 
 routes:
 
@@ -58,9 +109,11 @@ routes:
     get "/getChildren/@parentId":
         resp getChildren(@"parentId")
 
+    get "/getNChildren/@amount/@start":
+        resp getNChildren(@"amount", @"start")
 
 let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 init(path)
-echo getChildren("321")
+discard getNChildren("5", "50")
 # getParent(320)
 # echo getFirstN(10)

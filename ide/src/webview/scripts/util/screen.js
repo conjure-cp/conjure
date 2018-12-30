@@ -6,7 +6,7 @@ export function appendControls() {
         .append('div')
         .classed('col-xs-1', true);
 
-    console.log(step);
+    // console.log(step);
     step.append('input')
         .classed('form-control', true)
         .attr('type', 'text')

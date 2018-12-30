@@ -8,40 +8,29 @@ import panel from "./util/panel"
     window.addEventListener('message', event => {
         const message = event.data
         switch (message.command) {
-            case 'nParents':
-                message.data.forEach((parentId) => {
+
+            case 'nChildren':
+
+                // console.log(message.data);
+
+                message.data.nextNodes.forEach((parentId) => {
                     globals.addNode(parentId);
                 });
-                message.data.forEach((parentId) => {
-                    globals.getChildren(parentId);
-                });
 
-                globals.getChildren(globals.currentId);
+                message.data.parentChildren.forEach((element) => {
+                    globals.id2ChildIds[element.parentId] = element.children
+
+                    if (globals.id2Node[message.data.parentId]) {
+                        if (globals.id2Node[message.data.parentId].children) {
+                            loadedChildrenCount = globals.id2Node[message.data.parentId].children.length;
+                        }
+                    }
+                });
 
                 update(globals.id2Node[globals.currentId]);
                 globals.waiting = false;
+
                 break;
-
-            case 'children':
-
-                let loadedChildrenCount = 0;
-                // console.log(message.data.parentId)
-                // console.log(message.data.children)
-                // console.log(globals.id2Node[message.data.parentId])
-
-                if (globals.id2Node[message.data.parentId].children) {
-                    loadedChildrenCount = globals.id2Node[message.data.parentId].children.length;
-                }
-
-                let hasMore = message.data.children.length > loadedChildrenCount
-                // console.log(hasMore);
-
-                if (hasMore) {
-                    globals.setHasOthers(message.data.parentId);
-                }
-                else {
-                    globals.unsetHasOthers(message.data.parentId);
-                }
         }
     });
 
@@ -59,121 +48,6 @@ import panel from "./util/panel"
     function zoomed() {
         svg.attr("transform", "translate(" + d3.event.translate + ")" + " scale(" + d3.event.scale + ")")
     }
-
-    // function update(source) {
-    //     // Compute the new tree layout.
-    //     let nodes = globals.tree.nodes(globals.root).reverse(),
-    //         links = globals.tree.links(nodes);
-
-    //     // Normalize for fixed-depth.
-    //     nodes.forEach((d) => { d.y = d.depth * 100; });
-    //     // console.log(nodes);
-    //     // Declare the nodes…
-    //     let domNodes = svg.selectAll("g.node")
-    //             .data(nodes, (d) => { return d.id || (d.id = ++i); });
-    //     console.log(domNodes);
-    //         // .data(nodes);
-    //     // Enter the nodes.
-    //     let nodeEnter = domNodes.enter().append("g")
-    //         .attr("class", "node")
-    //         .attr("id", (d) => {return "node" + d.id})
-    //         .attr("transform", (d) => {
-    //             console.log("here");
-    //             // globals.id2Node[Number(d.minionID)] = d;
-    //             if (source.x0 && source.y0) {
-    //                 return "translate(" + source.x0 + "," + source.y0 + ")";
-    //             }
-    //         })
-    //         .on("click", (d) => {
-    //             globals.selectNode(d.id);
-    //         });
-    //     // .on("mouseover", showDomains);
-
-    //     nodeEnter.append("circle")
-    //         .transition()
-    //         .attr("r", 10)
-    //     // .call((d) => {globals.getChildren(d.id)})
-    //     // .attr("class", "hasOthers")
-    //     // .attr("stroke", (d) => { return d.children || d._children ? "steelblue" : "#00c13f"; })
-    //     // .style("fill", (d) => { return d.children || d._children ? "#6ac4a1" : "#f00"; });
-
-    //     nodeEnter.append("text")
-    //         .attr("y", (d) => {
-    //             if (d.children || d._children) {
-    //                 return 42;
-    //             }
-    //             return 20;
-    //         })
-    //         .attr("dy", ".35em")
-    //         .attr("text-anchor", "middle")
-    //         .text((d) => { return d.name; })
-    //         .style("fill-opacity", 1e-6);
-    //     // Transition nodes to their new position.
-    //     //horizontal tree
-    //     domNodes.transition()
-    //         .duration(globals.duration)
-    //         .attr("transform", (d) => { return "translate(" + d.x + "," + d.y + ")"; });
-
-    //     // Transition exiting nodes to the parent's new position.
-    //     let nodeExit = domNodes.exit().transition()
-    //         .duration(globals.duration)
-    //         .attr("transform", (d) => { 
-    //             // console.log(source);
-    //             return "translate(" + source.x + "," + source.y + ")"; })
-    //         .remove();
-    //     nodeExit.select("circle")
-    //         .attr("r", 1e-6);
-    //     nodeExit.select("text")
-    //         .style("fill-opacity", 1e-6);
-    //     // Update the links…
-    //     // Declare the links…
-    //     let link = svg.selectAll("path.link")
-    //         .data(links, (d) => { return d.target.id; });
-    //     // Enter the links.
-    //     link.enter().insert("path", "g")
-    //         .attr("class", "link")
-    //         .attr("marker-end", (d) => {
-    //             // console.log(d);
-    //             if (d.source.children.length == 1) {
-    //                 return "url(#marker_straight)";
-    //             }
-
-    //             if (d.source.children[0] == d.target) {
-    //                 return "url(#marker_left)";
-    //             }
-
-    //             return "url(#marker_right)";
-
-    //         })
-    //         .attr("d", (d) => {
-
-    //             if (source.x0 && source.y0) {
-
-    //                 let o = { x: source.x0, y: source.y0 };
-    //                 return globals.diagonal({ source: o, target: o });
-    //             }
-    //             let o = { x: source.x, y: source.y };
-    //             return globals.diagonal({ source: o, target: o });
-    //         })
-    //     // Transition links to their new position.
-    //     link.transition()
-    //         .duration(globals.duration)
-    //         .attr("d", globals.diagonal);
-    //     // Transition exiting nodes to the parent's new position.
-    //     link.exit().transition()
-    //         .duration(globals.duration)
-    //         .attr("d", (d) => {
-    //             let o = { x: source.x, y: source.y };
-    //             return globals.diagonal({ source: o, target: o });
-    //         })
-    //         .remove();
-
-    //     // Stash the old positions for transition.
-    //     nodes.forEach((d) => {
-    //         d.x0 = d.x;
-    //         d.y0 = d.y;
-    //     });
-    // }
 
 
     function update(source) {
@@ -225,12 +99,28 @@ import panel from "./util/panel"
         nodeUpdate.select("circle")
             .attr("r", 10)
             .attr("KIDS", (d) => {
-                console.log(d);
-                if (!d.children){
-                    // globals.getChildren(d.id);
+
+
+                let childLength = 0;
+                if (d.children) {
+                    childLength = d.children.length;
                 }
-                 return d._children ? "YES" : "NO"; 
-                });
+
+                console.log(d.id);
+                console.log(globals.id2ChildIds);
+                console.log(childLength);
+
+                if (globals.id2ChildIds[d.id]) {
+                    if (childLength < globals.id2ChildIds[d.id].length) {
+                        globals.setHasOthers(d.id);
+                    }
+                    else{
+                        globals.unsetHasOthers(d.id);
+                    }
+                }
+
+                return d._children ? "YES" : "NO";
+            });
 
         // .style("fill", (d) => { return d._children ? "#6ac4a1" : "#fff"; });
         nodeUpdate.select("text")
@@ -285,7 +175,9 @@ import panel from "./util/panel"
     appendControls();
     Mousetrap.bind('s', () => {
         globals.nextNode();
-        update(globals.selectNode);
+        update(globals.id2Node[globals.selectedId]);
+        // globals.selectId = globals.currentId;
+        // globals.selectNode(globals.selectedId);
     }, 'keydown');
     Mousetrap.bind('w', globals.previousNode, 'keydown');
     Mousetrap.bind('d', globals.rightNode, 'keydown');
@@ -306,7 +198,8 @@ import panel from "./util/panel"
     update(globals.root);
     globals.selectNode(globals.root.id);
     globals.focusNode(globals.root);
-    globals.getChildren(globals.root.id);
+    globals.setHasOthers(1);
+    // globals.getChildren(globals.root.id);
     d3.select("h1").text(function (d) { return "HELLO"; });
     console.log("HELLO")
 })()

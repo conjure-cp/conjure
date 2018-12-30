@@ -3,7 +3,7 @@ exports.currentId = 1;
 exports.selectedId = 1;
 exports.id2Node = {};
 exports.id2Parent = {};
-exports.id2Children = {};
+exports.id2ChildIds = {};
 exports.root = { id: 1 };
 
 exports.viewerWidth = $(document).width();
@@ -89,7 +89,7 @@ exports.nextNode = () => {
         exports.loadNNodes();
     }
     else {
-        exports.selectedId++;
+        exports.selectedId = exports.currentId;
         exports.selectNode(exports.selectedId);
         // if (exports.id2Parent[exports.selectedId]._children){
         //     exports.toggleNode(exports.id2Parent[exports.selectedId].id)
@@ -107,12 +107,20 @@ exports.previousNode = () => {
 
 exports.loadNNodes = () => {
     if (!exports.waiting) {
+        // exports.vscode.postMessage({
+        //     command: 'nParents',
+        //     amount: Number($("#stepSize").val()),
+        //     start: exports.currentId
+        // });
+
         exports.vscode.postMessage({
-            command: 'nParents',
+            command: 'nChildren',
             amount: Number($("#stepSize").val()),
             start: exports.currentId
         });
+
         exports.waiting = true;
+        // exports.currentId++;
     }
 }
 
@@ -134,6 +142,8 @@ exports.addNode = (parentId) => {
     // console.log(parentId);
     // console.log(exports.id2Node);
 
+
+
     if (!exports.id2Node[parentId].children) {
         exports.id2Node[parentId].children = [];
     }
@@ -154,6 +164,7 @@ exports.getChildren = (parentId) => {
 exports.setHasOthers = (nodeId) => {
     let s = "#node" + nodeId + " circle";
     d3.select(s).classed("hasOthers", true);
+    // console.log("SEtting has others for " + nodeId)
     // $(s).attr("class", "hasOthers")
 }
 
