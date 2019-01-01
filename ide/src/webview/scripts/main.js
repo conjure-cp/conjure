@@ -9,27 +9,29 @@ import panel from "./util/panel"
         const message = event.data
         switch (message.command) {
 
-            case 'nChildren':
+            case 'loadNodes':
 
                 // console.log(message.data);
 
-                message.data.nextNodes.forEach((parentId) => {
-                    globals.addNode(parentId);
-                });
+                var rootNode;
 
-                message.data.parentChildren.forEach((element) => {
-                    globals.id2ChildIds[element.parentId] = element.children
+                message.data.forEach((element) => {
 
-                    if (globals.id2Node[message.data.parentId]) {
-                        if (globals.id2Node[message.data.parentId].children) {
-                            loadedChildrenCount = globals.id2Node[message.data.parentId].children.length;
-                        }
+                    if (element.parentId === -1){
+                        rootNode = true;
                     }
+
+                    globals.addNode(element.parentId);
+                    globals.id2ChildIds[globals.currentId] = element.children
+
                 });
 
                 update(globals.id2Node[globals.currentId]);
                 globals.waiting = false;
 
+                if (rootNode){
+                    globals.selectNode(1);
+                }
                 break;
         }
     });
@@ -52,7 +54,7 @@ import panel from "./util/panel"
 
     function update(source) {
         // Compute the new tree layout.
-        let nodes = globals.tree.nodes(globals.root).reverse(),
+        let nodes = globals.tree.nodes(globals.id2Node[1]).reverse(),
             links = globals.tree.links(nodes);
 
         // Normalize for fixed-depth.
@@ -98,17 +100,17 @@ import panel from "./util/panel"
 
         nodeUpdate.select("circle")
             .attr("r", 10)
-            .attr("KIDS", (d) => {
-
+            .each((d) => {
 
                 let childLength = 0;
                 if (d.children) {
                     childLength = d.children.length;
                 }
 
-                console.log(d.id);
-                console.log(globals.id2ChildIds);
-                console.log(childLength);
+                // console.log(d)
+                // console.log(d.id);
+                //  console.log(globals.id2ChildIds);
+                // console.log(childLength);
 
                 if (globals.id2ChildIds[d.id]) {
                     if (childLength < globals.id2ChildIds[d.id].length) {
@@ -118,8 +120,6 @@ import panel from "./util/panel"
                         globals.unsetHasOthers(d.id);
                     }
                 }
-
-                return d._children ? "YES" : "NO";
             });
 
         // .style("fill", (d) => { return d._children ? "#6ac4a1" : "#fff"; });
@@ -169,15 +169,11 @@ import panel from "./util/panel"
 
     }
 
-
-
     globals.setup(zoom);
     appendControls();
     Mousetrap.bind('s', () => {
         globals.nextNode();
         update(globals.id2Node[globals.selectedId]);
-        // globals.selectId = globals.currentId;
-        // globals.selectNode(globals.selectedId);
     }, 'keydown');
     Mousetrap.bind('w', globals.previousNode, 'keydown');
     Mousetrap.bind('d', globals.rightNode, 'keydown');
@@ -194,12 +190,7 @@ import panel from "./util/panel"
         update(globals.id2Node[globals.selectedId]);
     }, 'keydown');
 
-    globals.id2Node[globals.root.id] = globals.root;
-    update(globals.root);
-    globals.selectNode(globals.root.id);
-    globals.focusNode(globals.root);
-    globals.setHasOthers(1);
-    // globals.getChildren(globals.root.id);
+    globals.loadNNodes();
     d3.select("h1").text(function (d) { return "HELLO"; });
     console.log("HELLO")
 })()

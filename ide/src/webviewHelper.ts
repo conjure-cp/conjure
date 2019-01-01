@@ -129,12 +129,12 @@ export default class WebviewHelper {
                     //         panel.webview.postMessage({command:"children", data: res.body});
                     //     });
                     //     break;
-                    case 'nChildren':
+                    case 'loadNodes':
                         // console.log(message.id);
-                        request(serverURL + '/getNChildren/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
+                        request(serverURL + '/loadNodes/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
                             if (err) { return console.log(err); }
                             console.log(res);
-                            panel.webview.postMessage({command:"nChildren", data: res.body});
+                            panel.webview.postMessage({command:"loadNodes", data: res.body});
                         });
                         break;
 

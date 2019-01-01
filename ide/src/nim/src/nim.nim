@@ -26,72 +26,24 @@ proc init(dirPath: string) =
     let dbPath = dirPath & "/test.db"
     db = open(dbPath, "", "", "") 
 
+proc loadNodes(amount, start: string): string =
 
-proc getNParents(amount, start: string): string =
-
-    var nodes : seq[int]
-    var id : int
-
-    for row in db.fastRows(sql"select parentId from Node where nodeId > ? limit ?", start, amount):
-        discard parseInt(row[0], id)
-        nodes.add(id)
-
-    return $(%nodes)
-
-proc getChildren(pId: string): string =
-
-    var kids : seq[int]
-    var childId : int
-    var parentId : int
-
-    discard parseInt(pId, parentId)
-
-    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", pId):
-        discard parseInt(row[0], childId)
-        kids.add(childId)
-
-    return $(%ParentChild(parentId: parentId, children: kids))
-
-proc getNChildren(amount, start: string): string =
-
-    var res : Response
     var list :seq[ParentChild]
-    var nodes : seq[int]
-    var id, childId : int
-    var pId : int
-    var count : int
-
-    discard parseInt(start, pId)
-    # pId.inc()
-    discard parseInt(amount, count)
-    count.inc()
-
-    while count > 0:
-        # echo "PARENT " & $parentId 
+    var pId, childId : int
+    
+    for row1 in db.fastRows(sql"select nodeId, parentId from Node where nodeId > ? limit ?", start, amount):
         var kids : seq[int]
-        for row in db.fastRows(sql"select nodeId from Node where parentId = ?", pId):
-            # echo row
-            discard parseInt(row[0], childId)
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+            discard parseInt(row2[0], childId)
             kids.add(childId)
 
-
+        discard parseInt(row1[1], pId)
         list.add(ParentChild(parentId: pId, children: kids))
 
-        pId.inc()
-        count.dec()
-
+    # echo nodes
+    echo list
     
-    for row in db.fastRows(sql"select parentId from Node where nodeId > ? limit ?", start, amount):
-        discard parseInt(row[0], id)
-        nodes.add(id)
-    
-    res = Response(nextNodes: nodes, parentChildren: list)
-
-    # echo "Amount: " & amount & " start " & start
-    # echo res
-    return $(%res)
-
-    
+    return $(%list)
 
 routes:
 
@@ -102,18 +54,12 @@ routes:
 
     get "/domains/@nodeId":
         resp domainsToJson(getPrettyDomainsOfNode(db, @"nodeId"))
-    
-    get "/getNParents/@amount/@start":
-        resp getNParents(@"amount", @"start") 
 
-    get "/getChildren/@parentId":
-        resp getChildren(@"parentId")
-
-    get "/getNChildren/@amount/@start":
-        resp getNChildren(@"amount", @"start")
+    get "/loadNodes/@amount/@start":
+        resp loadNodes(@"amount", @"start")
 
 let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 init(path)
-discard getNChildren("5", "50")
+discard loadNodes("5", "50")
 # getParent(320)
 # echo getFirstN(10)
