@@ -190,6 +190,17 @@ import panel from "./util/panel"
         update(globals.id2Node[globals.selectedId]);
     }, 'keydown');
 
+    Mousetrap.bind('c', () => {
+        globals.collapseNode(globals.selectedId);
+        update(globals.id2Node[globals.selectedId]);
+    }, 'keydown');
+
+    Mousetrap.bind('e', () => {
+        globals.expandNode(globals.selectedId);
+        update(globals.id2Node[globals.selectedId]);
+    }, 'keydown');
+
+
     globals.loadNNodes();
     d3.select("h1").text(function (d) { return "HELLO"; });
     console.log("HELLO")

@@ -28,19 +28,77 @@ exports.diagonal = d3.svg.diagonal()
 
     });
 
+
+exports.expandNode = (nodeId) => {
+
+    showChildren(nodeId);
+    let kidsToExpand = exports.id2ChildIds[nodeId];
+
+    while (kidsToExpand && kidsToExpand.length > 0) {
+
+        let nextKids = [];
+
+        kidsToExpand.forEach((id) => {
+            nextKids = exports.id2ChildIds[id];
+            showChildren(id);
+        });
+
+        kidsToExpand = nextKids;
+    }
+
+}
+
+
+exports.collapseNode = (nodeId) => {
+
+    hideChildren(nodeId);
+    let kidsToCollapse = exports.id2ChildIds[nodeId];
+
+    while (kidsToCollapse && kidsToCollapse.length > 0) {
+
+        let nextKids = [];
+
+        kidsToCollapse.forEach((id) => {
+            nextKids = exports.id2ChildIds[id];
+            hideChildren(id);
+        });
+
+        kidsToCollapse = nextKids;
+    }
+}
+
+function showChildren(nodeId) {
+
+
+    if (exports.id2Node[nodeId]) {
+        if (exports.id2Node[nodeId]._children) {
+            exports.id2Node[nodeId].children = exports.id2Node[nodeId]._children;
+            exports.id2Node[nodeId]._children = null;
+            console.log("collapsed " + nodeId);
+        }
+    }
+}
+
+function hideChildren(nodeId) {
+    console.log(nodeId);
+    console.log(exports.id2Node);
+    console.log(exports.id2Node[nodeId]);
+    if (exports.id2Node[nodeId]) {
+        if (exports.id2Node[nodeId].children) {
+            exports.id2Node[nodeId]._children = exports.id2Node[nodeId].children;
+            exports.id2Node[nodeId].children = null;
+        }
+    }
+}
+
+
 exports.toggleNode = (nodeId) => {
 
     if (exports.id2Node[nodeId]._children) {
-
-        exports.id2Node[nodeId].children = exports.id2Node[nodeId]._children;
-        exports.id2Node[nodeId]._children = null;
-        exports.unsetHasOthers(nodeId);
-        // console.log("here")
+        showChildren(nodeId);
     }
     else if (exports.id2Node[nodeId].children) {
-        exports.id2Node[nodeId]._children = exports.id2Node[nodeId].children;
-        exports.id2Node[nodeId].children = null;
-        exports.setHasOthers(nodeId);
+        hideChildren(nodeId);
     }
 }
 
@@ -76,18 +134,21 @@ exports.nextNode = () => {
     // console.log(exports.id2Node[exports.selectedId+1]);
 
 
-    if (exports.id2Node[exports.selectedId]._children){
+    let stepSize = Number($("#stepSize").val());
+
+    if (exports.id2Node[exports.selectedId]._children) {
         // console.log("NOW")
         exports.toggleNode(exports.selectedId);
         return
     }
 
 
-    if (!exports.id2Node[exports.selectedId + 1]) {
+    if (!exports.id2Node[exports.selectedId + stepSize]) {
         exports.loadNNodes();
     }
     else {
-        exports.selectedId = exports.currentId;
+        // exports.selectedId = exports.currentId;
+        exports.selectedId += stepSize;
         exports.selectNode(exports.selectedId);
     }
 }
@@ -129,7 +190,7 @@ exports.addNode = (parentId) => {
     // console.log(parentId);
     // console.log(exports.id2Node);
 
-    if (parentId === -1){
+    if (parentId === -1) {
         exports.id2Node[exports.currentId] = newNode;
         return;
     }
