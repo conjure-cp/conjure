@@ -41,8 +41,7 @@ import * as listView from "./util/listView"
                 globals.appendRows(message.data.vars);
                 message.data.changedIds.forEach(rowId => {
 
-                    let accountForExtra = globals.currentDomainId -  Number($("#domCount").val()) + Number(rowId)
-                    console.log(accountForExtra);
+                    let accountForExtra = globals.currentDomainId - Number($("#domCount").val()) + Number(rowId)
 
                     $("#row" + accountForExtra).toggleClass("changed");
 
@@ -174,7 +173,27 @@ import * as listView from "./util/listView"
             .data(links, (d) => { return d.target.id; });
         // Enter the links.
         link.enter().insert("path", "g")
-            .attr("class", "link")
+            .attr("class", (d) => {
+
+                let node = d.source
+
+                let start = "link"
+                let parent = globals.id2Parent[node.id];
+
+                if (parent) {
+                    let kids = globals.id2ChildIds[parent.id];
+
+                    if (kids[kids.length - 1] != node.id) {
+                        console.log(node.id);
+                        console.log(kids[kids.length - 1]);
+                        start += " red"
+                    }
+
+                }
+
+                return start;
+
+            })
             .attr("d", (d) => {
                 let o = { x: d.source.x, y: d.source.y };
                 return globals.diagonal({ source: o, target: o });

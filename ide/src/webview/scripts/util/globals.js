@@ -1,3 +1,5 @@
+// import * as listView from "./listView"
+
 exports.vscode = acquireVsCodeApi();
 exports.currentId = 0;
 exports.selectedId = 1;
@@ -78,7 +80,6 @@ function showChildren(nodeId) {
         if (exports.id2Node[nodeId]._children) {
             exports.id2Node[nodeId].children = exports.id2Node[nodeId]._children;
             exports.id2Node[nodeId]._children = null;
-            console.log("collapsed " + nodeId);
         }
     }
 }
@@ -187,6 +188,7 @@ exports.loadNNodes = () => {
 }
 
 exports.selectNode = (nodeId) => {
+    // listView.getPanel().setHeaderTitle("Node: " + d.id);
     exports.selectedId = nodeId;
     let allCircles = ".node circle"
     d3.selectAll(allCircles).classed("selected", false);
