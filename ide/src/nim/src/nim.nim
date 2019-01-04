@@ -1,32 +1,53 @@
 # Hello Nim!
-import db_sqlite, json, jester, parseUtils,typetraits , re
-import parser 
+import db_sqlite, json, jester, parseUtils,typetraits, re, os
+include parser/parser
 
 var db : DbConn
 
+type SimpleDomainResponse = ref object of RootObj
+    changedIds : seq[int]
+    vars : seq[Variable]
+
+type PrettyDomainResponse = ref object of RootObj
+    changedIds : seq[string]
+    vars : seq[Variable]
+
 type ParentChild = ref object of RootObj
-  parentId: int
-  children: seq[int]
-
-type Response = ref object of RootObj
-    nextNodes: seq[int]
-    parentChildren: seq[ParentChild]
-
+    parentId: int
+    children: seq[int]
 
 proc `$`(r: ParentChild): string =
     return $r.parentId & " : " & $r.children
 
-proc `$`(r: Response): string =
-    return $r.nextNodes & " : " & $r.parentChildren
-
 proc init(dirPath: string) =
-    # let minionFilePath = path & "/model000001.eprime-minion"
-    # let eprimeFilePath = path & "/model000001.eprime"
-    # initParser(minionFilePath, eprimeFilePath)
-    let dbPath = dirPath & "/test.db"
-    db = open(dbPath, "", "", "") 
 
-proc loadNodes(amount, start: string): string =
+    let current = getCurrentDir()
+    setCurrentDir(dirPath)
+
+    var minionFilePath : string
+    var eprimeFilePath : string
+    var dbFilePath : string
+
+    for f in walkFiles("*.eprime-minion"):
+        minionFilePath =  absolutePath(f)
+        break;
+
+    for f in walkFiles("*.eprime"):
+        eprimeFilePath =  absolutePath(f)
+        break;
+
+    for f in walkFiles("*.db"):
+        dbFilePath =  absolutePath(f)
+        break;
+        
+
+    setCurrentDir(current)
+
+    initParser(minionFilePath, eprimeFilePath)
+
+    db = open(dbFilePath, "", "", "") 
+
+proc loadNodes(amount, start: string): JsonNode =
 
     var list :seq[ParentChild]
     var pId, childId : int
@@ -41,9 +62,95 @@ proc loadNodes(amount, start: string): string =
         list.add(ParentChild(parentId: pId, children: kids))
 
     # echo nodes
-    echo list
+    # echo list
     
-    return $(%list)
+    return %list
+
+
+
+proc loadSimpleDomains(amount, start, nodeId: string): JsonNode =
+
+    var list : seq[int]
+    var id : int
+    var domainsAtPrev : seq[Variable]
+    discard parseInt(nodeId, id)
+
+    let domainsAtNode = getSimpleDomainsOfNode(db, amount, start, nodeId)
+    # echo start
+    # echo domainsAtNode
+
+    if (id != 1):
+        domainsAtPrev = getSimpleDomainsOfNode(db, amount, start, $(id - 1))
+        
+        for i in 0..<domainsAtNode.len():
+            if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
+                list.add(i)
+
+    # echo "3"
+
+    return  %SimpleDomainResponse(changedIds: list, vars: domainsAtNode)
+
+
+proc loadPrettyDomains(amount, start, nodeId: string): JsonNode =
+    var list : seq[string]
+    var id : int
+    var domainsAtPrev : seq[Variable]
+    
+    discard parseInt(nodeId, id)
+
+    var domainsAtNode : seq[Variable]
+    domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
+    
+    let jsonList = %domainsAtNode
+
+
+    for i in 0..<domainsAtNode.len():
+        if domainsAtNode[i] of Set:
+            let s = cast[Set](domainsAtNode[i])
+
+            jsonList[i]["Cardinality"] = %s.getCardinality()
+            jsonList[i]["Included"] = %s.included
+            jsonList[i]["Excluded"] = %s.excluded
+
+
+    if (id != 1):
+        domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
+
+        for i in 0..<domainsAtNode.len():
+
+            # echo domainsAtNode[i]
+            # echo domainsAtPrev[i]
+
+            if domainsAtNode[i] of Set:
+                let s1 = cast[Set](domainsAtNode[i])
+                let s2 = cast[Set](domainsAtPrev[i])
+
+                if (s1.getCardinality() != s2.getCardinality()):
+                    list.add("li" & s1.name & "Cardinality")
+
+                if (s1.included != s2.included):
+                    list.add("li" & s1.name & "Included")
+
+                if (s1.excluded != s2.excluded):
+                    list.add("li" & s1.name & "Excluded")
+
+            elif domainsAtNode[i] of Expression:
+                if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
+                    list.add("liExpressions" & domainsAtNode[i].name) 
+            else:
+                if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
+                    list.add("liVariables" & domainsAtNode[i].name )
+
+    
+    if id == 1:
+        return domainsToJson(domainsAtNode)
+
+    return %*{"vars" : jsonList, "changed" : list }
+
+
+
+
+
 
 routes:
 
@@ -52,14 +159,21 @@ routes:
         init(path)
         resp "OK"
 
-    get "/domains/@nodeId":
-        resp domainsToJson(getPrettyDomainsOfNode(db, @"nodeId"))
+    get "/simpleDomains/@amount/@start/@nodeId":
+        resp loadSimpleDomains(@"amount", @"start", @"nodeId")
+        
+    get "/prettyDomains/@amount/@start/@nodeId":
+        resp loadPrettyDomains(@"amount", @"start", @"nodeId")
 
     get "/loadNodes/@amount/@start":
         resp loadNodes(@"amount", @"start")
 
-let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
+# let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
+# let path = "/home/tom/ModRef2018-Langfords/experiment/conjure-output";
+let path = "/home/tom/conjure/ide/src/test/testData/conjure-test"
 init(path)
-discard loadNodes("5", "50")
+# discard loadNodes("5", "50")
+# echo loadSimpleDomains("1", "0", "2")
+echo loadPrettyDomains("1", "0", "2").pretty()
 # getParent(320)
 # echo getFirstN(10)

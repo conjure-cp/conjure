@@ -3,19 +3,19 @@ import re, strutils, os, tables, json, db_sqlite, parseutils
 
 type Variable* = ref object of RootObj
   name: string
-  range: string
+  rng: string
 
-type Expression* = ref object of Variable
+type Expression = ref object of Variable
 
-type Set* = ref object of Variable
+type Set = ref object of Variable
     lower: int
     upper: int
     included: seq[int]
     excluded: seq[int]
 
-type OccurrenceSet* = ref object of Set
+type OccurrenceSet = ref object of Set
 
-type DummySet* = ref object of Set
+type DummySet = ref object of Set
     dummyVal : int
     cardinality : int
 
@@ -26,13 +26,13 @@ proc getPrettyRange(lower: string, upper: string): string =
 
 proc `$`*(v:Variable): string =
     if v of Expression:
-        return "<Expr> " & v.name & " " & v.range
+        return "<Expr> " & v.name & " " & v.rng
     if v of OccurrenceSet:
         return "<OSet> " 
     if v of DummySet:
         let s = cast[DummySet](v)
         return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded & " card " & $ s.cardinality
-    return "<Variable> " & v.name & " " & v.range 
+    return "<Variable> " & v.name & " " & v.rng 
 
 proc getCardinality(s: Set): string =
     if s of DummySet:
@@ -41,7 +41,7 @@ proc getCardinality(s: Set): string =
         return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
     return "ERROR"
 
-proc parseAux*(minionFilePath: string): Table[string, Expression] =
+proc parseAux(minionFilePath: string): Table[string, Expression] =
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
     let minionFile = readFile(minionFilePath)
@@ -63,7 +63,7 @@ proc parseAux*(minionFilePath: string): Table[string, Expression] =
         # echo rhs
     return lookup
 
-proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
+proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
     var varLookup = initTable[string, Variable]()
     var clean = ""
@@ -101,24 +101,64 @@ proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
 var eprimeLookup : Table[string, Variable]
 var auxLookup : Table[string, Expression]
 
-proc initParser(minionFilePath: string, eprimeFilePath: string) =
+proc initParser*(minionFilePath: string, eprimeFilePath: string) =
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
 
-proc getPrettyDomainsOfNode(db: DbConn, nodeId: int) : seq[Variable] =
+proc getSimpleDomainsOfNode*(db: DbConn, amount: string, start: string, nodeId: string): seq[Variable] =
+
+    var domains : seq[Variable]
+
+    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? and domainId >= ? limit ?",nodeId, start, amount):
+
+        # echo domain[0]
+        # echo auxLookup
+
+        if (auxLookup.hasKey(domain[0])):
+            let d = auxLookup[domain[0]]
+            d.rng = getPrettyRange(domain[1], domain[2])
+            domains.add(d)
+        else:
+            let v = Variable(name: domain[0])
+            v.rng = getPrettyRange(domain[1], domain[2])
+            domains.add(v)
+
+    return domains
+
+
+# proc getChangedVariables(db: DbConn, nodeId: string)  : seq[string] = 
+#     for domain in db.fastRows(sql"select * from (select * from domain where nodeId = ?) where ", nodeId):
+    
+
+proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
     # echo auxLookup
     var domains : seq[Variable]
 
+    # for v in eprimeLookup.values:
+    #     v.rng = ""
+    #     if v of Set:
+    #         let s = cast[DummySet](v)
+    #         s.included = @[]
+    #         s.excluded = @[]
+    #         s.cardinality
+
+    var tableCopy : Table[string, Variable]
+    tableCopy.deepCopy(eprimeLookup)
+
+            
+
     for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ?", nodeId):
         
+        # echo domain
+
         if (auxLookup.hasKey(domain[0])):
             let d = auxLookup[domain[0]]
-            d.range = getPrettyRange(domain[1], domain[2])
+            d.rng = getPrettyRange(domain[1], domain[2])
             domains.add(d)
         
-        elif (eprimeLookup.hasKey(domain[0])):
-            let v = eprimeLookup[domain[0]]
-            v.range = getPrettyRange(domain[1], domain[2])
+        elif (tableCopy.hasKey(domain[0])):
+            let v = tableCopy[domain[0]]
+            v.rng = getPrettyRange(domain[1], domain[2])
             domains.add(v)
 
         else:
@@ -126,20 +166,23 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: int) : seq[Variable] =
             let setName = splitted[0]
             let lower = domain[1]
             let upper = domain[2]
-            let s = eprimeLookup[setName]
 
-            if s of DummySet:
+            if tableCopy.hasKey(setName):
 
-                let dummySet = cast[DummySet](s)
+                let s = tableCopy[setName]
 
-                if (not (dummySet in domains)):
-                    domains.add(dummySet)
+                if s of DummySet:
 
-                let num = parseInt(splitted[^1])
-                if (lower != $dummySet.dummyVal):
-                    dummySet.included.add(num)
-                else:
-                    dummySet.cardinality.dec()
+                    let dummySet = cast[DummySet](s)
+
+                    if (not (dummySet in domains)):
+                        domains.add(dummySet)
+
+                    let num = parseInt(splitted[^1])
+                    if (lower != $dummySet.dummyVal):
+                        dummySet.included.add(num)
+                    else:
+                        dummySet.cardinality.dec()
 
     # for d in domains:
     #     echo d
@@ -147,23 +190,34 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: int) : seq[Variable] =
     return domains
 
 
-type TreeViewNode* = ref object of RootObj
-  text: string
-  nodes: seq[TreeViewNode]
+type TreeViewNode = ref object of RootObj
+  name: string
+  children: seq[TreeViewNode]
 
-proc domainsToJson(domains: seq[Variable]): string =
 
-    let root = TreeViewNode(text: "Items")
-    let variables = TreeViewNode(text: "Variables")
-    let expressions = TreeViewNode(text: "Expressions")
-    let sets = TreeViewNode(text: "Sets")
+# proc domainListToJson(domains: seq[variable]): JsonNode =
 
-    root.nodes = @[variables, sets, expressions]
+#     var list = %domains
+
+#     for d in domains:
+#         if d of Set:
+
+
+#     domains.add(V)
+
+proc domainsToJson(domains: seq[Variable]): JsonNode =
+
+    let root = TreeViewNode(name: "Items")
+    let variables = TreeViewNode(name: "Variables")
+    let expressions = TreeViewNode(name: "Expressions")
+    let sets = TreeViewNode(name: "Sets")
+
+    root.children = @[variables, sets, expressions]
 
     for d in domains:
 
         if d of Expression:
-            expressions.nodes.add(TreeViewNode(text: d.name, nodes: @[TreeViewNode(text: d.range)]))
+            expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
 
         elif d of Set:
 
@@ -175,19 +229,18 @@ proc domainsToJson(domains: seq[Variable]): string =
             if (s of DummySet):
                 setType = "Dummy"
 
-            let t = TreeViewNode(text: "Type", nodes: @[TreeViewNode(text: setType)])
-            let cardinality = TreeViewNode(text: "Cardinality", nodes: @[TreeViewNode(text: s.getCardinality())])
-            let included = TreeViewNode(text: "Included", nodes: @[TreeViewNode(text: $s.included)])
-            let excluded = TreeViewNode(text: "Included", nodes: @[TreeViewNode(text: $s.excluded)])
-            sets.nodes.add(TreeViewNode(text: s.name, nodes: @[t, cardinality, included, excluded]))
+            let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
+            let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])
+            let included = TreeViewNode(name: "Included", children: @[TreeViewNode(name: $s.included)])
+            let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: $s.excluded)])
+            sets.children.add(TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
 
         else:
-            variables.nodes.add(TreeViewNode(text: d.name, nodes: @[TreeViewNode(text: d.range)]))
+            variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
         
-    let list = @[root]
-    let json = $(%list).pretty()
-    return json
-
+    # let list = @[root]
+    # let json = (%list).pretty()
+    return %root
 
 # let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
 # let eprimeFilePath = "../test/testData/conjure-output/model000001.eprime"
@@ -197,12 +250,15 @@ proc domainsToJson(domains: seq[Variable]): string =
 # discard getPrettyDomainsOfNode(1)
 # echo domainsToJson(getPrettyDomainsOfNode(3))
 
-when isMainModule:
+# when isMainModule:
 
-    let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
+    # let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 
-    let minionFilePath = path & "/model000001-random01.eprime-minion"
-    let eprimeFilePath = path & "/model000001.eprime"
-    let dbPath = path & "/test.db"
-    # db = open(dbPath, "", "", "") 
-    initParser(minionFilePath, eprimeFilePath)
+    # let minionFilePath = path & "/model000001-random01.eprime-minion"
+    # let eprimeFilePath = path & "/model000001.eprime"
+    # let dbPath = path & "/test.db"
+    # let db = open(dbPath, "", "", "") 
+    # initParser(minionFilePath, eprimeFilePath)
+    # echo getSimpleDomainsOfNode(db, "1", "0", "1")
+    # echo getSimpleDomainsOfNode(db, "1", "1", "1")
+    # echo getSimpleDomainsOfNode(db, "1", "2", "1")

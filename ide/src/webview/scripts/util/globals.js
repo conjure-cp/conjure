@@ -1,6 +1,7 @@
 exports.vscode = acquireVsCodeApi();
 exports.currentId = 0;
 exports.selectedId = 1;
+exports.currentDomainId = 0;
 exports.id2Node = {};
 exports.id2Parent = {};
 exports.id2ChildIds = {};
@@ -10,6 +11,8 @@ exports.margin = { top: 40, right: 30, bottom: 50, left: 30 };
 exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right;
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
+exports.init = true;
+exports.pretty = true;
 exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree().size([exports.height, exports.width]);
@@ -17,6 +20,7 @@ exports.tree = d3.layout.tree().size([exports.height, exports.width]);
 exports.waiting = false;
 
 let z = -1;
+let columns = ["name", "rng"]
 
 exports.setup = (zoom) => {
     z = zoom;
@@ -129,12 +133,13 @@ exports.rightNode = () => {
 }
 
 exports.nextNode = () => {
-    // console.log(exports.selectedId + 1);
-    // console.log(exports.id2Node);
-    // console.log(exports.id2Node[exports.selectedId+1]);
-
-
     let stepSize = Number($("#stepSize").val());
+
+    // console.log(exports.selectedId + stepSize);
+    // console.log(exports.id2Node);
+    // console.log(exports.id2Node[exports.selectedId + stepSize]);
+
+
 
     if (exports.id2Node[exports.selectedId]._children) {
         // console.log("NOW")
@@ -155,12 +160,20 @@ exports.nextNode = () => {
 
 exports.previousNode = () => {
     if (exports.selectedId > 1) {
+        exports.selectedId--;
+        exports.selectNode(exports.selectedId);
+    }
+}
+
+exports.upNode = () => {
+    if (exports.selectedId > 1) {
         exports.selectedId = exports.id2Parent[exports.selectedId].id;
     }
     exports.selectNode(exports.selectedId);
 }
 
 exports.loadNNodes = () => {
+
     if (!exports.waiting) {
 
         exports.vscode.postMessage({
@@ -180,6 +193,71 @@ exports.selectNode = (nodeId) => {
     let s = "#node" + nodeId + " circle";
     d3.select(s).classed("selected", true);
     exports.focusNode(exports.id2Node[nodeId]);
+
+
+    exports.currentDomainId = 0;
+    exports.loadDomains(nodeId);
+
+    if (!exports.pretty){
+        $("#pane").empty();
+        exports.tabulate()
+    }
+}
+
+exports.loadDomains = (nodeId) => {
+    if (!exports.waiting) {
+
+        let commandString;
+
+        if (exports.pretty) {
+            commandString = "prettyDomains"
+        }
+        else {
+            commandString = "simpleDomains"
+        }
+
+        exports.vscode.postMessage({
+            command: commandString,
+            amount: Number($("#domCount").val()),
+            start: exports.currentDomainId,
+            nodeId: nodeId,
+        });
+    }
+    exports.waiting = true;
+}
+
+exports.tabulate = () => {
+    var table = d3.select('#pane').append('table')
+    var thead = table.append('thead')
+
+    // append the header row
+    thead.append('tr')
+        .selectAll('th')
+        .data(columns).enter()
+        .append('th')
+        .text(function (column) { return column; });
+}
+
+exports.appendRows = (data) => {
+    var table = d3.select('#pane').append('table');
+    var tbody = table.append('tbody');
+
+    var rows = tbody.selectAll('tr')
+        .data(data)
+        .enter()
+        .append('tr')
+        .attr("id", (d, i) => { return "row" +  (i + exports.currentDomainId - Number($("#domCount").val())) })
+
+    // create a cell in each row for each column
+    var cells = rows.selectAll('td')
+        .data((row) => {
+            return columns.map((column) => {
+                return { column: column, value: row[column] };
+            });
+        })
+        .enter()
+        .append('td')
+        .text((d) => { return d.value; });
 }
 
 exports.addNode = (parentId) => {
@@ -224,4 +302,11 @@ exports.unsetHasOthers = (nodeId) => {
 
 exports.vscode.postMessage({
     command: 'init',
+});
+
+exports.vscode.postMessage({
+    command: 'prettyDomains',
+    amount: Number($("#domCount").val()),
+    start: 0,
+    nodeId: 1,
 });

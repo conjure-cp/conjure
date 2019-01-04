@@ -1,5 +1,9 @@
+import globals from "./globals"
+import * as listView from "./listView"
+
 
 export function appendControls() {
+
 
     console.log("CONTROLS");
     var step = d3.select("#controls")
@@ -13,6 +17,44 @@ export function appendControls() {
         .attr('name', 'textInput')
         .attr('value', '1')
         .attr('id', 'stepSize')
+
+    step.append('input')
+        .classed('form-control', true)
+        .attr('type', 'text')
+        .attr('name', 'textInput')
+        .attr('value', '100')
+        .attr('id', 'domCount')
+
+    d3.select("#controls")
+        .append('label')
+        .text("Pretty")
+        .append("input")
+        .attr("checked", false)
+        .attr("type", "checkbox")
+        .attr("id", "check")
+        .on("change", () => {
+            $("#pane").empty();
+            globals.pretty = !globals.pretty;
+
+            let temp = globals.selectedId;
+
+            // globals.selectNode(1);
+
+            if (globals.pretty){
+                listView.createUL()
+                let r = listView.getRootNode();
+                console.log(r);
+                listView.render(r, r);
+            }
+
+            globals.selectNode(temp);
+            // console.log("Changed!")
+            // showDomains(selectedNode)
+        })
+        // .attr("onClick", () => {
+        //     console.log("hello");
+        //     showDomains(selectedNode)
+        // });
 }
         // d3.select("#controls")
         //     .append("input")

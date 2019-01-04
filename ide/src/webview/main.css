@@ -3,7 +3,7 @@ body{
 }
 
 #pane{
-    font-size: 18px; 
+    font-size: 16px; 
 }
 
 .jsPanel-titlebar .jsPanel-title {
@@ -14,7 +14,7 @@ td, th {
     padding-left: 20px;
 }
 
-.changed{
+.changed * {
     color: coral;
 }
 
@@ -52,4 +52,24 @@ label{
     fill: none;
     stroke: var(--vscode-terminal-ansiGreen);
     stroke-width: 2px;
+}
+
+
+
+
+
+/* treelist */
+
+li.node {
+    position: absolute;
+    list-style: none;
+    cursor: default;
+}
+li.node span {
+    margin-right: 3px;
+    margin-left: 5px;
+}
+
+li.node .caret {
+    font-size: 10px;
 }
