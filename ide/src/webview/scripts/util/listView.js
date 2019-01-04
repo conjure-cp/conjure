@@ -1,5 +1,6 @@
 import colours from './colours.js';
 import "./treelist"
+import globals from "./globals"
 
 let panel = jsPanel.create({
     theme: colours.bgColour + ' filled',
@@ -18,14 +19,14 @@ let panel = jsPanel.create({
     <div id="pane"> </div>`
 });
 
-export function getPanel(){
-    return panel;
+export function setNodeId(){
+    panel.setHeaderTitle("Node: " + globals.selectedId);
 }
 
 var id = 0;
 var tree = d3.layout.treelist()
-// .childIndent(100)
-// .nodeHeight(30);
+.childIndent(15)
+.nodeHeight(40);
 
 var init = true;
 var rootNode;
@@ -83,6 +84,9 @@ export function setChanged() {
 
 export function render(data, parent) {
 
+    if (globals.selectedId === 1 && !init){
+        return; 
+    }
     // console.log("CALLED RENDER");
 
     if (init) {

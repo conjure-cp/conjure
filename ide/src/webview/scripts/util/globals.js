@@ -1,5 +1,3 @@
-// import * as listView from "./listView"
-
 exports.vscode = acquireVsCodeApi();
 exports.currentId = 0;
 exports.selectedId = 1;
@@ -7,6 +5,7 @@ exports.currentDomainId = 0;
 exports.id2Node = {};
 exports.id2Parent = {};
 exports.id2ChildIds = {};
+exports.correctPath = {};
 exports.viewerWidth = $(document).width();
 exports.viewerHeight = $(document).height();
 exports.margin = { top: 40, right: 30, bottom: 50, left: 30 };
@@ -85,9 +84,9 @@ function showChildren(nodeId) {
 }
 
 function hideChildren(nodeId) {
-    console.log(nodeId);
-    console.log(exports.id2Node);
-    console.log(exports.id2Node[nodeId]);
+    // console.log(nodeId);
+    // console.log(exports.id2Node);
+    // console.log(exports.id2Node[nodeId]);
     if (exports.id2Node[nodeId]) {
         if (exports.id2Node[nodeId].children) {
             exports.id2Node[nodeId]._children = exports.id2Node[nodeId].children;
@@ -121,6 +120,35 @@ exports.focusNode = (node) => {
         .duration(exports.duration)
         .attr("transform", "translate(" + x + "," + y + ")scale(" + scale + ")");
     z.translate([x, y]);
+}
+
+
+exports.collapseFailed = () => {
+    exports.correctPath.forEach(nodeId => {
+        if (exports.id2ChildIds[nodeId]) {
+            exports.id2ChildIds[nodeId].forEach(childId => {
+                if (!exports.correctPath.includes(childId)) {
+                    exports.collapseNode(childId);
+                }
+            })
+        }
+
+    });
+
+    if (!exports.correctPath.includes(exports.selectedId)){
+
+         for (var i = 0; i < exports.correctPath.length; i++){
+
+            let nodeId = exports.correctPath[i];
+
+            console.log(nodeId + " < " + exports.selectedId);
+
+            if (nodeId < exports.selectedId){
+                exports.selectNode(nodeId);
+                break;
+            }
+        };
+    }
 }
 
 exports.rightNode = () => {
@@ -159,6 +187,8 @@ exports.nextNode = () => {
     }
 }
 
+
+//TODO check that the previous node is not withn a collapsed node
 exports.previousNode = () => {
     if (exports.selectedId > 1) {
         exports.selectedId--;
@@ -188,7 +218,6 @@ exports.loadNNodes = () => {
 }
 
 exports.selectNode = (nodeId) => {
-    // listView.getPanel().setHeaderTitle("Node: " + d.id);
     exports.selectedId = nodeId;
     let allCircles = ".node circle"
     d3.selectAll(allCircles).classed("selected", false);
@@ -200,7 +229,7 @@ exports.selectNode = (nodeId) => {
     exports.currentDomainId = 0;
     exports.loadDomains(nodeId);
 
-    if (!exports.pretty){
+    if (!exports.pretty) {
         $("#pane").empty();
         exports.tabulate()
     }
@@ -248,7 +277,7 @@ exports.appendRows = (data) => {
         .data(data)
         .enter()
         .append('tr')
-        .attr("id", (d, i) => { return "row" +  (i + exports.currentDomainId - Number($("#domCount").val())) })
+        .attr("id", (d, i) => { return "row" + (i + exports.currentDomainId - Number($("#domCount").val())) })
 
     // create a cell in each row for each column
     var cells = rows.selectAll('td')
@@ -291,17 +320,6 @@ exports.getChildren = (parentId) => {
     });
 }
 
-exports.setHasOthers = (nodeId) => {
-    let s = "#node" + nodeId + " circle";
-    d3.select(s).classed("hasOthers", true);
-    // console.log("SEtting has others for " + nodeId)
-}
-
-exports.unsetHasOthers = (nodeId) => {
-    let s = "#node" + nodeId + " circle";
-    d3.select(s).classed("hasOthers", false);
-}
-
 exports.vscode.postMessage({
     command: 'init',
 });
@@ -311,4 +329,8 @@ exports.vscode.postMessage({
     amount: Number($("#domCount").val()),
     start: 0,
     nodeId: 1,
+});
+
+exports.vscode.postMessage({
+    command: 'correctPath',
 });

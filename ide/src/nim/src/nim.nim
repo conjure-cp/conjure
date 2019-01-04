@@ -100,7 +100,7 @@ proc loadPrettyDomains(amount, start, nodeId: string): JsonNode =
 
     var domainsAtNode : seq[Variable]
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
-    
+
     let jsonList = %domainsAtNode
 
 
@@ -147,8 +147,23 @@ proc loadPrettyDomains(amount, start, nodeId: string): JsonNode =
 
     return %*{"vars" : jsonList, "changed" : list }
 
+proc getCorrectPath(): JsonNode =
 
+    var ids : seq[int]
+    var id : int
 
+    for row in db.fastRows(sql("""with recursive
+	correctPath(n) as (
+	select max(nodeId) from Node
+	union 
+	select parentId  from Node, correctPath
+		where nodeId=correctPath.n  and parentId > 0
+    )
+    select * from correctPath;""")):
+        discard parseInt(row[0], id)
+        ids.add(id)
+
+    return % ids
 
 
 
@@ -168,12 +183,17 @@ routes:
     get "/loadNodes/@amount/@start":
         resp loadNodes(@"amount", @"start")
 
+    get "/correctPath":
+        resp getCorrectPath()
+
+
 # let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 # let path = "/home/tom/ModRef2018-Langfords/experiment/conjure-output";
 let path = "/home/tom/conjure/ide/src/test/testData/conjure-test"
 init(path)
+# echo getCorrectPath()
 # discard loadNodes("5", "50")
 # echo loadSimpleDomains("1", "0", "2")
-echo loadPrettyDomains("1", "0", "2").pretty()
+# echo loadPrettyDomains("1", "0", "2").pretty()
 # getParent(320)
 # echo getFirstN(10)

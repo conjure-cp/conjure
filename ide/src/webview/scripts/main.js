@@ -11,6 +11,11 @@ import * as listView from "./util/listView"
         const message = event.data
         switch (message.command) {
 
+            case 'correctPath':
+                globals.correctPath = message.data;
+                console.log(message.data);
+                break;
+
             case 'loadNodes':
 
 
@@ -35,6 +40,7 @@ import * as listView from "./util/listView"
                 }
                 break;
             case 'simpleDomains':
+                listView.setNodeId(globals.selectedId);
                 globals.currentDomainId += Number($("#domCount").val());
                 // console.log(message.data);
                 // console.log(globals.currentDomainId);
@@ -49,8 +55,7 @@ import * as listView from "./util/listView"
                 break;
 
             case 'prettyDomains':
-                // console.log(message.data);
-                // console.log(globals.selectedId);
+                listView.setNodeId(globals.selectedId);
 
                 if (globals.selectedId == 1) {
                     listView.render(message.data, message.data);
@@ -130,26 +135,31 @@ import * as listView from "./util/listView"
 
         nodeUpdate.select("circle")
             .attr("r", 10)
-            .each((d) => {
+            .attr("class", (d) => {
+
+                let res = "";
+
+                if (globals.selectedId === d.id){
+                    res = "selected "
+                }
 
                 let childLength = 0;
                 if (d.children) {
                     childLength = d.children.length;
                 }
 
-                // console.log(d)
-                // console.log(d.id);
-                //  console.log(globals.id2ChildIds);
-                // console.log(childLength);
-
                 if (globals.id2ChildIds[d.id]) {
                     if (childLength < globals.id2ChildIds[d.id].length) {
-                        globals.setHasOthers(d.id);
-                    }
-                    else {
-                        globals.unsetHasOthers(d.id);
+
+                        if (!globals.correctPath.includes(d.id)){
+
+                            return res + " hasOthers red"
+                        }
+                        return res + " hasOthers "
                     }
                 }
+
+                return res;
             });
 
         // .style("fill", (d) => { return d._children ? "#6ac4a1" : "#fff"; });
@@ -175,23 +185,13 @@ import * as listView from "./util/listView"
         link.enter().insert("path", "g")
             .attr("class", (d) => {
 
-                let node = d.source
-
-                let start = "link"
-                let parent = globals.id2Parent[node.id];
-
-                if (parent) {
-                    let kids = globals.id2ChildIds[parent.id];
-
-                    if (kids[kids.length - 1] != node.id) {
-                        console.log(node.id);
-                        console.log(kids[kids.length - 1]);
-                        start += " red"
-                    }
-
+                // console.log(d.target.id)
+                // console.log(globals.correctPath)
+                if (globals.correctPath.includes(d.target.id)){
+                    return "link"
                 }
 
-                return start;
+                return "link red";
 
             })
             .attr("d", (d) => {
@@ -255,6 +255,12 @@ import * as listView from "./util/listView"
 
     Mousetrap.bind('m', () => {
         globals.loadDomains(globals.selectedId);
+    }, 'keydown');
+
+    Mousetrap.bind('f', () => {
+        globals.collapseFailed();
+        update(globals.id2Node[globals.selectedId]);
+        // update(globals.id2Node[1]);
     }, 'keydown');
 
     globals.loadNNodes();

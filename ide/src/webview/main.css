@@ -29,6 +29,10 @@ circle.hasOthers {
     fill: var(--vscode-terminal-ansiGreen) ;
     transition: stroke 500ms, fill 500ms;
 }
+circle.hasOthers.red {
+    fill: var(--vscode-terminal-ansiRed) ;
+    transition: stroke 500ms, fill 500ms;
+}
 
 circle.selected {
     stroke: salmon;
@@ -56,7 +60,7 @@ label{
 
 .link.red {
     fill: none;
-    stroke: red;
+    stroke: var(--vscode-terminal-ansiRed) ;
     stroke-width: 2px;
 }
 

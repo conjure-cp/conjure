@@ -62,8 +62,8 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
-        // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
+        // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
+        let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"
         // let testDir = "/home/tom/minion-private/build/conjure-output";
@@ -153,6 +153,14 @@ export default class WebviewHelper {
                             if (err) { return console.log(err); }
                             console.log(res);
                             panel.webview.postMessage({command:"prettyDomains", data: res.body});
+                        });
+                        break;
+                    case 'correctPath':
+                        // console.log(message.id);
+                        request(serverURL + '/correctPath', { json: true }, (err: any, res: any, body: any) => {
+                            if (err) { return console.log(err); }
+                            console.log(res);
+                            panel.webview.postMessage({command:"correctPath", data: res.body});
                         });
                         break;
 
