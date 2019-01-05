@@ -25,12 +25,7 @@ rule_Equality = "permutation-equality" `namedRule` theRule where
     TypePermutation{} <- typeOf p
     TypePermutation{} <- typeOf q
     return ( "Horizontal rule for permutation equality"
-           , do
-              (rPat, r) <- quantifiedVar
-              (lPat, l) <- quantifiedVar
-              return [essence| and([ 1 = sum([ toInt(&r = &l)
-                                             | &lPat <- &p])
-                                   | &rPat <- &q]) |]
+           , return [essence| toSet(&p) = toSet(&q) |]
            )
 
 
@@ -38,7 +33,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "permutation-comprehension" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) =  do
         (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
+            Generator (GenInExpr pat expr) -> return (pat, matchDefs [opToSet] expr)
             _ -> na "rule_Comprehension"
         (TypePermutation inner, elems) <- match permutationLiteral perm 
         DomainPermutation _ _ innerD <- domainOf perm 

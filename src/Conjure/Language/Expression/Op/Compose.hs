@@ -4,13 +4,15 @@ module Conjure.Language.Expression.Op.Compose where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Bug
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
 import qualified Data.Vector as V               -- vector
 
-import Data.List (cycle)
+import Data.Permutation
+
+import qualified Data.Semigroup as SG
+
 
 data OpCompose x = OpCompose x x
     deriving (Eq, Ord, Show, Data, Functor, Traversable, Foldable, Typeable, Generic)
@@ -32,18 +34,13 @@ instance (TypeOf x, Pretty x) => TypeOf (OpCompose x) where
           _ -> raiseTypeError inp
 
 instance EvaluateOp OpCompose where
-    evaluateOp op@(OpCompose g@(viewConstantPermutation -> Just gss)
-                           h@(viewConstantPermutation -> Just hss)) = do
-        gt <- typeOf g
-        ht <- typeOf h
-        case (gt, ht) of
-          (TypePermutation (TypeInt _), TypePermutation (TypeInt _)) ->
-            let appI xss i = case filter (i `elem`) xss  of
-                               [] -> return i
-                               [k] -> return $ head $ drop 1 $ dropWhile (/= i) $ cycle k
-                               _ -> bug "evaluateOp{OpCompose} element should only be in one cycle of permutation"
-            in ConstantAbstract . AbsLitPermutation <$> (mapM (mapM (appI gss)) hss)
-          _ -> na $ "evaluateOp{OpCompose} only defined for Ints right now:" <++> pretty (show op)
+    evaluateOp (OpCompose (viewConstantPermutation -> Just gss)
+                             (viewConstantPermutation -> Just hss)) = do
+       case (fromCycles gss, fromCycles hss) of
+         (Right g, Right h) ->
+           return $ ConstantAbstract $ AbsLitPermutation $ toCycles $ g SG.<> h
+         (Left e, _) -> fail $ "evaluateOp{OpCompose}" <++> pretty (show e)
+         (_, Left e) -> fail $ "evaluateOp{OpCompose}" <++> pretty (show e)        
     evaluateOp op = na $ "evaluateOp{OpCompose}:" <++> pretty (show op)
 
 instance SimplifyOp OpCompose x where

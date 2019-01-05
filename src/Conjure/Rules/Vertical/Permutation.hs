@@ -38,7 +38,7 @@ rule_Comprehension :: Rule
 rule_Comprehension = "permutation-comprehension-tuples{AsFunction}" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) =  do
         (gocBefore, (pat, perm), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
-            Generator (GenInExpr pat [essence| &perm |]  ) -> return (pat, perm)
+            Generator (GenInExpr pat expr) -> return (pat, matchDefs [opToSet] expr)
             _ -> na "rule_Comprehension"
         TypePermutation{}                 <- typeOf perm
         Permutation_AsFunction <- representationOf perm
