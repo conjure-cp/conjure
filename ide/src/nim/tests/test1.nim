@@ -1,12 +1,18 @@
 # doAssert(1 + 1 == 2)
 import unittest
-import "../src/parser.nim"
+include util/parser
 
 
-let testPath = "../test/testData/conjure-output/model000001.eprime"
+let eprimePath = "../test/testData/sets/occurrence/model000001.eprime"
+let minionPath = "../test/testData/sets/occurrence/model000001.eprime-minion"
+let dbPath =     "../test/testData/sets/occurrence/test.db"
+
+let db = open(dbPath, "", "", "") 
 
 suite "description for this stuff":
     echo "suite setup: run once before the tests"
+    initParser(minionPath, eprimePath)
+
     
     setup:
       echo "run before each test"
@@ -14,12 +20,34 @@ suite "description for this stuff":
     teardown:
       echo "run after each test"
     
-    test "Parsing eprime":
-        # echo "ASDA"
-        # var correct = {"y" : " <Variable> ", "u" : " <Variable> ", "s" : " <DSet> (1..9) ", "z" : " <Variable> ", "x" : " <Variable> "}.toTable()
 
-        # let t = parseEprime(testPath)
-        # echo t
+    test "Parsing minion":
+      let t = parseAux(minionPath)
+      # echo t
+
+      for v in t.values:
+        require(not v.name.contains("aux"))
+
+    test "Parsing eprime":
+
+        let t = parseEprime(eprimePath)
+
+        for p in t.values():
+          echo p
+
+
+    test "Pretty domains":
+      for d in getPrettyDomainsOfNode(db, "1"):
+        echo d
+
+    test "Pretty domains Json":
+      echo domainsToJson(getPrettyDomainsOfNode(db, "1")).pretty()
+
+      
+    
+    
+
+      
         # echo t.contains("x")
         # echo t["x"]
         # echo correct
@@ -39,4 +67,4 @@ suite "description for this stuff":
     #   expect(IndexError):
     #     discard v[4]
     
-    echo "suite teardown: run once after the tests"
+    # echo "suite teardown: run once after the tests"

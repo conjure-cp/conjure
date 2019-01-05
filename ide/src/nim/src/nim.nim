@@ -1,6 +1,6 @@
 # Hello Nim!
-import db_sqlite, json, jester, parseUtils,typetraits, re, os
-include parser/parser
+import  jester, typetraits 
+include util/parser
 
 var db : DbConn
 
@@ -189,7 +189,7 @@ routes:
 
 # let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 # let path = "/home/tom/ModRef2018-Langfords/experiment/conjure-output";
-let path = "/home/tom/conjure/ide/src/test/testData/conjure-test"
+let path = "/home/tom/conjure/ide/src/test/testData/sets/occurrence"
 init(path)
 # echo getCorrectPath()
 echo loadNodes("1", "8")

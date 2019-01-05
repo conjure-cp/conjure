@@ -62,7 +62,7 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
+        let testDir = "/home/tom/conjure/ide/src/test/testData/sets/marker";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"

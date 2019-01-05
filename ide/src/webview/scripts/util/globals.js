@@ -161,6 +161,10 @@ exports.rightNode = () => {
 exports.nextNode = () => {
     let stepSize = Number($("#stepSize").val());
 
+    if (stepSize > exports.correctPath[0]){
+        stepSize = exports.correctPath[0] - exports.selectedId;
+    }
+
     // console.log(exports.selectedId + stepSize);
     // console.log(exports.id2Node);
     // console.log(exports.id2Node[exports.selectedId + stepSize]);

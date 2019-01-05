@@ -1,4 +1,5 @@
 import re, strutils, os, tables, json, db_sqlite, parseutils
+export re, strutils, os, tables, json, db_sqlite, parseutils
 # import "parseEprime.nim", "parseAux.nim"
 
 type Variable* = ref object of RootObj
@@ -21,14 +22,15 @@ type DummySet = ref object of Set
 
 proc getPrettyRange(lower: string, upper: string): string =
     if lower == upper:
-       return "(" & $lower & ")" 
-    return "(" & $lower & ".." & $upper & ")"
+       return "int(" & $lower & ")" 
+    return "int(" & $lower & ".." & $upper & ")"
 
 proc `$`*(v:Variable): string =
     if v of Expression:
         return "<Expr> " & v.name & " " & v.rng
     if v of OccurrenceSet:
-        return "<OSet> " 
+        let s = cast[OccurrenceSet](v)
+        return "<OSet> " & getPrettyRange($s.lower, $s.upper) & " " & " inc " & $s.included & " exc " & $s.excluded 
     if v of DummySet:
         let s = cast[DummySet](v)
         return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded & " card " & $ s.cardinality
@@ -59,11 +61,10 @@ proc parseAux(minionFilePath: string): Table[string, Expression] =
                 rhs = rhs.replace(nested, lookup[nested].name)
 
         lookup[name] = Expression(name: rhs)
-        # echo name
-        # echo rhs
+
     return lookup
 
-proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
+proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
 
     var varLookup = initTable[string, Variable]()
     var clean = ""
@@ -75,25 +76,45 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
     
     for key in parseJson(clean)["representations"].getElems():
         # echo key
-        try:
-            let n = key[0]["Name"].getStr()
+        # try:
+        let n = key[0]["Name"].getStr()
 
-            if key[1].hasKey("DomainInt"):
-                varLookup[n] = Variable(name: n)
+        if key[1].hasKey("DomainInt"):
+            varLookup[n] = Variable(name: n)
 
-            if key[1].hasKey("DomainSet"):
-                
-                let array = key[1]["DomainSet"].getElems()
-                let bounds = array[^1]["DomainInt"].getElems()[0]["RangeBounded"]
-                let l = bounds[0]["Constant"]["ConstantInt"].getInt()
-                let u = bounds[1]["Constant"]["ConstantInt"].getInt()
+        if key[1].hasKey("DomainSet"):
+            
+            let array = key[1]["DomainSet"].getElems()
+            # echo array[^1].pretty()
+            var bounds  : JsonNode
 
-                if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-                    varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1, cardinality: u + 1) 
-        except:
-            discard "Failed to parse Eprime"
+            bounds = array[^1]["DomainInt"].getElems()[0]
 
-    # echo varLookup
+            if (bounds.hasKey("RangeBounded")):
+                bounds = array[^1]["DomainInt"].getElems()[0]["RangeBounded"]
+            else:
+                bounds = array[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
+            # echo bounds
+            var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
+            var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
+
+            if (l == -1):
+                l = bounds[0]["Constant"]["ConstantInt"][1].getInt(-1)
+                u = bounds[1]["Constant"]["ConstantInt"][1].getInt(-1)
+
+                if (l == -1):
+                    echo "ERRORORORRORORORORRO"
+
+
+            if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
+                varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1, cardinality: u + 1) 
+
+            elif array[0].hasKey("Set_Occurrence"):
+                varLookup[n] = OccurrenceSet(name: n, lower: l, upper: u) 
+        # except:
+        #         discard "Failed to parse Eprime"
+
+    echo varLookup
     return varLookup
 
 
@@ -159,19 +180,38 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
             if tableCopy.hasKey(setName):
 
                 let s = tableCopy[setName]
+                let num = parseInt(splitted[^1])
 
                 if s of DummySet:
 
                     let dummySet = cast[DummySet](s)
 
-                    if (not (dummySet in domains)):
-                        domains.add(dummySet)
-
-                    let num = parseInt(splitted[^1])
                     if (lower != $dummySet.dummyVal):
                         dummySet.included.add(num)
                     else:
                         dummySet.cardinality.dec()
+
+                    # if (not (dummySet in domains)):
+                    #     domains.add(dummySet)
+
+                elif s of OccurrenceSet:
+                    let oSet = cast[OccurrenceSet](s)
+
+                    if (lower == upper):
+                        if (lower == "1"):
+                            oSet.included.add(num)
+                        else:
+                            oSet.excluded.add(num)
+                        
+                        echo "HERE"
+
+                if (not (s in domains)):
+                    domains.add(s)
+
+
+
+
+
 
     return domains
 
@@ -206,8 +246,8 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
 
             let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
             let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])
-            let included = TreeViewNode(name: "Included", children: @[TreeViewNode(name: $s.included)])
-            let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: $s.excluded)])
+            let included = TreeViewNode(name: "Included", children: @[TreeViewNode(name: ($s.included)[2..^2])])
+            let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: ($s.excluded)[2..^2])])
             sets.children.add(TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
 
         else:
@@ -216,24 +256,3 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
     # let list = @[root]
     # let json = (%list).pretty()
     return %root
-
-# let minionFilePath = "../test/testData/conjure-output/model000001.eprime-minion"
-# let eprimeFilePath = "../test/testData/conjure-output/model000001.eprime"
-# let dbPath = "../test/testData/test.db"
-
-# init(dbPath, minionFilePath, eprimeFilePath)
-# discard getPrettyDomainsOfNode(1)
-# echo domainsToJson(getPrettyDomainsOfNode(3))
-
-# when isMainModule:
-
-    # let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
-
-    # let minionFilePath = path & "/model000001-random01.eprime-minion"
-    # let eprimeFilePath = path & "/model000001.eprime"
-    # let dbPath = path & "/test.db"
-    # let db = open(dbPath, "", "", "") 
-    # initParser(minionFilePath, eprimeFilePath)
-    # echo getSimpleDomainsOfNode(db, "1", "0", "1")
-    # echo getSimpleDomainsOfNode(db, "1", "1", "1")
-    # echo getSimpleDomainsOfNode(db, "1", "2", "1")
