@@ -269,4 +269,5 @@ import * as listView from "./util/listView"
 
     globals.loadNNodes();
     console.log("HELLO")
+    $("#form").validate();
 })()

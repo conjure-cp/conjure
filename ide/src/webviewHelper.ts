@@ -62,8 +62,8 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
-        let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
+        let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test";
+        // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"
         // let testDir = "/home/tom/minion-private/build/conjure-output";
@@ -204,6 +204,7 @@ export default class WebviewHelper {
         const jspanelJS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
         const jquery = "http://code.jquery.com/jquery-2.1.3.min.js";
+        const validator = "https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js";
         // const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
         const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js";
 
@@ -211,7 +212,7 @@ export default class WebviewHelper {
 
         var htmlFile = createHTML({
             title: 'example',
-            script: [jsonDiff, jspanelJS, d3, jquery, treeViewUri, scriptUri, mouseTrap],
+            script: [jspanelJS, d3, jquery, validator, scriptUri, mouseTrap],
             // script: [jquery, treeViewUri, explorerUri],
             scriptAsync: false,
             css: [jspanelCSS, bootstrap, fontawesome, cssUri],

@@ -13,7 +13,7 @@ exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
 exports.init = true;
-exports.pretty = false;
+exports.pretty = true;
 exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree()
@@ -216,6 +216,8 @@ exports.loadNNodes = () => {
 
 exports.selectNode = (nodeId) => {
     exports.selectedId = nodeId;
+
+    $("#total").text(exports.selectedId + "/" + exports.correctPath[0]);
     let allCircles = ".node circle"
     d3.selectAll(allCircles).classed("selected", false);
     let s = "#node" + nodeId + " circle";

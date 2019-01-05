@@ -1,6 +1,25 @@
 <body>
-    <div id="controls">
-        <h1>DADSAD</h1>
-    </div>
+
+    <form id="form" class="needs-validation" novalidate>
+        <div class="form-row">
+            <div class="col-2">
+                <label for="stepSize">Step size</label>
+                <input id="stepSize" class="form-control" type="number" value="1" required>
+            </div>
+            <div class="col-2">
+                <label for="domCount">Number of domains to show</label>
+                <input id="domCount" class="form-control" type="number" value="100" required>
+            </div>
+            <div class="col-2">
+                <input id="check" type="checkbox" class="form-check-input" checked="true">
+                <label class="form-check-label" for="check">Pretty domains</label>
+            </div>
+            <div class="col-2">
+                <label class="form-check-label">Total Nodes</label>
+                <label id="total" class="form-check-label"> </label>
+            </div>
+        </div>
+    </form>
+
     <div id="tree"></div>
 </body>

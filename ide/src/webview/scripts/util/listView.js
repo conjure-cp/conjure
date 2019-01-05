@@ -38,6 +38,7 @@ var changedList;
 var ul;
 
 export function createUL(){
+    init = true;
     ul = d3.select("#pane").append("ul").classed("treelist", "true");
 }
 
