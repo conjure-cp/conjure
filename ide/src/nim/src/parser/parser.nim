@@ -134,21 +134,10 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
     # echo auxLookup
     var domains : seq[Variable]
 
-    # for v in eprimeLookup.values:
-    #     v.rng = ""
-    #     if v of Set:
-    #         let s = cast[DummySet](v)
-    #         s.included = @[]
-    #         s.excluded = @[]
-    #         s.cardinality
-
     var tableCopy : Table[string, Variable]
     tableCopy.deepCopy(eprimeLookup)
 
-            
-
     for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ?", nodeId):
-        
         # echo domain
 
         if (auxLookup.hasKey(domain[0])):
@@ -184,26 +173,12 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                     else:
                         dummySet.cardinality.dec()
 
-    # for d in domains:
-    #     echo d
-
     return domains
 
 
 type TreeViewNode = ref object of RootObj
   name: string
   children: seq[TreeViewNode]
-
-
-# proc domainListToJson(domains: seq[variable]): JsonNode =
-
-#     var list = %domains
-
-#     for d in domains:
-#         if d of Set:
-
-
-#     domains.add(V)
 
 proc domainsToJson(domains: seq[Variable]): JsonNode =
 

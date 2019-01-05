@@ -1,6 +1,6 @@
 # doAssert(1 + 1 == 2)
 import unittest
-import "../src/parseEprime.nim"
+import "../src/parser.nim"
 
 
 let testPath = "../test/testData/conjure-output/model000001.eprime"
@@ -16,10 +16,10 @@ suite "description for this stuff":
     
     test "Parsing eprime":
         # echo "ASDA"
-        var correct = {"y" : " <Variable> ", "u" : " <Variable> ", "s" : " <DSet> (1..9) ", "z" : " <Variable> ", "x" : " <Variable> "}.toTable()
+        # var correct = {"y" : " <Variable> ", "u" : " <Variable> ", "s" : " <DSet> (1..9) ", "z" : " <Variable> ", "x" : " <Variable> "}.toTable()
 
-        let t = parseEprime(testPath)
-        echo t
+        # let t = parseEprime(testPath)
+        # echo t
         # echo t.contains("x")
         # echo t["x"]
         # echo correct

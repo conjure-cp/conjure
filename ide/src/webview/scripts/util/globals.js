@@ -13,10 +13,12 @@ exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
 exports.init = true;
-exports.pretty = true;
+exports.pretty = false;
 exports.i = 0;
 exports.duration = 750;
-exports.tree = d3.layout.tree().size([exports.height, exports.width]);
+exports.tree = d3.layout.tree()
+    .size([exports.height, exports.width])
+    .nodeSize([300, 100]);
 
 exports.waiting = false;
 
@@ -36,40 +38,35 @@ exports.diagonal = d3.svg.diagonal()
 
 exports.expandNode = (nodeId) => {
 
-    showChildren(nodeId);
-    let kidsToExpand = exports.id2ChildIds[nodeId];
+    function recurse(node) {
 
-    while (kidsToExpand && kidsToExpand.length > 0) {
+        for (i in node._children) {
+            recurse(node._children[i])
+        }
 
-        let nextKids = [];
-
-        kidsToExpand.forEach((id) => {
-            nextKids = exports.id2ChildIds[id];
-            showChildren(id);
-        });
-
-        kidsToExpand = nextKids;
+        showChildren(node.id);
     }
 
+    let node = exports.id2Node[nodeId];
+    recurse(node);
 }
 
 
 exports.collapseNode = (nodeId) => {
 
-    hideChildren(nodeId);
-    let kidsToCollapse = exports.id2ChildIds[nodeId];
 
-    while (kidsToCollapse && kidsToCollapse.length > 0) {
+    function recurse(node) {
 
-        let nextKids = [];
+        for (i in node.children) {
+            recurse(node.children[i])
+        }
 
-        kidsToCollapse.forEach((id) => {
-            nextKids = exports.id2ChildIds[id];
-            hideChildren(id);
-        });
-
-        kidsToCollapse = nextKids;
+        hideChildren(node.id);
     }
+
+    let node = exports.id2Node[nodeId];
+    recurse(node);
+
 }
 
 function showChildren(nodeId) {
@@ -135,15 +132,15 @@ exports.collapseFailed = () => {
 
     });
 
-    if (!exports.correctPath.includes(exports.selectedId)){
+    if (!exports.correctPath.includes(exports.selectedId)) {
 
-         for (var i = 0; i < exports.correctPath.length; i++){
+        for (var i = 0; i < exports.correctPath.length; i++) {
 
             let nodeId = exports.correctPath[i];
 
             console.log(nodeId + " < " + exports.selectedId);
 
-            if (nodeId < exports.selectedId){
+            if (nodeId < exports.selectedId) {
                 exports.selectNode(nodeId);
                 break;
             }
@@ -291,10 +288,10 @@ exports.appendRows = (data) => {
         .text((d) => { return d.value; });
 }
 
-exports.addNode = (parentId) => {
+exports.addNode = (parentId, label) => {
 
     exports.currentId++;
-    let newNode = { id: exports.currentId };
+    let newNode = { id: exports.currentId, name: label };
     // console.log(exports.currentId);
     // console.log(parentId);
     // console.log(exports.id2Node);

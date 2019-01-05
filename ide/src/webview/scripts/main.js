@@ -13,7 +13,7 @@ import * as listView from "./util/listView"
 
             case 'correctPath':
                 globals.correctPath = message.data;
-                console.log(message.data);
+                // console.log(message.data);
                 break;
 
             case 'loadNodes':
@@ -27,7 +27,7 @@ import * as listView from "./util/listView"
                         rootNode = true;
                     }
 
-                    globals.addNode(element.parentId);
+                    globals.addNode(element.parentId, element.label);
                     globals.id2ChildIds[globals.currentId] = element.children
 
                 });
@@ -121,7 +121,9 @@ import * as listView from "./util/listView"
 
         nodeEnter.append("text")
             .attr("y", (d) => {
-                return d.children || d._children ? -18 : 18;
+                // console.log(d);
+                return -50
+                // return d.children || d._children ? -18 : 18;
             })
             .attr("dy", ".35em")
             .attr("text-anchor", "middle")
@@ -246,11 +248,13 @@ import * as listView from "./util/listView"
     Mousetrap.bind('c', () => {
         globals.collapseNode(globals.selectedId);
         update(globals.id2Node[globals.selectedId]);
+        globals.selectNode(globals.selectedId)
     }, 'keydown');
 
     Mousetrap.bind('e', () => {
         globals.expandNode(globals.selectedId);
         update(globals.id2Node[globals.selectedId]);
+        globals.selectNode(globals.selectedId)
     }, 'keydown');
 
     Mousetrap.bind('m', () => {

@@ -14,6 +14,7 @@ type PrettyDomainResponse = ref object of RootObj
 
 type ParentChild = ref object of RootObj
     parentId: int
+    label: string
     children: seq[int]
 
 proc `$`(r: ParentChild): string =
@@ -52,14 +53,14 @@ proc loadNodes(amount, start: string): JsonNode =
     var list :seq[ParentChild]
     var pId, childId : int
     
-    for row1 in db.fastRows(sql"select nodeId, parentId from Node where nodeId > ? limit ?", start, amount):
+    for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value from Node where nodeId > ? limit ?", start, amount):
         var kids : seq[int]
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
 
         discard parseInt(row1[1], pId)
-        list.add(ParentChild(parentId: pId, children: kids))
+        list.add(ParentChild(parentId: pId, label: row1[2] & " = " & row1[3], children: kids))
 
     # echo nodes
     # echo list
@@ -166,7 +167,6 @@ proc getCorrectPath(): JsonNode =
     return % ids
 
 
-
 routes:
 
     get re"/init/(.*)":
@@ -192,7 +192,7 @@ routes:
 let path = "/home/tom/conjure/ide/src/test/testData/conjure-test"
 init(path)
 # echo getCorrectPath()
-# discard loadNodes("5", "50")
+echo loadNodes("1", "8")
 # echo loadSimpleDomains("1", "0", "2")
 # echo loadPrettyDomains("1", "0", "2").pretty()
 # getParent(320)
