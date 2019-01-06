@@ -208,11 +208,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 if (not (s in domains)):
                     domains.add(s)
 
-
-
-
-
-
     return domains
 
 
