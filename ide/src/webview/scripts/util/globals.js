@@ -18,7 +18,7 @@ exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree()
     .size([exports.height, exports.width])
-    .nodeSize([300, 100]);
+    // .nodeSize([300, 100]);
 
 exports.waiting = false;
 
@@ -337,3 +337,8 @@ exports.vscode.postMessage({
 exports.vscode.postMessage({
     command: 'correctPath',
 });
+
+exports.vscode.postMessage({
+    command: 'longestBranchingVariable',
+});
+

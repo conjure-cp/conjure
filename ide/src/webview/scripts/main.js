@@ -11,6 +11,12 @@ import * as listView from "./util/listView"
         const message = event.data
         switch (message.command) {
 
+            case 'longestBranchingVariable':
+                console.log(message.data)
+                globals.tree.nodeSize([Number(message.data) * 12, 0])
+
+                break;
+
             case 'correctPath':
                 globals.correctPath = message.data;
                 // console.log(message.data);

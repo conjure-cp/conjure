@@ -16,9 +16,11 @@ type Set = ref object of Variable
 
 type OccurrenceSet = ref object of Set
 
+type MarkerSet = ref object of Set
+    cardinality : string
+
 type DummySet = ref object of Set
     dummyVal : int
-    cardinality : int
 
 proc getPrettyRange(lower: string, upper: string): string =
     if lower == upper:
@@ -28,18 +30,19 @@ proc getPrettyRange(lower: string, upper: string): string =
 proc `$`*(v:Variable): string =
     if v of Expression:
         return "<Expr> " & v.name & " " & v.rng
+    if v of MarkerSet:
+        let s = cast[MarkerSet](v)
+        return "<MSet> " & getPrettyRange($s.lower, $s.upper) & " " & " inc " & $s.included & " exc " & $s.excluded 
     if v of OccurrenceSet:
         let s = cast[OccurrenceSet](v)
         return "<OSet> " & getPrettyRange($s.lower, $s.upper) & " " & " inc " & $s.included & " exc " & $s.excluded 
     if v of DummySet:
         let s = cast[DummySet](v)
-        return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded & " card " & $ s.cardinality
+        return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded 
     return "<Variable> " & v.name & " " & v.rng 
 
 proc getCardinality(s: Set): string =
-    if s of DummySet:
-        return getPrettyRange($len(s.included), $cast[DummySet](s).cardinality)
-    if s of OccurrenceSet:
+    if s of DummySet or s of OccurrenceSet or s of MarkerSet:
         return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
     return "ERROR"
 
@@ -107,10 +110,13 @@ proc parseEprime*(eprimeFilePath: string): Table[string, Variable] =
 
 
             if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-                varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1, cardinality: u + 1) 
+                varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1) 
 
             elif array[0].hasKey("Set_Occurrence"):
                 varLookup[n] = OccurrenceSet(name: n, lower: l, upper: u) 
+
+            elif array[0].hasKey("Set_ExplicitVarSizeWithMarker"):
+                varLookup[n] = MarkerSet(name: n, lower: l, upper: u) 
         # except:
         #         discard "Failed to parse Eprime"
 
@@ -180,30 +186,39 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
             if tableCopy.hasKey(setName):
 
                 let s = tableCopy[setName]
-                let num = parseInt(splitted[^1])
+                # echo splitted
+                try:
+                    let num = parseInt(splitted[^1])
 
-                if s of DummySet:
+                    if s of DummySet:
 
-                    let dummySet = cast[DummySet](s)
+                        let dummySet = cast[DummySet](s)
 
-                    if (lower != $dummySet.dummyVal):
-                        dummySet.included.add(num)
-                    else:
-                        dummySet.cardinality.dec()
-
-                    # if (not (dummySet in domains)):
-                    #     domains.add(dummySet)
-
-                elif s of OccurrenceSet:
-                    let oSet = cast[OccurrenceSet](s)
-
-                    if (lower == upper):
-                        if (lower == "1"):
-                            oSet.included.add(num)
+                        if (lower != $dummySet.dummyVal):
+                            dummySet.included.add(num)
                         else:
-                            oSet.excluded.add(num)
-                        
-                        echo "HERE"
+                            dummySet.excluded.add(num)
+
+
+                        # if (not (dummySet in domains)):
+                        #     domains.add(dummySet)
+
+                    elif s of OccurrenceSet:
+                        let oSet = cast[OccurrenceSet](s)
+
+                        if (lower == upper):
+                            if (lower == "1"):
+                                oSet.included.add(num)
+                            else:
+                                oSet.excluded.add(num)
+                            
+                            echo "HERE"
+
+                except ValueError:
+                    
+                    let mSet = cast[MarkerSet](s)
+                    mSet.cardinality = getPrettyRange(lower, upper)
+                    
 
                 if (not (s in domains)):
                     domains.add(s)
@@ -238,6 +253,8 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
                 setType = "Occurrence"
             if (s of DummySet):
                 setType = "Dummy"
+            if (s of MarkerSet):
+                setType = "Marker"
 
             let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
             let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])

@@ -3,9 +3,9 @@ import unittest
 include util/parser
 
 
-let eprimePath = "../test/testData/sets/occurrence/model000001.eprime"
-let minionPath = "../test/testData/sets/occurrence/model000001.eprime-minion"
-let dbPath =     "../test/testData/sets/occurrence/test.db"
+let eprimePath = "../test/testData/sets/marker/model000001.eprime"
+let minionPath = "../test/testData/sets/marker/model000001.eprime-minion"
+let dbPath =     "../test/testData/sets/marker/test.db"
 
 let db = open(dbPath, "", "", "") 
 
@@ -40,8 +40,8 @@ suite "description for this stuff":
       for d in getPrettyDomainsOfNode(db, "1"):
         echo d
 
-    test "Pretty domains Json":
-      echo domainsToJson(getPrettyDomainsOfNode(db, "1")).pretty()
+    # test "Pretty domains Json":
+    #   echo domainsToJson(getPrettyDomainsOfNode(db, "1")).pretty()
 
       
     

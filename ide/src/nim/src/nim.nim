@@ -41,7 +41,6 @@ proc init(dirPath: string) =
         dbFilePath =  absolutePath(f)
         break;
         
-
     setCurrentDir(current)
 
     initParser(minionFilePath, eprimeFilePath)
@@ -166,6 +165,8 @@ proc getCorrectPath(): JsonNode =
 
     return % ids
 
+proc getLongestBranchingVarName() : JsonNode =
+    return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
 
 routes:
 
@@ -186,6 +187,8 @@ routes:
     get "/correctPath":
         resp getCorrectPath()
 
+    get "/longestBranchingVariable":
+        resp getLongestBranchingVarName()
 
 # let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
 # let path = "/home/tom/ModRef2018-Langfords/experiment/conjure-output";

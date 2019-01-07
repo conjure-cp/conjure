@@ -62,7 +62,7 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/conjure/ide/src/test/testData/sets/marker";
+        let testDir = "/home/tom/conjure/ide/src/test/testData/sets/flags";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"
@@ -161,6 +161,14 @@ export default class WebviewHelper {
                             if (err) { return console.log(err); }
                             console.log(res);
                             panel.webview.postMessage({command:"correctPath", data: res.body});
+                        });
+                        break;
+                    case 'longestBranchingVariable':
+                        // console.log(message.id);
+                        request(serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any, body: any) => {
+                            if (err) { return console.log(err); }
+                            console.log(res);
+                            panel.webview.postMessage({command:"longestBranchingVariable", data: res.body});
                         });
                         break;
 
