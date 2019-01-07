@@ -42,6 +42,10 @@ proc `$`*(v:Variable): string =
     return "<Variable> " & v.name & " " & v.rng 
 
 proc getCardinality(s: Set): string =
-    if s of DummySet or s of OccurrenceSet or s of MarkerSet:
+    if s of DummySet or s of OccurrenceSet:
         return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
+
+    if s of MarkerSet:
+        let mS = cast[MarkerSet](s)
+        return mS.cardinality
     return "ERROR"

@@ -86,6 +86,15 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                             
                             # echo "HERE"
 
+                    elif s of MarkerSet:
+                        let mSet = cast[MarkerSet](s)
+
+                        if (lower == upper):
+                            var l : int
+                            discard parseInt(lower, l)
+                            mSet.included.add(l)
+
+
                 except ValueError:
                     
                     let mSet = cast[MarkerSet](s)

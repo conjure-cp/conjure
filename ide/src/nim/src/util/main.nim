@@ -52,14 +52,23 @@ proc loadNodes*(amount, start: string): JsonNode =
     var list :seq[ParentChild]
     var pId, childId : int
     
-    for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value from Node where nodeId > ? limit ?", start, amount):
+    for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?", start, amount):
         var kids : seq[int]
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
             discard parseInt(row2[0], childId)
             kids.add(childId)
 
         discard parseInt(row1[1], pId)
-        list.add(ParentChild(parentId: pId, label: row1[2] & " = " & row1[3], children: kids))
+
+        var equality: string
+
+        if (row1[4] == "1"):
+            equality = " = "
+        else:
+            equality = " != "
+
+
+        list.add(ParentChild(parentId: pId, label: row1[2] & equality & row1[3], children: kids))
 
     # echo nodes
     # echo list
