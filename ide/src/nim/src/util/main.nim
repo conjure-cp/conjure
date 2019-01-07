@@ -1,6 +1,6 @@
 # Hello Nim!
 import  jester, typetraits 
-include util/parser
+include process
 
 var db : DbConn
 
@@ -20,7 +20,7 @@ type ParentChild = ref object of RootObj
 proc `$`(r: ParentChild): string =
     return $r.parentId & " : " & $r.children
 
-proc init(dirPath: string) =
+proc init*(dirPath: string) =
 
     let current = getCurrentDir()
     setCurrentDir(dirPath)
@@ -47,7 +47,7 @@ proc init(dirPath: string) =
 
     db = open(dbFilePath, "", "", "") 
 
-proc loadNodes(amount, start: string): JsonNode =
+proc loadNodes*(amount, start: string): JsonNode =
 
     var list :seq[ParentChild]
     var pId, childId : int
@@ -68,7 +68,7 @@ proc loadNodes(amount, start: string): JsonNode =
 
 
 
-proc loadSimpleDomains(amount, start, nodeId: string): JsonNode =
+proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
 
     var list : seq[int]
     var id : int
@@ -91,7 +91,7 @@ proc loadSimpleDomains(amount, start, nodeId: string): JsonNode =
     return  %SimpleDomainResponse(changedIds: list, vars: domainsAtNode)
 
 
-proc loadPrettyDomains(amount, start, nodeId: string): JsonNode =
+proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
     var list : seq[string]
     var id : int
     var domainsAtPrev : seq[Variable]
@@ -147,7 +147,7 @@ proc loadPrettyDomains(amount, start, nodeId: string): JsonNode =
 
     return %*{"vars" : jsonList, "changed" : list }
 
-proc getCorrectPath(): JsonNode =
+proc getCorrectPath*(): JsonNode =
 
     var ids : seq[int]
     var id : int
@@ -165,38 +165,5 @@ proc getCorrectPath(): JsonNode =
 
     return % ids
 
-proc getLongestBranchingVarName() : JsonNode =
+proc getLongestBranchingVarName*() : JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
-
-routes:
-
-    get re"/init/(.*)":
-        let path = request.matches[0]
-        init(path)
-        resp "OK"
-
-    get "/simpleDomains/@amount/@start/@nodeId":
-        resp loadSimpleDomains(@"amount", @"start", @"nodeId")
-        
-    get "/prettyDomains/@amount/@start/@nodeId":
-        resp loadPrettyDomains(@"amount", @"start", @"nodeId")
-
-    get "/loadNodes/@amount/@start":
-        resp loadNodes(@"amount", @"start")
-
-    get "/correctPath":
-        resp getCorrectPath()
-
-    get "/longestBranchingVariable":
-        resp getLongestBranchingVarName()
-
-# let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output"
-# let path = "/home/tom/ModRef2018-Langfords/experiment/conjure-output";
-let path = "/home/tom/conjure/ide/src/test/testData/sets/occurrence"
-init(path)
-# echo getCorrectPath()
-echo loadNodes("1", "8")
-# echo loadSimpleDomains("1", "0", "2")
-# echo loadPrettyDomains("1", "0", "2").pretty()
-# getParent(320)
-# echo getFirstN(10)
