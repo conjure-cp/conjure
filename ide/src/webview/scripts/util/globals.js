@@ -239,7 +239,7 @@ exports.selectNode = (nodeId) => {
 }
 
 exports.loadDomains = (nodeId) => {
-    if (!exports.waiting) {
+    if (!exports.waiting && nodeId != 1) {
 
         let commandString;
 

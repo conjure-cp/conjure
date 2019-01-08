@@ -84,10 +84,6 @@ export function setChanged() {
 }
 
 export function render(data, parent) {
-
-    if (globals.selectedId === 1 && !init){
-        return; 
-    }
     // console.log("CALLED RENDER");
 
     if (init) {
@@ -99,6 +95,8 @@ export function render(data, parent) {
         duration = 250;
 
     function toggleChildren(d) {
+        // console.log("start")
+        // console.log(d)
         if (d.children) {
             d._children = d.children;
             d.children = null;
@@ -106,6 +104,8 @@ export function render(data, parent) {
             d.children = d._children;
             d._children = null;
         }
+        // console.log("end")
+        // console.log(d)
     }
 
     var nodeEls = ul.selectAll("li.node").data(nodes, function (d) {
@@ -130,7 +130,9 @@ export function render(data, parent) {
         .on("click", function (d) {
             toggleChildren(d);
             render(data, d);
-            setChanged();
+            if(globals.selectedId != 1){
+                setChanged();
+            }
 
         })
         .on("mouseover", function (d) {

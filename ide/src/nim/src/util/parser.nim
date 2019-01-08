@@ -1,4 +1,5 @@
 
+
 proc parseAux(minionFilePath: string): Table[string, Expression] =
     var lookup = initTable[string, Expression]()
     let auxDef = re"aux\d* #(.*)"
@@ -70,6 +71,10 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
             elif array[0].hasKey("Set_ExplicitVarSizeWithMarker"):
                 varLookup[n] = MarkerSet(name: n, lower: l, upper: u) 
+
+            elif array[0].hasKey("Set_ExplicitVarSizeWithFlags"):
+                varLookup[n] = FlagSet(name: n, lower: l, upper: u) 
+  
         # except:
         #         discard "Failed to parse Eprime"
 

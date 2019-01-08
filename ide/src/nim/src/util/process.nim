@@ -94,6 +94,21 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                             discard parseInt(lower, l)
                             mSet.included.add(l)
 
+                    elif s of FlagSet:
+                        let fSet = cast[FlagSet](s)
+
+                        if (domain[0].contains("_ExplicitVarSizeWithFlags_Flags_")):
+                            if (lower == upper):
+                                if (lower == "1"):
+                                    fSet.list.add("")
+                                else:
+                                    discard fSet.list.pop()
+                        else:
+                            if (lower == upper):
+                                var l : int
+                                discard parseInt(lower, l)
+                                fSet.included.add(l)
+
 
                 except ValueError:
                     
@@ -132,6 +147,8 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
                 setType = "Dummy"
             if (s of MarkerSet):
                 setType = "Marker"
+            if (s of FlagSet):
+                setType = "Flags"
 
             let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
             let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])
