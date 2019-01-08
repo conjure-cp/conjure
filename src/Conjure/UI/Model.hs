@@ -1206,6 +1206,7 @@ horizontalRules =
     , Horizontal.Permutation.rule_Compose_Image
     , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal
+    , Horizontal.Permutation.rule_Image_Partition
     , Horizontal.Permutation.rule_Image_Sequence
     , Horizontal.Permutation.rule_Image_Sequence_Defined
     , Horizontal.Permutation.rule_In

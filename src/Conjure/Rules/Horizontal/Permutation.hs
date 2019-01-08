@@ -179,6 +179,7 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
     (perm, y) <- match opImage x 
     ty <- typeOf y
     case ty of TypeSequence{} -> na "sequence is a special case" ; _ -> return ()
+    case ty of TypePartition{} -> na "partition is a special case" ; _ -> return ()
     (TypePermutation inn) <- typeOf perm
     if ty `containsTypeComprehendable` inn
        then do
@@ -247,6 +248,36 @@ rule_Image_Sequence_Defined = "image-sequence-defined" `namedRule` theRule where
              )
        else na "rule_Image_Sequence_Defined"
   theRule _ = na "rule_Image_Sequence_Defined"
+
+
+rule_Image_Partition :: Rule
+rule_Image_Partition = "image-partition" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, expr)
+         _ -> na "rule_Image_Partition"
+    z <- match opParts x
+    (perm, y) <- match opImage z 
+    ty <- typeOf y
+    case ty of TypePartition{} -> return () ; _ -> na "only applies to partitions" 
+    (TypePermutation inn) <- typeOf perm
+    if ty `containsTypeComprehendable` inn
+       then do
+         return
+             ( "Horizontal rule for image of partition under permutation"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| parts(&y) |])]
+                 ++ ((ComprehensionLetting pat [essence| image(&perm, &d) |] ):gocAfter)
+                      )
+                      
+             )
+       else na "rule_Image_Partition"
+  theRule _ = na "rule_Image_Partition"
+
+
 
 
 
