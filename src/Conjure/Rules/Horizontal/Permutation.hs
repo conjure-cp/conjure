@@ -107,8 +107,6 @@ rule_In = "permutation-in" `namedRule` theRule where
 rule_Permutation_Inverse :: Rule
 rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
     theRule [essence| inverse(&p1, &p2)|] = do
-        case p1 of WithLocals{} -> na "bubble-delay" ; _ -> return ()
-        case p2 of WithLocals{} -> na "bubble-delay" ; _ -> return ()
         TypePermutation{}                 <- typeOf p1
         TypePermutation{}                 <- typeOf p2
         return
@@ -126,9 +124,6 @@ rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
 rule_Compose_Image :: Rule
 rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule [essence| image(compose(&g, &h),&i) |] = do
---    case match permutationLiteral h of
---      Nothing -> return () --SR error when h is literal, fall back to rule_Compose 
---      Just _ -> na "rule_Compose_Image" 
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
     typeI <- typeOf i
@@ -141,37 +136,6 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
        else na "rule_Compose_Image"
   theRule _ = na "rule_Compose_Image"
 
-
-rule_Compose :: Rule
-rule_Compose = "permutation-compose" `namedRule` theRule where
-  theRule [essence| compose(&g,&h) |] = do
-    TypePermutation innerG <- typeOf g
-    TypePermutation innerH <- typeOf h 
-    dg <- domainOf g
-    dh <- domainOf h
-    if typesUnify [innerG, innerH]
-      then do
-        du <- domainUnion dg dh
-        return ( "Horizontal rule for permutation composition"
-               , do
-                 
-                 (lPat, l)  <- quantifiedVar
-                 (pName, p) <- auxiliaryVar
-                 return $ WithLocals
-                            [essence| &p |]
-                        ( AuxiliaryVars
-                           [ (Declaration (FindOrGiven LocalFind pName du))
-                           , SuchThat
-                               [ [essence| 
-                                    forAll &lPat in (defined(&g) union defined(&h)) .
-                                      image(&p,&l) = image(&g,image(&h,&l))
-                                 |]
-                               ]
-                           ]
-                        )
-               )
-      else na "rule_Compose"
-  theRule _ = na "rule_Compose"
 
 rule_Image_Comprehendable :: Rule
 rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
