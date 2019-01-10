@@ -379,8 +379,9 @@ instance (Pretty x, TypeOf x) => DomainOf (OpHist x) where
 instance DomainOf (OpIff x) where
     domainOf _ = return DomainBool
 
-instance (Pretty x, TypeOf x) => DomainOf (OpImage x) where
+instance (Pretty x, TypeOf x, DomainOf x) => DomainOf (OpImage x) where
     domainOf op = mkDomainAny ("OpImage:" <++> pretty op) <$> typeOf op
+    indexDomainsOf (OpImage _ x) = indexDomainsOf x
 
 instance (Pretty x, TypeOf x) => DomainOf (OpImageSet x) where
     domainOf op = mkDomainAny ("OpImageSet:" <++> pretty op) <$> typeOf op

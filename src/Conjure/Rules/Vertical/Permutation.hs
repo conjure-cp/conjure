@@ -1,6 +1,7 @@
 {-# LANGUAGE QuasiQuotes #-}
 module Conjure.Rules.Vertical.Permutation where
 import Conjure.Rules.Import
+import Conjure.Rules.Vertical.Matrix (flattenIfNeeded)
 
 rule_Cardinality :: Rule
 rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
@@ -83,4 +84,69 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
   theRule _ = na "rule_Image"
 
 
+rule_Matrix_Image :: Rule
+rule_Matrix_Image = "matrix-image" `namedRule` theRule where
+    theRule [essence| image(&perm, &y) |]  = do
+      ty@(TypeMatrix _ _) <- typeOf y
+      (TypePermutation inn) <- typeOf perm
+      if ty `containsTypeComprehendable` inn
+        then do
+          y' <- flattenIfNeeded y
+          dm@(DomainMatrix dyindex _) <- domainOf y'
+          return
+              ( "Horizontal rule for image matrix"
+              , do
+                (dPat, d) <- quantifiedVar
+                (pyName, py) <- auxiliaryVar
+                return $ WithLocals
+                          [essence| &py |]
+                       (AuxiliaryVars
+                         [ Declaration (FindOrGiven LocalFind pyName dm)
+                         , SuchThat
+                           [ [essence|
+                                forAll &dPat : &dyindex .
+                                  &py[image(&perm,&d)] = image(&perm,&y'[&d]) 
+                             |]
+                           ]
+                         ]
+                       )
+              )
+        else na "rule_Matrix_Image"
+    theRule _ = na "rule_Matrix_Image"
+
+rule_Matrix_Image_Comprehension :: Rule
+rule_Matrix_Image_Comprehension = "matrix-image-comprehension" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+      (gocBefore, (pat, perm, y), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+         Generator (GenInExpr pat [essence| image(&perm, &y) |]) -> return (pat, perm, y)
+         _ -> na "rule_Matrix_Image"
+      ty@(TypeMatrix _ _) <- typeOf y
+      (TypePermutation inn) <- typeOf perm
+      if not $ typesUnify [ty, inn]
+        then do
+          unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+          y' <- flattenIfNeeded y
+          dm@(DomainMatrix dyindex _) <- domainOf y'
+          return
+              ( "Horizontal rule for image matrix in comprehension"
+              , do
+                (dPat, d) <- quantifiedVar
+                (pyName, py) <- auxiliaryVar
+                return $ WithLocals
+                      (Comprehension body $ gocBefore
+                                        ++ [Generator (GenInExpr pat [essence| &py |])]
+                                        ++ gocAfter)
+                       (AuxiliaryVars
+                         [ Declaration (FindOrGiven LocalFind pyName dm)
+                         , SuchThat
+                           [ [essence|
+                                forAll &dPat : &dyindex .
+                                  &py[image(&perm,&d)] = image(&perm,&y'[&d]) 
+                             |]
+                           ]
+                         ]
+                       )
+              )
+        else na "rule_Matrix_Image_Comprehension"
+    theRule _ = na "rule_Matrix_Image_Comprehension"
 

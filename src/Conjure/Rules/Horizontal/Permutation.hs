@@ -69,11 +69,14 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
         typeI <- typeOf i
         if typesUnify [inner, typeI] 
           then do
-            let outLiteral = make functionLiteral (TypeFunction inner inner) [ (de,f de) | de <- join elems ]
+            let srtdel = sortBy compare (join elems) 
+                domIndx = reTag AnyTag $  mkDomainInt (RangeSingle <$> srtdel) 
+                matLit = make matrixLiteral (TypeMatrix (TypeInt AnyTag) inner) domIndx ( f <$> srtdel)
             return
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
-                     return [essence| [&i, catchUndef(image(&outLiteral,&i),0)][toInt(&i in defined(&outLiteral))+1] |]
+                 return [essence| [&i, catchUndef(&matLit[&i],0)][toInt(&i in toSet(&matLit))+1] |]
+
                )
           else if typeI `containsType` inner
                  then na "rule_Image_Literal"
@@ -123,9 +126,9 @@ rule_Permutation_Inverse = "permutation-inverse" `namedRule` theRule where
 rule_Compose_Image :: Rule
 rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
   theRule [essence| image(compose(&g, &h),&i) |] = do
-    case match permutationLiteral h of
-      Nothing -> return () --SR error when h is literal, fall back to rule_Compose 
-      Just _ -> na "rule_Compose_Image" 
+--    case match permutationLiteral h of
+--      Nothing -> return () --SR error when h is literal, fall back to rule_Compose 
+--      Just _ -> na "rule_Compose_Image" 
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
     typeI <- typeOf i
@@ -196,6 +199,7 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
              )
        else na "rule_Image_Comprehendable"
   theRule _ = na "rule_Image_Comprehendable"
+
 
 rule_Image_Sequence :: Rule
 rule_Image_Sequence = "image-sequence" `namedRule` theRule where
@@ -304,5 +308,50 @@ rule_Image_Incomprehendable = "comprehendable-image" `namedRule` theRule where
          _ -> bug "rule_Image_Incomprehendable this is a bug"
        else na "rule_Image_Comprehendable"
   theRule _ = na "rule_Image_Comprehendable"
+
+----------------------------------------------------------------------------------
+
+rule_Image_Matrix_Indexing :: Rule
+rule_Image_Matrix_Indexing = "image-matrix-indexing" `namedRule` theRule where
+  theRule p = do 
+    (matexp, indexer) <- match opIndexing p
+    (perm, mat)       <- match opImage matexp
+    ty <- typeOf mat
+    case ty of TypeMatrix{} -> return () ; _ -> na "only applies to matrices" 
+    (TypePermutation inn) <- typeOf perm
+    if ty `containsTypeComprehendable` inn
+       then do
+         return
+             ( "Horizontal rule for image of matrix under permutation"
+             , return $ [essence| image(&perm, &mat[image(&perm, &indexer)]) |]                        )
+       else na "rule_Image_Matrix_Indexing"
+
+
+rule_Image_Matrix_Indexing_Comprehension :: Rule
+rule_Image_Matrix_Indexing_Comprehension = "image-matrix-indexing-comprehension" `namedRule` theRule where
+  theRule (Comprehension body gensOrConds) = do
+    (gocBefore, (pat, x), gocAfter) <- matchFirst gensOrConds $  \ goc -> case goc of
+         Generator (GenInExpr (Single pat) expr) -> return (pat, matchDefs [opToSet, opToMSet] expr)
+         _ -> na "rule_Image_Matrix_Indexing_Comprehension"
+    (matexp, indexer) <- match opIndexing x
+    (perm, mat)       <- match opImage matexp
+    ty <- typeOf mat
+    case ty of TypeMatrix{} -> return () ; _ -> na "only applies to matrices" 
+    (TypePermutation inn) <- typeOf perm
+    if ty `containsTypeComprehendable` inn
+       then do
+         return
+             ( "Horizontal rule for image of matrix under permutation"
+             , do
+               (dPat, d) <- quantifiedVar
+               return (Comprehension body $
+                     gocBefore
+                 ++ [Generator (GenInExpr dPat [essence| &mat[image(&perm, &indexer)] |])]
+                 ++ [ComprehensionLetting pat [essence| image(&perm, &d) |]]
+                 ++ gocAfter)
+             )
+       else na "rule_Image_Matrix_Indexing_Comprehension"
+
+  theRule _ = na "rule_Image_Matrix_Indexing_Comprehension"
 
 
