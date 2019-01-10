@@ -1155,6 +1155,7 @@ verticalRules =
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension
+    , Vertical.Function.Function1DPartial.rule_PowerSet_Comprehension
     , Vertical.Function.Function1DPartial.rule_Image_NotABool
     , Vertical.Function.Function1DPartial.rule_Image_Bool
     , Vertical.Function.Function1DPartial.rule_InDefined
