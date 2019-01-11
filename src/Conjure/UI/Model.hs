@@ -1785,8 +1785,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             wrap [x] = x
             wrap xs = make opFlatten (fromList xs)
 
-        ma <- downX a >>= mapM mk1D >>= return . wrap
-        mb <- downX b >>= mapM mk1D >>= return . wrap
+        ma <- downX a >>= mapM mk1D >>= return . reTag NoTag . wrap
+        mb <- downX b >>= mapM mk1D >>= return . reTag NoTag . wrap
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb

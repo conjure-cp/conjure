@@ -24,8 +24,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
     typeOf p@(OpTwoBars a) = do
         ty <- typeOf a
         case ty of
-            TypeInt NoTag   -> return ()
-            TypeInt AnyTag  -> return ()
+            TypeInt _       -> return ()
             TypeList{}      -> return ()
             TypeSet{}       -> return ()
             TypeMSet{}      -> return ()
