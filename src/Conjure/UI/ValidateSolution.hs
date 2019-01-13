@@ -14,14 +14,14 @@ import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
-validateSolution
-    :: ( MonadFail m
-       , EnumerateDomain m
-       )
-    => Model      -- essence model
-    -> Model      -- essence param
-    -> Model      -- essence solution
-    -> m ()
+validateSolution ::
+    MonadFail m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model ->      -- essence model
+    Model ->      -- essence param
+    Model ->      -- essence solution
+    m ()
 validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] $
   forM_ (mStatements essenceModel) $ \ st -> do
     mapM_ introduceRecordFields (universeBi st :: [Domain () Expression])
@@ -154,14 +154,14 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                          ]
 
 
-introduceRecordFields
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , Pretty r
-       , Pretty x
-       , TypeOf x
-       )
-    => Domain r x -> m ()
+introduceRecordFields ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    Pretty r =>
+    Pretty x =>
+    TypeOf x =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r x -> m ()
 introduceRecordFields (DomainRecord inners) =
     forM_ inners $ \ (n, d) -> do
         t <- typeOf d

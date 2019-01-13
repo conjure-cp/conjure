@@ -11,7 +11,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+sequenceExplicitBounded :: forall m .
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Representation m
 sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
@@ -65,7 +70,9 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
-            let injectiveCons values = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons values = do
                     innerType <- typeOf innerDomain
                     case innerType of
                       TypeInt _ -> do
@@ -84,7 +91,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                         ])
                                 |]
 
-            let surjectiveCons values = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- list
@@ -94,7 +102,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                     &values[&j] = &i
                         |]
 
-            let jectivityCons values = case jectivityAttr of
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons values = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  values
                     JectivityAttr_Surjective -> surjectiveCons values

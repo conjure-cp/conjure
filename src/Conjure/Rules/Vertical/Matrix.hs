@@ -347,7 +347,10 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             )
 
 
-flattenIfNeeded :: MonadFail m => Expression -> m Expression
+flattenIfNeeded ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 flattenIfNeeded m = do
     tyM <- typeOf m
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a

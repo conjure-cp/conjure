@@ -11,7 +11,12 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Language.NameResolution ( resolveX, resolveD )
 
 
-inferAttributes :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+inferAttributes ::
+    MonadFail m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 inferAttributes = flip evalStateT [] . go where
     go :: 
         MonadFail m =>
@@ -47,6 +52,7 @@ inferAttributesD ::
     MonadUserError m =>
     NameGen m =>
     MonadState [(Name, ReferenceTo)] m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
     Domain () Expression ->
     m (Domain () Expression)
 inferAttributesD (DomainPartition () (PartitionAttr partsNum1 partsSize1 isRegular1) innerDomain0) = do

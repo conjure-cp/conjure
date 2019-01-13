@@ -7,6 +7,7 @@ module Conjure.RepresentationsTest ( tests ) where
 import Conjure.Prelude
 import Conjure.Language.Definition
 import Conjure.Language.Type
+import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Process.Enumerate ( EnumerateDomainNoIO(..) )
@@ -19,7 +20,9 @@ import Test.Tasty.HUnit ( Assertion, testCase, assertFailure, (@?=) )
 -- import Test.Tasty.SmallCheck as SC
 
 
-tests :: TestTree
+tests ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    TestTree
 tests = testGroup "representations"
 
     [ testCase "bool #1" $
@@ -1095,15 +1098,16 @@ tests = testGroup "representations"
     ]
 
 
-testCases
-    :: Name                                                      -- high level variable name
-    -> Domain HasRepresentation Constant                         -- high level domain
-    -> Constant                                                  -- high level value (constant)
-    -> (forall a . a -> Maybe a)                                 -- `const Nothing` -- if going one level downC produces Nothing
-                                                                 -- `Just`          -- if going one level downC produces (Just mid)
-    -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "mid" result, if we go one level down
-    -> [(Name, Domain HasRepresentation Constant, Constant)]     -- "low" result, if we go all the way down
-    -> Assertion
+testCases ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Name ->                                     -- high level variable name
+    Domain HasRepresentation Constant ->        -- high level domain
+    Constant ->                                 -- high level value (constant)
+    (forall a . a -> Maybe a) ->                -- `const Nothing` - if going one level downC produces Nothing
+                                                -- `Just`          - if going one level downC produces (Just mid)
+    [(Name, Domain HasRepresentation Constant, Constant)] ->    -- "mid" result, if we go one level down
+    [(Name, Domain HasRepresentation Constant, Constant)] ->    -- "low" result, if we go all the way down
+    Assertion
 testCases highName highDomain highConstant mkMid mid low = do
     downC1Test  (highName, highDomain, highConstant) (mkMid mid)
     downTest    (highName, highDomain, highConstant) low
@@ -1112,42 +1116,46 @@ testCases highName highDomain highConstant mkMid mid low = do
     downUp1Test (highName, highDomain, highConstant)
     downUpTest  (highName, highDomain, highConstant)
 
-downC1Test
-    :: (Name, Domain HasRepresentation Constant, Constant)
-    -> Maybe [(Name, Domain HasRepresentation Constant, Constant)]
-    -> Assertion
+downC1Test ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant, Constant) ->
+    Maybe [(Name, Domain HasRepresentation Constant, Constant)] ->
+    Assertion
 downC1Test high low' =
     case downC1 high of
         TriedIO -> assertFailure "TriedIO"
         Failed err -> assertFailure (show err)
         Done low -> Pr low @?= Pr low'
 
-downTest
-    :: (Name, Domain HasRepresentation Constant, Constant)
-    -> [(Name, Domain HasRepresentation Constant, Constant)]
-    -> Assertion
+downTest ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant, Constant) ->
+    [(Name, Domain HasRepresentation Constant, Constant)] ->
+    Assertion
 downTest high lows' =
     case downC high of
         TriedIO -> assertFailure "TriedIO"
         Failed err -> assertFailure (show err)
         Done lows -> Pr lows @?= Pr lows'
 
-up1Test
-    :: (Name, Domain HasRepresentation Constant)
-    -> [(Name, Constant)]
-    -> (Name, Constant)
-    -> Assertion
+up1Test ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant) ->
+    [(Name, Constant)] ->
+    (Name, Constant) ->
+    Assertion
 up1Test info lows high' =
     case up1 info lows of
         TriedIO -> assertFailure "TriedIO"
         Failed err -> assertFailure (show err)
         Done high -> Pr high @?= Pr high'
 
-upTest
-    :: (Name, Domain HasRepresentation Constant)
-    -> [(Name, Constant)]
-    -> (Name, Constant)
-    -> Assertion
+upTest ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant) ->
+    [(Name, Constant)] ->
+    (Name, Constant) ->
+    Assertion
 upTest info lows high' =
     case up lows info of
         TriedIO -> assertFailure "TriedIO"
@@ -1155,19 +1163,21 @@ upTest info lows high' =
         Done high -> Pr high @?= Pr high'
 
 
-testCasesAuto
-    :: Name                                                      -- high level variable name
-    -> Domain HasRepresentation Constant                         -- high level domain
-    -> Constant                                                  -- high level value (constant)
-    -> Assertion
+testCasesAuto ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Name ->                                         -- high level variable name
+    Domain HasRepresentation Constant ->            -- high level domain
+    Constant ->                                     -- high level value (constant)
+    Assertion
 testCasesAuto highName highDomain highConstant = do
     downUp1Test (highName, highDomain, highConstant)
     downUpTest  (highName, highDomain, highConstant)
 
 
-downUp1Test
-    :: (Name, Domain HasRepresentation Constant, Constant)
-    -> Assertion
+downUp1Test ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant, Constant) ->
+    Assertion
 downUp1Test high =
     case downC1 high of
         TriedIO -> assertFailure "TriedIO"
@@ -1179,9 +1189,10 @@ downUp1Test high =
                 Failed err -> assertFailure (show err)
                 Done high' -> Pr high' @?= Pr (dropDomain high)
 
-downUpTest
-    :: (Name, Domain HasRepresentation Constant, Constant)
-    -> Assertion
+downUpTest ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Name, Domain HasRepresentation Constant, Constant) ->
+    Assertion
 downUpTest high =
     case downC high of
         TriedIO -> assertFailure "TriedIO"

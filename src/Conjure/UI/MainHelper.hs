@@ -21,6 +21,7 @@ import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
+import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )
@@ -56,7 +57,13 @@ import qualified Data.Text as T ( unlines, isInfixOf )
 import Control.Concurrent.ParallelIO.Global ( parallel, parallel_, stopGlobalPool )
 
 
-mainWithArgs :: forall m . (MonadIO m, MonadLog m, MonadFail m, EnumerateDomain m) => UI -> m ()
+mainWithArgs :: forall m .
+    MonadIO m =>
+    MonadLog m =>
+    MonadFail m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> m ()
 mainWithArgs Modelling{..} = do
     model <- readModelFromFile essence
     liftIO $ hSetBuffering stdout LineBuffering
@@ -382,15 +389,16 @@ savilerowScriptName
     | otherwise = "Cannot detect operating system."
 
 
-savileRowNoParam
-    :: UI
-    -> (FilePath, Model)    -- model
-    -> IO (Either
-        [Doc]               -- user error
-        [ ( FilePath        -- model
-          , FilePath        -- param
-          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
-          ) ])
+savileRowNoParam ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> 
+    (FilePath, Model) ->        -- model
+    IO (Either
+     [Doc]                      -- user error
+     [ ( FilePath               -- model
+       , FilePath               -- param
+       , Maybe FilePath         -- solution, Nothing if solutionsInOneFile=True
+       ) ])
 savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath]
     let outBase = dropExtension modelPath
@@ -413,16 +421,17 @@ savileRowNoParam ui@Solve{..} (modelPath, eprimeModel) = sh $ errExit False $ do
 savileRowNoParam _ _ = bug "savileRowNoParam"
 
 
-savileRowWithParams
-    :: UI
-    -> (FilePath, Model)    -- model
-    -> (FilePath, Model)    -- param
-    -> IO (Either
-        [Doc]               -- user error
-        [ ( FilePath        -- model
-          , FilePath        -- param
-          , Maybe FilePath  -- solution, Nothing if solutionsInOneFile=True
-          ) ])
+savileRowWithParams ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI ->
+    (FilePath, Model) ->        -- model
+    (FilePath, Model) ->        -- param
+    IO (Either
+     [Doc]                      -- user error
+     [ ( FilePath               -- model
+       , FilePath               -- param
+       , Maybe FilePath         -- solution, Nothing if solutionsInOneFile=True
+       ) ])
 savileRowWithParams ui@Solve{..} (modelPath, eprimeModel) (paramPath, essenceParam) = sh $ errExit False $ do
     pp logLevel $ hsep ["Savile Row:", pretty modelPath, pretty paramPath]
     let outBase = dropExtension modelPath ++ "-" ++ dropDirs (dropExtension paramPath)
@@ -585,7 +594,9 @@ srCleanUp stdoutSR solutions = do
                                ]])
 
 
-validateSolutionNoParam :: UI -> FilePath -> IO ()
+validateSolutionNoParam ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> FilePath -> IO ()
 validateSolutionNoParam Solve{..} solutionPath = do
     pp logLevel $ hsep ["Validating solution:", pretty solutionPath]
     essenceM <- readModelFromFile essence
@@ -598,7 +609,9 @@ validateSolutionNoParam Solve{..} solutionPath = do
 validateSolutionNoParam _ _ = bug "validateSolutionNoParam"
 
 
-validateSolutionWithParams :: UI -> FilePath -> FilePath -> IO ()
+validateSolutionWithParams ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    UI -> FilePath -> FilePath -> IO ()
 validateSolutionWithParams Solve{..} solutionPath paramPath = do
     pp logLevel $ hsep ["Validating solution:", pretty paramPath, pretty solutionPath]
     essenceM <- readModelFromFile essence

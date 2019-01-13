@@ -9,6 +9,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
+import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
 import Conjure.UI.IO
 import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution
@@ -84,7 +85,10 @@ instance IsOption TestTimeLimit where
                                   ]
 
 
-tests :: HasCallStack => IO (TestTimeLimit -> TestTree)
+tests ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    IO (TestTimeLimit -> TestTree)
 tests = do
     srExtraOptions <- do
         env <- getEnvironment
@@ -151,7 +155,10 @@ type Step = String -> Assertion
 -- which contains + an Essence file D/D.essence
 --                + D/*.param files if required
 --                + D/expected for the expected output files
-testSingleDir :: HasCallStack => TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
+testSingleDir ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    TestTimeLimit -> [Text] -> TestDirFiles -> [TestTree]
 testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles{..} =
     if shouldRun
         then return $ testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
@@ -192,7 +199,10 @@ testSingleDir (TestTimeLimit timeLimitMin timeLimitMax) srOptions t@TestDirFiles
                                                        ]
 
 
-savileRowNoParam :: HasCallStack => Step -> [Text] -> TestDirFiles -> FilePath -> Assertion
+savileRowNoParam ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Step -> [Text] -> TestDirFiles -> FilePath -> Assertion
 savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
     step (unwords ["Savile Row:", modelPath])
     let outBase = dropExtension modelPath
@@ -224,7 +234,7 @@ savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
                     Right s  -> do
                         let filename = outputsDir </> outBase ++ "-solution" ++ padLeft 6 '0' (show i) ++ ".solution"
                         writeFile filename (renderNormal s)
-                
+
         | T.isInfixOf "where false" (T.unlines [stdoutSR, stderrSR]) -> return ()
         | otherwise -> assert $ vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                      , "Savile Row stderr:"    <+> pretty stderrSR
@@ -232,7 +242,10 @@ savileRowNoParam step srOptions TestDirFiles{..} modelPath = do
                                      ]
 
 
-savileRowWithParams :: HasCallStack => Step -> [Text] -> TestDirFiles -> FilePath -> FilePath -> Assertion
+savileRowWithParams ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Step -> [Text] -> TestDirFiles -> FilePath -> FilePath -> Assertion
 savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
     step (unwords ["Savile Row:", modelPath, paramPath])
     fileShouldExist (outputsDir </> modelPath)
@@ -277,7 +290,10 @@ savileRowWithParams step srOptions TestDirFiles{..} modelPath paramPath = do
                                      ]
 
 
-validateSolutionNoParam :: HasCallStack => Step -> TestDirFiles -> [FilePath] -> Assertion
+validateSolutionNoParam ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Step -> TestDirFiles -> [FilePath] -> Assertion
 validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
     step "Validating solutions"
     essence <- readModelFromFile essenceFile
@@ -293,7 +309,10 @@ validateSolutionNoParam step TestDirFiles{..} solutionPaths = do
             Right () -> return ()
 
 
-validateSolutionWithParams :: HasCallStack => Step -> TestDirFiles -> [(FilePath, [FilePath])] -> Assertion
+validateSolutionWithParams ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Step -> TestDirFiles -> [(FilePath, [FilePath])] -> Assertion
 validateSolutionWithParams step TestDirFiles{..} paramSolutionPaths = do
     step "Validating solutions"
     essence <- readModelFromFile essenceFile
@@ -495,7 +514,10 @@ fileShouldExist f = do
         assert $ pretty ("file does not exist: " ++ f)
 
 
-modelAll :: HasCallStack => FilePath -> FilePath -> FilePath -> IO ()
+modelAll ::
+    HasCallStack =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    FilePath -> FilePath -> FilePath -> IO ()
 modelAll tBaseDir dir essenceFile = do
     additionalArgs <- catch (words . textToString <$> T.readFile (tBaseDir ++ "/additional-arguments.txt"))
                             (\ (_ :: SomeException) -> return [] )

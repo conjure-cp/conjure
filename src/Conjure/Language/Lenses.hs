@@ -497,6 +497,7 @@ opMatrixIndexing
        , Pretty x
        , TypeOf x
        , MonadFail m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Proxy (m :: * -> *)
     -> ( x -> [x] -> x
@@ -1155,7 +1156,7 @@ constantInt _ =
 
 
 matrixLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> Domain () Expression -> [Expression] -> Expression
        , Expression -> m (Type, Domain () Expression, [Expression])
@@ -1209,7 +1210,7 @@ onMatrixLiteral mlvl f = case mlvl of
 
 
 setLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1233,7 +1234,7 @@ setLiteral _ =
 
 
 msetLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1257,7 +1258,7 @@ msetLiteral _ =
 
 
 functionLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [(Expression,Expression)] -> Expression
        , Expression -> m (Type, [(Expression,Expression)])
@@ -1281,7 +1282,7 @@ functionLiteral _ =
 
 
 sequenceLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [Expression] -> Expression
        , Expression -> m (Type, [Expression])
@@ -1305,7 +1306,7 @@ sequenceLiteral _ =
 
 
 relationLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1329,7 +1330,7 @@ relationLiteral _ =
 
 
 partitionLiteral
-    :: MonadFail m
+    :: (MonadFail m, ?typeCheckerMode :: TypeCheckerMode)
     => Proxy (m :: * -> *)
     -> ( Type -> [[Expression]] -> Expression
        , Expression -> m (Type, [[Expression]])
@@ -1447,24 +1448,13 @@ opLex _ =
 
 
 fixTHParsing :: Data a => a -> a
-fixTHParsing = transformBi f
-    where
-        f :: Expression -> Expression
-        -- This is for TH parsing.
-        -- Internally the integers we produce will have AnyTag
-        -- so they type-unify with a wide range of int-like types
-        f (Constant (ConstantInt NoTag c)) = Constant (ConstantInt AnyTag c)
-        f p =
-            case match opRelationProj p of
-                Just (func, [Just arg]) ->
-                    case typeOf func of
-                        Just TypeFunction{} -> make opImage func arg
-                        Just TypeSequence{} -> make opImage func arg
-                        _                   -> p
-                _ -> p
+fixTHParsing p =
+    let ?typeCheckerMode = RelaxedIntegerTags
+    in  fixRelationProj p
 
-fixRelationProj :: Data a => a -> a
-fixRelationProj = transformBi f
+
+fixRelationProj :: (Data a, ?typeCheckerMode :: TypeCheckerMode) => a -> a
+fixRelationProj= transformBi f
     where
         f :: Expression -> Expression
         f p =

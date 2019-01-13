@@ -118,7 +118,13 @@ instance Arbitrary x => Arbitrary (Domain r x) where
 instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
-typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
+typeOfDomain ::
+    MonadFail m =>
+    Pretty r =>
+    TypeOf x =>
+    Pretty x =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE x)          = do

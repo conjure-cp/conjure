@@ -13,21 +13,21 @@ import Conjure.Language.Pretty
 import Conjure.Language.Instantiate ( instantiateExpression, instantiateDomain )
 import Conjure.Language.ZeroVal ( zeroVal )
 import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Process.Enumerate ( EnumerateDomain )
 
 
 -- | givens should have finite domains. except ints.
 --   this transformation introduces extra given ints to make them finite.
 --   the values for the extra givens will be computed during translate-solution
-finiteGivens
-    :: ( MonadFail m
-       , MonadLog m
-       , NameGen m
-       , MonadUserError m
-       , EnumerateDomain m
-       )
-    => Model
-    -> m Model
+finiteGivens ::
+    MonadFail m =>
+    NameGen m =>
+    MonadLog m =>
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 finiteGivens m = flip evalStateT 1 $ do
     statements <- forM (mStatements m) $ \ st ->
         case st of
@@ -44,11 +44,16 @@ finiteGivens m = flip evalStateT 1 $ do
              }
 
 
-finiteGivensParam
-    :: (MonadFail m, MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m)
-    => Model                                -- eprime
-    -> Model                                -- essence-param
-    -> m (Model, [Name])                    -- essence-param
+finiteGivensParam ::
+    MonadFail m =>
+    NameGen m =>
+    MonadLog m =>
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model ->                                -- eprime
+    Model ->                                -- essence-param
+    m (Model, [Name])                       -- essence-param
 finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
     let essenceGivenNames = eprimeModel |> mInfo |> miGivens
     let essenceGivens     = eprimeModel |> mInfo |> miOriginalDomains
@@ -95,20 +100,19 @@ finiteGivensParam eprimeModel essenceParam = flip evalStateT 1 $ do
 -- | given a domain, add it additional attributes to make it _smaller_
 --   for example, this means adding a size attribute at the outer-most level
 --   and adding a maxSize attribute at the inner levels.
-mkFinite
-    :: ( MonadState Int m
-       , MonadFail m
-       , NameGen m
-       , MonadLog m
-       , MonadUserError m
-       , EnumerateDomain m
-       )
-    => Domain () Expression
-    -> m ( Domain () Expression                 -- "finite" domain
-         , [Name]                               -- extra givens
-         , Constant -> m [(Name, Constant)]     -- value calculator for the extra givens
-                                                -- input is a list of values for the domain
-         )
+mkFinite ::
+    MonadState Int m =>
+    MonadFail m =>
+    NameGen m =>
+    MonadLog m =>
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain () Expression ->
+    m ( Domain () Expression                    -- "finite" domain
+      , [Name]                                  -- extra givens
+      , Constant -> m [(Name, Constant)]        -- value calculator for the extra givens
+      )                                         -- input is a list of values for the domain
 mkFinite d@DomainTuple{}     = mkFiniteOutermost d
 mkFinite d@DomainRecord{}    = mkFiniteOutermost d
 mkFinite d@DomainVariant{}   = mkFiniteOutermost d
@@ -122,19 +126,19 @@ mkFinite d@DomainPartition{} = mkFiniteOutermost d
 mkFinite d = return (d, [], const (return []))
 
 
-mkFiniteOutermost
-    :: ( MonadState Int m
-       , MonadFail m
-       , NameGen m
-       , MonadLog m
-       , MonadUserError m
-       , EnumerateDomain m
-       )
-    => Domain () Expression
-    -> m ( Domain () Expression
-         , [Name]
-         , Constant -> m [(Name, Constant)]
-         )
+mkFiniteOutermost ::
+    MonadState Int m =>
+    MonadFail m =>
+    NameGen m =>
+    MonadLog m =>
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain () Expression ->
+    m ( Domain () Expression
+      , [Name]
+      , Constant -> m [(Name, Constant)]
+      )
 mkFiniteOutermost (DomainTuple inners) = do
     mids <- mapM mkFiniteInner inners
     return
@@ -353,19 +357,19 @@ mkFiniteOutermost (DomainPartition () (PartitionAttr _ _ isRegularAttr) inner) =
 mkFiniteOutermost d = return (d, [], const (return []))
 
 
-mkFiniteInner
-    :: ( MonadState Int m
-       , MonadFail m
-       , NameGen m
-       , MonadLog m
-       , MonadUserError m
-       , EnumerateDomain m
-       )
-    => Domain () Expression
-    -> m ( Domain () Expression
-         , [Name]
-         , [Constant] -> m [(Name, Constant)]
-         )
+mkFiniteInner ::
+    MonadState Int m =>
+    MonadFail m =>
+    NameGen m =>
+    MonadLog m =>
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain () Expression ->
+    m ( Domain () Expression
+      , [Name]
+      , [Constant] -> m [(Name, Constant)]
+      )
 mkFiniteInner (DomainInt t []) = do
     fr <- nextName "fin"
     to <- nextName "fin"

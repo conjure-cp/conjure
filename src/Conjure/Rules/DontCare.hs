@@ -114,6 +114,7 @@ handleDontCares ::
     MonadFail m =>
     NameGen m =>
     EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
     Expression -> m Expression
 handleDontCares p =
     case match opDontCare p of

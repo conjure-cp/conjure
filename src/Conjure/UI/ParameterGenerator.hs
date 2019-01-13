@@ -15,7 +15,12 @@ import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 --      find s : set (minSize 1, maxSize 10) of int(1..10)
 --      such that n = |s|
 --   (Just dropping wrong category stuff from attribute list isn't acceptable, because mset.)
-parameterGenerator :: (MonadLog m, MonadFail m, MonadUserError m) => Model -> m Model
+parameterGenerator
+    :: ( MonadLog m
+       , MonadFail m
+       , MonadUserError m
+       , ?typeCheckerMode :: TypeCheckerMode
+       ) => Model -> m Model
 parameterGenerator model = runNameGen () (resolveNames model) >>= core
     where
         core m = do

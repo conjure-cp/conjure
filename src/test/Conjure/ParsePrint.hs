@@ -7,6 +7,7 @@ import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition ( Model )
 import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
+import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
 import Conjure.Language.NameGen ( runNameGen )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( readModelFromFile, writeModel )
@@ -20,7 +21,9 @@ import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCaseSteps, assertFailure )
 
 
-tests :: IO TestTree
+tests ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    IO TestTree
 tests = do
     let baseDir = "tests/parse_print"
     dirs <- mapM (isTestDir baseDir) =<< getAllDirs baseDir
@@ -52,7 +55,9 @@ isTestDir baseDir dir = do
 -- the first FilePath is the base directory for the parse_print tests
 -- we know at this point that the second FilePath points to a directory D,
 -- which contains + an Essence file D/D.essence
-testSingleDir :: TestDirFiles -> TestTree
+testSingleDir ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    TestDirFiles -> TestTree
 testSingleDir TestDirFiles{..} = testCaseSteps (map (\ ch -> if ch == '/' then '.' else ch) name) $ \ step -> do
     step "Conjuring"
     model_ <- runUserErrorT (readModelFromFile essenceFile)

@@ -8,7 +8,6 @@ import Conjure.Prelude
 import Conjure.Bug
 
 import Conjure.Language
-import Conjure.Language.TypeOf
 import Conjure.Compute.DomainUnion
 
 
@@ -17,21 +16,31 @@ type Dom = Domain () Expression
 class DomainOf a where
 
     -- | calculate the domain of `a`
-    domainOf
-        :: (MonadFail m, NameGen m)
-        => a -> m Dom
+    domainOf ::
+        MonadFail m =>
+        NameGen m =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
+        a -> m Dom
 
     -- | calculate the index domains of `a`
     --   the index is the index of a matrix.
     --   returns [] for non-matrix inputs.
     --   has a default implementation in terms of domainOf, so doesn't need to be implemented specifically.
     --   but sometimes it is better to implement this directly.
-    indexDomainsOf
-        :: (MonadFail m, NameGen m, Pretty a)
-        => a -> m [Dom]
+    indexDomainsOf ::
+        MonadFail m =>
+        NameGen m =>
+        Pretty a =>
+        (?typeCheckerMode :: TypeCheckerMode) =>
+        a -> m [Dom]
     indexDomainsOf = defIndexDomainsOf
 
-defIndexDomainsOf :: (MonadFail m, NameGen m, DomainOf a) => a -> m [Dom]
+defIndexDomainsOf ::
+    MonadFail m =>
+    NameGen m =>
+    DomainOf a =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    a -> m [Dom]
 defIndexDomainsOf x = do
     dom <- domainOf x
     let

@@ -278,6 +278,7 @@ parseDomainWithRepr = pDomainAtom
         pIntFromExpr = do
             lexeme L_int
             x <- parens parseExpr
+            let ?typeCheckerMode = StronglyTyped
             case typeOf x of
                 Just (TypeInt NoTag) -> return $ DomainInt NoTag [RangeSingle x]
                 _ -> return $ DomainIntE x
@@ -789,6 +790,7 @@ parseOthers = [ parseFunctional l
             x  <- parseExpr
             lexeme L_Colon
             d  <- betweenTicks parseDomain
+            let ?typeCheckerMode = StronglyTyped
             ty <- typeOfDomain d
             return (Typed x ty)
 

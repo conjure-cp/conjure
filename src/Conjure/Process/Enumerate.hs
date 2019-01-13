@@ -12,6 +12,7 @@ import Conjure.Language.AdHoc
 import Conjure.Language.AbstractLiteral
 import Conjure.Language.Constant
 import Conjure.Language.Type
+import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.Definition
@@ -117,7 +118,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     writeModel 120 Plain (Just essenceFile) model
     let
         solve :: IO ()
-        solve = ignoreLogs $ mainWithArgs Solve
+        solve = let ?typeCheckerMode = StronglyTyped in ignoreLogs $ mainWithArgs Solve
             { UI.essence                    = essenceFile
             , validateSolutionsOpt          = False
             , outputDirectory               = outDir

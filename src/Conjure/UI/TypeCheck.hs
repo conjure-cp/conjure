@@ -24,6 +24,7 @@ typeCheckModel_StandAlone
        , MonadUserError m
        , MonadLog m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Model
     -> m Model
@@ -46,6 +47,7 @@ typeCheckModel_StandAlone model0 = do
 typeCheckModel
     :: ( MonadFail m
        , MonadUserError m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Model
     -> m Model
