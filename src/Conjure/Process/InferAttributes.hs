@@ -18,7 +18,7 @@ inferAttributes ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     Model -> m Model
 inferAttributes = flip evalStateT [] . go where
-    go :: 
+    go ::
         MonadFail m =>
         MonadUserError m =>
         NameGen m =>

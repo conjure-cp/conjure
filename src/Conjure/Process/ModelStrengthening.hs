@@ -3,7 +3,7 @@
  - Description : Strengthen a model using type- and domain-inference.
  - Copyright   : Billy Brown 2017
  - License     : BSD3
- 
+
  Processing step that attempts to strengthen an Essence model, using methods described in the "Reformulating Essence Specifications for Robustness" paper.
 -}
 

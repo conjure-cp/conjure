@@ -8,7 +8,7 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
 import Conjure.Language.Pretty
-import Conjure.Language.Type 
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Instantiate
 import Conjure.Process.Enumerate ( EnumerateDomain )

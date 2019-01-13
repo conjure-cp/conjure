@@ -7,7 +7,7 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
-import Conjure.Language.Type 
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
@@ -155,7 +155,7 @@ translateParameter eprimeModel0 essenceParam0 = do
             ty <- typeOf domain
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
-    
+
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
         <- failToUserError $ concatMapM downC essenceGivensAndLettings' >>= mapM decorateWithType

@@ -456,7 +456,7 @@ instance (Pretty x, TypeOf x, ExpressionLike x, DomainOf x, Domain () x :< x) =>
     domainOf (OpMin x)
         | Just xs <- listOut x
         , not (null xs) = do
-        doms <- mapM domainOf xs        
+        doms <- mapM domainOf xs
         let lows = fromList [ [essence| min(`&d`) |] | d <- doms ]
         let low  = [essence| min(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]

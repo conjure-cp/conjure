@@ -40,7 +40,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
         namePartSizes  = mkOutName (Just "PartSizes")
         nameFirstIndex = mkOutName (Just "FirstIndex")
 
-        getMaxNumParts attrs d = 
+        getMaxNumParts attrs d =
             case partsNum attrs of
                 SizeAttr_Size       x   -> return x
                 SizeAttr_MaxSize    x   -> return x

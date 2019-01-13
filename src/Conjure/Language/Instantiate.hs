@@ -396,7 +396,7 @@ bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:
 
 -- check if the given expression can be evaluated to True
 -- False means it is not entailed, as opposed to "it is known to be false"
-entailed :: 
+entailed ::
     MonadUserError m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>

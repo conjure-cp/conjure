@@ -106,7 +106,7 @@ import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
-outputModels :: 
+outputModels ::
     MonadIO m =>
     MonadFail m =>
     MonadLog m =>

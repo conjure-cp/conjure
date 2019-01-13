@@ -658,7 +658,7 @@ parseExpr =
                     UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
                     UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
               | (descr, _) <- operatorsInGroup
-              ] 
+              ]
             | operatorsInGroup <- operatorsGrouped
             ]
 

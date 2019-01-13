@@ -53,7 +53,7 @@ msetOccurrence = Representation chck downD structuralCons downC up
                 case refs of
                     [m] -> do
                         (iPat, i) <- quantifiedVar
-                        let 
+                        let
                             minOccur = getMinOccur attrs
                             minOccurCons =
                                 [ [essence| forAll &iPat : &innerDomain . &m[&i] = 0 \/ &m[&i] >= &minOccur |]

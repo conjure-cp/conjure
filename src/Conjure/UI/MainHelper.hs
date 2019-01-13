@@ -391,7 +391,7 @@ savilerowScriptName
 
 savileRowNoParam ::
     (?typeCheckerMode :: TypeCheckerMode) =>
-    UI -> 
+    UI ->
     (FilePath, Model) ->        -- model
     IO (Either
      [Doc]                      -- user error
@@ -587,7 +587,7 @@ srCleanUp stdoutSR solutions = do
                                 , "Savile Row exit-code:" <+> pretty exitCodeSR
                                 ]])
         | exitCodeSR == 0 -> return (Right solutions)
-        | otherwise -> 
+        | otherwise ->
             return (Left [vcat [ "Savile Row stdout:"    <+> pretty stdoutSR
                                , "Savile Row stderr:"    <+> pretty stderrSR
                                , "Savile Row exit-code:" <+> pretty exitCodeSR

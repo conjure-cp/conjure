@@ -40,7 +40,7 @@ removeEnumsFromModel =
                             namesBefore <- gets (map fst . snd)
                             let outDomain = mkDomainIntBTagged (TagEnum enameText)
                                                 (fromIntWithTag 1 (TagEnum enameText))
-                                                (fromIntWithTag (genericLength names) (TagEnum enameText)) 
+                                                (fromIntWithTag (genericLength names) (TagEnum enameText))
                             case names `intersect` namesBefore of
                                 [] -> modify ( ( [(ename, outDomain)]
                                              , zip names (zip (cycle [ename]) allNats)
