@@ -88,7 +88,7 @@ reTag t = transformBi (const t)
 
 
 -- This parameter will decide the mode of the type checker.
--- Currently there are two modes: StronglyTyped and RelaxedIntegerTags.
+-- There are two modes: StronglyTyped and RelaxedIntegerTags.
 -- StronglyTyped is used for user input.
 -- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
 
