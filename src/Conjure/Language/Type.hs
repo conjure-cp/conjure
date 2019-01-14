@@ -93,7 +93,15 @@ reTag t = transformBi (const t)
 -- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
 
 data TypeCheckerMode = StronglyTyped | RelaxedIntegerTags
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
+instance Serialize TypeCheckerMode
+instance Hashable  TypeCheckerMode
+instance ToJSON    TypeCheckerMode where toJSON = genericToJSON jsonOptions
+instance FromJSON  TypeCheckerMode where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty TypeCheckerMode where
+    pretty = pretty . show
 
 
 -- | Check whether two types unify or not.
