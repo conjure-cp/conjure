@@ -63,24 +63,24 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                 [
                 -- number of active parts
                   ( nameNumParts domain name
-                  , DomainInt NoTag [RangeBounded 1 maxNumParts]
+                  , DomainInt TagInt [RangeBounded 1 maxNumParts]
                   )
                 -- for each element, the part it belongs to
                 , ( nameWhichPart domain name
                   , DomainMatrix
                       (forgetRepr innerDomain)
-                      (DomainInt NoTag [RangeBounded 1 maxNumParts])
+                      (DomainInt TagInt [RangeBounded 1 maxNumParts])
                   )
                 -- for each part, number of elements in the part
                 , ( namePartSizes domain name
                   , DomainMatrix
-                      (DomainInt NoTag [RangeBounded 1 maxNumParts])
-                      (DomainInt NoTag [RangeBounded 0 maxPartSizes])
+                      (DomainInt TagInt [RangeBounded 1 maxNumParts])
+                      (DomainInt TagInt [RangeBounded 0 maxPartSizes])
                   )
                 -- wtf was this?
                 , ( nameFirstIndex domain name
                   , DomainMatrix
-                      (DomainInt NoTag [RangeBounded 1 maxNumParts])
+                      (DomainInt TagInt [RangeBounded 1 maxNumParts])
                       innerDomain                                           -- dontCare if not used
                   )
                 ]
@@ -241,17 +241,17 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                                               , mem `elem` pVals
                                               ]
                         ]
-                numPartsVal   = ConstantInt NoTag (genericLength vals)
+                numPartsVal   = ConstantInt TagInt (genericLength vals)
                 whichPartVal  = ConstantAbstract (AbsLitMatrix
                                     (forgetRepr innerDomain)
-                                    (map (ConstantInt NoTag . fst) whichPartValInside))
+                                    (map (ConstantInt TagInt . fst) whichPartValInside))
                 partSizesVal  = ConstantAbstract (AbsLitMatrix
-                                    (DomainInt NoTag [RangeBounded 1 maxNumParts'])
-                                    (map (ConstantInt NoTag . genericLength) vals
+                                    (DomainInt TagInt [RangeBounded 1 maxNumParts'])
+                                    (map (ConstantInt TagInt . genericLength) vals
                                         ++ replicate (fromInteger (maxNumParts - genericLength vals))
-                                                     (ConstantInt NoTag 0)))
+                                                     (ConstantInt TagInt 0)))
                 firstIndexVal = ConstantAbstract (AbsLitMatrix
-                                    (DomainInt NoTag [RangeBounded 1 maxNumParts'])
+                                    (DomainInt TagInt [RangeBounded 1 maxNumParts'])
                                     ([ case lookup p whichPartValInside of
                                         Nothing -> bug $ vcat [ "Not found:" <+> pretty p
                                                               , "Inside:" <+> prettyList id "," whichPartValInside
@@ -281,7 +281,7 @@ partitionOccurrence = Representation chck downD structuralCons downC up
                     return
                         ( name
                         , normaliseConstant $ ConstantAbstract $ AbsLitPartition
-                            [ [ member | (member, b) <- zip members whichPartValues, b == ConstantInt NoTag bucket ]
+                            [ [ member | (member, b) <- zip members whichPartValues, b == ConstantInt TagInt bucket ]
                             | bucket <- [1..numPartsValue]
                             ]
                         )

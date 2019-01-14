@@ -3,7 +3,7 @@ module Conjure.Language.RepresentationOf where
 -- conjure
 import Conjure.Prelude
 import Conjure.Language.Domain
-import Conjure.Language.TypeOf ( TypeCheckerMode )
+import Conjure.Language.Type ( TypeCheckerMode )
 
 
 class RepresentationOf a where

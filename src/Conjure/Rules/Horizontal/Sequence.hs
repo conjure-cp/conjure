@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeSequence t, elems) <- match sequenceLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) t)
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) t)
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return

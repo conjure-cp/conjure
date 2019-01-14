@@ -9,7 +9,7 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
 import Conjure.Language.Pretty
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UI.IO
 import Conjure.UI.TranslateParameter
 import Conjure.UI.TranslateSolution

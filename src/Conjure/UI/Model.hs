@@ -634,7 +634,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix (TypeInt NoTag) ty
+        f (TypeList ty) = TypeMatrix (TypeInt TagInt) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -689,8 +689,8 @@ dropTagForSR m = do
                                 -- since True becomes False
                                 --       False becomes out-of-bounds, hence False
                 TypeInt{}  -> do
-                    let xNoTag = reTag NoTag x
-                    return [essence| &xNoTag - 1 |]
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt - 1 |]
                 _          -> bug "predSucc"
         replacePredSucc [essence| succ(&x) |] = do
             ty <- typeOf x
@@ -700,8 +700,8 @@ dropTagForSR m = do
                                 --       True becomes out-of-bounds, hence False
                                 -- "succ" is exactly "negate" on bools
                 TypeInt{}  -> do
-                    let xNoTag = reTag NoTag x
-                    return [essence| &xNoTag + 1 |]
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt + 1 |]
                 _          -> bug "predSucc"
         replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
         replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
@@ -731,7 +731,7 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt NoTag [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt TagInt [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
@@ -1844,8 +1844,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             wrap [x] = x
             wrap xs = make opFlatten (fromList xs)
 
-        ma <- downX a >>= mapM mk1D >>= return . reTag NoTag . wrap
-        mb <- downX b >>= mapM mk1D >>= return . reTag NoTag . wrap
+        ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
+        mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb

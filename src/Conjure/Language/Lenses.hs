@@ -1147,10 +1147,9 @@ constantInt
        , Expression -> m Integer
        )
 constantInt _ =
-    ( Constant . ConstantInt NoTag
+    ( Constant . ConstantInt TagInt
     , \ p -> case p of
-            (Constant (ConstantInt NoTag i)) -> return i
-            (Constant (ConstantInt AnyTag i)) -> return i
+            (Constant (ConstantInt TagInt i)) -> return i
             _ -> na ("Lenses.constantInt:" <++> pretty p)
     )
 

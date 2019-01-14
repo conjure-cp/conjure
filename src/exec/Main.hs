@@ -4,7 +4,7 @@ import Conjure.Prelude
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.MainHelper ( mainWithArgs )
 import Conjure.Language.Pretty ( pretty )
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UserError ( userErr1 )
 
 -- base

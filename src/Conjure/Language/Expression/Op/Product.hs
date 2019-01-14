@@ -22,17 +22,11 @@ instance FromJSON  x => FromJSON  (OpProduct x) where parseJSON = genericParseJS
 instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
     typeOf p@(OpProduct x) = do
         ty <- typeOf x
-        innerTy <- case ty of
+        case ty of
             TypeList t -> return t
             TypeMatrix _ t -> return t
             TypeSet t -> return t
             TypeMSet t -> return t
-            _ -> raiseTypeError $ vcat [ pretty p
-                                       , "The argument has type:" <+> pretty ty
-                                       ]
-        case innerTy of
-            TypeInt NoTag -> return (TypeInt AnyTag)
-            TypeInt AnyTag -> return (TypeInt AnyTag)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -42,12 +36,12 @@ instance BinaryOperator (OpProduct x) where
 
 instance EvaluateOp OpProduct where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
         , any isUndef xs =
-            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
+            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt TagInt . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)

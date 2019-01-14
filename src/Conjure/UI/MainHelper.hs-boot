@@ -2,7 +2,7 @@ module Conjure.UI.MainHelper ( mainWithArgs ) where
 
 import Conjure.Prelude
 import Conjure.UI ( UI )
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import {-# SOURCE #-} Conjure.Process.Enumerate ( EnumerateDomain )
 
 

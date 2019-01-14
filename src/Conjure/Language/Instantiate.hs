@@ -129,7 +129,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 ty
         else
             return $ ConstantAbstract $ AbsLitMatrix
-                (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength constants))])
+                (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength constants))])
                 constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
@@ -228,7 +228,7 @@ instantiateD (DomainIntE x) = do
                 (_, Just (_, xs), _) -> xs
                 (_, _, Just xs) -> xs
                 _ -> []
-    return (DomainInt NoTag (map RangeSingle vals))
+    return (DomainInt TagInt (map RangeSingle vals))
 instantiateD (DomainInt t ranges) = DomainInt t <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id

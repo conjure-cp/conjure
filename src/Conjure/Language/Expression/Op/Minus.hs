@@ -29,17 +29,15 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
         , TypeRelation [TypeAny]
         ]
         (\case
-            TypeInt NoTag -> True
-            TypeInt AnyTag -> True
-            TypeInt TagEnum{} -> True
+            TypeInt TagInt -> True
             _ -> False)
 
 instance EvaluateOp OpMinus where
     evaluateOp p | any isUndef (childrenBi p) = do
         ty <- typeOf p
         return $ mkUndef ty $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpMinus (ConstantInt _ a) (ConstantInt _ b))
-      = return $ ConstantInt AnyTag (a - b)
+    evaluateOp (OpMinus (ConstantInt t a) (ConstantInt _ b))
+      = return $ ConstantInt t (a - b)
     evaluateOp (OpMinus (viewConstantSet -> Just as) (viewConstantSet -> Just bs)) = do
         let outs =
                 [ a

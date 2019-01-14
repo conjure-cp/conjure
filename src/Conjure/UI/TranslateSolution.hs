@@ -4,7 +4,7 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
-import Conjure.Language.TypeOf
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate

@@ -21,7 +21,7 @@ import Conjure.UI.ParameterGenerator ( parameterGenerator )
 import Conjure.UI.NormaliseQuantified ( normaliseQuantifiedVariables )
 
 import Conjure.Language.Definition ( Model(..), Statement(..), Declaration(..), FindOrGiven(..) )
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.NameGen ( NameGenM, runNameGen )
 import Conjure.Language.Pretty ( pretty, prettyList, renderNormal, render )
 import qualified Conjure.Language.ParserC as ParserC ( parseModel )

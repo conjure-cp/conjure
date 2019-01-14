@@ -22,15 +22,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpNegate x) where
     typeOf p@(OpNegate a) = do
         TypeInt t <- typeOf a
         case t of
-            NoTag -> return ()
-            AnyTag -> return ()
+            TagInt -> return ()
             _ -> raiseTypeError p
         return (TypeInt t)
 
 instance EvaluateOp OpNegate where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpNegate x) = ConstantInt NoTag . negate <$> intOut "OpNegate" x
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpNegate x) = ConstantInt TagInt . negate <$> intOut "OpNegate" x
 
 instance SimplifyOp OpNegate x where
     simplifyOp _ = na "simplifyOp{OpNegate}"

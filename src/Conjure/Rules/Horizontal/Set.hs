@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
             _ -> na "rule_Comprehension_Literal"
         (TypeSet tau, elems) <- match setLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) tau)
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) tau)
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -161,7 +161,7 @@ rule_Union = "set-union" `namedRule` theRule where
         return
             ( "Horizontal rule for set union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt NoTag [RangeBounded 1 2])
+                (DomainInt TagInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (mkModifier x)) ]

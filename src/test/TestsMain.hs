@@ -2,7 +2,7 @@ module Main where
 
 -- conjure tests
 import Conjure.Prelude
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import qualified Conjure.Language.DomainSizeTest ( tests )
 import qualified Conjure.RepresentationsTest ( tests )
 import qualified Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) )

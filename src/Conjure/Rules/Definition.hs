@@ -18,7 +18,7 @@ module Conjure.Rules.Definition
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
-import Conjure.Language.TypeOf ( TypeCheckerMode )
+import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf

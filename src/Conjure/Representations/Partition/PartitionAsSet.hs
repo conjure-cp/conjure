@@ -12,7 +12,7 @@ import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( Type(..))
+import Conjure.Language.Type
 import Conjure.Language.TypeOf
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal

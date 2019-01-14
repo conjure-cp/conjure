@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeRelation taus, elems) <- match relationLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) (TypeTuple taus))
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) (TypeTuple taus))
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple row)
                             | row <- elems
                             ]

@@ -26,10 +26,10 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMod x) where
 
 instance EvaluateOp OpMod where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpMod x y)
-        | y /= 0    = ConstantInt NoTag <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
-        | otherwise = return $ mkUndef (TypeInt AnyTag) $ "modulo zero:" <+> pretty p
+        | y /= 0    = ConstantInt TagInt <$> (mod <$> intOut "mod x" x <*> intOut "mod y" y)
+        | otherwise = return $ mkUndef (TypeInt TagInt) $ "modulo zero:" <+> pretty p
 
 instance SimplifyOp OpMod x where
     simplifyOp _ = na "simplifyOp{OpMod}"

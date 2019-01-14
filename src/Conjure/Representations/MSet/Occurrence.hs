@@ -39,7 +39,7 @@ msetOccurrence = Representation chck downD structuralCons downC up
             maxOccur <- getMaxOccur attrs
             return $ Just
                 [ ( outName domain name
-                  , DomainMatrix (forgetRepr innerDomain) (DomainInt NoTag [RangeBounded 0 maxOccur])
+                  , DomainMatrix (forgetRepr innerDomain) (DomainInt TagInt [RangeBounded 0 maxOccur])
                   )
                 ]
         downD _ = na "{downD} Occurrence"

@@ -348,7 +348,7 @@ instance DomainOf x => DomainOf (OpDiv x) where
                              ] |]
         let low  = [essence| min(&vals) |]
         let upp  = [essence| max(&vals) |]
-        return (DomainInt NoTag [RangeBounded low upp] :: Dom)
+        return (DomainInt TagInt [RangeBounded low upp] :: Dom)
 
 instance DomainOf (OpDontCare x) where
     domainOf _ = return DomainBool
@@ -478,7 +478,7 @@ instance DomainOf x => DomainOf (OpMinus x) where
         let low = [essence| &xDom_Min - &yDom_Max |]
         let upp = [essence| &xDom_Max - &yDom_Min |]
 
-        return (DomainInt NoTag [RangeBounded low upp] :: Dom)
+        return (DomainInt TagInt [RangeBounded low upp] :: Dom)
 
 instance (Pretty x, TypeOf x) => DomainOf (OpMod x) where
     domainOf op = mkDomainAny ("OpMod:" <++> pretty op) <$> typeOf op
@@ -536,8 +536,8 @@ instance (ExpressionLike x, DomainOf x) => DomainOf (OpProduct x) where
         let upp  = [essence| product(&upps) |]
         -- a (too lax) lower bound is -upp
         let low  = [essence| -1 * &upp |]
-        return $ DomainInt NoTag [RangeBounded low upp]
-    domainOf _ = return $ DomainInt NoTag [RangeBounded 1 1]
+        return $ DomainInt TagInt [RangeBounded low upp]
+    domainOf _ = return $ DomainInt TagInt [RangeBounded 1 1]
 
 instance DomainOf x => DomainOf (OpRange x) where
     domainOf (OpRange f) = do
@@ -585,8 +585,8 @@ instance (ExpressionLike x, DomainOf x) => DomainOf (OpSum x) where
         let low  = [essence| sum(&lows) |]
         let upps = fromList [ [essence| max(`&d`) |] | d <- doms ]
         let upp  = [essence| sum(&upps) |]
-        return (DomainInt NoTag [RangeBounded low upp] :: Dom)
-    domainOf _ = return $ DomainInt NoTag [RangeBounded 0 0]
+        return (DomainInt TagInt [RangeBounded low upp] :: Dom)
+    domainOf _ = return $ DomainInt TagInt [RangeBounded 0 0]
 
 
 instance DomainOf (OpSupset x) where
@@ -602,7 +602,7 @@ instance DomainOf (OpTildeLt x) where
     domainOf _ = return DomainBool
 
 instance DomainOf (OpToInt x) where
-    domainOf _ = return $ DomainInt NoTag [RangeBounded 0 1]
+    domainOf _ = return $ DomainInt TagInt [RangeBounded 0 1]
 
 instance (Pretty x, TypeOf x) => DomainOf (OpToMSet x) where
     domainOf op = mkDomainAny ("OpToMSet:" <++> pretty op) <$> typeOf op

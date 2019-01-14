@@ -45,11 +45,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         innerDomain)) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt NoTag [RangeBounded size size]
+                  , DomainInt TagInt [RangeBounded size size]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt NoTag [RangeBounded 1 size])
+                      (DomainInt TagInt [RangeBounded 1 size])
                       innerDomain
                   ) ]
         downD (name, domain@(DomainSequence
@@ -59,11 +59,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             maxSize <- getMaxSize sizeAttr
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt NoTag [RangeBounded 0 maxSize]
+                  , DomainInt TagInt [RangeBounded 0 maxSize]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt NoTag [RangeBounded 1 maxSize])
+                      (DomainInt TagInt [RangeBounded 1 maxSize])
                       innerDomain
                   ) ]
         downD _ = na "{downD} ExplicitBounded"
@@ -203,12 +203,12 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
               ) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt NoTag [RangeBounded size size]
-                  , ConstantInt NoTag (genericLength constants)
+                  , DomainInt TagInt [RangeBounded size size]
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
-                  , DomainMatrix (DomainInt NoTag [RangeBounded 1 size]) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (DomainInt NoTag [RangeBounded 1 size]) constants
+                  , DomainMatrix (DomainInt TagInt [RangeBounded 1 size]) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (DomainInt TagInt [RangeBounded 1 size]) constants
                   )
                 ]
         downC ( name
@@ -231,7 +231,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt NoTag (genericLength constants)
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain

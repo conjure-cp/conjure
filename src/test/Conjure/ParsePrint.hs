@@ -7,7 +7,7 @@ import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition ( Model )
 import Conjure.Language.Pretty ( pretty, (<++>), renderNormal )
-import Conjure.Language.TypeOf ( TypeCheckerMode(..) )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.NameGen ( runNameGen )
 import Conjure.UI ( OutputFormat(..) )
 import Conjure.UI.IO ( readModelFromFile, writeModel )

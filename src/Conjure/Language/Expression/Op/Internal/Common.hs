@@ -97,22 +97,22 @@ intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        (TypeInt aTag, TypeInt bTag)
-            | aTag == AnyTag -> return (TypeInt bTag)
-            | bTag == AnyTag -> return (TypeInt aTag)
-            | aTag == bTag   -> return (TypeInt aTag)
-            | otherwise    ->  fail $ vcat
-                [ "When type checking:" <+> pretty p
-                , "Arguments have different tags."
-                ]
-        (_, TypeInt _)       -> fail $ vcat
+        (TypeInt{}, TypeInt{}) ->
+            if typeUnify tya tyb
+                then return $ mostDefined [tya, tyb]
+                else fail $ vcat
+                        [ "When type checking:" <+> pretty p
+                        , "Types do not unify:" <++> pretty tya 
+                        ]
+        (_, TypeInt{})         -> fail $ vcat
             [ "When type checking:" <+> pretty p
-            , "First argument expected to be an int, but it is:" <++> pretty tya
+            ,  "First argument expected to be an int, but it is:" <++> pretty tya
             ]
-        _                  -> fail $ vcat
+        _                      -> fail $ vcat
             [ "When type checking:" <+> pretty p
             , "Second argument expected to be an int, but it is:" <++> pretty tyb
             ]
+
 
 boolToBoolToBool :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> a -> m Type
 boolToBoolToBool p a b = do
