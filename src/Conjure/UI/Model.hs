@@ -169,6 +169,8 @@ outputModels config model = do
                     writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
+    let ?typeCheckerMode = RelaxedIntegerTags
+
     Pipes.foldM each
                 (return (numberingStart config))
                 (const $ return ())
@@ -186,8 +188,7 @@ toCompletion :: forall m .
     Model ->
     Producer LogOrModel m ()
 toCompletion config m = do
-    let ?typeCheckerMode = RelaxedIntegerTags
-    m2 <- prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
