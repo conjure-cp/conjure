@@ -28,9 +28,11 @@ instance (TypeOf x, Pretty x) => TypeOf (OpMinus x) where
         , TypeFunction TypeAny TypeAny
         , TypeRelation [TypeAny]
         ]
-        (\case
-            TypeInt TagInt -> True
-            _ -> False)
+        (\ ty -> case (?typeCheckerMode, ty) of
+                    (StronglyTyped, TypeInt TagInt) -> True
+                    (RelaxedIntegerTags, TypeInt{}) -> True
+                    _ -> False
+        )
 
 instance EvaluateOp OpMinus where
     evaluateOp p | any isUndef (childrenBi p) = do
