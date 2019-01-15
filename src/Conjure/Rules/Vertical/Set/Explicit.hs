@@ -88,7 +88,7 @@ rule_Min = "set-min{Explicit}" `namedRule` theRule where
         DomainMatrix index _ <- domainOf m
         minInIndex           <-
             case index of
-                DomainInt [RangeBounded lb _] -> return lb
+                DomainInt _ [RangeBounded lb _] -> return lb
                 _ -> do
                     (jPat, j) <- quantifiedVar
                     return [essence| min([&j | &jPat : &index]) |]
@@ -109,7 +109,7 @@ rule_Max = "set-max{Explicit}" `namedRule` theRule where
         DomainMatrix index _ <- domainOf m
         maxInIndex           <-
             case index of
-                DomainInt [RangeBounded _ ub] -> return ub
+                DomainInt _ [RangeBounded _ ub] -> return ub
                 _ -> do
                     (jPat, j) <- quantifiedVar
                     return [essence| max([&j | &jPat : &index]) |]

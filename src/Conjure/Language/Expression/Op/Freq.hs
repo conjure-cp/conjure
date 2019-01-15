@@ -24,7 +24,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
         tyE <- typeOf e
         case tyM of
             TypeMSet tyE'
-                | tyE `typeUnify` tyE' -> return TypeInt
+                | tyE `typeUnify` tyE' -> return $ TypeInt TagInt
                 | otherwise            -> raiseTypeError $ vcat
                     [ "The first argument of freq is expected to be a multi-set."
                     , pretty p
@@ -32,7 +32,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFreq x) where
             _ -> raiseTypeError p
 
 instance EvaluateOp OpFreq where
-    evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ ConstantInt $ sum [ 1 | i <- cs, c == i ]
+    evaluateOp (OpFreq (viewConstantMSet -> Just cs) c) = return $ (ConstantInt TagInt) $ sum [ 1 | i <- cs, c == i ]
     evaluateOp op = na $ "evaluateOp{OpFreq}:" <++> pretty (show op)
 
 instance SimplifyOp OpFreq x where

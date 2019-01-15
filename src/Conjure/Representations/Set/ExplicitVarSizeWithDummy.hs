@@ -29,29 +29,29 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
         calcDummyDomain :: Pretty r => Domain r Expression -> Domain r Expression
-        calcDummyDomain (DomainInt [RangeBounded lb ub]) =
-                DomainInt [RangeBounded lb [essence| &ub + 1 |]]
-        calcDummyDomain dom@(DomainInt ranges) =
+        calcDummyDomain (DomainInt t [RangeBounded lb ub]) =
+                DomainInt t [RangeBounded lb [essence| &ub + 1 |]]
+        calcDummyDomain dom@(DomainInt t ranges) =
             let dummyElem = calcDummyElem dom
-            in  DomainInt (ranges ++ [RangeSingle dummyElem])
+            in  DomainInt t (ranges ++ [RangeSingle dummyElem])
         calcDummyDomain dom = bug ("ExplicitVarSizeWithDummy.calcDummyDomain" <+> pretty dom)
 
         calcDummyElem :: Pretty r => Domain r Expression -> Expression
         calcDummyElem dom =
-            let theMax = bugFail "calcDummyElem" (maxOfDomain dom)
+            let theMax = bugFail "calcDummyElem: maxOfDomain" (maxOfDomain dom)
             in  [essence| &theMax + 1 |]
 
         calcDummyElemC :: Pretty r => Domain r Constant -> Constant
-        calcDummyElemC (DomainInt []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
-        calcDummyElemC (DomainInt rs) = ConstantInt $
+        calcDummyElemC (DomainInt _ []) = bug "ExplicitVarSizeWithDummy.calcDummyElemC []"
+        calcDummyElemC (DomainInt t rs) = ConstantInt t $
             1 + maximum [ i
                         | r <- rs
                         , i <- case r of
-                            RangeSingle (ConstantInt x) -> [x]
-                            RangeBounded (ConstantInt x) (ConstantInt y) -> [x..y]
+                            RangeSingle (ConstantInt _ x) -> [x]
+                            RangeBounded (ConstantInt _ x) (ConstantInt _ y) -> [x..y]
                             _ -> bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty r)
                         ]
         calcDummyElemC d = bug ("ExplicitVarSizeWithDummy.calcDummyElemC" <+> pretty d)
@@ -63,7 +63,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( outName domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 maxSize])
+                      (DomainInt TagInt [RangeBounded 1 maxSize])
                       domainWithDummy
                   ) ]
         downD _ = na "{downD} ExplicitVarSizeWithDummy"
@@ -127,7 +127,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize

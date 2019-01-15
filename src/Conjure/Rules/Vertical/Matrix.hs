@@ -4,7 +4,7 @@
 module Conjure.Rules.Vertical.Matrix where
 
 import Conjure.Rules.Import
-import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq, decomposeLexDotLt, decomposeLexDotLeq  )
+import Conjure.Rules.Vertical.Tuple ( decomposeLexLt, decomposeLexLeq  )
 
 
 rule_Comprehension_Literal :: Rule
@@ -15,7 +15,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
         tyInner <- typeOf body
-        let ty = TypeMatrix TypeInt tyInner
+        let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
             , return $ if null elems
@@ -347,7 +347,10 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             )
 
 
-flattenIfNeeded :: MonadFail m => Expression -> m Expression
+flattenIfNeeded ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 flattenIfNeeded m = do
     tyM <- typeOf m
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
@@ -428,38 +431,6 @@ rule_Matrix_Leq_Decompose = "matrix-Leq-tuple" `namedRule` theRule where
             )
 
 
-rule_Matrix_DotLt_Decompose :: Rule
-rule_Matrix_DotLt_Decompose = "matrix-DotLt-tuple" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opDotLt p
-        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs              <- downX1 x
-        ys              <- downX1 y
-        return
-            ( "Horizontal rule for matrix .<, decomposing"
-            , return $ decomposeLexDotLt p xs ys
-            )
-
-
-rule_Matrix_DotLeq_Decompose :: Rule
-rule_Matrix_DotLeq_Decompose = "matrix-DotLeq-tuple" `namedRule` theRule where
-    theRule p = do
-        (x,y)           <- match opDotLeq p
-        tx@TypeMatrix{} <- typeOf x     -- TODO: check matrix index & tuple arity
-        ty@TypeMatrix{} <- typeOf y
-        when (isPrimitiveType tx) $ fail ("this is a primitive type:" <+> pretty tx)
-        when (isPrimitiveType ty) $ fail ("this is a primitive type:" <+> pretty ty)
-        xs              <- downX1 x
-        ys              <- downX1 y
-        return
-            ( "Horizontal rule for matrix .<=, decomposing"
-            , return $ decomposeLexDotLeq p xs ys
-            )
-
-
 rule_Comprehension_SingletonDomain :: Rule
 rule_Comprehension_SingletonDomain = "matrix-comprehension-singleton-domain" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -502,10 +473,10 @@ rule_Concatenate_Singleton = "matrix-concatenate-singleton" `namedRule` theRule 
 rule_MatrixIndexing :: Rule
 rule_MatrixIndexing = "matrix-indexing" `namedRule` theRule where
     theRule p = do
-        (matrix, indexer)            <- match opIndexing p
-        (_, DomainInt ranges, elems) <- match matrixLiteral matrix
-        indexInts                    <- rangesInts ranges
-        indexerInt                   <- intOut "rule_MatrixIndexing" indexer
+        (matrix, indexer)              <- match opIndexing p
+        (_, DomainInt _ ranges, elems) <- match matrixLiteral matrix
+        indexInts                      <- rangesInts ranges
+        indexerInt                     <- intOut "rule_MatrixIndexing" indexer
         if length indexInts == length elems
             then
                 case lookup indexerInt (zip indexInts elems) of

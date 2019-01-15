@@ -6,11 +6,12 @@ given p_RelationAsSet_Explicit_1: matrix indexed by [int(1..fin1)] of int(1..3)
 given p_RelationAsSet_Explicit_2: matrix indexed by [int(1..fin1)] of bool
 branching on [r_RelationAsMatrix]
 such that
-    and([or([r_RelationAsMatrix[q6_1, q6_2] /\
-             (q6_1 = p_RelationAsSet_Explicit_1[q4] /\ q6_2 = p_RelationAsSet_Explicit_2[q4])
-                 | q6_1 : int(1..3), q6_2 : bool])
-             | q4 : int(1..fin1)]),
-    and([r_RelationAsMatrix[q7_1, q7_2] ->
-         or([p_RelationAsSet_Explicit_1[q9] = q7_1 /\ p_RelationAsSet_Explicit_2[q9] = q7_2 | q9 : int(1..fin1)])
-             | q7_1 : int(1..3), q7_2 : bool])
+    and([or([r_RelationAsMatrix[q8_1, q8_2] /\
+             (q8_1 = p_RelationAsSet_Explicit_1[q6] /\ q8_2 = p_RelationAsSet_Explicit_2[q6])
+                 | q8_1 : int(1..3), q8_2 : bool])
+             | q6 : int(1..fin1)]),
+    and([r_RelationAsMatrix[q9_1, q9_2] ->
+         or([p_RelationAsSet_Explicit_1[q11] = q9_1 /\ p_RelationAsSet_Explicit_2[q11] = q9_2 | q11 : int(1..fin1)])
+             | q9_1 : int(1..3), q9_2 : bool]),
+    fin1 = sum([toInt(r_RelationAsMatrix[q5_1, q5_2]) | q5_1 : int(1..3), q5_2 : bool])
 

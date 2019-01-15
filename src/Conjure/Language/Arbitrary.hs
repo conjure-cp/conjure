@@ -13,6 +13,7 @@ module Conjure.Language.Arbitrary
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Type
 import Conjure.Language.Domain
 import Conjure.Language.Pretty
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
@@ -106,24 +107,24 @@ arbitraryDomainAndConstant = sized dispatch
         intBounded = do
             l <- choose (0 :: Integer, 100)
             u <- choose (l, 200)
-            return ( DomainInt [RangeBounded (ConstantInt l) (ConstantInt u)]
-                   , ConstantInt <$> choose (l,u)
+            return ( DomainInt TagInt [RangeBounded (ConstantInt TagInt l) (ConstantInt TagInt u)]
+                   , ConstantInt TagInt <$> choose (l,u)
                    )
 
         intSingles :: Gen (Domain r Constant, Gen Constant)
         intSingles = do
             count <- choose (1 :: Integer, 20)
             vals  <- vectorOf (fromInteger count) (choose (0 :: Integer, 100))
-            return ( DomainInt (map (RangeSingle . ConstantInt) vals)
-                   , ConstantInt <$> pickFromList vals
+            return ( DomainInt TagInt (map (RangeSingle . ConstantInt TagInt) vals)
+                   , ConstantInt TagInt <$> pickFromList vals
                    )
 
         intMixed :: Gen (Domain r Constant, Gen Constant)
         intMixed = do
-            let single = RangeSingle . ConstantInt <$> choose (0 :: Integer, 100)
+            let single = RangeSingle . ConstantInt TagInt <$> choose (0 :: Integer, 100)
             let pair = do l <- choose (0 :: Integer, 100)
                           u <- choose (l, 200)
-                          return $ RangeBounded (ConstantInt l) (ConstantInt u)
+                          return $ RangeBounded (ConstantInt TagInt l) (ConstantInt TagInt u)
 
             numSingles <- choose (1 :: Int, 10)
             numPairs <- choose (1 :: Int, 10)
@@ -146,15 +147,15 @@ arbitraryDomainAndConstant = sized dispatch
                     [ vals
                     | r <- rs
                     , let vals = case r of
-                            RangeSingle (ConstantInt i) -> [i]
-                            RangeBounded (ConstantInt l) (ConstantInt u) -> [l..u]
+                            RangeSingle (ConstantInt TagInt i) -> [i]
+                            RangeBounded (ConstantInt TagInt l) (ConstantInt TagInt u) -> [l..u]
                             _ -> []
                     ]
 
             if null allVals
                 then bug "allVals null"
-                else return ( DomainInt rs
-                            , ConstantInt <$> pickFromList allVals
+                else return ( DomainInt TagInt rs
+                            , ConstantInt TagInt <$> pickFromList allVals
                             )
 
         -- enum :: Gen (Domain HasRepresentation Constant, Gen Constant)
@@ -194,7 +195,7 @@ arbitraryDomainAndConstant = sized dispatch
             let domainOut =
                     DomainSet
                         repr
-                        (SetAttr (SizeAttr_Size (ConstantInt size)))
+                        (SetAttr (SizeAttr_Size (ConstantInt TagInt size)))
                         dom
             return ( domainOut
                    , let try n =
@@ -223,7 +224,7 @@ arbitraryDomainAndConstant = sized dispatch
             maxSize <- choose (0 :: Integer, sizeUpTo)
             repr <- pickFromList [Set_ExplicitVarSizeWithFlags, Set_ExplicitVarSizeWithMarker]
             return ( DomainSet repr
-                               (SetAttr (SizeAttr_MaxSize (ConstantInt maxSize)))
+                               (SetAttr (SizeAttr_MaxSize (ConstantInt TagInt maxSize)))
                                dom
                    , do numElems <- choose (0, maxSize)
                         elems <- vectorOf (fromInteger numElems) constantGen
@@ -244,8 +245,8 @@ arbitraryDomainAndConstant = sized dispatch
                     DomainSet
                         repr
                         (SetAttr (SizeAttr_MinMaxSize
-                                    (ConstantInt minSize)
-                                    (ConstantInt maxSize)))
+                                    (ConstantInt TagInt minSize)
+                                    (ConstantInt TagInt maxSize)))
                         dom
             return ( domainOut
                    , let try n =

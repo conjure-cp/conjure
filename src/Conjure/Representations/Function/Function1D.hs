@@ -20,7 +20,7 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-function1D :: forall m . (MonadFail m, NameGen m) => Representation m
+function1D :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 function1D = Representation chck downD structuralCons downC up
 
     where
@@ -60,7 +60,9 @@ function1D = Representation chck downD structuralCons downC up
                 innerDomainFr
                 innerDomainTo) | domainCanIndexMatrix innerDomainFr = do
 
-            let injectiveCons m = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons m = do
                     tyTo <- typeOf innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
@@ -80,7 +82,8 @@ function1D = Representation chck downD structuralCons downC up
                                         &i .< &j -> &m[&i] != &m[&j]
                                 |]
 
-            let surjectiveCons m = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons m = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- list
@@ -89,7 +92,9 @@ function1D = Representation chck downD structuralCons downC up
                                 exists &jPat : &innerDomainFr .
                                     &m[&j] = &i
                         |]
-            let jectivityCons m = case jectivityAttr of
+
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons m = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  m
                     JectivityAttr_Surjective -> surjectiveCons m
@@ -178,5 +183,5 @@ domainValues :: (MonadFail m, Pretty r) => Domain r Constant -> m [Constant]
 domainValues dom =
     case dom of
         DomainBool -> return [ConstantBool False, ConstantBool True]
-        DomainInt rs -> map ConstantInt <$> valuesInIntDomain rs
+        DomainInt t rs -> map (ConstantInt t) <$> valuesInIntDomain rs
         _ -> fail ("domainValues, not supported:" <+> pretty dom)

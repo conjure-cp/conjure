@@ -23,22 +23,26 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSucc x) where
         ty <- typeOf x
         case ty of
             TypeBool{} -> return ty
-            TypeInt{}  -> return ty
+            TypeInt TagInt  -> return ty
+            TypeInt (TagEnum _)  -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
 
 instance EvaluateOp OpSucc where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSucc (ConstantBool False)) = return (ConstantBool True)
     evaluateOp (OpSucc (ConstantBool True )) = return (ConstantBool False)          -- undef
-    evaluateOp (OpSucc (ConstantInt x)) = return (ConstantInt (succ x))
+    evaluateOp (OpSucc (ConstantInt TagInt x)) = return (ConstantInt TagInt (succ x))
+    evaluateOp (OpSucc (ConstantInt (TagEnum t) x))
+        = return (ConstantInt (TagEnum t) (succ x))
     evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
 
 instance SimplifyOp OpSucc x where
     simplifyOp _ = na "simplifyOp{OpSucc}"
 
 instance Pretty x => Pretty (OpSucc x) where
-    prettyPrec _ (OpSucc x) = "pred" <> prParens (pretty x)
+    prettyPrec _ (OpSucc x) = "succ" <> prParens (pretty x)
 
 instance VarSymBreakingDescription x => VarSymBreakingDescription (OpSucc x) where
     varSymBreakingDescription (OpSucc a) = JSON.Object $ M.fromList

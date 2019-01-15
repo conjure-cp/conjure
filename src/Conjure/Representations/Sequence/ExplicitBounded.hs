@@ -11,7 +11,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-sequenceExplicitBounded :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+sequenceExplicitBounded :: forall m .
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Representation m
 sequenceExplicitBounded = Representation chck downD structuralCons downC up
 
     where
@@ -40,11 +45,11 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                         innerDomain)) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt [RangeBounded size size]
+                  , DomainInt TagInt [RangeBounded size size]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 size])
+                      (DomainInt TagInt [RangeBounded 1 size])
                       innerDomain
                   ) ]
         downD (name, domain@(DomainSequence
@@ -54,24 +59,27 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             maxSize <- getMaxSize sizeAttr
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt [RangeBounded 0 maxSize]
+                  , DomainInt TagInt [RangeBounded 0 maxSize]
                   )
                 , ( nameValues domain name
                   , DomainMatrix
-                      (DomainInt [RangeBounded 1 maxSize])
+                      (DomainInt TagInt [RangeBounded 1 maxSize])
                       innerDomain
                   ) ]
         downD _ = na "{downD} ExplicitBounded"
 
         structuralCons :: TypeOf_Structural m
         structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
-            let injectiveCons values = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons values = do
                     innerType <- typeOf innerDomain
-                    if typeUnify innerType TypeInt
-                        then do
+                    case innerType of
+                      TypeInt _ -> do
                             return $ return $ -- list
                                 [essence| allDiff(&values) |]
-                        else do
+
+                      _ ->  do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- list
@@ -83,7 +91,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                         ])
                                 |]
 
-            let surjectiveCons values = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     return $ return $ -- list
@@ -93,7 +102,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                                     &values[&j] = &i
                         |]
 
-            let jectivityCons values = case jectivityAttr of
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons values = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  values
                     JectivityAttr_Surjective -> surjectiveCons values
@@ -193,12 +203,12 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
               ) =
             return $ Just
                 [ ( nameMarker domain name
-                  , DomainInt [RangeBounded size size]
-                  , ConstantInt (genericLength constants)
+                  , DomainInt TagInt [RangeBounded size size]
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
-                  , DomainMatrix (DomainInt [RangeBounded 1 size]) innerDomain
-                  , ConstantAbstract $ AbsLitMatrix (DomainInt [RangeBounded 1 size]) constants
+                  , DomainMatrix (DomainInt TagInt [RangeBounded 1 size]) innerDomain
+                  , ConstantAbstract $ AbsLitMatrix (DomainInt TagInt [RangeBounded 1 size]) constants
                   )
                 ]
         downC ( name
@@ -209,7 +219,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             let indexDomain i = mkDomainIntB (fromInt i) maxSize
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize
@@ -221,7 +231,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt (genericLength constants)
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain
@@ -239,7 +249,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
             case (lookup (nameMarker domain name) ctxt, lookup (nameValues domain name) ctxt) of
                 (Just marker, Just constantMatrix) ->
                     case marker of
-                        ConstantInt card ->
+                        ConstantInt _ card ->
                             case viewConstantMatrix constantMatrix of
                                 Just (_, vals) ->
                                     return (name, ConstantAbstract (AbsLitSequence (genericTake card vals)))

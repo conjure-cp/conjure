@@ -18,12 +18,18 @@ instance Hashable  x => Hashable  (OpFactorial x)
 instance ToJSON    x => ToJSON    (OpFactorial x) where toJSON = genericToJSON jsonOptions
 instance FromJSON  x => FromJSON  (OpFactorial x) where parseJSON = genericParseJSON jsonOptions
 
-instance TypeOf x => TypeOf (OpFactorial x) where
-    typeOf (OpFactorial a) = do TypeInt <- typeOf a ; return TypeInt
+instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
+    typeOf p@(OpFactorial a) = do
+        TypeInt t <- typeOf a
+        case t of
+            TagInt -> return ()
+            _ -> raiseTypeError p
+        return (TypeInt t)
 
 instance EvaluateOp OpFactorial where
-    evaluateOp p | any isUndef (childrenBi p) = return $ mkUndef TypeInt $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpFactorial x) = ConstantInt . product . enumFromTo 1 <$> intOut "factorial" x
+    evaluateOp p | any isUndef (childrenBi p) =
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpFactorial x) = ConstantInt TagInt . product . enumFromTo 1 <$> intOut "factorial" x
 
 instance SimplifyOp OpFactorial x where
     simplifyOp _ = na "simplifyOp{OpFactorial}"

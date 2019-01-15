@@ -42,32 +42,26 @@ matrix:
     - os: linux
       env: GHC=8.4 SR="-O0" SOL=minion
       compiler: ": # GHC 8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.4]}}
     - os: linux
       env: GHC=8.4 SR="-O2" SOL=minion
       compiler: ": # GHC 8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.4]}}
     - os: linux
       env: GHC=8.4 SR="-O0" SOL=lingeling
       compiler: ": # GHC 8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.4]}}
     - os: linux
       env: GHC=8.4 SR="-O2" SOL=lingeling
       compiler: ": # GHC 8.4"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.2]}}
+      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-8.4.4]}}
     - os: osx
       env: GHC=8.4 SR="-O2" SOL=minion
       compiler: ": # GHC 8.4"
 
-    - os: linux
-      env: GHC=head SR="-O2" SOL=minion
-      compiler: ": # GHC head"
-      addons: {apt: {sources: [hvr-ghc, ubuntu-toolchain-r-test], packages: [gcc-4.9, g++-4.9, ghc-head]}}
-
-  allow_failures:
-    - env: GHC=8.4 SR="-O0" SOL=lingeling
-    - env: GHC=8.4 SR="-O2" SOL=lingeling
-    - env: GHC=head SR="-O2" SOL=minion
+  # allow_failures:
+  #   - env: GHC=8.4 SR="-O0" SOL=lingeling
+  #   - env: GHC=8.4 SR="-O2" SOL=lingeling
 
 before_install:
   - export STARTTIME=$(date +%s)
@@ -85,7 +79,7 @@ before_install:
   - export PATH=${BIN_DIR}:/opt/ghc/bin:${HOME}/.cabal/bin:${PATH}
   - echo $PATH
   - if [ ${SOLVER} = "minion" ] ; then export SR_OPTIONS="${SR_OPTIONS} -minion" ; fi
-  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat" ; fi
+  - if [ ${SOLVER} = "lingeling" ] ; then export SR_OPTIONS="${SR_OPTIONS} -sat -sat-family lingeling" ; fi
   - if [ "${TRAVIS_OS_NAME}" == "osx" ];   then export COMPILER_C=gcc     ; export COMPILER_CPP=g++     ; fi
   - if [ "${TRAVIS_OS_NAME}" == "linux" ]; then export COMPILER_C=gcc-4.9 ; export COMPILER_CPP=g++-4.9 ; fi
 
@@ -110,9 +104,8 @@ install:
   - (lingeling --help > /dev/null) || (CC=${COMPILER_C} etc/build/install-lingeling.sh)
 
   # Minion
-  # - (minion | grep 'Minion Version 2') || (COMPILER=${COMPILER_CPP} etc/build/install-minion.sh)
-  - (minion | grep 'Minion Version 1.8') || etc/build/download-minion.sh
-  - minion help | head -n2                   # print version
+  - (minion | grep 'Minion Version 2') || etc/build/install-minion.sh
+  - minion | head -n2                        # print version
 
   - ls -Alh $(find ${HOME}/.local/bin -type f)
 

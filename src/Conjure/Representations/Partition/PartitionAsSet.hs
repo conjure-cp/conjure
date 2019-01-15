@@ -12,14 +12,14 @@ import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( Type(..), typeUnify )
-import Conjure.Language.TypeOf ( typeOf )
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
 
 partitionAsSet
-    :: forall m . (MonadFail m, NameGen m)
+    :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
@@ -77,10 +77,11 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         PartitionAttr _ SizeAttr_Size{} _ -> True
                         _                                 -> False
 
+                exactlyOnce :: Expression -> m [Expression]
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
-                    if innerType `typeUnify` TypeInt
-                        then do
+                    case innerType of
+                      TypeInt _ ->  do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- for list
@@ -90,7 +91,8 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                             , &jPat <- &i
                                             ])
                                         |]
-                        else do
+
+                      _ -> do
                             (iPat, i) <- quantifiedVar
                             (jPat, j) <- quantifiedVar
                             return $ return $ -- for list
@@ -102,6 +104,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                                   ])
                                         |]
 
+                regular :: Expression -> m [Expression]
                 regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
@@ -114,10 +117,12 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         |]
                 regular _ = return []
 
+                partsAren'tEmpty :: Expression -> m [Expression]
                 partsAren'tEmpty rel = do
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
+                sumOfParts :: Expression -> m [Expression]
                 sumOfParts rel = do
                     case domainSizeOf innerDomain of
                         Left _err -> return []

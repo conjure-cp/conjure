@@ -32,6 +32,41 @@ rule_Comprehension = "function-comprehension{Function1DPartial}" `namedRule` the
     theRule _ = na "rule_Comprehension"
 
 
+rule_PowerSet_Comprehension :: Rule
+rule_PowerSet_Comprehension = "function-powerSet-comprehension{Function1DPartial}" `namedRule` theRule where
+    theRule (Comprehension body gensOrConds) = do
+        (gocBefore, (setPat, setPatNum, expr), gocAfter) <- matchFirst gensOrConds $ \ goc -> case goc of
+            Generator (GenInExpr setPat@(AbsPatSet pats) expr) -> return (setPat, length pats, expr)
+            _ -> na "rule_PowerSet_Comprehension"
+        func                       <- match opPowerSet expr
+        TypeFunction{}             <- typeOf func
+        Function_1DPartial         <- representationOf func
+        DomainFunction _ _ index _ <- domainOf func
+        [flags,values]             <- downX1 func
+        let upd val old = lambdaToFunction setPat old val
+        return
+            ( "Vertical rule for set-comprehension, Explicit representation"
+            , do
+                outPats <- replicateM setPatNum quantifiedVar
+                let val = AbstractLiteral $ AbsLitSet [ [essence| (&flags[&j], &values[&j]) |] | (_,j) <- outPats ]
+                return $ Comprehension (upd val body) $ concat
+                        [ gocBefore
+                        , concat
+                            [ [ Generator (GenDomainNoRepr pat index) ]
+                            | (pat,_) <- take 1 outPats
+                            ]
+                        , concat
+                            [ [ Generator (GenDomainNoRepr pat index)
+                              , Condition [essence| &patX > &beforeX |]
+                              ]
+                            | ((_, beforeX), (pat, patX)) <- zip outPats (tail outPats)
+                            ]
+                        , transformBi (upd val) gocAfter
+                        ]
+            )
+    theRule _ = na "rule_PowerSet_Comprehension"
+
+
 rule_Image_NotABool :: Rule
 rule_Image_NotABool = "function-image{Function1DPartial}-not-a-bool" `namedRule` theRule where
     theRule [essence| image(&f,&x) |] = do

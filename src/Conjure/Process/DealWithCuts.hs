@@ -8,7 +8,6 @@ import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.ModelStats ( finds )
-import Conjure.Language.Pretty
 
 
 dealWithCuts
@@ -16,7 +15,6 @@ dealWithCuts
     => Model
     -> m Model
 dealWithCuts m = do
-    checkMultiple m
     statements <- forM (mStatements m) $ \ statement ->
         case statement of
             SearchOrder orders0 -> do
@@ -42,22 +40,3 @@ dealWithCuts m = do
                     ]
             _ -> return [statement]
     return m { mStatements = concat statements }
-
-
-checkMultiple :: MonadUserError m => Model -> m ()
-checkMultiple m = do
-    let searchOrders = [ st | st@SearchOrder{}     <- mStatements m ]
-    let heuristics   = [ st | st@SearchHeuristic{} <- mStatements m ]
-    let msgs = concat
-            [ [ "Expected at most one 'branching on' statement, but got:"
-                    <++> vcat (map pretty searchOrders)
-              | length searchOrders > 1
-              ]
-            , [ "Expected at most one 'heuristic' statement, but got:"
-                    <++> vcat (map pretty heuristics)
-              | length heuristics > 1
-              ]
-            ]
-    when (length msgs > 0) $ userErr msgs
-
-

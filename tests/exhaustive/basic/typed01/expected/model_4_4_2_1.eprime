@@ -7,8 +7,8 @@ find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1)] of int(1)
 find y_Occurrence: matrix indexed by [int(1)] of bool
 branching on
-    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithDummy,
-     y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values, y_Occurrence]
+    [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, y_Occurrence,
+     y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values]
 such that
     x_ExplicitVarSizeWithFlags_Flags[1] /\
     (y_ExplicitVarSizeWithFlags_Flags[1] /\ y_ExplicitVarSizeWithFlags_Values[1] = x_ExplicitVarSizeWithFlags_Values[1])

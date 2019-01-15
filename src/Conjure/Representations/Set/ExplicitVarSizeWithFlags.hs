@@ -29,7 +29,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
 
         downD :: TypeOf_DownD m
@@ -111,7 +111,7 @@ setExplicitVarSizeWithFlags = Representation chck downD structuralCons downC up
 
             maxSizeInt <-
                 case maxSize of
-                    ConstantInt x -> return x
+                    ConstantInt _ x -> return x
                     _ -> fail $ vcat
                             [ "Expecting an integer for the maxSize attribute."
                             , "But got:" <+> pretty maxSize

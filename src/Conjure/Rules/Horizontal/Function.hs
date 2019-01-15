@@ -17,8 +17,8 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeFunction fr to, elems) <- match functionLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix TypeInt (TypeTuple [fr,to]))
-                            (DomainInt [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) (TypeTuple [fr,to]))
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]
@@ -133,36 +133,6 @@ rule_SupsetEq = "function-subsetEq" `namedRule` theRule where
             , return [essence| &y subsetEq &x |]
             )
     theRule _ = na "rule_SupsetEq"
-
-
-rule_DotLt :: Rule
-rule_DotLt = "function-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLt p
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for function .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "function-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLeq p
-        TypeFunction{} <- typeOf a
-        TypeFunction{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for function .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
 
 
 rule_Inverse :: Rule
@@ -592,7 +562,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
         case match opRestrict func of
             Nothing -> return ()
             Just{}  -> na "rule_Image_Int"          -- do not use this rule for restricted functions
-        TypeFunction _ TypeInt <- typeOf func
+        TypeFunction _ (TypeInt _) <- typeOf func
         return
             ( "Function image, int."
             , do
@@ -612,7 +582,7 @@ rule_Image_IntMatrixIndexed = "function-image-IntMatrixIndexed" `namedRule` theR
     theRule p = do
         (matrix, indices)                      <- match opMatrixIndexing p
         (func, arg)                            <- match opImage matrix
-        TypeFunction _ (TypeMatrix _ TypeInt)  <- typeOf func
+        TypeFunction _ (TypeMatrix _ (TypeInt _))  <- typeOf func
         return
             ( "Function image, matrix of int."
             , do
@@ -636,7 +606,7 @@ rule_Image_IntTupleIndexed = "function-image-IntTupleIndexed" `namedRule` theRul
         TypeFunction _ (TypeTuple ts) <- typeOf func
         iInt                          <- match constantInt index
         case atMay ts (fromInteger (iInt-1)) of
-            Just TypeInt -> return ()
+            Just (TypeInt _) -> return ()
             _            -> na "rule_Image_IntTupleIndexed"
         return
             ( "Function image, tuple of int."
@@ -796,7 +766,7 @@ rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule 
         return
             ( "Horizontal rule for function union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt [RangeBounded 1 2])
+                (DomainInt TagInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat mkx) ]

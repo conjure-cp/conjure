@@ -4,6 +4,7 @@ module Conjure.TypeCheckAll ( tests ) where
 import Conjure.Prelude
 import Conjure.Language.NameGen ( runNameGen )
 import Conjure.Language.Pretty ( renderNormal )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UI.IO
 import Conjure.UI.TypeCheck
 import Conjure.UserError ( runUserErrorT )
@@ -13,14 +14,18 @@ import Test.Tasty ( TestTree, testGroup )
 import Test.Tasty.HUnit ( testCase, assertFailure )
 
 
-tests :: IO TestTree
+tests ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    IO TestTree
 tests = do
     let baseDir = "tests/exhaustive"
     files <- getAllFilesWithSuffix ".essence" baseDir
     let testCases = map testSingle files
     return (testGroup "type-checking" testCases)
 
-testSingle :: FilePath -> TestTree
+testSingle ::
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    FilePath -> TestTree
 testSingle fp = testCase (map (\ ch -> if ch == '/' then '.' else ch) fp) $ do
     model <- readModelFromFile fp
     result <- runUserErrorT $ ignoreLogs $ runNameGen () $ typeCheckModel_StandAlone model

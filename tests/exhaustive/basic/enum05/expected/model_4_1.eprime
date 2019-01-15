@@ -1,0 +1,17 @@
+language ESSENCE' 1.0
+
+find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2)] of bool
+find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2)] of int(1..2)
+find x_Occurrence: matrix indexed by [int(1..2)] of bool
+branching on [x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
+such that
+    or([x_ExplicitVarSizeWithFlags_Flags[q13] /\ x_ExplicitVarSizeWithFlags_Values[q13] = 1 | q13 : int(1..2)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Values[1] < x_ExplicitVarSizeWithFlags_Values[2],
+    and([x_ExplicitVarSizeWithFlags_Flags[q2] = false -> x_ExplicitVarSizeWithFlags_Values[q2] = 1 | q2 : int(1..2)]),
+    x_ExplicitVarSizeWithFlags_Flags[2] -> x_ExplicitVarSizeWithFlags_Flags[1],
+    and([x_Occurrence[q7] ->
+         or([x_ExplicitVarSizeWithFlags_Flags[q9] /\ x_ExplicitVarSizeWithFlags_Values[q9] = q7 | q9 : int(1..2)])
+             | q7 : int(1..2)]),
+    and([x_ExplicitVarSizeWithFlags_Flags[q11] -> x_Occurrence[x_ExplicitVarSizeWithFlags_Values[q11]]
+             | q11 : int(1..2)])
+

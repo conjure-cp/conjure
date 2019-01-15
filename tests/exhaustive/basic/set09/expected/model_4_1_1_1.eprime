@@ -4,7 +4,7 @@ find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
 find x_Occurrence: matrix indexed by [int(2..5)] of bool
 find y_Occurrence: matrix indexed by [int(2..5)] of bool
-branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_Occurrence, y_Occurrence]
+branching on [x_Occurrence, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, y_Occurrence]
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q13] /\ y_Occurrence[j] -> x_ExplicitVarSizeWithFlags_Values[q13] + 2 = j
              | q13 : int(1..4), j : int(2..5)]),

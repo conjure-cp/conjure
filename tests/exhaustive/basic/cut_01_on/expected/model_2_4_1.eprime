@@ -7,8 +7,8 @@ find x_Occurrence: matrix indexed by [int(1..3)] of bool
 find cut1: bool
 find cut2: bool
 branching on
-    [cut1, cut2, x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values,
-     x_Occurrence]
+    [cut1, cut2, x_Occurrence, x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitVarSizeWithFlags_Values]
 such that
     !cut1 <->
     or([x_ExplicitVarSizeWithDummy[q32] != 4 /\ x_ExplicitVarSizeWithDummy[q32] = 1 | q32 : int(1..3)]) /\

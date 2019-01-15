@@ -20,7 +20,7 @@ module Conjure.Language.Domain
     , Tree(..), reprTree, reprAtTopLevel, applyReprTree
     , reprTreeEncoded
     , forgetRepr, changeRepr, defRepr
-    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainAny
+    , mkDomainBool, mkDomainInt, mkDomainIntB, mkDomainIntBTagged, mkDomainAny
     , typeOfDomain
     , readBinRel
     , normaliseDomain, normaliseRange
@@ -54,7 +54,7 @@ data Domain r x
     = DomainAny Text Type
     | DomainBool
     | DomainIntE x
-    | DomainInt [Range x]
+    | DomainInt IntTag [Range x]
     | DomainEnum
         Name
         (Maybe [Range x])           -- subset of values for this domain
@@ -83,10 +83,13 @@ mkDomainBool :: Domain () x
 mkDomainBool = DomainBool
 
 mkDomainInt :: [Range x] -> Domain () x
-mkDomainInt = DomainInt
+mkDomainInt = DomainInt TagInt
 
 mkDomainIntB :: x -> x -> Domain () x
-mkDomainIntB l u = DomainInt [RangeBounded l u]
+mkDomainIntB l u = DomainInt TagInt [RangeBounded l u]
+
+mkDomainIntBTagged :: IntTag -> x -> x -> Domain () x
+mkDomainIntBTagged t l u = DomainInt t [RangeBounded l u]
 
 mkDomainAny :: Doc -> Type -> Domain r x
 mkDomainAny reason = DomainAny (stringToText $ show reason)
@@ -100,45 +103,51 @@ instance Arbitrary x => Arbitrary (Domain r x) where
     arbitrary = sized f
         where
             f 0 = oneof [ return DomainBool
-                        , DomainInt <$> arbitrary
+                        , DomainInt TagInt <$> arbitrary
                         -- , DomainEnum <$> arbitrary <*> arbitrary
                         ]
             f s = do
                 arity <- choose (2 :: Int, 10)
                 DomainTuple <$> vectorOf arity (f (div s 10))
     shrink DomainBool = []
-    shrink (DomainInt []) = [DomainBool]
-    shrink (DomainInt [r]) = DomainBool : DomainInt [] : [DomainInt [r'] | r' <- shrink r]
-    shrink (DomainInt rs) = [DomainInt (init rs)]
+    shrink (DomainInt _ []) = [DomainBool]
+    shrink (DomainInt t [r]) = DomainBool : DomainInt t [] : [DomainInt t [r'] | r' <- shrink r]
+    shrink (DomainInt t rs) = [DomainInt t (init rs)]
     shrink _ = []
 
 instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
-typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
+typeOfDomain ::
+    MonadFail m =>
+    Pretty r =>
+    TypeOf x =>
+    Pretty x =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE x)          = do
     ty <- typeOf x
     case ty of
-        TypeInt              -> return ()       -- pre recoverDomainInt
-        TypeList     TypeInt -> return ()
-        TypeMatrix _ TypeInt -> return ()
-        TypeSet      TypeInt -> return ()
+        TypeInt{}              -> return ()       -- pre recoverDomainInt
+        TypeList     TypeInt{} -> return ()
+        TypeMatrix _ TypeInt{} -> return ()
+        TypeSet      TypeInt{} -> return ()
         _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
-    return TypeInt
-typeOfDomain d@(DomainInt rs)          = do
+    return (TypeInt TagInt)
+typeOfDomain d@(DomainInt t rs)        = do
     forM_ rs $ \ r -> forM_ r $ \ x -> do
         ty <- typeOf x
         case ty of
-            TypeInt -> return ()
+            TypeInt{} -> return ()
             _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                              , "For:" <+> pretty x
                              , "In domain:" <+> pretty d
                              ]
-    return TypeInt
+    return (TypeInt t)
 typeOfDomain (DomainEnum    defn _ _ ) = return (TypeEnum defn)
 typeOfDomain (DomainUnnamed defn _   ) = return (TypeUnnamed defn)
 typeOfDomain (DomainTuple         xs ) = TypeTuple      <$> mapM typeOf xs
@@ -174,7 +183,7 @@ changeRepr rep = go
         go (DomainAny t ty) = DomainAny t ty
         go DomainBool = DomainBool
         go (DomainIntE x) = DomainIntE x
-        go (DomainInt rs) = DomainInt rs
+        go (DomainInt t rs) = DomainInt t rs
         go (DomainEnum defn rs mp) = DomainEnum defn rs mp
         go (DomainUnnamed defn s) = DomainUnnamed defn s
         go (DomainTuple ds) = DomainTuple (map go ds)
@@ -755,6 +764,7 @@ data HasRepresentation
     | Set_ExplicitVarSizeWithMarker
     | Set_ExplicitVarSizeWithDummy
 
+    | MSet_Occurrence
     | MSet_ExplicitWithFlags
     | MSet_ExplicitWithRepetition
 
@@ -796,8 +806,8 @@ instance (Pretty r, Pretty a) => Pretty (Domain r a) where
 
     pretty (DomainIntE x) = "int" <> prParens (pretty x)
 
-    pretty (DomainInt []) = "int"
-    pretty (DomainInt ranges) = "int" <> prettyList prParens "," ranges
+    pretty (DomainInt _ []) = "int"
+    pretty (DomainInt _ ranges) = "int" <> prettyList prParens "," ranges
 
     pretty (DomainEnum name (Just ranges) _) = pretty name <> prettyList prParens "," ranges
     pretty (DomainEnum name _             _) = pretty name
@@ -870,7 +880,7 @@ instance Pretty a => Pretty (Range a) where
     pretty (RangeSingle x) = pretty x
     pretty (RangeLowerBounded x) = pretty x <> ".."
     pretty (RangeUpperBounded x) = ".." <> pretty x
-    pretty (RangeBounded x y) | show x == show y = pretty x
+    pretty (RangeBounded x y) | show (pretty x) == show (pretty y) = pretty x
     pretty (RangeBounded x y) = pretty x <> ".." <> pretty y
 
 instance Pretty HasRepresentation where
@@ -883,6 +893,7 @@ textToRepresentation t []             | t == "Explicit"                   = retu
 textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
 textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
 textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
+textToRepresentation t []             | t == "MOccurrence"                = return MSet_Occurrence
 textToRepresentation t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
 textToRepresentation t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
 textToRepresentation t []             | t == "Function1D"                 = return Function_1D
@@ -903,6 +914,7 @@ representationToShortText Set_Explicit                   = "Explicit"
 representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
 representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
+representationToShortText MSet_Occurrence                = "MOccurrence"
 representationToShortText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
 representationToShortText MSet_ExplicitWithRepetition    = "ExplicitWithRepetition"
 representationToShortText Function_1D                    = "Function1D"
@@ -940,7 +952,7 @@ representationToFullText r = representationToShortText r
 
 normaliseDomain :: (Ord c, ExpressionLike c) => (c -> c) -> Domain r c -> Domain r c
 normaliseDomain _norm DomainBool                  = DomainBool
-normaliseDomain  norm (DomainInt rs             ) = DomainInt $ sort $ map (normaliseRange norm) (expandRanges rs)
+normaliseDomain  norm (DomainInt t rs           ) = DomainInt t $ sort $ map (normaliseRange norm) (expandRanges rs)
 normaliseDomain _norm (DomainEnum n Nothing   mp) = DomainEnum n Nothing mp
 normaliseDomain _norm (DomainEnum n (Just rs) mp) = DomainEnum n (Just $ sort rs) mp
 normaliseDomain  norm (DomainUnnamed n x        ) = DomainUnnamed n (norm x)
@@ -983,8 +995,8 @@ innerDomainOf (DomainPartition _ _ t) = return (DomainSet () def t)
 innerDomainOf t = fail ("innerDomainOf:" <+> pretty (show t))
 
 singletonDomainInt :: (Eq x, CanBeAnAlias x) => Domain r x -> Maybe x
-singletonDomainInt (DomainInt [RangeSingle a]) = Just a
-singletonDomainInt (DomainInt [RangeBounded a b]) =
+singletonDomainInt (DomainInt _ [RangeSingle a]) = Just a
+singletonDomainInt (DomainInt _ [RangeBounded a b]) =
     let
         followAlias (isAlias -> Just x) = followAlias x
         followAlias x = x

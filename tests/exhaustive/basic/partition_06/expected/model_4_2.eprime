@@ -8,9 +8,9 @@ find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker: int(0..4)
 find x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
         matrix indexed by [int(1..4), int(1..4)] of int(1..5)
 branching on
-    [x_PartitionOccurrence_NumParts, x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes,
-     x_PartitionOccurrence_FirstIndex, x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
-     x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
+    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy, x_PartitionOccurrence_NumParts,
+     x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes, x_PartitionOccurrence_FirstIndex]
 such that
     and([q54 <= x_PartitionOccurrence_NumParts ->
          sum([toInt(x_PartitionOccurrence_WhichPart[q57] = q54) | q57 : int(1..4)]) = 2

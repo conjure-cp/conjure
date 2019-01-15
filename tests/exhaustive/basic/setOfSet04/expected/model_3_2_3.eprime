@@ -4,12 +4,16 @@ find x_ExplicitR5_ExplicitVarSizeWithMarker_Marker: matrix indexed by [int(1..2)
 find x_ExplicitR5_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 find x_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2), int(1..3)] of int(1..3)
 branching on
-    [x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values,
-     x_ExplicitR6_ExplicitVarSizeWithDummy]
+    [x_ExplicitR6_ExplicitVarSizeWithDummy, x_ExplicitR5_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitR5_ExplicitVarSizeWithMarker_Values]
 such that
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] < x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] \/
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] = x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] /\
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..] <lex x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..],
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
+             x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..];
+                 int(1..2)])
+    <lex
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
+             x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..];
+                 int(1..2)]),
     and([and([q3 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3] <
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]

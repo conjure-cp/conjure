@@ -8,9 +8,9 @@ find x_PartitionOccurrence_WhichPart: matrix indexed by [int(1..4)] of int(1..4)
 find x_PartitionOccurrence_PartSizes: matrix indexed by [int(1..4)] of int(0..4)
 find x_PartitionOccurrence_FirstIndex: matrix indexed by [int(1..4)] of int(1..4)
 branching on
-    [x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
-     x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy, x_PartitionOccurrence_NumParts,
-     x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes, x_PartitionOccurrence_FirstIndex]
+    [x_PartitionOccurrence_NumParts, x_PartitionOccurrence_WhichPart, x_PartitionOccurrence_PartSizes,
+     x_PartitionOccurrence_FirstIndex, x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker,
+     x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
 such that
     and([q55 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
          sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q55, q57] != 5)

@@ -90,7 +90,7 @@ variant = Representation chck downD structuralCons downC up
         up ctxt (name, DomainVariant ds) = do
             let dsForgotten = [ (n, defRepr d) | (n,d) <- ds ]
             case lookup (mkName name "_tag") ctxt of
-                Just (ConstantInt i) ->
+                Just (ConstantInt _ i) ->
                     let iTag = at ds (fromInteger (i-1)) |> fst
                         iName = mkName name iTag
                     in  case lookup iName ctxt of

@@ -484,6 +484,7 @@ To explicitly specify a sequence, use a list of values inside round brackets, pr
 .. code-block:: essence
 
    letting s be sequence(1,0,-1,2)
+   letting t be sequence() $ empty sequence
 
 
 Relation domains
@@ -792,12 +793,15 @@ Sequence operators
 
 For two sequences ``s`` and ``t``, ``s subsequence t`` tests whether the list of values taken by ``s`` occurs in the same order in the list of values taken by ``t``, and ``s substring t`` tests whether the list of values taken by ``s`` occurs in the same order and contiguously in the list of values taken by ``t``.
 
+When ``S`` is a sequence, then ``|S|`` denotes the number of elements in ``S``.
+
 .. code-block:: essence
 
    letting s be sequence(1,1)
    letting t be sequence(2,1,3,1)
    find a : bool such that s subsequence t $ true
    find b : bool such that s substring t $ false
+   find c : int(1..10) such that c = |t| $ 4
 
 
 Enumerated type operators
@@ -844,6 +848,7 @@ Examples:
    letting S be mset(0,1,-1,1)
    find x : int(0..1) such that freq(S,x) = 2 $ 1
    find y : int(-2..2) such that y = max(S) - min(S) $ 2
+   find z : int(-2..2) such that z = max([1,2]) $ 2
 
 
 Type conversion operators

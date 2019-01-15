@@ -4,6 +4,7 @@ module Conjure.UI.TranslateSolution ( translateSolution ) where
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language.Definition
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.Language.Constant ( normaliseConstant )
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
@@ -16,16 +17,17 @@ import Conjure.Representations ( up )
 import Data.Text as T ( pack )
 
 
-translateSolution
-    :: ( MonadFail m
-       , MonadLog m
-       , NameGen m
-       , EnumerateDomain m
-       )
-    => Model      -- eprime model
-    -> Model      -- essence param
-    -> Model      -- eprime solution
-    -> m Model    -- essence solution
+translateSolution ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model ->      -- eprime model
+    Model ->      -- essence param
+    Model ->      -- eprime solution
+    m Model       -- essence solution
+
 translateSolution eprimeModel essenceParam' eprimeSolution = do
 
     eprimeParam <- translateParameter eprimeModel essenceParam'
@@ -90,7 +92,7 @@ translateSolution eprimeModel essenceParam' eprimeSolution = do
     unnamedsAsEnumDomains <- forM unnameds $ \ (n, s') -> do
         s <- instantiateExpression eprimeLettings s'
         case s of
-            ConstantInt size -> return $
+            ConstantInt _ size -> return $
                 let nms = [ mconcat [n, "_", Name (T.pack (show i))]
                           | i <- [1 .. size]
                           ]

@@ -4,7 +4,7 @@ find a_Occurrence: matrix indexed by [int(1..4)] of bool
 find a_Explicit: matrix indexed by [int(1..3)] of int(1..4)
 find b_Explicit: matrix indexed by [int(1..3)] of int(1..4)
 find b_Occurrence: matrix indexed by [int(1..4)] of bool
-branching on [a_Occurrence, a_Explicit, b_Explicit, b_Occurrence]
+branching on [a_Explicit, a_Occurrence, b_Occurrence, b_Explicit]
 such that
     or([a_Occurrence[q17] /\
         (toInt(a_Occurrence[q17]) < toInt(or([b_Explicit[q30] = q17 | q30 : int(1..3)])) /\
