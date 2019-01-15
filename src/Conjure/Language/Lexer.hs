@@ -542,7 +542,7 @@ tryLex running (face,lexeme) = do
         else Just (rest, lexeme)
 
 tryLexIntLiteral :: T.Text -> Maybe (T.Text, Lexeme)
-tryLexIntLiteral t = 
+tryLexIntLiteral t =
     case T.decimal t of
         Left _ -> Nothing
         Right (x, rest) -> Just (rest, LIntLiteral x)

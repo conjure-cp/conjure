@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "set-comprehension-literal" `namedRule` theRule whe
             _ -> na "rule_Comprehension_Literal"
         (TypeSet tau, elems) <- match setLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) tau)
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) tau)
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -112,36 +112,6 @@ rule_SupsetEq = "set-subsetEq" `namedRule` theRule where
     theRule _ = na "rule_SupsetEq"
 
 
-rule_DotLt :: Rule
-rule_DotLt = "set-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)     <- match opDotLt p
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for set .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "set-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)     <- match opDotLeq p
-        TypeSet{} <- typeOf a
-        TypeSet{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for set .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
-
-
 rule_Intersect :: Rule
 rule_Intersect = "set-intersect" `namedRule` theRule where
     theRule (Comprehension body gensOrConds) = do
@@ -191,7 +161,7 @@ rule_Union = "set-union" `namedRule` theRule where
         return
             ( "Horizontal rule for set union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt NoTag [RangeBounded 1 2])
+                (DomainInt TagInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat (mkModifier x)) ]

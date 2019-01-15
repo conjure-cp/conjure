@@ -3,6 +3,7 @@
 module Conjure.Language.Type
     ( Type(..)
     , IntTag(..), reTag
+    , TypeCheckerMode(..)
     , typeUnify
     , typesUnify
     , mostDefined
@@ -72,10 +73,9 @@ instance Pretty Type where
     pretty (TypeRelation xs) = "relation of" <+> prettyList prParens " *" xs
 
 
-data IntTag = NoTag                     -- was an integer in the input
+data IntTag = TagInt                    -- was an integer in the input
             | TagEnum Text              -- was an enum in the input
             | TagUnnamed Text           -- was an unnamed in the input
-            | AnyTag                    -- only internally generated, unifies with any tag
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize IntTag
@@ -86,12 +86,32 @@ instance FromJSON  IntTag where parseJSON = genericParseJSON jsonOptions
 reTag :: Data a => IntTag -> a -> a
 reTag t = transformBi (const t)
 
+
+-- This parameter will decide the mode of the type checker.
+-- There are two modes: StronglyTyped and RelaxedIntegerTags.
+-- StronglyTyped is used for user input.
+-- RelaxedIntegerTags is for internal use only and it ignores the integer tags during type checking.
+
+data TypeCheckerMode = StronglyTyped | RelaxedIntegerTags
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize TypeCheckerMode
+instance Hashable  TypeCheckerMode
+instance ToJSON    TypeCheckerMode where toJSON = genericToJSON jsonOptions
+instance FromJSON  TypeCheckerMode where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty TypeCheckerMode where
+    pretty = pretty . show
+
+
 -- | Check whether two types unify or not.
-typeUnify :: Type -> Type -> Bool
+typeUnify :: (?typeCheckerMode :: TypeCheckerMode) => Type -> Type -> Bool
 typeUnify TypeAny _ = True
 typeUnify _ TypeAny = True
 typeUnify TypeBool TypeBool = True
-typeUnify (TypeInt t1) (TypeInt t2) = t1 == t2 || t1 == AnyTag || t2 == AnyTag
+typeUnify (TypeInt t1) (TypeInt t2) = case ?typeCheckerMode of
+                                         StronglyTyped -> t1 == t2
+                                         RelaxedIntegerTags -> True
 typeUnify (TypeEnum a) (TypeEnum b) = a == b
 typeUnify (TypeUnnamed a) (TypeUnnamed b) = a == b
 typeUnify (TypeTuple [TypeAny]) TypeTuple{} = True
@@ -128,21 +148,19 @@ typeUnify (TypePartition a) (TypePartition b) = typeUnify a b
 typeUnify _ _ = False
 
 -- | Check whether a given list of types unify with each other or not.
-typesUnify :: [Type] -> Bool
+typesUnify :: (?typeCheckerMode :: TypeCheckerMode) => [Type] -> Bool
 typesUnify ts = and [ typeUnify i j | i <- ts, j <- ts ]
 
 -- | Given a list of types, return "the most defined" one in this list.
 --   This is to get rid of TypeAny's if there are any.
 --   Precondition: `typesUnify`
-mostDefined :: [Type] -> Type
+mostDefined :: (?typeCheckerMode :: TypeCheckerMode) => [Type] -> Type
 mostDefined = foldr f TypeAny
     where
         f :: Type -> Type -> Type
         f TypeAny x = x
         f x TypeAny = x
         f _ x@TypeBool{} = x
-        f (TypeInt AnyTag) _ = TypeInt AnyTag       -- AnyTag is infectious
-        f _ (TypeInt AnyTag) = TypeInt AnyTag       -- AnyTag is infectious
         f _ x@TypeInt{} = x
         f _ x@TypeEnum{} = x
         f _ x@TypeUnnamed{} = x
@@ -186,15 +204,16 @@ matrixNumDims (TypeMatrix _ t) = 1 + matrixNumDims t
 matrixNumDims (TypeList     t) = 1 + matrixNumDims t
 matrixNumDims _ = 0
 
-homoType :: MonadFail m => Doc -> [Type] -> m Type
+homoType ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Doc -> [Type] -> m Type
 homoType msg [] = fail $ "empty collection, what's the type?" <++> ("When working on:" <+> msg)
 homoType msg xs =
     if typesUnify xs
         then return (mostDefined xs)
         else fail $ vcat [ "Not uniformly typed:" <+> msg
---                         , "Involved types are:" <+> vcat (map (\tx -> pretty tx <> " " <> stringToDoc (show tx)) xs)
                          , "Involved types are:" <+> vcat (map pretty xs)
-
                          ]
 
 innerTypeOf :: MonadFail m => Type -> m Type
@@ -203,7 +222,7 @@ innerTypeOf (TypeMatrix _ t) = return t
 innerTypeOf (TypeSet t) = return t
 innerTypeOf (TypeMSet t) = return t
 innerTypeOf (TypeFunction a b) = return (TypeTuple [a,b])
-innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt NoTag,t])
+innerTypeOf (TypeSequence t) = return (TypeTuple [TypeInt TagInt,t])
 innerTypeOf (TypeRelation ts) = return (TypeTuple ts)
 innerTypeOf (TypePartition t) = return (TypeSet t)
 innerTypeOf t = fail ("innerTypeOf:" <+> pretty (show t))

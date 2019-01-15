@@ -117,7 +117,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
     writeModel 120 Plain (Just essenceFile) model
     let
         solve :: IO ()
-        solve = ignoreLogs $ mainWithArgs Solve
+        solve = let ?typeCheckerMode = StronglyTyped in ignoreLogs $ mainWithArgs Solve
             { UI.essence                    = essenceFile
             , validateSolutionsOpt          = False
             , outputDirectory               = outDir
@@ -197,9 +197,7 @@ enumerateDomain d = liftIO' $ withSystemTempDirectory ("conjure-enumerateDomain-
 
 enumerateRange :: MonadFail m => Range Constant -> m [Constant]
 enumerateRange (RangeSingle x) = return [x]
-enumerateRange (RangeBounded (ConstantInt tx x) (ConstantInt ty y)) = do
-    let t = if tx == AnyTag then ty else tx
-    return $ ConstantInt t <$> [x..y]
+enumerateRange (RangeBounded (ConstantInt t x) (ConstantInt _ y)) = return $ ConstantInt t <$> [x..y]
 enumerateRange RangeBounded{} = fail "enumerateRange RangeBounded"
 enumerateRange RangeOpen{} = fail "enumerateRange RangeOpen"
 enumerateRange RangeLowerBounded{} = fail "enumerateRange RangeLowerBounded"

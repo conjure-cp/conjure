@@ -162,6 +162,7 @@ Library
                      , Conjure.Representations.Set.ExplicitVarSizeWithDummy
                      , Conjure.Representations.Set.ExplicitVarSizeWithMarker
                      , Conjure.Representations.Set.ExplicitVarSizeWithFlags
+                     , Conjure.Representations.MSet.Occurrence
                      , Conjure.Representations.MSet.ExplicitWithFlags
                      , Conjure.Representations.MSet.ExplicitWithRepetition
                      , Conjure.Representations.Function.Function1D
@@ -192,6 +193,7 @@ Library
                      , Conjure.Rules.Vertical.Set.ExplicitVarSizeWithFlags
 
                      , Conjure.Rules.Horizontal.MSet
+                     , Conjure.Rules.Vertical.MSet.Occurrence
                      , Conjure.Rules.Vertical.MSet.ExplicitWithFlags
                      , Conjure.Rules.Vertical.MSet.ExplicitWithRepetition
 
@@ -298,6 +300,7 @@ Library
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf
@@ -333,6 +336,7 @@ Executable conjure
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf
@@ -390,6 +394,7 @@ Test-Suite conjure-testing
     default-extensions:
         FlexibleContexts
         FlexibleInstances
+        ImplicitParams
         LambdaCase
         MultiParamTypeClasses
         MultiWayIf

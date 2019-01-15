@@ -6,13 +6,17 @@ find x_ExplicitR6_ExplicitVarSizeWithDummy: matrix indexed by [int(1..2), int(1.
 find x_ExplicitR4_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..2), int(1..3)] of bool
 find x_ExplicitR4_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..2), int(1..3)] of int(1..2)
 branching on
-    [x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values,
-     x_ExplicitR6_ExplicitVarSizeWithDummy, x_ExplicitR4_ExplicitVarSizeWithFlags_Flags,
-     x_ExplicitR4_ExplicitVarSizeWithFlags_Values]
+    [x_ExplicitR4_ExplicitVarSizeWithFlags_Flags, x_ExplicitR4_ExplicitVarSizeWithFlags_Values,
+     x_ExplicitR5_ExplicitVarSizeWithMarker_Marker, x_ExplicitR5_ExplicitVarSizeWithMarker_Values,
+     x_ExplicitR6_ExplicitVarSizeWithDummy]
 such that
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] < x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] \/
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1] = x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2] /\
-    x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..] <lex x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..],
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[1]; int(1)],
+             x_ExplicitR5_ExplicitVarSizeWithMarker_Values[1, ..];
+                 int(1..2)])
+    <lex
+    flatten([[x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[2]; int(1)],
+             x_ExplicitR5_ExplicitVarSizeWithMarker_Values[2, ..];
+                 int(1..2)]),
     and([and([q3 + 1 <= x_ExplicitR5_ExplicitVarSizeWithMarker_Marker[q2] ->
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3] <
               x_ExplicitR5_ExplicitVarSizeWithMarker_Values[q2, q3 + 1]
@@ -62,10 +66,13 @@ such that
                       | q33 : int(1..3)])
                  | q27 : int(1..2)])
              | q25 : int(1..2)]),
-    x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, ..] <lex x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, ..] \/
-    and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q43] = x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q43]
-             | q43 : int(1..3)])
-    /\ x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, ..] <lex x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, ..],
+    flatten([[toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[1, q43]) | q43 : int(1..3)],
+             x_ExplicitR4_ExplicitVarSizeWithFlags_Values[1, ..];
+                 int(1..2)])
+    <lex
+    flatten([[toInt(x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[2, q44]) | q44 : int(1..3)],
+             x_ExplicitR4_ExplicitVarSizeWithFlags_Values[2, ..];
+                 int(1..2)]),
     and([and([x_ExplicitR4_ExplicitVarSizeWithFlags_Flags[q37, q38 + 1] ->
               x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q37, q38] <
               x_ExplicitR4_ExplicitVarSizeWithFlags_Values[q37, q38 + 1]

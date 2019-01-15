@@ -2,30 +2,31 @@ language ESSENCE' 1.0
 
 find x_ExplicitR3_Explicit: matrix indexed by [int(1..2), int(1..3)] of int(1..4)
 find x_ExplicitR2_Occurrence: matrix indexed by [int(1..2), int(1..4)] of bool
-branching on [x_ExplicitR3_Explicit, x_ExplicitR2_Occurrence]
+branching on [x_ExplicitR2_Occurrence, x_ExplicitR3_Explicit]
 such that
-    or([and([or([1 = x_ExplicitR3_Explicit[q27, q29], 2 = x_ExplicitR3_Explicit[q27, q29],
-                 3 = x_ExplicitR3_Explicit[q27, q29];
+    or([and([or([1 = x_ExplicitR3_Explicit[q29, q31], 2 = x_ExplicitR3_Explicit[q29, q31],
+                 3 = x_ExplicitR3_Explicit[q29, q31];
                      int(1..3)])
-                 | q29 : int(1..3)])
+                 | q31 : int(1..3)])
         /\
-        and([or([x_ExplicitR3_Explicit[q27, q35] = 1 | q35 : int(1..3)]),
-             or([x_ExplicitR3_Explicit[q27, q37] = 2 | q37 : int(1..3)]),
-             or([x_ExplicitR3_Explicit[q27, q39] = 3 | q39 : int(1..3)]);
+        and([or([x_ExplicitR3_Explicit[q29, q37] = 1 | q37 : int(1..3)]),
+             or([x_ExplicitR3_Explicit[q29, q39] = 2 | q39 : int(1..3)]),
+             or([x_ExplicitR3_Explicit[q29, q41] = 3 | q41 : int(1..3)]);
                  int(1..3)])
-            | q27 : int(1..2)]),
+            | q29 : int(1..2)]),
     x_ExplicitR3_Explicit[1, ..] <lex x_ExplicitR3_Explicit[2, ..],
     and([and([x_ExplicitR3_Explicit[q2, q3] < x_ExplicitR3_Explicit[q2, q3 + 1] | q3 : int(1..2)]) | q2 : int(1..2)]),
-    x_ExplicitR2_Occurrence[1, ..] <lex x_ExplicitR2_Occurrence[2, ..],
+    [toInt(x_ExplicitR2_Occurrence[1, q8]) | q8 : int(1..4)] <lex
+    [toInt(x_ExplicitR2_Occurrence[2, q9]) | q9 : int(1..4)],
     and([3 = sum([toInt(x_ExplicitR2_Occurrence[q6, q7]) | q7 : int(1..4)]) | q6 : int(1..2)]),
-    and([or([and([x_ExplicitR2_Occurrence[q9, x_ExplicitR3_Explicit[q11, q13]] | q13 : int(1..3)]) /\
-             and([x_ExplicitR2_Occurrence[q9, q14] -> or([x_ExplicitR3_Explicit[q11, q16] = q14 | q16 : int(1..3)])
-                      | q14 : int(1..4)])
-                 | q11 : int(1..2)])
-             | q9 : int(1..2)]),
-    and([or([and([x_ExplicitR2_Occurrence[q20, q21] -> or([x_ExplicitR3_Explicit[q18, q23] = q21 | q23 : int(1..3)])
-                      | q21 : int(1..4)])
-             /\ and([x_ExplicitR2_Occurrence[q20, x_ExplicitR3_Explicit[q18, q25]] | q25 : int(1..3)])
-                 | q20 : int(1..2)])
-             | q18 : int(1..2)])
+    and([or([and([x_ExplicitR2_Occurrence[q11, x_ExplicitR3_Explicit[q13, q15]] | q15 : int(1..3)]) /\
+             and([x_ExplicitR2_Occurrence[q11, q16] -> or([x_ExplicitR3_Explicit[q13, q18] = q16 | q18 : int(1..3)])
+                      | q16 : int(1..4)])
+                 | q13 : int(1..2)])
+             | q11 : int(1..2)]),
+    and([or([and([x_ExplicitR2_Occurrence[q22, q23] -> or([x_ExplicitR3_Explicit[q20, q25] = q23 | q25 : int(1..3)])
+                      | q23 : int(1..4)])
+             /\ and([x_ExplicitR2_Occurrence[q22, x_ExplicitR3_Explicit[q20, q27]] | q27 : int(1..3)])
+                 | q22 : int(1..2)])
+             | q20 : int(1..2)])
 

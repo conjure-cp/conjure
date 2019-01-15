@@ -4,7 +4,7 @@ letting let1 be -4
 find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
 find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
-branching on [var2_Occurrence, var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values]
+branching on [var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values, var2_Occurrence]
 such that
     or([var2_Occurrence[q10] /\
         !or([q12 <= var2_ExplicitVarSizeWithMarker_Marker /\ var2_ExplicitVarSizeWithMarker_Values[q12] = q10

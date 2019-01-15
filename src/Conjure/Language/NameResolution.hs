@@ -14,13 +14,25 @@ import Conjure.Language
 import Conjure.Language.TypeOf
 
 
-resolveNamesMulti :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => [Model] -> m [Model]
+resolveNamesMulti
+    :: ( MonadLog m
+       , MonadFail m
+       , MonadUserError m
+       , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
+       ) => [Model] -> m [Model]
 resolveNamesMulti = flip evalStateT [] . go
     where
         go [] = return []
         go (m:ms) = (:) <$> resolveNames_ m <*> go ms
 
-resolveNames :: (MonadLog m, MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+resolveNames
+    :: ( MonadLog m
+       , MonadFail m
+       , MonadUserError m
+       , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
+       ) => Model -> m Model
 resolveNames = flip evalStateT [] . resolveNames_
 
 resolveNames_
@@ -28,6 +40,7 @@ resolveNames_
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Model -> m Model
 resolveNames_ model = do
@@ -61,7 +74,12 @@ shadowing p@(Comprehension _ is) = do
 shadowing p = return p
 
 
-resolveNamesX :: (MonadFail m, MonadUserError m, NameGen m) => Expression -> m Expression
+resolveNamesX
+    :: ( MonadFail m
+       , MonadUserError m
+       , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
+       ) => Expression -> m Expression
 resolveNamesX x = do
     x' <- evalStateT (resolveX x) []
     mapM_ check (universe x')
@@ -78,6 +96,7 @@ resolveStatement
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Statement
     -> m Statement
@@ -133,6 +152,7 @@ resolveSearchOrder
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => SearchOrder
     -> m SearchOrder
@@ -154,6 +174,7 @@ resolveX
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Expression
     -> m Expression
@@ -258,6 +279,7 @@ resolveD
        , Data r
        , Pretty r
        , Default r
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => Domain r Expression
     -> m (Domain r Expression)
@@ -288,6 +310,7 @@ resolveAbsLit
        , MonadUserError m
        , MonadState [(Name, ReferenceTo)] m
        , NameGen m
+       , ?typeCheckerMode :: TypeCheckerMode
        )
     => AbstractLiteral Expression
     -> m (AbstractLiteral Expression)

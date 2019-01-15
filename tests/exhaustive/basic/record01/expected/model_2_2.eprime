@@ -11,9 +11,13 @@ such that
          (x_ExplicitVarSizeWithFlags_Values_theVal[q6] % 2 = 0 <-> x_ExplicitVarSizeWithFlags_Values_isEven[q6])
              | q6 : int(1..6)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q1 + 1] ->
-         x_ExplicitVarSizeWithFlags_Values_isEven[q1] < x_ExplicitVarSizeWithFlags_Values_isEven[q1 + 1] \/
-         x_ExplicitVarSizeWithFlags_Values_isEven[q1] = x_ExplicitVarSizeWithFlags_Values_isEven[q1 + 1] /\
-         x_ExplicitVarSizeWithFlags_Values_theVal[q1] < x_ExplicitVarSizeWithFlags_Values_theVal[q1 + 1]
+         flatten([[toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1]); int(1)],
+                  [x_ExplicitVarSizeWithFlags_Values_theVal[q1]; int(1)];
+                      int(1..2)])
+         <lex
+         flatten([[toInt(x_ExplicitVarSizeWithFlags_Values_isEven[q1 + 1]); int(1)],
+                  [x_ExplicitVarSizeWithFlags_Values_theVal[q1 + 1]; int(1)];
+                      int(1..2)])
              | q1 : int(1..5)]),
     and([x_ExplicitVarSizeWithFlags_Flags[q2] = false ->
          x_ExplicitVarSizeWithFlags_Values_isEven[q2] = false /\ x_ExplicitVarSizeWithFlags_Values_theVal[q2] = 1

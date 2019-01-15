@@ -5,7 +5,7 @@ find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find x_ExplicitVarSizeWithMarker_Marker: int(0..4)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..4)] of int(1..4)
 branching on
-    [x_Occurrence, x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_Occurrence, x_ExplicitVarSizeWithDummy]
 such that
     x_Occurrence[1],
     x_Occurrence[2],

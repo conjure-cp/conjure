@@ -83,10 +83,10 @@ mkDomainBool :: Domain () x
 mkDomainBool = DomainBool
 
 mkDomainInt :: [Range x] -> Domain () x
-mkDomainInt = DomainInt NoTag
+mkDomainInt = DomainInt TagInt
 
 mkDomainIntB :: x -> x -> Domain () x
-mkDomainIntB l u = DomainInt NoTag [RangeBounded l u]
+mkDomainIntB l u = DomainInt TagInt [RangeBounded l u]
 
 mkDomainIntBTagged :: IntTag -> x -> x -> Domain () x
 mkDomainIntBTagged t l u = DomainInt t [RangeBounded l u]
@@ -103,7 +103,7 @@ instance Arbitrary x => Arbitrary (Domain r x) where
     arbitrary = sized f
         where
             f 0 = oneof [ return DomainBool
-                        , DomainInt NoTag <$> arbitrary
+                        , DomainInt TagInt <$> arbitrary
                         -- , DomainEnum <$> arbitrary <*> arbitrary
                         ]
             f s = do
@@ -118,7 +118,13 @@ instance Arbitrary x => Arbitrary (Domain r x) where
 instance (Pretty r, TypeOf x, Pretty x) => TypeOf (Domain r x) where
     typeOf = typeOfDomain
 
-typeOfDomain :: (MonadFail m, Pretty r, TypeOf x, Pretty x) => Domain r x -> m Type
+typeOfDomain ::
+    MonadFail m =>
+    Pretty r =>
+    TypeOf x =>
+    Pretty x =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r x -> m Type
 typeOfDomain (DomainAny _ ty)          = return ty
 typeOfDomain DomainBool                = return TypeBool
 typeOfDomain d@(DomainIntE x)          = do
@@ -131,7 +137,7 @@ typeOfDomain d@(DomainIntE x)          = do
         _ -> fail $ vcat [ "Expected an integer, but got:" <++> pretty ty
                          , "In domain:" <+> pretty d
                          ]
-    return (TypeInt NoTag)
+    return (TypeInt TagInt)
 typeOfDomain d@(DomainInt t rs)        = do
     forM_ rs $ \ r -> forM_ r $ \ x -> do
         ty <- typeOf x
@@ -758,6 +764,7 @@ data HasRepresentation
     | Set_ExplicitVarSizeWithMarker
     | Set_ExplicitVarSizeWithDummy
 
+    | MSet_Occurrence
     | MSet_ExplicitWithFlags
     | MSet_ExplicitWithRepetition
 
@@ -886,6 +893,7 @@ textToRepresentation t []             | t == "Explicit"                   = retu
 textToRepresentation t []             | t == "ExplicitVarSizeWithFlags"   = return Set_ExplicitVarSizeWithFlags
 textToRepresentation t []             | t == "ExplicitVarSizeWithMarker"  = return Set_ExplicitVarSizeWithMarker
 textToRepresentation t []             | t == "ExplicitVarSizeWithDummy"   = return Set_ExplicitVarSizeWithDummy
+textToRepresentation t []             | t == "MOccurrence"                = return MSet_Occurrence
 textToRepresentation t []             | t == "ExplicitWithFlags"          = return MSet_ExplicitWithFlags
 textToRepresentation t []             | t == "ExplicitWithRepetition"     = return MSet_ExplicitWithRepetition
 textToRepresentation t []             | t == "Function1D"                 = return Function_1D
@@ -906,6 +914,7 @@ representationToShortText Set_Explicit                   = "Explicit"
 representationToShortText Set_ExplicitVarSizeWithFlags   = "ExplicitVarSizeWithFlags"
 representationToShortText Set_ExplicitVarSizeWithMarker  = "ExplicitVarSizeWithMarker"
 representationToShortText Set_ExplicitVarSizeWithDummy   = "ExplicitVarSizeWithDummy"
+representationToShortText MSet_Occurrence                = "MOccurrence"
 representationToShortText MSet_ExplicitWithFlags         = "ExplicitWithFlags"
 representationToShortText MSet_ExplicitWithRepetition    = "ExplicitWithRepetition"
 representationToShortText Function_1D                    = "Function1D"

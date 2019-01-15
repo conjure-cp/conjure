@@ -12,8 +12,8 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..let1)] of int(
 find x_ExplicitVarSizeWithMarker_Marker: int(0..let1)
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..let1)] of int(let2)
 branching on
-    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
-     x_ExplicitVarSizeWithMarker_Values]
+    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
+     x_ExplicitVarSizeWithFlags_Values]
 such that
     and([x_ExplicitVarSizeWithFlags_Flags[q21] ->
          or([nums_Explicit[q23] = x_ExplicitVarSizeWithFlags_Values[q21] | q23 : int(1..fin1)])

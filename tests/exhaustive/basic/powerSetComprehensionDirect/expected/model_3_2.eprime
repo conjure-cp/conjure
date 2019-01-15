@@ -6,7 +6,7 @@ given b: int
 find x_ExplicitVarSizeWithMarker_Marker: int(0..1 + (b - a))
 find x_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..1 + (b - a))] of int(a..b)
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..1 + (b - a))] of int(a..b + 1)
-branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithDummy]
+branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values]
 such that
     and([and([or([q23 <= x_ExplicitVarSizeWithMarker_Marker /\
                   x_ExplicitVarSizeWithMarker_Values[q23] = t_ExplicitVarSizeWithDummy[q21]

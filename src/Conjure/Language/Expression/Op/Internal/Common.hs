@@ -39,7 +39,7 @@ import Conjure.Language.Lexer as X ( Lexeme(..), textToLexeme, lexemeFace )
 -- | Assume: the input is already normalised.
 --   Make sure the output is normalised.
 class EvaluateOp op where
-    evaluateOp :: MonadFail m => op Constant -> m Constant
+    evaluateOp :: ( MonadFail m, ?typeCheckerMode :: TypeCheckerMode) => op Constant -> m Constant
 
 class SimplifyOp op x where
     simplifyOp :: ( MonadFail m
@@ -81,7 +81,7 @@ prettyPrecBinOp envPrec op a b =
                                                        , prettyPrec  prec    b
                                                        ]
 
-intToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> m Type
+intToInt :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> m Type
 intToInt p a = do
     tya <- typeOf a
     case tya of
@@ -92,29 +92,29 @@ intToInt p a = do
             ]
 
 
-intToIntToInt :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> a -> m Type
+intToIntToInt :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> a -> m Type
 intToIntToInt p a b = do
     tya <- typeOf a
     tyb <- typeOf b
     case (tya, tyb) of
-        (TypeInt aTag, TypeInt bTag)
-            | aTag == AnyTag -> return (TypeInt bTag)
-            | bTag == AnyTag -> return (TypeInt aTag)
-            | aTag == bTag   -> return (TypeInt aTag)
-            | otherwise    ->  fail $ vcat
-                [ "When type checking:" <+> pretty p
-                , "Arguments have different tags."
-                ]
-        (_, TypeInt _)       -> fail $ vcat
+        (TypeInt{}, TypeInt{}) ->
+            if typeUnify tya tyb
+                then return $ mostDefined [tya, tyb]
+                else fail $ vcat
+                        [ "When type checking:" <+> pretty p
+                        , "Types do not unify:" <++> pretty tya 
+                        ]
+        (_, TypeInt{})         -> fail $ vcat
             [ "When type checking:" <+> pretty p
-            , "First argument expected to be an int, but it is:" <++> pretty tya
+            ,  "First argument expected to be an int, but it is:" <++> pretty tya
             ]
-        _                  -> fail $ vcat
+        _                      -> fail $ vcat
             [ "When type checking:" <+> pretty p
             , "Second argument expected to be an int, but it is:" <++> pretty tyb
             ]
 
-boolToBoolToBool :: (MonadFail m, TypeOf a, Pretty p) => p -> a -> a -> m Type
+
+boolToBoolToBool :: (MonadFail m, TypeOf a, Pretty p, ?typeCheckerMode :: TypeCheckerMode) => p -> a -> a -> m Type
 boolToBoolToBool p a b = do
     tya <- typeOf a
     tyb <- typeOf b
@@ -132,7 +132,10 @@ boolToBoolToBool p a b = do
 
 -- if acceptableTypes is null, use checkType
 -- if acceptableTypes is not null, either one of these is true or checkType
-sameToSameToBool :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
+sameToSameToBool
+    :: ( MonadFail m, ?typeCheckerMode :: TypeCheckerMode
+       , TypeOf a, Pretty a, Pretty p
+       ) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
 sameToSameToBool p a b acceptableTypes checkType = do
     tyA <- typeOf a
     tyB <- typeOf b
@@ -160,7 +163,11 @@ sameToSameToBool p a b acceptableTypes checkType = do
             ]
 
 -- See sameToSameToBool
-sameToSameToSame :: (MonadFail m, TypeOf a, Pretty a, Pretty p) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
+sameToSameToSame
+    :: ( MonadFail m
+       , ?typeCheckerMode :: TypeCheckerMode
+       , TypeOf a, Pretty a, Pretty p
+       ) => p -> a -> a -> [Type] -> (Type -> Bool) -> m Type
 sameToSameToSame p a b acceptableTypes checkType = do
     tyA <- typeOf a
     tyB <- typeOf b

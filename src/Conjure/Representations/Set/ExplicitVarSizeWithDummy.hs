@@ -29,7 +29,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
         calcDummyDomain :: Pretty r => Domain r Expression -> Domain r Expression
         calcDummyDomain (DomainInt t [RangeBounded lb ub]) =
@@ -63,7 +63,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( outName domain name
                   , DomainMatrix
-                      (DomainInt NoTag [RangeBounded 1 maxSize])
+                      (DomainInt TagInt [RangeBounded 1 maxSize])
                       domainWithDummy
                   ) ]
         downD _ = na "{downD} ExplicitVarSizeWithDummy"

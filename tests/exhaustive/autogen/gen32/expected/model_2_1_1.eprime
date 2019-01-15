@@ -3,7 +3,7 @@ language ESSENCE' 1.0
 letting let1 be -4
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 find var2_Occurrence: matrix indexed by [int(-4..5, 2)] of bool
-branching on [var2_ExplicitVarSizeWithDummy, var2_Occurrence]
+branching on [var2_Occurrence, var2_ExplicitVarSizeWithDummy]
 such that
     or([var2_ExplicitVarSizeWithDummy[q7] != 6 /\ !var2_Occurrence[var2_ExplicitVarSizeWithDummy[q7]]
             | q7 : int(1..11)])

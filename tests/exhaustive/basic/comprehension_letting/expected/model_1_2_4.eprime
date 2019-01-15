@@ -8,7 +8,7 @@ letting let1 be -100
 find x: int(-100..100)
 find conjure_aux1: int(-20..3)
 branching on
-    [s_Occurrence, s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, x]
+    [s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_Occurrence, s_ExplicitVarSizeWithDummy, x]
 such that
     and([and([s_Occurrence[i], s_ExplicitVarSizeWithDummy[q29] != 5, i != s_ExplicitVarSizeWithDummy[q29],
               allDiff([i + s_ExplicitVarSizeWithDummy[q29], i * s_ExplicitVarSizeWithDummy[q29],

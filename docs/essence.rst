@@ -484,6 +484,7 @@ To explicitly specify a sequence, use a list of values inside round brackets, pr
 .. code-block:: essence
 
    letting s be sequence(1,0,-1,2)
+   letting t be sequence() $ empty sequence
 
 
 Relation domains
@@ -847,6 +848,7 @@ Examples:
    letting S be mset(0,1,-1,1)
    find x : int(0..1) such that freq(S,x) = 2 $ 1
    find y : int(-2..2) such that y = max(S) - min(S) $ 2
+   find z : int(-2..2) such that z = max([1,2]) $ 2
 
 
 Type conversion operators

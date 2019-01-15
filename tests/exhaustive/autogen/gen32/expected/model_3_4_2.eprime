@@ -7,8 +7,8 @@ find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
 find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5, 2, 6)
 branching on
-    [var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values, var2_ExplicitVarSizeWithFlags_Flags,
-     var2_ExplicitVarSizeWithFlags_Values, var2_ExplicitVarSizeWithDummy]
+    [var2_ExplicitVarSizeWithDummy, var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values,
+     var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values]
 such that
     or([q38 <= var2_ExplicitVarSizeWithMarker_Marker /\
         !or([var2_ExplicitVarSizeWithFlags_Flags[q40] /\
