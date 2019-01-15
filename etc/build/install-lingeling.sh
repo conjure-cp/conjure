@@ -12,7 +12,7 @@ wget --no-check-certificate -c http://fmv.jku.at/lingeling/lingeling-bbc-9230380
 tar xzf lingeling-bbc-9230380-160707.tar.gz
 cd lingeling-bbc-9230380-160707
 ./configure.sh
-make
+make -j
 mkdir -p ${BIN_DIR}
 cp lingeling ${BIN_DIR}/lingeling
 echo "lingeling executable is at ${BIN_DIR}/lingeling"

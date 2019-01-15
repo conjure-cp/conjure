@@ -24,8 +24,8 @@ instance BinaryOperator (OpGt x) where
 instance (TypeOf x, Pretty x) => TypeOf (OpGt x) where
     typeOf p@(OpGt a b) = sameToSameToBool p a b [] $ \case
         TypeBool -> True
-        TypeInt NoTag -> True
-        TypeInt AnyTag -> True
+        TypeInt{} | ?typeCheckerMode == RelaxedIntegerTags -> True
+        TypeInt TagInt -> True
         TypeInt TagEnum{} -> True
         _ -> False
 

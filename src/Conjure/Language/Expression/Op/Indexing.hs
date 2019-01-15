@@ -36,18 +36,17 @@ instance (TypeOf x, Pretty x, ExpressionLike x, ReferenceContainer x) => TypeOf 
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeList inn
-                | typesUnify [TypeInt NoTag, tyI] -> return inn
+                | typesUnify [TypeInt TagInt, tyI] -> return inn
                 | otherwise -> fail $ "Indexing with inappropriate type:" <++> vcat
                     [ "The expression:"  <+> pretty p
                     , "Indexing:"        <+> pretty m
-                    , "Expected type of index:" <+> pretty (TypeInt NoTag)
+                    , "Expected type of index:" <+> pretty (TypeInt TagInt)
                     , "Actual type of index  :" <+> pretty tyI
                     ]
             TypeTuple inns   -> do
                 TypeInt t <- typeOf i
                 case t of
-                    NoTag -> return ()
-                    AnyTag -> return ()
+                    TagInt -> return ()
                     _ -> fail $ "Tuples cannot be indexed by enums/unnameds:" <++> pretty p
                 case intOut "OpIndexing" i of
                     Nothing -> fail $ "Tuples can only be indexed by constants:" <++> pretty p

@@ -9,12 +9,16 @@ module Conjure.Rules.Definition
     , Config(..)
     , ModelZipper, mkModelZipper, fromModelZipper
     , ModelWIP(..), modelWIPOut, updateModelWIPInfo
-    , isAtomic, representationOf, hasRepresentation, matchFirst
+    , isAtomic
+    , representationOf, hasRepresentation
+    , sameRepresentation, sameRepresentationTree
+    , matchFirst
     ) where
 
 import Conjure.Prelude
 import Conjure.UserError
 import Conjure.Language.Definition
+import Conjure.Language.Type ( TypeCheckerMode )
 import Conjure.Language.Expression.Op
 
 import Conjure.Language.RepresentationOf
@@ -150,6 +154,7 @@ data Rule = Rule
             , MonadFail m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
                 -- a fail in {m} means a bug
+            , ?typeCheckerMode :: TypeCheckerMode
             )
         => Zipper a Expression            -- to query context
         -> Expression
@@ -163,6 +168,7 @@ namedRule
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
             , MonadFail m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
+            , ?typeCheckerMode :: TypeCheckerMode
             ) => Expression -> n (Doc, m Expression))
     -> Rule
 namedRule nm f = Rule
@@ -179,6 +185,7 @@ namedRuleZ
             , NameGen n, EnumerateDomain n, MonadReader (Zipper a Expression) n
             , MonadFail m, MonadUserError m, MonadLog m
             , NameGen m, EnumerateDomain m
+            , ?typeCheckerMode :: TypeCheckerMode
             ) => Zipper a Expression -> Expression -> n (Doc, m Expression))
     -> Rule
 namedRuleZ nm f = Rule

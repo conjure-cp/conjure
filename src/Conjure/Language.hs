@@ -5,6 +5,7 @@ import Conjure.Language.Expression.Op as X
 import Conjure.Language.Constant as X
 import Conjure.Language.Domain as X
 import Conjure.Language.Type as X
+import Conjure.Language.TypeOf as X
 import Conjure.Language.Pretty as X
 
 import Conjure.Language.Lenses as X

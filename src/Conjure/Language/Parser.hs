@@ -278,15 +278,15 @@ parseDomainWithRepr = pDomainAtom
         pIntFromExpr = do
             lexeme L_int
             x <- parens parseExpr
-            case typeOf x of
-                Just (TypeInt NoTag) -> return $ DomainInt NoTag [RangeSingle x]
+            case (let ?typeCheckerMode = StronglyTyped in typeOf x) of
+                Just (TypeInt TagInt) -> return $ DomainInt TagInt [RangeSingle x]
                 _ -> return $ DomainIntE x
 
         pInt = do
             lexeme L_int
             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
-            return $ DomainInt NoTag xs
+            return $ DomainInt TagInt xs
 
         pReference = do
             r  <- identifierText
@@ -657,7 +657,7 @@ parseExpr =
                     UnaryPrefix L_ExclamationMark -> Prefix $ foldr1 (.) <$> some parseUnaryNot
                     UnaryPrefix l                 -> bug ("Unknown UnaryPrefix" <+> pretty (show l))
               | (descr, _) <- operatorsInGroup
-              ] 
+              ]
             | operatorsInGroup <- operatorsGrouped
             ]
 
@@ -789,7 +789,7 @@ parseOthers = [ parseFunctional l
             x  <- parseExpr
             lexeme L_Colon
             d  <- betweenTicks parseDomain
-            ty <- typeOfDomain d
+            ty <- let ?typeCheckerMode = StronglyTyped in typeOfDomain d
             return (Typed x ty)
 
         parseFunctional :: Lexeme -> Parser Expression
@@ -901,7 +901,7 @@ parseLiteral = label "value" $ msum
                  True  <$ lexeme L_true
             return (ConstantBool x)
 
-        pInt = ConstantInt NoTag . fromInteger <$> integer
+        pInt = ConstantInt TagInt . fromInteger <$> integer
 
         pMatrix = do
             lexeme L_OpenBracket
@@ -969,7 +969,11 @@ parseLiteral = label "value" $ msum
         pRelation = do
             lexeme L_relation
             xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
-            return (AbsLitRelation [is | AbsLitTuple is <- xs])
+            xsFiltered <- forM xs $ \case
+                -- Constant (ConstantAbstract (AbsLitTuple is)) -> ...
+                AbsLitTuple is -> return is
+                x -> fail ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
+            return (AbsLitRelation xsFiltered)
 
         pPartition = do
             lexeme L_partition

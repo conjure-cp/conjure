@@ -6,7 +6,7 @@ find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..
 find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
 branching on
-    [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values,
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithDummy,
      y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values]
 such that
     and([x_ExplicitVarSizeWithDummy[q23] != 6 /\ y_ExplicitVarSizeWithFlags_Flags[q24] ->

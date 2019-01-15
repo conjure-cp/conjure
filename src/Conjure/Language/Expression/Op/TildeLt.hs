@@ -33,7 +33,7 @@ instance EvaluateOp OpTildeLt where
             tupleE (i,j) = ConstantAbstract $ AbsLitTuple [i,j]
 
             tilLt (ConstantBool a) (ConstantBool b) = a < b
-            tilLt (ConstantInt NoTag a) (ConstantInt NoTag b) = a < b
+            tilLt (ConstantInt TagInt a) (ConstantInt TagInt b) = a < b
             tilLt (ConstantInt (TagEnum an) a) (ConstantInt (TagEnum bn) b)
                   | an == bn = a < b
             tilLt (viewConstantTuple -> Just [])

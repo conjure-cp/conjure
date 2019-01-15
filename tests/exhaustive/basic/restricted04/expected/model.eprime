@@ -11,7 +11,8 @@ such that
     and([x_FunctionNDPartial_Flags[q1_1, q1_2] /\ x_FunctionNDPartial_Flags[q2_1, q2_2] ->
          x_FunctionNDPartial_Values[q1_1, q1_2] != x_FunctionNDPartial_Values[q2_1, q2_2]
              | q1_1 : int(1..2), q1_2 : int(1..2), q2_1 : int(1..2), q2_2 : int(1..2),
-               q1_1 < q2_1 \/ q1_1 = q2_1 /\ q1_2 < q2_2]),
+               flatten([[q1_1; int(1)], [q1_2; int(1)]; int(1..2)]) <lex
+               flatten([[q2_1; int(1)], [q2_2; int(1)]; int(1..2)])]),
     and([x_FunctionNDPartial_Flags[q3_1, q3_2] = false -> x_FunctionNDPartial_Values[q3_1, q3_2] = 1
              | q3_1 : int(1..2), q3_2 : int(1..2)])
 

@@ -28,7 +28,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
         getMaxSize attrs innerDomain = case attrs of
             SizeAttr_MaxSize x -> return x
             SizeAttr_MinMaxSize _ x -> return x
-            _ -> domainSizeOf innerDomain
+            _ -> reTag TagInt <$> domainSizeOf innerDomain
 
         downD :: TypeOf_DownD m
         downD (name, domain@(DomainSet _ (SetAttr attrs) innerDomain)) = do
@@ -111,7 +111,7 @@ setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
             return $ Just
                 [ ( nameMarker domain name
                   , defRepr (indexDomain 0)
-                  , ConstantInt NoTag (genericLength constants)
+                  , ConstantInt TagInt (genericLength constants)
                   )
                 , ( nameValues domain name
                   , DomainMatrix (indexDomain 1) innerDomain

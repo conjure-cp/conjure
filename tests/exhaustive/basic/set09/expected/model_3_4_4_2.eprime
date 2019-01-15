@@ -8,9 +8,9 @@ find y_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find y_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(2..5)
 find y_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(2..6)
 branching on
-    [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values, x_ExplicitVarSizeWithFlags_Flags,
-     x_ExplicitVarSizeWithFlags_Values, y_ExplicitVarSizeWithFlags_Flags, y_ExplicitVarSizeWithFlags_Values,
-     y_ExplicitVarSizeWithDummy]
+    [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithMarker_Marker,
+     x_ExplicitVarSizeWithMarker_Values, y_ExplicitVarSizeWithDummy, y_ExplicitVarSizeWithFlags_Flags,
+     y_ExplicitVarSizeWithFlags_Values]
 such that
     and([q34 <= x_ExplicitVarSizeWithMarker_Marker /\ y_ExplicitVarSizeWithFlags_Flags[q35] ->
          x_ExplicitVarSizeWithMarker_Values[q34] + 2 = y_ExplicitVarSizeWithFlags_Values[q35]

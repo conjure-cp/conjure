@@ -3,7 +3,7 @@ language ESSENCE' 1.0
 find x_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find x_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..4)] of bool
 find x_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..4)
-branching on [x_ExplicitVarSizeWithDummy, x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values]
+branching on [x_ExplicitVarSizeWithFlags_Flags, x_ExplicitVarSizeWithFlags_Values, x_ExplicitVarSizeWithDummy]
 such that
     and([or([x_ExplicitVarSizeWithDummy[q19] != 5 /\ x_ExplicitVarSizeWithDummy[q19] = q22_1 | q19 : int(1..4)]) /\
          !or([x_ExplicitVarSizeWithFlags_Flags[q21] /\ x_ExplicitVarSizeWithFlags_Values[q21] = q22_2

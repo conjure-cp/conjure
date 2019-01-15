@@ -6,7 +6,7 @@ find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..4)] of int(1..
 find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..4)] of int(1..5)
 find conjure_aux2: int(1..4)
 branching on
-    [conjure_aux1, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values, s_ExplicitVarSizeWithDummy]
+    [conjure_aux1, s_ExplicitVarSizeWithDummy, s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
 such that
     and([s_ExplicitVarSizeWithFlags_Flags[q19] -> s_ExplicitVarSizeWithFlags_Values[q19] >= conjure_aux2
              | q19 : int(1..4)]),

@@ -6,8 +6,8 @@ find s_ExplicitVarSizeWithDummy: matrix indexed by [int(1..3)] of int(1..4)
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..3)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..3)] of int(1..3)
 branching on
-    [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_ExplicitVarSizeWithDummy,
-     s_ExplicitVarSizeWithFlags_Flags, s_ExplicitVarSizeWithFlags_Values]
+    [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_ExplicitVarSizeWithFlags_Flags,
+     s_ExplicitVarSizeWithFlags_Values, s_ExplicitVarSizeWithDummy]
 such that
     and([and([f_Function1DPartial_Flags[q23] ->
               or([s_ExplicitVarSizeWithDummy[q25] != 4 /\

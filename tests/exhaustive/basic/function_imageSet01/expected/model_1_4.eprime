@@ -6,8 +6,8 @@ find s_Occurrence: matrix indexed by [int(1..3)] of bool
 find s_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..3)] of bool
 find s_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..3)] of int(1..3)
 branching on
-    [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_Occurrence, s_ExplicitVarSizeWithFlags_Flags,
-     s_ExplicitVarSizeWithFlags_Values]
+    [f_Function1DPartial_Flags, f_Function1DPartial_Values, s_ExplicitVarSizeWithFlags_Flags,
+     s_ExplicitVarSizeWithFlags_Values, s_Occurrence]
 such that
     and([and([f_Function1DPartial_Flags[q17] -> s_Occurrence[f_Function1DPartial_Values[q17]]
                   | q17 : int(1..2), q17 = i])

@@ -14,7 +14,7 @@ git checkout 0.10.2
 mkdir build
 cd build
 cmake ..
-cmake --build .
+cmake --build . -j
 cp fzn-chuffed ${BIN_DIR}/fzn-chuffed
 echo "chuffed executable is at ${BIN_DIR}/fzn-chuffed"
 ls -l ${BIN_DIR}/fzn-chuffed

@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeSequence t, elems) <- match sequenceLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) t)
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) t)
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -215,36 +215,6 @@ rule_SupsetEq = "sequence-subsetEq" `namedRule` theRule where
             , return [essence| &b subsetEq &a |]
             )
     theRule _ = na "rule_SupsetEq"
-
-
-rule_DotLt :: Rule
-rule_DotLt = "sequence-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLt p
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for sequence .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "sequence-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLeq p
-        TypeSequence{} <- typeOf a
-        TypeSequence{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for sequence .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
 
 
 rule_Comprehension_PreImage :: Rule
