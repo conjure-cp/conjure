@@ -26,9 +26,9 @@ branching on [x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Va
 SNSIncumbentMapping([x_ExplicitVarSizeWithMarker_Marker, x_ExplicitVarSizeWithMarker_Values],
                     [incumbent_x_ExplicitVarSizeWithMarker_Marker, incumbent_x_ExplicitVarSizeWithMarker_Values])
 such that
-    and([q46 <= x_ExplicitVarSizeWithMarker_Marker ->
-         or([nums_Explicit[q48] = x_ExplicitVarSizeWithMarker_Values[q46] | q48 : int(1..fin1)])
-             | q46 : int(1..let1)]),
+    and([q51 <= x_ExplicitVarSizeWithMarker_Marker ->
+         or([nums_Explicit[q53] = x_ExplicitVarSizeWithMarker_Values[q51] | q53 : int(1..fin1)])
+             | q51 : int(1..let1)]),
     s =
     sum([toInt(q9 <= x_ExplicitVarSizeWithMarker_Marker) * catchUndef(x_ExplicitVarSizeWithMarker_Values[q9], 0)
              | q9 : int(1..let1)]),
@@ -82,9 +82,9 @@ such that
     or([q42 <= x_ExplicitVarSizeWithMarker_Marker /\ x_ExplicitVarSizeWithMarker_Values[q42] = findDoubleAdd_k
             | q42 : int(1..let1)]),
     findDoubleAdd_activation ->
-    or([q44 <= incumbent_x_ExplicitVarSizeWithMarker_Marker /\
-        incumbent_x_ExplicitVarSizeWithMarker_Values[q44] = 2 * findDoubleAdd_k
-            | q44 : int(1..let1)]),
+    or([q45 <= incumbent_x_ExplicitVarSizeWithMarker_Marker /\
+        incumbent_x_ExplicitVarSizeWithMarker_Values[q45] = 2 * findDoubleAdd_k
+            | q45 : int(1..let1)]),
     !findDoubleAdd_activation ->
     findDoubleAdd_nSize = 1 /\ findDoubleAdd_k = min([nums_Explicit[q40] | q40 : int(1..fin1)]),
     alldifferent_except([toInt(q5 <= x_ExplicitVarSizeWithMarker_Marker) *

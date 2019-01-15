@@ -130,22 +130,14 @@ such that
     x_setAddSingle_conjure_aux33 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setAddSingle_activation ->
     and([q11 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q11 = x_setAddSingle_conjure_aux31) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q16] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q16] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q16]
                   | q16 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q17] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q11, q17]
-                  | q17 : int(a..b)])
              | q11 : int(1..2 ** (1 + (b - a)))]),
     x_setAddSingle_activation ->
-    and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux32, q18] ->
+    and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux32, q18] =
          incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux31, q18]
              | q18 : int(a..b)])
-    /\
-    and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux31, q19] ->
-         x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux32, q19]
-             | q19 : int(a..b)])
     /\
     sum([toInt(x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setAddSingle_conjure_aux33, q20]) | q20 : int(a..b)]) =
     x_setAddSingle_size,
@@ -183,13 +175,9 @@ such that
               q21 = x_setLiftMultiple_setCollect_conjure_aux36;
                   int(1..3)])
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q38] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q38] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q38]
                   | q38 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q39] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q21, q39]
-                  | q39 : int(a..b)])
              | q21 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftMultiple_setCollect_activation ->
     and([and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftMultiple_setCollect_conjure_aux37, q40] ->
@@ -297,13 +285,9 @@ such that
     and([q53 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\
          !(q53 = x_setLiftMultiple_setCrossOver_conjure_aux40 \/ q53 = x_setLiftMultiple_setCrossOver_conjure_aux41)
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q53, q66] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q53, q66] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q53, q66]
                   | q66 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q53, q67] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q53, q67]
-                  | q67 : int(a..b)])
              | q53 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftMultiple_setCrossOver_activation ->
     and([and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence
@@ -411,13 +395,9 @@ such that
     and([q76 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\
          !(q76 = x_setLiftMultiple_setMerge_conjure_aux44 \/ q76 = x_setLiftMultiple_setMerge_conjure_aux45)
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q81] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q81] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q81]
                   | q81 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q82] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q76, q82]
-                  | q82 : int(a..b)])
              | q76 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftMultiple_setMerge_activation ->
     sum([toInt(incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftMultiple_setMerge_conjure_aux44, q83])
@@ -468,13 +448,9 @@ such that
     and([q87 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\
          !(q87 = x_setLiftMultiple_setMove_conjure_aux47 \/ q87 = x_setLiftMultiple_setMove_conjure_aux48)
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q87, q100] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q87, q100] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q87, q100]
                   | q100 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q87, q101] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q87, q101]
-                  | q101 : int(a..b)])
              | q87 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftMultiple_setMove_activation ->
     and([and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftMultiple_setMove_conjure_aux49, q102] ->
@@ -532,13 +508,9 @@ such that
     x_setLiftMultiple_setSplit_conjure_aux53 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftMultiple_setSplit_activation ->
     and([q108 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q108 = x_setLiftMultiple_setSplit_conjure_aux51) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q108, q113] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q108, q113] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q108, q113]
                   | q113 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q108, q114] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q108, q114]
-                  | q114 : int(a..b)])
              | q108 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftMultiple_setSplit_activation ->
     and([and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftMultiple_setSplit_conjure_aux52, q115] ->
@@ -576,13 +548,9 @@ such that
     x_setLiftSingle_setAdd_activation -> x_setLiftSingle_setAdd_conjure_aux55 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftSingle_setAdd_activation ->
     and([q119 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q119 = x_setLiftSingle_setAdd_conjure_aux54) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q119, q128] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q119, q128] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q119, q128]
                   | q128 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q119, q129] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q119, q129]
-                  | q129 : int(a..b)])
              | q119 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setAdd_activation ->
     and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftSingle_setAdd_conjure_aux54, q130] ->
@@ -611,13 +579,9 @@ such that
     x_setLiftSingle_setDiff_activation -> x_setLiftSingle_setDiff_conjure_aux57 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftSingle_setDiff_activation ->
     and([q133 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q133 = x_setLiftSingle_setDiff_conjure_aux56) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q133, q142] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q133, q142] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q133, q142]
                   | q142 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q133, q143] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q133, q143]
-                  | q143 : int(a..b)])
              | q133 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setDiff_activation ->
     x_setLiftSingle_setDiff_size =
@@ -645,13 +609,9 @@ such that
     x_setLiftSingle_setRemove_conjure_aux59 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftSingle_setRemove_activation ->
     and([q146 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q146 = x_setLiftSingle_setRemove_conjure_aux58) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q146, q155] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q146, q155] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q146, q155]
                   | q155 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q146, q156] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q146, q156]
-                  | q156 : int(a..b)])
              | q146 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setRemove_activation ->
     and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftSingle_setRemove_conjure_aux59, q157] ->
@@ -682,13 +642,9 @@ such that
     x_setLiftSingle_setSwap_activation -> x_setLiftSingle_setSwap_conjure_aux61 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftSingle_setSwap_activation ->
     and([q160 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q160 = x_setLiftSingle_setSwap_conjure_aux60) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q169] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q169] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q169]
                   | q169 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q170] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q160, q170]
-                  | q170 : int(a..b)])
              | q160 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setSwap_activation ->
     sum([toInt(x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftSingle_setSwap_conjure_aux61, q171] /\
@@ -718,13 +674,9 @@ such that
     x_setLiftSingle_setSwapAdd_conjure_aux63 <= x_ExplicitVarSizeWithMarkerR2_Marker,
     x_setLiftSingle_setSwapAdd_activation ->
     and([q174 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q174 = x_setLiftSingle_setSwapAdd_conjure_aux62) ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q183] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q183] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q183]
                   | q183 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q184] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q174, q184]
-                  | q184 : int(a..b)])
              | q174 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setSwapAdd_activation ->
     sum([toInt(x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setLiftSingle_setSwapAdd_conjure_aux63, q185] /\
@@ -759,13 +711,9 @@ such that
     x_setLiftSingle_setSwapRemove_activation ->
     and([q188 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\ !(q188 = x_setLiftSingle_setSwapRemove_conjure_aux64)
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q188, q197] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q188, q197] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q188, q197]
                   | q197 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q188, q198] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q188, q198]
-                  | q198 : int(a..b)])
              | q188 : int(1..2 ** (1 + (b - a)))]),
     x_setLiftSingle_setSwapRemove_activation ->
     sum([toInt(incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence
@@ -802,22 +750,14 @@ such that
     and([q202 <= incumbent_x_ExplicitVarSizeWithMarkerR2_Marker /\
          !(q202 = x_setRemoveSingle_conjure_aux66 \/ q202 = x_setRemoveSingle_conjure_aux67)
          ->
-         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q202, q207] ->
+         and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q202, q207] =
               incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q202, q207]
                   | q207 : int(a..b)])
-         /\
-         and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q202, q208] ->
-              x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q202, q208]
-                  | q208 : int(a..b)])
              | q202 : int(1..2 ** (1 + (b - a)))]),
     x_setRemoveSingle_activation ->
-    and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux68, q209] ->
+    and([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux68, q209] =
          incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux66, q209]
              | q209 : int(a..b)])
-    /\
-    and([incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux66, q210] ->
-         x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux68, q210]
-             | q210 : int(a..b)])
     /\
     sum([toInt(incumbent_x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[x_setRemoveSingle_conjure_aux67, q211])
              | q211 : int(a..b)])
@@ -833,12 +773,12 @@ such that
          x_setRemoveSingle_conjure_aux68 = 1;
              int(1..4)]),
     and([and([q5 <= x_ExplicitVarSizeWithMarkerR2_Marker ->
-              or([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q9] /\
-                  !x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9]
+              or([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q9] !=
+                  x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9]
                       | q9 : int(a..b)])
               \/
-              or([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9] /\
-                  !x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q9]
+              or([x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q9] !=
+                  x_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q9]
                       | q9 : int(a..b)])
                   | q5 : int(q4 + 1..2 ** (1 + (b - a)))])
              | q4 : int(1..2 ** (1 + (b - a)))]),
