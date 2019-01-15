@@ -272,12 +272,12 @@ rule_frameUpdate_decomposition = "set-frameUpdate{ExplicitVarSizeWithFlags}" `na
                             ] ++
                             [ Declaration (FindOrGiven LocalFind contiguousCountsPat
                                     (DomainMatrix oldIndex
-                                        (DomainInt AnyTag [RangeBounded
+                                        (DomainInt TagInt [RangeBounded
                                                         0
                                                         (fromInt $ genericLength focusNames_a)])))
                             , Declaration (FindOrGiven LocalFind offsetsPat
                                     (DomainMatrix oldIndex
-                                        (DomainInt AnyTag [RangeBounded
+                                        (DomainInt TagInt [RangeBounded
                                                         (fromInt $ negate $ maximum [genericLength focusNames_a, genericLength focusNames_b])
                                                         (fromInt $          maximum [genericLength focusNames_a, genericLength focusNames_b])])))
                             ] ++

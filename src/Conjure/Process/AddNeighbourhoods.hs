@@ -11,13 +11,13 @@ import Conjure.Language.Expression.DomainSizeOf ( getMaxNumberOfElementsInContai
 import qualified Conjure.Rules.Definition as Config ( Config(..) )
 import Conjure.Language.DomainSizeOf ( domainSizeOf )
 
-addNeighbourhoods
-    :: ( NameGen m
-       , MonadFail m
-       , MonadUserError m
-       , MonadLog m
-       )
-    => Config.Config -> Model -> m Model
+addNeighbourhoods ::
+    NameGen m =>
+    MonadFail m =>
+    MonadUserError m =>
+    MonadLog m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config.Config -> Model -> m Model
 addNeighbourhoods config inpModel | not (Config.generateNeighbourhoods config) = return inpModel
 addNeighbourhoods config inpModel = do
     let brachingOns = [ nm | SearchOrder xs <- mStatements inpModel, BranchingOn nm <- xs ]
@@ -48,17 +48,19 @@ addNeighbourhoods config inpModel = do
     (resolveNames >=> typeCheckModel) outModel
 
 
-generateNeighbourhoods :: NameGen m => Name -> Expression -> Domain () Expression -> m [Statement]
+generateNeighbourhoods ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Name -> Expression -> Domain () Expression -> m [Statement]
 generateNeighbourhoods theVarName theVar domain = do
     let theIncumbentVar = [essence| incumbent(&theVar) |]
     neighbourhoods <- allNeighbourhoods theIncumbentVar theVar domain
     return $ sortNub $ concatMap (skeleton theVarName theVar domain) neighbourhoods
 
 
-skeleton
-    :: Name -> Expression -> Domain () Expression
-    -> NeighbourhoodGenResult
-    -> [Statement]
+skeleton ::
+    Name -> Expression -> Domain () Expression ->
+    NeighbourhoodGenResult -> [Statement]
 skeleton varName var _ gen =
     let
         (generatorName, neighbourhoodSize, consGen) = gen
@@ -86,7 +88,10 @@ type NeighbourhoodGenResult = (Name, Expression, Expression -> [Statement])
 type MultiContainerNeighbourhoodGenResult = (Name, Expression, Int, Int, Expression -> [Expression] -> [Expression] -> [Statement])
 
 
-allNeighbourhoods :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+allNeighbourhoods ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIncumbentVar theVar domain )
     [ mSetOrSetLiftSingle
     , functionLiftSingle
@@ -118,7 +123,10 @@ allNeighbourhoods theIncumbentVar theVar domain = concatMapM (\ gen -> gen theIn
     , functionLessDefined
     ]
 
-multiContainerNeighbourhoods :: NameGen m => Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
+multiContainerNeighbourhoods ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain () Expression -> m [MultiContainerNeighbourhoodGenResult]
 multiContainerNeighbourhoods domain = concatMapM (\ gen -> gen domain )
     [ mSetOrSetMove
     , mSetOrSetCollect
@@ -148,7 +156,9 @@ multiContainerNeighbourhoodError :: b -> Int -> Int -> ([x],[x]) -> a
 multiContainerNeighbourhoodError _ _ _ _ = bug "Wrong number of incumbents/primaries passed to MultiContainerNeighbourhoodGenResult"
 
 
-makeFrameUpdate :: NameGen m => Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
+makeFrameUpdate ::
+    NameGen m =>
+    Int -> Int -> Expression -> Expression -> m ([Expression], [Expression], Expression -> Expression)
 makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
     incumbents <- replicateM numberIncumbents auxiliaryVar
     primaries <- replicateM numberPrimaries auxiliaryVar
@@ -163,7 +173,10 @@ makeFrameUpdate numberIncumbents numberPrimaries theIncumbentVar theVar = do
             in  \ c -> [essence| frameUpdate(&theIncumbentVar, &theVar, &iList, &jList, &c) |]
 
 
-makeFunctionFrameUpdate :: NameGen m => Int -> Int -> Domain () Expression -> Expression -> Expression -> m ([Expression], [Expression], Expression -> [Statement])
+makeFunctionFrameUpdate
+    :: NameGen m =>
+    Int -> Int -> Domain () Expression -> Expression -> Expression ->
+    m ([Expression], [Expression], Expression -> [Statement])
 makeFunctionFrameUpdate numberIncumbents numberPrimaries functionFromDomain theIncumbentVar theVar = do
     incumbents <- replicateM numberIncumbents auxiliaryVar
     primaries <- replicateM numberPrimaries auxiliaryVar
@@ -238,7 +251,10 @@ innerDomainOfMSetOrSet (DomainSet _ _ inner) = inner
 innerDomainOfMSetOrSet (DomainMSet _ _ inner) = inner
 innerDomainOfMSetOrSet _ = bug "I special case this function, called with type not set or MSet"
 
-mSetOrSetLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetLiftSingle ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetLiftSingle theIncumbentVar theVar theDomain
     | Just typeName <- mSetOrSetName theDomain = do
         let generatorName = mconcat [typeName,"LiftSingle"]
@@ -260,7 +276,10 @@ mSetOrSetLiftSingle theIncumbentVar theVar theDomain
 mSetOrSetLiftSingle _ _ _ = return []
 
 
-functionLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLiftSingle ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 functionLiftSingle theIncumbentVar theVar (DomainFunction _ _ frDomain toDomain) = do
         let generatorName = "functionLiftSingle"
         ([incumbent_i], [i], frameUpdate) <- makeFunctionFrameUpdate 1 1 frDomain theIncumbentVar theVar
@@ -282,7 +301,10 @@ functionLiftSingle _ _ _ = return []
 getInner :: Expression -> Expression -> [Domain () Expression] -> Integer -> (Expression, Expression, Domain () Expression)
 getInner theIncumbentVar theVar innerDomains i = let iE = fromInt i in([essence|&theIncumbentVar[&iE]  |], [essence|&theVar[&iE] |], (innerDomains !! ( fromIntegral (i-1))))
 
-tupleLiftSingle :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+tupleLiftSingle ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 tupleLiftSingle theIncumbentVar theVar (DomainTuple innerDomains) = do
         let generatorName = "tupleLiftSingle"
         let innerVarsAndDomains = map (\ i -> getInner theIncumbentVar theVar innerDomains i) [1..toInteger $ length innerDomains]
@@ -297,7 +319,10 @@ tupleLiftSingle theIncumbentVar theVar (DomainTuple innerDomains) = do
 tupleLiftSingle _ _ _ = return []
 
 
-functionLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+functionLiftMultiple ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 functionLiftMultiple theIncumbentVar theVar (DomainFunction _ _ frDomain toDomain) = do
         let generatorName = "functionLiftMultiple"
         let
@@ -317,7 +342,10 @@ functionLiftMultiple _ _ _ = return []
 
 
 
-mSetOrSetLiftMultiple :: NameGen m => Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
+mSetOrSetLiftMultiple ::
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> Expression -> Domain () Expression -> m [NeighbourhoodGenResult]
 mSetOrSetLiftMultiple theIncumbentVar theVar theDomain
     | Just typeName <- mSetOrSetName theDomain = do
         let generatorName = mconcat [typeName, "LiftMultiple"]

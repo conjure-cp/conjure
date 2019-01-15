@@ -11,7 +11,6 @@ import Conjure.Prelude
 import Conjure.Bug
 import Conjure.UserError
 import Conjure.Language
-import Conjure.Language.TypeOf
 
 
 resolveNamesMulti

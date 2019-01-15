@@ -5,7 +5,6 @@ module Conjure.Representations.Set.ExplicitVarSizeWithMarker ( setExplicitVarSiz
 -- conjure
 import Conjure.Prelude
 import Conjure.Language
-import Conjure.Language.TypeOf
 import Conjure.Language.DomainSizeOf
 import Conjure.Language.Expression.DomainSizeOf ()
 import Conjure.Language.ZeroVal ( zeroVal, EnumerateDomain )
@@ -13,7 +12,12 @@ import Conjure.Representations.Internal
 import Conjure.Representations.Common
 
 
-setExplicitVarSizeWithMarker :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
+setExplicitVarSizeWithMarker :: forall m .
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Representation m
 setExplicitVarSizeWithMarker = Representation chck downD structuralCons downC up
 
     where

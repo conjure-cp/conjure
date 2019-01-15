@@ -189,7 +189,7 @@ toCompletion :: forall m .
     Model ->
     Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue config m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -714,7 +714,7 @@ dropTagForSR m = do
     where
 
 
-updateDeclarations ::
+updateDeclarations :: forall m .
     MonadUserError m =>
     MonadFail m =>
     NameGen m =>
@@ -809,8 +809,13 @@ updateDeclarations model = do
     return model { mStatements = statements }
 
 
-updateDeclarationsInsideFrameUpdate
-    :: forall m . (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarationsInsideFrameUpdate :: forall m .
+    MonadUserError m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode::TypeCheckerMode) =>
+    Model -> m Model
 updateDeclarationsInsideFrameUpdate model = do
     
     let
@@ -1045,7 +1050,14 @@ removeExtraSlices model = do
     return model { mStatements = statements }
 
 
-convertSNSNeighbourhood :: (MonadFail m, MonadLog m, MonadUserError m, NameGen m, EnumerateDomain m) => Model -> m Model
+convertSNSNeighbourhood ::
+    MonadFail m =>
+    MonadLog m =>
+    MonadUserError m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode::TypeCheckerMode) =>
+    Model -> m Model
 convertSNSNeighbourhood model
     | let hasSNS = not $ null [ () | SNS_Neighbourhood{} <- mStatements model ]
     , hasSNS = do
@@ -1167,8 +1179,8 @@ prologue ::
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    Model -> m Model
-prologue model = do
+    Config -> Model -> m Model
+prologue config model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
     >>= return . addSearchOrder       >>= logDebugIdModel "[addSearchOrder]"
@@ -1302,7 +1314,7 @@ allRules config =
     , [ rule_Eq
       , rule_Neq
       ]
-    , verticalRules
+    , verticalRules config
     , horizontalRules
     ] ++ otherRules
       ++ delayedRules
