@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "relation-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeRelation taus, elems) <- match relationLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) (TypeTuple taus))
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) (TypeTuple taus))
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple row)
                             | row <- elems
                             ]
@@ -115,6 +115,8 @@ rule_Eq = "relation-eq" `namedRule` theRule where
                          (forAll &iPat in &x . &i in &y)
                          /\
                          (forAll &iPat in &y . &i in &x)
+                         /\
+                         (|&x| = |&y|)
                      |]
             )
 
@@ -136,36 +138,6 @@ rule_Neq = "relation-neq" `namedRule` theRule where
                      |]
             )
     theRule _ = na "rule_Neq"
-
-
-rule_DotLt :: Rule
-rule_DotLt = "relation-DotLt" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLt p
-        TypeRelation{} <- typeOf a
-        TypeRelation{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for relation .<" <+> pretty (make opDotLt ma mb)
-            , return $ make opDotLt ma mb
-            )
-
-
-rule_DotLeq :: Rule
-rule_DotLeq = "relation-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (a,b)          <- match opDotLeq p
-        TypeRelation{} <- typeOf a
-        TypeRelation{} <- typeOf b
-        sameRepresentation a b
-        ma <- tupleLitIfNeeded <$> downX1 a
-        mb <- tupleLitIfNeeded <$> downX1 b
-        return
-            ( "Horizontal rule for relation .<=" <+> pretty (make opDotLeq ma mb)
-            , return $ make opDotLeq ma mb
-            )
 
 
 rule_SubsetEq :: Rule

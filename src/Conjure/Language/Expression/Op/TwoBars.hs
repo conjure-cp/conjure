@@ -24,8 +24,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
     typeOf p@(OpTwoBars a) = do
         ty <- typeOf a
         case ty of
-            TypeInt NoTag   -> return ()
-            TypeInt AnyTag  -> return ()
+            TypeInt _       -> return ()
             TypeList{}      -> return ()
             TypeSet{}       -> return ()
             TypeMSet{}      -> return ()
@@ -37,25 +36,25 @@ instance (TypeOf x, Pretty x) => TypeOf (OpTwoBars x) where
                                                      , "Expected an integer or a collection."
                                                      , "But got:" <+> pretty ty
                                                      ]
-        return $ TypeInt NoTag
+        return $ TypeInt TagInt
 
 instance EvaluateOp OpTwoBars where
     evaluateOp (OpTwoBars x) =
         case x of
             -- absolute value
-            ConstantInt _ y                         -> return $ ConstantInt NoTag $ abs y
+            ConstantInt _ y                         -> return $ ConstantInt TagInt $ abs y
 
             -- cardinality of a constant
-            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt NoTag $ genericLength                    xs
-            (viewConstantSet       -> Just xs)      -> return $ ConstantInt NoTag $ genericLength $ sortNub          xs
-            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt NoTag $ genericLength                    xs
-            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt NoTag $ genericLength $ sortNub          xs
-            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt NoTag $ genericLength                    xs
-            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt NoTag $ genericLength $ sortNub          xs
-            (viewConstantPartition -> Just xs)      -> return $ ConstantInt NoTag $ genericLength $ sortNub $ concat xs
+            (viewConstantMatrix    -> Just (_, xs)) -> return $ ConstantInt TagInt $ genericLength                    xs
+            (viewConstantSet       -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
+            (viewConstantMSet      -> Just xs)      -> return $ ConstantInt TagInt $ genericLength                    xs
+            (viewConstantFunction  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
+            (viewConstantSequence  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength                    xs
+            (viewConstantRelation  -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub          xs
+            (viewConstantPartition -> Just xs)      -> return $ ConstantInt TagInt $ genericLength $ sortNub $ concat xs
 
             -- cardinality of a domain
-            DomainInConstant (DomainInt _ rs) -> ConstantInt NoTag . genericLength <$> rangesInts rs
+            DomainInConstant (DomainInt _ rs) -> ConstantInt TagInt . genericLength <$> rangesInts rs
             DomainInConstant dom            -> runNameGen () $ domainSizeOf dom
             _ -> na $ "evaluateOp OpTwoBars" <+> pretty (show x)
 

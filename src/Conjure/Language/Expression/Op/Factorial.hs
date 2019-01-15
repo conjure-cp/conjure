@@ -22,15 +22,14 @@ instance (TypeOf x, Pretty x) => TypeOf (OpFactorial x) where
     typeOf p@(OpFactorial a) = do
         TypeInt t <- typeOf a
         case t of
-            NoTag -> return ()
-            AnyTag -> return ()
+            TagInt -> return ()
             _ -> raiseTypeError p
-        return (TypeInt AnyTag)
+        return (TypeInt t)
 
 instance EvaluateOp OpFactorial where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpFactorial x) = ConstantInt NoTag . product . enumFromTo 1 <$> intOut "factorial" x
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpFactorial x) = ConstantInt TagInt . product . enumFromTo 1 <$> intOut "factorial" x
 
 instance SimplifyOp OpFactorial x where
     simplifyOp _ = na "simplifyOp{OpFactorial}"

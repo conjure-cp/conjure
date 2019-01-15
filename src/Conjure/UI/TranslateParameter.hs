@@ -7,8 +7,8 @@ import Conjure.UserError
 import Conjure.Language.Definition
 import Conjure.Language.Domain
 import Conjure.Language.Constant
-import Conjure.Language.Type 
-import Conjure.Language.TypeOf ( typeOf )
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Pretty
 import Conjure.Language.Instantiate
 import Conjure.Process.Enums ( removeEnumsFromParam )
@@ -17,15 +17,15 @@ import Conjure.Process.Enumerate ( EnumerateDomain )
 import Conjure.Representations ( downC )
 
 
-translateParameter
-    :: ( MonadFail m
-       , MonadLog m
-       , NameGen m
-       , EnumerateDomain m
-       )
-    => Model      -- eprime model
-    -> Model      -- essence param
-    -> m Model    -- eprime param
+translateParameter ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model ->     -- eprime model
+    Model ->     -- essence param
+    m Model      -- eprime param
 
 translateParameter eprimeModel0 essenceParam0 = do
     logDebug $ "[eprimeModel  0]" <+> pretty essenceParam0
@@ -116,7 +116,7 @@ translateParameter eprimeModel0 essenceParam0 = do
                                             ]
                                         else return $ Just (n, d, TypedConstant c cTy)
                         else return $ Just (n, d, v)
-            | (n, d) <- essenceGivens' ++ [ (n, DomainInt NoTag []) | n <- generatedLettingNames ]
+            | (n, d) <- essenceGivens' ++ [ (n, DomainInt TagInt []) | n <- generatedLettingNames ]
             ]
     logDebug $ "[essenceGivensAndLettings ]" <+> vcat [ vcat [ "name    :" <+> pretty n
                                                              , "domain  :" <+> pretty d
@@ -155,7 +155,7 @@ translateParameter eprimeModel0 essenceParam0 = do
             ty <- typeOf domain
             return (name, domain, TypedConstant constant ty)
         decorateWithType p = return p
-    
+
     eprimeLettings
         :: [(Name, Domain HasRepresentation Constant, Constant)]
         <- failToUserError $ concatMapM downC essenceGivensAndLettings' >>= mapM decorateWithType

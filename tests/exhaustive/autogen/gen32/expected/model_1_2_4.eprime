@@ -6,8 +6,8 @@ find var2_ExplicitVarSizeWithDummy: matrix indexed by [int(1..11)] of int(-4..5,
 find var2_ExplicitVarSizeWithFlags_Flags: matrix indexed by [int(1..11)] of bool
 find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 branching on
-    [var2_Occurrence, var2_ExplicitVarSizeWithDummy, var2_ExplicitVarSizeWithFlags_Flags,
-     var2_ExplicitVarSizeWithFlags_Values]
+    [var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values, var2_Occurrence,
+     var2_ExplicitVarSizeWithDummy]
 such that
     or([var2_Occurrence[q29] /\
         !or([var2_ExplicitVarSizeWithDummy[q31] != 6 /\ var2_ExplicitVarSizeWithDummy[q31] = q29 | q31 : int(1..11)])

@@ -7,13 +7,12 @@ module Conjure.Representations.Function.FunctionND ( functionND, viewAsDomainTup
 import Conjure.Prelude
 import Conjure.Bug
 import Conjure.Language
-import Conjure.Language.TypeOf
 import Conjure.Representations.Internal
 import Conjure.Representations.Common
 import Conjure.Representations.Function.Function1D ( domainValues )
 
 
-functionND :: forall m . (MonadFail m, NameGen m) => Representation m
+functionND :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
 functionND = Representation chck downD structuralCons downC up
 
     where
@@ -64,7 +63,9 @@ functionND = Representation chck downD structuralCons downC up
                 toIndex x = [ [essence| &x[&k] |] | k <- kRange ]
                 index x m = make opMatrixIndexing m (toIndex x)
 
-            let injectiveCons values = do
+            let
+                injectiveCons :: Expression -> m [Expression]
+                injectiveCons values = do
                     tyTo <- typeOf innerDomainTo
                     let canAllDiff = case tyTo of
                             TypeBool{} -> True
@@ -92,7 +93,8 @@ functionND = Representation chck downD structuralCons downC up
                                         &i .< &j -> &valuesIndexedI != &valuesIndexedJ
                                 |]
 
-            let surjectiveCons values = do
+                surjectiveCons :: Expression -> m [Expression]
+                surjectiveCons values = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
                     let valuesIndexedJ = index j values
@@ -103,14 +105,16 @@ functionND = Representation chck downD structuralCons downC up
                                     &valuesIndexedJ = &i
                         |]
 
-            let jectivityCons values = case jectivityAttr of
+                jectivityCons :: Expression -> m [Expression]
+                jectivityCons values = case jectivityAttr of
                     JectivityAttr_None       -> return []
                     JectivityAttr_Injective  -> injectiveCons  values
                     JectivityAttr_Surjective -> surjectiveCons values
                     JectivityAttr_Bijective  -> (++) <$> injectiveCons  values
                                                      <*> surjectiveCons values
 
-            let cardinality = do
+                cardinality :: m Expression
+                cardinality = do
                     (iPat, _) <- quantifiedVar
                     return [essence| sum &iPat : &innerDomainFr . 1 |]
 

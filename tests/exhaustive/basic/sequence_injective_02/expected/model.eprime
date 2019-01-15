@@ -9,7 +9,7 @@ such that
              | q1 : int(1..2)]),
     f_ExplicitBounded_Length <= 2,
     and([q2 <= f_ExplicitBounded_Length /\ q3 <= f_ExplicitBounded_Length ->
-         !(f_ExplicitBounded_Values_1[q2] = f_ExplicitBounded_Values_1[q3] /\
-           f_ExplicitBounded_Values_2[q2] = f_ExplicitBounded_Values_2[q3])
+         f_ExplicitBounded_Values_1[q2] != f_ExplicitBounded_Values_1[q3] \/
+         f_ExplicitBounded_Values_2[q2] != f_ExplicitBounded_Values_2[q3]
              | q2 : int(1..2), q3 : int(1..2), q2 < q3])
 

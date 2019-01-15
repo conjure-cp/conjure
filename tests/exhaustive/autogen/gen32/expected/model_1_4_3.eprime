@@ -7,8 +7,8 @@ find var2_ExplicitVarSizeWithFlags_Values: matrix indexed by [int(1..11)] of int
 find var2_ExplicitVarSizeWithMarker_Marker: int(0..11)
 find var2_ExplicitVarSizeWithMarker_Values: matrix indexed by [int(1..11)] of int(-4..5, 2)
 branching on
-    [var2_Occurrence, var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values,
-     var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values]
+    [var2_ExplicitVarSizeWithMarker_Marker, var2_ExplicitVarSizeWithMarker_Values, var2_Occurrence,
+     var2_ExplicitVarSizeWithFlags_Flags, var2_ExplicitVarSizeWithFlags_Values]
 such that
     or([var2_Occurrence[q28] /\
         !or([var2_ExplicitVarSizeWithFlags_Flags[q30] /\ var2_ExplicitVarSizeWithFlags_Values[q30] = q28

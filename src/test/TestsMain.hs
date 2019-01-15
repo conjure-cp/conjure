@@ -2,6 +2,7 @@ module Main where
 
 -- conjure tests
 import Conjure.Prelude
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import qualified Conjure.Language.DomainSizeTest ( tests )
 import qualified Conjure.RepresentationsTest ( tests )
 import qualified Conjure.ModelAllSolveAll ( tests, TestTimeLimit(..) )
@@ -19,6 +20,7 @@ import Test.Tasty.Runners.AntXML ( antXMLRunner )
 
 main :: IO ()
 main = do
+    let ?typeCheckerMode = StronglyTyped
     modelAllSolveAllTests <- Conjure.ModelAllSolveAll.tests
     typeCheckAllTests     <- Conjure.TypeCheckAll.tests
     parsePrintTests       <- Conjure.ParsePrint.tests

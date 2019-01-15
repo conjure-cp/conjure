@@ -5,8 +5,8 @@ find x_ExplicitWithRepetition_Values: matrix indexed by [int(1..4)] of int(1..2)
 find x_ExplicitWithFlags_Flags: matrix indexed by [int(1..4)] of int(0..4)
 find x_ExplicitWithFlags_Values: matrix indexed by [int(1..4)] of int(1..2)
 branching on
-    [x_ExplicitWithRepetition_Flag, x_ExplicitWithRepetition_Values, x_ExplicitWithFlags_Flags,
-     x_ExplicitWithFlags_Values]
+    [x_ExplicitWithFlags_Flags, x_ExplicitWithFlags_Values, x_ExplicitWithRepetition_Flag,
+     x_ExplicitWithRepetition_Values]
 such that
     or([q22 <= x_ExplicitWithRepetition_Flag /\ x_ExplicitWithRepetition_Values[q22] = 1 | q22 : int(1..4)]),
     and([q1 + 1 <= x_ExplicitWithRepetition_Flag ->

@@ -128,20 +128,6 @@ parseDomainWithRepr = pDomainAtom
             , DomainMetaVar <$> parseMetaVariable, parens parseDomainWithRepr
             ]
 
-        parseRepr = msum [ braces parseReprInner
-                         , return NoRepresentation
-                         ]
-
-        parseReprInner = do
-            pos    <- getPosition
-            nm     <- identifierText
-            inners <- fromMaybe [] <$> optional (brackets (commaSeparated parseReprInner))
-            case textToRepresentation nm inners of
-                Nothing -> do
-                    setPosition pos
-                    fail ("Not a valid representation:" <+> pretty nm)
-                Just r  -> return r
-
         pBool = do
             lexeme L_bool
             -- parse and discard, compatibility with SR
@@ -151,15 +137,15 @@ parseDomainWithRepr = pDomainAtom
         pIntFromExpr = do
             lexeme L_int
             x <- parens parseExpr
-            case typeOf x of
-                Just (TypeInt NoTag) -> return $ DomainInt NoTag [RangeSingle x]
+            case (let ?typeCheckerMode = StronglyTyped in typeOf x) of
+                Just (TypeInt TagInt) -> return $ DomainInt TagInt [RangeSingle x]
                 _ -> return $ DomainIntE x
 
         pInt = do
             lexeme L_int
             mxs <- optional $ parens $ commaSeparated0 $ parseRange parseExpr
             let xs = fromMaybe [] mxs
-            return $ DomainInt NoTag xs
+            return $ DomainInt TagInt xs
 
         pReference = do
             r  <- identifierText
@@ -210,41 +196,35 @@ parseDomainWithRepr = pDomainAtom
 
         pSet = do
             lexeme L_set
-            r <- parseRepr
             x <- parseSetAttr
             y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainSet r x y
+            return $ DomainSet NoRepresentation x y
 
         pMSet = do
             lexeme L_mset
-            r <- parseRepr
             x <- parseMSetAttr
             y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainMSet r x y
+            return $ DomainMSet NoRepresentation x y
 
         pFunction' = do
             lexeme L_function
-            r <- parseRepr
             (y,z) <- arrowedPair parseDomainWithRepr
-            return $ DomainFunction r def y z
+            return $ DomainFunction NoRepresentation def y z
 
         pFunction = do
             lexeme L_function
-            r <- parseRepr
             x <- parseFunctionAttr
             (y,z) <- arrowedPair parseDomainWithRepr
-            return $ DomainFunction r x y z
+            return $ DomainFunction NoRepresentation x y z
 
         pSequence = do
             lexeme L_sequence
-            r <- parseRepr
             x <- parseSequenceAttr
             y <- lexeme L_of >> parseDomainWithRepr
-            return $ DomainSequence r x y
+            return $ DomainSequence NoRepresentation x y
 
         pRelation = do
             lexeme L_relation
-            r  <- parseRepr
             pos <- getPosition
             x  <- parseRelationAttr
             lexeme L_of
@@ -254,15 +234,14 @@ parseDomainWithRepr = pDomainAtom
                 setPosition pos
                 fail $ "Only binary relations can have these attributes:" <+>
                             prettyList id "," (S.toList binAttrs)
-            return $ DomainRelation r x ys
+            return $ DomainRelation NoRepresentation x ys
 
         pPartition = do
             lexeme L_partition
-            r <- parseRepr
             x <- parsePartitionAttr
             lexeme L_from
             y <- parseDomainWithRepr
-            return $ DomainPartition r x y
+            return $ DomainPartition NoRepresentation x y
 
 parseAttributes :: Parser (DomainAttributes Expression)
 parseAttributes = do
@@ -514,7 +493,7 @@ parseTyped = parens $ do
     x  <- parseExpr
     lexeme L_Colon
     d  <- betweenTicks parseDomain
-    ty <- typeOfDomain d
+    ty <- let ?typeCheckerMode = StronglyTyped in typeOfDomain d
     return (Typed x ty)
 
 parseName :: Parser Name
@@ -539,7 +518,7 @@ parseLiteral = label "value" (do p <- pCore ; p)
         pCore = satisfyL $ \case
                 L_false       -> Just $ return $ Constant $ ConstantBool False
                 L_true        -> Just $ return $ Constant $ ConstantBool True
-                LIntLiteral i -> Just $ return $ Constant $ ConstantInt NoTag (fromInteger i)
+                LIntLiteral i -> Just $ return $ Constant $ ConstantInt TagInt (fromInteger i)
                 L_OpenBracket -> Just pMatrix
                 L_tuple       -> Just pTupleWith
                 L_OpenParen   -> Just pTupleWithout
@@ -626,8 +605,12 @@ parseLiteral = label "value" (do p <- pCore ; p)
 
         pRelation = mkAbstractLiteral <$> do
             -- lexeme L_relation
-            xs <- parens (commaSeparated0 (parseLiteral))
-            return (AbsLitRelation [is | AbstractLiteral (AbsLitTuple is) <- xs])
+            xs <- parens (commaSeparated0 (pTupleWith <|> pTupleWithout))
+            xsFiltered <- forM xs $ \case
+                Constant (ConstantAbstract (AbsLitTuple is)) -> return (map Constant is)
+                AbstractLiteral (AbsLitTuple is) -> return is
+                x -> fail ("Cannot parse as part of relation literal:" <+> vcat [pretty x, pretty (show x)])
+            return (AbsLitRelation xsFiltered)
 
         pPartition = mkAbstractLiteral <$> do
             -- lexeme L_partition

@@ -1,15 +1,22 @@
 language ESSENCE' 1.0
 
-find x_ExplicitR15_RelationAsMatrix: matrix indexed by [int(1..2), int(1..2), int(3)] of bool
-branching on [x_ExplicitR15_RelationAsMatrix]
+find x_ExplicitR16_RelationAsMatrix: matrix indexed by [int(1..2), int(1..2), int(3)] of bool
+branching on [x_ExplicitR16_RelationAsMatrix]
 such that
-    and([and([x_ExplicitR15_RelationAsMatrix[q6, q10_1, 3] -> false | q10_1 : int(1..2)]) \/
-         or([x_ExplicitR15_RelationAsMatrix[q6, q18_1, 3] /\ q18_1 = 2 | q18_1 : int(1..2)]) /\
-         and([x_ExplicitR15_RelationAsMatrix[q6, q13_1, 3] -> 2 = q13_1 | q13_1 : int(1..2)])
-             | q6 : int(1..2)]),
-    or([and([x_ExplicitR15_RelationAsMatrix[q22, q24_1, 3] -> false | q24_1 : int(1..2)]) | q22 : int(1..2)]),
-    or([and([x_ExplicitR15_RelationAsMatrix[q27, q29_1, 3] -> 2 = q29_1 | q29_1 : int(1..2)]) /\
-        or([x_ExplicitR15_RelationAsMatrix[q27, q34_1, 3] /\ q34_1 = 2 | q34_1 : int(1..2)])
-            | q27 : int(1..2)]),
-    flatten(x_ExplicitR15_RelationAsMatrix[1, .., ..]) <lex flatten(x_ExplicitR15_RelationAsMatrix[2, .., ..])
+    and([and([x_ExplicitR16_RelationAsMatrix[q10, q14_1, 3] -> false | q14_1 : int(1..2)]) /\
+         0 = sum([toInt(x_ExplicitR16_RelationAsMatrix[q10, q17_1, 3]) | q17_1 : int(1..2)])
+         \/
+         or([x_ExplicitR16_RelationAsMatrix[q10, q26_1, 3] /\ q26_1 = 2 | q26_1 : int(1..2)]) /\
+         and([x_ExplicitR16_RelationAsMatrix[q10, q21_1, 3] -> 2 = q21_1 | q21_1 : int(1..2)])
+         /\ 1 = sum([toInt(x_ExplicitR16_RelationAsMatrix[q10, q20_1, 3]) | q20_1 : int(1..2)])
+             | q10 : int(1..2)]),
+    or([and([x_ExplicitR16_RelationAsMatrix[q30, q32_1, 3] -> false | q32_1 : int(1..2)]) /\
+        sum([toInt(x_ExplicitR16_RelationAsMatrix[q30, q35_1, 3]) | q35_1 : int(1..2)]) = 0
+            | q30 : int(1..2)]),
+    or([and([x_ExplicitR16_RelationAsMatrix[q37, q41_1, 3] -> 2 = q41_1 | q41_1 : int(1..2)]) /\
+        or([x_ExplicitR16_RelationAsMatrix[q37, q46_1, 3] /\ q46_1 = 2 | q46_1 : int(1..2)])
+        /\ sum([toInt(x_ExplicitR16_RelationAsMatrix[q37, q40_1, 3]) | q40_1 : int(1..2)]) = 1
+            | q37 : int(1..2)]),
+    [toInt(x_ExplicitR16_RelationAsMatrix[1, q5, 3]) | q5 : int(1..2)] <lex
+    [toInt(x_ExplicitR16_RelationAsMatrix[2, q7, 3]) | q7 : int(1..2)]
 

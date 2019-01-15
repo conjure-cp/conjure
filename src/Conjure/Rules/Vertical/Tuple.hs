@@ -61,34 +61,6 @@ rule_Tuple_Leq = "tuple-Leq" `namedRule` theRule where
             )
 
 
-rule_Tuple_DotLt :: Rule
-rule_Tuple_DotLt = "tuple-DotLt" `namedRule` theRule where
-    theRule p = do
-        (x,y)       <- match opDotLt p
-        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple{} <- typeOf y
-        xs          <- downX1 x
-        ys          <- downX1 y
-        return
-            ( "Horizontal rule for tuple .<"
-            , return $ decomposeLexDotLt p xs ys
-            )
-
-
-rule_Tuple_DotLeq :: Rule
-rule_Tuple_DotLeq = "tuple-DotLeq" `namedRule` theRule where
-    theRule p = do
-        (x,y)       <- match opDotLeq p
-        TypeTuple{} <- typeOf x        -- TODO: check if x and y have the same arity
-        TypeTuple{} <- typeOf y
-        xs          <- downX1 x
-        ys          <- downX1 y
-        return
-            ( "Horizontal rule for tuple .<="
-            , return $ decomposeLexDotLeq p xs ys
-            )
-
-
 rule_Tuple_TildeLt :: Rule
 rule_Tuple_TildeLt = "tuple-TildeLt" `namedRule` theRule where
     theRule p = do

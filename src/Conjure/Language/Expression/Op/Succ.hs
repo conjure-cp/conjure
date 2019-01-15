@@ -23,17 +23,17 @@ instance (TypeOf x, Pretty x) => TypeOf (OpSucc x) where
         ty <- typeOf x
         case ty of
             TypeBool{} -> return ty
-            TypeInt NoTag  -> return ty
+            TypeInt TagInt  -> return ty
             TypeInt (TagEnum _)  -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError p
 
 instance EvaluateOp OpSucc where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpSucc (ConstantBool False)) = return (ConstantBool True)
     evaluateOp (OpSucc (ConstantBool True )) = return (ConstantBool False)          -- undef
-    evaluateOp (OpSucc (ConstantInt NoTag x)) = return (ConstantInt NoTag (succ x))
+    evaluateOp (OpSucc (ConstantInt TagInt x)) = return (ConstantInt TagInt (succ x))
     evaluateOp (OpSucc (ConstantInt (TagEnum t) x))
         = return (ConstantInt (TagEnum t) (succ x))
     evaluateOp op = na $ "evaluateOp{OpSucc}" <+> pretty (show op)
