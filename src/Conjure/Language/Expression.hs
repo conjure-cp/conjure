@@ -117,18 +117,22 @@ instance ToJSON    Dominance where toJSON = genericToJSON jsonOptions
 instance FromJSON  Dominance where parseJSON = genericParseJSON jsonOptions
 
 instance Pretty Dominance where
+
+    -- printing with Essence syntax
     pretty (Dominance rel Nothing False) =
         "dominance_relation" <+> pretty rel
     pretty (Dominance rel (Just (dir, func)) False) =
         vcat [ pretty (Dominance rel Nothing False)
              , "incomparability_function" <+> pretty dir <+> pretty func
              ]
+
+    -- printing with E' syntax
     pretty (Dominance rel Nothing True) =
-        "dominance_relation" <> prParens (pretty rel)
+        ", dominance_relation" <> prParens (pretty rel)
     pretty (Dominance rel (Just (dir, func)) True) =
         let dirNum = case dir of Ascending -> "0" ; Descending -> "1" in
         vcat [ pretty (Dominance rel Nothing True)
-             , "incomparability_function" <> prParens (dirNum <> "," <+> pretty func)
+             , ", incomparability_function" <> prParens (dirNum <> "," <+> pretty func)
              ]
 
 

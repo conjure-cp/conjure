@@ -104,7 +104,10 @@ instance VarSymBreakingDescription Model where
 
 
 languageEprime :: Model -> Model
-languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0] }
+languageEprime m = m { mLanguage = LanguageVersion "ESSENCE'" [1,0]
+                     , mStatements = transformBi updatePrintingStyle (mStatements m)
+                     }
+    where updatePrintingStyle (Dominance rel incomp _) = Dominance rel incomp True
 
 allContextsExceptReferences :: Zipper a Expression -> [Zipper a Expression]
 allContextsExceptReferences z0 = concatMap subtreeOf (allSiblings z0)
