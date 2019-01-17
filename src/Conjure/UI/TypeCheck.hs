@@ -158,9 +158,9 @@ typeCheckModel model1 = do
                                 ]
                             return x
                 return (SuchThat xs')
-            DominanceRelation x -> do
-                mty <- runExceptT $ typeOf x
-                case mty of
+            DominanceStmt (Dominance rel incomp _) -> do
+                tyRel <- runExceptT $ typeOf rel
+                case tyRel of
                     Right TypeBool -> return ()
                     Left err -> tell $ return $ vcat
                         [ "In the dominance_relation statement:" <++> pretty st
@@ -170,20 +170,21 @@ typeCheckModel model1 = do
                         [ "In the dominance_relation statement:" <++> pretty st
                         , "Expected type `bool`, but got:" <++> pretty ty
                         ]
-                return st
-            IncomparabilityFunction _ x -> do
-                mty <- runExceptT $ typeOf x
-                case mty of
-                    -- Can be generalised to other orderable types
-                    Right TypeInt{} -> return ()
-                    Left err -> tell $ return $ vcat
-                        [ "In the incomparability_function statement:" <++> pretty st
-                        , "Error:" <++> pretty err
-                        ]
-                    Right ty -> tell $ return $ vcat
-                        [ "In the incomparability_function statement:" <++> pretty st
-                        , "Expected type `int`, but got:" <++> pretty ty
-                        ]
+                case incomp of
+                    Nothing -> return ()
+                    Just (_, func) -> do
+                        tyFunc <- runExceptT $ typeOf func
+                        case tyFunc of
+                            -- Can be generalised to other orderable types
+                            Right TypeInt{} -> return ()
+                            Left err -> tell $ return $ vcat
+                                [ "In the incomparability_function statement:" <++> pretty st
+                                , "Error:" <++> pretty err
+                                ]
+                            Right ty -> tell $ return $ vcat
+                                [ "In the incomparability_function statement:" <++> pretty st
+                                , "Expected type `int`, but got:" <++> pretty ty
+                                ]
                 return st
     unless (null errs) (userErr errs)
 

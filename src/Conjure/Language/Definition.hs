@@ -17,6 +17,7 @@ module Conjure.Language.Definition
     , ModelInfo(..), Decision(..), TrailRewrites(..)
     , Statement(..), SearchOrder(..), AscDesc(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
+    , Dominance(..)
     , Strategy(..)
     , QuestionAnswered(..), viewAuto, parseStrategy
 

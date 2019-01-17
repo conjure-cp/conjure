@@ -144,9 +144,7 @@ sanityChecks model = do
         upToOneBranchingOn = upToOne (\ st -> case st of SearchOrder{} -> True; _ -> False) "branching on"
 
         upToOneDominance :: MonadWriter [Doc] m => Model -> m ()
-        upToOneDominance m = do
-            upToOne (\ st -> case st of DominanceRelation{} -> True; _ -> False) "dominance_relation" m
-            upToOne (\ st -> case st of IncomparabilityFunction{} -> True; _ -> False) "incomparability_function" m
+        upToOneDominance m = upToOne (\ st -> case st of DominanceStmt{} -> True; _ -> False) "dominance_relation" m
 
     (model', errs) <- runWriterT (check model)
     if null errs

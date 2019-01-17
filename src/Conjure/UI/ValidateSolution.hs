@@ -153,8 +153,7 @@ validateSolution essenceModel essenceParam essenceSolution = flip evalStateT [] 
                                                              ]
                                                          ]
 
-        DominanceRelation{} -> return ()
-        IncomparabilityFunction{} -> return ()
+        DominanceStmt{} -> return ()
 
 introduceRecordFields ::
     MonadFail m =>

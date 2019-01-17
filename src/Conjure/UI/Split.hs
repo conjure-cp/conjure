@@ -43,8 +43,7 @@ split m = do
         toPermute (Where xs)                   = Left [Where [x] | x <- xs]
         toPermute st@Objective{}               = Left [st]
         toPermute (SuchThat xs)                = Left [SuchThat [x] | x <- xs]
-        toPermute st@DominanceRelation{}       = Right st
-        toPermute st@IncomparabilityFunction{} = Right st
+        toPermute st@DominanceStmt{}           = Right st
     let (statements, decls) = mStatements m |> map toPermute |> partitionEithers
     forM_ (statements
             |> concat

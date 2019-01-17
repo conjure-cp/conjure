@@ -197,13 +197,13 @@ parseTopLevels = do
                 , do
                     lexeme L_dominance_relation
                     x <- parseExpr
-                    return [ DominanceRelation x ]
-                    <?> "dominance_relation"
-                , do
-                    lexeme L_incomparability_function
-                    ascDesc <- parseAscDesc
-                    x <- parseExpr
-                    return [ IncomparabilityFunction ascDesc x ]
+                    incomp <- optional $ do
+                        lexeme L_incomparability_function
+                        ascDesc <- parseAscDesc
+                        y <- parseExpr
+                        return (ascDesc, y)
+                    return [ DominanceStmt (Dominance x incomp False) ]
+                    <?> "dominance statement"
                 ] <?> "statement"
     concat <$> some one
 

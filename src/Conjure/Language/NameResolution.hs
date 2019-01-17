@@ -138,8 +138,13 @@ resolveStatement st =
         Where xs -> Where <$> mapM resolveX xs
         Objective obj x -> Objective obj <$> resolveX x
         SuchThat xs -> SuchThat <$> mapM resolveX xs
-        DominanceRelation x -> DominanceRelation <$> resolveX x
-        IncomparabilityFunction ascDesc x -> IncomparabilityFunction ascDesc <$> resolveX x
+        DominanceStmt (Dominance x Nothing pr) -> do
+            x' <- resolveX x
+            return (DominanceStmt (Dominance x' Nothing pr))
+        DominanceStmt (Dominance x (Just (dir, y)) pr) -> do
+            x' <- resolveX x
+            y' <- resolveX y
+            return (DominanceStmt (Dominance x' (Just (dir, y')) pr))
 
 
 resolveSearchOrder

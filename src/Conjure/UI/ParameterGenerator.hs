@@ -37,8 +37,7 @@ parameterGenerator model = runNameGen () (resolveNames model) >>= core
                 Where             xs                   -> return [SuchThat xs]
                 Objective         {}                   -> return []
                 SuchThat          {}                   -> return []
-                DominanceRelation {}                   -> return []
-                IncomparabilityFunction{}              -> return []
+                DominanceStmt     {}                   -> return []
             if null errs
                 then return m { mStatements = concat outStatements }
                 else userErr1 $ vcat $ "Some parameters have infinite domains."

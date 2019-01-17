@@ -5,6 +5,7 @@
 module Conjure.Language.Expression
     ( Statement(..), SearchOrder(..), AscDesc(..), Objective(..)
     , Declaration(..), FindOrGiven(..)
+    , Dominance(..)
     , Expression(..), ReferenceTo(..), Region(..), InBubble(..)
     , AbstractLiteral(..)
     , AbstractPattern(..)
@@ -55,8 +56,7 @@ data Statement
     | Where [Expression]
     | Objective Objective Expression
     | SuchThat [Expression]
-    | DominanceRelation Expression
-    | IncomparabilityFunction AscDesc Expression
+    | DominanceStmt Dominance
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
 
 instance Serialize Statement
@@ -71,8 +71,7 @@ instance Pretty Statement where
     pretty (Where xs) = "where" <++> vcat (punctuate "," $ map pretty xs)
     pretty (Objective obj x) = pretty obj <++> pretty x
     pretty (SuchThat xs) = "such that" <++> vcat (punctuate "," $ map pretty xs)
-    pretty (DominanceRelation x) = "dominance_relation" <+> pretty x
-    pretty (IncomparabilityFunction ascDesc x) = "incomparability_function" <+> pretty ascDesc <+> pretty x
+    pretty (DominanceStmt x) = pretty x
 
 instance VarSymBreakingDescription Statement where
     varSymBreakingDescription (Declaration x) = JSON.Object $ M.fromList
@@ -95,19 +94,43 @@ instance VarSymBreakingDescription Statement where
         , ("symmetricChildren", JSON.Bool True)
         , ("children", JSON.Array $ V.fromList $ map varSymBreakingDescription xs)
         ]
-    varSymBreakingDescription (DominanceRelation x) = JSON.Object $ M.fromList
-        [ ("type", JSON.String $ "DominanceRelation")
-        , ("children", varSymBreakingDescription x)
-        ]
-    varSymBreakingDescription (IncomparabilityFunction ascDesc x) = JSON.Object $ M.fromList
-        [ ("type", JSON.String $ "IncomparabilityFunction-" `mappend` stringToText (show ascDesc))
-        , ("children", varSymBreakingDescription x)
+    varSymBreakingDescription (DominanceStmt x) = JSON.Object $ M.fromList
+        [ ("type", JSON.String $ "DominanceStmt")
+        , ("children", toJSON x)
         ]
 
 
 ------------------------------------------------------------------------------------------------------------------------
--- AscDesc -------------------------------------------------------------------------------------------------------------
+-- Dominance -----------------------------------------------------------------------------------------------------------
 ------------------------------------------------------------------------------------------------------------------------
+
+data Dominance = Dominance { dominanceRelation :: Expression
+                           , incomparability :: Maybe (AscDesc, Expression)
+                           , printToSR :: Bool          -- prints E syntax if False
+                                                        --        E' syntax if True
+                           }
+    deriving (Eq, Ord, Show, Data, Typeable, Generic)
+
+instance Serialize Dominance
+instance Hashable  Dominance
+instance ToJSON    Dominance where toJSON = genericToJSON jsonOptions
+instance FromJSON  Dominance where parseJSON = genericParseJSON jsonOptions
+
+instance Pretty Dominance where
+    pretty (Dominance rel Nothing False) =
+        "dominance_relation" <+> pretty rel
+    pretty (Dominance rel (Just (dir, func)) False) =
+        vcat [ pretty (Dominance rel Nothing False)
+             , "incomparability_function" <+> pretty dir <+> pretty func
+             ]
+    pretty (Dominance rel Nothing True) =
+        "dominance_relation" <> prParens (pretty rel)
+    pretty (Dominance rel (Just (dir, func)) True) =
+        let dirNum = case dir of Ascending -> "0" ; Descending -> "1" in
+        vcat [ pretty (Dominance rel Nothing True)
+             , "incomparability_function" <> prParens (dirNum <> "," <+> pretty func)
+             ]
+
 
 data AscDesc = Ascending | Descending
     deriving (Eq, Ord, Show, Data, Typeable, Generic)
