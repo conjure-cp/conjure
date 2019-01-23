@@ -5,7 +5,7 @@ include process
 var db : DbConn
 
 type SimpleDomainResponse = ref object of RootObj
-    changedIds : seq[int]
+    changedNames : seq[string]
     vars : seq[Variable]
 
 type PrettyDomainResponse = ref object of RootObj
@@ -79,7 +79,7 @@ proc loadNodes*(amount, start: string): JsonNode =
 
 proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
 
-    var list : seq[int]
+    var list : seq[string]
     var id : int
     var domainsAtPrev : seq[Variable]
     discard parseInt(nodeId, id)
@@ -93,11 +93,12 @@ proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
         
         for i in 0..<domainsAtNode.len():
             if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                list.add(i)
+                list.add(domainsAtNode[i].name)
+                # list.add(i)
 
     # echo "3"
 
-    return  %SimpleDomainResponse(changedIds: list, vars: domainsAtNode)
+    return  %SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 
 proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
@@ -131,27 +132,45 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
             # echo domainsAtPrev[i]
 
             if domainsAtNode[i] of Set:
+
+                let sets = "liItemsSets"
+
                 let s1 = cast[Set](domainsAtNode[i])
                 let s2 = cast[Set](domainsAtPrev[i])
 
                 if (s1.getCardinality() != s2.getCardinality()):
                     list.add("li" & s1.name & "Cardinality")
+                    if not (sets in list):
+                        list.add(sets)
 
                 if (s1.included != s2.included):
                     list.add("li" & s1.name & "Included")
+                    if not (sets in list):
+                        list.add(sets)
 
                 if (s1.excluded != s2.excluded):
                     list.add("li" & s1.name & "Excluded")
+                    if not (sets in list):
+                        list.add(sets)
 
             elif domainsAtNode[i] of Expression:
+                let expressions = "liItemsExpressions"
+
                 if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                     list.add("liExpressions" & domainsAtNode[i].name) 
+                    if not (expressions in list):
+                        list.add(expressions)
             else:
+                let variables = "liItemsVariables"
                 if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                     list.add("liVariables" & domainsAtNode[i].name )
+                    if not (variables in list):
+                        list.add(variables)
+        if list.len() > 0:
+            list.add("liItems")
 
     
-    if id == 1:
+    else:
         return domainsToJson(domainsAtNode)
 
     return %*{"vars" : jsonList, "changed" : list }

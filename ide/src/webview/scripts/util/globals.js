@@ -13,7 +13,7 @@ exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
 exports.init = true;
-exports.pretty = true;
+exports.pretty = false;
 exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree()
@@ -232,10 +232,10 @@ exports.selectNode = (nodeId) => {
     exports.currentDomainId = 0;
     exports.loadDomains(nodeId);
 
-    if (!exports.pretty) {
-        $("#pane").empty();
-        exports.tabulate()
-    }
+    // if (!exports.pretty) {
+    //     $("#pane").empty();
+    //     exports.tabulate()
+    // }
 }
 
 exports.loadDomains = (nodeId) => {
@@ -280,7 +280,11 @@ exports.appendRows = (data) => {
         .data(data)
         .enter()
         .append('tr')
-        .attr("id", (d, i) => { return "row" + (i + exports.currentDomainId - Number($("#domCount").val())) })
+        .attr("id", (d, i) => { 
+            // console.log(d);
+            // return "row" + (i + exports.currentDomainId - Number($("#domCount").val())) 
+            return d.name; 
+        })
 
     // create a cell in each row for each column
     var cells = rows.selectAll('td')
@@ -327,8 +331,15 @@ exports.vscode.postMessage({
     command: 'init',
 });
 
+// exports.vscode.postMessage({
+//     command: 'prettyDomains',
+//     amount: Number($("#domCount").val()),
+//     start: 0,
+//     nodeId: 1,
+// });
+
 exports.vscode.postMessage({
-    command: 'prettyDomains',
+    command: 'simpleDomains',
     amount: Number($("#domCount").val()),
     start: 0,
     nodeId: 1,

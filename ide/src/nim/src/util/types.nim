@@ -41,7 +41,7 @@ proc getCardinality(s: Set): string =
 
     if s of FlagSet:
         let fS = cast[FlagSet](s)
-        return getPrettyRange($fS.list.len())
+        return getPrettyRange($fS.list.len(), $fs.list.len())
     
     return "ERROR"
 

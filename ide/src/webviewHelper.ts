@@ -200,10 +200,10 @@ export default class WebviewHelper {
         // const explorer = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/scripts', 'explorer.js'));
         // const explorerUri = explorer.with({ scheme: 'vscode-resource' });
         const treeView = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'node_modules/bootstrap-treeview/dist', 'bootstrap-treeview.min.js'));
-        const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
+        // const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
 
         // External scripts
-        const jsonDiff = "https://cdn.jsdelivr.net/npm/jsondiffpatch/dist/jsondiffpatch.umd.min.js";
+        // const jsonDiff = "https://cdn.jsdelivr.net/npm/jsondiffpatch/dist/jsondiffpatch.umd.min.js";
         const jspanelCSS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.css";
         // const bootstrap = "https://stackpath.bootstrapcdn.com/bootstrap/3.3.4/css/bootstrap.min.css";
         const fontawesome = "https://use.fontawesome.com/releases/v5.6.3/css/all.css";
@@ -211,7 +211,7 @@ export default class WebviewHelper {
 
         const jspanelJS = "https://cdn.jsdelivr.net/npm/jspanel4@4.2.1/dist/jspanel.js";
         const d3 = "https://d3js.org/d3.v3.min.js";
-        const jquery = "http://code.jquery.com/jquery-2.1.3.min.js";
+        const jquery = "https://code.jquery.com/jquery-3.3.1.min.js";
         const validator = "https://cdn.jsdelivr.net/npm/jquery-validation@1.19.0/dist/jquery.validate.js";
         // const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.4.6/mousetrap.js";
         const mouseTrap = "https://cdnjs.cloudflare.com/ajax/libs/mousetrap/1.6.2/mousetrap.min.js";

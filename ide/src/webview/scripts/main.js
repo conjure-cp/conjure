@@ -44,20 +44,62 @@ import * as listView from "./util/listView"
                 if (rootNode) {
                     globals.selectNode(1);
                 }
+
                 break;
             case 'simpleDomains':
                 listView.setNodeId(globals.selectedId);
                 globals.currentDomainId += Number($("#domCount").val());
-                // console.log(message.data);
-                // console.log(globals.currentDomainId);
-                globals.appendRows(message.data.vars);
-                message.data.changedIds.forEach(rowId => {
+                console.log(message.data.vars);
 
-                    let accountForExtra = globals.currentDomainId - Number($("#domCount").val()) + Number(rowId)
+                if (globals.selectedId === 1) {
+                    globals.tabulate()
+                    globals.appendRows(message.data.vars);
+                    console.log("HERE~!!!");
+                }
 
-                    $("#row" + accountForExtra).toggleClass("changed");
+                else {
+                    message.data.vars.forEach(variable => {
+                        $("#" + $.escapeSelector(variable.name)).removeClass("changed");
 
-                });
+                        let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");
+                        li.text(variable.rng);
+
+                        if (message.data.changedNames.includes(variable.name)){
+                        $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
+
+                        }
+                    });
+                }
+
+                // console.log(message.data.changedNames);
+
+                // let rows = $("tr");
+                // console.log(rows);
+
+                // for (var i = 1; i < rows.length; i++){
+                //     $(rows[i]).removeClass("changed");
+
+                //     if (message.data.changedIds.includes(i)){
+
+                //         console.log(rows[i]);
+                //         console.log(rows[i]);
+
+                //         $(rows[i]).toggleClass("changed");
+
+                //     }
+                // }
+
+                
+
+
+                // globals.appendRows(message.data.vars);
+                // message.data.changedIds.forEach(rowId => {
+
+                    // let accountForExtra = globals.currentDomainId - Number($("#domCount").val()) + Number(rowId)
+
+                    // $("#row" + accountForExtra).toggleClass("changed");
+
+                // });
                 break;
 
             case 'prettyDomains':
@@ -147,7 +189,7 @@ import * as listView from "./util/listView"
 
                 let res = "";
 
-                if (globals.selectedId === d.id){
+                if (globals.selectedId === d.id) {
                     res = "selected "
                 }
 
@@ -159,7 +201,7 @@ import * as listView from "./util/listView"
                 if (globals.id2ChildIds[d.id]) {
                     if (childLength < globals.id2ChildIds[d.id].length) {
 
-                        if (!globals.correctPath.includes(d.id)){
+                        if (!globals.correctPath.includes(d.id)) {
 
                             return res + " hasOthers red"
                         }
@@ -195,7 +237,7 @@ import * as listView from "./util/listView"
 
                 // console.log(d.target.id)
                 // console.log(globals.correctPath)
-                if (globals.correctPath.includes(d.target.id)){
+                if (globals.correctPath.includes(d.target.id)) {
                     return "link"
                 }
 
