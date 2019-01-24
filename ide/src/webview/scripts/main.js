@@ -1,7 +1,6 @@
 import Mousetrap from "./util/mousetrap"
 import { appendControls } from "./util/screen"
 import globals from "./util/globals"
-import showPretty from "./util/panel"
 import colours from "./util/colours"
 import * as listView from "./util/listView"
 
@@ -12,8 +11,8 @@ import * as listView from "./util/listView"
         switch (message.command) {
 
             case 'longestBranchingVariable':
-                console.log(message.data)
-                globals.tree.nodeSize([Number(message.data) * 12, 0])
+                // console.log(message.data)
+                globals.tree.nodeSize([Number(message.data) * 13, 0])
 
                 break;
 
@@ -24,14 +23,9 @@ import * as listView from "./util/listView"
 
             case 'loadNodes':
 
-
-                var rootNode;
+                // console.log(message.data);
 
                 message.data.forEach((element) => {
-
-                    if (element.parentId === -1) {
-                        rootNode = true;
-                    }
 
                     globals.addNode(element.parentId, element.label);
                     globals.id2ChildIds[globals.currentId] = element.children
@@ -41,20 +35,34 @@ import * as listView from "./util/listView"
                 update(globals.id2Node[globals.currentId]);
                 globals.waiting = false;
 
-                if (rootNode) {
-                    globals.selectNode(1);
-                }
+                globals.selectNode(globals.selectedId);
+
+                $("#total").text(globals.currentId + "/" + globals.correctPath[0]);
 
                 break;
+
             case 'simpleDomains':
+
                 listView.setNodeId(globals.selectedId);
                 globals.currentDomainId += Number($("#domCount").val());
-                console.log(message.data.vars);
 
                 if (globals.selectedId === 1) {
+                    globals.simpleDomainsAtRoot = message.data.vars;
+
+                    // console.log("HERE!!");
+
+                    if (globals.currentId === 0){
+                        globals.waiting = false;
+                        // console.log(globals.waiting);
+                        break;
+                    }
+                    // console.log("THERE!!");
+                    // console.log(globals.waiting);
+
+                    // console.log(globals.currentId);
+
                     globals.tabulate()
                     globals.appendRows(message.data.vars);
-                    console.log("HERE~!!!");
                 }
 
                 else {
@@ -64,42 +72,14 @@ import * as listView from "./util/listView"
                         let li = $("#" + $.escapeSelector(variable.name) + " > :last-child");
                         li.text(variable.rng);
 
-                        if (message.data.changedNames.includes(variable.name)){
-                        $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
+                        if (message.data.changedNames.includes(variable.name)) {
+                            $("#" + $.escapeSelector(variable.name)).toggleClass("changed");
 
                         }
                     });
                 }
+                globals.waiting = false;
 
-                // console.log(message.data.changedNames);
-
-                // let rows = $("tr");
-                // console.log(rows);
-
-                // for (var i = 1; i < rows.length; i++){
-                //     $(rows[i]).removeClass("changed");
-
-                //     if (message.data.changedIds.includes(i)){
-
-                //         console.log(rows[i]);
-                //         console.log(rows[i]);
-
-                //         $(rows[i]).toggleClass("changed");
-
-                //     }
-                // }
-
-                
-
-
-                // globals.appendRows(message.data.vars);
-                // message.data.changedIds.forEach(rowId => {
-
-                    // let accountForExtra = globals.currentDomainId - Number($("#domCount").val()) + Number(rowId)
-
-                    // $("#row" + accountForExtra).toggleClass("changed");
-
-                // });
                 break;
 
             case 'prettyDomains':
@@ -113,6 +93,7 @@ import * as listView from "./util/listView"
                     listView.setChangedList(message.data.changed);
                     listView.setChanged()
                 }
+                globals.waiting = false;
 
                 break;
         }
@@ -316,6 +297,7 @@ import * as listView from "./util/listView"
     }, 'keydown');
 
     globals.loadNNodes();
+    // globals.selectNode(globals.selectedId);
     console.log("HELLO")
     $("#form").validate();
 })()

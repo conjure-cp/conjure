@@ -34,6 +34,13 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
     for key in parseJson(clean)["representations"].getElems():
         # echo key
         # try:
+
+        # echo parseJson(clean).pretty()
+        # echo key[0]
+
+        if ( not key[0].haskey("Name")):
+            continue
+
         let n = key[0]["Name"].getStr()
 
         if key[1].hasKey("DomainInt"):

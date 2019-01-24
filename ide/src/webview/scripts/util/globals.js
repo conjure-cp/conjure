@@ -12,13 +12,14 @@ exports.margin = { top: 40, right: 30, bottom: 50, left: 30 };
 exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right;
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
+exports.simpleDomainsAtRoot;
 exports.init = true;
-exports.pretty = false;
+exports.pretty = true;
 exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree()
     .size([exports.height, exports.width])
-    // .nodeSize([300, 100]);
+// .nodeSize([300, 100]);
 
 exports.waiting = false;
 
@@ -138,7 +139,7 @@ exports.collapseFailed = () => {
 
             let nodeId = exports.correctPath[i];
 
-            console.log(nodeId + " < " + exports.selectedId);
+            // console.log(nodeId + " < " + exports.selectedId);
 
             if (nodeId < exports.selectedId) {
                 exports.selectNode(nodeId);
@@ -159,9 +160,12 @@ exports.rightNode = () => {
 }
 
 exports.nextNode = () => {
+
+    // console.log(exports.waiting);
+
     let stepSize = Number($("#stepSize").val());
 
-    if (stepSize > exports.correctPath[0]){
+    if (stepSize > exports.correctPath[0]) {
         stepSize = exports.correctPath[0] - exports.selectedId;
     }
 
@@ -180,6 +184,7 @@ exports.nextNode = () => {
 
     if (!exports.id2Node[exports.selectedId + stepSize]) {
         exports.loadNNodes();
+        // console.log("NEXT")
     }
     else {
         // exports.selectedId = exports.currentId;
@@ -208,28 +213,41 @@ exports.loadNNodes = () => {
 
     if (!exports.waiting) {
 
+        // console.log("requesting more");
+
         exports.vscode.postMessage({
             command: 'loadNodes',
             amount: Number($("#stepSize").val()),
             start: exports.currentId
         });
 
+        // console.log("SET WAIT TRUE NODES");
         exports.waiting = true;
+    }
+    else {
+        // console.log("waiting");
+
     }
 }
 
 exports.selectNode = (nodeId) => {
     exports.selectedId = nodeId;
 
-    $("#total").text(exports.selectedId + "/" + exports.correctPath[0]);
     let allCircles = ".node circle"
     d3.selectAll(allCircles).classed("selected", false);
     let s = "#node" + nodeId + " circle";
     d3.select(s).classed("selected", true);
+
+    // console.log(nodeId)
+    // console.log(exports.id2Node[nodeId])
+
     exports.focusNode(exports.id2Node[nodeId]);
 
 
     exports.currentDomainId = 0;
+
+    // console.log("Calling load domains");
+
     exports.loadDomains(nodeId);
 
     // if (!exports.pretty) {
@@ -239,7 +257,10 @@ exports.selectNode = (nodeId) => {
 }
 
 exports.loadDomains = (nodeId) => {
-    if (!exports.waiting && nodeId != 1) {
+
+    // console.log(exports.waiting);
+
+    if (!exports.waiting ) {
 
         let commandString;
 
@@ -256,8 +277,12 @@ exports.loadDomains = (nodeId) => {
             start: exports.currentDomainId,
             nodeId: nodeId,
         });
+
+
+        // console.log("get domains sent")
+        exports.waiting = true;
     }
-    exports.waiting = true;
+    // console.log("SET WAIT TRUE DOMAINS, pretty: " + exports.pretty );
 }
 
 exports.tabulate = () => {
@@ -280,10 +305,10 @@ exports.appendRows = (data) => {
         .data(data)
         .enter()
         .append('tr')
-        .attr("id", (d, i) => { 
+        .attr("id", (d, i) => {
             // console.log(d);
             // return "row" + (i + exports.currentDomainId - Number($("#domCount").val())) 
-            return d.name; 
+            return d.name;
         })
 
     // create a cell in each row for each column
@@ -331,19 +356,6 @@ exports.vscode.postMessage({
     command: 'init',
 });
 
-// exports.vscode.postMessage({
-//     command: 'prettyDomains',
-//     amount: Number($("#domCount").val()),
-//     start: 0,
-//     nodeId: 1,
-// });
-
-exports.vscode.postMessage({
-    command: 'simpleDomains',
-    amount: Number($("#domCount").val()),
-    start: 0,
-    nodeId: 1,
-});
 
 exports.vscode.postMessage({
     command: 'correctPath',
@@ -353,3 +365,9 @@ exports.vscode.postMessage({
     command: 'longestBranchingVariable',
 });
 
+exports.vscode.postMessage({
+    command: 'simpleDomains',
+    amount: Number($("#domCount").val()),
+    start: 0,
+    nodeId: 1,
+});

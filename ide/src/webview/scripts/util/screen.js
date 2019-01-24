@@ -8,12 +8,27 @@ export function appendControls() {
             $("#pane").empty();
             globals.pretty = !globals.pretty;
 
-
             if (globals.pretty) {
                 listView.createUL()
                 let r = listView.getRootNode();
                 console.log(r);
                 listView.render(r, r);
+            }
+            else {
+
+                if (!globals.simpleDomainsAtRoot) {
+                    globals.loadDomains(globals.selectedId);
+                }
+                else {
+                    globals.tabulate()
+                    globals.appendRows(globals.simpleDomainsAtRoot);
+                }
+                // globals.vscode.postMessage({
+                //     command: 'simpleDomains',
+                //     amount: Number($("#domCount").val()),
+                //     start: 0,
+                //     nodeId: 1,
+                // });
             }
 
             globals.selectNode(globals.selectedId);
