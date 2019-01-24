@@ -9,6 +9,7 @@ import * as path from 'path';
 // import * as cp from 'child_process';
 // import ChildProcess = cp.ChildProcess;
 
+const { exec } = require('child_process');
 const { spawn } = require('child_process');
 import * as vscode from 'vscode';
 // import { fstat } from 'fs';
@@ -136,27 +137,38 @@ export default class ConjureHelper {
         let dir = path.dirname(doc.uri.path);
         console.log(dir);
 
-        const process = spawn('conjure', ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir]);
+            let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
 
-        process.stdout.on('data', (data: string) => {
-            console.log(`stdout: ${data}`);
-        });
+            exec('conjure ' + args.join(" "), { cwd: dir }, (e :any, stdout: string, stderr: string)=> {
 
-        process.stderr.on('data', (data: string) => {
-            console.log(`stderr: ${data}`);
-        });
+                if (e instanceof Error) {
+            
+                    // console.error(e);
+                    vscode.window.showErrorMessage(e.message);
+            
+                    return;
+                    // throw e;
+                }
+            
+                // console.log('stdout ', stdout);
+            
+                // console.log('stderr ', stderr);
 
-        process.on('close', (code: string) => {
-            console.log(`child process exited with code ${code}`);
-            let uri = vscode.Uri.file(dir + '/model000001.eprime');
-            vscode.commands.executeCommand('vscode.openFolder', uri);
-        });
+                fs.readdir(dir, function (err, files) {
+                    const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
+
+                    let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
+                    vscode.commands.executeCommand('vscode.openFolder', uri);
+
+
+                });
+
+            });
 
     }
 
     public static async solve() {
         console.log("SOLVE------------------------");
-        vscode.window.showInformationMessage('Solving..');
         // vscode.workspace.textDocuments[0].
         let current = vscode.window.activeTextEditor;
         if (!current) {
@@ -172,6 +184,8 @@ export default class ConjureHelper {
             return;
         }
 
+        vscode.window.showInformationMessage('Solving..');
+
         let dir = path.dirname(doc.uri.path);
         console.log(dir);
 
@@ -186,20 +200,21 @@ export default class ConjureHelper {
 
             console.log("conjure " + args.join(" "));
 
-            const conjureProcess = spawn('conjure', args, { cwd: dir });
+            exec('conjure ' + args.join(" "), { cwd: dir }, (e :any, stdout: string, stderr: string)=> {
 
-            process.stdout.on('data', (data: string) => {
-                console.log(`stdout: ${data}`);
-            });
-
-            conjureProcess.stderr.on('data', (data: string) => {
-                console.log(`stderr: ${data}`);
-            });
-
-            conjureProcess.on('close', (code: string) => {
-
-                console.log(`child process exited with code ${code}`);
-
+                if (e instanceof Error) {
+            
+                    // console.error(e);
+                    vscode.window.showErrorMessage(e.message);
+            
+                    return;
+                    // throw e;
+            
+                }
+            
+                // console.log('stdout ', stdout);
+            
+                // console.log('stderr ', stderr);
 
                 fs.readdir(dir, function (err, files) {
                     const solutionFiles = files.filter(el => /\.solution$/.test(el));
@@ -216,96 +231,7 @@ export default class ConjureHelper {
 
 
                 });
-
             });
-
-        })
-
-
-
-        // process
-
-
-
-
-
-
+        });
     }
-
-
-    // public static async solve() {
-
-    //     vscode.window.showInformationMessage("Solving command !!!");
-
-    //     console.log(vscode.workspace.textDocuments);
-
-    //     let paramFile = (vscode.workspace.textDocuments.filter(this.isParam));
-
-    //     if (paramFile.length === 0) {
-    //         vscode.window.showErrorMessage("No parameters in workspace!");
-    //         return;
-    //     }
-
-    //     let modelFile = (vscode.workspace.textDocuments.filter(this.isModel));
-
-    //     if (modelFile.length === 0) {
-    //         vscode.window.showErrorMessage("No essence models in workspace!");
-    //         return;
-    //     }
-
-    //     paramFile.forEach(element => {
-    //         // console.log(element);
-    //         let splitted = element.fileName.split("/");
-    //         splitted.pop();
-    //         // console.log(splitted.join("/"));
-    //         let parentPath = splitted.join("/");
-
-    //         splitted.pop();
-    //         let grandParentPath =  splitted.join("/");
-
-    //         var myPath = parentPath + "/*.solution";
-
-    //         glob(myPath, function (er: any, files: string[]) {
-    //             // console.log(files);
-    //             files.forEach((element: string) => {
-    //                 fs.unlinkSync(element);    
-    //             });
-    //         });
-
-    //         const process = spawn('conjure', ['solve', '--channelling=no', '--responses=1',
-    //          '--copy-solutions', '-o /tmp', modelFile[0].uri.path, element.uri.path]);
-
-    //         process.stdout.on('data', (data: string) => {
-    //             // console.log(`stdout: ${data}`);
-    //         });
-
-    //         process.stderr.on('data', (data: string) => {
-    //             console.log(`stderr: ${data}`);
-    //         });
-
-    //         process.on('close', (code: string) => {
-    //             console.log(`child process exited with code ${code}`);
-
-    //             var myPath = grandParentPath + "/*.solution";
-    //             // var myPath = "/fileFolder/**/*.txt";
-
-    //             glob(myPath, function (er: any, files: string[]) {
-    //                 // Files is an array of filenames.
-    //                 // Do something with files.
-
-
-    //                 files.forEach((element: string) => {
-    //                     console.log(element);
-    //                     vscode.commands.executeCommand('vscode.openFolder', vscode.Uri.file(element));
-    //                 });
-    //             });
-
-
-    //             // let uri = vscode.Uri.file('/tmp/conjure-output/');
-    //             // vscode.commands.executeCommand('vscode.openFolder', parentPath + "/" + );
-    //         });
-    //     });
-
-
-    // }
 }
