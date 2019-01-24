@@ -2,6 +2,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 // import * as Parser from './parser';
 import fs = require('fs');
+import { ECONNREFUSED } from 'constants';
 const request = require('request');
 let createHTML = require('create-html');
 
@@ -53,6 +54,25 @@ export default class WebviewHelper {
 
     // public static  async activate(context: vscode.ExtensionContext) {
 
+    public static handleServerError(error: any) {
+
+        // console.log(ECONNREFUSED)
+
+        if (error.code === "ECONNREFUSED") {
+            vscode.window.showErrorMessage('Could not connect to server');
+        }
+
+        // console.log("ERROR");
+        // console.log(Object.keys(error));
+        console.log(error.code);
+        console.log(error.errno);
+        console.log(error.syscall);
+        console.log(error.address);
+        console.log(error.port);
+        console.log(typeof error);
+
+    }
+
     public static activate(context: vscode.ExtensionContext) {
 
         WebviewHelper.context = context;
@@ -62,7 +82,8 @@ export default class WebviewHelper {
 
         // let testDir = await this.getFolder();
 
-        let testDir = "/home/tom/conjure/ide/src/test/testData/sets/flags";
+        let testDir = "brokenDir";
+        // let testDir = "/home/tom/conjure/ide/src/test/testData/sets/flags";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/conjure-test"
@@ -105,70 +126,78 @@ export default class WebviewHelper {
 
                 switch (message.command) {
 
-                    // case 'ready':
-                    //     vscode.window.showErrorMessage(message.text);
-                    //     panel.webview.postMessage(contents);
-                    //     break;
                     case 'init':
                         request(serverURL + '/init/' + testDir, { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            if (res.statusCode === 501){
+                                vscode.window.showErrorMessage('Selected path not valid');
+                            }
+                            if (res.statusCode === 502){
+                                vscode.window.showErrorMessage('Minion file not valid');
+                            }
+                            if (res.statusCode === 503){
+                                vscode.window.showErrorMessage('Eprime file not valid');
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "init", data: res.body });
+                            }
                         });
                         break;
-                    // case 'nParents':
-                    //     // console.log(message.id);
-                    //     request(serverURL + '/getNParents/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
-                    //         if (err) { return console.log(err); }
-                    //         console.log(res);
-                    //         panel.webview.postMessage({command:"nParents", data: res.body});
-                    //     });
-                    //     break;
-                    // case 'children':
-                    //     // console.log(message.id);
-                    //     request(serverURL + '/getChildren/' + message.parentId, { json: true }, (err: any, res: any, body: any) => {
-                    //         if (err) { return console.log(err); }
-                    //         console.log(res);
-                    //         panel.webview.postMessage({command:"children", data: res.body});
-                    //     });
-                    //     break;
                     case 'loadNodes':
                         // console.log(message.id);
                         request(serverURL + '/loadNodes/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"loadNodes", data: res.body});
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "loadNodes", data: res.body });
+                            }
                         });
                         break;
                     case 'simpleDomains':
                         // console.log(message.id);
                         request(serverURL + '/simpleDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"simpleDomains", data: res.body});
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "simpleDomains", data: res.body });
+                            }
                         });
                         break;
                     case 'prettyDomains':
                         // console.log(message.id);
                         request(serverURL + '/prettyDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"prettyDomains", data: res.body});
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "prettyDomains", data: res.body });
+                            }
                         });
                         break;
                     case 'correctPath':
                         // console.log(message.id);
                         request(serverURL + '/correctPath', { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"correctPath", data: res.body});
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "correctPath", data: res.body });
+                            }
                         });
                         break;
                     case 'longestBranchingVariable':
                         // console.log(message.id);
                         request(serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any, body: any) => {
-                            if (err) { return console.log(err); }
-                            console.log(res);
-                            panel.webview.postMessage({command:"longestBranchingVariable", data: res.body});
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "longestBranchingVariable", data: res.body });
+                            }
                         });
                         break;
 

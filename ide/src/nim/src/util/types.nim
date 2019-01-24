@@ -1,37 +1,42 @@
-type TreeViewNode = ref object of RootObj
+type
+    EprimeParseException* = object of Exception
+type
+    MinionParseException* = object of Exception
+
+type TreeViewNode* = ref object of RootObj
   name: string
   children: seq[TreeViewNode]
 
-type Variable = ref object of RootObj
+type Variable* = ref object of RootObj
   name: string
   rng: string
 
-type Expression = ref object of Variable
+type Expression* = ref object of Variable
 
-type Set = ref object of Variable
+type Set* = ref object of Variable
     lower: int
     upper: int
     included: seq[int]
     excluded: seq[int]
 
-type OccurrenceSet = ref object of Set
+type OccurrenceSet* = ref object of Set
 
 
-type DummySet = ref object of Set
+type DummySet* = ref object of Set
     dummyVal : int
 
-type MarkerSet = ref object of Set
+type MarkerSet* = ref object of Set
     cardinality : string
 
-type FlagSet = ref object of Set
+type FlagSet* = ref object of Set
     list : seq[string]
 
-proc getPrettyRange(lower: string, upper: string): string =
+proc getPrettyRange*(lower: string, upper: string): string =
     if lower == upper:
        return "int(" & $lower & ")" 
     return "int(" & $lower & ".." & $upper & ")"
 
-proc getCardinality(s: Set): string =
+proc getCardinality*(s: Set): string =
     if s of DummySet or s of OccurrenceSet:
         return getPrettyRange($len(s.included), $(s.upper - len(s.excluded))) 
 

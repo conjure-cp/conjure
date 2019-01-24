@@ -1,0 +1,48 @@
+MINION 3
+# CSETopLevel_number = 0
+# CSETopLevel_eliminated_expressions = 0
+# CSETopLevel_total_size = 0
+# CSE_active_number = 0
+# CSE_active_eliminated_expressions = 0
+# CSE_active_total_size = 0
+**VARIABLES**
+DISCRETE x #
+{1..7}
+**CONSTRAINTS**
+w-inintervalset(x, [1,1,3,3,5,5,7,7])
+**VARIABLES**
+DISCRETE y #
+{2..8}
+DISCRETE z #
+{3..9}
+**CONSTRAINTS**
+w-inintervalset(z, [3,3,5,5,7,7,9,9])
+**VARIABLES**
+BOOL s_Occurrence_00001 #
+BOOL s_Occurrence_00002 #
+BOOL s_Occurrence_00003 #
+BOOL s_Occurrence_00004 #
+BOOL s_Occurrence_00005 #
+BOOL s_Occurrence_00006 #
+BOOL s_Occurrence_00007 #
+BOOL s_Occurrence_00008 #
+BOOL s_Occurrence_00009 #
+DISCRETE u #
+{2..8}
+DISCRETE aux0 #(u - x)
+{1..3}
+**SEARCH**
+PRINT[[x],[y],[z],[s_Occurrence_00001],[s_Occurrence_00002],[s_Occurrence_00003],[s_Occurrence_00004],[s_Occurrence_00005],[s_Occurrence_00006],[s_Occurrence_00007],[s_Occurrence_00008],[s_Occurrence_00009],[u]]
+VARORDER STATIC [x, y, z, s_Occurrence_00001, s_Occurrence_00002, s_Occurrence_00003, s_Occurrence_00004, s_Occurrence_00005, s_Occurrence_00006, s_Occurrence_00007, s_Occurrence_00008, s_Occurrence_00009, u]
+**CONSTRAINTS**
+gacalldiff([x, y, z])
+modulo(x,2,1)
+modulo(z,2,1)
+product(z, aux0, 9)
+weightedsumleq([1,-1],[u,x],aux0)
+weightedsumgeq([1,-1],[u,x],aux0)
+sumleq([x,y],z)
+sumgeq([x,y],z)
+weightedsumleq([-1,-1,-1,1,2,3,4,5,6,7,8,9],[x,y,z,s_Occurrence_00001,s_Occurrence_00002,s_Occurrence_00003,s_Occurrence_00004,s_Occurrence_00005,s_Occurrence_00006,s_Occurrence_00007,s_Occurrence_00008,s_Occurrence_00009],0)
+weightedsumgeq([-1,-1,-1,1,2,3,4,5,6,7,8,9],[x,y,z,s_Occurrence_00001,s_Occurrence_00002,s_Occurrence_00003,s_Occurrence_00004,s_Occurrence_00005,s_Occurrence_00006,s_Occurrence_00007,s_Occurrence_00008,s_Occurrence_00009],0)
+**EOF**

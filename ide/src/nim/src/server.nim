@@ -5,7 +5,19 @@ routes:
 
     get re"/init/(.*)":
         let path = request.matches[0]
-        init(path)
+        try:
+            init(path)
+
+        except EprimeParseException:
+            resp HttpCode(503)
+            echo "Failed to parse Eprime file"
+        except MinionParseException:
+            resp HttpCode(502)
+            echo "Failed to parse Minion file"
+        except :
+            resp HttpCode(501)
+            echo("IOERROR!!")
+
         resp "OK"
 
     get "/simpleDomains/@amount/@start/@nodeId":
