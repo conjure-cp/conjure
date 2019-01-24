@@ -27,7 +27,7 @@ export function activate(context: vscode.ExtensionContext) {
         WebviewHelper.activate(context);
     }));
 
-    WebviewHelper.activate(context);
+    // WebviewHelper.activate(context);
 }
 
 
