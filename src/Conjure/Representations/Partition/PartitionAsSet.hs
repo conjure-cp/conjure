@@ -68,7 +68,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
             return $ Just [ ( outName inDom name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
+        structuralCons f downX1 inDom@(DomainPartition r attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
 
@@ -80,22 +80,26 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                 exactlyOnce :: Expression -> m [Expression]
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
-                    case innerType of
-                      TypeInt _ ->  do
-                            (iPat, i) <- quantifiedVar
-                            (jPat, j) <- quantifiedVar
-                            return $ return $ -- for list
+                    let useAllDiff =
+                            case r of
+                                -- we use a sum when the inner set is occurrence
+                                Partition_AsSet _ Set_Occurrence -> False
+                                _ ->
+                                    case innerType of
+                                        TypeInt{} -> True
+                                        _         -> False      -- or if the inner type is not int
+
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    if useAllDiff
+                        then return $ return $ -- for list
                                 [essence|
                                     allDiff([ &j
                                             | &iPat <- &rel
                                             , &jPat <- &i
                                             ])
                                         |]
-
-                      _ -> do
-                            (iPat, i) <- quantifiedVar
-                            (jPat, j) <- quantifiedVar
-                            return $ return $ -- for list
+                        else return $ return $ -- for list
                                 [essence|
                                     forAll &iPat : &innerDomain .
                                         1  = sum ([ 1

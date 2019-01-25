@@ -4,6 +4,7 @@ module Conjure.Language.Expression.Op.PowerSet where
 
 import Conjure.Prelude
 import Conjure.Language.Expression.Op.Internal.Common
+import Conjure.Language.Expression.Op.TildeLt ( ordTildeLt )
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
@@ -28,7 +29,7 @@ instance EvaluateOp OpPowerSet where
     evaluateOp (OpPowerSet (viewConstantSet -> Just xs)) =
         return $ ConstantAbstract $ AbsLitSet
             [ ConstantAbstract $ AbsLitSet ys
-            | ys <- subsequences (sortNub xs) ]
+            | ys <- subsequences (sortBy ordTildeLt (sortNub xs)) ]
     evaluateOp op = na $ "evaluateOp{OpPowerSet}:" <++> pretty (show op)
 
 instance SimplifyOp OpPowerSet x where

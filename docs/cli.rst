@@ -73,8 +73,8 @@ These messages may change between releases of Conjure.
 .. only:: html
 
  .. raw:: html
-     :file: conjure-help.html
+     :file: docs/conjure-help.html
 
 .. only:: not html
 
- .. include:: conjure-help.txt
+ .. include:: docs/conjure-help.txt
