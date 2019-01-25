@@ -49,8 +49,9 @@ install:
 	elif ! ${BUILD_TESTS} && ! ${CI} ; then\
 		stack install --local-bin-path ${BIN_DIR};\
 	fi
-	@echo Copying Savile Row to ${BIN_DIR}
+	@etc/build/copy-conjure-branch.sh
 	@cp -r etc/savilerow/* ${BIN_DIR}
+	@echo - savilerow
 
 .PHONY: install-using-cabal
 install-using-cabal:
