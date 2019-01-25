@@ -1401,8 +1401,9 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
-
-        , rule_DomainCardinality
+        ]
+    ,
+        [ rule_DomainCardinality
         , rule_DomainMinMax
 
         , rule_ComplexAbsPat
