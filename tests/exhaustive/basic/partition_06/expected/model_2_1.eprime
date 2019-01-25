@@ -61,11 +61,11 @@ such that
                              | q14 : int(1..4)]),
                     0)
              | q12 : int(1..4)]),
-    alldifferent_except([toInt(q51 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q51, q16])
-                         * catchUndef(q16, 0)
-                             | q51 : int(1..4), q16 : int(1..4)],
-                        0),
+    and([1 =
+         sum([toInt(q51 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q51, q15])
+                  | q51 : int(1..4)])
+             | q15 : int(1..4)]),
     and([q52 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q52, q53]) | q53 : int(1..4)]) >= 1
              | q52 : int(1..4)]),

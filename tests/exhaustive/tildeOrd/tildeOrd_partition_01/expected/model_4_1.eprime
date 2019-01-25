@@ -346,11 +346,11 @@ such that
     and([q9 <= a_PartitionOccurrence_NumParts /\ q10 <= a_PartitionOccurrence_NumParts ->
          (q9 < q10 <-> a_PartitionOccurrence_FirstIndex[q9] < a_PartitionOccurrence_FirstIndex[q10])
              | q9 : int(1..2), q10 : int(1..2)]),
-    alldifferent_except([toInt(q24 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q24, q12])
-                         * catchUndef(q12, 0)
-                             | q24 : int(1..2), q12 : int(1..2)],
-                        0),
+    and([1 =
+         sum([toInt(q24 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q24, q11])
+                  | q24 : int(1..2)])
+             | q11 : int(1..2)]),
     and([q25 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q25, q26]) | q26 : int(1..2)]) >= 1
              | q25 : int(1..2)]),
