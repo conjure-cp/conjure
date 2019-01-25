@@ -3,9 +3,7 @@
 module Conjure.Language.Expression.Op.TildeLt where
 
 import Conjure.Prelude
-import Conjure.Bug
 import Conjure.Language.Expression.Op.Internal.Common
-import Conjure.Language.Expression.Op.Eq
 
 import qualified Data.Aeson as JSON             -- aeson
 import qualified Data.HashMap.Strict as M       -- unordered-containers
