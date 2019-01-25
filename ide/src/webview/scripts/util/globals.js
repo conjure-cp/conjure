@@ -188,6 +188,7 @@ exports.nextNode = () => {
     }
     else {
         // exports.selectedId = exports.currentId;
+        console.log("here!!!")
         exports.selectedId += stepSize;
         exports.selectNode(exports.selectedId);
     }
@@ -249,6 +250,8 @@ exports.selectNode = (nodeId) => {
     // console.log("Calling load domains");
 
     exports.loadDomains(nodeId);
+
+
 
     // if (!exports.pretty) {
     //     $("#pane").empty();

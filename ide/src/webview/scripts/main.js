@@ -51,7 +51,7 @@ import * as listView from "./util/listView"
 
                     // console.log("HERE!!");
 
-                    if (globals.currentId === 0){
+                    if (globals.currentId === 0) {
                         globals.waiting = false;
                         // console.log(globals.waiting);
                         break;
@@ -166,13 +166,14 @@ import * as listView from "./util/listView"
 
         nodeUpdate.select("circle")
             .attr("r", 10)
-            .attr("class", (d) => {
+            // .attr("class", (d) => {
+            .each((d) => {
 
-                let res = "";
+                let s = "#node" + d.id + " circle";
 
-                if (globals.selectedId === d.id) {
-                    res = "selected "
-                }
+                console.log(s);
+                let domElement = d3.select(s);
+                domElement.classed("hasOthers red", false);
 
                 let childLength = 0;
                 if (d.children) {
@@ -184,16 +185,15 @@ import * as listView from "./util/listView"
 
                         if (!globals.correctPath.includes(d.id)) {
 
-                            return res + " hasOthers red"
+                            domElement.classed("hasOthers red", true);
+
                         }
-                        return res + " hasOthers "
+                        domElement.classed("hasOthers", true);
                     }
                 }
 
-                return res;
-            });
+            })
 
-        // .style("fill", (d) => { return d._children ? "#6ac4a1" : "#fff"; });
         nodeUpdate.select("text")
             .style("fill-opacity", 1);
 

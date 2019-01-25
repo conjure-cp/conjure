@@ -21,11 +21,17 @@ export function activate(context: vscode.ExtensionContext) {
     context.subscriptions.push(vscode.commands.registerCommand('conjure.solve', () => {
         ConjureHelper.solve();
     }));
+    context.subscriptions.push(vscode.commands.registerCommand('conjure.solveAndVis', () => {
+        WebviewHelper.activate(context);
+        ConjureHelper.visualiseCurrent();
+    }));
     // ConjureHelper.solve();
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.vis', () => {
         WebviewHelper.activate(context);
+        // WebviewHelper.activate(context);
     }));
+
 
     // WebviewHelper.activate(context);
 }

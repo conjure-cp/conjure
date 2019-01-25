@@ -8,13 +8,9 @@ let createHTML = require('create-html');
 
 export default class WebviewHelper {
 
-    // TODO
-
-    // Focus to root node after minimising
-    // Focus to deepest child.
-
     private static context: vscode.ExtensionContext;
 
+    private static serverURL = "http://0.0.0.0:5000";
 
     // private static async getFile() {
 
@@ -77,12 +73,10 @@ export default class WebviewHelper {
 
         WebviewHelper.context = context;
 
-        let serverURL = "http://0.0.0.0:5000";
-
 
         // let testDir = await this.getFolder();
 
-        let testDir = "brokenDir";
+        // let testDir = "brokenDir";
         // let testDir = "/home/tom/conjure/ide/src/test/testData/sets/flags";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
         // let testDir = "home/tom/ModRef2018-Langfords/experiment/conjure-output";
@@ -90,25 +84,15 @@ export default class WebviewHelper {
         // let testDir = "/home/tom/minion-private/build/conjure-output";
         // let testDir = "/home/tom/EssenceCatalog/problems/csplib-prob001/CarSequencing~random33";
 
-        if (testDir) {
+        // if (testDir) {
 
-            // let paramPart = "";
-            // let splitted = path.basename(testDir).split("~");
-            // if (splitted.length > 1) {
-            //     paramPart = "-" + splitted[1];
-            // }
+            // this.launch(testDir);
 
-            // let eprime = (fs.readFileSync(testDir + "/model000001.eprime", 'utf8'));
-            // let minion = (fs.readFileSync(testDir + "/model000001" + paramPart + ".eprime-minion", 'utf8'));
-            // let json = (fs.readFileSync(testDir + "/out.json", 'utf8'));
+        // }
+    }
 
-            // let parser = new Parser.JSONParser(json, eprime, minion);
-            // let contents = parser.parseJson();
-            // return;
 
-            // Get path to resource on disk
-
-            // let contents = await this.getFile();
+    public static launch(path: string){
 
             const panel = vscode.window.createWebviewPanel(
                 'treeVis', // Identifies the type of the webview. Used internally
@@ -127,7 +111,7 @@ export default class WebviewHelper {
                 switch (message.command) {
 
                     case 'init':
-                        request(serverURL + '/init/' + testDir, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/init/' + path, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -147,7 +131,7 @@ export default class WebviewHelper {
                         break;
                     case 'loadNodes':
                         // console.log(message.id);
-                        request(serverURL + '/loadNodes/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/loadNodes/' + message.amount + '/' + message.start, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -158,7 +142,7 @@ export default class WebviewHelper {
                         break;
                     case 'simpleDomains':
                         // console.log(message.id);
-                        request(serverURL + '/simpleDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/simpleDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -169,7 +153,7 @@ export default class WebviewHelper {
                         break;
                     case 'prettyDomains':
                         // console.log(message.id);
-                        request(serverURL + '/prettyDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/prettyDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -180,7 +164,7 @@ export default class WebviewHelper {
                         break;
                     case 'correctPath':
                         // console.log(message.id);
-                        request(serverURL + '/correctPath', { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/correctPath', { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -191,7 +175,7 @@ export default class WebviewHelper {
                         break;
                     case 'longestBranchingVariable':
                         // console.log(message.id);
-                        request(serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/longestBranchingVariable', { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -202,18 +186,7 @@ export default class WebviewHelper {
                         break;
 
                 }
-            }, undefined, context.subscriptions);
-
-        }
-
-
-        //     panel.webview.postMessage({ message: contents });
-
-        // context.subscriptions.push(vscode.commands.registerCommand('catCoding.start', () => {
-
-        //     panel.webview.postMessage({ message: contents });
-
-        // }));
+            }, undefined, this.context.subscriptions);
     }
 
     private static getWebContent(): string {
@@ -228,7 +201,6 @@ export default class WebviewHelper {
         const scriptUri = scriptPath.with({ scheme: 'vscode-resource' });
         // const explorer = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'src/webview/scripts', 'explorer.js'));
         // const explorerUri = explorer.with({ scheme: 'vscode-resource' });
-        const treeView = vscode.Uri.file(path.join(WebviewHelper.context.extensionPath, 'node_modules/bootstrap-treeview/dist', 'bootstrap-treeview.min.js'));
         // const treeViewUri = treeView.with({ scheme: 'vscode-resource' });
 
         // External scripts

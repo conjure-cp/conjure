@@ -12,6 +12,7 @@ import * as path from 'path';
 const { exec } = require('child_process');
 const { spawn } = require('child_process');
 import * as vscode from 'vscode';
+import WebviewHelper from './webviewHelper';
 // import { fstat } from 'fs';
 
 const ESSENCE = "essence";
@@ -114,7 +115,7 @@ export default class ConjureHelper {
     }
 
 
-    public static async model() {
+    public static model() {
 
         vscode.window.showInformationMessage('Modelling..');
         console.log("MODEL------------------------");
@@ -137,43 +138,65 @@ export default class ConjureHelper {
         let dir = path.dirname(doc.uri.path);
         console.log(dir);
 
-            let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
+        let args = ['modelling', doc.uri.path, '--channelling=no', '--responses=1', "-o", dir];
 
-            exec('conjure ' + args.join(" "), { cwd: dir }, (e :any, stdout: string, stderr: string)=> {
+        exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
-                if (e instanceof Error) {
-            
-                    // console.error(e);
-                    vscode.window.showErrorMessage(e.message);
-            
-                    return;
-                    // throw e;
-                }
-            
-                // console.log('stdout ', stdout);
-            
-                // console.log('stderr ', stderr);
+            if (e instanceof Error) {
 
-                fs.readdir(dir, function (err, files) {
-                    const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
+                // console.error(e);
+                vscode.window.showErrorMessage(e.message);
 
-                    let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
-                    vscode.commands.executeCommand('vscode.openFolder', uri);
+                return;
+                // throw e;
+            }
 
+            // console.log('stdout ', stdout);
 
-                });
+            // console.log('stderr ', stderr);
+
+            fs.readdir(dir, function (err, files) {
+                const eprimeFiles = files.filter(el => /\.eprime$/.test(el));
+
+                let uri = vscode.Uri.file(path.join(dir, eprimeFiles[0]));
+                vscode.commands.executeCommand('vscode.openFolder', uri);
+
 
             });
 
+        });
+
     }
 
-    public static async solve() {
+    public static visualiseCurrent() {
+        // if (this.solve()) {
+            let current = vscode.window.activeTextEditor;
+            if (!current) {
+                vscode.window.showErrorMessage("No active text editor!");
+                return;
+            }
+
+            let doc = current.document;
+            let dir = path.dirname(doc.uri.path);
+
+            // fs.readdir(dir, function (err, files) {
+                // const db = files.filter(el => /\.db$/.test(el));
+                // console.log(path.join(dir, db[0]));
+                WebviewHelper.launch(path.join(dir, "conjure-output"));
+                // WebviewHelper.launch("/home/tom/conjure/ide/src/test/testData/sets/flags");
+            // });
+        // }
+
+
+    }
+
+    public static solve(): boolean {
         console.log("SOLVE------------------------");
         // vscode.workspace.textDocuments[0].
         let current = vscode.window.activeTextEditor;
         if (!current) {
             vscode.window.showErrorMessage("No active text editor!");
-            return;
+            return false;
         }
 
         let doc = current.document;
@@ -181,7 +204,7 @@ export default class ConjureHelper {
         // console.log(extension);
         if (extension !== ".param") {
             vscode.window.showErrorMessage("This is not a param file");
-            return;
+            return false;
         }
 
         vscode.window.showInformationMessage('Solving..');
@@ -194,26 +217,26 @@ export default class ConjureHelper {
 
             let modelPath = path.join(dir, essenceFile);
 
-            // let args = ['solve', modelPath, doc.uri.path,  "-o", dir, '--solver-options', '"-dumptreejson out.json"'];
+            let args = ['solve', modelPath, doc.uri.path, '--solver-options', '"-dumptreejson out.json"'];
 
-            let args = ['solve', modelPath, doc.uri.path];
+            // let args = ['solve', modelPath, doc.uri.path];
 
             console.log("conjure " + args.join(" "));
 
-            exec('conjure ' + args.join(" "), { cwd: dir }, (e :any, stdout: string, stderr: string)=> {
+            exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 
                 if (e instanceof Error) {
-            
+
                     // console.error(e);
                     vscode.window.showErrorMessage(e.message);
-            
-                    return;
+
+                    return false;
                     // throw e;
-            
+
                 }
-            
+
                 // console.log('stdout ', stdout);
-            
+
                 // console.log('stderr ', stderr);
 
                 fs.readdir(dir, function (err, files) {
@@ -233,5 +256,6 @@ export default class ConjureHelper {
                 });
             });
         });
+        return true;
     }
 }
