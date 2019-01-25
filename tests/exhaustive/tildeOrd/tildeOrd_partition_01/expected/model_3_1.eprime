@@ -823,11 +823,11 @@ such that
     sum([toInt(q11 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Marker) *
          catchUndef(a_PartitionAsSet_ExplicitVarSizeWithMarkerR5_Values_ExplicitVarSizeWithMarker_Marker[q11], 0)
              | q11 : int(1..2)]),
-    alldifferent_except([toInt(q26 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q26, q13])
-                         * catchUndef(q13, 0)
-                             | q26 : int(1..2), q13 : int(1..2)],
-                        0),
+    and([1 =
+         sum([toInt(q26 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q26, q12])
+                  | q26 : int(1..2)])
+             | q12 : int(1..2)]),
     and([q27 <= b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(b_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q27, q28]) | q28 : int(1..2)]) >= 1
              | q27 : int(1..2)]),

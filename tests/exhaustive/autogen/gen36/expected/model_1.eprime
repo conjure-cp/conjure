@@ -34,15 +34,15 @@ such that
                   | q16 : int(1..2)])
              | q2 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
-         alldifferent_except([toInt(q18 <=
-                                    var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker
-                                        [q3]
-                                    /\
-                                    var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                                        [q3, q18, q5])
-                              * catchUndef(q5 + -1, 0)
-                                  | q18 : int(1..2), q5 : int(2, 5)],
-                             0)
+         and([1 =
+              sum([toInt(q18 <=
+                         var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker
+                             [q3]
+                         /\
+                         var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
+                             [q3, q18, q4])
+                       | q18 : int(1..2)])
+                  | q4 : int(2, 5)])
              | q3 : int(1..2)]),
     and([q3 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Marker ->
          and([q19 <= var6_ExplicitVarSizeWithMarkerR18R5R2_Values_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker[q3]

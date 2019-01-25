@@ -20,20 +20,20 @@ such that
                and([q62_ExplicitVarSizeWithDummy[q64] = b + 1 -> q62_ExplicitVarSizeWithDummy[q64 + 1] = b + 1
                         | q64 : int(1..b - 1)])])
     / 8,
-    alldifferent_except([toInt(q49 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q49, q2])
-                         * catchUndef(q2, 0)
-                             | q49 : int(1..b), q2 : int(1..b)],
-                        0),
+    and([1 =
+         sum([toInt(q20 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q20, q1])
+                  | q20 : int(1..b)])
+             | q1 : int(1..b)]),
     and([q50 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q50, q51]) | q51 : int(1..b)]) >= 1
              | q50 : int(1..b)]),
     and([q4 + 1 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         [toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q20]) | q20 : int(1..b)] <lex
-         [toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4 + 1, q21]) | q21 : int(1..b)]
+         [toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4, q21]) | q21 : int(1..b)] <lex
+         [toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q4 + 1, q22]) | q22 : int(1..b)]
              | q4 : int(1..b - 1)]),
     and([q5 > p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q22] = false | q22 : int(1..b)])
+         and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q5, q23] = false | q23 : int(1..b)])
              | q5 : int(1..b)]),
     p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker <= b,
     and([q6 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
@@ -64,8 +64,8 @@ such that
          p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q12 + 1, ..]
              | q12 : int(1..b - 1)]),
     and([q13 > p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q13, q23] = 1
-                  | q23 : int(1..b)])
+         and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q13, q24] = 1
+                  | q24 : int(1..b)])
              | q13 : int(1..b)]),
     p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker <= b,
     and([q14 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
@@ -85,38 +85,38 @@ such that
          <= b
              | q14 : int(1..b)]),
     b =
-    sum([toInt(q24 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
-         catchUndef(sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q24, q26] !=
+    sum([toInt(q25 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker) *
+         catchUndef(sum([toInt(p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q25, q27] !=
                                b + 1)
-                             | q26 : int(1..b)]),
+                             | q27 : int(1..b)]),
                     0)
-             | q24 : int(1..b)]),
-    and([q29 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
-         or([q32 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-             (and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q32, q33] ->
-                   or([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q29, q35] != b + 1
-                       /\ p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q29, q35] = q33
-                           | q35 : int(1..b)])
-                       | q33 : int(1..b)])
+             | q25 : int(1..b)]),
+    and([q30 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker ->
+         or([q33 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+             (and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q33, q34] ->
+                   or([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q30, q36] != b + 1
+                       /\ p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q30, q36] = q34
+                           | q36 : int(1..b)])
+                       | q34 : int(1..b)])
               /\
-              and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q29, q37] != b + 1 ->
+              and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q30, q38] != b + 1 ->
                    p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                       [q32, p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q29, q37]]
-                       | q37 : int(1..b)]))
-                 | q32 : int(1..b)])
-             | q29 : int(1..b)]),
-    and([q40 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
-         or([q43 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
-             (and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q43, q45] != b + 1 ->
+                       [q33, p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q30, q38]]
+                       | q38 : int(1..b)]))
+                 | q33 : int(1..b)])
+             | q30 : int(1..b)]),
+    and([q41 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
+         or([q44 <= p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Marker /\
+             (and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q46] != b + 1 ->
                    p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence
-                       [q40, p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q43, q45]]
-                       | q45 : int(1..b)])
+                       [q41, p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q46]]
+                       | q46 : int(1..b)])
               /\
-              and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q40, q46] ->
-                   or([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q43, q48] != b + 1
-                       /\ p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q43, q48] = q46
-                           | q48 : int(1..b)])
-                       | q46 : int(1..b)]))
-                 | q43 : int(1..b)])
-             | q40 : int(1..b)])
+              and([p_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q41, q47] ->
+                   or([p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q49] != b + 1
+                       /\ p_PartitionAsSet_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q44, q49] = q47
+                           | q49 : int(1..b)])
+                       | q47 : int(1..b)]))
+                 | q44 : int(1..b)])
+             | q41 : int(1..b)])
 

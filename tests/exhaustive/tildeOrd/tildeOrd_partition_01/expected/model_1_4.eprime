@@ -336,11 +336,11 @@ such that
                              | q69 : int(1..2)]))
                    | q66 : int(1..2)])))
             | q31 : int(1..2)]),
-    alldifferent_except([toInt(q24 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q24, q2])
-                         * catchUndef(q2, 0)
-                             | q24 : int(1..2), q2 : int(1..2)],
-                        0),
+    and([1 =
+         sum([toInt(q24 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q24, q1])
+                  | q24 : int(1..2)])
+             | q1 : int(1..2)]),
     and([q25 <= a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker ->
          sum([toInt(a_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q25, q26]) | q26 : int(1..2)]) >= 1
              | q25 : int(1..2)]),
