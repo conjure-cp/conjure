@@ -258,19 +258,21 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 if (not (s in domains)):
                     domains.add(s)
 
+    # echo domains
     return domains
 
 
 proc domainsToJson(domains: seq[Variable]): JsonNode =
 
     let root = TreeViewNode(name: "Items")
-    let variables = TreeViewNode(name: "Variables")
+    let variables = TreeViewNode(name: "Domain Variables")
     let expressions = TreeViewNode(name: "Expressions")
-    let sets = TreeViewNode(name: "Sets")
+    # let sets = TreeViewNode(name: "Sets")
 
-    root.children = @[variables, sets, expressions]
+    root.children = @[variables, expressions]
 
     for d in domains:
+
 
         if d of Expression:
             expressions.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
@@ -295,7 +297,7 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
             let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])
             let included = TreeViewNode(name: "Included", children: @[TreeViewNode(name: ($s.included)[2..^2])])
             let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: ($s.excluded)[2..^2])])
-            sets.children.add(TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
+            variables.children.add(TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
 
         else:
             variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))

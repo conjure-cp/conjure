@@ -133,25 +133,33 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
             if domainsAtNode[i] of Set:
 
-                let sets = "liItemsSets"
+                let sets = "liItemsDomain Variables"
 
                 let s1 = cast[Set](domainsAtNode[i])
                 let s2 = cast[Set](domainsAtPrev[i])
 
+                var different = false
+
                 if (s1.getCardinality() != s2.getCardinality()):
+                    different = true
                     list.add("li" & s1.name & "Cardinality")
                     if not (sets in list):
                         list.add(sets)
 
                 if (s1.included != s2.included):
+                    different = true
                     list.add("li" & s1.name & "Included")
                     if not (sets in list):
                         list.add(sets)
 
                 if (s1.excluded != s2.excluded):
+                    different = true
                     list.add("li" & s1.name & "Excluded")
                     if not (sets in list):
                         list.add(sets)
+
+                if different:
+                    list.add("liDomain Variables" & s1.name)
 
             elif domainsAtNode[i] of Expression:
                 let expressions = "liItemsExpressions"
@@ -161,11 +169,12 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
                     if not (expressions in list):
                         list.add(expressions)
             else:
-                let variables = "liItemsVariables"
+                let variables = "liItemsDomain Variables"
                 if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
-                    list.add("liVariables" & domainsAtNode[i].name )
+                    list.add("liDomain Variables" & domainsAtNode[i].name )
                     if not (variables in list):
                         list.add(variables)
+
         if list.len() > 0:
             list.add("liItems")
 
