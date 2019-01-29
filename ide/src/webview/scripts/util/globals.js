@@ -15,6 +15,7 @@ exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bott
 exports.simpleDomainsAtRoot;
 exports.init = true;
 exports.pretty = true;
+exports.frozen = false;
 exports.i = 0;
 exports.duration = 750;
 exports.tree = d3.layout.tree()
@@ -253,7 +254,9 @@ exports.selectNode = (nodeId) => {
     //     exports.tabulate()
     // }
 
-    exports.loadDomains(nodeId);
+    if (!exports.frozen) {
+        exports.loadDomains(nodeId);
+    }
 
 }
 
@@ -261,7 +264,7 @@ exports.loadDomains = (nodeId) => {
 
     // console.log(exports.waiting);
 
-    if (!exports.waiting ) {
+    if (!exports.waiting) {
 
         let commandString;
 

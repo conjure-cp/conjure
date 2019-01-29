@@ -3,6 +3,11 @@ import * as listView from "./listView"
 
 
 export function appendControls() {
+    d3.select("#freeze")
+        .on("change", () => {
+            globals.loadDomains(globals.selectedId);
+            globals.frozen = !globals.frozen;
+        })
     d3.select("#check")
         .on("change", () => {
             $("#pane").empty();
