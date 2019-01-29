@@ -261,15 +261,15 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
     # echo domains
     return domains
 
-
 proc domainsToJson(domains: seq[Variable]): JsonNode =
 
     let root = TreeViewNode(name: "Items")
     let variables = TreeViewNode(name: "Domain Variables")
     let expressions = TreeViewNode(name: "Expressions")
+    let changedExpressions = TreeViewNode(name: "Changed Expressions")
     # let sets = TreeViewNode(name: "Sets")
 
-    root.children = @[variables, expressions]
+    root.children = @[variables, expressions, changedExpressions]
 
     for d in domains:
 
@@ -305,3 +305,12 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
     # let list = @[root]
     # let json = (%list).pretty()
     return %root
+
+
+proc expressionsToJson(expressions: seq[Expression]): JsonNode =
+    var list : seq[TreeViewNode]
+
+    for exp in expressions:
+        list.add(TreeViewNode(name: exp.name, children: @[TreeViewNode(name: exp.rng)]))
+
+    return %list

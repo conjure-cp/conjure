@@ -84,7 +84,6 @@ import * as listView from "./util/listView"
                 break;
 
             case 'prettyDomains':
-                console.log(message.data)
 
                 listView.setNodeId(globals.selectedId);
 
@@ -92,6 +91,9 @@ import * as listView from "./util/listView"
                     listView.render(message.data, message.data);
                 }
                 else {
+
+                    console.log(message.data.changedExpressions)
+                    listView.setChangedExpressions(message.data.changedExpressions);
                     listView.updateNodes(message.data.vars);
                     listView.setChangedList(message.data.changed);
                     listView.setChanged()

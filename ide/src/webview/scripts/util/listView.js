@@ -46,6 +46,12 @@ export function getRootNode() {
     return rootNode;
 }
 
+export function setChangedExpressions(expressions){
+    console.log(name2Node["Changed Expressions"])
+    name2Node["Changed Expressions"]["children"] = expressions
+
+}
+
 export function updateNodes(data) {
 
 

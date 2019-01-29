@@ -105,10 +105,11 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
     var list : seq[string]
     var id : int
     var domainsAtPrev : seq[Variable]
+    var domainsAtNode : seq[Variable]
+    var changedExpressions : seq[Expression]
     
     discard parseInt(nodeId, id)
 
-    var domainsAtNode : seq[Variable]
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
 
     let jsonList = %domainsAtNode
@@ -166,6 +167,8 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
                 if (domainsAtNode[i].rng != domainsAtPrev[i].rng):
                     list.add("liExpressions" & domainsAtNode[i].name) 
+                    let expression = cast[Expression](domainsAtNode[i])
+                    changedExpressions.add(expression)
                     if not (expressions in list):
                         list.add(expressions)
             else:
@@ -182,7 +185,7 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
     else:
         return domainsToJson(domainsAtNode)
 
-    return %*{"vars" : jsonList, "changed" : list }
+    return %*{"vars" : jsonList, "changed" : list, "changedExpressions": expressionsToJson(changedExpressions) }
 
 proc getCorrectPath*(): JsonNode =
 
