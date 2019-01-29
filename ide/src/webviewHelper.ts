@@ -40,13 +40,6 @@ export default class WebviewHelper {
     // }
 
 
-    // private static async getFolder() {
-    //     let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
-    //     if (folder) {
-    //         console.log(folder[0].path);
-    //         return folder[0].path;
-    //     }
-    // }
 
     // public static  async activate(context: vscode.ExtensionContext) {
 

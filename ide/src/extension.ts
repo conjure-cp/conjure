@@ -29,7 +29,7 @@ export function activate(context: vscode.ExtensionContext) {
 
     context.subscriptions.push(vscode.commands.registerCommand('conjure.vis', () => {
         WebviewHelper.activate(context);
-        // WebviewHelper.activate(context);
+        ConjureHelper.visualisePath();
     }));
 
 

@@ -188,7 +188,7 @@ exports.nextNode = () => {
     }
     else {
         // exports.selectedId = exports.currentId;
-        console.log("here!!!")
+        // console.log("here!!!")
         exports.selectedId += stepSize;
         exports.selectNode(exports.selectedId);
     }
@@ -248,15 +248,13 @@ exports.selectNode = (nodeId) => {
     exports.currentDomainId = 0;
 
     // console.log("Calling load domains");
-
-    exports.loadDomains(nodeId);
-
-
-
     // if (!exports.pretty) {
     //     $("#pane").empty();
     //     exports.tabulate()
     // }
+
+    exports.loadDomains(nodeId);
+
 }
 
 exports.loadDomains = (nodeId) => {

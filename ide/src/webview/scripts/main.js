@@ -61,6 +61,7 @@ import * as listView from "./util/listView"
 
                     // console.log(globals.currentId);
 
+                    $("#pane").empty();
                     globals.tabulate()
                     globals.appendRows(message.data.vars);
                 }
@@ -83,6 +84,8 @@ import * as listView from "./util/listView"
                 break;
 
             case 'prettyDomains':
+                console.log(message.data)
+
                 listView.setNodeId(globals.selectedId);
 
                 if (globals.selectedId == 1) {
@@ -171,7 +174,7 @@ import * as listView from "./util/listView"
 
                 let s = "#node" + d.id + " circle";
 
-                console.log(s);
+                // console.log(s);
                 let domElement = d3.select(s);
                 domElement.classed("hasOthers red", false);
 

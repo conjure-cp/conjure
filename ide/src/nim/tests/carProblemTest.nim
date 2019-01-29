@@ -2,8 +2,8 @@ import unittest
 # include util/process
 import util/main
 
-let path = "/home/tom/EssenceCatalog/problems/csplib-prob001/conjure-output";
-let badPath = "/home/tom/EssenceCatalog/problems/csplib-prob001/"
+let path = "/home/tom/EssenceCatalog/problems/csplib-prob065/conjure-output";
+# let badPath = "/home/tom/EssenceCatalog/problems/csplib-prob001/"
         
 
 # let db = open(dbPath, "", "", "") 
@@ -12,8 +12,8 @@ suite "Test for dummy sets":
     test "Valid path":
         init(path)
 
-    test "invaid path":
-        init(badPath)
+    # test "invaid path":
+    #     init(badPath)
 
     # initParser(minionPath, eprimePath)
 

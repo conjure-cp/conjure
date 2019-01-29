@@ -26,10 +26,15 @@ type DummySet* = ref object of Set
     dummyVal : int
 
 type MarkerSet* = ref object of Set
-    cardinality : string
+    markerLower : int
+    markerUpper : int
 
 type FlagSet* = ref object of Set
-    list : seq[string]
+    # list : seq[string]
+    # flags : seq[int]
+    maxSetTo1 : int
+    maxSetTo0 : int
+    flagCount : int
 
 proc getPrettyRange*(lower: string, upper: string): string =
     if lower == upper:
@@ -42,11 +47,18 @@ proc getCardinality*(s: Set): string =
 
     if s of MarkerSet:
         let mS = cast[MarkerSet](s)
-        return mS.cardinality
+
+        # if mS.markerLower == mS.markerUpper:
+        return getPrettyRange($mS.markerLower, $mS.markerUpper)
+
+        # return mS.lower
+        # return getPrettyRange($mS.markerLower, $mS.markerLower)
 
     if s of FlagSet:
         let fS = cast[FlagSet](s)
-        return getPrettyRange($fS.list.len(), $fs.list.len())
+
+        return getPrettyRange($max(fS.included.len(), fS.lower), $(fS.flagCount - fS.excluded.len()))
+        # return getPrettyRange($fS.maxSetTo1, $fS.maxSetTo1)
     
     return "ERROR"
 

@@ -168,24 +168,30 @@ export default class ConjureHelper {
 
     }
 
+
+    public static async visualisePath() {
+        let folder = await vscode.window.showOpenDialog({ "canSelectFiles": false, "canSelectFolders": true });
+        if (folder) {
+            // console.log(folder[0].path);
+            // return folder[0].path;
+
+            WebviewHelper.launch(folder[0].path);
+
+        }
+    }
+
     public static visualiseCurrent() {
         // if (this.solve()) {
-            let current = vscode.window.activeTextEditor;
-            if (!current) {
-                vscode.window.showErrorMessage("No active text editor!");
-                return;
-            }
+        let current = vscode.window.activeTextEditor;
+        if (!current) {
+            vscode.window.showErrorMessage("No active text editor!");
+            return;
+        }
 
-            let doc = current.document;
-            let dir = path.dirname(doc.uri.path);
+        let doc = current.document;
+        let dir = path.dirname(doc.uri.path);
 
-            // fs.readdir(dir, function (err, files) {
-                // const db = files.filter(el => /\.db$/.test(el));
-                // console.log(path.join(dir, db[0]));
-                WebviewHelper.launch(path.join(dir, "conjure-output"));
-                // WebviewHelper.launch("/home/tom/conjure/ide/src/test/testData/sets/flags");
-            // });
-        // }
+        WebviewHelper.launch(path.join(dir, "conjure-output"));
 
 
     }
@@ -219,9 +225,7 @@ export default class ConjureHelper {
 
             let args = ['solve', modelPath, doc.uri.path, '--solver-options', '"-dumptreejson out.json"'];
 
-            // let args = ['solve', modelPath, doc.uri.path];
-
-            console.log("conjure " + args.join(" "));
+            // console.log("conjure " + args.join(" "));
 
             exec('conjure ' + args.join(" "), { cwd: dir }, (e: any, stdout: string, stderr: string) => {
 

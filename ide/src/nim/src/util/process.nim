@@ -87,7 +87,8 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
                     varLookup[n] = FlagSet(name: n, lower: l, upper: u) 
   
     except:
-        raise newException(EprimeParseException, "Failed to parse eprime")
+        raise
+        # raise newException(EprimeParseException, "Failed to parse eprime")
 
     # echo varLookup
     return varLookup
@@ -96,6 +97,8 @@ var eprimeLookup : Table[string, Variable]
 var auxLookup : Table[string, Expression]
 
 proc initParser(minionFilePath: string, eprimeFilePath: string) =
+    eprimeLookup.clear()
+    auxLookup.clear()
     eprimeLookup = parseEprime(eprimeFilePath)
     auxLookup = parseAux(minionFilePath)
 
@@ -103,7 +106,7 @@ proc getSimpleDomainsOfNode(db: DbConn, amount: string, start: string, nodeId: s
 
     var domains : seq[Variable]
 
-    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? and domainId >= ? limit ?",nodeId, start, amount):
+    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? and domainId >= ? order by name limit ? ",nodeId, start, amount):
 
         # echo domain[0]
         # echo auxLookup
@@ -126,7 +129,7 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
     var tableCopy : Table[string, Variable]
     tableCopy.deepCopy(eprimeLookup)
 
-    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ?", nodeId):
+    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? order by name", nodeId):
         # echo domain
 
         if (auxLookup.hasKey(domain[0])):
@@ -182,28 +185,57 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                         if (lower == upper):
                             var l : int
                             discard parseInt(lower, l)
-                            mSet.included.add(l)
+
+                            # if mSet.markerLower == mSet.markerUpper:
+                            if num <= mSet.markerLower:
+                                mSet.included.add(l)
+                                
+                            
+                            if num > mSet.markerUpper:
+                                mSet.excluded.add(l)
+
+                            echo mSet
+                            # mSet.included.add(l)
 
                     elif s of FlagSet:
                         let fSet = cast[FlagSet](s)
 
+
                         if (domain[0].contains("_ExplicitVarSizeWithFlags_Flags_")):
-                            if (lower == upper):
-                                if (lower == "1"):
-                                    fSet.list.add("")
-                                else:
-                                    discard fSet.list.pop()
+
+                            fSet.flagCount.inc()
+                            # fSet.flags.add(num)
+                            if (lower == "1" and upper == "1"):
+                                if num > fSet.maxSetTo1:
+                                    fSet.maxSetTo1 = num
+                                    echo num
+
+                            if (lower == "0" and upper == "0"):
+                                if num > fSet.maxSetTo0:
+                                    fSet.maxSetTo0 = num
                         else:
                             if (lower == upper):
                                 var l : int
                                 discard parseInt(lower, l)
-                                fSet.included.add(l)
+
+                                if (num <= fSet.maxSetTo1):
+                                    fSet.included.add(l)
+
+                                if (num > fSet.maxSetTo1 and num <= fSet.maxSetTo0):
+                                    fSet.excluded.add(l)
 
 
                 except ValueError:
                     
                     let mSet = cast[MarkerSet](s)
-                    mSet.cardinality = getPrettyRange(lower, upper)
+                    # mSet.cardinality = getPrettyRange(lower, upper)
+                    # if lower == upper:
+                    var l : int
+                    discard parseInt(lower, l)
+                    var u : int
+                    discard parseInt(upper, u)
+                    mSet.markerLower = l
+                    mSet.markerUpper = u
                     
 
                 if (not (s in domains)):

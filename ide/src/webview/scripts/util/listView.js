@@ -54,10 +54,18 @@ export function updateNodes(data) {
         // console.log(name2Node[element.name].children[0].name);
 
         // Chec if its a set
-        if (element.Cardinality) {
+
+        // console.log("~~")
+        // console.log(element.Cardinality)
+        // console.log("~~")
+
+        if (element.hasOwnProperty("Cardinality")) {
             name2Node[element.name].children[1].children[0].name = element.Cardinality
             name2Node[element.name].children[2].children[0].name = element.Included
             name2Node[element.name].children[3].children[0].name = element.Excluded
+
+            // console.log("SADASDASDSAFGDAFSJAJSFJAJFJAS")
+            // console.log(name2Node[element.name].children[3].children[0])
         }
         else {
             name2Node[element.name].children[0].name = element.rng;
@@ -124,6 +132,7 @@ export function render(data, parent) {
 
             return "li" + parentName + d.name;
         })
+        // .style("margin-bottom", "200px")
         .style("top", parent.y + "px")
         .style("opacity", 0)
         .style("height", tree.nodeHeight() + "px")
