@@ -52,16 +52,25 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
             if key[1].hasKey("DomainSet"):
                 
-                let array = key[1]["DomainSet"].getElems()
-                # echo array[^1].pretty()
+                let arr = key[1]["DomainSet"].getElems()
+
+                # echo arr[1]["SizeAttr_Size"]
+
+                if arr[1].hasKey("SizeAttr_Size"):
+                    varLookup[n] = ExplicitSet(name: n, cardinality: arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
+                    continue
+                    # echo varLookup
+                    # return
+
+                # echo arr[^1].pretty()
                 var bounds  : JsonNode
 
-                bounds = array[^1]["DomainInt"].getElems()[0]
+                bounds = arr[^1]["DomainInt"].getElems()[0]
 
                 if (bounds.hasKey("RangeBounded")):
-                    bounds = array[^1]["DomainInt"].getElems()[0]["RangeBounded"]
+                    bounds = arr[^1]["DomainInt"].getElems()[0]["RangeBounded"]
                 else:
-                    bounds = array[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
+                    bounds = arr[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
                 # echo bounds
                 var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
                 var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
@@ -74,17 +83,18 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
                         echo "ERRORORORRORORORORRO"
 
 
-                if array[0].hasKey("Set_ExplicitVarSizeWithDummy"):
+                if arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
                     varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1) 
 
-                elif array[0].hasKey("Set_Occurrence"):
+                elif arr[0].hasKey("Set_Occurrence"):
                     varLookup[n] = OccurrenceSet(name: n, lower: l, upper: u) 
 
-                elif array[0].hasKey("Set_ExplicitVarSizeWithMarker"):
+                elif arr[0].hasKey("Set_ExplicitVarSizeWithMarker"):
                     varLookup[n] = MarkerSet(name: n, lower: l, upper: u) 
 
-                elif array[0].hasKey("Set_ExplicitVarSizeWithFlags"):
+                elif arr[0].hasKey("Set_ExplicitVarSizeWithFlags"):
                     varLookup[n] = FlagSet(name: n, lower: l, upper: u) 
+
   
     except:
         raise
@@ -224,6 +234,13 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                                 if (num > fSet.maxSetTo1 and num <= fSet.maxSetTo0):
                                     fSet.excluded.add(l)
 
+                    elif s of ExplicitSet:
+                        let eSet = cast[ExplicitSet](s)
+                        var l : int
+                        discard parseInt(lower, l)
+                        if (lower == upper):
+                            eSet.included.add(l)
+
 
                 except ValueError:
                     
@@ -271,6 +288,8 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
                 setType = "Marker"
             if (s of FlagSet):
                 setType = "Flags"
+            if (s of ExplicitSet):
+                setType = "Explicit"
 
             let t = TreeViewNode(name: "Type", children: @[TreeViewNode(name: setType)])
             let cardinality = TreeViewNode(name: "Cardinality", children: @[TreeViewNode(name: s.getCardinality())])

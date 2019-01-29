@@ -36,6 +36,9 @@ type FlagSet* = ref object of Set
     maxSetTo0 : int
     flagCount : int
 
+type ExplicitSet* = ref object of Set
+    cardinality : int
+
 proc getPrettyRange*(lower: string, upper: string): string =
     if lower == upper:
        return "int(" & $lower & ")" 
@@ -47,20 +50,17 @@ proc getCardinality*(s: Set): string =
 
     if s of MarkerSet:
         let mS = cast[MarkerSet](s)
-
-        # if mS.markerLower == mS.markerUpper:
         return getPrettyRange($mS.markerLower, $mS.markerUpper)
-
-        # return mS.lower
-        # return getPrettyRange($mS.markerLower, $mS.markerLower)
 
     if s of FlagSet:
         let fS = cast[FlagSet](s)
-
         return getPrettyRange($max(fS.included.len(), fS.lower), $(fS.flagCount - fS.excluded.len()))
-        # return getPrettyRange($fS.maxSetTo1, $fS.maxSetTo1)
     
-    return "ERROR"
+    if s of ExplicitSet:
+        let eS = cast[ExplicitSet](s)
+        return getPrettyRange($eS.cardinality, $eS.cardinality)
+    
+    return "SET TYPE NOT SUPPORTED"
 
 proc `$`*(v:Variable): string =
     if v of Expression:

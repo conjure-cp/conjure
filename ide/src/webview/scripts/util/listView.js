@@ -51,7 +51,6 @@ export function updateNodes(data) {
 
     data.forEach(element => {
 
-        // console.log(name2Node[element.name].children[0].name);
 
         // Chec if its a set
 
@@ -60,6 +59,9 @@ export function updateNodes(data) {
         // console.log("~~")
 
         if (element.hasOwnProperty("Cardinality")) {
+            if (!name2Node[element.name].children){
+                console.log(element);
+            }
             name2Node[element.name].children[1].children[0].name = element.Cardinality
             name2Node[element.name].children[2].children[0].name = element.Included
             name2Node[element.name].children[3].children[0].name = element.Excluded
