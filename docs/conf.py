@@ -375,6 +375,7 @@ def setup(sphinx):
     from EssenceLexer import EssenceLexer
     sphinx.add_lexer("essence", EssenceLexer())
     
-    subprocess.run(["make", "conjure-help"])
+    # python 2
+    subprocess.call(["make", "conjure-help"])
     
     
