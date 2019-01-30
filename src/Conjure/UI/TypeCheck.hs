@@ -177,6 +177,8 @@ typeCheckModel model1 = do
                         case tyFunc of
                             -- Can be generalised to other orderable types
                             Right TypeInt{} -> return ()
+                            Right (TypeList TypeInt{}) -> return ()
+                            Right (TypeMatrix _ TypeInt{}) -> return ()
                             Left err -> tell $ return $ vcat
                                 [ "In the incomparability_function statement:" <++> pretty st
                                 , "Error:" <++> pretty err
