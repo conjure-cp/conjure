@@ -1156,16 +1156,12 @@ verticalRules =
     , Vertical.Record.rule_Record_Neq
     , Vertical.Record.rule_Record_Leq
     , Vertical.Record.rule_Record_Lt
-    , Vertical.Record.rule_Record_DotLeq
-    , Vertical.Record.rule_Record_DotLt
     , Vertical.Record.rule_Record_Index
 
     , Vertical.Variant.rule_Variant_Eq
     , Vertical.Variant.rule_Variant_Neq
     , Vertical.Variant.rule_Variant_Leq
     , Vertical.Variant.rule_Variant_Lt
-    , Vertical.Variant.rule_Variant_DotLeq
-    , Vertical.Variant.rule_Variant_DotLt
     , Vertical.Variant.rule_Variant_Index
     , Vertical.Variant.rule_Variant_Active
 
