@@ -2,6 +2,7 @@ module Conjure.Representations.Combined
     ( downD, downC, up
     , downD1, downC1, up1
     , downToX1
+    , symmetryOrderingDispatch
     , reprOptions, getStructurals
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     ) where
@@ -141,6 +142,24 @@ up ctxt (name, highDomain) = do
                              | (n, d) <- toDescend
                              ]
             up1 (name, highDomain) midConstants
+
+
+-- | ...
+symmetryOrderingDispatch ::
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    (Expression -> m [Expression]) ->
+    Expression ->
+    Name ->
+    DomainX Expression ->
+    m Expression
+symmetryOrderingDispatch downX1 inp name domain =
+    rSymmetryOrdering
+        (dispatch domain)
+        symmetryOrderingDispatch downX1
+        inp name domain
 
 
 -- | Combine all known representations into one.
@@ -311,6 +330,8 @@ getStructurals ::
     NameGen m =>
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
-    (Expression -> m [Expression]) -> DomainX Expression -> m (Expression -> m [Expression])
+    (Expression -> m [Expression]) ->
+    DomainX Expression ->
+    m (Expression -> m [Expression])
 getStructurals downX1 domain = rStructural (dispatch domain) (getStructurals downX1) downX1 domain
 
