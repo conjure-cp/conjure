@@ -517,6 +517,7 @@ instance ExpressionLike Expression where
     boolOut (Constant c) = boolOut c
     boolOut x = fail ("Expecting a constant, but got:" <++> pretty x)
 
+    -- fromList [x] = x -- TODO: what would break if I do this?
     fromList xs = AbstractLiteral $ AbsLitMatrix (mkDomainIntB 1 (fromInt $ genericLength xs)) xs
     listOut (AbstractLiteral (AbsLitMatrix _ xs)) = return xs
     listOut (Constant (ConstantAbstract (AbsLitMatrix _ xs))) = return (map Constant xs)

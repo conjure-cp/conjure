@@ -41,5 +41,5 @@ parameterGenerator model = runNameGen () (resolveNames model) >>= core
                 then return m { mStatements = concat outStatements }
                 else userErr1 $ vcat $ "Some parameters have infinite domains."
                                      : [ pretty nm <> ":" <++> pretty dom
-                                     | (nm, dom) <- errs
-                                     ]
+                                       | (nm, dom) <- errs
+                                       ]
