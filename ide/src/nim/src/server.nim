@@ -15,7 +15,7 @@ routes:
             resp HttpCode(502)
             echo "Failed to parse Minion file"
         except :
-            resp HttpCode(501)
+            # resp HttpCode(501)
             echo("IOERROR!!")
 
         resp "OK"

@@ -40,8 +40,8 @@ proc parseSet(s: JsonNode, n: string): Set =
             return MarkerSet(name: n, inner: parseSet(innerArr, "inner"))
         # if innerArr[0].hasKey("Set_Occurrence"):
 
-    if arr[1].hasKey("SizeAttr_Size"):
-        return ExplicitSet(name: n, cardinality: s["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
+    if arr[0].hasKey("Set_Explicit"):
+        return ExplicitSet(name: n, cardinality: arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
 
     if arr[^1].hasKey("DomainInt"):
 
@@ -66,16 +66,16 @@ proc parseSet(s: JsonNode, n: string): Set =
 
 
         if arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-            return DummySet(name: n, lower: l, upper: u, dummyVal: u + 1) 
+            return DummySet(name: n, lowerBound: l, upperBound: u, dummyVal: u + 1) 
 
         elif arr[0].hasKey("Set_Occurrence"):
-            return OccurrenceSet(name: n, lower: l, upper: u) 
+            return OccurrenceSet(name: n, lowerBound: l, upperBound: u) 
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithMarker"):
-            return MarkerSet(name: n, lower: l, upper: u) 
+            return MarkerSet(name: n, lowerBound: l, upperBound: u) 
 
         elif arr[0].hasKey("Set_ExplicitVarSizeWithFlags"):
-            return FlagSet(name: n, lower: l, upper: u) 
+            return FlagSet(name: n, lowerBound: l, upperBound: u) 
 
 proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
@@ -141,133 +141,271 @@ proc getSimpleDomainsOfNode(db: DbConn, amount: string, start: string, nodeId: s
     return domains
 
 proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
-    # echo auxLookup
-    var domains : seq[Variable]
+    var list : seq[Variable]
 
     var tableCopy : Table[string, Variable]
     tableCopy.deepCopy(eprimeLookup)
 
-    for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? order by name", nodeId):
-        # echo domain
+    for variable in tableCopy.values():
+        list.add(variable)
+        # echo "dasd"
+        let digitRe = re"(\d*$)"
 
-        if (auxLookup.hasKey(domain[0])):
-            let d = auxLookup[domain[0]]
-            d.rng = getPrettyRange(domain[1], domain[2])
-            domains.add(d)
-        
-        elif (tableCopy.hasKey(domain[0])):
-            let v = tableCopy[domain[0]]
-            v.rng = getPrettyRange(domain[1], domain[2])
-            domains.add(v)
+        if (variable of Set):
+            var num : int
+            var lower : int
 
-        else:
-            let splitted = domain[0].split("_")
-            let setName = splitted[0]
-            let lower = domain[1]
-            let upper = domain[2]
+            if (variable of ExplicitSet):
+                let eSet = cast[ExplicitSet](variable)
+                let query0 = sql("SELECT lower FROM domain WHERE name like '%" & variable.name & "_Explicit_%' and lower = upper and nodeId = ?;")
+                for res in db.fastRows(query0, nodeId):
+                    discard res[0].parseInt(lower)
+                    eSet.included.add(lower)
 
-            if tableCopy.hasKey(setName):
 
-                let s = tableCopy[setName]
-                # echo splitted
-                try:
-                    let num = parseInt(splitted[^1])
+            if (variable of OccurrenceSet):
+                let oSet = cast[OccurrenceSet](variable)
+                let query = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_Occurrence%' and lower = upper and nodeId = ?;")
+                # echo $query
+                for res in db.fastRows(query, nodeId):
+                    # echo res[0].findAll(digitRe)
+                    discard res[0].findAll(digitRe)[0].parseInt(num)
+                    if res[1] == "1":
+                        echo "Including " & $num
+                        oSet.included.add(num)
+                    else:
+                        echo "Excluding " & $num
+                        oSet.excluded.add(num)
 
-                    if s of DummySet:
+            if (variable of DummySet):
+                # echo "HERE"
+                let dSet = cast[DummySet](variable)
+                let query = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithDummy%' and lower = upper and nodeId = ?;")
+                for res in db.fastRows(query, nodeId):
+                    # echo res
+                    # echo res[0].findAll(digitRe)
+                    discard res[1].parseInt(lower)
+                    discard res[0].findAll(digitRe)[0].parseInt(num)
 
-                        let dummySet = cast[DummySet](s)
+                    if res[1] == $dSet.dummyVal:
+                        dSet.excludedCount.inc()
+                        # dSet.excluded.add(num)
+                    else:
+                        dSet.included.add(lower)
 
-                        if (lower != $dummySet.dummyVal):
-                            dummySet.included.add(num)
+            if variable of FlagSet:
+                # var maxSetTo1 : int
+                var maxSetTo0 = -1
+                let fSet = cast[FlagSet](variable)
+                # let query0 = sql("SELECT name FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Flags_%' and nodeId = ? order by name desc limit 1;")
+
+                # var res = db.getValue(query0, nodeId)
+                # discard res.findAll(digitRe)[0].parseInt(fSet.flagCount)
+
+                let query1 = sql("SELECT name FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Flags_%' and lower = 1 and upper = 1 and nodeId = ? order by name desc limit 1;")
+                var res = db.getValue(query1, nodeId)
+                discard res.findAll(digitRe)[0].parseInt(fSet.maxSetTo1)
+
+                let query2 = sql("SELECT name FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Flags_%' and lower = 0 and upper = 0 and nodeId = ? order by name desc limit 1;")
+                res = db.getValue(query2, nodeId)
+                if res != "":
+                    discard res.findAll(digitRe)[0].parseInt(maxSetTo0)
+
+
+                # select * from domain where name like "%s_ExplicitVarSizeWithFlags_Values_%"  and lower = upper order by name asc 
+                let query3 = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Values_%' and lower = upper and nodeId = ? order by name asc;")
+                for res in db.rows(query3, nodeId):
+                    discard res[1].parseInt(lower)
+                    discard res[0].findAll(digitRe)[0].parseInt(num)
+
+                    # echo "num " & $num
+                    # echo "maxSetTo0 " & $maxSetTo0
+                    # echo "maxSetTo1 " & $maxSetTo1
+
+
+                    if maxSetTo0 > -1:
+                        if num > maxSetTo0:
+                            break
                         else:
-                            dummySet.excluded.add(num)
+                            if num > fSet.maxSetTo1:
+                                break
+
+                    elif num > fSet.maxSetTo1 and num <= maxSetTo0:
+                        fSet.excluded.add(lower)
+                    
+                    elif num <= fSet.maxSetTo1:
+                        fSet.included.add(lower)
+
+            if variable of MarkerSet:
+                let mSet = cast[MarkerSet](variable)
+                let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & variable.name & "_ExplicitVarSizeWithMarker_Marker' and nodeId = ?;")
+                var res = db.getRow(query0, nodeId)
+                discard res[0].findAll(digitRe)[0].parseInt(mSet.markerLower)
+                discard res[1].findAll(digitRe)[0].parseInt(mSet.markerUpper)
+
+                # if (mSet.markerLower != mSet.markerUpper):
+                #     continue
+
+                let query1 = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithMarker_Values_%' and lower = upper and nodeId = ? order by name asc;")
+                for res in db.fastRows(query1, nodeId):
+                    discard res[1].parseInt(lower)
+                    discard res[0].findAll(digitRe)[0].parseInt(num)
+
+                    if num <= mSet.markerLower:
+                        mSet.included.add(lower)
+                    if num > mSet.markerUpper:
+                        mSet.excluded.add(lower)
+
+        elif variable of Expression:
+            discard
+        else:
+            let query0 = sql("SELECT lower, upper FROM domain WHERE name = '" & variable.name & "' and nodeId = ?;")
+            var res = db.getRow(query0, nodeId)
+            variable.rng = getPrettyRange(res[0], res[1])
 
 
-                        # if (not (dummySet in domains)):
-                        #     domains.add(dummySet)
 
-                    elif s of OccurrenceSet:
-                        let oSet = cast[OccurrenceSet](s)
 
-                        if (lower == upper):
-                            if (lower == "1"):
-                                oSet.included.add(num)
-                            else:
-                                oSet.excluded.add(num)
+
+
+
+
+
+
+    return list
+
+    # for variable in eprimeLookup.values()
+
+
+
+# proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
+#     # echo auxLookup
+#     var domains : seq[Variable]
+
+#     var tableCopy : Table[string, Variable]
+#     tableCopy.deepCopy(eprimeLookup)
+
+#     for domain in db.fastRows(sql"select name, lower, upper from domain where nodeId = ? order by name", nodeId):
+#         # echo domain
+
+#         if (auxLookup.hasKey(domain[0])):
+#             let d = auxLookup[domain[0]]
+#             d.rng = getPrettyRange(domain[1], domain[2])
+#             domains.add(d)
+        
+#         elif (tableCopy.hasKey(domain[0])):
+#             let v = tableCopy[domain[0]]
+#             v.rng = getPrettyRange(domain[1], domain[2])
+#             domains.add(v)
+
+#         else:
+#             let splitted = domain[0].split("_")
+#             let setName = splitted[0]
+#             let lower = domain[1]
+#             let upper = domain[2]
+
+#             if tableCopy.hasKey(setName):
+
+#                 let s = tableCopy[setName]
+#                 # echo splitted
+#                 try:
+#                     let num = parseInt(splitted[^1])
+
+#                     if s of DummySet:
+
+#                         let dummySet = cast[DummySet](s)
+
+#                         if (lower != $dummySet.dummyVal):
+#                             dummySet.included.add(num)
+#                         else:
+#                             dummySet.excluded.add(num)
+
+
+#                         # if (not (dummySet in domains)):
+#                         #     domains.add(dummySet)
+
+#                     elif s of OccurrenceSet:
+#                         let oSet = cast[OccurrenceSet](s)
+
+#                         if (lower == upper):
+#                             if (lower == "1"):
+#                                 oSet.included.add(num)
+#                             else:
+#                                 oSet.excluded.add(num)
                             
-                            # echo "HERE"
+#                             # echo "HERE"
 
-                    elif s of MarkerSet:
-                        let mSet = cast[MarkerSet](s)
+#                     elif s of MarkerSet:
+#                         let mSet = cast[MarkerSet](s)
 
-                        if (lower == upper):
-                            var l : int
-                            discard parseInt(lower, l)
+#                         if (lower == upper):
+#                             var l : int
+#                             discard parseInt(lower, l)
 
-                            # if mSet.markerLower == mSet.markerUpper:
-                            if num <= mSet.markerLower:
-                                mSet.included.add(l)
+#                             # if mSet.markerLower == mSet.markerUpper:
+#                             if num <= mSet.markerLower:
+#                                 mSet.included.add(l)
                                 
                             
-                            if num > mSet.markerUpper:
-                                mSet.excluded.add(l)
+#                             if num > mSet.markerUpper:
+#                                 mSet.excluded.add(l)
 
-                            # echo mSet
-                            # mSet.included.add(l)
+#                             # echo mSet
+#                             # mSet.included.add(l)
 
-                    elif s of FlagSet:
-                        let fSet = cast[FlagSet](s)
-
-
-                        if (domain[0].contains("_ExplicitVarSizeWithFlags_Flags_")):
-
-                            fSet.flagCount.inc()
-                            # fSet.flags.add(num)
-                            if (lower == "1" and upper == "1"):
-                                if num > fSet.maxSetTo1:
-                                    fSet.maxSetTo1 = num
-                                    # echo num
-
-                            if (lower == "0" and upper == "0"):
-                                if num > fSet.maxSetTo0:
-                                    fSet.maxSetTo0 = num
-                        else:
-                            if (lower == upper):
-                                var l : int
-                                discard parseInt(lower, l)
-
-                                if (num <= fSet.maxSetTo1):
-                                    fSet.included.add(l)
-
-                                if (num > fSet.maxSetTo1 and num <= fSet.maxSetTo0):
-                                    fSet.excluded.add(l)
-
-                    elif s of ExplicitSet:
-                        let eSet = cast[ExplicitSet](s)
-                        var l : int
-                        discard parseInt(lower, l)
-                        if (lower == upper):
-                            eSet.included.add(l)
+#                     elif s of FlagSet:
+#                         let fSet = cast[FlagSet](s)
 
 
-                except ValueError:
+#                         if (domain[0].contains("_ExplicitVarSizeWithFlags_Flags_")):
+
+#                             fSet.flagCount.inc()
+#                             # fSet.flags.add(num)
+#                             if (lower == "1" and upper == "1"):
+#                                 if num > fSet.maxSetTo1:
+#                                     fSet.maxSetTo1 = num
+#                                     # echo num
+
+#                             if (lower == "0" and upper == "0"):
+#                                 if num > fSet.maxSetTo0:
+#                                     fSet.maxSetTo0 = num
+#                         else:
+#                             if (lower == upper):
+#                                 var l : int
+#                                 discard parseInt(lower, l)
+
+#                                 if (num <= fSet.maxSetTo1):
+#                                     fSet.included.add(l)
+
+#                                 if (num > fSet.maxSetTo1 and num <= fSet.maxSetTo0):
+#                                     fSet.excluded.add(l)
+
+#                     elif s of ExplicitSet:
+#                         let eSet = cast[ExplicitSet](s)
+#                         var l : int
+#                         discard parseInt(lower, l)
+#                         if (lower == upper):
+#                             eSet.included.add(l)
+
+
+#                 except ValueError:
                     
-                    let mSet = cast[MarkerSet](s)
-                    # mSet.cardinality = getPrettyRange(lower, upper)
-                    # if lower == upper:
-                    var l : int
-                    discard parseInt(lower, l)
-                    var u : int
-                    discard parseInt(upper, u)
-                    mSet.markerLower = l
-                    mSet.markerUpper = u
+#                     let mSet = cast[MarkerSet](s)
+#                     # mSet.cardinality = getPrettyRange(lower, upper)
+#                     # if lower == upper:
+#                     var l : int
+#                     discard parseInt(lower, l)
+#                     var u : int
+#                     discard parseInt(upper, u)
+#                     mSet.markerLower = l
+#                     mSet.markerUpper = u
                     
 
-                if (not (s in domains)):
-                    domains.add(s)
+#                 if (not (s in domains)):
+#                     domains.add(s)
 
-    # echo domains
-    return domains
+#     # echo domains
+#     return domains
 
 proc domainsToJson(domains: seq[Variable]): JsonNode =
 
