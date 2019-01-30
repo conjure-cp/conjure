@@ -1,7 +1,3 @@
 find x,y,z : int(1..9)
-find s : set of set of int(1..9)
-find u : int(1..9)
-
-such that x + y = z, allDiff([x, y, z]), x % 2 = 1, z % 2 = 1
-such that size(s) = x + y + z
-such that (u - x) * z = 9
+find s: set (minSize 1) of set (maxSize 2) of int(1..9)
+such that sum([j | i <- s, j <- i]) = x + y + z

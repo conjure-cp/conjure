@@ -18,6 +18,7 @@ type Set* = ref object of Variable
     upper: int
     included: seq[int]
     excluded: seq[int]
+    inner: Set
 
 type OccurrenceSet* = ref object of Set
 
@@ -65,16 +66,37 @@ proc getCardinality*(s: Set): string =
 proc `$`*(v:Variable): string =
     if v of Expression:
         return "<Expr> " & v.name & " " & v.rng
-    if v of FlagSet:
-        let s = cast[MarkerSet](v)
-        return "<FSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)
-    if v of MarkerSet:
-        let s = cast[MarkerSet](v)
-        return "<MSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    if v of OccurrenceSet:
-        let s = cast[OccurrenceSet](v)
-        return "<OSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    if v of DummySet:
-        let s = cast[DummySet](v)
-        return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " dummy " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    return "<Variable> " & v.name & " " & v.rng 
+
+
+    if v of Set:
+        let s = cast[Set](v)
+        result = getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)
+
+        if not  (s.inner == nil):
+            result &= " {" & $s.inner & "}"
+
+        if s of FlagSet:
+            result = "<FSet> " & result
+        if s of MarkerSet:
+            result = "<MSet> " & result
+        if s of OccurrenceSet:
+            result = "<OSet> " & result
+        if s of DummySet:
+            let d = cast[DummySet](v)
+            result = "<DSet>  dummy " & $d.dummyVal & " " & result
+
+    else:
+        result =  "<Variable> " & v.name & " " & v.rng 
+    
+    # if v of FlagSet:
+    #     let s = cast[MarkerSet](v)
+    #     return "<FSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)  
+    # if v of MarkerSet:
+    #     let s = cast[MarkerSet](v)
+    #     return "<MSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
+    # if v of OccurrenceSet:
+    #     let s = cast[OccurrenceSet](v)
+    #     return "<OSet> " & getPrettyRange($s.lower, $s.upper) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
+    # if v of DummySet:
+    #     let s = cast[DummySet](v)
+    #     return "<DSet> " & getPrettyRange($s.lower, $s.upper) & " dummy " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)

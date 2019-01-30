@@ -28,6 +28,55 @@ proc parseAux(minionFilePath: string): Table[string, Expression] =
 
     return lookup
 
+proc parseSet(s: JsonNode, n: string): Set =
+
+    # let n = "inner"
+
+    let arr = s.getElems()
+
+    if arr[^1].hasKey("DomainSet"):
+        let innerArr = arr[^1]["DomainSet"]
+        if (arr[0].hasKey("Set_ExplicitVarSizeWithMarker")):
+            return MarkerSet(name: n, inner: parseSet(innerArr, "inner"))
+        # if innerArr[0].hasKey("Set_Occurrence"):
+
+    if arr[1].hasKey("SizeAttr_Size"):
+        return ExplicitSet(name: n, cardinality: s["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
+
+    if arr[^1].hasKey("DomainInt"):
+
+        var bounds  : JsonNode
+
+        bounds = arr[^1]["DomainInt"].getElems()[0]
+
+        if (bounds.hasKey("RangeBounded")):
+            bounds = arr[^1]["DomainInt"].getElems()[0]["RangeBounded"]
+        else:
+            bounds = arr[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
+        # echo bounds
+        var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
+        var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
+
+        if (l == -1):
+            l = bounds[0]["Constant"]["ConstantInt"][1].getInt(-1)
+            u = bounds[1]["Constant"]["ConstantInt"][1].getInt(-1)
+
+            if (l == -1):
+                echo "ERRORORORRORORORORRO"
+
+
+        if arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
+            return DummySet(name: n, lower: l, upper: u, dummyVal: u + 1) 
+
+        elif arr[0].hasKey("Set_Occurrence"):
+            return OccurrenceSet(name: n, lower: l, upper: u) 
+
+        elif arr[0].hasKey("Set_ExplicitVarSizeWithMarker"):
+            return MarkerSet(name: n, lower: l, upper: u) 
+
+        elif arr[0].hasKey("Set_ExplicitVarSizeWithFlags"):
+            return FlagSet(name: n, lower: l, upper: u) 
+
 proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
 
     var varLookup = initTable[string, Variable]()
@@ -51,57 +100,16 @@ proc parseEprime(eprimeFilePath: string): Table[string, Variable] =
                 varLookup[n] = Variable(name: n)
 
             if key[1].hasKey("DomainSet"):
-                
-                let arr = key[1]["DomainSet"].getElems()
 
-                # echo arr[1]["SizeAttr_Size"]
-
-                if arr[1].hasKey("SizeAttr_Size"):
-                    varLookup[n] = ExplicitSet(name: n, cardinality: arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
-                    continue
-                    # echo varLookup
-                    # return
-
-                # echo arr[^1].pretty()
-                var bounds  : JsonNode
-
-                bounds = arr[^1]["DomainInt"].getElems()[0]
-
-                if (bounds.hasKey("RangeBounded")):
-                    bounds = arr[^1]["DomainInt"].getElems()[0]["RangeBounded"]
-                else:
-                    bounds = arr[^1]["DomainInt"].getElems()[1][0]["RangeBounded"]
-                # echo bounds
-                var l = bounds[0]["Constant"]["ConstantInt"].getInt(-1)
-                var u = bounds[1]["Constant"]["ConstantInt"].getInt(-1)
-
-                if (l == -1):
-                    l = bounds[0]["Constant"]["ConstantInt"][1].getInt(-1)
-                    u = bounds[1]["Constant"]["ConstantInt"][1].getInt(-1)
-
-                    if (l == -1):
-                        echo "ERRORORORRORORORORRO"
-
-
-                if arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
-                    varLookup[n] = DummySet(name: n, lower: l, upper: u, dummyVal: u + 1) 
-
-                elif arr[0].hasKey("Set_Occurrence"):
-                    varLookup[n] = OccurrenceSet(name: n, lower: l, upper: u) 
-
-                elif arr[0].hasKey("Set_ExplicitVarSizeWithMarker"):
-                    varLookup[n] = MarkerSet(name: n, lower: l, upper: u) 
-
-                elif arr[0].hasKey("Set_ExplicitVarSizeWithFlags"):
-                    varLookup[n] = FlagSet(name: n, lower: l, upper: u) 
-
-  
+                varLookup[n] = parseSet(key[1]["DomainSet"], n)
     except:
         raise
         # raise newException(EprimeParseException, "Failed to parse eprime")
 
-    # echo varLookup
+    echo varLookup
     return varLookup
+
+
 # import "parseEprime.nim", "parseAux.nim"
 var eprimeLookup : Table[string, Variable]
 var auxLookup : Table[string, Expression]
@@ -204,7 +212,7 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                             if num > mSet.markerUpper:
                                 mSet.excluded.add(l)
 
-                            echo mSet
+                            # echo mSet
                             # mSet.included.add(l)
 
                     elif s of FlagSet:
@@ -218,7 +226,7 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                             if (lower == "1" and upper == "1"):
                                 if num > fSet.maxSetTo1:
                                     fSet.maxSetTo1 = num
-                                    echo num
+                                    # echo num
 
                             if (lower == "0" and upper == "0"):
                                 if num > fSet.maxSetTo0:
@@ -299,6 +307,9 @@ proc domainsToJson(domains: seq[Variable]): JsonNode =
             let excluded = TreeViewNode(name: "Excluded", children: @[TreeViewNode(name: ($s.excluded)[2..^2])])
             variables.children.add(TreeViewNode(name: s.name, children: @[t, cardinality, included, excluded]))
 
+            # if not (s.inner == nil):
+            #     let inner = TreeViewNode(name: "Inner", children: @[TreeViewNode(name: ($s.inner.name)[2..^2])])
+
         else:
             variables.children.add(TreeViewNode(name: d.name, children: @[TreeViewNode(name: d.rng)]))
         
@@ -314,3 +325,4 @@ proc expressionsToJson(expressions: seq[Expression]): JsonNode =
         list.add(TreeViewNode(name: exp.name, children: @[TreeViewNode(name: exp.rng)]))
 
     return %list
+
