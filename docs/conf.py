@@ -367,8 +367,14 @@ sys.path.append(os.path.join(os.path.dirname(__file__), '.'))
 inline_highlight_respect_highlight = True
 inline_highlight_literals = True
 
+import subprocess
+
 def setup(sphinx):
     from BNFLexer import BNFLexer
     sphinx.add_lexer("bnf", BNFLexer())
     from EssenceLexer import EssenceLexer
     sphinx.add_lexer("essence", EssenceLexer())
+    
+    subprocess.run(["make", "conjure-help"])
+    
+    
