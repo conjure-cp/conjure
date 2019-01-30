@@ -24,7 +24,7 @@ partitionAsSet
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
     -> Representation m
-partitionAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up
+partitionAsSet dispatch reprOptions useLevels = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -198,3 +198,20 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering innerSO downX1 inp name domain = do
+            -- traceM $ show $ "tuple 1" <+> pretty inp
+            mdoms <- downD (name, domain)
+            -- traceM $ show $ "tuple 2" <+> pretty (show mdoms)
+            case mdoms of
+                Just doms -> do
+                    -- traceM $ show $ "tuple 3" <+> prettyList id "," doms
+                    xs <- downX1 inp
+                    -- traceM $ show $ "tuple 4" <+> prettyList id "," xs
+                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
+                    -- traceM $ show $ "tuple y" <+> pretty res
+                    return res
+                Nothing -> do
+                    -- traceM "tuple 4 Nothing"
+                    na "{symmetryOrdering}"

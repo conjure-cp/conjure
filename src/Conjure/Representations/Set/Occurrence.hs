@@ -10,7 +10,7 @@ import Conjure.Representations.Common
 
 
 setOccurrence :: forall m . (MonadFail m, NameGen m) => Representation m
-setOccurrence = Representation chck downD structuralCons downC up
+setOccurrence = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -85,3 +85,11 @@ setOccurrence = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} Occurrence"
+
+        -- produce a [int]
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO downX1 inp _name (DomainSet Set_Occurrence _attrs innerDomain@DomainInt{}) = do
+            [m] <- downX1 inp
+            (iPat, i) <- quantifiedVar
+            return [essence| [ -toInt(&m[&i]) | &iPat : &innerDomain ] |]
+        symmetryOrdering _ _ _ _ _ = na "{symmetryOrdering} Occurrence"
