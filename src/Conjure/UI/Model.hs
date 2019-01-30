@@ -47,6 +47,7 @@ import Conjure.UI.NormaliseQuantified ( distinctQuantifiedVars )
 
 import Conjure.Representations
     ( downX, downX1, downD, reprOptions, getStructurals
+    , symmetryOrdering
     , reprsStandardOrderNoLevels, reprsStandardOrder, reprsSparseOrder
     )
 
@@ -1789,10 +1790,13 @@ rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
         (a,b,mk) <- case p of
-                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
-                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
+                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| flatten(&i) <lex  flatten(&j) |] )
+                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| flatten(&i) <=lex flatten(&j) |] )
                     _ -> na "rule_DotLtLeq"
+        -- traceM $ show $ "in rule_DotLtLeq, a:" <+> pretty a
+        -- traceM $ show $ "in rule_DotLtLeq, b:" <+> pretty b
         aType <- typeOf a
+        -- traceM $ show $ "in rule_DotLtLeq, aType:" <+> pretty aType
         case aType of
             TypeTuple{}     -> return ()
             TypeMatrix{}    -> return ()
@@ -1804,46 +1808,52 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             TypePartition{} -> return ()
             _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
-        let
-            nestingLevel (TypeMatrix _ t) = 1 + nestingLevel t
-            nestingLevel (TypeList     t) = 1 + nestingLevel t
-            nestingLevel _ = 0 :: Int
 
-            innerMostTy (TypeMatrix _ t) = innerMostTy t
-            innerMostTy (TypeList     t) = innerMostTy t
-            innerMostTy t = t
+        ma <- symmetryOrdering a
+        -- traceM $ show $ "in rule_DotLtLeq, ma:" <+> pretty ma
+        mb <- symmetryOrdering b
+        -- traceM $ show $ "in rule_DotLtLeq, mb:" <+> pretty mb
 
-            matrixForAll [] x = return (x, [])
-            matrixForAll (dom:doms) x = do
-                (iPat, i) <- quantifiedVar
-                (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
-                let gen = Generator (GenDomainNoRepr iPat dom)
-                return (xIndexed, gen : gens)
-
-            mk1D x = do
-                ty <- typeOf x
-                case nestingLevel ty of
-                    0 -> case ty of
-                            TypeBool  -> return [essence| [toInt(&x)] |]
-                            TypeInt{} -> return [essence| [&x] |]
-                            _         -> bug ("What type? [0]" <+> pretty ty)
-                    nl -> do
-                        xInt <- case innerMostTy ty of
-                            TypeBool -> do
-                                doms <- indexDomainsOf x
-                                (xIndexed, gens) <- matrixForAll doms x
-                                return $ Comprehension [essence| toInt(&xIndexed) |] gens
-                            TypeInt{} -> return x
-                            _ -> bug ("What type? [1]" <+> pretty ty)
-                        if nl == 1
-                            then return xInt
-                            else return [essence| flatten(&xInt) |]
-
-            wrap [x] = x
-            wrap xs = make opFlatten (fromList xs)
-
-        ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
-        mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
+        -- let
+        --     nestingLevel (TypeMatrix _ t) = 1 + nestingLevel t
+        --     nestingLevel (TypeList     t) = 1 + nestingLevel t
+        --     nestingLevel _ = 0 :: Int
+        --
+        --     innerMostTy (TypeMatrix _ t) = innerMostTy t
+        --     innerMostTy (TypeList     t) = innerMostTy t
+        --     innerMostTy t = t
+        --
+        --     matrixForAll [] x = return (x, [])
+        --     matrixForAll (dom:doms) x = do
+        --         (iPat, i) <- quantifiedVar
+        --         (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
+        --         let gen = Generator (GenDomainNoRepr iPat dom)
+        --         return (xIndexed, gen : gens)
+        --
+        --     mk1D x = do
+        --         ty <- typeOf x
+        --         case nestingLevel ty of
+        --             0 -> case ty of
+        --                     TypeBool  -> return [essence| [toInt(&x)] |]
+        --                     TypeInt{} -> return [essence| [&x] |]
+        --                     _         -> bug ("What type? [0]" <+> pretty ty)
+        --             nl -> do
+        --                 xInt <- case innerMostTy ty of
+        --                     TypeBool -> do
+        --                         doms <- indexDomainsOf x
+        --                         (xIndexed, gens) <- matrixForAll doms x
+        --                         return $ Comprehension [essence| toInt(&xIndexed) |] gens
+        --                     TypeInt{} -> return x
+        --                     _ -> bug ("What type? [1]" <+> pretty ty)
+        --                 if nl == 1
+        --                     then return xInt
+        --                     else return [essence| flatten(&xInt) |]
+        --
+        --     wrap [x] = x
+        --     wrap xs = make opFlatten (fromList xs)
+        --
+        -- ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
+        -- mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
