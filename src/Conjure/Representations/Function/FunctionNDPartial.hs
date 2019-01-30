@@ -278,5 +278,11 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
         up _ _ = na "{up} FunctionNDPartial"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering _innerSO _downX1 inp _name _domain =
-            return inp
+        symmetryOrdering innerSO downX1 inp name domain = do
+            mdoms <- downD (name, domain)
+            case mdoms of
+                Just doms -> do
+                    xs <- downX1 inp
+                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
+                    return res
+                Nothing -> na "{symmetryOrdering}"
