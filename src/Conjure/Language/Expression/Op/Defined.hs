@@ -24,7 +24,7 @@ instance (Pretty x, TypeOf x) => TypeOf (OpDefined x) where
         case ty of
             TypeFunction a _  -> return (TypeSet a)
             TypePermutation a -> return (TypeSet a)
-            TypeSequence _    -> return (TypeSet (TypeInt NoTag))
+            TypeSequence _    -> return (TypeSet (TypeInt TagInt))
             _                 -> raiseTypeError p
 
 instance EvaluateOp OpDefined where

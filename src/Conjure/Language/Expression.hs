@@ -761,7 +761,7 @@ patternToExpr :: AbstractPattern -> Expression
 patternToExpr (Single nm) = Reference nm Nothing
 patternToExpr (AbsPatTuple  ts) = AbstractLiteral $ AbsLitTuple  $ map patternToExpr ts
 patternToExpr (AbsPatMatrix ts) = AbstractLiteral $ AbsLitMatrix
-                                    (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength ts))])
+                                    (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength ts))])
                                                                  $ map patternToExpr ts
 patternToExpr (AbsPatSet    ts) = AbstractLiteral $ AbsLitSet    $ map patternToExpr ts
 patternToExpr AbstractPatternMetaVar{} = bug "patternToExpr"

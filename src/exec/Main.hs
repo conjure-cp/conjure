@@ -4,6 +4,7 @@ import Conjure.Prelude
 import Conjure.UI ( UI(..), ui )
 import Conjure.UI.MainHelper ( mainWithArgs )
 import Conjure.Language.Pretty ( pretty )
+import Conjure.Language.Type ( TypeCheckerMode(..) )
 import Conjure.UserError ( userErr1 )
 
 -- base
@@ -62,6 +63,7 @@ main = do
     input <- withArgs args (cmdArgs ui)
     let workload = runLoggerPipeIO (logLevel input) $ do
             logDebug ("Command line options: " <+> pretty (show input))
+            let ?typeCheckerMode = StronglyTyped
             mainWithArgs input
     case limitTime input of
         Just sec | sec > 0 -> do

@@ -109,11 +109,17 @@ import Pipes ( Producer, await, yield, (>->), cat )
 import qualified Pipes.Prelude as Pipes ( foldM )
 
 
-outputModels
-    :: (MonadIO m, MonadFail m, MonadLog m, NameGen m, EnumerateDomain m, MonadUserError m)
-    => Config
-    -> Model
-    -> m ()
+outputModels ::
+    MonadIO m =>
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    MonadUserError m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    Model ->
+    m ()
 outputModels config model = do
 
     liftIO $ writeIORef recordedResponses (responses config)
@@ -166,6 +172,8 @@ outputModels config model = do
                     writeModel (lineWidth config) Plain (Just filename) eprime
                     return (i+1)
 
+    let ?typeCheckerMode = RelaxedIntegerTags
+
     Pipes.foldM each
                 (return (numberingStart config))
                 (const $ return ())
@@ -173,13 +181,17 @@ outputModels config model = do
                     >-> limitModelsIfNeeded)
 
 
-toCompletion
-    :: forall m . (MonadIO m, MonadFail m, NameGen m, EnumerateDomain m)
-    => Config
-    -> Model
-    -> Producer LogOrModel m ()
+toCompletion :: forall m .
+    MonadIO m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    Model ->
+    Producer LogOrModel m ()
 toCompletion config m = do
-    m2 <- prologue m
+    m2 <- let ?typeCheckerMode = StronglyTyped in prologue m
     namegenst <- exportNameGenState
     let m2Info = mInfo m2
     let m3 = m2 { mInfo = m2Info { miStrategyQ = strategyQ config
@@ -209,11 +221,15 @@ toCompletion config m = do
 -- | If a rule is applied at a position P, the MonadZipper will be retained focused at that location
 --   and new rules will be tried using P as the top of the zipper-tree.
 --   The whole model (containing P too) will be tried later for completeness.
-remainingWIP
-    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelWIP
-    -> m [Question]
+remainingWIP ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelWIP ->
+    m [Question]
 remainingWIP config (StartOver model)
     | Just modelZipper <- mkModelZipper model = do
         qs <- remaining config modelZipper (mInfo model)
@@ -230,12 +246,16 @@ remainingWIP config wip@(TryThisFirst modelZipper info) = do
                                                                             -- something on the left needs attention.
 
 
-remaining
-    :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelZipper
-    -> ModelInfo
-    -> m [Question]
+remaining ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelZipper ->
+    ModelInfo ->
+    m [Question]
 remaining config modelZipper minfo = do
     -- note: the call to getQuestions can update the NameGen state
     importNameGenState (minfo |> miNameGenState)
@@ -308,11 +328,15 @@ remaining config modelZipper minfo = do
 
 -- | Computes all applicable questions.
 --   strategyQ == PickFirst is special-cased for performance.
-getQuestions
-    :: (MonadLog m, MonadFail m, NameGen m, EnumerateDomain m)
-    => Config
-    -> ModelZipper
-    -> m [(ModelZipper, [(Doc, RuleResult m)])]
+getQuestions ::
+    MonadLog m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    ModelZipper ->
+    m [(ModelZipper, [(Doc, RuleResult m)])]
 getQuestions config modelZipper | strategyQ config == PickFirst = maybeToList <$>
     let
         loopLevels :: Monad m => [m (Maybe a)] -> m (Maybe a)
@@ -614,7 +638,7 @@ oneSuchThat m = m { mStatements = onStatements (mStatements m) }
 emptyMatrixLiterals :: Model -> Model
 emptyMatrixLiterals model =
     let
-        f (TypeList ty) = TypeMatrix (TypeInt NoTag) ty
+        f (TypeList ty) = TypeMatrix (TypeInt TagInt) ty
         f x = x
     in
         model { mStatements = mStatements model |> transformBi f }
@@ -656,7 +680,10 @@ inlineDecVarLettings model =
         model { mStatements = statements }
 
 
-dropTagForSR :: MonadFail m => Model -> m Model
+dropTagForSR ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 dropTagForSR m = do
     let
         replacePredSucc [essence| pred(&x) |] = do
@@ -666,8 +693,8 @@ dropTagForSR m = do
                                 -- since True becomes False
                                 --       False becomes out-of-bounds, hence False
                 TypeInt{}  -> do
-                    let xNoTag = reTag NoTag x
-                    return [essence| &xNoTag - 1 |]
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt - 1 |]
                 _          -> bug "predSucc"
         replacePredSucc [essence| succ(&x) |] = do
             ty <- typeOf x
@@ -677,8 +704,8 @@ dropTagForSR m = do
                                 --       True becomes out-of-bounds, hence False
                                 -- "succ" is exactly "negate" on bools
                 TypeInt{}  -> do
-                    let xNoTag = reTag NoTag x
-                    return [essence| &xNoTag + 1 |]
+                    let xTagInt = reTag TagInt x
+                    return [essence| &xTagInt + 1 |]
                 _          -> bug "predSucc"
         replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
         replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
@@ -689,7 +716,13 @@ dropTagForSR m = do
     where
 
 
-updateDeclarations :: (MonadUserError m, MonadFail m, NameGen m, EnumerateDomain m) => Model -> m Model
+updateDeclarations ::
+    MonadUserError m =>
+    MonadFail m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 updateDeclarations model = do
     let
         representations = model |> mInfo |> miRepresentations
@@ -702,11 +735,11 @@ updateDeclarations model = do
                         domains = [ d | (n, d) <- representations, n == nm ]
                     nub <$> concatMapM (onEachDomain forg nm) domains
                 Declaration (GivenDomainDefnEnum name) -> return
-                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt NoTag [])) ]
+                    [ Declaration (FindOrGiven Given (name `mappend` "_EnumSize") (DomainInt TagInt [])) ]
                 Declaration (Letting nm x)             -> do
                     let usedAfter = nbUses nm afters > 0
                     let isRefined = (0 :: Int) == sum
-                                            [ case y of 
+                                            [ case y of
                                                 Constant (ConstantAbstract AbsLitMatrix{}) -> 0
                                                 Constant ConstantAbstract{} -> 1
                                                 AbstractLiteral AbsLitMatrix{} -> 0
@@ -760,7 +793,7 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
               | (i, c) <- zip allNats (tail (ascendants x))
               ]
 
-    fails <- fmap concat $ forM (allContextsExceptReferences modelZipper) $ \ x ->
+    fails <- fmap (nub . concat) $ forM (allContextsExceptReferences modelZipper) $ \ x ->
                 case hole x of
                     Reference _ (Just (DeclHasRepr _ _ dom))
                         | not (isPrimitiveDomain dom) ->
@@ -830,7 +863,12 @@ checkIfHasUndefined m  | Just modelZipper <- mkModelZipper m = do
 checkIfHasUndefined m = return m
 
 
-topLevelBubbles :: (MonadFail m, MonadUserError m, NameGen m) => Model -> m Model
+topLevelBubbles ::
+    MonadFail m =>
+    MonadUserError m =>
+    NameGen m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 topLevelBubbles m = do
     let
         onStmt (SuchThat xs) = onExprs xs
@@ -890,7 +928,10 @@ topLevelBubbles m = do
     return m { mStatements = statements' }
 
 
-sliceThemMatrices :: Monad m => Model -> m Model
+sliceThemMatrices ::
+    Monad m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 sliceThemMatrices model = do
     let
         -- nothing stays with a matrix type
@@ -947,7 +988,13 @@ removeExtraSlices model = do
 logDebugIdModel :: MonadLog m => Doc -> Model -> m Model
 logDebugIdModel msg a = logDebug (msg <++> pretty (a {mInfo = def})) >> return a
 
-prologue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+prologue ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 prologue model = do
     void $ typeCheckModel_StandAlone model
     return model                      >>= logDebugIdModel "[input]"
@@ -972,7 +1019,13 @@ prologue model = do
     >>= return . addTrueConstraints   >>= logDebugIdModel "[addTrueConstraints]"
 
 
-epilogue :: (MonadFail m, MonadLog m, NameGen m, EnumerateDomain m) => Model -> m Model
+epilogue ::
+    MonadFail m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Model -> m Model
 epilogue model = return model
                                       >>= logDebugIdModel "[epilogue]"
     >>= dropTagForSR                  >>= logDebugIdModel "[dropTagForSR]"
@@ -988,14 +1041,21 @@ epilogue model = return model
     >>= return . languageEprime       >>= logDebugIdModel "[languageEprime]"
 
 
-applicableRules
-    :: forall m n . ( MonadUserError n, MonadLog n, NameGen n, EnumerateDomain n
-                    , MonadUserError m, MonadLog m, NameGen m, EnumerateDomain m, MonadFail m
-                    )
-    => Config
-    -> [Rule]
-    -> ModelZipper
-    -> n [(Doc, RuleResult m)]
+applicableRules :: forall m n .
+    MonadUserError n =>
+    MonadLog n =>
+    NameGen n =>
+    EnumerateDomain n =>
+    MonadUserError m =>
+    MonadLog m =>
+    NameGen m =>
+    EnumerateDomain m =>
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Config ->
+    [Rule] ->
+    ModelZipper ->
+    n [(Doc, RuleResult m)]
 applicableRules Config{..} rulesAtLevel x = do
     let logAttempt = if logRuleAttempts  then logInfo else const (return ())
     let logFail    = if logRuleFails     then logInfo else const (return ())
@@ -1049,7 +1109,7 @@ applicableRules Config{..} rulesAtLevel x = do
            ]
 
 
-allRules :: Config -> [[Rule]]
+allRules :: (?typeCheckerMode :: TypeCheckerMode) => Config -> [[Rule]]
 allRules config =
     [ [ rule_FullEvaluate
       ]
@@ -1163,6 +1223,7 @@ verticalRules =
     , Vertical.Function.Function1D.rule_Image
 
     , Vertical.Function.Function1DPartial.rule_Comprehension
+    , Vertical.Function.Function1DPartial.rule_PowerSet_Comprehension
     , Vertical.Function.Function1DPartial.rule_Image_NotABool
     , Vertical.Function.Function1DPartial.rule_Image_Bool
     , Vertical.Function.Function1DPartial.rule_InDefined
@@ -1204,10 +1265,10 @@ horizontalRules =
     , Horizontal.Permutation.rule_Equality
     , Horizontal.Permutation.rule_Comprehension
     , Horizontal.Permutation.rule_Compose_Image
+    , Horizontal.Permutation.rule_Image_Matrix_Indexing
+--    , Horizontal.Permutation.rule_Image_Matrix_Indexing_Comprehension
 --    , Horizontal.Permutation.rule_Compose
     , Horizontal.Permutation.rule_Image_Literal
-    , Horizontal.Permutation.rule_Image_Matrix_Indexing
-    , Horizontal.Permutation.rule_Image_Matrix_Indexing_Comprehension
     , Horizontal.Permutation.rule_Image_Partition
     , Horizontal.Permutation.rule_Image_Sequence
     , Horizontal.Permutation.rule_Image_Sequence_Defined
@@ -1367,8 +1428,9 @@ otherRules =
         , rule_Decompose_AllDiff
 
         , rule_GeneratorsFirst
-
-        , rule_DomainCardinality
+        ]
+    ,
+        [ rule_DomainCardinality
         , rule_DomainMinMax
 
         , rule_ComplexAbsPat
@@ -1407,7 +1469,7 @@ delayedRules =
     ]
 
 
-rule_ChooseRepr :: Config -> Rule
+rule_ChooseRepr :: (?typeCheckerMode :: TypeCheckerMode) => Config -> Rule
 rule_ChooseRepr config = Rule "choose-repr" (const theRule) where
 
     theRule (Reference nm (Just (DeclNoRepr forg _ inpDom region))) | forg `elem` [Find, Given, CutFind] = do
@@ -1789,7 +1851,7 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
                 (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
                 let gen = Generator (GenDomainNoRepr iPat dom)
                 return (xIndexed, gen : gens)
-            
+
             mk1D x = do
                 ty <- typeOf x
                 case nestingLevel ty of
@@ -1812,8 +1874,8 @@ rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
             wrap [x] = x
             wrap xs = make opFlatten (fromList xs)
 
-        ma <- downX a >>= mapM mk1D >>= return . wrap
-        mb <- downX b >>= mapM mk1D >>= return . wrap
+        ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
+        mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb

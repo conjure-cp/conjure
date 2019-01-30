@@ -17,8 +17,8 @@ rule_Comprehension_Literal = "function-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeFunction fr to, elems) <- match functionLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) (TypeTuple [fr,to]))
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) (TypeTuple [fr,to]))
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             [ AbstractLiteral (AbsLitTuple [a,b])
                             | (a,b) <- elems
                             ]
@@ -567,7 +567,7 @@ rule_Image_Int = "function-image-int" `namedRule` theRule where
             ( "Function image, int."
             , do
                 (iPat, i) <- quantifiedVar
-                let val = make opSum $ reTag AnyTag $ Comprehension [essence| &i[2] |]
+                let val = make opSum $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]
@@ -766,7 +766,7 @@ rule_DefinedOrRange_Union = "function-DefinedOrRange-union" `namedRule` theRule 
         return
             ( "Horizontal rule for function union"
             , return $ make opFlatten $ AbstractLiteral $ AbsLitMatrix
-                (DomainInt NoTag [RangeBounded 1 2])
+                (DomainInt TagInt [RangeBounded 1 2])
                 [ Comprehension body
                     $  gocBefore
                     ++ [ Generator (GenInExpr pat mkx) ]

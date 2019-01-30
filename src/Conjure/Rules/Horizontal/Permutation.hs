@@ -9,7 +9,7 @@ rule_Cardinality_Literal = "permutation-cardinality-literal" `namedRule` theRule
   theRule p' = do
     p                              <- match opTwoBars p'
     (TypePermutation _, elems) <- match permutationLiteral p 
-    let i' = Constant . ConstantInt AnyTag . fromIntegral . size <$> fromCycles elems
+    let i' = Constant . ConstantInt TagInt . fromIntegral . size <$> fromCycles elems
     case i' of
       Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right i -> return
@@ -42,7 +42,7 @@ rule_Comprehension = "permutation-comprehension" `namedRule` theRule where
           Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
           Right f -> do 
             let outLiteral = make matrixLiteral
-                    (TypeMatrix (TypeInt AnyTag) (TypeTuple [inner,inner])) innerD  
+                    (TypeMatrix (TypeInt TagInt) (TypeTuple [inner,inner])) innerD  
                                    [ AbstractLiteral (AbsLitTuple [de
                                                                   ,f de])
                                    | de <- join elems 
@@ -67,18 +67,18 @@ rule_Image_Literal = "permutation-image-literal" `namedRule` theRule where
       Left er -> fail $ "Permutation literal invalid." <++> stringToDoc (show er)
       Right f -> do 
         typeI <- typeOf i
-        if typesUnify [inner, typeI] 
+        if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
           then do
             let srtdel = sortBy compare (join elems) 
-                domIndx = reTag AnyTag $  mkDomainInt (RangeSingle <$> srtdel) 
-                matLit = make matrixLiteral (TypeMatrix (TypeInt AnyTag) inner) domIndx ( f <$> srtdel)
+                domIndx = mkDomainInt (RangeSingle <$> srtdel) 
+                matLit = make matrixLiteral (TypeMatrix inner inner) domIndx ( f <$> srtdel)
             return
                ( "Horizontal rule for permutation literal application to a single value (image), AsFunction representation"
                , do
                  return [essence| [&i, catchUndef(&matLit[&i],0)][toInt(&i in toSet(&matLit))+1] |]
 
                )
-          else if typeI `containsType` inner
+          else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
                  then na "rule_Image_Literal"
                  else return ( "Horizontal rule for permutation application to a type the permutation doesn't care about"
                              , do
@@ -127,7 +127,7 @@ rule_Compose_Image = "permutation-compose-image" `namedRule` theRule where
     TypePermutation innerG <- typeOf g
     TypePermutation innerH <- typeOf g
     typeI <- typeOf i
-    if typesUnify [innerG, innerH, typeI]
+    if let ?typeCheckerMode = StronglyTyped in typesUnify [innerG, innerH, typeI]
        then return
             ( "Horizontal rule for image of permutation composition"
             , do
@@ -148,7 +148,7 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
     case ty of TypeSequence{} -> na "sequence is a special case" ; _ -> return ()
     case ty of TypePartition{} -> na "partition is a special case" ; _ -> return ()
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of comprehendable under permutation"
@@ -175,7 +175,7 @@ rule_Image_Sequence = "image-sequence" `namedRule` theRule where
     ty <- typeOf y
     case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences" 
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of sequence under permutation"
@@ -203,7 +203,7 @@ rule_Image_Sequence_Defined = "image-sequence-defined" `namedRule` theRule where
     ty <- typeOf y
     case ty of TypeSequence{} -> return () ; _ -> na "only applies to sequences" 
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of sequence defined under permutation"
@@ -229,7 +229,7 @@ rule_Image_Partition = "image-partition" `namedRule` theRule where
     ty <- typeOf y
     case ty of TypePartition{} -> return () ; _ -> na "only applies to partitions" 
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of partition under permutation"
@@ -254,10 +254,10 @@ rule_Image_Incomprehendable = "comprehendable-image" `namedRule` theRule where
   theRule [essence| image(&p, &i) |] = do 
     (TypePermutation inn) <- typeOf p
     ti <- typeOf i
-    if ti `containsTypeIncomprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ti `containsTypeIncomprehendable` inn
        then case ti of
          (TypeTuple tint) -> do
-           let tupleIndexImage indx = let indexexpr = Constant (ConstantInt AnyTag indx)
+           let tupleIndexImage indx = let indexexpr = Constant (ConstantInt TagInt indx)
                                       in [essence| image(&p, &i[&indexexpr]) |]
                tupleExpression = AbstractLiteral $ AbsLitTuple
                                $ (tupleIndexImage <$> [1..(fromIntegral $ length tint)])
@@ -283,7 +283,8 @@ rule_Image_Matrix_Indexing = "image-matrix-indexing" `namedRule` theRule where
     ty <- typeOf mat
     case ty of TypeMatrix{} -> return () ; _ -> na "only applies to matrices" 
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    ti <- typeOf indexer
+    if let ?typeCheckerMode = StronglyTyped in ty `containsType` inn 
        then do
          return
              ( "Horizontal rule for image of matrix under permutation"
@@ -291,6 +292,7 @@ rule_Image_Matrix_Indexing = "image-matrix-indexing" `namedRule` theRule where
        else na "rule_Image_Matrix_Indexing"
 
 
+--TODO don't need?
 rule_Image_Matrix_Indexing_Comprehension :: Rule
 rule_Image_Matrix_Indexing_Comprehension = "image-matrix-indexing-comprehension" `namedRule` theRule where
   theRule (Comprehension body gensOrConds) = do
@@ -302,7 +304,7 @@ rule_Image_Matrix_Indexing_Comprehension = "image-matrix-indexing-comprehension"
     ty <- typeOf mat
     case ty of TypeMatrix{} -> return () ; _ -> na "only applies to matrices" 
     (TypePermutation inn) <- typeOf perm
-    if ty `containsTypeComprehendable` inn
+    if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
        then do
          return
              ( "Horizontal rule for image of matrix under permutation"

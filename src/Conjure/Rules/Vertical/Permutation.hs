@@ -15,7 +15,7 @@ rule_Cardinality = "permutation-cardinality" `namedRule` theRule where
             ( "Vertical rule for permutation cardinality, AsFunction representation."
             , do
                (iPat, i) <- quantifiedVarOverDomain (forgetRepr innerDom)
-               return $ reTag AnyTag $ [essence| 
+               return $ [essence| 
                           sum([ toInt(&i != image(&fun, &i)) | &iPat : &innerDom ])
                                        |]
             )
@@ -67,14 +67,14 @@ rule_Image = "permutation-image{AsFunction}" `namedRule` theRule where
     case match permutationLiteral p of
       Nothing -> do
         typeI <- typeOf i
-        if typesUnify [inner, typeI] 
+        if let ?typeCheckerMode = StronglyTyped in typesUnify [inner, typeI] 
           then do
             [f] <- downX1 p
             return ( "Vertical rule for permutation application to a single value" 
                    , do
                      return [essence| [&i, catchUndef(image(&f,&i),0)][toInt(&i in defined(&f))+1] |]
                    )
-          else if typeI `containsType` inner
+          else if let ?typeCheckerMode = StronglyTyped in typeI `containsType` inner
                  then na "rule_Image"
                  else return ( "Vertical rule for permutation application to a type the permutation doesn't care about"
                              , do
@@ -89,7 +89,7 @@ rule_Matrix_Image = "matrix-image" `namedRule` theRule where
     theRule [essence| image(&perm, &y) |]  = do
       ty@(TypeMatrix _ _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
-      if ty `containsTypeComprehendable` inn
+      if let ?typeCheckerMode = StronglyTyped in ty `containsTypeComprehendable` inn
         then do
           y' <- flattenIfNeeded y
           dm@(DomainMatrix dyindex _) <- domainOf y'
@@ -122,7 +122,7 @@ rule_Matrix_Image_Comprehension = "matrix-image-comprehension" `namedRule` theRu
          _ -> na "rule_Matrix_Image"
       ty@(TypeMatrix _ _) <- typeOf y
       (TypePermutation inn) <- typeOf perm
-      if not $ typesUnify [ty, inn]
+      if let ?typeCheckerMode = StronglyTyped in not $ typesUnify [ty, inn]
         then do
           unless (isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
           y' <- flattenIfNeeded y

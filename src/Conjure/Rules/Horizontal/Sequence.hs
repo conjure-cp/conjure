@@ -13,8 +13,8 @@ rule_Comprehension_Literal = "sequence-comprehension-literal" `namedRule` theRul
             _ -> na "rule_Comprehension_Literal"
         (TypeSequence t, elems) <- match sequenceLiteral expr
         let outLiteral = make matrixLiteral
-                            (TypeMatrix (TypeInt NoTag) t)
-                            (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength elems))])
+                            (TypeMatrix (TypeInt TagInt) t)
+                            (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength elems))])
                             elems
         let upd val old = lambdaToFunction pat old val
         return
@@ -457,7 +457,7 @@ rule_Image_Int = "sequence-image-int" `namedRule` theRule where
             ( "Sequence image, int."
             , do
                 (iPat, i) <- quantifiedVar
-                let val = make opSum $ reTag AnyTag $ Comprehension [essence| &i[2] |]
+                let val = make opSum $ Comprehension [essence| &i[2] |]
                         [ Generator (GenInExpr iPat func)
                         , Condition [essence| &i[1] = &arg |]
                         ]

@@ -24,7 +24,7 @@ sanityChecks model = do
                 Declaration FindOrGiven{}           -> mapM_ (checkDomain True  (Just st)) (universeBi (forgetRefs st))
                 _                                   -> mapM_ (checkDomain False (Just st)) (universeBi (forgetRefs st))
             forM_ (mStatements m) $ \ st -> case st of
-                SuchThat{} -> 
+                SuchThat{} ->
                     forM_ (universeBi st) $ \case
                         x@Comprehension{} ->
                             forM_ (universeBi x) $ \case

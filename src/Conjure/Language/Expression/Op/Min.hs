@@ -25,8 +25,7 @@ instance ( TypeOf x, Pretty x
     typeOf p@(OpMin x) | Just (dom :: Domain () x) <- project x = do
         ty <- typeOf dom
         case ty of
-            TypeInt NoTag -> return ty
-            TypeInt AnyTag -> return ty
+            TypeInt TagInt -> return ty
             TypeInt (TagEnum _) -> return ty
             TypeEnum{} -> return ty
             _ -> raiseTypeError $ vcat [ pretty p
@@ -43,8 +42,7 @@ instance ( TypeOf x, Pretty x
                                        , "Unexpected type inside min:" <+> pretty ty
                                        ]
         case tyInner of
-            TypeInt NoTag -> return ()
-            TypeInt AnyTag -> return ()
+            TypeInt TagInt -> return ()
             TypeInt (TagEnum _) -> return ()
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "Unexpected type inside min:" <+> pretty ty
@@ -53,16 +51,16 @@ instance ( TypeOf x, Pretty x
 
 instance EvaluateOp OpMin where
     evaluateOp p | any isUndef (childrenBi p) =
-            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpMin x)
         | Just xs <- listOut x
         , any isUndef xs =
-            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp (OpMin (DomainInConstant DomainBool)) = return (ConstantBool False)
     evaluateOp (OpMin (DomainInConstant (DomainInt t rs))) = do
         is <- rangesInts rs
         return $ if null is
-            then mkUndef (TypeInt AnyTag) "Empty collection in min"
+            then mkUndef (TypeInt TagInt) "Empty collection in min"
             else ConstantInt t (minimum is)
     evaluateOp (OpMin coll@(viewConstantMatrix -> Just (_, xs))) = do
         case xs of

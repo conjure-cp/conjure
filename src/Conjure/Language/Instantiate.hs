@@ -22,7 +22,11 @@ import Conjure.Process.Enumerate ( EnumerateDomain, enumerateDomain, enumerateIn
 
 
 -- | Try to simplify an expression recursively.
-trySimplify :: (MonadUserError m, EnumerateDomain m) => Expression -> m Expression
+trySimplify ::
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 trySimplify x = do
     res <- runMaybeT $ instantiateExpression [] x
     case res of
@@ -32,11 +36,11 @@ trySimplify x = do
         _   -> descendM trySimplify x                           -- otherwise, try the same on its children
 
 
-instantiateExpression
-    :: (MonadFail m, EnumerateDomain m)
-    => [(Name, Expression)]
-    -> Expression
-    -> m Constant
+instantiateExpression ::
+    MonadFail m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    [(Name, Expression)] -> Expression -> m Constant
 instantiateExpression ctxt x = do
     constant <- normaliseConstant <$> evalStateT (instantiateE x) ctxt
     case (emptyCollection constant, constant) of
@@ -47,29 +51,25 @@ instantiateExpression ctxt x = do
         (False, _) -> return constant
 
 
-instantiateDomain
-    :: ( MonadFail m
-       , EnumerateDomain m
-       , Pretty r
-       , Default r
-       )
-    => [(Name, Expression)]
-    -> Domain r Expression
-    -> m (Domain r Constant)
+instantiateDomain ::
+    MonadFail m =>
+    EnumerateDomain m =>
+    Pretty r =>
+    Default r =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    [(Name, Expression)] -> Domain r Expression -> m (Domain r Constant)
 instantiateDomain ctxt x = normaliseDomain normaliseConstant <$> evalStateT (instantiateD x) ctxt
 
 
 newtype HasUndef = HasUndef Any
     deriving (Semigroup, Monoid)
 
-instantiateE
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => Expression
-    -> m Constant
-
+instantiateE ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Constant
 instantiateE (Comprehension body gensOrConds) = do
     let
         loop :: ( MonadFail m
@@ -129,7 +129,7 @@ instantiateE (Comprehension body gensOrConds) = do
                 ty
         else
             return $ ConstantAbstract $ AbsLitMatrix
-                (DomainInt NoTag [RangeBounded 1 (fromInt (genericLength constants))])
+                (DomainInt TagInt [RangeBounded 1 (fromInt (genericLength constants))])
                 constants
 
 instantiateE (Reference name (Just (RecordField _ ty))) = return $ ConstantField name ty
@@ -182,23 +182,21 @@ instantiateE (WithLocals b (DefinednessConstraints locals)) = do
 instantiateE x = fail $ "instantiateE:" <+> pretty (show x)
 
 
-instantiateOp
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => Op Expression
-    -> m Constant
+instantiateOp ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Op Expression -> m Constant
 instantiateOp opx = mapM instantiateE opx >>= evaluateOp . fmap normaliseConstant
 
 
-instantiateAbsLit
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => AbstractLiteral Expression
-    -> m Constant
+instantiateAbsLit ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    AbstractLiteral Expression -> m Constant
 instantiateAbsLit x = do
     c <- mapM instantiateE x
     case c of
@@ -213,15 +211,14 @@ instantiateAbsLit x = do
         _ -> return $ ConstantAbstract c
 
 
-instantiateD
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       , Pretty r
-       , Default r
-       )
-    => Domain r Expression
-    -> m (Domain r Constant)
+instantiateD ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    Pretty r =>
+    Default r =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Domain r Expression -> m (Domain r Constant)
 instantiateD (DomainAny t ty) = return (DomainAny t ty)
 instantiateD DomainBool = return DomainBool
 instantiateD (DomainIntE x) = do
@@ -231,7 +228,7 @@ instantiateD (DomainIntE x) = do
                 (_, Just (_, xs), _) -> xs
                 (_, _, Just xs) -> xs
                 _ -> []
-    return (DomainInt NoTag (map RangeSingle vals))
+    return (DomainInt TagInt (map RangeSingle vals))
 instantiateD (DomainInt t ranges) = DomainInt t <$> mapM instantiateR ranges
 instantiateD (DomainEnum nm Nothing _) = do
     st <- gets id
@@ -280,23 +277,21 @@ instantiateD (DomainReference name Nothing) = do
 instantiateD DomainMetaVar{} = bug "instantiateD DomainMetaVar"
 
 
-instantiateSetAttr
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => SetAttr Expression
-    -> m (SetAttr Constant)
+instantiateSetAttr ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    SetAttr Expression -> m (SetAttr Constant)
 instantiateSetAttr (SetAttr s) = SetAttr <$> instantiateSizeAttr s
 
 
-instantiateSizeAttr
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => SizeAttr Expression
-    -> m (SizeAttr Constant)
+instantiateSizeAttr ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    SizeAttr Expression -> m (SizeAttr Constant)
 instantiateSizeAttr SizeAttr_None = return SizeAttr_None
 instantiateSizeAttr (SizeAttr_Size x) = SizeAttr_Size <$> instantiateE x
 instantiateSizeAttr (SizeAttr_MinSize x) = SizeAttr_MinSize <$> instantiateE x
@@ -304,74 +299,68 @@ instantiateSizeAttr (SizeAttr_MaxSize x) = SizeAttr_MaxSize <$> instantiateE x
 instantiateSizeAttr (SizeAttr_MinMaxSize x y) = SizeAttr_MinMaxSize <$> instantiateE x <*> instantiateE y
 
 
-instantiateMSetAttr
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => MSetAttr Expression
-    -> m (MSetAttr Constant)
+instantiateMSetAttr ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    MSetAttr Expression -> m (MSetAttr Constant)
 instantiateMSetAttr (MSetAttr s o) = MSetAttr <$> instantiateSizeAttr s <*> instantiateOccurAttr o
 
 
-instantiateOccurAttr
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => OccurAttr Expression
-    -> m (OccurAttr Constant)
+instantiateOccurAttr ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    OccurAttr Expression -> m (OccurAttr Constant)
 instantiateOccurAttr OccurAttr_None = return OccurAttr_None
 instantiateOccurAttr (OccurAttr_MinOccur x) = OccurAttr_MinOccur <$> instantiateE x
 instantiateOccurAttr (OccurAttr_MaxOccur x) = OccurAttr_MaxOccur <$> instantiateE x
 instantiateOccurAttr (OccurAttr_MinMaxOccur x y) = OccurAttr_MinMaxOccur <$> instantiateE x <*> instantiateE y
 
 
-instantiateFunctionAttr
-    :: ( MonadFail m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => FunctionAttr Expression
-    -> m (FunctionAttr Constant)
+instantiateFunctionAttr ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    FunctionAttr Expression -> m (FunctionAttr Constant)
 instantiateFunctionAttr (FunctionAttr s p j) =
     FunctionAttr <$> instantiateSizeAttr s
                  <*> pure p
                  <*> pure j
 
 
-instantiateSequenceAttr
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => SequenceAttr Expression
-    -> m (SequenceAttr Constant)
+instantiateSequenceAttr ::
+    MonadFail m =>
+    MonadUserError m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    SequenceAttr Expression -> m (SequenceAttr Constant)
 instantiateSequenceAttr (SequenceAttr s j) =
     SequenceAttr <$> instantiateSizeAttr s
                  <*> pure j
 
 
-instantiateRelationAttr
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => RelationAttr Expression
-    -> m (RelationAttr Constant)
+instantiateRelationAttr ::
+    MonadFail m =>
+    MonadUserError m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    RelationAttr Expression -> m (RelationAttr Constant)
 instantiateRelationAttr (RelationAttr s b) = RelationAttr <$> instantiateSizeAttr s <*> pure b
 
 
-instantiatePartitionAttr
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => PartitionAttr Expression
-    -> m (PartitionAttr Constant)
+instantiatePartitionAttr ::
+    MonadFail m =>
+    MonadUserError m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    PartitionAttr Expression -> m (PartitionAttr Constant)
 instantiatePartitionAttr (PartitionAttr a b r) =
     PartitionAttr <$> instantiateSizeAttr a
                   <*> instantiateSizeAttr b
@@ -379,26 +368,23 @@ instantiatePartitionAttr (PartitionAttr a b r) =
 
 
 instantiatePermutationAttr
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => PermutationAttr Expression
-    -> m (PermutationAttr Constant)
+    :: MonadFail m =>
+       MonadUserError m =>
+       MonadState [(Name, Expression)] m =>
+       EnumerateDomain m =>
+       (?typeCheckerMode :: TypeCheckerMode) =>
+       PermutationAttr Expression -> m (PermutationAttr Constant)
 instantiatePermutationAttr (PermutationAttr s) =
     PermutationAttr <$> instantiateSizeAttr s
 
 
 
-instantiateR
-    :: ( MonadFail m
-       , MonadUserError m
-       , MonadState [(Name, Expression)] m
-       , EnumerateDomain m
-       )
-    => Range Expression
-    -> m (Range Constant)
+instantiateR ::
+    MonadFail m =>
+    MonadState [(Name, Expression)] m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Range Expression -> m (Range Constant)
 instantiateR RangeOpen = return RangeOpen
 instantiateR (RangeSingle x) = RangeSingle <$> instantiateE x
 instantiateR (RangeLowerBounded x) = RangeLowerBounded <$> instantiateE x
@@ -423,7 +409,11 @@ bind pat val = bug $ "Instantiate.bind:" <++> vcat ["pat:" <+> pretty pat, "val:
 
 -- check if the given expression can be evaluated to True
 -- False means it is not entailed, as opposed to "it is known to be false"
-entailed :: (MonadUserError m, EnumerateDomain m) => Expression -> m Bool
+entailed ::
+    MonadUserError m =>
+    EnumerateDomain m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Bool
 entailed x = do
     -- traceM $ show $ "entailed x:" <+> pretty x
     c <- trySimplify x

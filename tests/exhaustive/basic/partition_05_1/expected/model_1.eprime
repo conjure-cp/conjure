@@ -14,11 +14,11 @@ such that
          !(x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q34, 1] /\
            x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q34, 2])
              | q34 : int(1..4)]),
-    alldifferent_except([toInt(q16 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
-                               x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q16, q2])
-                         * catchUndef(q2, 0)
-                             | q16 : int(1..4), q2 : int(1..4)],
-                        0),
+    and([1 =
+         sum([toInt(q16 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
+                    x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Values_Occurrence[q16, q1])
+                  | q16 : int(1..4)])
+             | q1 : int(1..4)]),
     and([q17 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker /\
          q18 <= x_PartitionAsSet_ExplicitVarSizeWithMarkerR2_Marker
          ->

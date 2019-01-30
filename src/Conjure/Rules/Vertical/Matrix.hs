@@ -15,7 +15,7 @@ rule_Comprehension_Literal = "matrix-comprehension-literal" `namedRule` theRule 
             _ -> na "rule_Comprehension_Literal"
         (_, _index, elems) <- match matrixLiteral expr
         tyInner <- typeOf body
-        let ty = TypeMatrix (TypeInt NoTag) tyInner
+        let ty = TypeMatrix (TypeInt TagInt) tyInner
         return
             ( "Vertical rule for matrix-comprehension on matrix literal"
             , return $ if null elems
@@ -347,7 +347,10 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             )
 
 
-flattenIfNeeded :: MonadFail m => Expression -> m Expression
+flattenIfNeeded ::
+    MonadFail m =>
+    (?typeCheckerMode :: TypeCheckerMode) =>
+    Expression -> m Expression
 flattenIfNeeded m = do
     tyM <- typeOf m
     let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a

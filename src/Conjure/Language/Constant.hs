@@ -89,7 +89,7 @@ instance FromJSON  Constant where parseJSON = genericParseJSON jsonOptions
 instance Arbitrary Constant where
     arbitrary = oneof
         [ ConstantBool <$> arbitrary
-        , ConstantInt NoTag <$> arbitrary
+        , ConstantInt TagInt <$> arbitrary
         ]
 
 instance TypeOf Constant where
@@ -151,7 +151,7 @@ domainSizeOfRanges :: MonadFail m => [Range Constant] -> m Integer
 domainSizeOfRanges = fmap genericLength . valuesInIntDomain
 
 instance DomainSizeOf Constant Constant where
-    domainSizeOf = fmap (ConstantInt NoTag) . domainSizeOf
+    domainSizeOf = fmap (ConstantInt TagInt) . domainSizeOf
 
 instance Pretty Constant where
 
@@ -184,7 +184,7 @@ instance Pretty Constant where
     pretty (ConstantUndefined reason ty) = "undefined" <> prParens (pretty reason <+> ":" <+> "`" <> pretty ty <> "`")
 
 instance ExpressionLike Constant where
-    fromInt = ConstantInt AnyTag
+    fromInt = ConstantInt TagInt
     fromIntWithTag i t = ConstantInt t i
     intOut _ (ConstantInt _ x) = return x
     intOut doc c = fail $ vcat [ "Expecting an integer, but found:" <+> pretty c
@@ -229,17 +229,17 @@ normaliseConstant (TypedConstant c ty) = TypedConstant (normaliseConstant c) ty
 normaliseConstant x@ConstantUndefined{} = x
 
 instance Num Constant where
-    ConstantInt _ x + ConstantInt _ y = ConstantInt NoTag (x+y)
+    ConstantInt _ x + ConstantInt _ y = ConstantInt TagInt (x+y)
     x + y = bug $ vcat [ "Num Constant (+)", "x:" <+> pretty x, "y:" <+> pretty y ]
-    ConstantInt _ x - ConstantInt _ y = ConstantInt NoTag (x-y)
+    ConstantInt _ x - ConstantInt _ y = ConstantInt TagInt (x-y)
     x - y = bug $ vcat [ "Num Constant (-)", "x:" <+> pretty x, "y:" <+> pretty y ]
-    ConstantInt _ x * ConstantInt _ y = ConstantInt NoTag (x*y)
+    ConstantInt _ x * ConstantInt _ y = ConstantInt TagInt (x*y)
     x * y = bug $ vcat [ "Num Constant (*)", "x:" <+> pretty x, "y:" <+> pretty y ]
     abs (ConstantInt t x) = ConstantInt t (abs x)
     abs x = bug $ vcat [ "Num Constant abs", "x:" <+> pretty x ]
     signum (ConstantInt t x) = ConstantInt t (signum x)
     signum x = bug $ vcat [ "Num Constant signum", "x:" <+> pretty x ]
-    fromInteger = ConstantInt NoTag . fromInteger
+    fromInteger = ConstantInt TagInt . fromInteger
 
 
 valuesInIntDomain :: MonadFail m => [Range Constant] -> m [Integer]
@@ -497,7 +497,7 @@ viewConstantFunction  constant = do
         suggestion = case constant of
             ConstantAbstract (AbsLitMatrix (DomainInt _ rs) vals) -> do
                 froms <- valuesInIntDomain rs
-                return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt NoTag) froms) vals)
+                return $ Just $ pretty $ AbsLitFunction (zip (map (ConstantInt TagInt) froms) vals)
             _ -> return Nothing
     suggestion >>= \case
         Nothing  -> fail ("Expecting a function, but got:" <++> pretty constant)

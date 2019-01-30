@@ -31,8 +31,8 @@ instance (TypeOf x, Pretty x, ExpressionLike x) => TypeOf (OpProduct x) where
                                        , "The argument has type:" <+> pretty ty
                                        ]
         case innerTy of
-            TypeInt NoTag -> return (TypeInt AnyTag)
-            TypeInt AnyTag -> return (TypeInt AnyTag)
+            TypeInt t | ?typeCheckerMode == RelaxedIntegerTags -> return (TypeInt t)
+            TypeInt TagInt -> return (TypeInt TagInt)
             _ -> raiseTypeError $ vcat [ pretty p
                                        , "The argument has type:" <+> pretty ty
                                        ]
@@ -42,18 +42,12 @@ instance BinaryOperator (OpProduct x) where
 
 instance EvaluateOp OpProduct where
     evaluateOp p | any isUndef (childrenBi p) =
-        return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
+        return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
     evaluateOp p@(OpProduct x)
         | Just xs <- listOut x
         , any isUndef xs =
-            return $ mkUndef (TypeInt AnyTag) $ "Has undefined children:" <+> pretty p
-    evaluateOp (OpProduct x) = ConstantInt AnyTag . product <$> intsOut "OpProduct" x
-
---    evaluateOp p@(OpProduct x)
---        | Just xs <- listOut x
---        , any isUndef xs                      = return $ mkUndef (TypeInt NoTag) $ "Has undefined children:" <+> pretty p
---    evaluateOp (OpProduct x) = ConstantInt NoTag . product <$> intsOut "OpProduct" x
---
+            return $ mkUndef (TypeInt TagInt) $ "Has undefined children:" <+> pretty p
+    evaluateOp (OpProduct x) = ConstantInt TagInt . product <$> intsOut "OpProduct" x
 
 instance (OpProduct x :< x) => SimplifyOp OpProduct x where
     simplifyOp (OpProduct x)
@@ -65,7 +59,10 @@ instance (OpProduct x :< x) => SimplifyOp OpProduct x where
         | Just xs <- listOut x
         , let filtered = filter (/=1) xs
         , length filtered /= length xs      -- there were 1's
-        = return $ inject $ OpProduct $ fromList filtered
+        = case filtered of
+            []  -> return 1
+            [n] -> return n
+            _   -> return $ inject $ OpProduct $ fromList filtered
     simplifyOp _ = na "simplifyOp{OpProduct}"
 
 instance (Pretty x, ExpressionLike x) => Pretty (OpProduct x) where

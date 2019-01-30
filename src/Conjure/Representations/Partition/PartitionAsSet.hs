@@ -12,14 +12,14 @@ import Conjure.Language.Constant
 import Conjure.Language.Domain
 import Conjure.Language.TH
 import Conjure.Language.Pretty
-import Conjure.Language.Type ( Type(..))
-import Conjure.Language.TypeOf ( typeOf )
+import Conjure.Language.Type
+import Conjure.Language.TypeOf
 import Conjure.Language.Expression.DomainSizeOf ( domainSizeOf )
 import Conjure.Representations.Internal
 
 
 partitionAsSet
-    :: forall m . (MonadFail m, NameGen m)
+    :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode)
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Bool
@@ -68,7 +68,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
             return $ Just [ ( outName inDom name , outDom ) ]
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 inDom@(DomainPartition _ attrs innerDomain) = return $ \ inpRel -> do
+        structuralCons f downX1 inDom@(DomainPartition r attrs innerDomain) = return $ \ inpRel -> do
             refs <- downX1 inpRel
             let
 
@@ -77,24 +77,29 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         PartitionAttr _ SizeAttr_Size{} _ -> True
                         _                                 -> False
 
+                exactlyOnce :: Expression -> m [Expression]
                 exactlyOnce rel = do
                     innerType <- typeOf innerDomain
-                    case innerType of
-                      TypeInt _ ->  do
-                            (iPat, i) <- quantifiedVar
-                            (jPat, j) <- quantifiedVar
-                            return $ return $ -- for list
+                    let useAllDiff =
+                            case r of
+                                -- we use a sum when the inner set is occurrence
+                                Partition_AsSet _ Set_Occurrence -> False
+                                _ ->
+                                    case innerType of
+                                        TypeInt{} -> True
+                                        _         -> False      -- or if the inner type is not int
+
+                    (iPat, i) <- quantifiedVar
+                    (jPat, j) <- quantifiedVar
+                    if useAllDiff
+                        then return $ return $ -- for list
                                 [essence|
                                     allDiff([ &j
                                             | &iPat <- &rel
                                             , &jPat <- &i
                                             ])
                                         |]
-
-                      _ -> do
-                            (iPat, i) <- quantifiedVar
-                            (jPat, j) <- quantifiedVar
-                            return $ return $ -- for list
+                        else return $ return $ -- for list
                                 [essence|
                                     forAll &iPat : &innerDomain .
                                         1  = sum ([ 1
@@ -103,6 +108,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                                   ])
                                         |]
 
+                regular :: Expression -> m [Expression]
                 regular rel | isRegular attrs && not fixedPartSize = do
                     (iPat, i) <- quantifiedVar
                     (jPat, j) <- quantifiedVar
@@ -115,10 +121,12 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                         |]
                 regular _ = return []
 
+                partsAren'tEmpty :: Expression -> m [Expression]
                 partsAren'tEmpty rel = do
                     (iPat, i) <- quantifiedVar
                     return $ return [essence| and([ |&i| >= 1 | &iPat <- &rel ]) |]
 
+                sumOfParts :: Expression -> m [Expression]
                 sumOfParts rel = do
                     case domainSizeOf innerDomain of
                         Left _err -> return []

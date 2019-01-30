@@ -27,7 +27,7 @@ instance (TypeOf x, Pretty x) => TypeOf (OpImage x) where
         tyX <- typeOf x
         (from, to) <- case tyF of
             TypeFunction from to -> return (from, to)
-            TypeSequence      to -> return (TypeInt NoTag, to)
+            TypeSequence      to -> return (TypeInt TagInt, to)
             TypePermutation _    -> return (tyX, tyX)
             _ -> raiseTypeError $ "(function application)" <+> pretty p
         if typesUnify [tyX, from]
