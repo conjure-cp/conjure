@@ -13,7 +13,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 functionND :: forall m . (MonadFail m, NameGen m, ?typeCheckerMode :: TypeCheckerMode) => Representation m
-functionND = Representation chck downD structuralCons downC up
+functionND = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -231,6 +231,10 @@ functionND = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionND"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp
 
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]

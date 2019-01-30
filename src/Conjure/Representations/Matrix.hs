@@ -20,7 +20,7 @@ matrix
     -> ((Name, DomainC, Constant) -> m (Maybe [(Name, DomainC, Constant)]))
     -> ((Name, DomainC) -> [(Name, Constant)] -> m (Name, Constant))
     -> Representation m
-matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrixDownC matrixUp
+matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrixDownC matrixUp symmetryOrdering
 
     where
 
@@ -193,3 +193,7 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
                     let values = map snd mid4
                     return (name, ConstantAbstract $ AbsLitMatrix indexDomain values)
         matrixUp _ _ = na "{matrixUp}"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

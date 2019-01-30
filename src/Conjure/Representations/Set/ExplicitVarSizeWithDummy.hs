@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 setExplicitVarSizeWithDummy :: forall m . (MonadFail m, NameGen m) => Representation m
-setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
+setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -166,3 +166,7 @@ setExplicitVarSizeWithDummy = Representation chck downD structuralCons downC up
                                 , "With domain:" <+> pretty domain
                                 ]
         up _ _ = na "{up} ExplicitVarSizeWithDummy"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

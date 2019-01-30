@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 msetExplicitWithRepetition :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-msetExplicitWithRepetition = Representation chck downD structuralCons downC up
+msetExplicitWithRepetition = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -219,3 +219,7 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

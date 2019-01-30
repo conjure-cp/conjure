@@ -20,7 +20,7 @@ functionNDPartial :: forall m .
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Representation m
-functionNDPartial = Representation chck downD structuralCons downC up
+functionNDPartial = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -276,3 +276,7 @@ functionNDPartial = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up} FunctionNDPartial"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

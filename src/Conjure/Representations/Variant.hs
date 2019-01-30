@@ -16,7 +16,7 @@ import Conjure.Representations.Internal
 
 
 variant :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-variant = Representation chck downD structuralCons downC up
+variant = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -117,3 +117,7 @@ variant = Representation chck downD structuralCons downC up
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
         up _ _ = na "{up}"
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

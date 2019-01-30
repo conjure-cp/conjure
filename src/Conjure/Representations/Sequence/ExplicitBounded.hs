@@ -17,7 +17,7 @@ sequenceExplicitBounded :: forall m .
     EnumerateDomain m =>
     (?typeCheckerMode :: TypeCheckerMode) =>
     Representation m
-sequenceExplicitBounded = Representation chck downD structuralCons downC up
+sequenceExplicitBounded = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -69,7 +69,8 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
         downD _ = na "{downD} ExplicitBounded"
 
         structuralCons :: TypeOf_Structural m
-        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
+        structuralCons f downX1 (DomainSequence Sequence_ExplicitBounded
+                                        (SequenceAttr (SizeAttr_Size size) jectivityAttr) innerDomain) = do
             let
                 injectiveCons :: Expression -> m [Expression]
                 injectiveCons values = do
@@ -279,3 +280,7 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

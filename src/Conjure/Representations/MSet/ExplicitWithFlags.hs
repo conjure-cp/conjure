@@ -13,7 +13,7 @@ import Conjure.Representations.Common
 
 
 msetExplicitWithFlags :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
-msetExplicitWithFlags = Representation chck downD structuralCons downC up
+msetExplicitWithFlags = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -202,3 +202,7 @@ msetExplicitWithFlags = Representation chck downD structuralCons downC up
                     , "With domain:" <+> pretty domain
                     ] ++
                     ("Bindings in context:" : prettyContext ctxt)
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

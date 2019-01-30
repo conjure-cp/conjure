@@ -12,7 +12,7 @@ import Conjure.Representations.Function.Function1D ( domainValues )
 
 
 relationAsMatrix :: forall m . (MonadFail m, NameGen m) => Representation m
-relationAsMatrix = Representation chck downD structuralCons downC up
+relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -164,3 +164,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp

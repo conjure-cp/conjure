@@ -17,7 +17,7 @@ functionAsRelation
     => (forall x . DispatchFunction m x)
     -> (forall r x . ReprOptionsFunction m r x)
     -> Representation m
-functionAsRelation dispatch reprOptions = Representation chck downD structuralCons downC up
+functionAsRelation dispatch reprOptions = Representation chck downD structuralCons downC up symmetryOrdering
 
     where
 
@@ -176,3 +176,7 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
                                         , "name:" <+> pretty name
                                         , "domain:" <+> pretty domain
                                         ]
+
+        symmetryOrdering :: TypeOf_SymmetryOrdering m
+        symmetryOrdering _innerSO _downX1 inp _name _domain =
+            return inp
