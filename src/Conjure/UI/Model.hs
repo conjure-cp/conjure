@@ -2269,7 +2269,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
             TypeList{}   -> return ()
             _            -> na "rule_QuantifierShift2"
-        let flattenIfNeeded = if matrixNumDims ty > 1
+        let flattenIfNeededPure = if matrixNumDims ty > 1
                                 then make opFlatten
                                 else id
         return
@@ -2278,7 +2278,7 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
                         (make matrixLiteral
                             ty
                             index
-                            (map (mkQuan . flattenIfNeeded) elems))
+                            (map (mkQuan . flattenIfNeededPure) elems))
             )
 
 

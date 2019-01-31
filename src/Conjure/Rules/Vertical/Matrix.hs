@@ -347,20 +347,6 @@ rule_Matrix_Neq = "matrix-neq" `namedRule` theRule where
             )
 
 
-flattenIfNeeded ::
-    MonadFail m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Expression -> m Expression
-flattenIfNeeded m = do
-    tyM <- typeOf m
-    let nestingLevel (TypeMatrix _ a) = 1 + nestingLevel a
-        nestingLevel (TypeList     a) = 1 + nestingLevel a
-        nestingLevel _ = 0 :: Int
-    return $ if nestingLevel tyM > 1
-        then make opFlatten m
-        else m
-
-
 rule_Matrix_Lt_Primitive :: Rule
 rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
     theRule p = do
