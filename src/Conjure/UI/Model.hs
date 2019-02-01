@@ -1151,6 +1151,8 @@ verticalRules =
     , Vertical.Permutation.rule_Cardinality
     , Vertical.Permutation.rule_Defined
     , Vertical.Permutation.rule_Comprehension
+    , Vertical.Permutation.rule_Permutation_DotLt
+
 
     , Vertical.Tuple.rule_Tuple_Eq
     , Vertical.Tuple.rule_Tuple_Neq
@@ -1419,6 +1421,7 @@ otherRules =
         , DontCare.rule_Tuple
         , DontCare.rule_Record
         , DontCare.rule_Variant
+        , DontCare.rule_Permutation
         , DontCare.rule_Matrix
         , DontCare.rule_Abstract
         ]

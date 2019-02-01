@@ -88,6 +88,19 @@ rule_Matrix = "dontCare-matrix" `namedRule` theRule where
                 return [essence| forAll &iPat : &index . dontCare(&x[&i]) |]
             )
 
+rule_Permutation :: Rule
+rule_Permutation = "dontCare-permutation" `namedRule` theRule where
+    theRule p = do 
+        x                    <- match opDontCare p
+        DomainPermutation _ _ inner <- domainOf x
+        return
+            ( "dontCare handling for permutation"
+            , do
+                (iPat, i) <- quantifiedVar
+                return [essence| forAll &iPat : &inner . image(&x,&i) = &i |]
+            )
+
+
 
 rule_Abstract :: Rule
 rule_Abstract = "dontCare-abstract" `namedRule` theRule where
@@ -95,12 +108,12 @@ rule_Abstract = "dontCare-abstract" `namedRule` theRule where
         x  <- match opDontCare p
         ty <- typeOf x
         case ty of
-            TypeSet      {} -> return ()
-            TypeMSet     {} -> return ()
-            TypeSequence {} -> return ()
-            TypeFunction {} -> return ()
-            TypeRelation {} -> return ()
-            TypePartition{} -> return ()
+            TypeSet      {}   -> return ()
+            TypeMSet     {}   -> return ()
+            TypeSequence {}   -> return ()
+            TypeFunction {}   -> return ()
+            TypeRelation {}   -> return ()
+            TypePartition{}   -> return ()
             _ -> na "not a known abstract domain"
         hasRepresentation x
         xs <- downX1 x
