@@ -1,11 +1,11 @@
 exports.vscode = acquireVsCodeApi();
-exports.currentId = 0;
+exports.totalLoaded = 0
 exports.selectedId = 1;
 exports.currentDomainId = 0;
 exports.id2Node = {};
 exports.id2Parent = {};
 exports.id2ChildIds = {};
-exports.correctPath = {};
+exports.correctPath = [];
 exports.viewerWidth = $(document).width();
 exports.viewerHeight = $(document).height();
 exports.margin = { top: 40, right: 30, bottom: 50, left: 30 };
@@ -140,10 +140,10 @@ exports.collapseFailed = () => {
 
             let nodeId = exports.correctPath[i];
 
-            // console.log(nodeId + " < " + exports.selectedId);
+            if (nodeId > exports.selectedId) {
 
-            if (nodeId < exports.selectedId) {
-                exports.selectNode(nodeId);
+                exports.selectedId = nodeId;
+
                 break;
             }
         };
@@ -166,8 +166,8 @@ exports.nextNode = () => {
 
     let stepSize = Number($("#stepSize").val());
 
-    if (stepSize > exports.correctPath[0]) {
-        stepSize = exports.correctPath[0] - exports.selectedId;
+    if (stepSize > exports.correctPath[exports.correctPath.length-1]) {
+        stepSize = exports.correctPath[exports.correctPath.length-1] - exports.selectedId;
     }
 
     // console.log(exports.selectedId + stepSize);
@@ -189,7 +189,7 @@ exports.nextNode = () => {
     }
     else {
         // exports.selectedId = exports.currentId;
-        // console.log("here!!!")
+        console.log("here!!!")
         exports.selectedId += stepSize;
         exports.selectNode(exports.selectedId);
     }
@@ -220,7 +220,8 @@ exports.loadNNodes = () => {
         exports.vscode.postMessage({
             command: 'loadNodes',
             amount: Number($("#stepSize").val()),
-            start: exports.currentId
+            start: exports.selectedId
+            // start: exports.currentId
         });
 
         // console.log("SET WAIT TRUE NODES");
@@ -327,16 +328,16 @@ exports.appendRows = (data) => {
         .text((d) => { return d.value; });
 }
 
-exports.addNode = (parentId, label) => {
+exports.addNode = (nodeId, parentId, label) => {
 
-    exports.currentId++;
-    let newNode = { id: exports.currentId, name: label };
-    // console.log(exports.currentId);
-    // console.log(parentId);
-    // console.log(exports.id2Node);
+    exports.totalLoaded++;
+    let newNode = { id: nodeId, name: label };
+    console.log(exports.currentId);
+    console.log(parentId);
+    console.log(exports.id2Node);
 
     if (parentId === -1) {
-        exports.id2Node[exports.currentId] = newNode;
+        exports.id2Node[nodeId] = newNode;
         return;
     }
 
@@ -345,8 +346,8 @@ exports.addNode = (parentId, label) => {
     }
 
     exports.id2Node[parentId].children.push(newNode);
-    exports.id2Node[exports.currentId] = newNode;
-    exports.id2Parent[exports.currentId] = exports.id2Node[parentId];
+    exports.id2Node[nodeId] = newNode;
+    exports.id2Parent[nodeId] = exports.id2Node[parentId];
 }
 
 exports.getChildren = (parentId) => {
@@ -367,6 +368,10 @@ exports.vscode.postMessage({
 
 exports.vscode.postMessage({
     command: 'longestBranchingVariable',
+});
+
+exports.vscode.postMessage({
+    command: 'loadCore',
 });
 
 exports.vscode.postMessage({

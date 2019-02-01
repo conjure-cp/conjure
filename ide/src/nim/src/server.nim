@@ -16,7 +16,7 @@ routes:
             echo "Failed to parse Minion file"
         except :
             # resp HttpCode(501)
-            echo("IOERROR!!")
+            echo("IOERROR!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!")
 
         resp "OK"
 
@@ -29,8 +29,14 @@ routes:
     get "/loadNodes/@amount/@start":
         resp loadNodes(@"amount", @"start")
 
-    get "/correctPath":
-        resp getCorrectPath()
-
     get "/longestBranchingVariable":
         resp getLongestBranchingVarName()
+
+    # get "/allNodes":
+    #     resp loadAllNodes()
+
+    get "/loadCore":
+        resp loadCore()
+
+    get "/loadChildren/@id":
+        resp loadChildren(@"id")

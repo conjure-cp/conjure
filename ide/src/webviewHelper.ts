@@ -177,6 +177,29 @@ export default class WebviewHelper {
                             }
                         });
                         break;
+                    case 'loadCore':
+                        // console.log(message.id);
+                        request(this.serverURL + '/loadCore', { json: true }, (err: any, res: any, body: any) => {
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "loadCore", data: res.body });
+                            }
+                        });
+                        break;
+
+                    case 'loadChildren':
+                        // console.log(message.id);
+                        request(this.serverURL + '/loadChildren/' + message.id, { json: true }, (err: any, res: any, body: any) => {
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "loadChildren", data: res.body });
+                            }
+                        });
+                        break;
 
                 }
             }, undefined, this.context.subscriptions);

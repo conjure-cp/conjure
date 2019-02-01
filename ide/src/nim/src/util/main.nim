@@ -13,9 +13,22 @@ type PrettyDomainResponse = ref object of RootObj
     vars : seq[Variable]
 
 type ParentChild = ref object of RootObj
+    nodeId: int
     parentId: int
     label: string
     children: seq[int]
+
+type ChildResponse = ref object of RootObj
+    nodeId: int
+    children: seq[int]
+
+type Node = ref object of RootObj
+    id: int
+    name: string
+    children: seq[Node]
+
+type Blah = ref object of RootObj
+    b : Table[int, seq[int]]
 
 proc `$`(r: ParentChild): string =
     return $r.parentId & " : " & $r.children
@@ -47,12 +60,16 @@ proc init*(dirPath: string) =
 
     db = open(dbFilePath, "", "", "") 
 
+
+
+
 proc loadNodes*(amount, start: string): JsonNode =
 
     var list :seq[ParentChild]
-    var pId, childId : int
+    var nId, pId, childId : int
     
     for row1 in db.fastRows(sql"select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId > ? limit ?", start, amount):
+        discard parseInt(row1[0], nId)
         var kids : seq[int]
         for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
             discard parseInt(row2[0], childId)
@@ -68,13 +85,59 @@ proc loadNodes*(amount, start: string): JsonNode =
             equality = " != "
 
 
-        list.add(ParentChild(parentId: pId, label: row1[2] & equality & row1[3], children: kids))
+        list.add(ParentChild(parentId: pId, nodeId: nId, label: row1[2] & equality & row1[3], children: kids))
 
     # echo nodes
     # echo list
     
     return %list
 
+
+proc loadChildren*(id : string): JsonNode = 
+
+    var nId, childId : int
+    discard parseInt(id, nId)
+    var kids : seq[int]
+    for row in db.fastRows(sql"select nodeId from Node where parentId = ?", id):
+        discard parseInt(row[0], childId)
+        kids.add(childId)
+    return %ChildResponse(nodeId: nId , children: kids)
+
+
+proc loadCore*(): JsonNode = 
+    var list :seq[ParentChild]
+    var nId, pId, childId : int
+
+    let query = sql(
+        """with recursive
+        correctPath(n) as (
+        select max(nodeId) from Node
+        union 
+        select parentId  from Node, correctPath
+            where nodeId=correctPath.n  and parentId > 0
+        )
+        select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
+
+    for row1 in db.fastRows(query):
+        discard parseInt(row1[0], nId)
+        var kids : seq[int]
+        for row2 in db.fastRows(sql"select nodeId from Node where parentId = ?", row1[0]):
+            discard parseInt(row2[0], childId)
+            kids.add(childId)
+
+        discard parseInt(row1[1], pId)
+
+        var equality: string
+
+        if (row1[4] == "1"):
+            equality = " = "
+        else:
+            equality = " != "
+
+
+        list.add(ParentChild(parentId: pId, nodeId: nId, label: row1[2] & equality & row1[3], children: kids))
+
+    return %list
 
 
 proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
@@ -187,23 +250,84 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
     return %*{"vars" : jsonList, "changed" : list, "changedExpressions": expressionsToJson(changedExpressions) }
 
-proc getCorrectPath*(): JsonNode =
-
-    var ids : seq[int]
-    var id : int
-
-    for row in db.fastRows(sql("""with recursive
-	correctPath(n) as (
-	select max(nodeId) from Node
-	union 
-	select parentId  from Node, correctPath
-		where nodeId=correctPath.n  and parentId > 0
-    )
-    select * from correctPath;""")):
-        discard parseInt(row[0], id)
-        ids.add(id)
-
-    return % ids
-
 proc getLongestBranchingVarName*() : JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+
+
+# proc loadAllNodes*(): JsonNode = 
+
+#     # var id2Node = initTable[int, Node]()
+#     # var id2Parent = initTable[int, Node]()
+#     # var id2ChildIds = initTable[int, seq[int]]()
+#     var id2Node = %*{}
+#     var id2Parent = %*{}
+#     var id2ChildIds = %*{}
+#     var nodeId : int
+#     var parentId : int
+
+#     let query = sql(
+#         """with recursive
+#         correctPath(n) as (
+#         select max(nodeId) from Node
+#         union 
+#         select parentId  from Node, correctPath
+#             where nodeId=correctPath.n  and parentId > 0
+#         )
+#         select nodeId, parentId, branchingVariable, value, isLeftChild from Node where nodeId in correctPath;""")
+
+#     # for row in db.fastRows(sql"select nodeId, parentId, branchingVariable, value, isLeftChild from Node"):
+#     for row in db.fastRows(query):
+#         discard parseInt(row[0], nodeId)
+#         discard parseInt(row[1], parentId)
+#         let node = %*{"id" : nodeId, "name": row[2], "children": []}
+#         if nodeId == 1:
+
+#             id2Node["1"] = node
+#             id2ChildIds["1"] = %*[]
+
+#         else:
+#             id2Node[$parentId]["children"].add(node)
+#             id2Node[$nodeId] = node
+#             id2Parent[$nodeId] = id2Node[$parentId]
+#             id2ChildIds[$parentId].add(node["id"])
+#             id2ChildIds[$nodeId] = %*[]
+    
+#     let query1 = sql(
+#         """with recursive
+# 	correctPath(n) as (
+# 	select max(nodeId) from Node
+# 	union 
+# 	select parentId  from Node, correctPath
+# 		where nodeId=correctPath.n  and parentId > 0
+#     )
+#     select nodeId, parentId, branchingVariable, value, isLeftChild from Node where parentId in correctPath and nodeId not in correctPath;""")
+
+#     for row in db.fastRows(query1):
+#         discard parseInt(row[0], nodeId)
+#         discard parseInt(row[1], parentId)
+#         let node = %*{"id" : nodeId, "name": row[2], "children": []}
+#         id2Node[$parentId]["children"].add(node)
+#         id2Node[$nodeId] = node
+#         id2Parent[$nodeId] = id2Node[$parentId]
+#         id2ChildIds[$parentId].add(node["id"])
+#         id2ChildIds[$nodeId] = %*[]
+
+#     # return id2Node["1"]
+
+#     return %*{"id2Node" : id2Node, "id2Parent" : id2Parent,  "id2ChildIds" : id2ChildIds}
+
+        # echo id2Node
+
+
+    # result = newJObject()
+    # for k, v in id2ChildIds.pairs:
+    #      result[$k] = %v
+
+    # echo result
+
+    # echo %Blah(b: id2ChildIds)
+
+    # return %*{"id2Node" : id2Node, "id2Parent" : id2Parent, "id2ChildIds": id2ChildIds}
+
+
+# proc loadCore*

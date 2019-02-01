@@ -152,6 +152,11 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
         let digitRe = re"(\d*$)"
 
         if (variable of Set):
+
+            let s = cast[Set](variable)
+            if (s.inner != nil):
+                continue
+
             var num : int
             var lower : int
 
@@ -161,7 +166,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 for res in db.fastRows(query0, nodeId):
                     discard res[0].parseInt(lower)
                     eSet.included.add(lower)
-
 
             if (variable of OccurrenceSet):
                 let oSet = cast[OccurrenceSet](variable)
@@ -197,10 +201,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 # var maxSetTo1 : int
                 var maxSetTo0 = -1
                 let fSet = cast[FlagSet](variable)
-                # let query0 = sql("SELECT name FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Flags_%' and nodeId = ? order by name desc limit 1;")
-
-                # var res = db.getValue(query0, nodeId)
-                # discard res.findAll(digitRe)[0].parseInt(fSet.flagCount)
 
                 let query1 = sql("SELECT name FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Flags_%' and lower = 1 and upper = 1 and nodeId = ? order by name desc limit 1;")
                 var res = db.getValue(query1, nodeId)
@@ -211,7 +211,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 if res != "":
                     discard res.findAll(digitRe)[0].parseInt(maxSetTo0)
 
-
                 # select * from domain where name like "%s_ExplicitVarSizeWithFlags_Values_%"  and lower = upper order by name asc 
                 let query3 = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithFlags_Values_%' and lower = upper and nodeId = ? order by name asc;")
                 for res in db.rows(query3, nodeId):
@@ -221,7 +220,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                     # echo "num " & $num
                     # echo "maxSetTo0 " & $maxSetTo0
                     # echo "maxSetTo1 " & $maxSetTo1
-
 
                     if maxSetTo0 > -1:
                         if num > maxSetTo0:
@@ -242,9 +240,6 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
                 var res = db.getRow(query0, nodeId)
                 discard res[0].findAll(digitRe)[0].parseInt(mSet.markerLower)
                 discard res[1].findAll(digitRe)[0].parseInt(mSet.markerUpper)
-
-                # if (mSet.markerLower != mSet.markerUpper):
-                #     continue
 
                 let query1 = sql("SELECT name, lower FROM domain WHERE name like '%" & variable.name & "_ExplicitVarSizeWithMarker_Values_%' and lower = upper and nodeId = ? order by name asc;")
                 for res in db.fastRows(query1, nodeId):

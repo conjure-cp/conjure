@@ -6,19 +6,65 @@ import * as listView from "./util/listView"
 
 (function () {
 
+    let init = true;
+
     window.addEventListener('message', event => {
         const message = event.data
         switch (message.command) {
+            case 'loadChildren':
+                globals.id2ChildIds[message.data.nodeId] = message.data.children
+                update(globals.id2Node[message.data.nodeId]);
+                // console.log(globals.id2ChildIds)
+                // globals.tree.nodeSize([Number(message.data) * 13, 0])
+
+                break;
+            case 'loadCore':
+                console.log(message.data)
+                // globals.tree.nodeSize([Number(message.data) * 13, 0])
+                message.data.forEach((element) => {
+
+                    globals.correctPath.push(element.nodeId);
+                });
+
+                for (let i = 0; i < message.data.length; i++) {
+
+                    let element = message.data[i]
+
+                    if (!globals.id2Node[element.nodeId]) {
+
+                        globals.addNode(element.nodeId, element.parentId, element.label);
+                        globals.id2ChildIds[element.nodeId] = element.children
+
+                        element.children.forEach(kidId => {
+
+                            if (!globals.correctPath.includes(kidId)) {
+
+                                globals.addNode(kidId, element.nodeId, message.data[i + 1].label.replace("!", ""))
+                                globals.vscode.postMessage({
+                                    command: 'loadChildren',
+                                    id: kidId,
+                                });
+                            }
+
+                        })
+                    }
+                }
+
+                globals.collapseNode(1);
+
+                update(globals.id2Node[0]);
+                globals.waiting = false;
+
+                globals.selectNode(globals.selectedId);
+
+                $("#total").text(globals.totalLoaded + "/" + globals.correctPath[globals.correctPath.length - 1]);
+
+                break;
 
             case 'longestBranchingVariable':
                 // console.log(message.data)
                 globals.tree.nodeSize([Number(message.data) * 13, 0])
 
-                break;
-
-            case 'correctPath':
-                globals.correctPath = message.data;
-                // console.log(message.data);
                 break;
 
             case 'loadNodes':
@@ -27,17 +73,18 @@ import * as listView from "./util/listView"
 
                 message.data.forEach((element) => {
 
-                    globals.addNode(element.parentId, element.label);
-                    globals.id2ChildIds[globals.currentId] = element.children
-
+                    if (!globals.id2Node[element.nodeId]) {
+                        globals.addNode(element.nodeId, element.parentId, element.label);
+                        globals.id2ChildIds[element.nodeId] = element.children
+                    }
                 });
 
-                update(globals.id2Node[globals.currentId]);
+                update(globals.id2Node[0]);
                 globals.waiting = false;
 
                 globals.selectNode(globals.selectedId);
 
-                $("#total").text(globals.currentId + "/" + globals.correctPath[0]);
+                $("#total").text(globals.totalLoaded + "/" + globals.correctPath[globals.correctPath.length - 1]);
 
                 break;
 
@@ -51,7 +98,8 @@ import * as listView from "./util/listView"
 
                     // console.log("HERE!!");
 
-                    if (globals.currentId === 0) {
+                    if (init) {
+                        init = false;
                         globals.waiting = false;
                         // console.log(globals.waiting);
                         break;
@@ -92,7 +140,7 @@ import * as listView from "./util/listView"
                 }
                 else {
 
-                    console.log(message.data.changedExpressions)
+                    // console.log(message.data.changedExpressions)
                     listView.setChangedExpressions(message.data.changedExpressions);
                     listView.updateNodes(message.data.vars);
                     listView.setChangedList(message.data.changed);
@@ -149,9 +197,12 @@ import * as listView from "./util/listView"
         // .on("mouseover", showDomains);
 
         nodeEnter.append("circle")
-            .transition()
-            .attr("r", 10)
+            // .transition()
+            // .duration(globals.duration)
+            // .attr("r", 10)
+            .attr("r", 1e-6)
 
+        // c.attr("r", 10)
 
         nodeEnter.append("text")
             .attr("y", (d) => {
@@ -184,6 +235,14 @@ import * as listView from "./util/listView"
                 if (d.children) {
                     childLength = d.children.length;
                 }
+
+                // if (d.id == 2) {
+                    // console.log(Object.keys(globals.id2ChildIds))
+                    // console.log(d)
+                    // console.log(globals.id2ChildIds[1])
+                    // console.log(globals.id2ChildIds[2])
+                    // console.log(globals.id2ChildIds)
+                // }
 
                 if (globals.id2ChildIds[d.id]) {
                     if (childLength < globals.id2ChildIds[d.id].length) {
@@ -233,11 +292,14 @@ import * as listView from "./util/listView"
             .attr("d", (d) => {
                 let o = { x: d.source.x, y: d.source.y };
                 return globals.diagonal({ source: o, target: o });
-            });
+            })
+            .style("stroke-opacity", 1e-6);
         // Transition links to their new position.
         link.transition()
             .duration(globals.duration)
-            .attr("d", globals.diagonal);
+            // .duration(1000)
+            .attr("d", globals.diagonal)
+            .style("stroke-opacity", 1);
         // Transition exiting nodes to the parent's new position.
         link.exit().transition()
             .duration(globals.duration)
@@ -298,10 +360,11 @@ import * as listView from "./util/listView"
     Mousetrap.bind('f', () => {
         globals.collapseFailed();
         update(globals.id2Node[globals.selectedId]);
+        globals.selectNode(globals.selectedId)
         // update(globals.id2Node[1]);
     }, 'keydown');
 
-    globals.loadNNodes();
+    // globals.loadNNodes();
     // globals.selectNode(globals.selectedId);
     console.log("HELLO")
     $("#form").validate();
