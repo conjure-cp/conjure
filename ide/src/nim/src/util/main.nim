@@ -61,8 +61,6 @@ proc init*(dirPath: string) =
     db = open(dbFilePath, "", "", "") 
 
 
-
-
 proc loadNodes*(amount, start: string): JsonNode =
 
     var list :seq[ParentChild]
@@ -177,7 +175,6 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
     let jsonList = %domainsAtNode
 
-
     for i in 0..<domainsAtNode.len():
         if domainsAtNode[i] of Set:
             let s = cast[Set](domainsAtNode[i])
@@ -185,6 +182,10 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
             jsonList[i]["Cardinality"] = %s.getCardinality()
             jsonList[i]["Included"] = %s.included
             jsonList[i]["Excluded"] = %s.excluded
+            jsonList[i]["Children"] = %[]
+
+            for kid in s.children:
+                jsonList[i]["Children"].add(%setToTreeView(kid))
 
 
     if (id != 1):
@@ -203,6 +204,9 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
                 let s2 = cast[Set](domainsAtPrev[i])
 
                 var different = false
+
+                # for kid in s1.children:
+                #     list.add("li" & kid.name)
 
                 if (s1.getCardinality() != s2.getCardinality()):
                     different = true

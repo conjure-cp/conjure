@@ -23,21 +23,18 @@ suite "Test for explicit sets":
 
     test "Parsing eprime":
 
-        var containsExplicit = false
 
         for p in parseEprime(eprimePath).values():
             if p of ExplicitSet:
-                containsExplicit = true
+                discard
           # echo d
-        require(containsExplicit)
 
 
     test "Pretty domains":
 
-        var containsExplicit = false
-
-        for d in getPrettyDomainsOfNode(db, "1"):
+        for d in getPrettyDomainsOfNode(db, "3"):
             if d of ExplicitSet:
-                containsExplicit = true
+                let eS = cast[DummySet](d)
+                check(eS.included == @[1, 2, 6])
+                check(eS.excluded.len() == 0)
         # echo d
-        require(containsExplicit)

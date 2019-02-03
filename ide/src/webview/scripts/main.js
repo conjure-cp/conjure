@@ -19,7 +19,7 @@ import * as listView from "./util/listView"
 
                 break;
             case 'loadCore':
-                console.log(message.data)
+                // console.log(message.data)
                 // globals.tree.nodeSize([Number(message.data) * 13, 0])
                 message.data.forEach((element) => {
 
@@ -140,7 +140,7 @@ import * as listView from "./util/listView"
                 }
                 else {
 
-                    // console.log(message.data.changedExpressions)
+                    console.log(message.data.vars)
                     listView.setChangedExpressions(message.data.changedExpressions);
                     listView.updateNodes(message.data.vars);
                     listView.setChangedList(message.data.changed);
@@ -321,6 +321,7 @@ import * as listView from "./util/listView"
     appendControls();
     Mousetrap.bind('s', () => {
         globals.nextNode();
+        console.log(globals.selectedId)
         update(globals.id2Node[globals.selectedId]);
     }, 'keydown');
     Mousetrap.bind('w', globals.upNode, 'keydown');

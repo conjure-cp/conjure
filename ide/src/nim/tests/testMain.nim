@@ -11,11 +11,6 @@ suite "Test for Main":
     test "loadNodes":
         let nodes = loadNodes("10", "0")
         check(nodes.len() == 10)
-    
-    test "getCorrectPath":
-        let cp = getCorrectPath()
-        check(cp.getElems()[^1].getInt() == 1)
-        check(cp.len() > 0)
 
     test "loadSimpleDomains":
         let ls =  loadSimpleDomains("1", "0", "2")

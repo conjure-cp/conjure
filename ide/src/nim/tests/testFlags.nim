@@ -21,21 +21,19 @@ suite "Test for Flag sets":
 
     test "Parsing eprime":
 
-        var containsDummy = false
 
         for p in parseEprime(eprimePath).values():
             if p of FlagSet:
-                containsDummy = true
-          # echo d
-        require(containsDummy)
+                discard
 
 
     test "Pretty domains":
 
-        var containsDummy = false
-
-        for d in getPrettyDomainsOfNode(db, "1"):
+        for d in getPrettyDomainsOfNode(db, "21"):
             if d of FlagSet:
-                containsDummy = true
+                let fS = cast[FlagSet](d)
+                check(fS.included == @[1,2,3,7])
+                check(fS.excluded.len() == 0)
+            
+                # echo d
         # echo d
-        require(containsDummy)

@@ -23,22 +23,16 @@ suite "Test for dummy sets":
 
     test "Parsing eprime":
 
-
-        var containsDummy = false
-
         for p in parseEprime(eprimePath).values():
             if p of DummySet:
-                containsDummy = true
+                discard
           # echo d
-        require(containsDummy)
 
 
     test "Pretty domains":
-
-        var containsDummy = false
-
-        for d in getPrettyDomainsOfNode(db, "1"):
+        for d in getPrettyDomainsOfNode(db, "10"):
             if d of DummySet:
-                containsDummy = true
+                let dS = cast[DummySet](d)
+                check(dS.included == @[6, 7, 1])
+                check(dS.excluded.len() == 0)
         # echo d
-        require(containsDummy)

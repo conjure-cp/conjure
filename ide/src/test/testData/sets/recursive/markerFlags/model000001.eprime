@@ -1,0 +1,121 @@
+language ESSENCE' 1.0
+
+find x: int(1..9)
+find y: int(1..9)
+find z: int(1..9)
+find s_ExplicitVarSizeWithMarkerR4_Marker: int(0..512)
+find s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags:
+        matrix indexed by [int(1..512), int(1..9)] of bool
+find s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values:
+        matrix indexed by [int(1..512), int(1..9)] of int(1..9)
+branching on
+    [x, y, z, s_ExplicitVarSizeWithMarkerR4_Marker, s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags,
+     s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values]
+such that
+    sum([toInt(q13 <= s_ExplicitVarSizeWithMarkerR4_Marker /\
+               s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q13, q14])
+         * catchUndef(s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q13, q14], 0)
+             | q13 : int(1..512), q14 : int(1..9)])
+    = x + y + z,
+    and([q1 + 1 <= s_ExplicitVarSizeWithMarkerR4_Marker ->
+         s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q1, ..] <lex
+         s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q1 + 1, ..]
+         \/
+         and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q1, q9] =
+              s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q1 + 1, q9]
+                  | q9 : int(1..9)])
+         /\
+         s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q1, ..] <lex
+         s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q1 + 1, ..]
+             | q1 : int(1..511)]),
+    and([q2 > s_ExplicitVarSizeWithMarkerR4_Marker ->
+         and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q2, q11] = false | q11 : int(1..9)])
+         /\ and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q2, q12] = 1 | q12 : int(1..9)])
+             | q2 : int(1..512)]),
+    1 <= s_ExplicitVarSizeWithMarkerR4_Marker,
+    and([q3 <= s_ExplicitVarSizeWithMarkerR4_Marker ->
+         and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q4 + 1] ->
+              s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, q4] <
+              s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, q4 + 1]
+                  | q4 : int(1..8)])
+             | q3 : int(1..512)]),
+    and([q3 <= s_ExplicitVarSizeWithMarkerR4_Marker ->
+         and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q5] = false ->
+              s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Values[q3, q5] = 1
+                  | q5 : int(1..9)])
+             | q3 : int(1..512)]),
+    and([q3 <= s_ExplicitVarSizeWithMarkerR4_Marker ->
+         and([s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q6 + 1] ->
+              s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q6]
+                  | q6 : int(1..8)])
+             | q3 : int(1..512)]),
+    and([q3 <= s_ExplicitVarSizeWithMarkerR4_Marker ->
+         2 <= sum([toInt(s_ExplicitVarSizeWithMarkerR4_Values_ExplicitVarSizeWithFlags_Flags[q3, q7]) | q7 : int(1..9)])
+             | q3 : int(1..512)])
+
+$ Conjure's
+$ {"finds": [{"Name": "x"}, {"Name": "y"}, {"Name": "z"}, {"Name": "s"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Auto": {"Interactive": []}},
+$  "trailCompact":
+$      [[1, 4, 8], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 4, 8], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1]],
+$  "trailVerbose": [],
+$  "trailRewrites": [],
+$  "nameGenState": [["q", 15]],
+$  "nbExtraGivens": 0,
+$  "representations":
+$      [[{"Name": "s"},
+$        {"DomainSet":
+$             [{"Set_ExplicitVarSizeWithMarker": []}, {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 1}}},
+$              {"DomainSet":
+$                   [{"Set_ExplicitVarSizeWithFlags": []}, {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 2}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}],
+$       [{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]],
+$  "representationsTree":
+$      [[{"Name": "s"},
+$        [{"rootLabel": {"Set_ExplicitVarSizeWithMarker": []},
+$          "subForest":
+$              [{"rootLabel": {"Set_ExplicitVarSizeWithFlags": []},
+$                "subForest":
+$                    [{"rootLabel": null,
+$                      "subForest": []}]}]}]],
+$       [{"Name": "x"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "y"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "z"},
+$        [{"rootLabel": null,
+$          "subForest": []}]]],
+$  "originalDomains":
+$      [[{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "s"},
+$        {"DomainSet":
+$             [[], {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 1}}},
+$              {"DomainSet":
+$                   [[], {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 2}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}]],
+$  "questionAnswered": []}

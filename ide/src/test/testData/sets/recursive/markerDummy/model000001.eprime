@@ -1,0 +1,103 @@
+language ESSENCE' 1.0
+
+find x: int(1..9)
+find y: int(1..9)
+find z: int(1..9)
+find s_ExplicitVarSizeWithMarkerR6_Marker: int(0..512)
+find s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy:
+        matrix indexed by [int(1..512), int(1..2)] of int(1..10)
+branching on
+    [x, y, z, s_ExplicitVarSizeWithMarkerR6_Marker, s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy]
+such that
+    sum([toInt(q9 <= s_ExplicitVarSizeWithMarkerR6_Marker /\
+               s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q9, q10] != 10)
+         * catchUndef(s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q9, q10], 0)
+             | q9 : int(1..512), q10 : int(1..2)])
+    = x + y + z,
+    and([q1 + 1 <= s_ExplicitVarSizeWithMarkerR6_Marker ->
+         s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q1, ..] <lex
+         s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q1 + 1, ..]
+             | q1 : int(1..511)]),
+    and([q2 > s_ExplicitVarSizeWithMarkerR6_Marker ->
+         and([s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q2, q8] = 1 | q8 : int(1..2)])
+             | q2 : int(1..512)]),
+    1 <= s_ExplicitVarSizeWithMarkerR6_Marker,
+    and([q3 <= s_ExplicitVarSizeWithMarkerR6_Marker ->
+         s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1] <
+         s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 2]
+         \/ s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1] = 10
+             | q3 : int(1..512)]),
+    and([q3 <= s_ExplicitVarSizeWithMarkerR6_Marker ->
+         (s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 1] = 10 ->
+          s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, 2] = 10)
+             | q3 : int(1..512)]),
+    and([q3 <= s_ExplicitVarSizeWithMarkerR6_Marker ->
+         sum([toInt(s_ExplicitVarSizeWithMarkerR6_Values_ExplicitVarSizeWithDummy[q3, q6] != 10) | q6 : int(1..2)]) <= 2
+             | q3 : int(1..512)])
+
+$ Conjure's
+$ {"finds": [{"Name": "x"}, {"Name": "y"}, {"Name": "z"}, {"Name": "s"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Auto": {"Interactive": []}},
+$  "trailCompact":
+$      [[1, 2, 8], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
+$  "trailVerbose": [],
+$  "trailRewrites": [],
+$  "nameGenState": [["q", 11]],
+$  "nbExtraGivens": 0,
+$  "representations":
+$      [[{"Name": "s"},
+$        {"DomainSet":
+$             [{"Set_ExplicitVarSizeWithMarker": []}, {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 1}}},
+$              {"DomainSet":
+$                   [{"Set_ExplicitVarSizeWithDummy": []}, {"SizeAttr_MaxSize": {"Constant": {"ConstantInt": 2}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}],
+$       [{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]],
+$  "representationsTree":
+$      [[{"Name": "s"},
+$        [{"rootLabel": {"Set_ExplicitVarSizeWithMarker": []},
+$          "subForest":
+$              [{"rootLabel": {"Set_ExplicitVarSizeWithDummy": []},
+$                "subForest":
+$                    [{"rootLabel": null,
+$                      "subForest": []}]}]}]],
+$       [{"Name": "x"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "y"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "z"},
+$        [{"rootLabel": null,
+$          "subForest": []}]]],
+$  "originalDomains":
+$      [[{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "s"},
+$        {"DomainSet":
+$             [[], {"SizeAttr_MinSize": {"Constant": {"ConstantInt": 1}}},
+$              {"DomainSet":
+$                   [[], {"SizeAttr_MaxSize": {"Constant": {"ConstantInt": 2}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}]],
+$  "questionAnswered": []}

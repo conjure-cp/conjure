@@ -1,0 +1,74 @@
+language ESSENCE' 1.0
+
+find x: int(1..9)
+find y: int(1..9)
+find z: int(1..9)
+find s_ExplicitR3_Explicit: matrix indexed by [int(1..2), int(1)] of int(1..9)
+branching on [x, y, z, s_ExplicitR3_Explicit]
+such that
+    sum([s_ExplicitR3_Explicit[q5, 1] | q5 : int(1..2)]) = x + y + z,
+    s_ExplicitR3_Explicit[1, ..] <lex s_ExplicitR3_Explicit[2, ..]
+
+$ Conjure's
+$ {"finds": [{"Name": "x"}, {"Name": "y"}, {"Name": "z"}, {"Name": "s"}],
+$  "givens": [],
+$  "enumGivens": [],
+$  "enumLettings": [],
+$  "lettings": [],
+$  "unnameds": [],
+$  "strategyQ": {"PickFirst": []},
+$  "strategyA": {"Auto": {"Interactive": []}},
+$  "trailCompact":
+$      [[1, 2, 2], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 2, 2], [1, 1, 1], [1, 1, 1],
+$       [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1], [1, 1, 1]],
+$  "trailVerbose": [],
+$  "trailRewrites": [],
+$  "nameGenState": [["q", 7]],
+$  "nbExtraGivens": 0,
+$  "representations":
+$      [[{"Name": "s"},
+$        {"DomainSet":
+$             [{"Set_Explicit": []}, {"SizeAttr_Size": {"Constant": {"ConstantInt": 2}}},
+$              {"DomainSet":
+$                   [{"Set_Explicit": []}, {"SizeAttr_Size": {"Constant": {"ConstantInt": 1}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}],
+$       [{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]],
+$  "representationsTree":
+$      [[{"Name": "s"},
+$        [{"rootLabel": {"Set_Explicit": []},
+$          "subForest":
+$              [{"rootLabel": {"Set_Explicit": []},
+$                "subForest":
+$                    [{"rootLabel": null,
+$                      "subForest": []}]}]}]],
+$       [{"Name": "x"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "y"},
+$        [{"rootLabel": null,
+$          "subForest": []}]],
+$       [{"Name": "z"},
+$        [{"rootLabel": null,
+$          "subForest": []}]]],
+$  "originalDomains":
+$      [[{"Name": "x"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "y"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "z"},
+$        {"DomainInt": [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}],
+$       [{"Name": "s"},
+$        {"DomainSet":
+$             [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": 2}}},
+$              {"DomainSet":
+$                   [[], {"SizeAttr_Size": {"Constant": {"ConstantInt": 1}}},
+$                    {"DomainInt":
+$                         [{"RangeBounded": [{"Constant": {"ConstantInt": 1}}, {"Constant": {"ConstantInt": 9}}]}]}]}]}]],
+$  "questionAnswered": []}

@@ -166,14 +166,13 @@ exports.nextNode = () => {
 
     let stepSize = Number($("#stepSize").val());
 
-    if (stepSize > exports.correctPath[exports.correctPath.length-1]) {
-        stepSize = exports.correctPath[exports.correctPath.length-1] - exports.selectedId;
-    }
+    // if (stepSize > exports.correctPath[exports.correctPath.length-1]) {
+    //     stepSize = exports.correctPath[exports.correctPath.length-1] - exports.selectedId;
+    // }
 
     // console.log(exports.selectedId + stepSize);
     // console.log(exports.id2Node);
     // console.log(exports.id2Node[exports.selectedId + stepSize]);
-
 
 
     if (exports.id2Node[exports.selectedId]._children) {
@@ -181,7 +180,6 @@ exports.nextNode = () => {
         exports.toggleNode(exports.selectedId);
         return
     }
-
 
     if (!exports.id2Node[exports.selectedId + stepSize]) {
         exports.loadNNodes();
@@ -332,9 +330,9 @@ exports.addNode = (nodeId, parentId, label) => {
 
     exports.totalLoaded++;
     let newNode = { id: nodeId, name: label };
-    console.log(exports.currentId);
-    console.log(parentId);
-    console.log(exports.id2Node);
+    // console.log(exports.currentId);
+    // console.log(parentId);
+    // console.log(exports.id2Node);
 
     if (parentId === -1) {
         exports.id2Node[nodeId] = newNode;

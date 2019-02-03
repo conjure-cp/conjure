@@ -1,6 +1,7 @@
 
 # doAssert(1 + 1 == 2)
 import unittest
+import util/main
 include util/process
 
 
@@ -15,29 +16,40 @@ suite "Test for occurrence sets":
 
     initParser(minionPath, eprimePath)
 
-    test "Parsing minion":
-        let t = parseAux(minionPath)
-      # echo t
+    # test "Parsing minion":
+    #     let t = parseAux(minionPath)
+    #   # echo t
 
-        for v in t.values:
-            require(not v.name.contains("aux"))
+    #     for v in t.values:
+    #         require(not v.name.contains("aux"))
 
-    test "Parsing eprime":
+    # test "Parsing eprime":
 
 
-        var containsMarkerOccurrenceSet = false
+    #     var containsMarkerOccurrenceSet = false
 
-        for p in parseEprime(eprimePath).values():
-            if p of MarkerSet:
-                # echo p
-                # discard
-                containsMarkerOccurrenceSet = true
-          # echo d
-        require(containsMarkerOccurrenceSet)
+    #     for p in parseEprime(eprimePath).values():
+    #         if p of MarkerSet:
+    #             # echo p
+    #             # discard
+    #             containsMarkerOccurrenceSet = true
+    #       # echo d
+    #     require(containsMarkerOccurrenceSet)
 
 
     test "Pretty domains":
 
-        for d in getPrettyDomainsOfNode(db, "1"):
-            echo d
+        # init("../testData/sets/recursive/markerOccurrence")
+
+        let pretty = getPrettyDomainsOfNode(db, "4")
+
+        for d in pretty:
+            if (d of MarkerSet):
+                let ms = cast[MarkerSet](d)
+                # echo ms.inner
+                echo ms
+                discard
+
+        # echo domainsToJson(pretty).pretty()
+                #  d
         # echo d

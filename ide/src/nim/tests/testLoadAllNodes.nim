@@ -19,10 +19,10 @@ suite "Test for occurrence sets":
     # init("../test/testData/sets/dummy")
     init("/home/tom/EssenceCatalog/problems/csplib-prob053-GracefulGears/conjure-output")
 
-    test "blah":
+    # test "blah":
         # echo loadAllNodes()
-        benchmark "my benchmark":
-            echo loadAllNodes()
+        # benchmark "my benchmark":
+            # echo loadAllNodes()
             # discard loadAllNodes()
         
     #     let t = parseAux(minionPath)

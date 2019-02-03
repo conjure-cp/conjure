@@ -46,7 +46,7 @@ export function getRootNode() {
     return rootNode;
 }
 
-export function setChangedExpressions(expressions){
+export function setChangedExpressions(expressions) {
     // console.log(name2Node["Changed Expressions"])
     name2Node["Changed Expressions"]["children"] = expressions
 
@@ -72,6 +72,11 @@ export function updateNodes(data) {
                 name2Node[element.name].children[1].children[0].name = element.Cardinality
                 name2Node[element.name].children[2].children[0].name = element.Included
                 name2Node[element.name].children[3].children[0].name = element.Excluded
+                if (element.Children.length > 0) {
+                    name2Node[element.name].children[4].children = element.Children
+                }
+                // console.log(name2Node[element.name].children[4])
+                // .children[0].name = element.Excluded
             }
 
             // console.log("SADASDASDSAFGDAFSJAJSFJAJFJAS")
