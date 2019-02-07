@@ -282,11 +282,16 @@ sequenceExplicitBounded = Representation chck downD structuralCons downC up symm
                     ("Bindings in context:" : prettyContext ctxt)
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            [marker, values] <- downX1 inp
+            Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            soValues <- innerSO downX1 [essence| &values[&i] |] "SO" inner
+            return
+                [essence|
+                    flatten([ [ &marker ]
+                            , flatten([ &soValues
+                                      | &iPat : &index
+                                      ])
+                            ])
+                |]

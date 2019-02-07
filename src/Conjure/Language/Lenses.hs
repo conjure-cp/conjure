@@ -563,14 +563,24 @@ opFlatten _ =
 
 
 flattenIfNeeded ::
-    MonadFail m =>
-    (?typeCheckerMode :: TypeCheckerMode) =>
-    Expression -> m Expression
-flattenIfNeeded m = do
-    tyM <- typeOf m
-    return $ if matrixNumDims tyM > 1
+    Int ->
+    Expression ->
+    Expression
+flattenIfNeeded dims m =
+    if dims > 1
         then make opFlatten m
         else m
+
+
+oneDimensionaliser ::
+    Int -> -- current number of dimensions
+    Expression ->
+    Expression
+oneDimensionaliser dims x =
+    case dims of
+        0 -> fromList [x]
+        1 -> x
+        _ -> make opFlatten x
 
 
 opConcatenate

@@ -7,12 +7,9 @@ module Conjure.Representations.Variant
 -- conjure
 import Conjure.Prelude
 import Conjure.Bug
-import Conjure.Language.Definition
-import Conjure.Language.Domain
-import Conjure.Language.Pretty
-import Conjure.Language.TH
-import Conjure.Language.ZeroVal
+import Conjure.Language
 import Conjure.Representations.Internal
+import Conjure.Language.ZeroVal ( EnumerateDomain, zeroVal )
 
 
 variant :: forall m . (MonadFail m, NameGen m, EnumerateDomain m) => Representation m
@@ -119,11 +116,9 @@ variant = Representation chck downD structuralCons downC up symmetryOrdering
         up _ _ = na "{up}"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            xs <- downX1 inp
+            Just xsDoms' <- downD ("SO", domain)
+            let xsDoms = map snd xsDoms'
+            soValues <- sequence [ innerSO downX1 x "SO" xDom | (x, xDom) <- zip xs xsDoms ]
+            return $ make opFlatten (fromList soValues)

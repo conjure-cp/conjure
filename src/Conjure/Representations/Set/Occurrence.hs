@@ -88,7 +88,7 @@ setOccurrence = Representation chck downD structuralCons downC up symmetryOrderi
 
         -- produce a [int]
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering _innerSO downX1 inp _name (DomainSet Set_Occurrence _attrs innerDomain@DomainInt{}) = do
+        symmetryOrdering _innerSO downX1 inp _name (DomainSet Set_Occurrence _attrs innerDomain) = do
             [m] <- downX1 inp
             (iPat, i) <- quantifiedVar
             return [essence| [ -toInt(&m[&i]) | &iPat : &innerDomain ] |]

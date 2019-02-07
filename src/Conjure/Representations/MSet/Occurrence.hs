@@ -112,11 +112,8 @@ msetOccurrence = Representation chck downD structuralCons downC up symmetryOrder
         up _ _ = na "{up} Occurrence"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering _innerSO downX1 inp _name (DomainSet MSet_Occurrence _attrs innerDomain) = do
+            [m] <- downX1 inp
+            (iPat, i) <- quantifiedVar
+            return [essence| [ -&m[&i] | &iPat : &innerDomain ] |]
+        symmetryOrdering _ _ _ _ _ = na "{symmetryOrdering} Occurrence"

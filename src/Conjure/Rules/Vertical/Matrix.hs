@@ -358,9 +358,9 @@ rule_Matrix_Lt_Primitive = "matrix-Lt-primitive" `namedRule` theRule where
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
         unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims tx > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- flattenIfNeeded x
-        y' <- flattenIfNeeded y
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        let x' = flattenIfNeeded (matrixNumDims tx) x
+        let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <"
             , return [essence| &x' <lex &y' |]
@@ -378,9 +378,9 @@ rule_Matrix_Leq_Primitive = "matrix-Leq-primitive" `namedRule` theRule where
         tx <- typeOf x        -- TODO: check if x and y have the same arity
         ty <- typeOf y
         unless (matrixNumDims tx > 0 && isPrimitiveType tx) $ fail ("not a primitive type:" <+> pretty tx)
-        unless (matrixNumDims tx > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
-        x' <- flattenIfNeeded x
-        y' <- flattenIfNeeded y
+        unless (matrixNumDims ty > 0 && isPrimitiveType ty) $ fail ("not a primitive type:" <+> pretty ty)
+        let x' = flattenIfNeeded (matrixNumDims tx) x
+        let y' = flattenIfNeeded (matrixNumDims ty) y
         return
             ( "Horizontal rule for matrix <="
             , return [essence| &x' <=lex &y' |]

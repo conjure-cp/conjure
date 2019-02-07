@@ -138,31 +138,29 @@ symmetryOrdering inp =
     case inp of
         -- Constant x -> so_onConstant x
         -- AbstractLiteral x
-        Reference _ (Just refTo) ->
+        Reference _ (Just refTo) -> do
             case refTo of
                 Alias x                       -> symmetryOrdering x
-                InComprehension{}             -> fail ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
-                DeclNoRepr{}                  -> fail ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
+                InComprehension{}             -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
+                DeclNoRepr{}                  -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
                 DeclHasRepr _forg name domain -> symmetryOrderingDispatch downX1 inp name domain
-                RecordField{}                 -> fail ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
-                VariantField{}                -> fail ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
+                RecordField{}                 -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
+                VariantField{}                -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
         Op op -> case op of
-            MkOpIndexing (OpIndexing m i) -> do
+            MkOpIndexing (OpIndexing m _) -> do
                 ty <- typeOf m
                 case ty of
                     TypeMatrix{} -> return ()
                     TypeList{}   -> return ()
-                    _ -> fail $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
+                    _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
                 mDom <- domainOfR m
                 case mDom of
-                    DomainMatrix _ innerDom -> do
-                        let mi = [essence| &m[&i] |]
-                        symmetryOrderingDispatch downX1 mi "<nope>" innerDom
-                    _ -> bug ("symmetryOrdering:" <++> pretty (show op))
-            _ -> bug ("symmetryOrdering:" <++> pretty (show op))
+                    DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp "noname-m[i]" domainInner
+                    _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
+            _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
         -- Comprehension body stmts -> do
         --     xs <- downX1 body
         --     return [Comprehension x stmts | x <- xs]
-        -- x@WithLocals{} -> fail ("downX1:" <++> pretty (show x))
+        -- x@WithLocals{} -> bug ("downX1:" <++> pretty (show x))
         _ -> bug ("symmetryOrdering:" <++> pretty (show inp))
 

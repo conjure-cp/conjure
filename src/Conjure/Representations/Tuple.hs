@@ -78,18 +78,9 @@ tuple = Representation chck downD structuralCons downC up symmetryOrdering
         up _ _ = na "{up}"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            -- traceM $ show $ "tuple 1" <+> pretty inp
-            mdoms <- downD (name, domain)
-            -- traceM $ show $ "tuple 2" <+> pretty (show mdoms)
-            case mdoms of
-                Just doms -> do
-                    -- traceM $ show $ "tuple 3" <+> prettyList id "," doms
-                    xs <- downX1 inp
-                    -- traceM $ show $ "tuple 4" <+> prettyList id "," xs
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    -- traceM $ show $ "tuple y" <+> pretty res
-                    return res
-                Nothing -> do
-                    -- traceM "tuple 4 Nothing"
-                    na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            xs <- downX1 inp
+            Just xsDoms' <- downD ("SO", domain)
+            let xsDoms = map snd xsDoms'
+            soValues <- sequence [ innerSO downX1 x "SO" xDom | (x, xDom) <- zip xs xsDoms ]
+            return $ make opFlatten (fromList soValues)

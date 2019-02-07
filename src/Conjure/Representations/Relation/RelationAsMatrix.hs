@@ -166,11 +166,7 @@ relationAsMatrix = Representation chck downD structuralCons downC up symmetryOrd
                                         ]
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            [inner] <- downX1 inp
+            Just [(_, innerDomain)] <- downD ("SO", domain)
+            innerSO downX1 inner "SO" innerDomain

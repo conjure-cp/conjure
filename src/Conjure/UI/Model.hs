@@ -705,8 +705,8 @@ dropTagForSR m = do
                     let xTagInt = reTag TagInt x
                     return [essence| &xTagInt + 1 |]
                 _          -> bug "predSucc"
-        replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
-        replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
+        -- replacePredSucc [essence| &a .< &b |] = return [essence| &a < &b |]
+        -- replacePredSucc [essence| &a .<= &b |] = return [essence| &a <= &b |]
         replacePredSucc x = return x
 
     st <- transformBiM replacePredSucc (mStatements m)
@@ -836,6 +836,10 @@ checkIfAllRefined m | Just modelZipper <- mkModelZipper m = do             -- we
                                         ++ [ nest 4 ("Context #" <> pretty i <> ":" <+> pretty c)
                                            | (i, c) <- zip allNats (tail (ascendants x))
                                            ]
+                    [essence| &_ .< &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
+                    [essence| &_ .<= &_ |] ->
+                        return ["", ("Not refined:" <+> pretty (hole x))]
                     _ -> return []
     unless (null fails) (bug (vcat fails))
     return m
@@ -1790,70 +1794,24 @@ rule_DotLtLeq :: Rule
 rule_DotLtLeq = "generic-DotLtLeq" `namedRule` theRule where
     theRule p = do
         (a,b,mk) <- case p of
-                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| flatten(&i) <lex  flatten(&j) |] )
-                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| flatten(&i) <=lex flatten(&j) |] )
+                    [essence| &a .<  &b |] -> return ( a, b, \ i j -> [essence| &i <lex  &j |] )
+                    [essence| &a .<= &b |] -> return ( a, b, \ i j -> [essence| &i <=lex &j |] )
                     _ -> na "rule_DotLtLeq"
-        -- traceM $ show $ "in rule_DotLtLeq, a:" <+> pretty a
-        -- traceM $ show $ "in rule_DotLtLeq, b:" <+> pretty b
-        aType <- typeOf a
-        -- traceM $ show $ "in rule_DotLtLeq, aType:" <+> pretty aType
-        case aType of
-            TypeTuple{}     -> return ()
-            TypeMatrix{}    -> return ()
-            TypeSet{}       -> return ()
-            TypeMSet{}      -> return ()
-            TypeFunction{}  -> return ()
-            TypeSequence{}  -> return ()
-            TypeRelation{}  -> return ()
-            TypePartition{} -> return ()
-            _ -> na "rule_DotLtLeq"
+        -- aType <- typeOf a
+        -- case aType of
+        --     TypeTuple{}     -> return ()
+        --     TypeMatrix{}    -> return ()
+        --     TypeSet{}       -> return ()
+        --     TypeMSet{}      -> return ()
+        --     TypeFunction{}  -> return ()
+        --     TypeSequence{}  -> return ()
+        --     TypeRelation{}  -> return ()
+        --     TypePartition{} -> return ()
+        --     _ -> na "rule_DotLtLeq"
         -- sameRepresentationTree a b
 
         ma <- symmetryOrdering a
-        -- traceM $ show $ "in rule_DotLtLeq, ma:" <+> pretty ma
         mb <- symmetryOrdering b
-        -- traceM $ show $ "in rule_DotLtLeq, mb:" <+> pretty mb
-
-        -- let
-        --     nestingLevel (TypeMatrix _ t) = 1 + nestingLevel t
-        --     nestingLevel (TypeList     t) = 1 + nestingLevel t
-        --     nestingLevel _ = 0 :: Int
-        --
-        --     innerMostTy (TypeMatrix _ t) = innerMostTy t
-        --     innerMostTy (TypeList     t) = innerMostTy t
-        --     innerMostTy t = t
-        --
-        --     matrixForAll [] x = return (x, [])
-        --     matrixForAll (dom:doms) x = do
-        --         (iPat, i) <- quantifiedVar
-        --         (xIndexed, gens) <- matrixForAll doms [essence| &x[&i] |]
-        --         let gen = Generator (GenDomainNoRepr iPat dom)
-        --         return (xIndexed, gen : gens)
-        --
-        --     mk1D x = do
-        --         ty <- typeOf x
-        --         case nestingLevel ty of
-        --             0 -> case ty of
-        --                     TypeBool  -> return [essence| [toInt(&x)] |]
-        --                     TypeInt{} -> return [essence| [&x] |]
-        --                     _         -> bug ("What type? [0]" <+> pretty ty)
-        --             nl -> do
-        --                 xInt <- case innerMostTy ty of
-        --                     TypeBool -> do
-        --                         doms <- indexDomainsOf x
-        --                         (xIndexed, gens) <- matrixForAll doms x
-        --                         return $ Comprehension [essence| toInt(&xIndexed) |] gens
-        --                     TypeInt{} -> return x
-        --                     _ -> bug ("What type? [1]" <+> pretty ty)
-        --                 if nl == 1
-        --                     then return xInt
-        --                     else return [essence| flatten(&xInt) |]
-        --
-        --     wrap [x] = x
-        --     wrap xs = make opFlatten (fromList xs)
-        --
-        -- ma <- downX a >>= mapM mk1D >>= return . reTag TagInt . wrap
-        -- mb <- downX b >>= mapM mk1D >>= return . reTag TagInt . wrap
         return
             ( "Generic vertical rule for dotLt and dotLeq:" <+> pretty p
             , return $ mk ma mb
@@ -1906,17 +1864,35 @@ rule_TrueIsNoOp = "true-is-noop" `namedRule` theRule where
 
 rule_FlattenOf1D :: Rule
 rule_FlattenOf1D = "flatten-of-1D" `namedRule` theRule where
+    theRule [essence| &xs <lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<lex on singleton matrices"
+                , return [essence| &x < &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
+    theRule [essence| &xs <=lex &ys |] =
+        case (listOut xs, listOut ys) of
+            (Just [x], Just [y]) -> return
+                ( "<=lex on singleton matrices"
+                , return [essence| &x <= &y |]
+                )
+            _ -> na "rule_FlattenOf1D"
     theRule p = do
         x   <- match opFlatten p
         tyx <- typeOf x
-        case tyx of
-            TypeList     TypeBool{} -> return ()
-            TypeList     TypeInt{}  -> return ()
-            TypeMatrix _ TypeBool{} -> return ()
-            TypeMatrix _ TypeInt{}  -> return ()
+        out <- case tyx of
+            TypeList     TypeBool{} -> return x
+            TypeList     TypeInt{}  -> return x
+            TypeMatrix _ TypeBool{} -> return x
+            TypeMatrix _ TypeInt{}  -> return x
+            TypeMatrix{}            -> -- more than 1D
+                case listOut x of
+                    Just [y] -> return (make opFlatten y)
+                    _        -> na "rule_FlattenOf1D"
             _ -> na "rule_FlattenOf1D"
         return ( "1D matrices do not need a flatten."
-               , return x
+               , return out
                )
 
 
@@ -2269,16 +2245,13 @@ rule_QuantifierShift2 = "quantifier-shift2" `namedRule` theRule where
             TypeMatrix{} -> return ()           -- the matrix literal should contain further matrix/list stuff.
             TypeList{}   -> return ()
             _            -> na "rule_QuantifierShift2"
-        let flattenIfNeededPure = if matrixNumDims ty > 1
-                                then make opFlatten
-                                else id
         return
             ( "Shifting quantifier inwards"
             , return $ mkQuan
                         (make matrixLiteral
                             ty
                             index
-                            (map (mkQuan . flattenIfNeededPure) elems))
+                            (map (mkQuan . flattenIfNeeded (matrixNumDims ty)) elems))
             )
 
 

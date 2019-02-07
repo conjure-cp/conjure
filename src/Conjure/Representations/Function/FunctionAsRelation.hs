@@ -178,11 +178,8 @@ functionAsRelation dispatch reprOptions = Representation chck downD structuralCo
                                         ]
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            [rel] <- downX1 inp
+            Just [(_, relDomain)] <- downD ("SO", domain)
+            soValues <- innerSO downX1 rel "SO" relDomain
+            return soValues

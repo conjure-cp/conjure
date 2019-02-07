@@ -233,14 +233,26 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
         up _ _ = na "{up} FunctionND"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp name domain = do
-            mdoms <- downD (name, domain)
-            case mdoms of
-                Just doms -> do
-                    xs <- downX1 inp
-                    res <- fromList <$> sequence [ innerSO downX1 x nm2 dom | (x, (nm2, dom)) <- zip xs doms ]
-                    return res
-                Nothing -> na "{symmetryOrdering}"
+        symmetryOrdering innerSO downX1 inp _name domain = do
+            [values] <- downX1 inp
+            Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
+            (iPat, i) <- quantifiedVar
+            
+            -- setting up the quantification
+            let kRange = case innerDomainFr of
+                    DomainTuple ts  -> map fromInt [1 .. genericLength ts]
+                    DomainRecord rs -> map (fromName . fst) rs
+                    _ -> bug $ vcat [ "FunctionND.rule_Comprehension"
+                                    , "indexDomain:" <+> pretty innerDomainFr
+                                    ]
+                toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
+                valuesIndexed = make opMatrixIndexing values toIndex
+
+            soValues <- innerSO downX1 valuesIndexed "SO" innerDomainTo
+
+            return $ make opFlatten $
+                Comprehension soValues
+                    [Generator (GenDomainNoRepr iPat (forgetRepr innerDomainFr))]
 
 
 viewAsDomainTuple :: Domain r x -> Maybe [Domain r x]
