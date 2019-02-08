@@ -164,6 +164,20 @@ rule_Image_Comprehendable = "comprehendable-image" `namedRule` theRule where
        else na "rule_Image_Comprehendable"
   theRule _ = na "rule_Image_Comprehendable"
 
+rule_Image_Sequence_Literal :: Rule
+rule_Image_Sequence_Literal = "image-permutation-sequence-literal" `namedRule` theRule where
+    theRule expr = do
+        (perm,seq) <- match opImage expr
+        (TypeSequence t, elems) <- match sequenceLiteral seq
+        (TypePermutation inn) <- typeOf perm
+        let outLiteral = AbstractLiteral $ AbsLitSequence [ [essence| image(&perm,&e) |] | e <- elems ]
+        return
+            ( "Comprehension on permutation image of sequence literals"
+            , return [essence| &outLiteral |] 
+            )
+    theRule _ = na "rule_Image_Sequence_Literal"
+
+
 
 rule_Image_Sequence :: Rule
 rule_Image_Sequence = "image-sequence" `namedRule` theRule where
