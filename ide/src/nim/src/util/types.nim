@@ -64,8 +64,8 @@ proc newMarkerSet*(name : string, lowerBound, upperBound: int = -1,inner: Set = 
 proc newFlagSet*(name : string, lowerBound, upperBound: int = -1, inner: Set = nil): FlagSet =
     return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, maxSetTo1: 0,maxSetTo0: 0, inner: inner)
 
-proc newExplicitSet*(name : string, lowerBound, upperBound: int = -1, card: int = -1, inner: Set = nil): ExplicitSet =
-    return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, cardinality: card, inner: inner)
+proc newExplicitSet*(name : string, lowerBound, upperBound: int = -1, cardinality: int = -1, inner: Set = nil): ExplicitSet =
+    return ExplicitSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, cardinality: cardinality, inner: inner)
 
 
 proc getPrettyRange*(lowerBound: string, upperBound: string): string =
@@ -96,29 +96,39 @@ proc getCardinality*(s: Set): string =
     
     return "SET TYPE NOT SUPPORTED"
 
+
+proc getSetType(s: Set): string =
+    if s of ExplicitSet:
+        result = "<ESet> "
+    if s of FlagSet:
+        result = "<FSet> "
+    if s of MarkerSet:
+        result = "<MSet> "
+    if s of OccurrenceSet:
+        result = "<OSet> "
+    if s of DummySet:
+        let d = cast[DummySet](s)
+        result = "<DSet>  dummy " & $d.dummyVal & " "
+
+
 proc `$`*(v:Variable): string =
     if v of Expression:
         return "<Expr> " & v.name & " " & v.rng
 
     if v of Set:
         let s = cast[Set](v)
-        result = s.name & " " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)
+
+        result = getSetType(s)
+
+        result &= s.name
+
+        if s.inner == nil:
+            result &= " " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded 
+
+        result &= " cardinality " & getCardinality(s)
 
         if (s.inner != nil):
-            result &= " {" & $s.inner & "}"
-
-        if s of ExplicitSet:
-            result = "<ESet> " & result
-        if s of FlagSet:
-            result = "<FSet> " & result
-        if s of MarkerSet:
-            result = "<MSet> " & result
-        if s of OccurrenceSet:
-            result = "<OSet> " & result
-        if s of DummySet:
-            let d = cast[DummySet](v)
-            result = "<DSet>  dummy " & $d.dummyVal & " " & result
-
+            result &= " {" & getSetType(s.inner) & "}"
         # echo s.children.len()
 
         if s.children.len() > 0:
@@ -132,16 +142,3 @@ proc `$`*(v:Variable): string =
 
     else:
         result =  "<Variable> " & v.name & " " & v.rng 
-    
-    # if v of FlagSet:
-    #     let s = cast[MarkerSet](v)
-    #     return "<FSet> " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded  &  " cardinality " & getCardinality(s)  
-    # if v of MarkerSet:
-    #     let s = cast[MarkerSet](v)
-    #     return "<MSet> " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    # if v of OccurrenceSet:
-    #     let s = cast[OccurrenceSet](v)
-    #     return "<OSet> " & getPrettyRange($s.lowerBound, $s.upperBound) & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)
-    # if v of DummySet:
-    #     let s = cast[DummySet](v)
-    #     return "<DSet> " & getPrettyRange($s.lowerBound, $s.upperBound) & " dummy " & $s.dummyVal & " inc " & $s.included & " exc " & $s.excluded &  " cardinality " & getCardinality(s)

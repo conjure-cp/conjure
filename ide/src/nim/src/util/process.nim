@@ -48,12 +48,12 @@ proc parseSet(s: JsonNode, name: string): Set =
             return newFlagSet(name, inner = parseSet(innerArr, name))
 
         if (arr[0].hasKey("Set_Explicit")):
-            return newExplicitSet(name, inner = parseSet(innerArr, name))
+            return newExplicitSet(name,
+            cardinality = arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1),
+            inner = parseSet(innerArr, name))
             
         # if innerArr[0].hasKey("Set_Occurrence"):
 
-    if arr[0].hasKey("Set_Explicit"):
-        return newExplicitSet(name, arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
 
     if arr[^1].hasKey("DomainInt"):
 
@@ -77,7 +77,11 @@ proc parseSet(s: JsonNode, name: string): Set =
                 echo "ERRORORORRORORORORRO"
 
 
-        if arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
+        if arr[0].hasKey("Set_Explicit"):
+            return newExplicitSet(name, lowerBound = l, upperBound = u,
+            cardinality = arr[1]["SizeAttr_Size"]["Constant"]["ConstantInt"].getInt(-1)) 
+
+        elif arr[0].hasKey("Set_ExplicitVarSizeWithDummy"):
             return newDummySet(name, lowerBound = l, upperBound = u, dummyVal = u + 1) 
 
         elif arr[0].hasKey("Set_Occurrence"):
