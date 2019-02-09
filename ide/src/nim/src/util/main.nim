@@ -180,12 +180,16 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
             let s = cast[Set](domainsAtNode[i])
 
             jsonList[i]["Cardinality"] = %s.getCardinality()
-            jsonList[i]["Included"] = %s.included
-            jsonList[i]["Excluded"] = %s.excluded
-            jsonList[i]["Children"] = %[]
+            if (s.inner == nil):
+                jsonList[i]["Included"] = %s.included
+                jsonList[i]["Excluded"] = %s.excluded
+            else:
+                # jsonList[i]["inner"] = %s.inner
+                jsonList[i]["Children"] = getCollapsedSetChildren(nodeId, s.name)
+                # echo jsonList[i]["Children"].pretty()
 
-            for kid in s.children:
-                jsonList[i]["Children"].add(%setToTreeView(kid))
+            # for kid in s.children:
+            #     jsonList[i]["Children"].add(%setToTreeView(kid))
 
 
     if (id != 1):
@@ -252,10 +256,17 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
     else:
         return domainsToJson(domainsAtNode)
 
+    echo (%jsonList).pretty()
+
     return %*{"vars" : jsonList, "changed" : list, "changedExpressions": expressionsToJson(changedExpressions) }
 
 proc getLongestBranchingVarName*() : JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+
+
+# proc loadChildSets*(setName, nodeId : string) : JsonNode = 
+#     return getChildSets(setName, nodeId)
+
 
 
 # proc loadAllNodes*(): JsonNode = 

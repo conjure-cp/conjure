@@ -54,33 +54,35 @@ export function setChangedExpressions(expressions) {
 
 export function updateNodes(data) {
 
+    console.log(data)
 
     data.forEach(element => {
-
-
-        // Chec if its a set
-
-        // console.log("~~")
-        // console.log(element.Cardinality)
-        // console.log("~~")
 
         if (element.hasOwnProperty("Cardinality")) {
             // if (!name2Node[element.name].children){
             // console.log(name2Node[element.name]);
             // }
             if (name2Node[element.name].children) {
-                name2Node[element.name].children[1].children[0].name = element.Cardinality
-                name2Node[element.name].children[2].children[0].name = element.Included
-                name2Node[element.name].children[3].children[0].name = element.Excluded
-                if (element.Children.length > 0) {
-                    name2Node[element.name].children[4].children = element.Children
-                }
-                // console.log(name2Node[element.name].children[4])
-                // .children[0].name = element.Excluded
-            }
 
-            // console.log("SADASDASDSAFGDAFSJAJSFJAJFJAS")
-            // console.log(name2Node[element.name].children[3].children[0])
+                let setNode = name2Node[element.name].children
+                // console.log(element)
+
+                setNode[1].children[0].name = element.Cardinality
+
+                // if (setNode.children.length > 3){
+                if (element.Included) {
+                    setNode[2].children[0].name = element.Included
+                    setNode[3].children[0].name = element.Excluded
+                }
+
+                if (element.Children) {
+                    setNode[2] = { name: "Children", children: element.Children.children}
+                    // console.log(setNode[2])
+                    // console.log(element)
+
+
+                }
+            }
         }
         else {
             name2Node[element.name].children[0].name = element.rng;

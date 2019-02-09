@@ -11,6 +11,11 @@ import * as listView from "./util/listView"
     window.addEventListener('message', event => {
         const message = event.data
         switch (message.command) {
+            // case 'loadChildSets':
+
+            //     break;
+
+
             case 'loadChildren':
                 globals.id2ChildIds[message.data.nodeId] = message.data.children
                 update(globals.id2Node[message.data.nodeId]);
@@ -140,7 +145,7 @@ import * as listView from "./util/listView"
                 }
                 else {
 
-                    console.log(message.data.vars)
+                    // console.log(message.data.vars)
                     listView.setChangedExpressions(message.data.changedExpressions);
                     listView.updateNodes(message.data.vars);
                     listView.setChangedList(message.data.changed);

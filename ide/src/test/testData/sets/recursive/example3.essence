@@ -1,4 +1,4 @@
 
 find x,y,z : int(1..9)
-find s: set (minSize 2) of set (minSize 1) of set (minSize 1) of int(1..9)
+find s: set (minSize 2) of set (minSize 1) of set (minSize 1) of int(1..2)
 such that sum([k | i <- s, j <- i, k <- j]) = x + y + z

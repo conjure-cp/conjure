@@ -40,3 +40,6 @@ routes:
 
     get "/loadChildren/@id":
         resp loadChildren(@"id")
+
+    # get "/loadChildSets/@id/@setName":
+    #     resp loadChildSets(@"setName", @"id")

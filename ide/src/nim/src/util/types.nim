@@ -6,6 +6,11 @@ type
 type TreeViewNode* = ref object of RootObj
   name: string
   children: seq[TreeViewNode]
+  
+
+# type HiddenTreeViewNode* = ref object of RootObj
+#   name: string
+#   children: seq[TreeViewNode]
 
 type Variable* = ref object of RootObj
   name: string
@@ -114,10 +119,16 @@ proc `$`*(v:Variable): string =
             let d = cast[DummySet](v)
             result = "<DSet>  dummy " & $d.dummyVal & " " & result
 
+        # echo s.children.len()
+
         if s.children.len() > 0:
-            result &= "\n KIDS:"
+            result &= "\n KIDS:{"
             for child in s.children:
-                result &= "\n" & $child
+                if (child.inner != nil):
+                    result &= "\n inner"
+                else:
+                    result &= "\n" & $child
+            result &= "}"
 
     else:
         result =  "<Variable> " & v.name & " " & v.rng 
