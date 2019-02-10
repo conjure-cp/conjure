@@ -46,12 +46,12 @@ suite "level1":
 
     test "Marker":
         init(pathPrefix & "marker")
-        for d in getPrettyDomainsOfNode(db, "15"):
+        for d in getPrettyDomainsOfNode(db, "3"):
             if d of MarkerSet:
                 let mS = cast[MarkerSet](d)
-                check(mS.included == @[2, 4])
+                check(mS.included.len() == 0)
                 check(mS.excluded.len() == 0)
-                check(mS.getCardinality() == "int(2..5)")
+                check(mS.getCardinality() == "int(1..5)")
 
 suite "level2":
 
@@ -196,3 +196,15 @@ suite "level3":
 
 
                 echo ms.children[1].children[0].name
+
+    test "MarkerMarkerMarker":
+        init(pathPrefix & "recursive/markerMarkerMarker")
+
+        for d in getPrettyDomainsOfNode(db, "8"):
+            if (d of MarkerSet):
+                let mS = cast[MarkerSet](d)
+                check(mS.children.len() == 2)
+                check(mS.children[0].children.len() == 1)
+                check(mS.children[1].children.len() == 1)
+
+                # check(mS.inner of MarkerSet)

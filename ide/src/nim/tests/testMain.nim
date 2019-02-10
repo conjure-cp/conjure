@@ -24,7 +24,9 @@ suite "Test for Main":
     test "expandSet":
         init("../test/testData/sets/recursive/markerMarkerOccurrence")
         let lp =  loadPrettyDomains("2", "")
-        echo getExpandedSetChild("2", "s.s-1")
+        check(getExpandedSetChild("2", "s.s-1").name == "s-1")
+        check(getExpandedSetChild("2", "s.s-1.s-1-1").name == "s-1-1")
+        check(getExpandedSetChild("2", "s.s-2.s-2-1").name == "s-2-1")
 
     test "loadSetChild":
         init("../test/testData/sets/recursive/markerMarkerOccurrence")

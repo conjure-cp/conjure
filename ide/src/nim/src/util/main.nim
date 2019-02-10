@@ -183,15 +183,11 @@ proc getExpandedSetChild*(nodeId, path : string): Set =
 
     var s = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
 
-    echo "here" 
-    echo path
-
     for name in path.split(".")[1..^1]:
         for kid in s.children:
             if kid.name == name:
                 s = kid
                 break;
-
 
     return (s)
 
@@ -199,7 +195,6 @@ proc loadSetChild*(nodeId, path : string): JsonNode =
     let s = getExpandedSetChild(nodeId, path)
     let update = setToJson(s, nodeId, true)
     return %*{"structure" : %setToTreeView(s), "update" : update, "path" : path}
-
 
 
 proc loadPrettyDomains*(nodeId, paths: string): JsonNode =

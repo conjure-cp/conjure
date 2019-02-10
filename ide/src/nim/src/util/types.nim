@@ -36,6 +36,7 @@ type DummySet* = ref object of Set
 type MarkerSet* = ref object of Set
     markerLower : int
     markerUpper : int
+    id : int
     # cardinality : int
 
 type FlagSet* = ref object of Set
@@ -59,7 +60,7 @@ proc newDummySet*(name : string,  lowerBound, upperBound: int = -1, dummyVal : i
     return DummySet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, dummyVal: dummyVal, excludedCount: 0)
 
 proc newMarkerSet*(name : string, lowerBound, upperBound: int = -1,inner: Set = nil): MarkerSet =
-    return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, markerUpper: -1, inner: inner)
+    return MarkerSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, markerLower: -1, markerUpper: -1, inner: inner, id : -1)
 
 proc newFlagSet*(name : string, lowerBound, upperBound: int = -1, inner: Set = nil): FlagSet =
     return FlagSet(name: name, rng: "UNDEFINED", lowerBound: lowerBound, upperBound: upperBound, maxSetTo1: 0,maxSetTo0: 0, inner: inner)

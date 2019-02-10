@@ -101,7 +101,6 @@ export function updateNodes(data) {
 
                 if (element.Children && !setNode[2].children) {
                     setNode[2] = { name: "Children", children: element.Children.children }
-
                 }
             }
         }
