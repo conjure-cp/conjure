@@ -146,7 +146,7 @@ export default class WebviewHelper {
                         break;
                     case 'prettyDomains':
                         // console.log(message.id);
-                        request(this.serverURL + '/prettyDomains/' + message.amount + '/' + message.start + '/' + message.nodeId, { json: true }, (err: any, res: any, body: any) => {
+                        request(this.serverURL + '/prettyDomains/' + message.nodeId + '/' + message.paths, { json: true }, (err: any, res: any, body: any) => {
                             if (err) {
                                 this.handleServerError(err);
                             }
@@ -197,6 +197,18 @@ export default class WebviewHelper {
                             }
                             else {
                                 panel.webview.postMessage({ command: "loadChildren", data: res.body });
+                            }
+                        });
+                        break;
+
+                    case 'loadSet':
+                        // console.log(message.id);
+                        request(this.serverURL + '/loadSet/' + message.nodeId + "/" + message.path , { json: true }, (err: any, res: any, body: any) => {
+                            if (err) {
+                                this.handleServerError(err);
+                            }
+                            else {
+                                panel.webview.postMessage({ command: "loadSet", data: res.body });
                             }
                         });
                         break;

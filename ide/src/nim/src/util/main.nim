@@ -1,5 +1,5 @@
 # Hello Nim!
-import  jester, typetraits 
+import  jester, typetraits, sequtils 
 include process
 
 var db : DbConn
@@ -132,7 +132,6 @@ proc loadCore*(): JsonNode =
         else:
             equality = " != "
 
-
         list.add(ParentChild(parentId: pId, nodeId: nId, label: row1[2] & equality & row1[3], children: kids))
 
     return %list
@@ -162,10 +161,48 @@ proc loadSimpleDomains*(amount, start, nodeId: string): JsonNode =
     return  %SimpleDomainResponse(changedNames: list, vars: domainsAtNode)
 
 
-proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
+proc setToJson(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode =
+
+    let json = %*{}
+
+    json["name"] = %s.name
+    json["Cardinality"] = %s.getCardinality()
+    if (s.inner == nil):
+        json["Included"] = %s.included
+        json["Excluded"] = %s.excluded
+    else:
+        if wantCollapsedChildren:
+            json["Children"] = getCollapsedSetChildren(s)
+        # else:
+            # json["Children"] = %setToTreeView(s)
+
+
+    return json
+
+proc getExpandedSetChild*(nodeId, path : string): Set =
+
+    var s = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
+
+    echo path
+
+    for name in path.split(".")[1..^1]:
+        for kid in s.children:
+            if kid.name == name:
+                s = kid
+                break;
+
+    return (s)
+
+proc loadSetChild*(nodeId, path : string): JsonNode =
+    let s = getExpandedSetChild(nodeId, path)
+    let update = setToJson(s, nodeId, true)
+    return %*{"structure" : %setToTreeView(s), "update" : update, "path" : path}
+
+
+
+proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
     var list : seq[string]
     var id : int
-    var domainsAtPrev : seq[Variable]
     var domainsAtNode : seq[Variable]
     var changedExpressions : seq[Expression]
     
@@ -173,27 +210,24 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
     domainsAtNode.deepCopy(getPrettyDomainsOfNode(db, nodeId))
 
-    let jsonList = %domainsAtNode
+    let jsonList = %[] 
 
-    for i in 0..<domainsAtNode.len():
-        if domainsAtNode[i] of Set:
-            let s = cast[Set](domainsAtNode[i])
 
-            jsonList[i]["Cardinality"] = %s.getCardinality()
-            if (s.inner == nil):
-                jsonList[i]["Included"] = %s.included
-                jsonList[i]["Excluded"] = %s.excluded
-            else:
-                # jsonList[i]["inner"] = %s.inner
-                jsonList[i]["Children"] = getCollapsedSetChildren(nodeId, s.name)
-                # echo jsonList[i]["Children"].pretty()
+    if paths != "":
+        for path in paths.split("|"):
+            let child = (getExpandedSetChild(nodeId, path))
+            jsonList.add(setToJson(child, nodeId, false))
 
-            # for kid in s.children:
-            #     jsonList[i]["Children"].add(%setToTreeView(kid))
 
+    for v in domainsAtNode:
+        if (v of Set):
+            jsonList.add(setToJson(cast[Set](v), nodeId, true))
+        else:
+            jsonList.add(%v)
+    
 
     if (id != 1):
-        domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
+        var domainsAtPrev = getPrettyDomainsOfNode(db, $(id - 1))
 
         for i in 0..<domainsAtNode.len():
 
@@ -260,8 +294,10 @@ proc loadPrettyDomains*(amount, start, nodeId: string): JsonNode =
 
     return %*{"vars" : jsonList, "changed" : list, "changedExpressions": expressionsToJson(changedExpressions) }
 
+
 proc getLongestBranchingVarName*() : JsonNode =
     return % db.getRow(sql"select max(length(branchingVariable)) from Node")[0]
+
 
 
 # proc loadChildSets*(setName, nodeId : string) : JsonNode = 

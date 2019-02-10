@@ -158,14 +158,14 @@ proc getSimpleDomainsOfNode(db: DbConn, amount: string, start: string, nodeId: s
     return domains
 
 
-proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
-    var list : seq[Variable]
+proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : (seq[Variable]) =
+    var varList : seq[Variable]
     # var tableCopy = prettyLookup["1"]
     prettyLookup[nodeId] = initTable[string, Variable]()
     prettyLookup[nodeId].deepCopy(eprimeLookup)
 
     for variable in prettyLookup[nodeId].values():
-        list.add(variable)
+        varList.add(variable)
         # prettyLookup[Variable.name]
         # echo variable
 
@@ -181,7 +181,7 @@ proc getPrettyDomainsOfNode(db: DbConn, nodeId: string) : seq[Variable] =
             var res = db.getRow(query0, nodeId)
             variable.rng = getPrettyRange(res[0], res[1])
 
-    return list
+    return (varList)
 
 
 
@@ -263,12 +263,11 @@ proc expressionsToJson(expressions: seq[Expression]): JsonNode =
 
     return %list
 
-proc getCollapsedSetChildren(nodeId, setName : string): JsonNode =
+proc getCollapsedSetChildren(s : Set): JsonNode =
     # let s = cast[Set](eprimeLookup[setName])
 
     # echo prettyLookup[nodeId]
 
-    let s = cast[Set](prettyLookup[nodeId][setName])
     echo s.children.len()
     let json = %*{}
     if s.children.len() > 0:
@@ -280,9 +279,10 @@ proc getCollapsedSetChildren(nodeId, setName : string): JsonNode =
     
     return json
 
-# proc getExpandedSetChildren(nodeId, setName : string): JsonNode =
-    # let s = cast[Set](eprimeLookup[setName])
-    # let s = cast[Set](prettyLookup[nodeId][setName])
+
+
+
+
     # echo s.children.len()
     # let json = %*{}
     # if s.children.len() > 0:

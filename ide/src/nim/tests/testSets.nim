@@ -176,19 +176,20 @@ suite "level3":
             # echo d
             if (d of MarkerSet):
                 let mS = cast[MarkerSet](d)
+
+                # echo mS.children
+
                 check(mS.inner of MarkerSet)
                 check(mS.getCardinality() == "int(2)")
 
-                check(mS.children[0].inner of MarkerSet)
+                check(mS.inner.inner of OccurrenceSet)
+
                 check(mS.children[0].getCardinality() == "int(1..4)")
                 check(mS.children[0].children[0].getCardinality() == "int(1..2)")
                 check(mS.children[0].children[0].included.len() == 0)
                 check(mS.children[0].children[0].excluded.len() == 0)
 
-                check(mS.children[1].inner of MarkerSet)
                 check(mS.children[1].getCardinality() == "int(1..4)")
                 check(mS.children[1].children[0].getCardinality() == "int(1..2)")
                 check(mS.children[1].children[0].included.len() == 0)
                 check(mS.children[1].children[0].excluded.len() == 0)
-                # check(mS.children[0].included == @[1, 2])
-                # check(mS.children[0].excluded.len() == 0)

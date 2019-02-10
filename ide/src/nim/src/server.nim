@@ -23,8 +23,8 @@ routes:
     get "/simpleDomains/@amount/@start/@nodeId":
         resp loadSimpleDomains(@"amount", @"start", @"nodeId")
         
-    get "/prettyDomains/@amount/@start/@nodeId":
-        resp loadPrettyDomains(@"amount", @"start", @"nodeId")
+    get "/prettyDomains/@nodeId/@paths?":
+        resp loadPrettyDomains(@"nodeId", @"paths")
 
     get "/loadNodes/@amount/@start":
         resp loadNodes(@"amount", @"start")
@@ -40,6 +40,9 @@ routes:
 
     get "/loadChildren/@id":
         resp loadChildren(@"id")
+
+    get "/loadSet/@nodeId/@path":
+        resp loadSetChild(@"nodeId",@"path")
 
     # get "/loadChildSets/@id/@setName":
     #     resp loadChildSets(@"setName", @"id")

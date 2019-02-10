@@ -12,6 +12,7 @@ exports.margin = { top: 40, right: 30, bottom: 50, left: 30 };
 exports.width = exports.viewerWidth - exports.margin.left - exports.margin.right;
 exports.height = exports.viewerHeight - exports.margin.top - exports.margin.bottom;
 
+exports.pathList = []
 exports.simpleDomainsAtRoot;
 exports.init = true;
 exports.pretty = true;
@@ -254,39 +255,46 @@ exports.selectNode = (nodeId) => {
     // }
 
     if (!exports.frozen) {
-        exports.loadDomains(nodeId);
+        exports.loadDomains();
     }
 
 }
 
-exports.loadDomains = (nodeId) => {
+exports.loadDomains = () => {
 
     // console.log(exports.waiting);
 
     if (!exports.waiting) {
 
-        let commandString;
-
         if (exports.pretty) {
-            commandString = "prettyDomains"
+            exports.sendPrettyRequest()
         }
         else {
-            commandString = "simpleDomains"
+            exports.sendSimpleRequest()
         }
 
-        exports.vscode.postMessage({
-            command: commandString,
-            amount: Number($("#domCount").val()),
-            start: exports.currentDomainId,
-            nodeId: nodeId,
-        });
-
-
-        // console.log("get domains sent")
         exports.waiting = true;
     }
     // console.log("SET WAIT TRUE DOMAINS, pretty: " + exports.pretty );
 }
+exports.sendSimpleRequest = () => {
+        exports.vscode.postMessage({
+            command: "simpleDomains",
+            amount: Number($("#domCount").val()),
+            start: exports.currentDomainId,
+            nodeId: exports.selectedId,
+        });
+}
+
+exports.sendPrettyRequest = () => {
+        exports.vscode.postMessage({
+            command: "prettyDomains",
+            nodeId: exports.selectedId,
+            paths: exports.pathList.join("|")
+        });
+}
+
+
 
 exports.tabulate = () => {
     var table = d3.select('#pane').append('table')

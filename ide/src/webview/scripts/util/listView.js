@@ -2,6 +2,7 @@ import colours from './colours.js';
 import "./treelist"
 import globals from "./globals"
 
+
 let panel = jsPanel.create({
     theme: colours.bgColour + ' filled',
     headerTitle: 'my panel #1',
@@ -31,11 +32,29 @@ var tree = d3.layout.treelist()
 var init = true;
 var rootNode;
 
-var name2Node = {}
+var path2Node = {}
 
 var changedList;
 
 var ul;
+
+window.addEventListener('message', event => {
+    const message = event.data
+
+    switch (message.command) {
+        case 'loadSet':
+            console.log(message.data)
+
+            path2Node[message.data.structure.name].children = message.data.structure.children;
+
+            render(rootNode, rootNode);
+
+            updateNodes([message.data.update])
+
+            break;
+    }
+
+});
 
 export function createUL() {
     init = true;
@@ -47,8 +66,9 @@ export function getRootNode() {
 }
 
 export function setChangedExpressions(expressions) {
+    console.log(path2Node)
     // console.log(name2Node["Changed Expressions"])
-    name2Node["Changed Expressions"]["children"] = expressions
+    path2Node["Changed Expressions"]["children"] = expressions
 
 }
 
@@ -62,9 +82,9 @@ export function updateNodes(data) {
             // if (!name2Node[element.name].children){
             // console.log(name2Node[element.name]);
             // }
-            if (name2Node[element.name].children) {
+            if (path2Node[element.name].children) {
 
-                let setNode = name2Node[element.name].children
+                let setNode = path2Node[element.name].children
                 // console.log(element)
 
                 setNode[1].children[0].name = element.Cardinality
@@ -75,8 +95,8 @@ export function updateNodes(data) {
                     setNode[3].children[0].name = element.Excluded
                 }
 
-                if (element.Children) {
-                    setNode[2] = { name: "Children", children: element.Children.children}
+                if (element.Children && !setNode[2].children) {
+                    setNode[2] = { name: "Children", children: element.Children.children }
                     // console.log(setNode[2])
                     // console.log(element)
 
@@ -85,7 +105,7 @@ export function updateNodes(data) {
             }
         }
         else {
-            name2Node[element.name].children[0].name = element.rng;
+            path2Node[element.name].children[0].name = element.rng;
         }
 
     });
@@ -154,6 +174,24 @@ export function render(data, parent) {
         .style("opacity", 0)
         .style("height", tree.nodeHeight() + "px")
         .on("click", function (d) {
+
+            // check if its a baby set
+            // console.log(d._children)
+            if (d._children) {
+                if (d._children.length == 0) {
+
+                    let p = getVarPath(d);
+
+                    globals.pathList.push(p);
+
+                    globals.vscode.postMessage({
+                        command: 'loadSet',
+                        nodeId: globals.selectedId,
+                        path: p,
+                    });
+                }
+            }
+
             toggleChildren(d);
             render(data, d);
             if (globals.selectedId != 1) {
@@ -168,7 +206,14 @@ export function render(data, parent) {
             // d3.selectAll(".changed").classed("changed", false);
         })
         .each((d) => {
-            name2Node[d.name] = d;
+            // console.log(d)
+            // if (d.Cardinality) {
+                // path2Node[getVarPath(d)] = d;
+            path2Node[d.name] = d;
+            // }
+            // else{
+                // path2Node[d.name] = d;
+            // }
         })
     //add arrows if it is a folder
     entered.append("span").attr("class", function (d) {
@@ -213,6 +258,30 @@ export function render(data, parent) {
 
 }
 
+function getVarPath(node) {
+
+    let path = []
+
+    function recurse(node) {
+
+        // console.log(node.name);
+
+        if (node.name != "Children" && node.name != "Items") {
+            path.push(node.name);
+        }
+
+        if (node.parent) {
+            if (node.parent.name === "Domain Variables") {
+                return node;
+            }
+
+            recurse(node.parent);
+        }
+    }
+
+    recurse(node)
+    return path.reverse().join(".");
+}
 
 createUL();
 

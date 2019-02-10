@@ -13,13 +13,22 @@ suite "Test for Main":
         check(nodes.len() == 10)
 
     test "loadSimpleDomains":
-        let ls =  loadSimpleDomains("1", "0", "2")
+        let ls =  loadSimpleDomains("1", "0", "2" )
 
     test "loadPrettyDomains":
-        let lp =  loadPrettyDomains("1", "0", "1")
+        let lp =  loadPrettyDomains("1", "")
 
     test "getLongestBranchingVarName":
         let longest = getLongestBranchingVarName()
+
+    test "expandSet":
+        init("../test/testData/sets/recursive/markerMarkerOccurrence")
+        let lp =  loadPrettyDomains("1", "")
+
+        # let domains = getPrettyDomainsOfNode(db, "2")
+        # echo (%getExpandedSetChildren("2", "s", "1:1")).pretty()
+        # echo (%getExpandedSetChildren("2", "s", "1:2")).pretty()
+        # echo (%getExpandedSetChildren("2", "s", "1:1.Children.s")).pretty()
 
 
 
