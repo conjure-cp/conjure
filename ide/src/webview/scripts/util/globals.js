@@ -290,7 +290,7 @@ exports.sendPrettyRequest = () => {
         exports.vscode.postMessage({
             command: "prettyDomains",
             nodeId: exports.selectedId,
-            paths: exports.pathList.join("|")
+            paths: exports.pathList.join(":")
         });
 }
 

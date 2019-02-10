@@ -183,6 +183,7 @@ proc getExpandedSetChild*(nodeId, path : string): Set =
 
     var s = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
 
+    echo "here" 
     echo path
 
     for name in path.split(".")[1..^1]:
@@ -190,6 +191,7 @@ proc getExpandedSetChild*(nodeId, path : string): Set =
             if kid.name == name:
                 s = kid
                 break;
+
 
     return (s)
 
@@ -214,7 +216,7 @@ proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
 
 
     if paths != "":
-        for path in paths.split("|"):
+        for path in paths.split(":"):
             let child = (getExpandedSetChild(nodeId, path))
             jsonList.add(setToJson(child, nodeId, false))
 
@@ -290,7 +292,7 @@ proc loadPrettyDomains*(nodeId, paths: string): JsonNode =
     else:
         return domainsToJson(domainsAtNode)
 
-    echo (%jsonList).pretty()
+    # echo (%jsonList).pretty()
 
     return %*{"vars" : jsonList, "changed" : list, "changedExpressions": expressionsToJson(changedExpressions) }
 

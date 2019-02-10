@@ -23,7 +23,15 @@ suite "Test for Main":
 
     test "expandSet":
         init("../test/testData/sets/recursive/markerMarkerOccurrence")
-        let lp =  loadPrettyDomains("1", "")
+        let lp =  loadPrettyDomains("2", "")
+        echo getExpandedSetChild("2", "s.s-1")
+
+    test "loadSetChild":
+        init("../test/testData/sets/recursive/markerMarkerOccurrence")
+        let lp =  loadPrettyDomains("2", "")
+        echo loadSetChild("2", "s.1")
+
+
 
         # let domains = getPrettyDomainsOfNode(db, "2")
         # echo (%getExpandedSetChildren("2", "s", "1:1")).pretty()

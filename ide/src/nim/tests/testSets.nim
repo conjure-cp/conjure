@@ -172,7 +172,7 @@ suite "level3":
     test "MarkerMarkerOccurrence":
         init(pathPrefix & "recursive/markerMarkerOccurrence")
 
-        for d in getPrettyDomainsOfNode(db, "4"):
+        for d in getPrettyDomainsOfNode(db, "7"):
             # echo d
             if (d of MarkerSet):
                 let mS = cast[MarkerSet](d)
@@ -184,12 +184,15 @@ suite "level3":
 
                 check(mS.inner.inner of OccurrenceSet)
 
-                check(mS.children[0].getCardinality() == "int(1..4)")
-                check(mS.children[0].children[0].getCardinality() == "int(1..2)")
+                check(mS.children[0].getCardinality() == "int(1)")
+                check(mS.children[0].children[0].getCardinality() == "int(1)")
                 check(mS.children[0].children[0].included.len() == 0)
-                check(mS.children[0].children[0].excluded.len() == 0)
+                check(mS.children[0].children[0].excluded == @[1])
 
-                check(mS.children[1].getCardinality() == "int(1..4)")
-                check(mS.children[1].children[0].getCardinality() == "int(1..2)")
+                check(mS.children[1].getCardinality() == "int(1)")
+                check(mS.children[1].children[0].getCardinality() == "int(1)")
                 check(mS.children[1].children[0].included.len() == 0)
-                check(mS.children[1].children[0].excluded.len() == 0)
+                check(mS.children[1].children[0].excluded == @[1])
+
+
+                echo ms.children[1].children[0].name

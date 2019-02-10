@@ -43,9 +43,13 @@ window.addEventListener('message', event => {
 
     switch (message.command) {
         case 'loadSet':
-            console.log(message.data)
+            console.log("structure")
+            console.log(message.data.structure)
 
             path2Node[message.data.structure.name].children = message.data.structure.children;
+
+            console.log("updated: ")
+            console.log(path2Node[message.data.structure.name]);
 
             render(rootNode, rootNode);
 
@@ -97,9 +101,6 @@ export function updateNodes(data) {
 
                 if (element.Children && !setNode[2].children) {
                     setNode[2] = { name: "Children", children: element.Children.children }
-                    // console.log(setNode[2])
-                    // console.log(element)
-
 
                 }
             }
@@ -182,12 +183,15 @@ export function render(data, parent) {
 
                     let p = getVarPath(d);
 
+                    // console.log(p)
+
                     globals.pathList.push(p);
 
                     globals.vscode.postMessage({
                         command: 'loadSet',
                         nodeId: globals.selectedId,
-                        path: p,
+                        path: p
+                        // path: d.name,
                     });
                 }
             }
