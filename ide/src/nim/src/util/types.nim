@@ -143,3 +143,6 @@ proc `$`*(v:Variable): string =
 
     else:
         result =  "<Variable> " & v.name & " " & v.rng 
+
+
+let maxIndex = 9

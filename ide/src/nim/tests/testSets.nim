@@ -194,24 +194,31 @@ suite "level3":
                 check(mS.children[1].children[0].included.len() == 0)
                 check(mS.children[1].children[0].excluded == @[1])
 
-
                 echo ms.children[1].children[0].name
 
     test "MarkerMarkerMarker":
         init(pathPrefix & "recursive/markerMarkerMarker")
 
+        for d in getPrettyDomainsOfNode(db, "9"):
+            if (d of MarkerSet):
+                let mS = cast[MarkerSet](d)
+
+                let child1 = ms.children[0]
+                let grandkid1 = child1.children[0]
+                check(grandkid1.included == @[1])
+
+                let child2 = ms.children[1]
+                let grandkid2 = child2.children[0]
+                check(grandkid2.included == @[2])
+
+suite "level4":
+    test "MarkerMarkerMarkerMarker":
+        init(pathPrefix & "recursive/markerMarkerMarkerMarker")
         for d in getPrettyDomainsOfNode(db, "2"):
             if (d of MarkerSet):
                 let mS = cast[MarkerSet](d)
-                # check(mS.children.len() == 2)
-                # check(mS.children[0].children.len() == 1)
-                # check(mS.children[1].children.len() == 1)
 
-        # for d in getPrettyDomainsOfNode(db, "8"):
-        #     if (d of MarkerSet):
-        #         let mS = cast[MarkerSet](d)
-        #         check(mS.children.len() == 2)
-        #         check(mS.children[0].children.len() == 1)
-        #         check(mS.children[1].children.len() == 1)
-
-        #         check(mS.inner of MarkerSet)
+                let child1 = ms.children[0]
+                let grandkid1 = child1.children[0]
+                let greatGrandKid1 = grandkid1.children[0]
+                check(greatGrandKid1.included == @[1])

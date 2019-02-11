@@ -181,6 +181,9 @@ proc setToJson(s: Set, nodeId : string, wantCollapsedChildren : bool): JsonNode 
 
 proc getExpandedSetChild*(nodeId, path : string): Set =
 
+# TODO return nil if cant find child
+
+
     var s = cast[Set](prettyLookup[nodeId][path.split(".")[0]])
 
     for name in path.split(".")[1..^1]:
