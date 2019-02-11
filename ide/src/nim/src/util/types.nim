@@ -1,3 +1,5 @@
+import strutils
+
 type
     EprimeParseException* = object of Exception
 type
@@ -130,16 +132,15 @@ proc `$`*(v:Variable): string =
 
         if (s.inner != nil):
             result &= " {" & getSetType(s.inner) & "}"
-        # echo s.children.len()
 
         if s.children.len() > 0:
-            result &= "\n KIDS:{"
+            result &= "\n"
+            var indent = ""
+            for i in countUp(1, s.name.split("-").len()):
+                indent &= "      "
             for child in s.children:
-                if (child.inner != nil):
-                    result &= "\n inner"
-                else:
-                    result &= "\n" & $child
-            result &= "}"
+                result &= indent & $child & "\n"
+            # result &= "\n}"
 
     else:
         result =  "<Variable> " & v.name & " " & v.rng 

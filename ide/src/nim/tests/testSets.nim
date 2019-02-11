@@ -1,7 +1,6 @@
 import unittest
 include util/main
 
-
 let pathPrefix = "../test/testData/sets/"
 
 suite "level1":
@@ -203,6 +202,8 @@ suite "level3":
             if (d of MarkerSet):
                 let mS = cast[MarkerSet](d)
 
+                echo mS
+
                 let child1 = ms.children[0]
                 let grandkid1 = child1.children[0]
                 check(grandkid1.included == @[1])
@@ -217,6 +218,8 @@ suite "level4":
         for d in getPrettyDomainsOfNode(db, "2"):
             if (d of MarkerSet):
                 let mS = cast[MarkerSet](d)
+
+                echo mS
 
                 let child1 = ms.children[0]
                 let grandkid1 = child1.children[0]
