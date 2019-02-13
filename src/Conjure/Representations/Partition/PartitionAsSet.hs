@@ -200,7 +200,7 @@ partitionAsSet dispatch reprOptions useLevels = Representation chck downD struct
                                         ]
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [inner] <- downX1 inp
             Just [(_, innerDomain)] <- downD ("SO", domain)
-            innerSO downX1 inner "SO" innerDomain
+            innerSO downX1 inner innerDomain

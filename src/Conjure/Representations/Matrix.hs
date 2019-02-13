@@ -196,11 +196,11 @@ matrix downD1 downC1 up1 = Representation chck matrixDownD structuralCons matrix
         matrixUp _ _ = na "{matrixUp}"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain =
+        symmetryOrdering innerSO downX1 inp domain =
             case domain of
                 DomainMatrix indexDom innerDom -> do
                     (iPat, i) <- quantifiedVarOverDomain indexDom
                     let mi = [essence| &inp[&i] |]
-                    res <- innerSO downX1 mi "SO" innerDom
+                    res <- innerSO downX1 mi innerDom
                     return [essence| flatten([ &res | &iPat : &indexDom ]) |]
                 _ -> bug $ "symmetryOrdering matrix" <+> pretty inp <+> pretty domain

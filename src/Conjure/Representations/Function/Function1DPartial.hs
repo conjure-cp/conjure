@@ -202,11 +202,11 @@ function1DPartial = Representation chck downD structuralCons downC up symmetryOr
         up _ _ = na "{up} Function1DPartial"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [flags, values] <- downX1 inp
             Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
-            soValues <- innerSO downX1 [essence| &values[&i] |] "SO" innerDomainTo
+            soValues <- innerSO downX1 [essence| &values[&i] |] innerDomainTo
             return
                 [essence|
                     flatten([ flatten([ [-toInt(&flags[&i])]

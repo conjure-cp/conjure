@@ -221,11 +221,11 @@ msetExplicitWithRepetition = Representation chck downD structuralCons downC up s
                     ("Bindings in context:" : prettyContext ctxt)
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [marker, values] <- downX1 inp
             Just [_, (_, DomainMatrix index inner)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
-            soValues <- innerSO downX1 [essence| &values[&i] |] "SO" inner
+            soValues <- innerSO downX1 [essence| &values[&i] |] inner
             return
                 [essence|
                     flatten([ [ &marker ]

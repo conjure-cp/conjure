@@ -50,10 +50,10 @@ type TypeOf_DownD (m :: * -> *) =
     -> m (Maybe [(Name, DomainX Expression)])
 
 type TypeOf_SymmetryOrdering (m :: * -> *) =
-       ((Expression -> m [Expression]) -> Expression -> Name -> DomainX Expression -> m Expression) -- inner S.O.
+       ((Expression -> m [Expression]) -> Expression -> DomainX Expression -> m Expression) -- inner S.O.
     -> (Expression -> m [Expression])               -- general downX1
     -> Expression                                   -- this as an expression
-    -> Name -> DomainX Expression                   -- name and domain
+    -> DomainX Expression                           -- name and domain
     -> m Expression                                 -- output, of type [int]
 
 type TypeOf_Structural (m :: * -> *) =

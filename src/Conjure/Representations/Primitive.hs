@@ -28,7 +28,7 @@ primitive = Representation
                 : "Bindings in context:"
                 : prettyContext ctxt
             Just c  -> return (name, c)
-    , rSymmetryOrdering = \ _innerSO _downX1 inp _name domain -> return $
+    , rSymmetryOrdering = \ _innerSO _downX1 inp domain -> return $
         case domain of
             DomainBool -> [essence| [-toInt(&inp)] |]
             _          -> [essence| [&inp] |]

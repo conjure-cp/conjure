@@ -78,9 +78,9 @@ tuple = Representation chck downD structuralCons downC up symmetryOrdering
         up _ _ = na "{up}"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             xs <- downX1 inp
             Just xsDoms' <- downD ("SO", domain)
             let xsDoms = map snd xsDoms'
-            soValues <- sequence [ innerSO downX1 x "SO" xDom | (x, xDom) <- zip xs xsDoms ]
+            soValues <- sequence [ innerSO downX1 x xDom | (x, xDom) <- zip xs xsDoms ]
             return $ make opFlatten (fromList soValues)

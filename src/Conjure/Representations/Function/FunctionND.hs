@@ -233,7 +233,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
         up _ _ = na "{up} FunctionND"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [values] <- downX1 inp
             Just [(_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
@@ -248,7 +248,7 @@ functionND = Representation chck downD structuralCons downC up symmetryOrdering
                 toIndex       = [ [essence| &i[&k] |] | k <- kRange ]
                 valuesIndexed = make opMatrixIndexing values toIndex
 
-            soValues <- innerSO downX1 valuesIndexed "SO" innerDomainTo
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
 
             return $ make opFlatten $
                 Comprehension soValues

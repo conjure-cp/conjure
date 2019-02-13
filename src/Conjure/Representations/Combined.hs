@@ -152,14 +152,13 @@ symmetryOrderingDispatch ::
     (?typeCheckerMode :: TypeCheckerMode) =>
     (Expression -> m [Expression]) ->
     Expression ->
-    Name ->
     DomainX Expression ->
     m Expression
-symmetryOrderingDispatch downX1 inp name domain =
+symmetryOrderingDispatch downX1 inp domain =
     rSymmetryOrdering
         (dispatch domain)
         symmetryOrderingDispatch downX1
-        inp name domain
+        inp domain
 
 
 -- | Combine all known representations into one.

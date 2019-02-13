@@ -140,12 +140,12 @@ symmetryOrdering inp =
         -- AbstractLiteral x
         Reference _ (Just refTo) -> do
             case refTo of
-                Alias x                       -> symmetryOrdering x
-                InComprehension{}             -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
-                DeclNoRepr{}                  -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
-                DeclHasRepr _forg name domain -> symmetryOrderingDispatch downX1 inp name domain
-                RecordField{}                 -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
-                VariantField{}                -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
+                Alias x                        -> symmetryOrdering x
+                InComprehension{}              -> bug ("symmetryOrdering.InComprehension:" <++> pretty (show inp))
+                DeclNoRepr{}                   -> bug ("symmetryOrdering.DeclNoRepr:"      <++> pretty (show inp))
+                DeclHasRepr _forg _name domain -> symmetryOrderingDispatch downX1 inp domain
+                RecordField{}                  -> bug ("symmetryOrdering.RecordField:"     <++> pretty (show inp))
+                VariantField{}                 -> bug ("symmetryOrdering.VariantField:"    <++> pretty (show inp))
         Op op -> case op of
             MkOpIndexing (OpIndexing m _) -> do
                 ty <- typeOf m
@@ -155,7 +155,7 @@ symmetryOrdering inp =
                     _ -> bug $ "[symmetryOrdering.onOp, not a TypeMatrix or TypeList]" <+> vcat [pretty ty, pretty op]
                 mDom <- domainOfR m
                 case mDom of
-                    DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp "noname-m[i]" domainInner
+                    DomainMatrix _ domainInner -> symmetryOrderingDispatch downX1 inp domainInner
                     _ -> bug ("symmetryOrdering, not DomainMatrix:" <++> pretty (show op))
             _ -> bug ("symmetryOrdering, no OpIndexing:" <++> pretty (show op))
         -- Comprehension body stmts -> do

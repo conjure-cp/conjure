@@ -278,7 +278,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
         up _ _ = na "{up} FunctionNDPartial"
 
         symmetryOrdering :: TypeOf_SymmetryOrdering m
-        symmetryOrdering innerSO downX1 inp _name domain = do
+        symmetryOrdering innerSO downX1 inp domain = do
             [flags, values] <- downX1 inp
             Just [_, (_, DomainMatrix innerDomainFr innerDomainTo)] <- downD ("SO", domain)
             (iPat, i) <- quantifiedVar
@@ -294,7 +294,7 @@ functionNDPartial = Representation chck downD structuralCons downC up symmetryOr
                 flagsIndexed = make opMatrixIndexing flags toIndex
                 valuesIndexed = make opMatrixIndexing values toIndex
 
-            soValues <- innerSO downX1 valuesIndexed "SO" innerDomainTo
+            soValues <- innerSO downX1 valuesIndexed innerDomainTo
 
             return $ make opFlatten $
                 Comprehension
